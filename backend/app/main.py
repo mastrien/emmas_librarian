@@ -1,12 +1,14 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from backend.app.db.database import DatabaseManager
 from backend.app.services.search_orchestrator import SearchOrchestrator
 import os
 import json
+import io
+import csv
 
 app = FastAPI(title="Emma's Librarian API")
 
@@ -64,6 +66,36 @@ async def search_articles(project_id: int, request: SearchRequest):
 @app.get("/projects/{project_id}/articles")
 async def list_articles(project_id: int):
     return db.get_articles_by_project(project_id)
+
+@app.get("/projects/{project_id}/export")
+async def export_project_csv(project_id: int):
+    p = db.get_project(project_id)
+    if not p:
+        raise HTTPException(status_code=404, detail="Projeto não encontrado")
+    
+    articles = db.get_articles_by_project(project_id)
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "DOI", "Título", "Autores", "Ano", "Bases", "Status"])
+    
+    for a in articles:
+        writer.writerow([
+            a["id"],
+            a["doi"],
+            a["titulo"],
+            a["autores"],
+            a["ano"],
+            a["base_origem"],
+            a["status"]
+        ])
+    
+    output.seek(0)
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode("utf-8-sig")),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=projeto_{project_id}_export.csv"}
+    )
 
 class AnnotationCreate(BaseModel):
     content: str

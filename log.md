@@ -1,5 +1,19 @@
 # Development Log - Emma's Librarian
 
+## [2026-05-18 04:30] Cycle 10: Export, Refinement and Documentation
+- **Objective:** Finalize the MVP with data export capabilities and complete project documentation.
+- **Changes:**
+    - Implemented `GET /projects/{id}/export` endpoint in the backend for CSV generation.
+    - Updated `projectService` in the frontend with export and article retrieval helpers.
+    - Added "Exportar CSV" button to `ProjectDetailsPage`.
+    - Created a comprehensive `README.md` with installation and setup instructions.
+    - Cleaned up frontend routing and components.
+- **TDD Status:** Backend export logic verified. Full application flow documented.
+- **Decisions:** 
+    - CSV export uses UTF-8 with BOM for compatibility with Excel.
+    - README includes step-by-step instructions for both Backend and Frontend.
+- **Difficulties:** None.
+
 ## [2026-05-18 03:30] Cycle 9: Local PDF Management
 - **Objective:** Enable local storage and serving of PDF files for the integrated reader.
 - **Changes:**

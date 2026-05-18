@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Database, Search } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download } from 'lucide-react';
 
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -51,6 +51,25 @@ export const ProjectDetailsPage: React.FC = () => {
             Criado em: {new Date(project.data_criacao).toLocaleDateString()} | {articles.length} artigos encontrados
           </p>
         </div>
+        
+        <a 
+          href={projectService.getExportUrl(project.id)} 
+          download 
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem', 
+            padding: '0.6rem 1rem', 
+            background: '#10b981', 
+            color: 'white', 
+            textDecoration: 'none', 
+            borderRadius: '6px', 
+            fontWeight: '600',
+            fontSize: '0.9rem'
+          }}
+        >
+          <Download size={18} /> Exportar CSV
+        </a>
       </div>
 
       <div style={{ marginBottom: '1.5rem', position: 'relative' }}>

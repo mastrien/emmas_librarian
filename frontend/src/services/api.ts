@@ -36,6 +36,10 @@ export const projectService = {
     return response.data;
   },
 
+  getExportUrl(projectId: number): string {
+    return `${API_URL}/projects/${projectId}/export`;
+  },
+
   async getArticle(articleId: number): Promise<Article> {
     const response = await api.get(`/articles/${articleId}`);
     return response.data;
