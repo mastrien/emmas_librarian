@@ -1,5 +1,20 @@
 # Development Log - Emma's Librarian
 
+## [2026-05-18 00:55] Cycle 4: Search Orchestrator and Deduplication
+- **Objective:** Coordinate the search process across multiple APIs, normalize results, and deduplicate articles before persisting them.
+- **Changes:**
+    - Created `backend/app/services/search_orchestrator.py`.
+    - Implemented deduplication logic based on DOI and Title.
+    - Updated `DatabaseManager` with `save_article` and `get_articles_by_project`.
+    - Created `backend/tests/test_search_orchestrator.py` with integration tests.
+    - Moved shared fixtures to `backend/tests/conftest.py`.
+- **TDD Status:** Success (2 tests passing).
+- **Decisions:** 
+    - Deduplication uses DOI as the primary key and lowercase Title as the secondary key.
+    - `base_origem` is stored as a JSON list to track which APIs provided the article.
+    - `csl_json` is stored as a raw JSON blob to preserve all metadata.
+- **Difficulties:** None.
+
 ## [2026-05-18 00:30] Cycle 3: API Integration and CSL-JSON Normalization
 - **Objective:** Integrate with OpenAlex and Crossref APIs and implement a normalization layer to CSL-JSON.
 - **Changes:**

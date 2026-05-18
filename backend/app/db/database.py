@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import json
 
 class DatabaseManager:
     def __init__(self, db_path: str):
@@ -32,3 +33,28 @@ class DatabaseManager:
             cursor.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def save_article(self, article_data: dict):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO articles 
+                (projeto_id, doi, titulo, autores, ano, query_origem, base_origem, csl_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                article_data["projeto_id"],
+                article_data.get("doi"),
+                article_data["titulo"],
+                article_data.get("autores"),
+                article_data.get("ano"),
+                article_data.get("query_origem"),
+                json.dumps(article_data.get("base_origem", [])),
+                json.dumps(article_data.get("csl_json", {}))
+            ))
+            return cursor.lastrowid
+
+    def get_articles_by_project(self, project_id: int):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM articles WHERE projeto_id = ?", (project_id,))
+            return [dict(row) for row in cursor.fetchall()]
