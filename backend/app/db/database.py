@@ -58,3 +58,43 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM articles WHERE projeto_id = ?", (project_id,))
             return [dict(row) for row in cursor.fetchall()]
+
+    def get_article(self, article_id: int):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM articles WHERE id = ?", (article_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def save_annotation(self, article_id: int, content: str) -> int:
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO annotations (artigo_id, conteudo_markdown) VALUES (?, ?)", (article_id, content))
+            return cursor.lastrowid
+
+    def get_annotations(self, article_id: int):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM annotations WHERE artigo_id = ?", (article_id,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def save_highlight(self, article_id: int, color: str, position_data: str, annotation_id: int = None):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO highlights (artigo_id, color, position_data, annotation_id)
+                VALUES (?, ?, ?, ?)
+            """, (article_id, color, position_data, annotation_id))
+            return cursor.lastrowid
+
+    def get_highlights(self, article_id: int):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            # Join with annotations to get the linked content if exists
+            cursor.execute("""
+                SELECT h.*, a.conteudo_markdown as comment 
+                FROM highlights h
+                LEFT JOIN annotations a ON h.annotation_id = a.id
+                WHERE h.artigo_id = ?
+            """, (article_id,))
+            return [dict(row) for row in cursor.fetchall()]

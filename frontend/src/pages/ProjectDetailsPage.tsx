@@ -105,9 +105,9 @@ export const ProjectDetailsPage: React.FC = () => {
                 </td>
                 <td style={{ padding: '1rem' }}>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button style={{ padding: '0.5rem', background: '#f0f9ff', color: '#0ea5e9', border: '1px solid #bae6fd', borderRadius: '4px', cursor: 'pointer' }} title="Ler Artigo">
+                    <Link to={`/articles/${article.id}`} style={{ padding: '0.5rem', background: '#f0f9ff', color: '#0ea5e9', border: '1px solid #bae6fd', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Ler Artigo">
                       <FileText size={18} />
-                    </button>
+                    </Link>
                     {article.doi && (
                       <a href={`https://doi.org/${article.doi}`} target="_blank" rel="noreferrer" style={{ padding: '0.5rem', background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '4px' }} title="Abrir no Navegador">
                         <ExternalLink size={18} />

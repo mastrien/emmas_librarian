@@ -60,3 +60,44 @@ async def search_articles(project_id: int, request: SearchRequest):
 @app.get("/projects/{project_id}/articles")
 async def list_articles(project_id: int):
     return db.get_articles_by_project(project_id)
+
+class AnnotationCreate(BaseModel):
+    content: str
+
+class HighlightCreate(BaseModel):
+    color: str
+    position_data: dict
+    annotation_content: Optional[str] = None
+
+@app.get("/articles/{article_id}")
+async def get_article(article_id: int):
+    a = db.get_article(article_id)
+    if not a:
+        raise HTTPException(status_code=404, detail="Artigo não encontrado")
+    return a
+
+@app.get("/articles/{article_id}/highlights")
+async def list_highlights(article_id: int):
+    highlights = db.get_highlights(article_id)
+    # Parse position_data back to dict
+    for h in highlights:
+        h["position_data"] = json.loads(h["position_data"])
+    return highlights
+
+@app.post("/articles/{article_id}/highlights")
+async def create_highlight(article_id: int, highlight: HighlightCreate):
+    annotation_id = None
+    if highlight.annotation_content:
+        annotation_id = db.save_annotation(article_id, highlight.annotation_content)
+    
+    h_id = db.save_highlight(
+        article_id, 
+        highlight.color, 
+        json.dumps(highlight.position_data), 
+        annotation_id
+    )
+    return {"id": h_id, "annotation_id": annotation_id}
+
+@app.get("/articles/{article_id}/annotations")
+async def list_annotations(article_id: int):
+    return db.get_annotations(article_id)

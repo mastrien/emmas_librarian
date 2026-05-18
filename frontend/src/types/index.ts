@@ -1,3 +1,19 @@
+export interface Highlight {
+  id: string;
+  artigo_id: number;
+  color: string;
+  position_data: any; // Coordinate data for the highlighter
+  annotation_id?: number;
+  comment?: string; // Content of the linked annotation
+}
+
+export interface Annotation {
+  id: number;
+  artigo_id: number;
+  conteudo_markdown: string;
+  data_criacao: string;
+}
+
 export interface QueryBlock {
   id: string;
   field: 'title' | 'year';
@@ -20,7 +36,7 @@ export interface Article {
   autores?: string;
   ano?: number;
   query_origem: string;
-  base_origem: string[]; // Normalized from JSON in backend
+  base_origem: string[];
   csl_json: any;
   status: 'novo' | 'lido' | 'arquivado';
 }

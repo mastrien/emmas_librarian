@@ -1,5 +1,21 @@
 # Development Log - Emma's Librarian
 
+## [2026-05-18 03:00] Cycle 8: PDF Reader & Highlighting
+- **Objective:** Implement the PDF reader with highlighting capabilities and persist marks/notes.
+- **Changes:**
+    - Updated TypeScript types to include `Highlight` and `Annotation`.
+    - Implemented database methods in `database.py` for saving/retrieving highlights and annotations.
+    - Added FastAPI endpoints for article details, highlights, and annotations.
+    - Created `ArticleReaderPage` using `react-pdf-highlighter`.
+    - Integrated annotation popup to save highlights with linked markdown comments.
+    - Updated navigation to link the article list to the reader.
+- **TDD Status:** Backend logic for persistence verified. UI integration completed for highlighting flow.
+- **Decisions:** 
+    - Highlights and Annotations are stored in separate tables to support multiple marks per note or notes without marks.
+    - Mocked PDF URLs for now (pointing to ArXiv) as the local file manager is a future phase.
+    - Used a unified endpoint `POST /articles/{id}/highlights` that handles both the mark and its optional linked annotation.
+- **Difficulties:** `react-pdf-highlighter` coordinates management is complex; mapped its internal format to the SQLite JSON blob successfully.
+
 ## [2026-05-18 02:00] Cycle 7: Article Listing & Project Dashboard
 - **Objective:** Implement the dashboard and the detailed view of articles for each project.
 - **Changes:**
