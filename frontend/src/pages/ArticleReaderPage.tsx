@@ -8,7 +8,7 @@ import {
   AreaHighlight 
 } from 'react-pdf-highlighter';
 import { projectService } from '../services/api';
-import { Article } from '../types';
+import type { Article } from '../types';
 import { ArrowLeft, Loader2, Upload, AlertCircle } from 'lucide-react';
 
 export const ArticleReaderPage: React.FC = () => {
@@ -29,7 +29,7 @@ export const ArticleReaderPage: React.FC = () => {
         projectService.getHighlights(parseInt(id))
       ]);
       setArticle(artData);
-      setHighlights(highData.map(h => ({
+      setHighlights(highData.map((h: any) => ({
         id: h.id.toString(),
         position: h.position_data,
         content: { text: h.comment || '' },
@@ -173,8 +173,11 @@ export const ArticleReaderPage: React.FC = () => {
                         </button>
                       </div>
                     }
-                    onMouseOver={(popupContent) => transformSelection(popupContent, [])}
-                  />
+                    onMouseOver={() => transformSelection()}
+                    onMouseOut={() => {}}
+                  >
+                    <div />
+                  </Popup>
                 )}
                 highlightTransform={(
                   highlight,
@@ -203,13 +206,15 @@ export const ArticleReaderPage: React.FC = () => {
 
                   return (
                     <Popup
-                      key={index}
+                      popupContent={<div />}
                       onMouseOver={(popupContent) =>
                         setTip(highlight, (highlight) => popupContent)
                       }
                       onMouseOut={hideTip}
-                      children={component}
-                    />
+                      key={index}
+                    >
+                      {component}
+                    </Popup>
                   );
                 }}
                 highlights={highlights}

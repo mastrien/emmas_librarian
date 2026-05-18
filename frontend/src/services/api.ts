@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Project, QueryBlock, Article } from '../types';
+import type { Project, QueryBlock, Article, Highlight, Annotation } from '../types';
 
 const API_URL = 'http://localhost:8000';
 
