@@ -1,5 +1,19 @@
 # Development Log - Emma's Librarian
 
+## [2026-05-18 00:30] Cycle 3: API Integration and CSL-JSON Normalization
+- **Objective:** Integrate with OpenAlex and Crossref APIs and implement a normalization layer to CSL-JSON.
+- **Changes:**
+    - Created `backend/app/services/api_integrator.py`.
+    - Implemented `fetch_openalex` and `fetch_crossref` using `httpx`.
+    - Implemented normalization methods for both APIs.
+    - Created `backend/tests/test_api_integrator.py` with mocked API tests and normalization validation.
+- **TDD Status:** Success (4 tests passing).
+- **Decisions:** 
+    - Used `httpx.AsyncClient` for non-blocking API calls.
+    - Standardized normalization to CSL-JSON to ensure internal data consistency.
+    - Added basic author name splitting (Given/Family) for OpenAlex display names.
+- **Difficulties:** Mocking async HTTP responses required careful handling of the `json()` method in `AsyncMock`.
+
 ## [2026-05-18 00:10] Cycle 2: Query Translation Module
 - **Objective:** Implement the translation of "Visual Blocks" from the frontend into the specific syntaxes of OpenAlex and Crossref.
 - **Changes:**
