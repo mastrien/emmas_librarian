@@ -18,6 +18,11 @@ export const projectService = {
     return response.data;
   },
 
+  async getProject(projectId: number): Promise<Project> {
+    const response = await api.get(`/projects/${projectId}`);
+    return response.data;
+  },
+
   async searchAndPersist(projectId: number, queryBlocks: QueryBlock[], limit: number = 100): Promise<{ count: number }> {
     const response = await api.post(`/projects/${projectId}/search`, {
       query_blocks: queryBlocks,

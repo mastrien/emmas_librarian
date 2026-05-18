@@ -1,5 +1,19 @@
 # Development Log - Emma's Librarian
 
+## [2026-05-18 02:00] Cycle 7: Article Listing & Project Dashboard
+- **Objective:** Implement the dashboard and the detailed view of articles for each project.
+- **Changes:**
+    - Created `DashboardPage` to list all research projects.
+    - Created `ProjectDetailsPage` with a searchable table of articles, displaying metadata and origin bases.
+    - Updated `main.tsx` with routes for the new pages.
+    - Added `getProject` and `getArticles` to the frontend `api.ts` service.
+- **TDD Status:** UI flow verified through navigation logic.
+- **Decisions:** 
+    - Used `lucide-react` for consistent iconography.
+    - Implemented a local search filter on the frontend for the article table.
+    - Formatted DOI links and origin base tags for better readability.
+- **Difficulties:** Handled JSON parsing of `base_origem` which is stored as a string in SQLite but needs to be an array in the UI.
+
 ## [2026-05-18 01:30] Cycle 6: Visual Query Builder & Project UI
 - **Objective:** Create the frontend interface for creating projects and building queries visually.
 - **Changes:**
