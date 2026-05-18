@@ -25,6 +25,15 @@ O tradutor de queries é o coração do projeto.
 ## 5. Anotações e Exportação Complementar
 - A ferramenta permitirá extrair não só as listas de referência (via `.ris`, `.bib`) mas também as **anotações escritas pelo usuário** no formato de relatório (ex: arquio `.csv` ou `.docx`), de modo que possam ser usadas ativamente na geração do paper final?
 
+## 8. Destaques Visuais (Highlighter) e Persistência
+- **Implementação do Leitor:** Para permitir marcações visuais, a biblioteca `react-pdf-highlighter` é uma forte candidata.
+- **Estrutura de Dados das Marcações:** Precisamos definir como salvar os destaques para que sejam recarregados exatamente na mesma posição do PDF. Isso geralmente envolve:
+  - Um identificador único para o destaque.
+  - As coordenadas/posição (viewport/scaled coordinates) no documento.
+  - A cor do destaque.
+  - O conteúdo da anotação vinculada (Markdown).
+- **Relacionamento:** As marcações devem estar vinculadas ao arquivo PDF e ao registro do artigo no banco de dados.
+
 ## 6. Sincronia e Atualização (Os "Projetos", embora não-prioritário)
 - Apesar de não ser prioridade imediata, é bom prever: quando os dados em um projeto ficarem "desatualizados" na sua máquina, um processo de atualização de query irá puxar novos dados e *apenas* incluí-los junto aos atuais e marcá-los como "novo", gerando um fluxo de delta/incremental? O ideal seria sempre salvar a `string original da busca + o timestamp da última execução` associado ao Projeto criado.
 

@@ -9,7 +9,7 @@ Automatizar buscas estruturadas em diferentes bases (Scopus, Web of Science, Ope
 - Fazer requisições simultaneamente para múltiplas bases de dados com a mesma query.
 - Analisar dados de diferentes bases.
 - Facilitar a leitura de documentos científicos (talvez permitindo baixar o documento ou então só anexando o link com o DOI do artigo).
-- Permitir realizar anotações vinculadas a artigos específicos.
+- Permitir realizar anotações vinculadas a artigos específicos, incluindo a persistência de marcações (destaques visuais) nos documentos. O usuário deve ser capaz de selecionar um texto, destacá-lo com uma cor específica e vincular uma nota em Markdown.
 - Um módulo que normaliza sintaxe de querys para todas as bases.
 - Será possível salvar "Projetos" de busca e acompanhá-los ao longo do tempo, mas essa funcionalidade não é prioritária.
 
