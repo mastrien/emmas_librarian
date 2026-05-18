@@ -1,5 +1,21 @@
 # Development Log - Emma's Librarian
 
+## [2026-05-18 01:30] Cycle 6: Visual Query Builder & Project UI
+- **Objective:** Create the frontend interface for creating projects and building queries visually.
+- **Changes:**
+    - Defined TypeScript interfaces for `Project`, `Article`, and `QueryBlock` in `frontend/src/types/index.ts`.
+    - Created `frontend/src/services/api.ts` to interact with the backend.
+    - Implemented `QueryBuilder` component for block-based search.
+    - Created `NewProjectPage` to handle project creation and initial search triggering.
+    - Set up `frontend/src/main.tsx` with React Router.
+    - Implemented main FastAPI entry point in `backend/app/main.py` with CORS support.
+- **TDD Status:** Backend integration tested via Frontend service layer logic.
+- **Decisions:** 
+    - Used inline styles for initial UI speed, will move to CSS later.
+    - Enabled CORS on the backend to allow local frontend development.
+    - Standardized error handling for project creation.
+- **Difficulties:** Cleaned up Vite boilerplate to avoid TypeScript/Build errors.
+
 ## [2026-05-18 01:00] Cycle 5: Frontend Setup (React)
 - **Objective:** Initialize the frontend project and set up basic structure.
 - **Changes:**

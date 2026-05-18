@@ -19,7 +19,7 @@ Automatizar buscas estruturadas em diferentes bases (Scopus, Web of Science, Ope
 2. A interface será web, mas rodará localmente. Isso facilita o desenvolvimento e a manutenção.
 3. MVP será apenas com OpenAlex e Crossref.
 4. Desduplicação será feita, mas a informação de quais bases contêm o artigo deve ser mantida.
-5. O leitor de PDF pode ser um link inicialmente, mas a intenção é que no futuro seja um leitor local integrado no sistema.
+5. O leitor de PDF será um leitor local integrado no sistema.
 6. O acesso a bases pagas será gerenciado pela própria chave da API do usuário.
 
 ## Pontos a serem definidos
