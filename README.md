@@ -23,9 +23,15 @@ Emma's Librarian is a local tool designed to automate structured searches across
 ### 1. Setup the Backend
 
 ```bash
-cd backend
-pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --port 8000
+# From the project root directory:
+pip install -r backend/requirements.txt
+
+# Start the backend ensuring the root is in PYTHONPATH
+# Windows (PowerShell):
+$env:PYTHONPATH = "."; python -m uvicorn backend.app.main:app --reload --port 8000
+
+# Linux/Mac:
+PYTHONPATH=. python3 -m uvicorn backend.app.main:app --reload --port 8000
 ```
 The backend will automatically create a `emma.db` SQLite file and a `storage/pdfs` folder.
 
