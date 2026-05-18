@@ -1,5 +1,17 @@
 # Development Log - Emma's Librarian
 
+## [2026-05-18 00:10] Cycle 2: Query Translation Module
+- **Objective:** Implement the translation of "Visual Blocks" from the frontend into the specific syntaxes of OpenAlex and Crossref.
+- **Changes:**
+    - Created `backend/app/services/query_translator.py`.
+    - Created `backend/tests/test_query_translator.py` with validation for both APIs.
+- **TDD Status:** Success (4 tests passing).
+- **Decisions:** 
+    - Standardized a JSON input format for filters (`field`, `value`, `type`).
+    - OpenAlex uses the `filter` query parameter with `.search` and operators like `:>`.
+    - Crossref uses a mix of query parameters (e.g., `query.title`) and the `filter` parameter (e.g., `from-pub-date`).
+- **Difficulties:** None. The logic is extensible for more fields in the future.
+
 ## [2026-05-17 23:35] Cycle 1: Project Setup and Database Schema
 - **Objective:** Initialize the backend project structure and create the SQLite database schema.
 - **Changes:**
