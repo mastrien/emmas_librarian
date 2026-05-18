@@ -1,5 +1,17 @@
 # Development Log - Emma's Librarian
 
+## [2026-05-18 01:00] Cycle 5: Frontend Setup (React)
+- **Objective:** Initialize the frontend project and set up basic structure.
+- **Changes:**
+    - Initialized React + TypeScript project with Vite in `frontend/`.
+    - Installed core dependencies: `react-router-dom`, `axios`, `lucide-react`, `react-pdf-highlighter`.
+    - Created frontend directory structure (`components`, `pages`, `services`, etc.).
+- **TDD Status:** Pending (Frontend setup).
+- **Decisions:** 
+    - Using Vite for fast development and build.
+    - Standardized directory structure for scalability.
+- **Difficulties:** Vite installation required manual confirmation in the background turn (handled).
+
 ## [2026-05-18 00:55] Cycle 4: Search Orchestrator and Deduplication
 - **Objective:** Coordinate the search process across multiple APIs, normalize results, and deduplicate articles before persisting them.
 - **Changes:**
