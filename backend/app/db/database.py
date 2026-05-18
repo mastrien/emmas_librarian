@@ -39,8 +39,8 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO articles 
-                (projeto_id, doi, titulo, autores, ano, query_origem, base_origem, csl_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (projeto_id, doi, titulo, autores, ano, query_origem, base_origem, csl_json, local_file_path)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 article_data["projeto_id"],
                 article_data.get("doi"),
@@ -49,9 +49,15 @@ class DatabaseManager:
                 article_data.get("ano"),
                 article_data.get("query_origem"),
                 json.dumps(article_data.get("base_origem", [])),
-                json.dumps(article_data.get("csl_json", {}))
+                json.dumps(article_data.get("csl_json", {})),
+                article_data.get("local_file_path")
             ))
             return cursor.lastrowid
+
+    def update_article_file_path(self, article_id: int, file_path: str):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE articles SET local_file_path = ? WHERE id = ?", (file_path, article_id))
 
     def get_articles_by_project(self, project_id: int):
         with self._get_connection() as conn:

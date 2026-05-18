@@ -58,5 +58,20 @@ export const projectService = {
   async getAnnotations(articleId: number): Promise<Annotation[]> {
     const response = await api.get(`/articles/${articleId}/annotations`);
     return response.data;
+  },
+
+  async uploadPdf(articleId: number, file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(`/articles/${articleId}/upload-pdf`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  getPdfUrl(articleId: number): string {
+    return `${API_URL}/articles/${articleId}/pdf`;
   }
 };

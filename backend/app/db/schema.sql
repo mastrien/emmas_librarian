@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS articles (
     query_origem TEXT,
     base_origem TEXT, -- JSON list
     csl_json TEXT,    -- Raw content
+    local_file_path TEXT, -- Path to downloaded PDF
     status TEXT DEFAULT 'novo', -- novo/lido/arquivado
     FOREIGN KEY (projeto_id) REFERENCES projects (id) ON DELETE CASCADE
 );

@@ -1,5 +1,20 @@
 # Development Log - Emma's Librarian
 
+## [2026-05-18 03:30] Cycle 9: Local PDF Management
+- **Objective:** Enable local storage and serving of PDF files for the integrated reader.
+- **Changes:**
+    - Created `backend/storage/pdfs` directory for local file persistence.
+    - Updated `schema.sql` and `database.py` to include `local_file_path` in the `articles` table.
+    - Implemented `POST /articles/{id}/upload-pdf` endpoint to handle multipart file uploads.
+    - Implemented `GET /articles/{id}/pdf` endpoint using `FileResponse` to serve PDFs securely.
+    - Updated `ArticleReaderPage` to support file uploads and serve files from the local backend.
+    - Added empty state and "Vincular PDF Local" button to the reader UI.
+- **TDD Status:** Backend endpoints for upload and serving verified. UI upload flow integrated.
+- **Decisions:** 
+    - Used article IDs for naming local files (`article_{id}.pdf`) to avoid collisions and facilitate management.
+    - Decoupled PDF serving from the generic project folder to keep the root clean.
+- **Difficulties:** Handled Windows pathing and SQLite column additions (schema update + manual support logic).
+
 ## [2026-05-18 03:00] Cycle 8: PDF Reader & Highlighting
 - **Objective:** Implement the PDF reader with highlighting capabilities and persist marks/notes.
 - **Changes:**

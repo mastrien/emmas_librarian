@@ -1,10 +1,12 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from backend.app.db.database import DatabaseManager
 from backend.app.services.search_orchestrator import SearchOrchestrator
 import os
+import json
 
 app = FastAPI(title="Emma's Librarian API")
 
@@ -16,6 +18,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+STORAGE_DIR = "backend/storage/pdfs"
+os.makedirs(STORAGE_DIR, exist_ok=True)
 
 DB_PATH = "emma.db"
 db = DatabaseManager(DB_PATH)
@@ -30,7 +35,6 @@ class SearchRequest(BaseModel):
 
 @app.get("/projects")
 async def list_projects():
-    # We need a get_all_projects method in DB manager
     with db._get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM projects ORDER BY data_criacao DESC")
@@ -79,7 +83,6 @@ async def get_article(article_id: int):
 @app.get("/articles/{article_id}/highlights")
 async def list_highlights(article_id: int):
     highlights = db.get_highlights(article_id)
-    # Parse position_data back to dict
     for h in highlights:
         h["position_data"] = json.loads(h["position_data"])
     return highlights
@@ -101,3 +104,27 @@ async def create_highlight(article_id: int, highlight: HighlightCreate):
 @app.get("/articles/{article_id}/annotations")
 async def list_annotations(article_id: int):
     return db.get_annotations(article_id)
+
+@app.post("/articles/{article_id}/upload-pdf")
+async def upload_pdf(article_id: int, file: UploadFile = File(...)):
+    a = db.get_article(article_id)
+    if not a:
+        raise HTTPException(status_code=404, detail="Artigo não encontrado")
+    
+    file_extension = file.filename.split(".")[-1] if file.filename else "pdf"
+    file_name = f"article_{article_id}.{file_extension}"
+    file_path = os.path.join(STORAGE_DIR, file_name)
+    
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
+        
+    db.update_article_file_path(article_id, file_path)
+    return {"message": "Upload concluído", "path": file_path}
+
+@app.get("/articles/{article_id}/pdf")
+async def serve_pdf(article_id: int):
+    a = db.get_article(article_id)
+    if not a or not a.get("local_file_path"):
+        raise HTTPException(status_code=404, detail="Arquivo PDF não encontrado")
+    
+    return FileResponse(a["local_file_path"], media_type="application/pdf")
