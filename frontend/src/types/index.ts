@@ -39,4 +39,5 @@ export interface Article {
   base_origem: string[];
   csl_json: any;
   status: 'novo' | 'lido' | 'arquivado';
+  local_file_path?: string;
 }

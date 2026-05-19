@@ -65,6 +65,7 @@ export const QueryBuilder: React.FC<Props> = ({ blocks, onChange }) => {
           />
 
           <button 
+            type="button"
             onClick={() => removeBlock(block.id)}
             style={{ padding: '0.4rem', background: '#fee2e2', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
           >
@@ -74,6 +75,7 @@ export const QueryBuilder: React.FC<Props> = ({ blocks, onChange }) => {
       ))}
 
       <button 
+        type="button"
         onClick={addBlock}
         style={{ 
           display: 'flex', 

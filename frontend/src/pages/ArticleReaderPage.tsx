@@ -7,6 +7,12 @@ import {
   Popup, 
   AreaHighlight 
 } from 'react-pdf-highlighter';
+import 'react-pdf-highlighter/dist/style.css';
+import * as pdfjs from 'pdfjs-dist/build/pdf';
+
+// Set up the worker for PDF.js (v3 uses .js)
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`;
+
 import { projectService } from '../services/api';
 import type { Article } from '../types';
 import { ArrowLeft, Loader2, Upload, AlertCircle } from 'lucide-react';
@@ -81,6 +87,74 @@ export const ArticleReaderPage: React.FC = () => {
 
   const hasLocalFile = !!(article as any).local_file_path;
 
+  const renderTip = (
+    position: any,
+    content: any,
+    hideTipAndSelection: () => void
+  ) => {
+    return (
+      <div style={{ 
+        background: 'white', 
+        border: '1px solid #e2e8f0', 
+        borderRadius: '8px', 
+        padding: '0.8rem', 
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        width: '220px'
+      }}>
+        <textarea 
+          id="tip-textarea"
+          placeholder="Nota (opcional)..." 
+          style={{ 
+            width: '100%', 
+            height: '60px', 
+            marginBottom: '0.5rem', 
+            display: 'block',
+            padding: '0.4rem',
+            borderRadius: '4px',
+            border: '1px solid #cbd5e1',
+            fontSize: '0.85rem'
+          }}
+        />
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button 
+            onClick={() => {
+              const textarea = document.getElementById('tip-textarea') as HTMLTextAreaElement;
+              addHighlight({ content, position, comment: { text: textarea.value } });
+              hideTipAndSelection();
+            }}
+            style={{ 
+              flexGrow: 1,
+              padding: '0.4rem', 
+              background: '#0ea5e9', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '4px', 
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '0.85rem'
+            }}
+          >
+            Destacar
+          </button>
+          <button 
+            onClick={hideTipAndSelection}
+            style={{ 
+              padding: '0.4rem', 
+              background: '#f1f5f9', 
+              color: '#64748b', 
+              border: 'none', 
+              borderRadius: '4px', 
+              cursor: 'pointer',
+              fontSize: '0.85rem'
+            }}
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <header style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'white' }}>
@@ -125,7 +199,7 @@ export const ArticleReaderPage: React.FC = () => {
         )}
       </header>
 
-      <div style={{ flexGrow: 1, position: 'relative', background: '#f8fafc' }}>
+      <div style={{ flexGrow: 1, position: 'relative', background: '#f8fafc', height: '100%' }}>
         {!hasLocalFile ? (
           <div style={{ 
             display: 'flex', 
@@ -148,77 +222,71 @@ export const ArticleReaderPage: React.FC = () => {
                 enableAreaSelection={(event) => event.altKey}
                 onScrollChange={() => {}}
                 scrollRef={() => {}}
-                onSelectionFinished={(
-                  position,
-                  content,
-                  hideTipAndSelection,
-                  transformSelection
-                ) => (
-                  <Popup
-                    popupContent={
-                      <div style={{ padding: '1rem', background: 'white', border: '1px solid #ccc', borderRadius: '4px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-                        <textarea 
-                          placeholder="Adicionar anotação..." 
-                          style={{ width: '200px', height: '80px', marginBottom: '0.5rem', display: 'block' }}
-                        />
-                        <button 
-                          onClick={() => {
-                            const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
-                            addHighlight({ content, position, comment: { text: textarea.value } });
-                            hideTipAndSelection();
-                          }}
-                          style={{ padding: '0.3rem 0.6rem', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                        >
-                          Salvar
-                        </button>
-                      </div>
-                    }
-                    onMouseOver={() => transformSelection()}
-                    onMouseOut={() => {}}
-                  >
-                    <div />
-                  </Popup>
-                )}
-                highlightTransform={(
-                  highlight,
-                  index,
-                  setTip,
-                  hideTip,
-                  viewportToScaled,
-                  screenshot,
-                  isScrolledTo
-                ) => {
-                  const isTextHighlight = !Boolean(highlight.content && highlight.content.image);
-
-                  const component = isTextHighlight ? (
-                    <Highlight
-                      isScrolledTo={isScrolledTo}
-                      position={highlight.position}
-                      comment={highlight.comment}
-                    />
-                  ) : (
-                    <AreaHighlight
-                      isScrolledTo={isScrolledTo}
-                      highlight={highlight}
-                      onChange={() => {}}
-                    />
-                  );
-
-                  return (
-                    <Popup
-                      popupContent={<div />}
-                      onMouseOver={(popupContent) =>
-                        setTip(highlight, (highlight) => popupContent)
-                      }
-                      onMouseOut={hideTip}
-                      key={index}
-                    >
-                      {component}
-                    </Popup>
-                  );
+                style={{
+                  height: '100%',
+                  width: '100%',
                 }}
-                highlights={highlights}
-              />
+                onSelectionFinished={(
+                    position,
+                    content,
+                    hideTipAndSelection,
+                    transformSelection
+                  ) => renderTip(position, content, hideTipAndSelection)}
+                  highlightTransform={(
+                    highlight,
+                    index,
+                    setTip,
+                    hideTip,
+                    viewportToScaled,
+                    screenshot,
+                    isScrolledTo
+                  ) => {
+                    const isTextHighlight = !Boolean(highlight.content && highlight.content.image);
+
+                    const component = isTextHighlight ? (
+                      <Highlight
+                        isScrolledTo={isScrolledTo}
+                        position={highlight.position}
+                        comment={highlight.comment}
+                      />
+                    ) : (
+                      <AreaHighlight
+                        isScrolledTo={isScrolledTo}
+                        highlight={highlight}
+                        onChange={() => {}}
+                      />
+                    );
+
+                    return (
+                      <Popup
+                        popupContent={
+                          highlight.comment?.text ? (
+                            <div style={{ 
+                              background: 'white', 
+                              padding: '0.5rem 0.8rem', 
+                              border: '1px solid #e2e8f0', 
+                              borderRadius: '4px',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                              fontSize: '0.85rem',
+                              maxWidth: '200px',
+                              wordBreak: 'break-word'
+                            }}>
+                              {highlight.comment.text}
+                            </div>
+                          ) : null
+                        }
+                        onMouseOver={(popupContent) =>
+                          setTip(highlight, (highlight) => popupContent)
+                        }
+                        onMouseOut={hideTip}
+                        key={index}
+                      >
+                        {component}
+                      </Popup>
+                    );
+                  }}
+                  highlights={highlights}
+                />
             )}
           </PdfLoader>
         )}

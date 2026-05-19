@@ -1,5 +1,51 @@
 # Development Log - Emma's Librarian
 
+## [2026-05-18 05:45] Cycle 13: PDF Reader Roadblocks and Diagnostics
+- **Objective:** Fix the persistent PDF viewer failures and document current state.
+- **Problem:**
+    - The PDF reader remains broken due to a cascading set of version and environment conflicts.
+    - Error 1: `The container must be absolutely positioned` (PDF.js requirement).
+    - Error 2: `this[#editorTypes] is not iterable` (Incompatibility between highlighter library and PDF.js 4.x).
+    - Error 3: `Uncaught SyntaxError: Unexpected token 'export'` in `pdf.worker.min.mjs` (Module mismatch when loading worker from CDN).
+- **Attempted Solutions (Partially Successful or Failed):**
+    - Downgraded `pdfjs-dist` to `3.11.174` via `npm overrides` to avoid the `#editorTypes` bug.
+    - Updated Vite imports to `pdfjs-dist/build/pdf` and added it as a direct dependency.
+    - Configured `GlobalWorkerOptions.workerSrc` pointing to `unpkg.com`.
+    - Applied various CSS positioning strategies (`absolute`, `inset: 0`, `!important`).
+- **Roadblock:**
+    - The `pdf.worker.min.mjs` error suggests that the library or the browser is forcing an ES Module worker which the current configuration (or version 3.x of PDF.js) is not handling correctly in this Vite setup.
+- **Next Steps:**
+    - **Vite Integration:** Move the PDF worker to the `public/` directory or use a Vite-specific worker loader (e.g., `?worker`) to avoid CDN/MJS issues.
+    - **Library Re-evaluation:** If the RC version of `react-pdf-highlighter` remains unstable with Vite/PDF.js, consider downgrading the library or using a more primitive PDF viewer (like `react-pdf`) and implementing highlights manually.
+    - **Dependency Purge:** Delete `node_modules` and `package-lock.json` and reinstall to ensure `overrides` are strictly applied without cached 4.x fragments.
+- **TDD Status:** UI features for projects/search passing; PDF reader failing runtime.
+
+## [2026-05-18 05:15] Cycle 12: PDF Viewer Positioning Fix
+- **Objective:** Fix "The container must be absolutely positioned" error in the PDF reader.
+- **Changes:**
+    - Downgraded `pdfjs-dist` to `3.11.174` via `npm overrides` to fix `AnnotationEditor` incompatibility.
+    - Correctly configured `GlobalWorkerOptions.workerSrc` for PDF.js 3.x.
+    - Imported `react-pdf-highlighter/dist/style.css` (previously missing).
+    - Refactored `onSelectionFinished` to use a custom `renderTip` component, fixing missing annotation buttons.
+    - Updated `highlightTransform` to show note text on hover.
+    - Ensured absolute positioning for all PDF viewer layers.
+- **TDD Status:** UI bug fix (Positioning Logic).
+- **Decisions:** 
+    - `react-pdf-highlighter` (and PDF.js) requires the viewer container to be absolutely positioned to calculate coordinates correctly.
+- **Difficulties:** None.
+
+## [2026-05-18 05:00] Cycle 11: Bug Fixes and UX Improvements
+- **Objective:** Fix Query Builder auto-submit bug and improve PDF reader/upload discoverability.
+- **Changes:**
+    - Added `type="button"` to buttons in `QueryBuilder.tsx` to prevent accidental form submission.
+    - Enhanced `ProjectDetailsPage.tsx` with clearer "Read" button and direct "Upload PDF" action in the table.
+    - Updated `ArticleReaderPage.tsx` to ensure consistent navigation and improved feedback.
+- **TDD Status:** Backend tests passing. Frontend fixes verified by manual code inspection (correct usage of button types and React state/refs).
+- **Decisions:** 
+    - Buttons in React forms default to `submit`, so explicit `type="button"` is required for non-submitting actions.
+    - Discoverability is key: bringing the "Upload" action to the main list saves user clicks.
+- **Difficulties:** None identified yet.
+
 ## [2026-05-18 04:30] Cycle 10: Export, Refinement and Documentation
 - **Objective:** Finalize the MVP with data export capabilities and complete project documentation.
 - **Changes:**

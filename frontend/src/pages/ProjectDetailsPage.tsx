@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2 } from 'lucide-react';
 
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -10,25 +10,52 @@ export const ProjectDetailsPage: React.FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const selectedArticleId = useRef<number | null>(null);
+
+  const fetchData = async () => {
+    if (!id) return;
+    try {
+      const [projData, artData] = await Promise.all([
+        projectService.getProject(parseInt(id)),
+        projectService.getArticles(parseInt(id))
+      ]);
+      setProject(projData);
+      setArticles(artData);
+    } catch (err) {
+      console.error('Erro ao carregar dados do projeto', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!id) return;
-      try {
-        const [projData, artData] = await Promise.all([
-          projectService.getProject(parseInt(id)),
-          projectService.getArticles(parseInt(id))
-        ]);
-        setProject(projData);
-        setArticles(artData);
-      } catch (err) {
-        console.error('Erro ao carregar dados do projeto', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, [id]);
+
+  const handleUploadClick = (articleId: number) => {
+    selectedArticleId.current = articleId;
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedArticleId.current) return;
+
+    const artId = selectedArticleId.current;
+    setUploadingId(artId);
+    try {
+      await projectService.uploadPdf(artId, file);
+      await fetchData();
+    } catch (err) {
+      alert('Erro ao fazer upload do PDF');
+    } finally {
+      setUploadingId(null);
+      selectedArticleId.current = null;
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const filteredArticles = articles.filter(a => 
     a.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,6 +67,13 @@ export const ProjectDetailsPage: React.FC = () => {
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+      <input 
+        type="file" 
+        accept="application/pdf" 
+        ref={fileInputRef} 
+        style={{ display: 'none' }} 
+        onChange={handleFileChange}
+      />
       <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', textDecoration: 'none', color: '#64748b' }}>
         <ArrowLeft size={18} /> Voltar para Projetos
       </Link>
@@ -123,12 +157,49 @@ export const ProjectDetailsPage: React.FC = () => {
                   </div>
                 </td>
                 <td style={{ padding: '1rem' }}>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <Link to={`/articles/${article.id}`} style={{ padding: '0.5rem', background: '#f0f9ff', color: '#0ea5e9', border: '1px solid #bae6fd', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Ler Artigo">
-                      <FileText size={18} />
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <Link 
+                      to={`/articles/${article.id}`} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.4rem', 
+                        padding: '0.4rem 0.8rem', 
+                        background: '#0ea5e9', 
+                        color: 'white', 
+                        textDecoration: 'none', 
+                        borderRadius: '4px', 
+                        fontSize: '0.85rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      <FileText size={16} /> Ler e Anotar
                     </Link>
+
+                    {!article.local_file_path && (
+                      <button 
+                        onClick={() => handleUploadClick(article.id)}
+                        disabled={uploadingId === article.id}
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.4rem', 
+                          padding: '0.4rem 0.8rem', 
+                          background: '#f8fafc', 
+                          color: '#64748b', 
+                          border: '1px solid #e2e8f0', 
+                          borderRadius: '4px', 
+                          fontSize: '0.85rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {uploadingId === article.id ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                        Vincular PDF
+                      </button>
+                    )}
+
                     {article.doi && (
-                      <a href={`https://doi.org/${article.doi}`} target="_blank" rel="noreferrer" style={{ padding: '0.5rem', background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '4px' }} title="Abrir no Navegador">
+                      <a href={`https://doi.org/${article.doi}`} target="_blank" rel="noreferrer" style={{ padding: '0.4rem', color: '#94a3b8' }} title="Abrir no Navegador Original">
                         <ExternalLink size={18} />
                       </a>
                     )}
