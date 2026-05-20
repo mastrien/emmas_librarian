@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { projectService } from '../services/api';
 import { DiaryEntry } from '../types';
-import { Plus, Trash2, Calendar, BookOpen, Save } from 'lucide-react';
+import { Plus, Trash2, Calendar, BookOpen, Save, Eye, Edit2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
   MDXEditor,
@@ -35,6 +35,7 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editorRef = useRef<MDXEditorMethods>(null);
 
@@ -181,11 +182,30 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
                 {formatDate(selectedDate)}
               </h3>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                {saving && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Salvando...</span>}
-                {!saving && hasChanges && <span style={{ fontSize: '0.8rem', color: 'var(--color-primary)' }}>Não salvo</span>}
-                {!saving && !hasChanges && selectedDate && content && <span style={{ fontSize: '0.8rem', color: 'var(--color-success)' }}>✓ Salvo</span>}
-                <button onClick={handleSave} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} disabled={!hasChanges}>
-                  <Save size={14} /> Salvar
+                {isEditMode && (
+                  <>
+                    {saving && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Salvando...</span>}
+                    {!saving && hasChanges && <span style={{ fontSize: '0.8rem', color: 'var(--color-primary)' }}>Não salvo</span>}
+                    {!saving && !hasChanges && selectedDate && content && <span style={{ fontSize: '0.8rem', color: 'var(--color-success)' }}>✓ Salvo</span>}
+                    <button onClick={handleSave} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} disabled={!hasChanges}>
+                      <Save size={14} /> Salvar
+                    </button>
+                  </>
+                )}
+                <button 
+                  onClick={() => setIsEditMode(!isEditMode)} 
+                  className="btn-secondary" 
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  {isEditMode ? (
+                    <>
+                      <Eye size={14} /> Visualizar
+                    </>
+                  ) : (
+                    <>
+                      <Edit2 size={14} /> Editar
+                    </>
+                  )}
                 </button>
                 <button onClick={() => setConfirmDelete(true)} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', color: 'var(--color-danger)' }}>
                   <Trash2 size={14} />
@@ -200,11 +220,12 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
               overflow: 'hidden',
               background: 'var(--bg-surface)',
               minHeight: '400px',
-            }} className="diary-editor-wrapper">
+            }} className={`diary-editor-wrapper ${isEditMode ? '' : 'read-only-mode'}`}>
               <MDXEditor
                 ref={editorRef}
                 key={selectedDate}
                 markdown={content}
+                readOnly={!isEditMode}
                 onChange={handleContentChange}
                 placeholder="Escreva suas anotações do dia..."
                 plugins={[

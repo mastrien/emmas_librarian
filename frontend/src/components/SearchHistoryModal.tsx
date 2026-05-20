@@ -16,9 +16,10 @@ interface Props {
   onClose: () => void;
   history: HistoryItem[];
   embedded?: boolean;
+  onRevertSearch?: (searchId: number) => void;
 }
 
-const HistoryContent: React.FC<{ history: HistoryItem[] }> = ({ history }) => (
+const HistoryContent: React.FC<{ history: HistoryItem[]; onRevertSearch?: (searchId: number) => void }> = ({ history, onRevertSearch }) => (
   <div style={{ flex: 1, overflowY: 'auto', paddingRight: '1rem' }}>
     {history.length === 0 ? (
       <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -36,8 +37,44 @@ const HistoryContent: React.FC<{ history: HistoryItem[] }> = ({ history }) => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                   <Calendar size={14} /> {new Date(item.created_at).toLocaleString()}
                 </div>
-                <div style={{ background: 'var(--color-primary)', color: 'white', padding: '0.2rem 0.75rem', borderRadius: 'var(--radius-xl)', fontSize: '0.85rem', fontWeight: 600 }}>
-                  {item.total_results} artigos salvos
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {onRevertSearch && (
+                    <button 
+                      onClick={() => {
+                        if (window.confirm("Deseja realmente desfazer esta busca? Todos os artigos importados por ela serão removidos permanentemente.")) {
+                          onRevertSearch(item.id);
+                        }
+                      }}
+                      title="Desfazer busca (remover artigos importados)"
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        color: 'var(--color-danger)',
+                        border: 'none',
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: 'var(--radius-md)',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        transition: 'all var(--transition-fast)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--color-danger)';
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                        e.currentTarget.style.color = 'var(--color-danger)';
+                      }}
+                    >
+                      <RotateCcw size={12} /> Desfazer Busca
+                    </button>
+                  )}
+                  <div style={{ background: 'var(--color-primary)', color: 'white', padding: '0.2rem 0.75rem', borderRadius: 'var(--radius-xl)', fontSize: '0.85rem', fontWeight: 600 }}>
+                    {item.total_results} artigos salvos
+                  </div>
                 </div>
               </div>
 
@@ -88,7 +125,7 @@ const HistoryContent: React.FC<{ history: HistoryItem[] }> = ({ history }) => (
   </div>
 );
 
-export const SearchHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, embedded }) => {
+export const SearchHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, embedded, onRevertSearch }) => {
   if (!isOpen) return null;
 
   // Embedded mode: render inline without portal
@@ -101,7 +138,7 @@ export const SearchHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, 
           </h2>
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>Registro de todas as buscas realizadas neste projeto.</p>
         </div>
-        <HistoryContent history={history} />
+        <HistoryContent history={history} onRevertSearch={onRevertSearch} />
       </div>
     );
   }
@@ -121,7 +158,7 @@ export const SearchHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, 
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>Registro de todas as buscas realizadas neste projeto.</p>
         </div>
 
-        <HistoryContent history={history} />
+        <HistoryContent history={history} onRevertSearch={onRevertSearch} />
       </div>
     </div>,
     document.body

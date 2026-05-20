@@ -53,4 +53,28 @@ const DatabaseManager_1 = require("../DatabaseManager");
         (0, vitest_1.expect)(highlights[0].color).toBe('#ff0');
         (0, vitest_1.expect)(highlights[0].comment).toBe('Test Annotation'); // from LEFT JOIN
     });
+    (0, vitest_1.it)('saves search history, associates with articles, and reverts searches correctly', () => {
+        const proj = dbManager.createProject('Revert Search Project');
+        // Save search history
+        const searchId = dbManager.saveSearchHistory(proj.id, 'test unified query', { openalex: 'test translated query' }, 1, { openalex: { count: 1 } });
+        (0, vitest_1.expect)(searchId).toBeGreaterThan(0);
+        // Save article with that searchId
+        const articleId = dbManager.saveArticle(proj.id, {
+            title: 'Article 1',
+            source_query: 'test',
+            source_databases: '["openalex"]',
+            csl_json: '{}',
+            search_id: searchId
+        });
+        const article = dbManager.getArticle(articleId);
+        (0, vitest_1.expect)(article?.search_id).toBe(searchId);
+        // Revert the search
+        dbManager.revertSearch(searchId);
+        // Verify search is deleted from history
+        const history = dbManager.getSearchHistory(proj.id);
+        (0, vitest_1.expect)(history).toHaveLength(0);
+        // Verify article is deleted
+        const articleDeleted = dbManager.getArticle(articleId);
+        (0, vitest_1.expect)(articleDeleted).toBeUndefined();
+    });
 });

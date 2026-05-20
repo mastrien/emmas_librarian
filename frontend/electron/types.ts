@@ -59,6 +59,7 @@ export interface Article {
   csl_json: string;
   local_file_path?: string;
   status: 'new' | 'read' | 'archived';
+  search_id?: number;
 }
 
 export interface DiaryEntry {
@@ -92,6 +93,7 @@ export enum IpcChannel {
   PROJECTS_GET_SEARCH_HISTORY = 'projects:getSearchHistory',
   SEARCH_EXECUTE = 'search:execute',
   SEARCH_TRANSLATE_QUERY = 'search:translateQuery',
+  SEARCH_REVERT = 'search:revert',
   ARTICLES_GET_BY_PROJECT = 'articles:getByProject',
   ARTICLES_GET_ONE = 'articles:getOne',
   ARTICLES_UPDATE_STATUS = 'articles:updateStatus',

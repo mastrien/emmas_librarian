@@ -23,6 +23,7 @@ export interface ArticleInput {
   source_query: string;
   source_databases: string;
   csl_json: string;
+  search_id?: number;
 }
 
 export type HighlightWithComment = Highlight & { comment?: string };
@@ -74,6 +75,7 @@ export class DatabaseManager {
       'ALTER TABLE articles ADD COLUMN document_type TEXT',
       'ALTER TABLE articles ADD COLUMN issn TEXT',
       'ALTER TABLE articles ADD COLUMN citation_count INTEGER',
+      'ALTER TABLE articles ADD COLUMN search_id INTEGER REFERENCES search_history(id) ON DELETE SET NULL',
     ];
     for (const sql of migrations) {
       try { this.db.exec(sql); } catch (e) { /* column already exists */ }
@@ -109,9 +111,9 @@ export class DatabaseManager {
   saveArticle(projectId: number, data: ArticleInput): number {
     const stmt = this.db.prepare(`
       INSERT INTO articles (project_id, doi, title, authors, year, source_query, source_databases, csl_json,
-        abstract, author_keywords, index_keywords, journal, volume, issue, pages, affiliations, references_list, document_type, issn, citation_count)
+        abstract, author_keywords, index_keywords, journal, volume, issue, pages, affiliations, references_list, document_type, issn, citation_count, search_id)
       VALUES (@project_id, @doi, @title, @authors, @year, @source_query, @source_databases, @csl_json,
-        @abstract, @author_keywords, @index_keywords, @journal, @volume, @issue, @pages, @affiliations, @references_list, @document_type, @issn, @citation_count)
+        @abstract, @author_keywords, @index_keywords, @journal, @volume, @issue, @pages, @affiliations, @references_list, @document_type, @issn, @citation_count, @search_id)
     `);
     const info = stmt.run({
       project_id: projectId,
@@ -134,6 +136,7 @@ export class DatabaseManager {
       document_type: data.document_type || null,
       issn: data.issn || null,
       citation_count: data.citation_count || null,
+      search_id: data.search_id || null,
     });
     return info.lastInsertRowid as number;
   }
@@ -228,12 +231,12 @@ export class DatabaseManager {
   }
 
   // Search History
-  public saveSearchHistory(projectId: number, unifiedQuery: string, translatedQueries: Record<string, string>, totalResults: number, breakdown: Record<string, any>): void {
+  public saveSearchHistory(projectId: number, unifiedQuery: string, translatedQueries: Record<string, string>, totalResults: number, breakdown: Record<string, any>): number {
     const stmt = this.db.prepare(`
       INSERT INTO search_history (project_id, unified_query, translated_queries, total_results, results_breakdown, created_at)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
-    stmt.run(
+    const info = stmt.run(
       projectId, 
       unifiedQuery, 
       JSON.stringify(translatedQueries), 
@@ -241,11 +244,42 @@ export class DatabaseManager {
       JSON.stringify(breakdown),
       new Date().toISOString()
     );
+    return info.lastInsertRowid as number;
   }
 
   public getSearchHistory(projectId: number): any[] {
     const stmt = this.db.prepare('SELECT * FROM search_history WHERE project_id = ? ORDER BY created_at DESC');
     return stmt.all(projectId);
+  }
+
+  public revertSearch(searchId: number): void {
+    // 1. Get all articles associated with this search
+    const stmtArticles = this.db.prepare('SELECT id, local_file_path FROM articles WHERE search_id = ?');
+    const articles = stmtArticles.all(searchId) as { id: number, local_file_path?: string }[];
+    
+    // 2. Delete all annotations, highlights, physical files and the articles themselves
+    for (const article of articles) {
+      // Delete highlights first to satisfy potential constraints, then annotations
+      this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(article.id);
+      this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(article.id);
+      
+      // Delete physical PDF file
+      if (article.local_file_path) {
+        try {
+          if (fs.existsSync(article.local_file_path)) {
+            fs.unlinkSync(article.local_file_path);
+          }
+        } catch (err) {
+          console.error(`Failed to delete physical PDF for article ${article.id}:`, err);
+        }
+      }
+      
+      // Delete the article
+      this.db.prepare('DELETE FROM articles WHERE id = ?').run(article.id);
+    }
+    
+    // 3. Delete the search history entry
+    this.db.prepare('DELETE FROM search_history WHERE id = ?').run(searchId);
   }
 
   // Diary

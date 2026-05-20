@@ -45,6 +45,9 @@ function setupIpcHandlers() {
     electron_1.ipcMain.handle(types_1.IpcChannel.SEARCH_TRANSLATE_QUERY, (event, ast) => {
         return QueryTranslator_1.queryTranslator.translate(ast);
     });
+    electron_1.ipcMain.handle(types_1.IpcChannel.SEARCH_REVERT, async (event, searchId) => {
+        return db.revertSearch(searchId);
+    });
     // Articles
     electron_1.ipcMain.handle(types_1.IpcChannel.ARTICLES_GET_BY_PROJECT, (event, projectId) => {
         return db.getArticlesByProject(projectId);

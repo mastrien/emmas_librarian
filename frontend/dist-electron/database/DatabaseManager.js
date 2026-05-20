@@ -49,6 +49,7 @@ class DatabaseManager {
             'ALTER TABLE articles ADD COLUMN document_type TEXT',
             'ALTER TABLE articles ADD COLUMN issn TEXT',
             'ALTER TABLE articles ADD COLUMN citation_count INTEGER',
+            'ALTER TABLE articles ADD COLUMN search_id INTEGER REFERENCES search_history(id) ON DELETE SET NULL',
         ];
         for (const sql of migrations) {
             try {
@@ -81,9 +82,9 @@ class DatabaseManager {
     saveArticle(projectId, data) {
         const stmt = this.db.prepare(`
       INSERT INTO articles (project_id, doi, title, authors, year, source_query, source_databases, csl_json,
-        abstract, author_keywords, index_keywords, journal, volume, issue, pages, affiliations, references_list, document_type, issn, citation_count)
+        abstract, author_keywords, index_keywords, journal, volume, issue, pages, affiliations, references_list, document_type, issn, citation_count, search_id)
       VALUES (@project_id, @doi, @title, @authors, @year, @source_query, @source_databases, @csl_json,
-        @abstract, @author_keywords, @index_keywords, @journal, @volume, @issue, @pages, @affiliations, @references_list, @document_type, @issn, @citation_count)
+        @abstract, @author_keywords, @index_keywords, @journal, @volume, @issue, @pages, @affiliations, @references_list, @document_type, @issn, @citation_count, @search_id)
     `);
         const info = stmt.run({
             project_id: projectId,
@@ -106,6 +107,7 @@ class DatabaseManager {
             document_type: data.document_type || null,
             issn: data.issn || null,
             citation_count: data.citation_count || null,
+            search_id: data.search_id || null,
         });
         return info.lastInsertRowid;
     }
@@ -188,11 +190,38 @@ class DatabaseManager {
       INSERT INTO search_history (project_id, unified_query, translated_queries, total_results, results_breakdown, created_at)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
-        stmt.run(projectId, unifiedQuery, JSON.stringify(translatedQueries), totalResults, JSON.stringify(breakdown), new Date().toISOString());
+        const info = stmt.run(projectId, unifiedQuery, JSON.stringify(translatedQueries), totalResults, JSON.stringify(breakdown), new Date().toISOString());
+        return info.lastInsertRowid;
     }
     getSearchHistory(projectId) {
         const stmt = this.db.prepare('SELECT * FROM search_history WHERE project_id = ? ORDER BY created_at DESC');
         return stmt.all(projectId);
+    }
+    revertSearch(searchId) {
+        // 1. Get all articles associated with this search
+        const stmtArticles = this.db.prepare('SELECT id, local_file_path FROM articles WHERE search_id = ?');
+        const articles = stmtArticles.all(searchId);
+        // 2. Delete all annotations, highlights, physical files and the articles themselves
+        for (const article of articles) {
+            // Delete highlights first to satisfy potential constraints, then annotations
+            this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(article.id);
+            this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(article.id);
+            // Delete physical PDF file
+            if (article.local_file_path) {
+                try {
+                    if (fs_1.default.existsSync(article.local_file_path)) {
+                        fs_1.default.unlinkSync(article.local_file_path);
+                    }
+                }
+                catch (err) {
+                    console.error(`Failed to delete physical PDF for article ${article.id}:`, err);
+                }
+            }
+            // Delete the article
+            this.db.prepare('DELETE FROM articles WHERE id = ?').run(article.id);
+        }
+        // 3. Delete the search history entry
+        this.db.prepare('DELETE FROM search_history WHERE id = ?').run(searchId);
     }
     // Diary
     saveDiaryEntry(projectId, entryDate, content) {

@@ -50,6 +50,10 @@ export function setupIpcHandlers() {
     return queryTranslator.translate(ast);
   });
 
+  ipcMain.handle(IpcChannel.SEARCH_REVERT, async (event, searchId: number) => {
+    return db.revertSearch(searchId);
+  });
+
   // Articles
   ipcMain.handle(IpcChannel.ARTICLES_GET_BY_PROJECT, (event, projectId: number) => {
     return db.getArticlesByProject(projectId);

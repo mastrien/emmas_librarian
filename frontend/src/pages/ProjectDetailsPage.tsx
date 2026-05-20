@@ -338,6 +338,15 @@ export const ProjectDetailsPage: React.FC = () => {
     }
   };
 
+  const handleRevertSearch = async (searchId: number) => {
+    try {
+      await projectService.revertSearch(searchId);
+      await fetchData();
+    } catch (err) {
+      alert('Erro ao desfazer a busca');
+    }
+  };
+
   const handleStatusChange = async (articleId: number, status: 'new' | 'read' | 'archived', note?: string) => {
     try {
       await projectService.updateArticleStatus(articleId, status, note);
@@ -732,6 +741,7 @@ export const ProjectDetailsPage: React.FC = () => {
           onClose={() => setActiveTab('articles')} 
           history={history}
           embedded={true}
+          onRevertSearch={handleRevertSearch}
         />
       )}
 
@@ -752,6 +762,7 @@ export const ProjectDetailsPage: React.FC = () => {
           isOpen={isHistoryOpen} 
           onClose={() => setIsHistoryOpen(false)} 
           history={history} 
+          onRevertSearch={handleRevertSearch}
         />
       )}
     </div>

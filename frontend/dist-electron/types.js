@@ -11,6 +11,7 @@ var IpcChannel;
     IpcChannel["PROJECTS_GET_SEARCH_HISTORY"] = "projects:getSearchHistory";
     IpcChannel["SEARCH_EXECUTE"] = "search:execute";
     IpcChannel["SEARCH_TRANSLATE_QUERY"] = "search:translateQuery";
+    IpcChannel["SEARCH_REVERT"] = "search:revert";
     IpcChannel["ARTICLES_GET_BY_PROJECT"] = "articles:getByProject";
     IpcChannel["ARTICLES_GET_ONE"] = "articles:getOne";
     IpcChannel["ARTICLES_UPDATE_STATUS"] = "articles:updateStatus";

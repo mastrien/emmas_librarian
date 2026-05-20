@@ -38,6 +38,8 @@ class SearchOrchestrator {
         })));
         const combinedResults = resultsArray.flat();
         const deduplicated = this.deduplicate(combinedResults);
+        // Save to history first to get searchId
+        const searchId = this.db.saveSearchHistory(projectId, unifiedQuery, queryMap, deduplicated.length, breakdown);
         let savedCount = 0;
         for (const article of deduplicated) {
             this.db.saveArticle(projectId, {
@@ -59,12 +61,11 @@ class SearchOrchestrator {
                 citation_count: article.citationCount,
                 source_query: JSON.stringify(queryMap),
                 source_databases: JSON.stringify(article.source_databases),
-                csl_json: JSON.stringify(article.csl_json)
+                csl_json: JSON.stringify(article.csl_json),
+                search_id: searchId
             });
             savedCount++;
         }
-        // Save to history
-        this.db.saveSearchHistory(projectId, unifiedQuery, queryMap, deduplicated.length, breakdown);
         const projectArticles = this.db.getArticlesByProject(projectId);
         return { savedCount, articles: projectArticles, breakdown };
     }

@@ -26,6 +26,10 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.PROJECTS_GET_SEARCH_HISTORY, projectId);
   },
 
+  async revertSearch(searchId: number): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.SEARCH_REVERT, searchId);
+  },
+
   async searchAndPersist(projectId: number, queryMap: Record<string, string>, limit: number, sortBy: string, unifiedQuery: string): Promise<any> {
     return await window.electronAPI.invoke(IpcChannel.SEARCH_EXECUTE, projectId, queryMap, limit, sortBy, unifiedQuery);
   },
