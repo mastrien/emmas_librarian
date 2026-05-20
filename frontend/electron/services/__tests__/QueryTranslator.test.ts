@@ -1,26 +1,37 @@
 import { describe, it, expect } from 'vitest';
-import { QueryTranslator } from '../QueryTranslator';
-import { QueryBlock } from '../types';
+import { queryTranslator } from '../QueryTranslator';
+import { QueryASTNode } from '../../types';
 
 describe('QueryTranslator', () => {
-  const translator = new QueryTranslator();
+  it('translates AST to Scopus, WoS, OpenAlex, and Crossref correctly', () => {
+    const ast: QueryASTNode = {
+      type: 'group',
+      logicalOperator: 'AND',
+      children: [
+        { type: 'rule', field: 'title', operator: 'contains', value: 'test' }
+      ]
+    };
+    
+    const result = queryTranslator.translate(ast);
+    
+    expect(result.scopus.isValid).toBe(true);
+    expect(result.scopus.query).toContain('TITLE("test")');
 
-  it('translates title and year to OpenAlex format', () => {
-    const blocks: QueryBlock[] = [
-      { id: '1', field: 'title', type: 'contains', value: 'machine learning' },
-      { id: '2', field: 'year', type: 'greater_than', value: '2020' }
-    ];
-    const result = translator.toOpenAlex(blocks);
-    expect(result).toBe('title.search:machine learning,publication_year:>2020');
+    expect(result.openalex.isValid).toBe(true);
+    expect(result.openalex.query).toContain('title.search:test');
   });
 
-  it('translates title and year to Crossref format', () => {
-    const blocks: QueryBlock[] = [
-      { id: '1', field: 'title', type: 'contains', value: 'machine learning' },
-      { id: '2', field: 'year', type: 'greater_than', value: '2020' }
-    ];
-    const result = translator.toCrossref(blocks);
-    expect(result['query.title']).toBe('machine learning');
-    expect(result['filter']).toBe('from-pub-date:2021');
+  it('rejects invalid Crossref OR queries', () => {
+    const ast: QueryASTNode = {
+      type: 'group',
+      logicalOperator: 'OR',
+      children: [
+        { type: 'rule', field: 'title', operator: 'contains', value: 'a' },
+        { type: 'rule', field: 'abstract', operator: 'contains', value: 'b' }
+      ]
+    };
+    
+    const result = queryTranslator.translate(ast);
+    expect(result.crossref.isValid).toBe(false);
   });
 });

@@ -1,15 +1,18 @@
 # Emma's Librarian 📚
 
-Emma's Librarian is a local Desktop application designed to automate structured searches across multiple scientific databases (OpenAlex, Crossref) and facilitate paper reading with integrated visual highlighting and annotations.
+Emma's Librarian is a powerful local Desktop application designed to automate structured searches across multiple scientific databases and facilitate paper reading with integrated visual highlighting and annotations. It's built for researchers who need transparency, speed, and privacy in their systematic reviews.
 
-## 🚀 Features
+## 🚀 Key Features
 
-- **Multi-API Search:** Simultaneous search on OpenAlex and Crossref using a Visual Query Builder.
-- **Smart Deduplication:** Automatically merges results found in multiple bases.
-- **Local PDF Reader:** Integrated reader using `react-pdf-highlighter`.
-- **Persistent Annotations:** Highlight text or areas in PDFs and save markdown notes locally.
-- **Data Privacy:** All data (projects, articles, notes, PDFs) stays on your machine in a SQLite database inside the app's `userData` folder.
-- **Export:** Export your findings and metadata to CSV.
+- **Multi-API Orchestration:** Simultaneous search across **OpenAlex**, **Crossref**, **Scopus**, and **Web of Science**.
+- **Advanced Visual Query Builder:** Create complex queries using logical operators (AND/OR) and field filters (Title, Abstract, Authors) without writing syntax.
+- **Project Search History:** Complete traceability of your research. Every search is saved with its unified query, translated syntax for each base, and detailed result breakdown.
+- **Smart Deduplication:** Automatically merges results found in multiple databases using DOI and Title normalization.
+- **Premium Local PDF Reader:** Integrated reader with visual highlighting (colors) and persistent markdown annotations.
+- **Smart Result Summary:** Real-time feedback after searches, including base-specific error reporting (e.g., invalid API keys).
+- **Data Privacy & Control:** All projects, articles, notes, and PDFs stay on your machine in a SQLite database.
+- **Customization:** Support for Light/Dark themes and secure API key management for paid databases.
+- **Export:** Export your project metadata and systematic findings to CSV.
 
 ---
 
@@ -45,15 +48,17 @@ This will compile the TypeScript code, bundle the React frontend, and generate a
 ## 📂 Project Structure
 
 - `frontend/src/`: React + TypeScript (Vite) application for the UI.
-- `frontend/electron/`: Electron main process, IPC handlers, and SQLite database management (`better-sqlite3`).
+- `frontend/electron/`: Electron main process, IPC handlers, and services:
+  - `database/`: SQLite management with `better-sqlite3`.
+  - `services/`: API integration (normalization, translation) and Search Orchestration.
 - `plans/`: Implementation roadmaps and architectural decisions.
 
-## 📜 Procedures
+## 📜 Development Philosophy
 
-This project follows strict development procedures:
-- **TDD:** Mandatory Red-Green-Refactor cycle for new features.
-- **Logging:** All progress is recorded in `log.md`.
-- **Standards:** Check `procedimento.md` for more details.
+This project follows strict development procedures to ensure research reliability:
+- **Consistency:** Unified search translation ensures results are comparable across bases.
+- **Transparency:** The user always sees exactly how their query was interpreted by each external service.
+- **Privacy:** Local-first approach for all sensitive bibliographic data.
 
 ---
 *Created with care for researchers. Happy reading!*

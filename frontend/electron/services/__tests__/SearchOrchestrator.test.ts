@@ -30,7 +30,7 @@ describe('SearchOrchestrator', () => {
     vi.spyOn(api, 'searchOpenAlex').mockResolvedValue([item1]);
     vi.spyOn(api, 'searchCrossref').mockResolvedValue([item2]);
 
-    const res = await orchestrator.executeSearch(proj.id, [{id:'1', field:'title', type:'contains', value:'test'}]);
+    const res = await orchestrator.searchAndPersist(proj.id, { openalex: 'filter=title.search:test' }, 100, 'relevance', 'title contains "test"');
     
     expect(res.savedCount).toBe(1);
     const articles = db.getArticlesByProject(proj.id);

@@ -56,14 +56,22 @@ export class DatabaseManager {
 
   // Projects
   createProject(name: string): Project {
-    const stmt = this.db.prepare('INSERT INTO projects (name) VALUES (?)');
-    const info = stmt.run(name);
-    return this.getProject(info.lastInsertRowid as number)!;
+    const stmt = this.db.prepare('INSERT INTO projects (name, created_at) VALUES (?, ?)');
+    const info = stmt.run(name, new Date().toISOString());
+    return this.getProject(Number(info.lastInsertRowid)) as Project;
   }
 
   getProject(id: number): Project | undefined {
     const stmt = this.db.prepare('SELECT * FROM projects WHERE id = ?');
     return stmt.get(id) as Project | undefined;
+  }
+
+  updateProject(id: number, name: string): void {
+    this.db.prepare('UPDATE projects SET name = ? WHERE id = ?').run(name, id);
+  }
+
+  deleteProject(id: number): void {
+    this.db.prepare('DELETE FROM projects WHERE id = ?').run(id);
   }
 
   getAllProjects(): Project[] {
@@ -167,5 +175,36 @@ export class DatabaseManager {
 
   close(): void {
     this.db.close();
+  }
+
+  // Settings
+  public getSetting(key: string): string | null {
+    const row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as any;
+    return row ? row.value : null;
+  }
+
+  public setSetting(key: string, value: string): void {
+    this.db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, value);
+  }
+
+  // Search History
+  public saveSearchHistory(projectId: number, unifiedQuery: string, translatedQueries: Record<string, string>, totalResults: number, breakdown: Record<string, any>): void {
+    const stmt = this.db.prepare(`
+      INSERT INTO search_history (project_id, unified_query, translated_queries, total_results, results_breakdown, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(
+      projectId, 
+      unifiedQuery, 
+      JSON.stringify(translatedQueries), 
+      totalResults, 
+      JSON.stringify(breakdown),
+      new Date().toISOString()
+    );
+  }
+
+  public getSearchHistory(projectId: number): any[] {
+    const stmt = this.db.prepare('SELECT * FROM search_history WHERE project_id = ? ORDER BY created_at DESC');
+    return stmt.all(projectId);
   }
 }

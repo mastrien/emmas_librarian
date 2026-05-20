@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { SearchHistoryModal } from '../components/SearchHistoryModal';
 
 const ArchiveModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClose: () => void, onSubmit: (note: string) => void }) => {
   const [note, setNote] = useState('');
@@ -48,16 +49,24 @@ export const ProjectDetailsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [archivingId, setArchivingId] = useState<number | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState('');
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     if (!id) return;
     try {
-      const [projData, artData] = await Promise.all([
+      const [projData, artData, histData] = await Promise.all([
         projectService.getProject(parseInt(id)),
-        projectService.getArticles(parseInt(id))
+        projectService.getArticles(parseInt(id)),
+        projectService.getSearchHistory(parseInt(id))
       ]);
       setProject(projData);
       setArticles(artData);
+      setHistory(histData);
+      setNewName(projData.name);
     } catch (err) {
       console.error('Erro ao carregar dados do projeto', err);
     } finally {
@@ -93,6 +102,29 @@ export const ProjectDetailsPage: React.FC = () => {
     }
   };
 
+  const handleUpdateName = async () => {
+    if (!id || !newName.trim()) return;
+    try {
+      await projectService.updateProject(parseInt(id), newName.trim());
+      setProject(prev => prev ? { ...prev, name: newName.trim() } : null);
+      setIsEditingName(false);
+    } catch (e) {
+      alert('Erro ao atualizar nome do projeto');
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!id || !project) return;
+    if (window.confirm(`Tem certeza que deseja excluir o projeto "${project.name}"? Todos os artigos e anotações serão perdidos permanentemente.`)) {
+      try {
+        await projectService.deleteProject(parseInt(id));
+        navigate('/');
+      } catch (e) {
+        alert('Erro ao excluir projeto');
+      }
+    }
+  };
+
   const handleArchiveSubmit = (note: string) => {
     if (archivingId) {
       handleStatusChange(archivingId, 'archived', note);
@@ -119,8 +151,38 @@ export const ProjectDetailsPage: React.FC = () => {
       </Link>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem' }}>
-        <div>
-          <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>{project.name}</h1>
+        <div style={{ flex: 1 }}>
+          {isEditingName ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <input 
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 700, 
+                  background: 'var(--bg-main)', 
+                  border: '1px solid var(--color-primary)', 
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-heading)',
+                  padding: '0.2rem 0.5rem',
+                  width: '60%'
+                }}
+                autoFocus
+              />
+              <button onClick={handleUpdateName} className="btn-primary" style={{ padding: '0.5rem' }}><Check size={20} /></button>
+              <button onClick={() => { setIsEditingName(false); setNewName(project.name); }} className="btn-secondary" style={{ padding: '0.5rem' }}><XIcon size={20} /></button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+              <h1 style={{ margin: 0, fontSize: '2rem' }}>{project.name}</h1>
+              <button onClick={() => setIsEditingName(true)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.2rem', display: 'flex' }}>
+                <Edit2 size={20} />
+              </button>
+              <button onClick={handleDeleteProject} style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0.2rem', display: 'flex' }}>
+                <Trash2 size={20} />
+              </button>
+            </div>
+          )}
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>
             Criado em {new Date(project.created_at).toLocaleDateString()} &middot; {articles.length} artigos no total
           </p>
@@ -129,6 +191,9 @@ export const ProjectDetailsPage: React.FC = () => {
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={() => projectService.exportCsv(project.id)} className="btn-secondary">
             <Download size={18} /> Exportar CSV
+          </button>
+          <button onClick={() => setIsHistoryOpen(true)} className="btn-secondary">
+            <History size={18} /> Histórico
           </button>
           <Link to={`/projects/${project.id}/search`} className="btn-primary">
             <Search size={18} /> Nova Busca
@@ -296,6 +361,12 @@ export const ProjectDetailsPage: React.FC = () => {
         isOpen={archivingId !== null} 
         onClose={() => setArchivingId(null)} 
         onSubmit={handleArchiveSubmit} 
+      />
+
+      <SearchHistoryModal 
+        isOpen={isHistoryOpen} 
+        onClose={() => setIsHistoryOpen(false)} 
+        history={history} 
       />
     </div>
   );

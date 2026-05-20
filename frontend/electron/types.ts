@@ -5,6 +5,36 @@ export interface Project {
   last_executed_at?: string;
 }
 
+export type QueryField = 'all' | 'title' | 'abstract' | 'authors';
+export type QueryOperator = 'contains' | 'exact' | 'not_contains';
+export type QuerySort = 'relevance' | 'citations' | 'date';
+
+export interface QueryRuleNode {
+  type: 'rule';
+  field: QueryField;
+  operator: QueryOperator;
+  value: string;
+}
+
+export interface QueryGroupNode {
+  type: 'group';
+  logicalOperator: 'AND' | 'OR';
+  children: QueryASTNode[];
+}
+
+export type QueryASTNode = QueryRuleNode | QueryGroupNode;
+
+export interface QueryTranslationResult {
+  query: string;
+  isValid: boolean;
+  error?: string;
+  warning?: string;
+}
+
+export interface DatabaseTranslationMap {
+  [dbId: string]: QueryTranslationResult;
+}
+
 export interface Article {
   id: number;
   project_id: number;
@@ -38,7 +68,11 @@ export enum IpcChannel {
   PROJECTS_GET_ALL = 'projects:getAll',
   PROJECTS_CREATE = 'projects:create',
   PROJECTS_GET_ONE = 'projects:getOne',
+  PROJECTS_UPDATE = 'projects:update',
+  PROJECTS_DELETE = 'projects:delete',
+  PROJECTS_GET_SEARCH_HISTORY = 'projects:getSearchHistory',
   SEARCH_EXECUTE = 'search:execute',
+  SEARCH_TRANSLATE_QUERY = 'search:translateQuery',
   ARTICLES_GET_BY_PROJECT = 'articles:getByProject',
   ARTICLES_GET_ONE = 'articles:getOne',
   ARTICLES_UPDATE_STATUS = 'articles:updateStatus',
@@ -53,4 +87,6 @@ export enum IpcChannel {
   PDF_GET = 'pdf:get',
   EXPORT_CSV = 'export:csv',
   DIALOG_OPEN_FILE = 'dialog:openFile',
+  SETTINGS_GET = 'settings:get',
+  SETTINGS_SET = 'settings:set',
 }

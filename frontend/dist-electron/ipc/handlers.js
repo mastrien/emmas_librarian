@@ -10,12 +10,13 @@ const path_1 = __importDefault(require("path"));
 const DatabaseManager_1 = require("../database/DatabaseManager");
 const SearchOrchestrator_1 = require("../services/SearchOrchestrator");
 const QueryTranslator_1 = require("../services/QueryTranslator");
+const QueryTranslator_2 = require("../services/QueryTranslator");
 const ApiIntegrator_1 = require("../services/ApiIntegrator");
 const types_1 = require("../types");
 function setupIpcHandlers() {
     const dbPath = path_1.default.join(electron_1.app.getPath('userData'), 'emma.db');
     const db = new DatabaseManager_1.DatabaseManager(dbPath);
-    const translator = new QueryTranslator_1.QueryTranslator();
+    const translator = new QueryTranslator_2.QueryTranslator();
     const api = new ApiIntegrator_1.ApiIntegrator();
     const orchestrator = new SearchOrchestrator_1.SearchOrchestrator(db, translator, api);
     // Projects
@@ -25,12 +26,24 @@ function setupIpcHandlers() {
     electron_1.ipcMain.handle(types_1.IpcChannel.PROJECTS_CREATE, (event, name) => {
         return db.createProject(name);
     });
-    electron_1.ipcMain.handle(types_1.IpcChannel.PROJECTS_GET_ONE, (event, id) => {
-        return db.getProject(id);
+    electron_1.ipcMain.handle(types_1.IpcChannel.PROJECTS_GET_ONE, async (event, projectId) => {
+        return db.getProject(projectId);
+    });
+    electron_1.ipcMain.handle(types_1.IpcChannel.PROJECTS_GET_SEARCH_HISTORY, async (event, projectId) => {
+        return db.getSearchHistory(projectId);
+    });
+    electron_1.ipcMain.handle(types_1.IpcChannel.PROJECTS_UPDATE, async (event, id, name) => {
+        return db.updateProject(id, name);
+    });
+    electron_1.ipcMain.handle(types_1.IpcChannel.PROJECTS_DELETE, async (event, id) => {
+        return db.deleteProject(id);
     });
     // Search
-    electron_1.ipcMain.handle(types_1.IpcChannel.SEARCH_EXECUTE, async (event, projectId, queryBlocks, limit) => {
-        return await orchestrator.executeSearch(projectId, queryBlocks, limit);
+    electron_1.ipcMain.handle(types_1.IpcChannel.SEARCH_EXECUTE, async (event, projectId, queryMap, limit, sortBy, unifiedQuery) => {
+        return orchestrator.searchAndPersist(projectId, queryMap, limit, sortBy, unifiedQuery);
+    });
+    electron_1.ipcMain.handle(types_1.IpcChannel.SEARCH_TRANSLATE_QUERY, (event, ast) => {
+        return QueryTranslator_1.queryTranslator.translate(ast);
     });
     // Articles
     electron_1.ipcMain.handle(types_1.IpcChannel.ARTICLES_GET_BY_PROJECT, (event, projectId) => {
@@ -41,6 +54,13 @@ function setupIpcHandlers() {
     });
     electron_1.ipcMain.handle(types_1.IpcChannel.ARTICLES_UPDATE_STATUS, (event, id, status, note) => {
         return db.updateArticleStatus(id, status, note);
+    });
+    // Settings
+    electron_1.ipcMain.handle(types_1.IpcChannel.SETTINGS_GET, (event, key) => {
+        return db.getSetting(key);
+    });
+    electron_1.ipcMain.handle(types_1.IpcChannel.SETTINGS_SET, (event, key, value) => {
+        return db.setSetting(key, value);
     });
     // Annotations
     electron_1.ipcMain.handle(types_1.IpcChannel.ANNOTATIONS_GET, (event, articleId) => {

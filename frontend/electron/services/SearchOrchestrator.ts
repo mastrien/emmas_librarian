@@ -11,21 +11,34 @@ export class SearchOrchestrator {
     private api: ApiIntegrator
   ) {}
 
-  async executeSearch(
-    projectId: number,
-    queryBlocks: QueryBlock[],
-    limit: number = 100
-  ): Promise<{ savedCount: number; articles: Article[] }> {
-    const openalexFilter = this.translator.toOpenAlex(queryBlocks);
-    const crossrefParams = this.translator.toCrossref(queryBlocks);
+  public async searchAndPersist(projectId: number, queryMap: Record<string, string>, limit: number, sortBy: 'relevance' | 'citations' | 'date', unifiedQuery: string): Promise<{ savedCount: number; articles: Article[]; breakdown: Record<string, { count: number; error?: string }> }> {
+    // Fetch API keys from settings
+    const scopusKey = this.db.getSetting('scopus_api_key') || '';
+    const wosKey = this.db.getSetting('wos_api_key') || '';
+
+    const activeIntegrators: { name: string; promise: Promise<NormalizedArticle[]> }[] = [];
     
-    // Fetch results
-    const [oaResults, crResults] = await Promise.all([
-      this.api.searchOpenAlex(openalexFilter),
-      this.api.searchCrossref(crossrefParams)
-    ]);
+    // Select integrators based on the queryMap provided by the frontend.
+    // If a database is missing in the map, it means the user deactivated it.
+    if (queryMap.openalex) activeIntegrators.push({ name: 'openalex', promise: this.api.searchOpenAlex(queryMap.openalex, sortBy) });
+    if (queryMap.crossref) activeIntegrators.push({ name: 'crossref', promise: this.api.searchCrossref(queryMap.crossref, sortBy) });
+    if (queryMap.scopus) activeIntegrators.push({ name: 'scopus', promise: this.api.searchScopus(queryMap.scopus, scopusKey, sortBy) });
+    if (queryMap.wos) activeIntegrators.push({ name: 'wos', promise: this.api.searchWoS(queryMap.wos, wosKey, sortBy) });
+
+    const breakdown: Record<string, { count: number; error?: string }> = {};
+    const resultsArray = await Promise.all(activeIntegrators.map(ai => 
+      ai.promise
+        .then(res => {
+          breakdown[ai.name] = { count: res.length };
+          return res;
+        })
+        .catch(err => {
+          breakdown[ai.name] = { count: 0, error: err.message || "Erro desconhecido" };
+          return [];
+        })
+    ));
     
-    const combinedResults = [...oaResults.slice(0, limit), ...crResults.slice(0, limit)];
+    const combinedResults = resultsArray.flat();
     
     const deduplicated = this.deduplicate(combinedResults);
     
@@ -36,15 +49,24 @@ export class SearchOrchestrator {
         title: article.title,
         authors: article.authors,
         year: article.year,
-        source_query: JSON.stringify(queryBlocks),
+        source_query: JSON.stringify(queryMap),
         source_databases: JSON.stringify(article.source_databases),
         csl_json: JSON.stringify(article.csl_json)
       });
       savedCount++;
     }
+
+    // Save to history
+    this.db.saveSearchHistory(
+      projectId, 
+      unifiedQuery, 
+      queryMap, 
+      deduplicated.length, 
+      breakdown
+    );
     
     const projectArticles = this.db.getArticlesByProject(projectId);
-    return { savedCount, articles: projectArticles };
+    return { savedCount, articles: projectArticles, breakdown };
   }
 
   private deduplicate(results: NormalizedArticle[]): NormalizedArticle[] {

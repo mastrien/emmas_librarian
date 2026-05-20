@@ -1,122 +1,127 @@
 import React from 'react';
-import { QueryBlock } from '../types';
-import { Plus, Trash2, Filter } from 'lucide-react';
+import { QueryASTNode, QueryGroupNode, QueryRuleNode, QueryField, QueryOperator } from '../types';
+import { Plus, Trash2, GitBranch } from 'lucide-react';
 
 interface Props {
-  blocks: QueryBlock[];
-  onChange: (blocks: QueryBlock[]) => void;
+  node: QueryASTNode;
+  onChange: (node: QueryASTNode) => void;
 }
 
-export const QueryBuilder: React.FC<Props> = ({ blocks, onChange }) => {
-  const addBlock = () => {
-    const newBlock: QueryBlock = {
-      id: Math.random().toString(36).substr(2, 9),
-      field: 'title',
-      value: '',
-      type: 'contains'
-    };
-    onChange([...blocks, newBlock]);
+export const QueryBuilder: React.FC<Props> = ({ node, onChange }) => {
+  
+  if (node.type === 'rule') {
+    return (
+      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <select 
+          value={node.field} 
+          onChange={(e) => onChange({ ...node, field: e.target.value as QueryField })}
+          style={{ padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', outline: 'none' }}
+        >
+          <option value="all">Todos os Campos</option>
+          <option value="title">Título</option>
+          <option value="abstract">Resumo</option>
+          <option value="authors">Autores</option>
+        </select>
+        
+        <select 
+          value={node.operator} 
+          onChange={(e) => onChange({ ...node, operator: e.target.value as QueryOperator })}
+          style={{ padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', outline: 'none' }}
+        >
+          <option value="contains">Contém</option>
+          <option value="exact">Exato</option>
+          <option value="not_contains">Não Contém</option>
+        </select>
+
+        <input 
+          type="text" 
+          value={node.value} 
+          onChange={(e) => onChange({ ...node, value: e.target.value })}
+          placeholder="Termo de busca..."
+          style={{ flexGrow: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', outline: 'none' }}
+        />
+      </div>
+    );
+  }
+
+  // Node is a group
+  const groupNode = node as QueryGroupNode;
+
+  const updateChild = (index: number, newChild: QueryASTNode) => {
+    const newChildren = [...groupNode.children];
+    newChildren[index] = newChild;
+    onChange({ ...groupNode, children: newChildren });
   };
 
-  const removeBlock = (id: string) => {
-    onChange(blocks.filter(b => b.id !== id));
+  const removeChild = (index: number) => {
+    const newChildren = [...groupNode.children];
+    newChildren.splice(index, 1);
+    onChange({ ...groupNode, children: newChildren });
   };
 
-  const updateBlock = (id: string, updates: Partial<QueryBlock>) => {
-    onChange(blocks.map(b => b.id === id ? { ...b, ...updates } : b));
+  const addRule = () => {
+    onChange({
+      ...groupNode,
+      children: [...groupNode.children, { type: 'rule', field: 'all', operator: 'contains', value: '' }]
+    });
   };
 
-  const inputStyle = {
-    padding: '0.6rem 0.8rem',
-    border: '1px solid var(--border-color)',
-    borderRadius: 'var(--radius-sm)',
-    background: 'var(--bg-main)',
-    color: 'var(--text-main)',
-    outline: 'none',
-    transition: 'border-color var(--transition-fast)'
+  const addGroup = () => {
+    onChange({
+      ...groupNode,
+      children: [...groupNode.children, { type: 'group', logicalOperator: 'AND', children: [{ type: 'rule', field: 'all', operator: 'contains', value: '' }] }]
+    });
   };
 
   return (
-    <div className="card" style={{ padding: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-        <Filter size={20} color="var(--color-primary)" />
-        <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-heading)' }}>Construtor de Query</h3>
+    <div style={{ 
+      borderLeft: `2px solid ${groupNode.logicalOperator === 'AND' ? 'var(--color-primary)' : 'var(--color-secondary)'}`, 
+      paddingLeft: '1rem', 
+      marginBottom: '1rem' 
+    }}>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
+        <select 
+          value={groupNode.logicalOperator} 
+          onChange={(e) => onChange({ ...groupNode, logicalOperator: e.target.value as 'AND' | 'OR' })}
+          style={{ 
+            padding: '0.3rem 0.5rem', 
+            borderRadius: 'var(--radius-sm)', 
+            border: 'none', 
+            background: groupNode.logicalOperator === 'AND' ? 'var(--color-primary)' : 'var(--color-secondary)',
+            color: 'white',
+            fontWeight: 600,
+            outline: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="AND">E (AND)</option>
+          <option value="OR">OU (OR)</option>
+        </select>
+
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button type="button" onClick={addRule} className="btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}>
+            <Plus size={14} /> Regra
+          </button>
+          <button type="button" onClick={addGroup} className="btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}>
+            <GitBranch size={14} /> Subgrupo
+          </button>
+        </div>
       </div>
-      
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
-        {blocks.map((block) => (
-          <div key={block.id} className="fade-in" style={{ 
-            display: 'flex', 
-            gap: '0.5rem', 
-            alignItems: 'center',
-            background: 'var(--bg-surface)',
-            padding: '0.5rem',
-            border: '1px solid var(--border-color)',
-            borderRadius: 'var(--radius-md)',
-            boxShadow: 'var(--shadow-sm)'
-          }}>
-            <select 
-              value={block.field} 
-              onChange={(e) => updateBlock(block.id, { field: e.target.value as any })}
-              style={inputStyle}
-            >
-              <option value="title">Título</option>
-              <option value="year">Ano</option>
-            </select>
 
-            <select 
-              value={block.type} 
-              onChange={(e) => updateBlock(block.id, { type: e.target.value as any })}
-              style={inputStyle}
-            >
-              {block.field === 'title' ? (
-                <option value="contains">Contém</option>
-              ) : (
-                <>
-                  <option value="equals">Igual a</option>
-                  <option value="greater_than">Posterior a</option>
-                  <option value="less_than">Anterior a</option>
-                </>
-              )}
-            </select>
-
-            <input 
-              type={block.field === 'year' ? 'number' : 'text'}
-              value={block.value}
-              onChange={(e) => updateBlock(block.id, { value: e.target.value })}
-              placeholder="Digite o valor..."
-              style={{ ...inputStyle, flexGrow: 1 }}
-            />
-
-            <button 
-              type="button"
-              onClick={() => removeBlock(block.id)}
-              style={{ 
-                padding: '0.6rem', 
-                background: 'transparent', 
-                border: 'none', 
-                borderRadius: 'var(--radius-sm)', 
-                cursor: 'pointer',
-                color: '#ef4444',
-                transition: 'background var(--transition-fast)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#fee2e2'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-            >
-              <Trash2 size={18} />
-            </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {groupNode.children.map((child, index) => (
+          <div key={index} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+            <div style={{ flexGrow: 1 }}>
+              <QueryBuilder node={child} onChange={(newChild) => updateChild(index, newChild)} />
+            </div>
+            {groupNode.children.length > 1 && (
+              <button type="button" onClick={() => removeChild(index)} style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0.5rem' }} title="Remover">
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
         ))}
       </div>
-
-      <button 
-        type="button"
-        onClick={addBlock}
-        className="btn-secondary"
-        style={{ width: '100%', borderStyle: 'dashed' }}
-      >
-        <Plus size={18} /> Adicionar Condição de Busca
-      </button>
     </div>
   );
 };

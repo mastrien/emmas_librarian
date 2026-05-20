@@ -25,7 +25,7 @@ const DatabaseManager_1 = require("../../database/DatabaseManager");
         };
         vitest_1.vi.spyOn(api, 'searchOpenAlex').mockResolvedValue([item1]);
         vitest_1.vi.spyOn(api, 'searchCrossref').mockResolvedValue([item2]);
-        const res = await orchestrator.executeSearch(proj.id, [{ id: '1', field: 'title', type: 'contains', value: 'test' }]);
+        const res = await orchestrator.searchAndPersist(proj.id, { openalex: 'filter=title.search:test' }, 100, 'relevance', 'title contains "test"');
         (0, vitest_1.expect)(res.savedCount).toBe(1);
         const articles = db.getArticlesByProject(proj.id);
         (0, vitest_1.expect)(articles).toHaveLength(1);

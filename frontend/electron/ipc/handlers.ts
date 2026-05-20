@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { DatabaseManager } from '../database/DatabaseManager';
 import { SearchOrchestrator } from '../services/SearchOrchestrator';
+import { queryTranslator } from '../services/QueryTranslator';
 import { QueryTranslator } from '../services/QueryTranslator';
 import { ApiIntegrator } from '../services/ApiIntegrator';
 import { IpcChannel } from '../types';
@@ -24,13 +25,29 @@ export function setupIpcHandlers() {
     return db.createProject(name);
   });
 
-  ipcMain.handle(IpcChannel.PROJECTS_GET_ONE, (event, id: number) => {
-    return db.getProject(id);
+  ipcMain.handle(IpcChannel.PROJECTS_GET_ONE, async (event, projectId: number) => {
+    return db.getProject(projectId);
+  });
+
+  ipcMain.handle(IpcChannel.PROJECTS_GET_SEARCH_HISTORY, async (event, projectId: number) => {
+    return db.getSearchHistory(projectId);
+  });
+
+  ipcMain.handle(IpcChannel.PROJECTS_UPDATE, async (event, id: number, name: string) => {
+    return db.updateProject(id, name);
+  });
+
+  ipcMain.handle(IpcChannel.PROJECTS_DELETE, async (event, id: number) => {
+    return db.deleteProject(id);
   });
 
   // Search
-  ipcMain.handle(IpcChannel.SEARCH_EXECUTE, async (event, projectId: number, queryBlocks: QueryBlock[], limit?: number) => {
-    return await orchestrator.executeSearch(projectId, queryBlocks, limit);
+  ipcMain.handle(IpcChannel.SEARCH_EXECUTE, async (event, projectId: number, queryMap: Record<string, string>, limit: number, sortBy: string, unifiedQuery: string) => {
+    return orchestrator.searchAndPersist(projectId, queryMap, limit, sortBy as any, unifiedQuery);
+  });
+
+  ipcMain.handle(IpcChannel.SEARCH_TRANSLATE_QUERY, (event, ast: any) => {
+    return queryTranslator.translate(ast);
   });
 
   // Articles
@@ -44,6 +61,15 @@ export function setupIpcHandlers() {
 
   ipcMain.handle(IpcChannel.ARTICLES_UPDATE_STATUS, (event, id: number, status: 'new' | 'read' | 'archived', note?: string) => {
     return db.updateArticleStatus(id, status, note);
+  });
+
+  // Settings
+  ipcMain.handle(IpcChannel.SETTINGS_GET, (event, key: string) => {
+    return db.getSetting(key);
+  });
+
+  ipcMain.handle(IpcChannel.SETTINGS_SET, (event, key: string, value: string) => {
+    return db.setSetting(key, value);
   });
 
   // Annotations

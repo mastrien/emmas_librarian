@@ -1,4 +1,4 @@
-import type { Project, QueryBlock, Article, Highlight, Annotation } from '../types';
+import type { Project, Article, Highlight, Annotation } from '../types';
 import { IpcChannel } from '../types';
 
 export const projectService = {
@@ -14,9 +14,24 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.PROJECTS_GET_ONE, projectId);
   },
 
-  async searchAndPersist(projectId: number, queryBlocks: QueryBlock[], limit: number = 100): Promise<{ count: number }> {
-    const res = await window.electronAPI.invoke(IpcChannel.SEARCH_EXECUTE, projectId, queryBlocks, limit);
-    return { count: res.savedCount };
+  async updateProject(id: number, name: string): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.PROJECTS_UPDATE, id, name);
+  },
+
+  async deleteProject(id: number): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.PROJECTS_DELETE, id);
+  },
+
+  async getSearchHistory(projectId: number): Promise<any[]> {
+    return await window.electronAPI.invoke(IpcChannel.PROJECTS_GET_SEARCH_HISTORY, projectId);
+  },
+
+  async searchAndPersist(projectId: number, queryMap: Record<string, string>, limit: number, sortBy: string, unifiedQuery: string): Promise<any> {
+    return await window.electronAPI.invoke(IpcChannel.SEARCH_EXECUTE, projectId, queryMap, limit, sortBy, unifiedQuery);
+  },
+
+  async translateQuery(ast: any): Promise<any> {
+    return await window.electronAPI.invoke(IpcChannel.SEARCH_TRANSLATE_QUERY, ast);
   },
 
   async getArticles(projectId: number): Promise<Article[]> {
@@ -72,6 +87,14 @@ export const projectService = {
 
   async deleteHighlight(id: number): Promise<void> {
     await window.electronAPI.invoke(IpcChannel.HIGHLIGHTS_DELETE, id);
+  },
+
+  async getSetting(key: string): Promise<string | null> {
+    return await window.electronAPI.invoke(IpcChannel.SETTINGS_GET, key);
+  },
+
+  async setSetting(key: string, value: string): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.SETTINGS_SET, key, value);
   },
 
   async openPdfDialog(): Promise<string | null> {

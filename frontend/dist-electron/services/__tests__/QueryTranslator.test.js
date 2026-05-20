@@ -3,22 +3,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const vitest_1 = require("vitest");
 const QueryTranslator_1 = require("../QueryTranslator");
 (0, vitest_1.describe)('QueryTranslator', () => {
-    const translator = new QueryTranslator_1.QueryTranslator();
-    (0, vitest_1.it)('translates title and year to OpenAlex format', () => {
-        const blocks = [
-            { id: '1', field: 'title', type: 'contains', value: 'machine learning' },
-            { id: '2', field: 'year', type: 'greater_than', value: '2020' }
-        ];
-        const result = translator.toOpenAlex(blocks);
-        (0, vitest_1.expect)(result).toBe('title.search:machine learning,publication_year:>2020');
+    (0, vitest_1.it)('translates AST to Scopus, WoS, OpenAlex, and Crossref correctly', () => {
+        const ast = {
+            type: 'group',
+            logicalOperator: 'AND',
+            children: [
+                { type: 'rule', field: 'title', operator: 'contains', value: 'test' }
+            ]
+        };
+        const result = QueryTranslator_1.queryTranslator.translate(ast);
+        (0, vitest_1.expect)(result.scopus.isValid).toBe(true);
+        (0, vitest_1.expect)(result.scopus.query).toContain('TITLE("test")');
+        (0, vitest_1.expect)(result.openalex.isValid).toBe(true);
+        (0, vitest_1.expect)(result.openalex.query).toContain('title.search:test');
     });
-    (0, vitest_1.it)('translates title and year to Crossref format', () => {
-        const blocks = [
-            { id: '1', field: 'title', type: 'contains', value: 'machine learning' },
-            { id: '2', field: 'year', type: 'greater_than', value: '2020' }
-        ];
-        const result = translator.toCrossref(blocks);
-        (0, vitest_1.expect)(result['query.title']).toBe('machine learning');
-        (0, vitest_1.expect)(result['filter']).toBe('from-pub-date:2021');
+    (0, vitest_1.it)('rejects invalid Crossref OR queries', () => {
+        const ast = {
+            type: 'group',
+            logicalOperator: 'OR',
+            children: [
+                { type: 'rule', field: 'title', operator: 'contains', value: 'a' },
+                { type: 'rule', field: 'abstract', operator: 'contains', value: 'b' }
+            ]
+        };
+        const result = QueryTranslator_1.queryTranslator.translate(ast);
+        (0, vitest_1.expect)(result.crossref.isValid).toBe(false);
     });
 });

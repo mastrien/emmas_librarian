@@ -43,13 +43,19 @@ class DatabaseManager {
     }
     // Projects
     createProject(name) {
-        const stmt = this.db.prepare('INSERT INTO projects (name) VALUES (?)');
-        const info = stmt.run(name);
-        return this.getProject(info.lastInsertRowid);
+        const stmt = this.db.prepare('INSERT INTO projects (name, created_at) VALUES (?, ?)');
+        const info = stmt.run(name, new Date().toISOString());
+        return this.getProject(Number(info.lastInsertRowid));
     }
     getProject(id) {
         const stmt = this.db.prepare('SELECT * FROM projects WHERE id = ?');
         return stmt.get(id);
+    }
+    updateProject(id, name) {
+        this.db.prepare('UPDATE projects SET name = ? WHERE id = ?').run(name, id);
+    }
+    deleteProject(id) {
+        this.db.prepare('DELETE FROM projects WHERE id = ?').run(id);
     }
     getAllProjects() {
         const stmt = this.db.prepare('SELECT * FROM projects ORDER BY created_at DESC');
@@ -137,6 +143,26 @@ class DatabaseManager {
     }
     close() {
         this.db.close();
+    }
+    // Settings
+    getSetting(key) {
+        const row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+        return row ? row.value : null;
+    }
+    setSetting(key, value) {
+        this.db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, value);
+    }
+    // Search History
+    saveSearchHistory(projectId, unifiedQuery, translatedQueries, totalResults, breakdown) {
+        const stmt = this.db.prepare(`
+      INSERT INTO search_history (project_id, unified_query, translated_queries, total_results, results_breakdown, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+        stmt.run(projectId, unifiedQuery, JSON.stringify(translatedQueries), totalResults, JSON.stringify(breakdown), new Date().toISOString());
+    }
+    getSearchHistory(projectId) {
+        const stmt = this.db.prepare('SELECT * FROM search_history WHERE project_id = ? ORDER BY created_at DESC');
+        return stmt.all(projectId);
     }
 }
 exports.DatabaseManager = DatabaseManager;
