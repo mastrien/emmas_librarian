@@ -12,12 +12,31 @@ export interface Article {
   title: string;
   authors?: string;
   year?: number;
+  abstract?: string;
+  author_keywords?: string;
+  index_keywords?: string;
+  journal?: string;
+  volume?: string;
+  issue?: string;
+  pages?: string;
+  affiliations?: string;
+  references_list?: string;
+  document_type?: string;
+  issn?: string;
+  citation_count?: number;
   source_query: string;
   source_databases: string;
   csl_json: string | any;
   local_file_path?: string;
   status: 'new' | 'read' | 'archived';
   archive_note?: string;
+}
+
+export interface DiaryEntry {
+  id: number;
+  project_id: number;
+  entry_date: string;
+  content: string;
 }
 
 export interface Annotation {
@@ -87,8 +106,15 @@ export enum IpcChannel {
   ANNOTATIONS_DELETE = 'annotations:delete',
   PDF_UPLOAD = 'pdf:upload',
   PDF_GET = 'pdf:get',
+  PDF_UNLINK = 'pdf:unlink',
+  ARTICLES_CREATE_MANUAL = 'articles:createManual',
   EXPORT_CSV = 'export:csv',
+  EXPORT_BIBLIOSHINY = 'export:biblioshiny',
   DIALOG_OPEN_FILE = 'dialog:openFile',
   SETTINGS_GET = 'settings:get',
   SETTINGS_SET = 'settings:set',
+  DIARY_GET_ALL = 'diary:getAll',
+  DIARY_GET_ONE = 'diary:getOne',
+  DIARY_SAVE = 'diary:save',
+  DIARY_DELETE = 'diary:delete',
 }

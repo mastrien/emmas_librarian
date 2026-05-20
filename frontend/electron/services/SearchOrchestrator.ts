@@ -20,10 +20,11 @@ export class SearchOrchestrator {
     
     // Select integrators based on the queryMap provided by the frontend.
     // If a database is missing in the map, it means the user deactivated it.
-    if (queryMap.openalex) activeIntegrators.push({ name: 'openalex', promise: this.api.searchOpenAlex(queryMap.openalex, sortBy) });
-    if (queryMap.crossref) activeIntegrators.push({ name: 'crossref', promise: this.api.searchCrossref(queryMap.crossref, sortBy) });
-    if (queryMap.scopus) activeIntegrators.push({ name: 'scopus', promise: this.api.searchScopus(queryMap.scopus, scopusKey, sortBy) });
-    if (queryMap.wos) activeIntegrators.push({ name: 'wos', promise: this.api.searchWoS(queryMap.wos, wosKey, sortBy) });
+    // limit is applied per-database (each base fetches up to 'limit' articles)
+    if (queryMap.openalex) activeIntegrators.push({ name: 'openalex', promise: this.api.searchOpenAlex(queryMap.openalex, sortBy, limit) });
+    if (queryMap.crossref) activeIntegrators.push({ name: 'crossref', promise: this.api.searchCrossref(queryMap.crossref, sortBy, limit) });
+    if (queryMap.scopus) activeIntegrators.push({ name: 'scopus', promise: this.api.searchScopus(queryMap.scopus, scopusKey, sortBy, limit) });
+    if (queryMap.wos) activeIntegrators.push({ name: 'wos', promise: this.api.searchWoS(queryMap.wos, wosKey, sortBy, limit) });
 
     const breakdown: Record<string, { count: number; error?: string }> = {};
     const resultsArray = await Promise.all(activeIntegrators.map(ai => 
@@ -49,6 +50,18 @@ export class SearchOrchestrator {
         title: article.title,
         authors: article.authors,
         year: article.year,
+        abstract: article.abstract,
+        author_keywords: article.authorKeywords,
+        index_keywords: article.indexKeywords,
+        journal: article.journal,
+        volume: article.volume,
+        issue: article.issue,
+        pages: article.pages,
+        affiliations: article.affiliations,
+        references_list: article.references,
+        document_type: article.documentType,
+        issn: article.issn,
+        citation_count: article.citationCount,
         source_query: JSON.stringify(queryMap),
         source_databases: JSON.stringify(article.source_databases),
         csl_json: JSON.stringify(article.csl_json)

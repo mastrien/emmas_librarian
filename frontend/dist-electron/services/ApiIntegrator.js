@@ -6,7 +6,7 @@ class ApiIntegrator {
     CROSSREF_URL = "https://api.crossref.org/works";
     SCOPUS_URL = "https://api.elsevier.com/content/search/scopus";
     WOS_URL = "https://api.clarivate.com/api/wos-starter/v1/search";
-    async searchOpenAlex(filterStr, sortBy) {
+    async searchOpenAlex(filterStr, sortBy, limit = 50) {
         try {
             const url = new URL(this.OPENALEX_URL);
             // If filterStr contains 'filter=', extract just the value
@@ -17,6 +17,7 @@ class ApiIntegrator {
             }
             if (cleanFilter)
                 url.searchParams.append("filter", cleanFilter);
+            url.searchParams.append("per_page", String(Math.min(limit, 200))); // OpenAlex max is 200
             if (sortBy === 'citations')
                 url.searchParams.append("sort", "cited_by_count:desc");
             else if (sortBy === 'date')
@@ -37,11 +38,12 @@ class ApiIntegrator {
             throw e;
         }
     }
-    async searchCrossref(queryStr, sortBy) {
+    async searchCrossref(queryStr, sortBy, limit = 50) {
         try {
             // Use URLSearchParams to parse queryStr and add sorting
             const url = new URL(this.CROSSREF_URL);
             const searchParams = new URLSearchParams(queryStr);
+            searchParams.set('rows', String(Math.min(limit, 1000))); // Crossref max is 1000
             if (sortBy === 'citations') {
                 searchParams.set('sort', 'is-referenced-by-count');
                 searchParams.set('order', 'desc');
@@ -68,12 +70,13 @@ class ApiIntegrator {
             throw e;
         }
     }
-    async searchScopus(queryStr, apiKey, sortBy) {
+    async searchScopus(queryStr, apiKey, sortBy, limit = 50) {
         if (!apiKey)
             return [];
         try {
             const url = new URL(this.SCOPUS_URL);
             url.searchParams.append("query", queryStr);
+            url.searchParams.append("count", String(Math.min(limit, 200))); // Scopus max per request is 200
             if (sortBy === 'citations')
                 url.searchParams.append("sort", "citedby-count");
             else if (sortBy === 'date')
@@ -98,14 +101,14 @@ class ApiIntegrator {
             throw e;
         }
     }
-    async searchWoS(queryStr, apiKey, sortBy) {
+    async searchWoS(queryStr, apiKey, sortBy, limit = 50) {
         if (!apiKey)
             return [];
         try {
             const url = new URL(this.WOS_URL);
             url.searchParams.append("dbId", "WOK");
             url.searchParams.append("usrQuery", queryStr);
-            url.searchParams.append("count", "50");
+            url.searchParams.append("count", String(Math.min(limit, 100))); // WoS Starter max is 100
             url.searchParams.append("firstRecord", "1");
             // Starter API sorting: relevance, timesCited, publicationDate
             if (sortBy === 'citations')
@@ -151,6 +154,50 @@ class ApiIntegrator {
             }
         }
         const year = raw.publication_year;
+        // Reconstruct abstract from inverted index
+        let abstract;
+        if (raw.abstract_inverted_index) {
+            const pairs = [];
+            for (const [word, positions] of Object.entries(raw.abstract_inverted_index)) {
+                for (const pos of positions) {
+                    pairs.push([word, pos]);
+                }
+            }
+            pairs.sort((a, b) => a[1] - b[1]);
+            abstract = pairs.map(p => p[0]).join(' ');
+        }
+        // Author keywords
+        const authorKeywords = raw.keywords?.length
+            ? raw.keywords.map((k) => k.display_name || k.keyword || k).join('; ')
+            : undefined;
+        // Index keywords from concepts
+        const indexKeywords = raw.concepts?.length
+            ? raw.concepts.map((c) => c.display_name).join('; ')
+            : undefined;
+        // Journal / volume / issue / pages
+        const journal = raw.primary_location?.source?.display_name;
+        const volume = raw.biblio?.volume;
+        const issue = raw.biblio?.issue;
+        const firstPage = raw.biblio?.first_page;
+        const lastPage = raw.biblio?.last_page;
+        const pages = firstPage ? (lastPage ? `${firstPage}-${lastPage}` : firstPage) : undefined;
+        // Affiliations: unique institution names across all authorships
+        const allInstitutions = [];
+        for (const auth of (raw.authorships || [])) {
+            for (const inst of (auth.institutions || [])) {
+                if (inst.display_name && !allInstitutions.includes(inst.display_name)) {
+                    allInstitutions.push(inst.display_name);
+                }
+            }
+        }
+        const affiliations = allInstitutions.length ? allInstitutions.join('; ') : undefined;
+        // References (OpenAlex IDs)
+        const references = raw.referenced_works?.length
+            ? raw.referenced_works.join('; ')
+            : undefined;
+        const documentType = raw.type_crossref || raw.type;
+        const issn = raw.primary_location?.source?.issn_l;
+        const citationCount = raw.cited_by_count;
         const cslJson = {
             id: raw.id,
             type: "article-journal",
@@ -164,6 +211,18 @@ class ApiIntegrator {
             title: raw.title || "",
             authors: authors.map((a) => `${a.given || ''} ${a.family || ''}`.trim()).join(", "),
             year: year,
+            abstract,
+            authorKeywords,
+            indexKeywords,
+            journal,
+            volume,
+            issue,
+            pages,
+            affiliations,
+            references,
+            documentType,
+            issn,
+            citationCount,
             source_databases: ["OpenAlex"],
             csl_json: cslJson
         };
@@ -172,6 +231,35 @@ class ApiIntegrator {
         const title = (raw.title && raw.title.length > 0) ? raw.title[0] : "";
         const year = raw.issued?.["date-parts"]?.[0]?.[0];
         const authors = (raw.author || []).map((a) => `${a.given || ''} ${a.family || ''}`.trim()).join(", ");
+        // Abstract (strip XML/HTML tags if present)
+        const abstract = raw.abstract
+            ? raw.abstract.replace(/<[^>]*>/g, '').trim()
+            : undefined;
+        // Author keywords (Crossref uses "subject" field)
+        const authorKeywords = raw.subject?.length
+            ? raw.subject.join('; ')
+            : undefined;
+        const journal = raw['container-title']?.[0];
+        const volume = raw.volume;
+        const issue = raw.issue;
+        const pages = raw.page;
+        // Affiliations: unique affiliation names from all authors
+        const allAffiliations = [];
+        for (const a of (raw.author || [])) {
+            for (const aff of (a.affiliation || [])) {
+                if (aff.name && !allAffiliations.includes(aff.name)) {
+                    allAffiliations.push(aff.name);
+                }
+            }
+        }
+        const affiliations = allAffiliations.length ? allAffiliations.join('; ') : undefined;
+        // References
+        const references = raw.reference?.length
+            ? raw.reference.map((ref) => ref.DOI || ref.unstructured || '').filter(Boolean).join('; ')
+            : undefined;
+        const documentType = raw.type;
+        const issn = raw.ISSN?.[0];
+        const citationCount = raw['is-referenced-by-count'];
         const cslJson = {
             id: raw.DOI,
             type: "article-journal",
@@ -185,6 +273,17 @@ class ApiIntegrator {
             title: title,
             authors: authors,
             year: year,
+            abstract,
+            authorKeywords,
+            journal,
+            volume,
+            issue,
+            pages,
+            affiliations,
+            references,
+            documentType,
+            issn,
+            citationCount,
             source_databases: ["Crossref"],
             csl_json: cslJson
         };
@@ -195,11 +294,30 @@ class ApiIntegrator {
         const authors = raw["dc:creator"] || "";
         const date = raw["prism:coverDate"] || "";
         const year = date ? parseInt(date.split("-")[0]) : undefined;
+        const abstract = raw['dc:description'] || undefined;
+        const authorKeywords = raw.authkeywords || undefined;
+        const journal = raw['prism:publicationName'] || undefined;
+        const volume = raw['prism:volume'] || undefined;
+        const issue = raw['prism:issueIdentifier'] || undefined;
+        const pages = raw['prism:pageRange'] || undefined;
+        const documentType = raw['subtypeDescription'] || raw['prism:aggregationType'] || undefined;
+        const citedByRaw = raw['citedby-count'];
+        const citationCount = citedByRaw != null ? parseInt(citedByRaw, 10) : undefined;
+        const issn = raw['prism:issn'] || undefined;
         return {
             doi,
             title,
             authors,
             year,
+            abstract,
+            authorKeywords,
+            journal,
+            volume,
+            issue,
+            pages,
+            documentType,
+            citationCount,
+            issn,
             source_databases: ["Scopus"],
             csl_json: {
                 id: doi || raw["dc:identifier"],
@@ -216,11 +334,29 @@ class ApiIntegrator {
         const title = raw.title || "";
         const authors = (raw.names?.authors || []).map((a) => a.displayName).join(", ");
         const year = raw.publication?.year;
+        const abstract = raw.other?.abstract || raw.abstract || undefined;
+        const authorKeywords = raw.keywords?.authorKeywords?.length
+            ? raw.keywords.authorKeywords.join('; ')
+            : undefined;
+        const journal = raw.source?.sourceTitle || undefined;
+        const volume = raw.source?.volume || undefined;
+        const issue = raw.source?.issue || undefined;
+        const pages = raw.source?.pages?.range || undefined;
+        const documentType = raw.doctype || raw.source?.documentType || undefined;
+        const citationCount = raw.citations?.length ?? raw.citationCount ?? undefined;
         return {
             doi,
             title,
             authors,
             year,
+            abstract,
+            authorKeywords,
+            journal,
+            volume,
+            issue,
+            pages,
+            documentType,
+            citationCount,
             source_databases: ["Web of Science"],
             csl_json: {
                 id: doi || raw.uid,

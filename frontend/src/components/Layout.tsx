@@ -37,13 +37,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         
         <nav style={{ display: 'flex', gap: '1rem' }}>
           <Link to="/" className="btn-secondary" style={{ padding: '0.5rem 1rem' }}>
-            Meus Projetos
+            Projetos
           </Link>
           <Link to="/settings" className="btn-secondary" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Settings size={18} /> Configurações
-          </Link>
-          <Link to="/new-project" className="btn-primary" style={{ padding: '0.5rem 1rem' }}>
-            <Plus size={18} /> Novo Projeto
           </Link>
         </nav>
       </header>

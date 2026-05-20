@@ -1,4 +1,4 @@
-import type { Project, Article, Highlight, Annotation } from '../types';
+import type { Project, Article, Highlight, Annotation, DiaryEntry } from '../types';
 import { IpcChannel } from '../types';
 
 export const projectService = {
@@ -40,6 +40,10 @@ export const projectService = {
 
   async exportCsv(projectId: number): Promise<string | null> {
     return await window.electronAPI.invoke(IpcChannel.EXPORT_CSV, projectId);
+  },
+
+  async exportBiblioshiny(projectId: number): Promise<string | null> {
+    return await window.electronAPI.invoke(IpcChannel.EXPORT_BIBLIOSHINY, projectId);
   },
 
   async getArticle(articleId: number): Promise<Article> {
@@ -105,7 +109,32 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.PDF_UPLOAD, articleId, filePath);
   },
 
+  async unlinkPdf(articleId: number): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.PDF_UNLINK, articleId);
+  },
+
+  async createManualArticle(projectId: number, data: any, sourceFilePath?: string): Promise<number> {
+    return await window.electronAPI.invoke(IpcChannel.ARTICLES_CREATE_MANUAL, projectId, data, sourceFilePath);
+  },
+
   async getPdfBuffer(articleId: number): Promise<ArrayBuffer> {
     return await window.electronAPI.invoke(IpcChannel.PDF_GET, articleId);
+  },
+
+  // Diary
+  async getDiaryEntries(projectId: number): Promise<DiaryEntry[]> {
+    return await window.electronAPI.invoke(IpcChannel.DIARY_GET_ALL, projectId);
+  },
+
+  async getDiaryEntry(projectId: number, entryDate: string): Promise<DiaryEntry | null> {
+    return await window.electronAPI.invoke(IpcChannel.DIARY_GET_ONE, projectId, entryDate);
+  },
+
+  async saveDiaryEntry(projectId: number, entryDate: string, content: string): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.DIARY_SAVE, projectId, entryDate, content);
+  },
+
+  async deleteDiaryEntry(projectId: number, entryDate: string): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.DIARY_DELETE, projectId, entryDate);
   }
 };

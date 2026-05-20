@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle } from 'lucide-react';
+import { Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon } from 'lucide-react';
 import { 
   PdfLoader, 
   PdfHighlighter, 
@@ -31,7 +31,83 @@ export const ArticleReaderPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
 
+  const [scale, setScale] = useState(1.0);
+  const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search'>('annotations');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
   const highlighterRef = useRef<any>(null);
+
+  const handleUnlinkClick = async () => {
+    if (!id || !article) return;
+    if (window.confirm("Deseja realmente desvincular o PDF deste artigo? O arquivo físico será removido do armazenamento local.")) {
+      try {
+        await projectService.unlinkPdf(parseInt(id));
+        setPdfUrl('');
+        await fetchData();
+      } catch (err) {
+        alert('Erro ao desvincular o PDF');
+      }
+    }
+  };
+
+  const handleSearch = async (pdfDoc: any) => {
+    if (!searchQuery.trim() || !pdfDoc) return;
+    setIsSearching(true);
+    setSearchResults([]);
+    const results: any[] = [];
+    
+    try {
+      const totalPages = pdfDoc.numPages;
+      for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+        const page = await pdfDoc.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        
+        const textItems = textContent.items.map((item: any) => item.str);
+        const fullText = textItems.join(' ');
+        
+        let index = 0;
+        const queryLower = searchQuery.toLowerCase();
+        const textLower = fullText.toLowerCase();
+        
+        while ((index = textLower.indexOf(queryLower, index)) !== -1) {
+          const start = Math.max(0, index - 40);
+          const end = Math.min(fullText.length, index + queryLower.length + 45);
+          let snippet = fullText.substring(start, end);
+          if (start > 0) snippet = '...' + snippet;
+          if (end < fullText.length) snippet = snippet + '...';
+          
+          results.push({
+            pageNumber: pageNum,
+            snippet: snippet,
+            matchIndex: index,
+            highlightStart: index - start + (start > 0 ? 3 : 0),
+          });
+          
+          index += queryLower.length;
+        }
+      }
+      setSearchResults(results);
+    } catch (err) {
+      console.error("Erro ao pesquisar no PDF:", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleResultClick = (pageNum: number) => {
+    if (highlighterRef.current) {
+      try {
+        highlighterRef.current.scrollTo({ position: { pageNumber: pageNum } });
+      } catch (e) {
+        const pageEl = document.querySelector(`[data-page-number="${pageNum}"]`);
+        if (pageEl) {
+          pageEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
+  };
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -257,7 +333,7 @@ export const ArticleReaderPage: React.FC = () => {
           </h2>
         </div>
 
-        {!hasLocalFile && (
+        {!hasLocalFile ? (
           <div>
             <button 
               onClick={handleFileUpload}
@@ -267,6 +343,45 @@ export const ArticleReaderPage: React.FC = () => {
             >
               {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
               Vincular PDF Local
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)' }}>
+              <button 
+                onClick={() => setScale(s => Math.max(0.5, parseFloat((s - 0.1).toFixed(1))))} 
+                className="btn-secondary" 
+                style={{ padding: '0.3rem', border: 'none', background: 'transparent' }} 
+                title="Zoom Out"
+              >
+                <ZoomOut size={16} />
+              </button>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, padding: '0 0.5rem', minWidth: '45px', textAlign: 'center', color: 'var(--text-main)' }}>
+                {Math.round(scale * 100)}%
+              </span>
+              <button 
+                onClick={() => setScale(s => Math.min(2.5, parseFloat((s + 0.1).toFixed(1))))} 
+                className="btn-secondary" 
+                style={{ padding: '0.3rem', border: 'none', background: 'transparent' }} 
+                title="Zoom In"
+              >
+                <ZoomIn size={16} />
+              </button>
+              <button 
+                onClick={() => setScale(1.0)} 
+                className="btn-secondary" 
+                style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem', border: 'none', background: 'transparent', color: 'var(--text-muted)' }}
+              >
+                Reset
+              </button>
+            </div>
+
+            <button 
+              onClick={handleUnlinkClick}
+              className="btn-secondary"
+              style={{ color: 'var(--color-danger)', fontSize: '0.9rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <XIcon size={16} /> Desvincular PDF
             </button>
           </div>
         )}
@@ -293,13 +408,15 @@ export const ArticleReaderPage: React.FC = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', height: '100%', width: '100%' }}>
-            <div style={{ flexGrow: 1, position: 'relative', height: '100%' }}>
-              <PdfLoader url={pdfUrl} beforeLoad={<div style={{ textAlign: 'center', padding: '2rem' }}><Loader2 className="animate-spin" /> Carregando PDF...</div>}>
-                {(pdfDocument) => (
-                  <div style={{ height: '100%', width: '100%' }}>
+            <PdfLoader url={pdfUrl} beforeLoad={<div style={{ textAlign: 'center', padding: '2rem' }}><Loader2 className="animate-spin" /> Carregando PDF...</div>}>
+              {(pdfDocument) => (
+                <>
+                  <div style={{ flexGrow: 1, position: 'relative', height: '100%' }}>
                     <PdfHighlighter
+                      key={scale}
                       ref={highlighterRef}
                       pdfDocument={pdfDocument}
+                      pdfScaleValue={scale.toString()}
                       enableAreaSelection={(event) => event.altKey}
                       onScrollChange={() => {}}
                       scrollRef={() => {}}
@@ -367,168 +484,311 @@ export const ArticleReaderPage: React.FC = () => {
                       highlights={highlights}
                     />
                   </div>
-                )}
-              </PdfLoader>
-            </div>
-            
-            <div style={{ 
-              width: '320px', 
-              borderLeft: '1px solid var(--border-color)', 
-              background: 'var(--bg-surface)', 
-              display: 'flex', 
-              flexDirection: 'column' 
-            }}>
-              <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-heading)', marginBottom: '1rem' }}>Anotações ({highlights.length + standaloneAnnotations.length})</h3>
-                
-                <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
-                  <textarea 
-                    value={newAnnotationText}
-                    onChange={(e) => setNewAnnotationText(e.target.value)}
-                    placeholder="Nova anotação avulsa..." 
-                    style={{ 
-                      width: '100%', 
-                      height: '60px', 
-                      padding: '0.6rem',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg-main)',
-                      color: 'var(--text-main)',
-                      fontSize: '0.85rem',
-                      outline: 'none',
-                      resize: 'none'
-                    }}
-                  />
-                  <button 
-                    onClick={handleCreateStandaloneAnnotation}
-                    className="btn-primary"
-                    disabled={!newAnnotationText.trim()}
-                    style={{ fontSize: '0.85rem', padding: '0.4rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.25rem' }}
-                  >
-                    <Plus size={14} /> Adicionar
-                  </button>
-                </div>
-              </div>
+                  
+                  {/* Sidebar with Tabs */}
+                  <div style={{ 
+                    width: '320px', 
+                    borderLeft: '1px solid var(--border-color)', 
+                    background: 'var(--bg-surface)', 
+                    display: 'flex', 
+                    flexDirection: 'column' 
+                  }}>
+                    {/* Tab Selector */}
+                    <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-main)' }}>
+                      <button
+                        onClick={() => setSidebarTab('annotations')}
+                        style={{
+                          flex: 1,
+                          padding: '0.8rem',
+                          background: 'transparent',
+                          border: 'none',
+                          borderBottom: sidebarTab === 'annotations' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                          color: sidebarTab === 'annotations' ? 'var(--color-primary)' : 'var(--text-muted)',
+                          fontWeight: sidebarTab === 'annotations' ? 600 : 500,
+                          fontSize: '0.9rem',
+                          cursor: 'pointer',
+                          transition: 'all var(--transition-fast)'
+                        }}
+                      >
+                        Anotações
+                      </button>
+                      <button
+                        onClick={() => setSidebarTab('search')}
+                        style={{
+                          flex: 1,
+                          padding: '0.8rem',
+                          background: 'transparent',
+                          border: 'none',
+                          borderBottom: sidebarTab === 'search' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                          color: sidebarTab === 'search' ? 'var(--color-primary)' : 'var(--text-muted)',
+                          fontWeight: sidebarTab === 'search' ? 600 : 500,
+                          fontSize: '0.9rem',
+                          cursor: 'pointer',
+                          transition: 'all var(--transition-fast)'
+                        }}
+                      >
+                        Pesquisar
+                      </button>
+                    </div>
 
-              <div style={{ flexGrow: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {highlights.length === 0 && standaloneAnnotations.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', marginTop: '2rem' }}>
-                    Nenhuma anotação ou destaque ainda.
-                  </p>
-                ) : (
-                  <>
-                    {standaloneAnnotations.map((a, idx) => (
-                      <div key={`ann-${a.id || idx}`} className="card hover-lift" style={{ 
-                        padding: '1rem', 
-                        border: '1px solid var(--border-color)', 
-                        background: 'var(--bg-main)',
-                        fontSize: '0.9rem',
-                        position: 'relative'
-                      }}>
-                        <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', display: 'flex', gap: '0.5rem' }}>
-                          <button onClick={() => handleEditStandaloneAnnotation(a)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} title="Editar">
-                            <Edit2 size={14} />
-                          </button>
-                          <button onClick={() => handleDeleteStandaloneAnnotation(a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)' }} title="Excluir">
-                            <Trash2 size={14} />
-                          </button>
+                    {/* Tab Content */}
+                    {sidebarTab === 'annotations' ? (
+                      <>
+                        <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+                          <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-heading)', marginBottom: '1rem' }}>
+                            Anotações ({highlights.length + standaloneAnnotations.length})
+                          </h3>
+                          
+                          <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+                            <textarea 
+                              value={newAnnotationText}
+                              onChange={(e) => setNewAnnotationText(e.target.value)}
+                              placeholder="Nova anotação avulsa..." 
+                              style={{ 
+                                width: '100%', 
+                                height: '60px', 
+                                padding: '0.6rem',
+                                borderRadius: 'var(--radius-sm)',
+                                border: '1px solid var(--border-color)',
+                                background: 'var(--bg-main)',
+                                color: 'var(--text-main)',
+                                fontSize: '0.85rem',
+                                outline: 'none',
+                                resize: 'none'
+                              }}
+                            />
+                            <button 
+                              onClick={handleCreateStandaloneAnnotation}
+                              className="btn-primary"
+                              disabled={!newAnnotationText.trim()}
+                              style={{ fontSize: '0.85rem', padding: '0.4rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.25rem' }}
+                            >
+                              <Plus size={14} /> Adicionar
+                            </button>
+                          </div>
                         </div>
-                        <div style={{ color: 'var(--text-heading)', fontWeight: 500, paddingRight: '2rem' }}>
-                          {editingId === a.id.toString() ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                              <textarea
-                                value={editContent}
-                                onChange={(e) => setEditContent(e.target.value)}
-                                onClick={(e) => e.stopPropagation()}
+
+                        <div style={{ flexGrow: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          {highlights.length === 0 && standaloneAnnotations.length === 0 ? (
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', marginTop: '2rem' }}>
+                              Nenhuma anotação ou destaque ainda.
+                            </p>
+                          ) : (
+                            <>
+                              {standaloneAnnotations.map((a, idx) => (
+                                <div key={`ann-${a.id || idx}`} className="card hover-lift" style={{ 
+                                  padding: '1rem', 
+                                  border: '1px solid var(--border-color)', 
+                                  background: 'var(--bg-main)',
+                                  fontSize: '0.9rem',
+                                  position: 'relative'
+                                }}>
+                                  <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+                                    <button onClick={() => handleEditStandaloneAnnotation(a)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} title="Editar">
+                                      <Edit2 size={14} />
+                                    </button>
+                                    <button onClick={() => handleDeleteStandaloneAnnotation(a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)' }} title="Excluir">
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                  <div style={{ color: 'var(--text-heading)', fontWeight: 500, paddingRight: '2rem' }}>
+                                    {editingId === a.id.toString() ? (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                        <textarea
+                                          value={editContent}
+                                          onChange={(e) => setEditContent(e.target.value)}
+                                          onClick={(e) => e.stopPropagation()}
+                                          style={{
+                                            width: '100%', height: '60px', padding: '0.5rem',
+                                            borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)',
+                                            background: 'var(--bg-main)', color: 'var(--text-main)',
+                                            fontSize: '0.85rem', outline: 'none', resize: 'none'
+                                          }}
+                                        />
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                          <button onClick={() => saveEdit(a.id.toString(), a.id, true)} className="btn-primary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.8rem' }}>Salvar</button>
+                                          <button onClick={() => setEditingId(null)} className="btn-secondary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.8rem' }}>Cancelar</button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      a.content_markdown
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+
+                              {highlights.map((h, idx) => {
+                                const pageNum = h.position?.boundingRect?.pageNumber || h.position?.pageNumber;
+                                return (
+                                  <div 
+                                    key={`high-${h.id || idx}`} 
+                                    className="card hover-lift" 
+                                    onClick={() => {
+                                      if (highlighterRef.current) {
+                                        highlighterRef.current.scrollTo(h);
+                                      }
+                                    }}
+                                    style={{ 
+                                      padding: '1rem', 
+                                      border: '1px solid var(--border-color)', 
+                                      background: 'var(--bg-main)',
+                                      fontSize: '0.9rem',
+                                      cursor: 'pointer',
+                                      position: 'relative'
+                                    }}
+                                  >
+                                    <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+                                      {h.annotation_id && (
+                                        <button onClick={(e) => handleEditHighlightAnnotation(h, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} title="Editar">
+                                          <Edit2 size={14} />
+                                        </button>
+                                      )}
+                                      <button onClick={(e) => handleDeleteHighlight(h.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)' }} title="Excluir">
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
+                                    
+                                    {pageNum && (
+                                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', fontWeight: 600 }}>
+                                        Página {pageNum}
+                                      </div>
+                                    )}
+                                    <div style={{ borderLeft: '3px solid var(--color-primary)', paddingLeft: '0.75rem', marginBottom: '0.5rem', color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.85rem', paddingRight: '2.5rem' }}>
+                                      "{h.content?.text?.substring(0, 80)}{h.content?.text?.length > 80 ? '...' : ''}"
+                                    </div>
+                                    {editingId === h.id ? (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }} onClick={e => e.stopPropagation()}>
+                                        <textarea
+                                          value={editContent}
+                                          onChange={(e) => setEditContent(e.target.value)}
+                                          style={{
+                                            width: '100%', height: '60px', padding: '0.5rem',
+                                            borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)',
+                                            background: 'var(--bg-main)', color: 'var(--text-main)',
+                                            fontSize: '0.85rem', outline: 'none', resize: 'none'
+                                          }}
+                                        />
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                          <button onClick={(e) => { e.stopPropagation(); saveEdit(h.id, h.annotation_id, false); }} className="btn-primary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.8rem' }}>Salvar</button>
+                                          <button onClick={(e) => { e.stopPropagation(); setEditingId(null); }} className="btn-secondary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.8rem' }}>Cancelar</button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      h.comment?.text && (
+                                        <div style={{ color: 'var(--text-heading)', fontWeight: 500 }}>
+                                          {h.comment.text}
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+                          <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-heading)', marginBottom: '1rem' }}>
+                            Buscar no PDF
+                          </h3>
+                          <form onSubmit={(e) => { e.preventDefault(); handleSearch(pdfDocument); }} style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div style={{ flex: 1, position: 'relative' }}>
+                              <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Termo para busca..."
                                 style={{
-                                  width: '100%', height: '60px', padding: '0.5rem',
-                                  borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)',
-                                  background: 'var(--bg-main)', color: 'var(--text-main)',
-                                  fontSize: '0.85rem', outline: 'none', resize: 'none'
+                                  width: '100%',
+                                  padding: '0.5rem 0.6rem',
+                                  borderRadius: 'var(--radius-sm)',
+                                  border: '1px solid var(--border-color)',
+                                  background: 'var(--bg-main)',
+                                  color: 'var(--text-main)',
+                                  fontSize: '0.85rem',
+                                  outline: 'none'
                                 }}
                               />
-                              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button onClick={() => saveEdit(a.id.toString(), a.id, true)} className="btn-primary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.8rem' }}>Salvar</button>
-                                <button onClick={() => setEditingId(null)} className="btn-secondary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.8rem' }}>Cancelar</button>
-                              </div>
                             </div>
+                            <button
+                              type="submit"
+                              disabled={isSearching || !searchQuery.trim()}
+                              className="btn-primary"
+                              style={{ padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                              {isSearching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                            </button>
+                          </form>
+                        </div>
+
+                        <div style={{ flexGrow: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          {isSearching ? (
+                            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                              <Loader2 size={24} className="animate-spin" style={{ margin: '0 auto 0.5rem auto' }} />
+                              Pesquisando termo...
+                            </div>
+                          ) : searchResults.length === 0 ? (
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', marginTop: '2rem' }}>
+                              {searchQuery ? 'Nenhum resultado encontrado.' : 'Digite um termo para pesquisar.'}
+                            </p>
                           ) : (
-                            a.content_markdown
+                            <>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.25rem' }}>
+                                {searchResults.length} ocorrência(s) encontrada(s)
+                              </div>
+                              {searchResults.map((res, idx) => (
+                                <div
+                                  key={`search-${idx}`}
+                                  onClick={() => handleResultClick(res.pageNumber)}
+                                  className="card hover-lift"
+                                  style={{
+                                    padding: '0.75rem',
+                                    border: '1px solid var(--border-color)',
+                                    background: 'var(--bg-main)',
+                                    fontSize: '0.85rem',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)' }}>
+                                    <span>Página {res.pageNumber}</span>
+                                  </div>
+                                  <div style={{ color: 'var(--text-main)', lineHeight: '1.4' }}>
+                                    {(() => {
+                                      const term = searchQuery;
+                                      const lowerSnippet = res.snippet.toLowerCase();
+                                      const lowerTerm = term.toLowerCase();
+                                      const termIdx = lowerSnippet.indexOf(lowerTerm);
+                                      
+                                      if (termIdx === -1) return res.snippet;
+                                      
+                                      const before = res.snippet.substring(0, termIdx);
+                                      const match = res.snippet.substring(termIdx, termIdx + term.length);
+                                      const after = res.snippet.substring(termIdx + term.length);
+                                      
+                                      return (
+                                        <>
+                                          {before}
+                                          <mark style={{ background: 'rgba(234, 179, 8, 0.3)', color: 'var(--text-heading)', fontWeight: 600, padding: '0 0.1rem', borderRadius: '2px' }}>
+                                            {match}
+                                          </mark>
+                                          {after}
+                                        </>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+                              ))}
+                            </>
                           )}
                         </div>
                       </div>
-                    ))}
-
-                    {highlights.map((h, idx) => {
-                      const pageNum = h.position?.boundingRect?.pageNumber || h.position?.pageNumber;
-                      return (
-                        <div 
-                          key={`high-${h.id || idx}`} 
-                          className="card hover-lift" 
-                          onClick={() => {
-                            if (highlighterRef.current) {
-                              highlighterRef.current.scrollTo(h);
-                            }
-                          }}
-                          style={{ 
-                            padding: '1rem', 
-                            border: '1px solid var(--border-color)', 
-                            background: 'var(--bg-main)',
-                            fontSize: '0.9rem',
-                            cursor: 'pointer',
-                            position: 'relative'
-                          }}
-                        >
-                          <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', display: 'flex', gap: '0.5rem' }}>
-                            {h.annotation_id && (
-                              <button onClick={(e) => handleEditHighlightAnnotation(h, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} title="Editar">
-                                <Edit2 size={14} />
-                              </button>
-                            )}
-                            <button onClick={(e) => handleDeleteHighlight(h.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)' }} title="Excluir">
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                          
-                          {pageNum && (
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', fontWeight: 600 }}>
-                              Página {pageNum}
-                            </div>
-                          )}
-                          <div style={{ borderLeft: '3px solid var(--color-primary)', paddingLeft: '0.75rem', marginBottom: '0.5rem', color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.85rem', paddingRight: '2.5rem' }}>
-                            "{h.content?.text?.substring(0, 80)}{h.content?.text?.length > 80 ? '...' : ''}"
-                          </div>
-                          {editingId === h.id ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }} onClick={e => e.stopPropagation()}>
-                              <textarea
-                                value={editContent}
-                                onChange={(e) => setEditContent(e.target.value)}
-                                style={{
-                                  width: '100%', height: '60px', padding: '0.5rem',
-                                  borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)',
-                                  background: 'var(--bg-main)', color: 'var(--text-main)',
-                                  fontSize: '0.85rem', outline: 'none', resize: 'none'
-                                }}
-                              />
-                              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button onClick={(e) => { e.stopPropagation(); saveEdit(h.id, h.annotation_id, false); }} className="btn-primary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.8rem' }}>Salvar</button>
-                                <button onClick={(e) => { e.stopPropagation(); setEditingId(null); }} className="btn-secondary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.8rem' }}>Cancelar</button>
-                              </div>
-                            </div>
-                          ) : (
-                            h.comment?.text && (
-                              <div style={{ color: 'var(--text-heading)', fontWeight: 500 }}>
-                                {h.comment.text}
-                              </div>
-                            )
-                          )}
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
-              </div>
-            </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </PdfLoader>
           </div>
         )}
       </div>

@@ -10,9 +10,11 @@ import { SettingsPage } from './pages/SettingsPage'
 import { Layout } from './components/Layout'
 import './style.css'
 
-// Initialize theme
+// Initialize theme and accent
 const savedTheme = localStorage.getItem('theme') || 'light';
+const savedAccent = localStorage.getItem('accent') || 'blue';
 document.documentElement.setAttribute('data-theme', savedTheme);
+document.documentElement.setAttribute('data-accent', savedAccent);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

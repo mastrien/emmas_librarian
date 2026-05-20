@@ -1,13 +1,25 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
-import { Project, Article, Annotation, Highlight } from '../types';
+import { Project, Article, Annotation, Highlight, DiaryEntry } from '../types';
 
 export interface ArticleInput {
   doi?: string;
   title: string;
   authors?: string;
   year?: number;
+  abstract?: string;
+  author_keywords?: string;
+  index_keywords?: string;
+  journal?: string;
+  volume?: string;
+  issue?: string;
+  pages?: string;
+  affiliations?: string;
+  references_list?: string;
+  document_type?: string;
+  issn?: string;
+  citation_count?: number;
   source_query: string;
   source_databases: string;
   csl_json: string;
@@ -47,10 +59,24 @@ export class DatabaseManager {
 
     this.db.exec(schemaStr);
 
-    try {
-      this.db.exec('ALTER TABLE articles ADD COLUMN archive_note TEXT');
-    } catch (e) {
-      // Ignore if it already exists
+    // Migrations — add columns that may not exist in older databases
+    const migrations = [
+      'ALTER TABLE articles ADD COLUMN archive_note TEXT',
+      'ALTER TABLE articles ADD COLUMN abstract TEXT',
+      'ALTER TABLE articles ADD COLUMN author_keywords TEXT',
+      'ALTER TABLE articles ADD COLUMN index_keywords TEXT',
+      'ALTER TABLE articles ADD COLUMN journal TEXT',
+      'ALTER TABLE articles ADD COLUMN volume TEXT',
+      'ALTER TABLE articles ADD COLUMN issue TEXT',
+      'ALTER TABLE articles ADD COLUMN pages TEXT',
+      'ALTER TABLE articles ADD COLUMN affiliations TEXT',
+      'ALTER TABLE articles ADD COLUMN references_list TEXT',
+      'ALTER TABLE articles ADD COLUMN document_type TEXT',
+      'ALTER TABLE articles ADD COLUMN issn TEXT',
+      'ALTER TABLE articles ADD COLUMN citation_count INTEGER',
+    ];
+    for (const sql of migrations) {
+      try { this.db.exec(sql); } catch (e) { /* column already exists */ }
     }
   }
 
@@ -82,8 +108,10 @@ export class DatabaseManager {
   // Articles
   saveArticle(projectId: number, data: ArticleInput): number {
     const stmt = this.db.prepare(`
-      INSERT INTO articles (project_id, doi, title, authors, year, source_query, source_databases, csl_json)
-      VALUES (@project_id, @doi, @title, @authors, @year, @source_query, @source_databases, @csl_json)
+      INSERT INTO articles (project_id, doi, title, authors, year, source_query, source_databases, csl_json,
+        abstract, author_keywords, index_keywords, journal, volume, issue, pages, affiliations, references_list, document_type, issn, citation_count)
+      VALUES (@project_id, @doi, @title, @authors, @year, @source_query, @source_databases, @csl_json,
+        @abstract, @author_keywords, @index_keywords, @journal, @volume, @issue, @pages, @affiliations, @references_list, @document_type, @issn, @citation_count)
     `);
     const info = stmt.run({
       project_id: projectId,
@@ -93,7 +121,19 @@ export class DatabaseManager {
       year: data.year || null,
       source_query: data.source_query,
       source_databases: data.source_databases,
-      csl_json: data.csl_json
+      csl_json: data.csl_json,
+      abstract: data.abstract || null,
+      author_keywords: data.author_keywords || null,
+      index_keywords: data.index_keywords || null,
+      journal: data.journal || null,
+      volume: data.volume || null,
+      issue: data.issue || null,
+      pages: data.pages || null,
+      affiliations: data.affiliations || null,
+      references_list: data.references_list || null,
+      document_type: data.document_type || null,
+      issn: data.issn || null,
+      citation_count: data.citation_count || null,
     });
     return info.lastInsertRowid as number;
   }
@@ -108,7 +148,7 @@ export class DatabaseManager {
     return stmt.all(projectId) as Article[];
   }
 
-  updateArticleFilePath(articleId: number, path: string): void {
+  updateArticleFilePath(articleId: number, path: string | null): void {
     const stmt = this.db.prepare('UPDATE articles SET local_file_path = ? WHERE id = ?');
     stmt.run(path, articleId);
   }
@@ -206,5 +246,25 @@ export class DatabaseManager {
   public getSearchHistory(projectId: number): any[] {
     const stmt = this.db.prepare('SELECT * FROM search_history WHERE project_id = ? ORDER BY created_at DESC');
     return stmt.all(projectId);
+  }
+
+  // Diary
+  public saveDiaryEntry(projectId: number, entryDate: string, content: string): void {
+    this.db.prepare(`
+      INSERT OR REPLACE INTO project_diary (project_id, entry_date, content)
+      VALUES (?, ?, ?)
+    `).run(projectId, entryDate, content);
+  }
+
+  public getDiaryEntries(projectId: number): DiaryEntry[] {
+    return this.db.prepare('SELECT * FROM project_diary WHERE project_id = ? ORDER BY entry_date DESC').all(projectId) as DiaryEntry[];
+  }
+
+  public getDiaryEntry(projectId: number, entryDate: string): DiaryEntry | undefined {
+    return this.db.prepare('SELECT * FROM project_diary WHERE project_id = ? AND entry_date = ?').get(projectId, entryDate) as DiaryEntry | undefined;
+  }
+
+  public deleteDiaryEntry(projectId: number, entryDate: string): void {
+    this.db.prepare('DELETE FROM project_diary WHERE project_id = ? AND entry_date = ?').run(projectId, entryDate);
   }
 }

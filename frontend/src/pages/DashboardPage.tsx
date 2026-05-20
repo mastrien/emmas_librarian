@@ -26,7 +26,7 @@ export const DashboardPage: React.FC = () => {
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
         <div>
-          <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>Meus Projetos</h1>
+          <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>Projetos</h1>
           <p style={{ margin: 0, color: 'var(--text-muted)' }}>Gerencie suas pesquisas e bibliotecas de artigos.</p>
         </div>
         <Link to="/new-project" className="btn-primary">
