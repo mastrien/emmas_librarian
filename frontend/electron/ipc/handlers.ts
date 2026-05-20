@@ -3,9 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import { DatabaseManager } from '../database/DatabaseManager';
 import { SearchOrchestrator } from '../services/SearchOrchestrator';
-import { queryTranslator } from '../services/QueryTranslator';
-import { QueryTranslator } from '../services/QueryTranslator';
+import { QueryTranslator, queryTranslator } from '../services/QueryTranslator';
 import { ApiIntegrator } from '../services/ApiIntegrator';
+import { ExportService } from '../services/ExportService';
 import { IpcChannel } from '../types';
 import { QueryBlock } from '../services/types';
 
@@ -15,6 +15,7 @@ export function setupIpcHandlers() {
   const translator = new QueryTranslator();
   const api = new ApiIntegrator();
   const orchestrator = new SearchOrchestrator(db, translator, api);
+  const exportService = new ExportService();
 
   // Projects
   ipcMain.handle(IpcChannel.PROJECTS_GET_ALL, () => {
@@ -194,17 +195,7 @@ export function setupIpcHandlers() {
     
     if (!project) throw new Error("Project not found");
 
-    const header = ["id", "doi", "title", "authors", "year", "source", "status"];
-    const rows = articles.map(a => [
-      a.id,
-      a.doi || '',
-      `"${(a.title || '').replace(/"/g, '""')}"`,
-      `"${(a.authors || '').replace(/"/g, '""')}"`,
-      a.year || '',
-      `"${(a.source_databases || '').replace(/"/g, '""')}"`,
-      a.status
-    ]);
-    const csvContent = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const csvContent = exportService.exportToCsv(articles);
 
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: 'Export Articles CSV',
@@ -255,181 +246,7 @@ export function setupIpcHandlers() {
     
     if (!project) throw new Error("Project not found");
 
-    // Exact column order from a real Scopus CSV export (45 columns)
-    const headers = [
-      "Authors",                      //  1
-      "Author full names",            //  2
-      "Author(s) ID",                 //  3
-      "Title",                        //  4
-      "Year",                         //  5
-      "Source title",                  //  6
-      "Volume",                       //  7
-      "Issue",                        //  8
-      "Art. No.",                     //  9
-      "Page start",                   // 10
-      "Page end",                     // 11
-      "Cited by",                     // 12
-      "DOI",                          // 13
-      "Link",                         // 14
-      "Affiliations",                 // 15
-      "Authors with affiliations",    // 16
-      "Abstract",                     // 17
-      "Author Keywords",              // 18
-      "Index Keywords",               // 19
-      "Molecular Sequence Numbers",   // 20
-      "Chemicals/CAS",                // 21
-      "Tradenames",                   // 22
-      "Manufacturers",                // 23
-      "Funding Details",              // 24
-      "Funding Texts",                // 25
-      "References",                   // 26
-      "Correspondence Address",       // 27
-      "Editors",                      // 28
-      "Publisher",                     // 29
-      "Sponsors",                     // 30
-      "Conference name",              // 31
-      "Conference date",              // 32
-      "Conference location",          // 33
-      "Conference code",              // 34
-      "ISSN",                         // 35
-      "ISBN",                         // 36
-      "CODEN",                        // 37
-      "PubMed ID",                    // 38
-      "Language of Original Document",// 39
-      "Abbreviated Source Title",     // 40
-      "Document Type",                // 41
-      "Publication Stage",            // 42
-      "Open Access",                  // 43
-      "Source",                       // 44
-      "EID"                           // 45
-    ];
-
-    // Escape CSV value: quote everything, double-escape internal quotes, strip newlines
-    const escCsv = (val: any) => {
-      const str = String(val ?? '').replace(/\r?\n/g, ' ').replace(/\r/g, ' ').replace(/"/g, '""');
-      return `"${str}"`;
-    };
-
-    // Format authors for Biblioshiny
-    const formatAuthors = (authorsStr: string, abbreviate: boolean): string => {
-      if (!authorsStr) return '';
-      const separator = authorsStr.includes(';') ? ';' : ',';
-      const names = authorsStr.split(separator);
-      
-      const formatted = names.map(name => {
-        const trimmed = name.trim();
-        if (!trimmed) return '';
-        
-        let lastName = '';
-        let firstName = '';
-        
-        if (trimmed.includes(',')) {
-          const commaIdx = trimmed.indexOf(',');
-          lastName = trimmed.substring(0, commaIdx).trim();
-          firstName = trimmed.substring(commaIdx + 1).trim();
-        } else {
-          const parts = trimmed.split(/\s+/).filter(Boolean);
-          if (parts.length === 0) return '';
-          if (parts.length === 1) {
-            lastName = parts[0];
-            firstName = '';
-          } else {
-            const lastPart = parts[parts.length - 1];
-            const cleanLast = lastPart.replace(/[^a-zA-Z]/g, '');
-            if (cleanLast.length > 0 && cleanLast.length <= 2 && lastPart === lastPart.toUpperCase()) {
-              lastName = parts.slice(0, parts.length - 1).join(' ');
-              firstName = cleanLast.split('').join(' ');
-            } else {
-              lastName = parts[parts.length - 1];
-              firstName = parts.slice(0, parts.length - 1).join(' ');
-            }
-          }
-        }
-        
-        if (abbreviate) {
-          const initials = firstName
-            .split(/[\s-]+/)
-            .map(part => part.replace(/[^a-zA-Z]/g, '').trim().charAt(0).toUpperCase())
-            .filter(Boolean)
-            .join('');
-          return initials ? `${lastName} ${initials}.` : lastName;
-        } else {
-          return firstName ? `${lastName}, ${firstName}` : lastName;
-        }
-      }).filter(Boolean);
-      
-      return formatted.join('; ');
-    };
-
-    const getAuthorsWithAffiliations = (authorsStr: string, affiliationsStr: string): string => {
-      if (!authorsStr) return '';
-      const formattedAuthors = formatAuthors(authorsStr, true);
-      if (!affiliationsStr) return '';
-      const authorList = formattedAuthors.split(';').map(s => s.trim()).filter(Boolean);
-      return authorList.map(auth => `${auth}, ${affiliationsStr}`).join('; ');
-    };
-
-    const cleanDoi = (doiStr: string): string => {
-      if (!doiStr) return '';
-      return doiStr.replace(/^https?:\/\/(dx\.)?doi\.org\//i, '').trim();
-    };
-
-    const rows = articles.map(a => {
-      const pageStart = a.pages?.split('-')[0] || '';
-      const pageEnd = a.pages?.split('-')[1] || '';
-      const cleanedDoi = cleanDoi(a.doi || '');
-      return [
-        escCsv(formatAuthors(a.authors || '', true)),                //  1 Authors
-        escCsv(formatAuthors(a.authors || '', false)),               //  2 Author full names
-        escCsv(''),                                                 //  3 Author(s) ID
-        escCsv(a.title || ''),                                      //  4 Title
-        escCsv(a.year || ''),                                       //  5 Year
-        escCsv(a.journal || ''),                                    //  6 Source title
-        escCsv(a.volume || ''),                                     //  7 Volume
-        escCsv(a.issue || ''),                                      //  8 Issue
-        escCsv(''),                                                 //  9 Art. No.
-        escCsv(pageStart),                                          // 10 Page start
-        escCsv(pageEnd),                                            // 11 Page end
-        escCsv(a.citation_count ?? ''),                             // 12 Cited by
-        escCsv(cleanedDoi),                                         // 13 DOI
-        escCsv(cleanedDoi ? `https://doi.org/${cleanedDoi}` : ''),   // 14 Link
-        escCsv(a.affiliations || ''),                               // 15 Affiliations
-        escCsv(getAuthorsWithAffiliations(a.authors || '', a.affiliations || '')), // 16 Authors with affiliations
-        escCsv(a.abstract || ''),                                   // 17 Abstract
-        escCsv(a.author_keywords || ''),                            // 18 Author Keywords
-        escCsv(a.index_keywords || ''),                             // 19 Index Keywords
-        escCsv(''),                                                 // 20 Molecular Sequence Numbers
-        escCsv(''),                                                 // 21 Chemicals/CAS
-        escCsv(''),                                                 // 22 Tradenames
-        escCsv(''),                                                 // 23 Manufacturers
-        escCsv(''),                                                 // 24 Funding Details
-        escCsv(''),                                                 // 25 Funding Texts
-        escCsv(a.references_list || ''),                            // 26 References
-        escCsv(''),                                                 // 27 Correspondence Address
-        escCsv(''),                                                 // 28 Editors
-        escCsv(''),                                                 // 29 Publisher
-        escCsv(''),                                                 // 30 Sponsors
-        escCsv(''),                                                 // 31 Conference name
-        escCsv(''),                                                 // 32 Conference date
-        escCsv(''),                                                 // 33 Conference location
-        escCsv(''),                                                 // 34 Conference code
-        escCsv(a.issn || ''),                                       // 35 ISSN
-        escCsv(''),                                                 // 36 ISBN
-        escCsv(''),                                                 // 37 CODEN
-        escCsv(''),                                                 // 38 PubMed ID
-        escCsv('English'),                                          // 39 Language of Original Document
-        escCsv(''),                                                 // 40 Abbreviated Source Title
-        escCsv(a.document_type || 'Article'),                       // 41 Document Type
-        escCsv('Final'),                                            // 42 Publication Stage
-        escCsv(''),                                                 // 43 Open Access
-        escCsv('Scopus'),                                           // 44 Source
-        escCsv(`2-s2.0-${a.id}`)                                    // 45 EID
-      ].join(',');
-    });
-
-    // UTF-8 BOM + CRLF line endings (matching real Scopus export format)
-    const bom = '\uFEFF';
-    const csvContent = bom + [headers.map(h => escCsv(h)).join(','), ...rows].join('\r\n');
+    const csvContent = exportService.exportToBiblioshiny(articles);
 
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: 'Exportar para Biblioshiny',
