@@ -5,10 +5,15 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "electron:dev": "tsc -p tsconfig.electron.json && concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "rebuild:electron": "electron-rebuild",
+    "rebuild:node": "npm rebuild better-sqlite3",
+    "electron:dev": "npm run rebuild:electron && tsc -p tsconfig.electron.json && concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "vite build && tsc -p tsconfig.electron.json && electron-builder",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "npm run rebuild:node && vitest run",
+    "test:watch": "npm run rebuild:node && vitest",
+    "coverage": "npm run rebuild:node && vitest run --coverage"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.0",
