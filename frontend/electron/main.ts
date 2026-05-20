@@ -14,6 +14,10 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
+      // Disable background throttling so the renderer doesn't limit compositing
+      // when the window loses focus — required for backdrop-filter (glassmorphism)
+      // to remain active during resize, focus changes, and initial paint.
+      backgroundThrottling: false,
     },
   });
 
