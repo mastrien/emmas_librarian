@@ -1,5 +1,6 @@
 # Pontos Pendentes e Considerações Técnicas - Emma's Librarian
 
+> **Atualização:** O sistema foi refatorado para uma aplicação Desktop standalone usando Electron + React, com um banco de dados SQLite local integrado via `better-sqlite3`. As discussões abaixo sobre Python e FastAPI são históricas e estão desatualizadas.
 Este documento centraliza as questões técnicas e de negócio ainda em aberto, para guiar as atualizações do `ideia.md` e a formulação da arquitetura do projeto.
 
 ---

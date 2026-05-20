@@ -2,7 +2,43 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive } from 'lucide-react';
+import { createPortal } from 'react-dom';
+
+const ArchiveModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClose: () => void, onSubmit: (note: string) => void }) => {
+  const [note, setNote] = useState('');
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
+      <div className="card fade-in" style={{ padding: '2rem', width: '400px', background: 'var(--bg-main)' }}>
+        <h3 style={{ margin: '0 0 1rem 0' }}>Motivo do Arquivamento (Opcional)</h3>
+        <form onSubmit={(e) => { e.preventDefault(); onSubmit(note); }}>
+          <textarea 
+            autoFocus
+            value={note} 
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Por que este artigo não é relevante?"
+            style={{ 
+              width: '100%', height: '100px', padding: '0.75rem', 
+              borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)',
+              outline: 'none', resize: 'none', marginBottom: '1rem',
+              fontFamily: 'inherit',
+              background: 'var(--bg-surface)',
+              color: 'var(--text-main)'
+            }}
+          />
+          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+            <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
+            <button type="submit" className="btn-primary" style={{ background: 'var(--color-danger)', color: '#ffffff' }}>Confirmar Arquivamento</button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
+  );
+};
 
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -11,8 +47,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadingId, setUploadingId] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const selectedArticleId = useRef<number | null>(null);
+  const [archivingId, setArchivingId] = useState<number | null>(null);
 
   const fetchData = async () => {
     if (!id) return;
@@ -34,80 +69,75 @@ export const ProjectDetailsPage: React.FC = () => {
     fetchData();
   }, [id]);
 
-  const handleUploadClick = (articleId: number) => {
-    selectedArticleId.current = articleId;
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedArticleId.current) return;
-
-    const artId = selectedArticleId.current;
-    setUploadingId(artId);
+  const handleUploadClick = async (articleId: number) => {
+    setUploadingId(articleId);
     try {
-      await projectService.uploadPdf(artId, file);
-      await fetchData();
+      const filePath = await projectService.openPdfDialog();
+      if (filePath) {
+        await projectService.uploadPdf(articleId, filePath);
+        await fetchData();
+      }
     } catch (err) {
       alert('Erro ao fazer upload do PDF');
     } finally {
       setUploadingId(null);
-      selectedArticleId.current = null;
-      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleStatusChange = async (articleId: number, status: 'new' | 'read' | 'archived', note?: string) => {
+    try {
+      await projectService.updateArticleStatus(articleId, status, note);
+      setArticles(articles.map(a => a.id === articleId ? { ...a, status, archive_note: note } : a));
+    } catch (e: any) {
+      alert(`Erro ao atualizar status do artigo: ${e.message}`);
+    }
+  };
+
+  const handleArchiveSubmit = (note: string) => {
+    if (archivingId) {
+      handleStatusChange(archivingId, 'archived', note);
+      setArchivingId(null);
     }
   };
 
   const filteredArticles = articles.filter(a => 
-    a.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.autores?.toLowerCase().includes(searchTerm.toLowerCase())
+    (a.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (a.authors || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const activeArticles = filteredArticles.filter(a => a.status === 'new' || !a.status);
+  const readArticles = filteredArticles.filter(a => a.status === 'read');
+  const archivedArticles = filteredArticles.filter(a => a.status === 'archived');
 
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
   if (!project) return <div style={{ padding: '2rem', textAlign: 'center' }}>Projeto não encontrado.</div>;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <input 
-        type="file" 
-        accept="application/pdf" 
-        ref={fileInputRef} 
-        style={{ display: 'none' }} 
-        onChange={handleFileChange}
-      />
-      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', textDecoration: 'none', color: '#64748b' }}>
+    <div className="fade-in" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
         <ArrowLeft size={18} /> Voltar para Projetos
       </Link>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem' }}>
         <div>
-          <h1 style={{ margin: 0 }}>{project.name}</h1>
-          <p style={{ color: '#64748b', margin: '0.5rem 0 0' }}>
-            Criado em: {new Date(project.data_criacao).toLocaleDateString()} | {articles.length} artigos encontrados
+          <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>{project.name}</h1>
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+            Criado em {new Date(project.created_at).toLocaleDateString()} &middot; {articles.length} artigos no total
           </p>
         </div>
         
-        <a 
-          href={projectService.getExportUrl(project.id)} 
-          download 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.5rem', 
-            padding: '0.6rem 1rem', 
-            background: '#10b981', 
-            color: 'white', 
-            textDecoration: 'none', 
-            borderRadius: '6px', 
-            fontWeight: '600',
-            fontSize: '0.9rem'
-          }}
-        >
-          <Download size={18} /> Exportar CSV
-        </a>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={() => projectService.exportCsv(project.id)} className="btn-secondary">
+            <Download size={18} /> Exportar CSV
+          </button>
+          <Link to={`/projects/${project.id}/search`} className="btn-primary">
+            <Search size={18} /> Nova Busca
+          </Link>
+        </div>
       </div>
 
       <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
-        <div style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>
+        <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
           <Search size={18} />
         </div>
         <input 
@@ -115,92 +145,138 @@ export const ProjectDetailsPage: React.FC = () => {
           placeholder="Filtrar por título ou autor..." 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ width: '100%', padding: '0.8rem 0.8rem 0.8rem 2.5rem', fontSize: '1rem', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+          style={{ 
+            width: '100%', 
+            padding: '0.8rem 1rem 0.8rem 2.8rem', 
+            fontSize: '1rem', 
+            border: '1px solid var(--border-color)', 
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-sm)',
+            outline: 'none',
+            transition: 'border-color var(--transition-fast)'
+          }}
+          onFocus={(e) => e.currentTarget.style.borderColor = 'var(--color-primary)'}
+          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
         />
       </div>
 
-      <div style={{ overflowX: 'auto', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+      {readArticles.length > 0 && (
+        <details style={{ marginBottom: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', padding: '1rem' }}>
+          <summary style={{ fontWeight: 600, color: 'var(--color-primary)', cursor: 'pointer', outline: 'none' }}>
+            Artigos Lidos ({readArticles.length})
+          </summary>
+          <div style={{ marginTop: '1rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+              <tbody>
+                {readArticles.map(article => (
+                  <tr key={article.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '0.75rem 1rem' }}>{article.title}</td>
+                    <td style={{ padding: '0.75rem 1rem', width: '200px' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <Link to={`/articles/${article.id}`} className="btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}>Ver</Link>
+                        <button onClick={() => handleStatusChange(article.id, 'new')} className="btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}>Desmarcar</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
+
+      {archivedArticles.length > 0 && (
+        <details style={{ marginBottom: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', padding: '1rem' }}>
+          <summary style={{ fontWeight: 600, color: 'var(--color-danger)', cursor: 'pointer', outline: 'none' }}>
+            Artigos Arquivados ({archivedArticles.length})
+          </summary>
+          <div style={{ marginTop: '1rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+              <tbody>
+                {archivedArticles.map(article => (
+                  <tr key={article.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '0.75rem 1rem' }}>
+                      <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{article.title}</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>Motivo: {article.archive_note}</div>
+                    </td>
+                    <td style={{ padding: '0.75rem 1rem', width: '150px' }}>
+                      <button onClick={() => handleStatusChange(article.id, 'new')} className="btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}>Restaurar</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
+
+      <div className="card" style={{ overflowX: 'auto', border: 'none', marginBottom: '2rem' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-            <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-              <th style={{ padding: '1rem' }}>Título</th>
-              <th style={{ padding: '1rem' }}>Autores</th>
-              <th style={{ padding: '1rem' }}>Ano</th>
-              <th style={{ padding: '1rem' }}>Bases</th>
-              <th style={{ padding: '1rem' }}>Ações</th>
+            <tr style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>TÍTULO</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>AUTORES</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>BASES</th>
+              <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>AÇÕES</th>
             </tr>
           </thead>
           <tbody>
-            {filteredArticles.map(article => (
-              <tr key={article.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                <td style={{ padding: '1rem', maxWidth: '400px' }}>
-                  <div style={{ fontWeight: '600', color: '#1e293b' }}>{article.titulo}</div>
+            {activeArticles.map(article => (
+              <tr key={article.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background var(--transition-fast)' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-main)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                <td style={{ padding: '1.25rem 1.5rem', maxWidth: '350px' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--text-heading)', marginBottom: '0.25rem', lineHeight: '1.4' }}>{article.title}</div>
                   {article.doi && (
-                    <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.2rem' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                       DOI: {article.doi}
                     </div>
                   )}
                 </td>
-                <td style={{ padding: '1rem', color: '#475569', fontSize: '0.9rem' }}>{article.autores}</td>
-                <td style={{ padding: '1rem', color: '#475569' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Calendar size={14} /> {article.ano || 'N/A'}
+                <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-main)', fontSize: '0.9rem', maxWidth: '250px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                    <Calendar size={14} color="var(--text-muted)" /> {article.year || 'N/A'}
                   </div>
+                  {article.authors}
                 </td>
-                <td style={{ padding: '1rem' }}>
-                  <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-                    {JSON.parse(article.base_origem as any).map((base: string) => (
-                      <span key={base} style={{ padding: '0.2rem 0.5rem', background: '#f1f5f9', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                <td style={{ padding: '1.25rem 1.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    {JSON.parse(article.source_databases as any).map((base: string) => (
+                      <span key={base} style={{ 
+                        padding: '0.2rem 0.6rem', 
+                        background: 'var(--bg-surface)', 
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 'var(--radius-xl)', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 600,
+                        color: 'var(--color-primary)'
+                      }}>
                         {base}
                       </span>
                     ))}
                   </div>
                 </td>
-                <td style={{ padding: '1rem' }}>
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <Link 
-                      to={`/articles/${article.id}`} 
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '0.4rem', 
-                        padding: '0.4rem 0.8rem', 
-                        background: '#0ea5e9', 
-                        color: 'white', 
-                        textDecoration: 'none', 
-                        borderRadius: '4px', 
-                        fontSize: '0.85rem',
-                        fontWeight: '600'
-                      }}
-                    >
-                      <FileText size={16} /> Ler e Anotar
+                <td style={{ padding: '1.25rem 1.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <Link to={`/articles/${article.id}`} className="btn-primary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}>
+                      <FileText size={14} /> Ler
                     </Link>
 
                     {!article.local_file_path && (
-                      <button 
-                        onClick={() => handleUploadClick(article.id)}
-                        disabled={uploadingId === article.id}
-                        style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '0.4rem', 
-                          padding: '0.4rem 0.8rem', 
-                          background: '#f8fafc', 
-                          color: '#64748b', 
-                          border: '1px solid #e2e8f0', 
-                          borderRadius: '4px', 
-                          fontSize: '0.85rem',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {uploadingId === article.id ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                        Vincular PDF
+                      <button onClick={() => handleUploadClick(article.id)} disabled={uploadingId === article.id} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Vincular PDF Local">
+                        {uploadingId === article.id ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                       </button>
                     )}
 
+                    <button onClick={() => handleStatusChange(article.id, 'read')} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Marcar como Lido">
+                      <CheckCircle size={14} /> Lido
+                    </button>
+                    
+                    <button onClick={() => setArchivingId(article.id)} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: 'var(--color-danger)' }} title="Arquivar">
+                      <Archive size={14} /> Arquivar
+                    </button>
+
                     {article.doi && (
-                      <a href={`https://doi.org/${article.doi}`} target="_blank" rel="noreferrer" style={{ padding: '0.4rem', color: '#94a3b8' }} title="Abrir no Navegador Original">
-                        <ExternalLink size={18} />
+                      <a href={`https://doi.org/${article.doi}`} target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)' }} title="Abrir no Navegador">
+                        <ExternalLink size={16} />
                       </a>
                     )}
                   </div>
@@ -209,12 +285,18 @@ export const ProjectDetailsPage: React.FC = () => {
             ))}
           </tbody>
         </table>
-        {filteredArticles.length === 0 && (
+        {activeArticles.length === 0 && (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-            Nenhum artigo encontrado.
+            Nenhum artigo ativo na biblioteca.
           </div>
         )}
       </div>
+
+      <ArchiveModal 
+        isOpen={archivingId !== null} 
+        onClose={() => setArchivingId(null)} 
+        onSubmit={handleArchiveSubmit} 
+      />
     </div>
   );
 };

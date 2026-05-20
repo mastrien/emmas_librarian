@@ -1,0 +1,142 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DatabaseManager = void 0;
+const better_sqlite3_1 = __importDefault(require("better-sqlite3"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+class DatabaseManager {
+    db;
+    constructor(dbPath) {
+        this.db = new better_sqlite3_1.default(dbPath);
+        this.db.pragma('journal_mode = WAL');
+        this.db.pragma('foreign_keys = ON');
+        this.initSchema();
+    }
+    initSchema() {
+        // Determine the right path for schema.sql whether running compiled, in dev, or in tests
+        const possiblePaths = [
+            path_1.default.join(__dirname, 'schema.sql'), // compiled dist-electron/database/schema.sql or test from __dirname
+            path_1.default.join(__dirname, '..', '..', 'electron', 'database', 'schema.sql'), // from dist-electron (if __dirname is dist-electron)
+            path_1.default.join(process.cwd(), 'electron', 'database', 'schema.sql'), // test from frontend root
+        ];
+        let schemaStr = '';
+        let found = false;
+        for (const p of possiblePaths) {
+            if (fs_1.default.existsSync(p)) {
+                schemaStr = fs_1.default.readFileSync(p, 'utf-8');
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            throw new Error("Could not find schema.sql. Checked: " + possiblePaths.join(', '));
+        this.db.exec(schemaStr);
+        try {
+            this.db.exec('ALTER TABLE articles ADD COLUMN archive_note TEXT');
+        }
+        catch (e) {
+            // Ignore if it already exists
+        }
+    }
+    // Projects
+    createProject(name) {
+        const stmt = this.db.prepare('INSERT INTO projects (name) VALUES (?)');
+        const info = stmt.run(name);
+        return this.getProject(info.lastInsertRowid);
+    }
+    getProject(id) {
+        const stmt = this.db.prepare('SELECT * FROM projects WHERE id = ?');
+        return stmt.get(id);
+    }
+    getAllProjects() {
+        const stmt = this.db.prepare('SELECT * FROM projects ORDER BY created_at DESC');
+        return stmt.all();
+    }
+    // Articles
+    saveArticle(projectId, data) {
+        const stmt = this.db.prepare(`
+      INSERT INTO articles (project_id, doi, title, authors, year, source_query, source_databases, csl_json)
+      VALUES (@project_id, @doi, @title, @authors, @year, @source_query, @source_databases, @csl_json)
+    `);
+        const info = stmt.run({
+            project_id: projectId,
+            doi: data.doi || null,
+            title: data.title,
+            authors: data.authors || null,
+            year: data.year || null,
+            source_query: data.source_query,
+            source_databases: data.source_databases,
+            csl_json: data.csl_json
+        });
+        return info.lastInsertRowid;
+    }
+    getArticle(id) {
+        const stmt = this.db.prepare('SELECT * FROM articles WHERE id = ?');
+        return stmt.get(id);
+    }
+    getArticlesByProject(projectId) {
+        const stmt = this.db.prepare('SELECT * FROM articles WHERE project_id = ?');
+        return stmt.all(projectId);
+    }
+    updateArticleFilePath(articleId, path) {
+        const stmt = this.db.prepare('UPDATE articles SET local_file_path = ? WHERE id = ?');
+        stmt.run(path, articleId);
+    }
+    updateArticleStatus(articleId, status, archiveNote) {
+        const stmt = this.db.prepare('UPDATE articles SET status = ?, archive_note = ? WHERE id = ?');
+        stmt.run(status, archiveNote || null, articleId);
+    }
+    // Annotations
+    saveAnnotation(articleId, content) {
+        const stmt = this.db.prepare('INSERT INTO annotations (article_id, content_markdown) VALUES (?, ?)');
+        const info = stmt.run(articleId, content);
+        return info.lastInsertRowid;
+    }
+    getAnnotations(articleId) {
+        const stmt = this.db.prepare('SELECT * FROM annotations WHERE article_id = ? ORDER BY created_at DESC');
+        return stmt.all(articleId);
+    }
+    updateAnnotation(id, content) {
+        const stmt = this.db.prepare('UPDATE annotations SET content_markdown = ? WHERE id = ?');
+        stmt.run(content, id);
+    }
+    deleteAnnotation(id) {
+        const stmt = this.db.prepare('DELETE FROM annotations WHERE id = ?');
+        stmt.run(id);
+    }
+    // Highlights
+    saveHighlight(articleId, color, positionData, annotationId) {
+        const stmt = this.db.prepare(`
+      INSERT INTO highlights (article_id, color, position_data, annotation_id)
+      VALUES (?, ?, ?, ?)
+    `);
+        const info = stmt.run(articleId, color, positionData, annotationId || null);
+        return info.lastInsertRowid;
+    }
+    getHighlights(articleId) {
+        const stmt = this.db.prepare(`
+      SELECT h.*, a.content_markdown as comment
+      FROM highlights h
+      LEFT JOIN annotations a ON h.annotation_id = a.id
+      WHERE h.article_id = ?
+    `);
+        return stmt.all(articleId);
+    }
+    deleteHighlight(id) {
+        // If we want to delete a highlight, we should also delete its associated annotation
+        const getStmt = this.db.prepare('SELECT annotation_id FROM highlights WHERE id = ?');
+        const highlight = getStmt.get(id);
+        const stmt = this.db.prepare('DELETE FROM highlights WHERE id = ?');
+        stmt.run(id);
+        if (highlight?.annotation_id) {
+            this.deleteAnnotation(highlight.annotation_id);
+        }
+    }
+    close() {
+        this.db.close();
+    }
+}
+exports.DatabaseManager = DatabaseManager;

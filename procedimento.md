@@ -31,6 +31,6 @@ O arquivo `log.md` na raiz do projeto serve como a memória viva da evolução d
 
 ## 3. Padrões de Código
 
--   **Backend (Python):** Seguir PEP 8. Utilizar tipagem estática (Type Hints).
--   **Frontend (React):** Componentes funcionais e Hooks. TypeScript obrigatório.
+-   **Aplicação (Electron/Node):** Processo Main em TypeScript usando `better-sqlite3`. Seguir tipagem forte e separar a lógica em serviços.
+-   **Frontend (React):** Processo Renderer usando React 19, Hooks e Vite. TypeScript obrigatório. Comunicação exclusiva via IPC (`window.electronAPI.invoke`).
 -   **Commits:** Mensagens claras e em inglês, descrevendo o *quê* e o *porquê* da mudança.

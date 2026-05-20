@@ -1,0 +1,24 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.IpcChannel = void 0;
+var IpcChannel;
+(function (IpcChannel) {
+    IpcChannel["PROJECTS_GET_ALL"] = "projects:getAll";
+    IpcChannel["PROJECTS_CREATE"] = "projects:create";
+    IpcChannel["PROJECTS_GET_ONE"] = "projects:getOne";
+    IpcChannel["SEARCH_EXECUTE"] = "search:execute";
+    IpcChannel["ARTICLES_GET_BY_PROJECT"] = "articles:getByProject";
+    IpcChannel["ARTICLES_GET_ONE"] = "articles:getOne";
+    IpcChannel["ARTICLES_UPDATE_STATUS"] = "articles:updateStatus";
+    IpcChannel["HIGHLIGHTS_GET"] = "highlights:get";
+    IpcChannel["HIGHLIGHTS_CREATE"] = "highlights:create";
+    IpcChannel["ANNOTATIONS_GET"] = "annotations:get";
+    IpcChannel["ANNOTATIONS_CREATE"] = "annotations:create";
+    IpcChannel["ANNOTATIONS_UPDATE"] = "annotations:update";
+    IpcChannel["ANNOTATIONS_DELETE"] = "annotations:delete";
+    IpcChannel["HIGHLIGHTS_DELETE"] = "highlights:delete";
+    IpcChannel["PDF_UPLOAD"] = "pdf:upload";
+    IpcChannel["PDF_GET"] = "pdf:get";
+    IpcChannel["EXPORT_CSV"] = "export:csv";
+    IpcChannel["DIALOG_OPEN_FILE"] = "dialog:openFile";
+})(IpcChannel || (exports.IpcChannel = IpcChannel = {}));

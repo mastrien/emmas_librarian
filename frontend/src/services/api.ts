@@ -1,81 +1,88 @@
-import axios from 'axios';
 import type { Project, QueryBlock, Article, Highlight, Annotation } from '../types';
-
-const API_URL = 'http://localhost:8000';
-
-const api = axios.create({
-  baseURL: API_URL,
-});
+import { IpcChannel } from '../types';
 
 export const projectService = {
   async getProjects(): Promise<Project[]> {
-    const response = await api.get('/projects');
-    return response.data;
+    return await window.electronAPI.invoke(IpcChannel.PROJECTS_GET_ALL);
   },
 
   async createProject(name: string): Promise<Project> {
-    const response = await api.post('/projects', { name });
-    return response.data;
+    return await window.electronAPI.invoke(IpcChannel.PROJECTS_CREATE, name);
   },
 
   async getProject(projectId: number): Promise<Project> {
-    const response = await api.get(`/projects/${projectId}`);
-    return response.data;
+    return await window.electronAPI.invoke(IpcChannel.PROJECTS_GET_ONE, projectId);
   },
 
   async searchAndPersist(projectId: number, queryBlocks: QueryBlock[], limit: number = 100): Promise<{ count: number }> {
-    const response = await api.post(`/projects/${projectId}/search`, {
-      query_blocks: queryBlocks,
-      limit
-    });
-    return response.data;
+    const res = await window.electronAPI.invoke(IpcChannel.SEARCH_EXECUTE, projectId, queryBlocks, limit);
+    return { count: res.savedCount };
   },
 
   async getArticles(projectId: number): Promise<Article[]> {
-    const response = await api.get(`/projects/${projectId}/articles`);
-    return response.data;
+    return await window.electronAPI.invoke(IpcChannel.ARTICLES_GET_BY_PROJECT, projectId);
   },
 
-  getExportUrl(projectId: number): string {
-    return `${API_URL}/projects/${projectId}/export`;
+  async exportCsv(projectId: number): Promise<string | null> {
+    return await window.electronAPI.invoke(IpcChannel.EXPORT_CSV, projectId);
   },
 
   async getArticle(articleId: number): Promise<Article> {
-    const response = await api.get(`/articles/${articleId}`);
-    return response.data;
+    return await window.electronAPI.invoke(IpcChannel.ARTICLES_GET_ONE, articleId);
+  },
+
+  async updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', note?: string): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.ARTICLES_UPDATE_STATUS, articleId, status, note);
   },
 
   async getHighlights(articleId: number): Promise<Highlight[]> {
-    const response = await api.get(`/articles/${articleId}/highlights`);
-    return response.data;
+    const dbHighlights = await window.electronAPI.invoke(IpcChannel.HIGHLIGHTS_GET, articleId);
+    return dbHighlights.map((h: any) => ({
+      id: String(h.id),
+      article_id: h.article_id,
+      color: h.color,
+      position_data: JSON.parse(h.position_data),
+      annotation_id: h.annotation_id,
+      comment: h.comment
+    }));
   },
 
   async createHighlight(articleId: number, color: string, positionData: any, annotationContent?: string): Promise<{ id: number; annotation_id: number | null }> {
-    const response = await api.post(`/articles/${articleId}/highlights`, {
-      color,
-      position_data: positionData,
-      annotation_content: annotationContent
-    });
-    return response.data;
+    const positionDataStr = JSON.stringify(positionData);
+    const id = await window.electronAPI.invoke(IpcChannel.HIGHLIGHTS_CREATE, articleId, color, positionDataStr, annotationContent);
+    return { id, annotation_id: annotationContent ? -1 : null };
   },
 
   async getAnnotations(articleId: number): Promise<Annotation[]> {
-    const response = await api.get(`/articles/${articleId}/annotations`);
-    return response.data;
+    return await window.electronAPI.invoke(IpcChannel.ANNOTATIONS_GET, articleId);
   },
 
-  async uploadPdf(articleId: number, file: File): Promise<any> {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await api.post(`/articles/${articleId}/upload-pdf`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
-    return response.data;
+  async createAnnotation(articleId: number, content: string): Promise<{ id: number }> {
+    const id = await window.electronAPI.invoke(IpcChannel.ANNOTATIONS_CREATE, articleId, content);
+    return { id };
   },
 
-  getPdfUrl(articleId: number): string {
-    return `${API_URL}/articles/${articleId}/pdf`;
+  async updateAnnotation(id: number, content: string): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.ANNOTATIONS_UPDATE, id, content);
+  },
+
+  async deleteAnnotation(id: number): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.ANNOTATIONS_DELETE, id);
+  },
+
+  async deleteHighlight(id: number): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.HIGHLIGHTS_DELETE, id);
+  },
+
+  async openPdfDialog(): Promise<string | null> {
+    return await window.electronAPI.invoke(IpcChannel.DIALOG_OPEN_FILE);
+  },
+
+  async uploadPdf(articleId: number, filePath: string): Promise<string> {
+    return await window.electronAPI.invoke(IpcChannel.PDF_UPLOAD, articleId, filePath);
+  },
+
+  async getPdfBuffer(articleId: number): Promise<ArrayBuffer> {
+    return await window.electronAPI.invoke(IpcChannel.PDF_GET, articleId);
   }
 };

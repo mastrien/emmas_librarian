@@ -14,10 +14,9 @@ export interface Article {
   year?: number;
   source_query: string;
   source_databases: string;
-  csl_json: string | any;
+  csl_json: string;
   local_file_path?: string;
   status: 'new' | 'read' | 'archived';
-  archive_note?: string;
 }
 
 export interface Annotation {
@@ -28,19 +27,11 @@ export interface Annotation {
 }
 
 export interface Highlight {
-  id: string; // The UI uses string id for highlight
+  id: number;
   article_id: number;
   color: string;
-  position_data: any; // Coordinate data for the highlighter
+  position_data: string;
   annotation_id?: number;
-  comment?: string; // Content of the linked annotation
-}
-
-export interface QueryBlock {
-  id: string;
-  field: 'title' | 'year';
-  value: string;
-  type: 'contains' | 'equals' | 'greater_than' | 'less_than';
 }
 
 export enum IpcChannel {
@@ -53,11 +44,11 @@ export enum IpcChannel {
   ARTICLES_UPDATE_STATUS = 'articles:updateStatus',
   HIGHLIGHTS_GET = 'highlights:get',
   HIGHLIGHTS_CREATE = 'highlights:create',
-  HIGHLIGHTS_DELETE = 'highlights:delete',
   ANNOTATIONS_GET = 'annotations:get',
   ANNOTATIONS_CREATE = 'annotations:create',
   ANNOTATIONS_UPDATE = 'annotations:update',
   ANNOTATIONS_DELETE = 'annotations:delete',
+  HIGHLIGHTS_DELETE = 'highlights:delete',
   PDF_UPLOAD = 'pdf:upload',
   PDF_GET = 'pdf:get',
   EXPORT_CSV = 'export:csv',

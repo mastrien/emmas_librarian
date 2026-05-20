@@ -1,6 +1,6 @@
 # Emma's Librarian 📚
 
-Emma's Librarian is a local tool designed to automate structured searches across multiple scientific databases (OpenAlex, Crossref) and facilitate paper reading with integrated visual highlighting and annotations.
+Emma's Librarian is a local Desktop application designed to automate structured searches across multiple scientific databases (OpenAlex, Crossref) and facilitate paper reading with integrated visual highlighting and annotations.
 
 ## 🚀 Features
 
@@ -8,7 +8,7 @@ Emma's Librarian is a local tool designed to automate structured searches across
 - **Smart Deduplication:** Automatically merges results found in multiple bases.
 - **Local PDF Reader:** Integrated reader using `react-pdf-highlighter`.
 - **Persistent Annotations:** Highlight text or areas in PDFs and save markdown notes locally.
-- **Data Privacy:** All data (projects, articles, notes, PDFs) stays on your machine in a SQLite database.
+- **Data Privacy:** All data (projects, articles, notes, PDFs) stays on your machine in a SQLite database inside the app's `userData` folder.
 - **Export:** Export your findings and metadata to CSV.
 
 ---
@@ -17,41 +17,35 @@ Emma's Librarian is a local tool designed to automate structured searches across
 
 ### Prerequisites
 
-- [Python 3.10+](https://www.python.org/downloads/)
 - [Node.js 18+](https://nodejs.org/)
 
-### 1. Setup the Backend
+### 1. Setup the Application
 
-```bash
-# From the project root directory:
-pip install -r backend/requirements.txt
-
-# Start the backend ensuring the root is in PYTHONPATH
-# Windows (PowerShell):
-$env:PYTHONPATH = "."; python -m uvicorn backend.app.main:app --reload --port 8000
-
-# Linux/Mac:
-PYTHONPATH=. python3 -m uvicorn backend.app.main:app --reload --port 8000
-```
-The backend will automatically create a `emma.db` SQLite file and a `storage/pdfs` folder.
-
-### 2. Setup the Frontend
-
-Open a new terminal:
 ```bash
 cd frontend
 npm install
-npm run dev
 ```
-The application will be available at `http://localhost:5173`.
+
+### 2. Run in Development Mode
+
+```bash
+npm run electron:dev
+```
+The application will open an Electron window and connect to the local Vite dev server.
+
+### 3. Build for Production
+
+```bash
+npm run electron:build
+```
+This will compile the TypeScript code, bundle the React frontend, and generate an executable installer in the `release` folder.
 
 ---
 
 ## 📂 Project Structure
 
-- `backend/`: FastAPI application, SQLite database management, and API integrations.
-- `frontend/`: React + TypeScript (Vite) application.
-- `analysis_outputs/`: (Ignored by Git) Local storage for PDFs and research artifacts.
+- `frontend/src/`: React + TypeScript (Vite) application for the UI.
+- `frontend/electron/`: Electron main process, IPC handlers, and SQLite database management (`better-sqlite3`).
 - `plans/`: Implementation roadmaps and architectural decisions.
 
 ## 📜 Procedures
