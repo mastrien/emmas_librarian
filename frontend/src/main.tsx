@@ -1,6 +1,16 @@
+import Prism from 'prismjs';
+import 'prismjs/components/prism-core';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-markdown';
+
+// Force Prism to be global BEFORE any other imports that might depend on it
+(window as any).Prism = Prism;
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import { NewProjectPage } from './pages/NewProjectPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ProjectDetailsPage } from './pages/ProjectDetailsPage'
@@ -18,7 +28,7 @@ document.documentElement.setAttribute('data-accent', savedAccent);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <HashRouter>
       <Layout>
         <Routes>
           <Route path="/" element={<DashboardPage />} />
@@ -29,6 +39,6 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </Layout>
-    </BrowserRouter>
+    </HashRouter>
   </StrictMode>,
 )

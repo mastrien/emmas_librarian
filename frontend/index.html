@@ -12,6 +12,41 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Recursive "bottomless" mock to satisfy deep property access like 
+      // Prism.languages.markdown[t].inside.content.inside[n]
+      (function() {
+        function createRecursiveProxy(name) {
+          return new Proxy(function() {}, {
+            get: function(target, prop) {
+              if (prop === Symbol.toPrimitive) return function() { return name; };
+              if (prop === 'toJSON') return function() { return {}; };
+              if (!(prop in target)) {
+                target[prop] = createRecursiveProxy(name + '.' + String(prop));
+              }
+              return target[prop];
+            },
+            apply: function() {
+              return createRecursiveProxy(name + '()');
+            },
+            set: function(target, prop, value) {
+              target[prop] = value;
+              return true;
+            }
+          });
+        }
+
+        if (!window.Prism) {
+          window.Prism = createRecursiveProxy('Prism');
+          window.Prism.languages = createRecursiveProxy('Prism.languages');
+          window.Prism.plugins = {};
+          window.Prism.hooks = {
+            add: function() {},
+            run: function() {}
+          };
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

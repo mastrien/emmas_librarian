@@ -11,6 +11,7 @@ function createWindow() {
     const mainWindow = new electron_1.BrowserWindow({
         width: 1200,
         height: 800,
+        show: false,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -19,11 +20,24 @@ function createWindow() {
     });
     if (isDev) {
         mainWindow.loadURL('http://localhost:5173');
-        mainWindow.webContents.openDevTools();
+        mainWindow.webContents.on('did-finish-load', () => {
+            mainWindow.show();
+            mainWindow.webContents.openDevTools();
+        });
     }
     else {
         mainWindow.loadFile(path_1.default.join(__dirname, '../dist/index.html'));
+        mainWindow.webContents.on('did-finish-load', () => {
+            mainWindow.show();
+        });
     }
+    // Log renderer errors
+    mainWindow.webContents.on('render-process-gone', (event, details) => {
+        console.error('Render process gone:', details);
+    });
+    mainWindow.webContents.on('unresponsive', () => {
+        console.warn('Window unresponsive');
+    });
     electron_1.session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
         callback({
             responseHeaders: {
@@ -37,13 +51,27 @@ function createWindow() {
         return { action: 'deny' };
     });
 }
+// Handle unhandled exceptions in the main process
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    electron_1.dialog.showErrorBox('Main Process Error', error.message || String(error));
+});
 electron_1.app.whenReady().then(() => {
-    (0, handlers_1.setupIpcHandlers)();
-    createWindow();
+    try {
+        (0, handlers_1.setupIpcHandlers)();
+        createWindow();
+    }
+    catch (err) {
+        console.error('Error during app startup:', err);
+        electron_1.dialog.showErrorBox('Startup Error', err.message || String(err));
+    }
     electron_1.app.on('activate', () => {
         if (electron_1.BrowserWindow.getAllWindows().length === 0)
             createWindow();
     });
+}).catch((err) => {
+    console.error('Failed to start app:', err);
+    electron_1.dialog.showErrorBox('Initialization Error', err.message || String(err));
 });
 electron_1.app.on('window-all-closed', () => {
     if (process.platform !== 'darwin')

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session, shell } from 'electron';
+import { app, BrowserWindow, session, shell, dialog } from 'electron';
 import path from 'path';
 
 import { setupIpcHandlers } from './ipc/handlers';
@@ -9,6 +9,7 @@ function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    show: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -18,10 +19,25 @@ function createWindow() {
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
-    mainWindow.webContents.openDevTools();
+    mainWindow.webContents.on('did-finish-load', () => {
+      mainWindow.show();
+      mainWindow.webContents.openDevTools();
+    });
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    mainWindow.webContents.on('did-finish-load', () => {
+      mainWindow.show();
+    });
   }
+
+  // Log renderer errors
+  mainWindow.webContents.on('render-process-gone', (event, details) => {
+    console.error('Render process gone:', details);
+  });
+
+  mainWindow.webContents.on('unresponsive', () => {
+    console.warn('Window unresponsive');
+  });
 
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -38,13 +54,27 @@ function createWindow() {
   });
 }
 
+// Handle unhandled exceptions in the main process
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  dialog.showErrorBox('Main Process Error', error.message || String(error));
+});
+
 app.whenReady().then(() => {
-  setupIpcHandlers();
-  createWindow();
+  try {
+    setupIpcHandlers();
+    createWindow();
+  } catch (err: any) {
+    console.error('Error during app startup:', err);
+    dialog.showErrorBox('Startup Error', err.message || String(err));
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+}).catch((err) => {
+  console.error('Failed to start app:', err);
+  dialog.showErrorBox('Initialization Error', err.message || String(err));
 });
 
 app.on('window-all-closed', () => {
