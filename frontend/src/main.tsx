@@ -1,12 +1,6 @@
-import Prism from 'prismjs';
-import 'prismjs/components/prism-core';
-import 'prismjs/components/prism-clike';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/components/prism-markdown';
-
-// Force Prism to be global BEFORE any other imports that might depend on it
-(window as any).Prism = Prism;
+// PrismJS is loaded externally via <script> tags in index.html
+// to ensure correct initialization order in production builds.
+// See public/vendor/prismjs/ and the error report in relatorio_erro_prism.md.
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'

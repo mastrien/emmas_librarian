@@ -42,3 +42,88 @@ O erro reside na inicialização síncrona do plugin Markdown do PrismJS. Ele é
 1. **Isolamento do MDXEditor:** Tentar remover temporariamente o `@mdxeditor/editor` para confirmar se o restante da aplicação carrega normalmente.
 2. **Externalização Total:** Configurar o `prismjs` como uma dependência externa (`external`) no Vite e carregá-lo via tag `<script>` estática no `index.html` a partir de uma pasta de assets, evitando que o bundler tente processá-lo.
 3. **Verificação de Polyfills:** Verificar se há necessidade de polyfills globais adicionais que o Electron de produção possa estar omitindo em relação ao ambiente de desenvolvimento.
+
+---
+
+## Solução Definitiva Aplicada (2026-05-20)
+
+### Causa Raiz Confirmada
+
+Ao inspecionar o bundle de produção do `@lexical/code` (`LexicalCode.prod.mjs`), foi identificado que o módulo importa o `prismjs` e todos os seus componentes de linguagem como side-effects síncronos no topo do arquivo:
+
+```javascript
+import "prismjs";
+import "prismjs/components/prism-markup.js";
+import "prismjs/components/prism-markdown.js";
+// ... etc
+```
+
+O componente `prism-markdown.js` executa este trecho durante sua avaliação:
+
+```javascript
+['url', 'bold', 'italic', 'strike'].forEach(function (token) {
+    ['url', 'bold', 'italic', 'strike', 'code-snippet'].forEach(function (inside) {
+        if (token !== inside) {
+            Prism.languages.markdown[token].inside.content.inside[inside] = Prism.languages.markdown[inside];
+        }
+    });
+});
+```
+
+Quando o Vite/Rollup empacota tudo em um único bundle, a ordem de avaliação dos módulos não é garantida da forma esperada pelo PrismJS. O `prism-markdown` precisa que o `prism-markup` já tenha populado `Prism.languages.markup` (pois faz `Prism.languages.extend('markup', {})`), e que os tokens `bold`, `italic` etc. já estejam definidos antes das linhas acima executarem. No bundle minificado de produção, essa interdependência se rompe.
+
+A tentativa de usar `rollupOptions.external` não funcionou porque o Rollup mantém os `import "prismjs"` como bare specifiers no output final, que o browser não consegue resolver (sem import maps).
+
+### Solução: Plugin Vite + Scripts Estáticos
+
+A solução implementa a **Externalização Total** (opção 2 da recomendação), com uma abordagem mais robusta usando um plugin Vite customizado.
+
+#### Arquivos modificados
+
+**1. `frontend/vite.config.ts`** — Plugin `prismjsExternalPlugin` que intercepta todos os imports de `prismjs` e `prismjs/components/*` no nível do Vite, substituindo-os por módulos virtuais:
+- `import "prismjs"` → vira um módulo que exporta `globalThis.Prism || window.Prism`
+- `import "prismjs/components/*"` → vira um comentário no-op (componentes já carregados via `<script>`)
+
+Isso elimina os bare specifiers do bundle final sem usar `rollupOptions.external`.
+
+**2. `frontend/index.html`** — Scripts síncronos carregando o PrismJS antes do bundle React:
+
+```html
+<script src="./vendor/prismjs/prism.js"></script>
+<script src="./vendor/prismjs/components/prism-markup.min.js"></script>
+<script src="./vendor/prismjs/components/prism-clike.min.js"></script>
+<!-- ... demais componentes em ordem de dependência ... -->
+<script src="./vendor/prismjs/components/prism-markdown.min.js"></script>
+<!-- O bundle React carrega DEPOIS, como type="module" (deferido) -->
+<script type="module" src="/src/main.tsx"></script>
+```
+
+Scripts sem `type="module"` são síncronos e bloqueantes — executam completamente antes de qualquer módulo ES ser avaliado. Isso garante que `window.Prism` e todos os `Prism.languages.*` estejam totalmente inicializados antes do `@lexical/code` rodar.
+
+**3. `frontend/src/main.tsx`** — Removidos os imports manuais de `prismjs` e a atribuição `window.Prism = Prism` (que eram tentativas anteriores de correção).
+
+**4. `frontend/public/vendor/prismjs/`** — Arquivos do PrismJS copiados de `node_modules/prismjs/` para servir como assets estáticos. O Vite os copia automaticamente para `dist/vendor/prismjs/` no build, e o `electron-builder` os inclui no pacote via `"dist/**/*"`.
+
+#### Ordem de carregamento garantida no `dist/index.html` gerado
+
+```
+prism.js         → inicializa window.Prism com o core
+prism-markup     → define Prism.languages.markup (necessário para markdown)
+prism-clike      → define Prism.languages.clike (necessário para js/ts)
+prism-javascript → define Prism.languages.javascript
+prism-typescript → define Prism.languages.typescript
+prism-markdown   → usa extend('markup') e acessa tokens já definidos ✓
+... demais componentes ...
+[bundle React]   → @lexical/code acessa globalThis.Prism, já completo ✓
+```
+
+#### Verificação
+
+```
+npm run build  →  ✅ compila sem erros
+```
+
+- Bundle não contém bare `import "prismjs"` (verificado com grep)
+- `dist/vendor/prismjs/` contém os 16 componentes + core
+- `dist/index.html` carrega scripts na ordem correta
+- `globalThis.Prism` e `window.Prism` referenciados corretamente no bundle
