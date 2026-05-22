@@ -8,12 +8,18 @@ import {
   Popup, 
   AreaHighlight 
 } from 'react-pdf-highlighter';
-import 'react-pdf-highlighter/dist/style.css';
+import 'react-pdf-highlighter/dist/style/AreaHighlight.css';
+import 'react-pdf-highlighter/dist/style/Highlight.css';
+import 'react-pdf-highlighter/dist/style/MouseSelection.css';
+import 'react-pdf-highlighter/dist/style/PdfHighlighter.css';
+import 'react-pdf-highlighter/dist/style/Tip.css';
+import 'react-pdf-highlighter/dist/style/pdf_viewer.css';
 // @ts-ignore
 import * as pdfjs from 'pdfjs-dist/build/pdf';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Set up the worker for PDF.js to load from local public directory
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+// Set up the worker for PDF.js to load via Vite's asset pipeline
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 import { projectService } from '../services/api';
 import type { Article } from '../types';
@@ -67,8 +73,8 @@ export const ArticleReaderPage: React.FC = () => {
         const page = await pdfDoc.getPage(pageNum);
         const textContent = await page.getTextContent();
         
-        const textItems = textContent.items.map((item: any) => item.str);
-        const fullText = textItems.join(' ');
+        const textItems = textContent.items.map((item: any) => item.str + (item.hasEOL ? '\n' : ''));
+        const fullText = textItems.join('');
         
         let index = 0;
         const queryLower = searchQuery.toLowerCase();
@@ -193,22 +199,44 @@ export const ArticleReaderPage: React.FC = () => {
       
       const highlightText = () => {
         if (!isActive) return;
-        const textLayers = document.querySelectorAll('.textLayer');
-        textLayers.forEach(layer => {
-          if (layer.hasAttribute('data-search-highlighted-' + query)) return;
-          layer.setAttribute('data-search-highlighted-' + query, 'true');
+        
+        const executeHighlight = () => {
+          if (!isActive) return;
+          const textLayers = document.querySelectorAll('.textLayer');
           
-          const spans = layer.querySelectorAll('span');
-          spans.forEach(span => {
-            if (!span.querySelector('mark') && span.textContent && span.textContent.toLowerCase().includes(query)) {
-              const regex = new RegExp(`(${query})`, 'gi');
-              span.innerHTML = span.textContent.replace(regex, '<mark style="background-color: rgba(234, 179, 8, 0.4); color: inherit; border-radius: 2px;">$1</mark>');
-            }
+          textLayers.forEach(layer => {
+            if (layer.hasAttribute('data-search-highlighted-' + query)) return;
+            layer.setAttribute('data-search-highlighted-' + query, 'true');
+            
+            const spans = layer.querySelectorAll('span');
+            spans.forEach(span => {
+              // Only mutate pure text nodes to avoid breaking complex pdf.js internal structures
+              if (span.children.length > 0 && !span.querySelector('mark')) return; 
+              
+              if (!span.querySelector('mark') && span.textContent && span.textContent.toLowerCase().includes(query)) {
+                const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedQuery})`, 'gi');
+                
+                const safeText = span.textContent
+                  .replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;');
+                  
+                span.innerHTML = safeText.replace(regex, '<mark style="background-color: rgba(234, 179, 8, 0.4); color: inherit; border-radius: 2px;">$1</mark>');
+              }
+            });
           });
-        });
+        };
+
+        // Use requestIdleCallback to wait for pdf.js to finish its heavy layout calculations
+        if (typeof window.requestIdleCallback === 'function') {
+          window.requestIdleCallback(executeHighlight, { timeout: 1000 });
+        } else {
+          executeHighlight();
+        }
       };
       
-      initialTimer = setTimeout(highlightText, 100);
+      initialTimer = setTimeout(highlightText, 400);
       
       const observer = new MutationObserver((mutations) => {
         let shouldHighlight = false;
@@ -217,7 +245,7 @@ export const ArticleReaderPage: React.FC = () => {
         });
         if (shouldHighlight) {
           if (observerTimer) clearTimeout(observerTimer);
-          observerTimer = setTimeout(highlightText, 50);
+          observerTimer = setTimeout(highlightText, 400);
         }
       });
       
@@ -545,7 +573,13 @@ export const ArticleReaderPage: React.FC = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', height: '100%', width: '100%' }}>
-            <PdfLoader url={pdfUrl} beforeLoad={<div style={{ textAlign: 'center', padding: '2rem' }}><Loader2 className="animate-spin" /> Carregando PDF...</div>}>
+            <PdfLoader 
+              url={pdfUrl} 
+              workerSrc={pdfWorkerUrl}
+              beforeLoad={<div style={{ textAlign: 'center', padding: '2rem' }}><Loader2 className="animate-spin" /> Carregando PDF...</div>}
+              errorMessage={<div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-danger)' }}><AlertCircle size={48} style={{ margin: '0 auto 1rem auto' }} /><h3>Erro ao carregar o PDF</h3><p>O arquivo PDF pode estar corrompido ou o caminho está inacessível.</p></div>}
+              onError={(error) => console.error("PdfLoader falhou:", error)}
+            >
               {(pdfDocument) => (
                 <>
                   <div id="pdf-container" style={{ flexGrow: 1, position: 'relative', height: '100%' }}>
