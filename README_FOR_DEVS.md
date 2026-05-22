@@ -14,18 +14,12 @@ A filosofia do **Emma's Librarian** baseia-se em três pilares:
 1. **Transparência e Rastreabilidade:** O pesquisador deve ter controle absoluto sobre suas buscas. O sistema traduz automaticamente a query visual construída para a sintaxe nativa de cada base de dados externa (OpenAlex, Crossref, Scopus, Web of Science) e documenta esse histórico detalhadamente.
 2. **Privacidade Absoluta (Local-First):** Seus projetos, termos de pesquisa, anotações de leitura e arquivos PDF nunca saem do seu computador. O armazenamento é feito em um banco SQLite embutido de alta performance.
 3. **Estética Premium e Ergonomia Visual:** A interface adota um design moderno com efeito *Glassmorphism*, transições fluidas e um tema visual focado em reduzir a fadiga cognitiva durante longas sessões de leitura científica.
+O projeto está estruturado em uma arquitetura limpa de aplicação Desktop utilizando **Electron** no processo principal (backend local) e **React + TypeScript + Vite** no processo de renderização (emmas_librarian).
 
----
+## Estrutura de Diretórios
 
-## 📂 Estrutura de Pastas e Arquivos
-
-O projeto está estruturado em uma arquitetura limpa de aplicação Desktop utilizando **Electron** no processo principal (backend local) e **React + TypeScript + Vite** no processo de renderização (frontend).
-
-```text
+```
 emmas_librarian/
-├── backend/                        # Histórico: protótipos de serviços auxiliares (FastAPI/Python)
-├── frontend/                       # Código principal da aplicação Desktop
-│   ├── dist/                       # Build final da aplicação React (Vite)
 │   ├── dist-electron/              # Transpilação de TypeScript para Electron Main Process
 │   ├── public/                     # Arquivos públicos estáticos (ex: workers do PDFJS)
 │   ├── electron/                   # Camada de Processo Principal do Electron
@@ -113,9 +107,9 @@ Durante o desenvolvimento da aplicação, superamos desafios técnicos complexos
 * **npm** (gerenciador de pacotes)
 
 ### Passo 1: Instalação de Dependências
-Navegue até a pasta do frontend e instale todas as dependências requeridas do ecossistema Electron e React:
+Navegue até a pasta `emmas_librarian` e instale todas as dependências requeridas do ecossistema Electron e React:
 ```bash
-cd frontend
+cd emmas_librarian
 npm install
 ```
 
@@ -131,7 +125,7 @@ Para gerar um instalador portátil autônomo (`.exe` no Windows) otimizado e com
 ```bash
 npm run electron:build
 ```
-Os arquivos gerados para distribuição serão salvos na pasta `/frontend/release/`.
+Os arquivos gerados para distribuição serão salvos na pasta `/emmas_librarian/release/`.
 
 ---
 
