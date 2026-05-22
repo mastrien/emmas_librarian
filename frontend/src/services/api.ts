@@ -140,5 +140,9 @@ export const projectService = {
 
   async deleteDiaryEntry(projectId: number, entryDate: string): Promise<void> {
     await window.electronAPI.invoke(IpcChannel.DIARY_DELETE, projectId, entryDate);
+  },
+
+  async getAppVersion(): Promise<string> {
+    return await window.electronAPI.invoke(IpcChannel.APP_GET_VERSION);
   }
 };

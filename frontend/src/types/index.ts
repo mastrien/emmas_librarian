@@ -119,4 +119,5 @@ export enum IpcChannel {
   DIARY_GET_ONE = 'diary:getOne',
   DIARY_SAVE = 'diary:save',
   DIARY_DELETE = 'diary:delete',
+  APP_GET_VERSION = 'app:getVersion',
 }

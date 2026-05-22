@@ -35,4 +35,5 @@ var IpcChannel;
     IpcChannel["DIARY_GET_ONE"] = "diary:getOne";
     IpcChannel["DIARY_SAVE"] = "diary:save";
     IpcChannel["DIARY_DELETE"] = "diary:delete";
+    IpcChannel["APP_GET_VERSION"] = "app:getVersion";
 })(IpcChannel || (exports.IpcChannel = IpcChannel = {}));

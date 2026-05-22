@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Library, Plus, Settings } from 'lucide-react';
+import { HelpButton } from './HelpButton';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -35,7 +36,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Emma's Librarian</h1>
         </Link>
         
-        <nav style={{ display: 'flex', gap: '1rem' }}>
+        <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <HelpButton />
           <Link to="/" className="btn-secondary" style={{ padding: '0.5rem 1rem' }}>
             Projetos
           </Link>

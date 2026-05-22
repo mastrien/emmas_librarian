@@ -13,6 +13,7 @@ export const SettingsPage: React.FC = () => {
   const [wosKey, setWosKey] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [appVersion, setAppVersion] = useState('');
 
   useEffect(() => {
     // Load API keys from DB
@@ -21,6 +22,13 @@ export const SettingsPage: React.FC = () => {
       const wKey = await projectService.getSetting('wos_api_key');
       if (sKey) setScopusKey(sKey);
       if (wKey) setWosKey(wKey);
+      
+      try {
+        const v = await projectService.getAppVersion();
+        setAppVersion(v);
+      } catch (err) {
+        console.error('Failed to get app version:', err);
+      }
     };
     loadKeys();
   }, []);
@@ -206,6 +214,11 @@ export const SettingsPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* App Info Section */}
+        <div style={{ textAlign: 'center', marginTop: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          <p>Emma's Librarian {appVersion ? `v${appVersion}` : ''}</p>
         </div>
       </div>
     </div>

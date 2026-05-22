@@ -152,7 +152,7 @@ export const SearchPage: React.FC = () => {
                     padding: '0.75rem 1.5rem',
                     borderRadius: 'var(--radius-xl)',
                     border: `2px solid ${isSelected ? 'var(--color-primary)' : 'var(--border-color)'}`,
-                    background: isSelected ? 'rgba(79, 70, 229, 0.1)' : 'var(--bg-surface)',
+                    background: isSelected ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)' : 'var(--bg-surface)',
                     color: isSelected ? 'var(--color-primary)' : 'var(--text-muted)',
                     fontWeight: 600,
                     cursor: 'pointer',
@@ -295,7 +295,7 @@ export const SearchPage: React.FC = () => {
                 value={limit} 
                 onChange={(e) => setLimit(parseInt(e.target.value) || 50)}
                 min="10"
-                max="1000"
+                max="100000"
                 style={{ 
                   width: '100%', 
                   padding: '0.8rem 1rem', 
@@ -310,6 +310,22 @@ export const SearchPage: React.FC = () => {
                 onFocus={(e) => e.currentTarget.style.borderColor = 'var(--color-primary)'}
                 onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
               />
+              <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <strong>Limites das APIs:</strong>
+                <span style={{ color: selectedDbs.includes('crossref') && limit > 1000 ? 'var(--color-danger)' : 'inherit' }}>• Crossref: máximo de 1.000 resultados.</span>
+                <span style={{ color: selectedDbs.includes('scopus') && limit > 5000 ? 'var(--color-danger)' : 'inherit' }}>• Scopus: a API pode limitar entre 200 e 5.000 dependendo da assinatura institucional (pode falhar em limites altos).</span>
+                <span>• OpenAlex / Web of Science: máximo de 100.000 resultados.</span>
+                {limit > 1000 && selectedDbs.includes('crossref') && (
+                  <span style={{ color: 'var(--color-danger)', fontWeight: 600, marginTop: '0.25rem' }}>
+                    Atenção: A base Crossref será limitada a 1.000 resultados.
+                  </span>
+                )}
+                {limit > 200 && selectedDbs.includes('scopus') && (
+                  <span style={{ color: 'var(--color-warning)', fontWeight: 600, marginTop: '0.25rem' }}>
+                    Aviso: A base Scopus pode retornar erro (Exceeds maximum) para limites &gt 200 dependendo do seu nível de serviço.
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -348,7 +364,7 @@ export const SearchPage: React.FC = () => {
       {showKeyAlert.isOpen && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
           <div className="card fade-in" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-surface)', padding: '2.5rem', textAlign: 'center' }}>
-            <div style={{ background: 'rgba(79, 70, 229, 0.1)', color: 'var(--color-primary)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+            <div style={{ background: 'color-mix(in srgb, var(--color-primary) 10%, transparent)', color: 'var(--color-primary)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
               <Key size={32} />
             </div>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Chave de API Necessária</h2>

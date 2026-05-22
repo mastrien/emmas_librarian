@@ -21,18 +21,16 @@ document.documentElement.setAttribute('data-theme', savedTheme);
 document.documentElement.setAttribute('data-accent', savedAccent);
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <HashRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/new-project" element={<NewProjectPage />} />
-          <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-          <Route path="/projects/:id/search" element={<SearchPage />} />
-          <Route path="/articles/:id" element={<ArticleReaderPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
-      </Layout>
-    </HashRouter>
-  </StrictMode>,
+  <HashRouter>
+    <Layout>
+      <Routes>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/new-project" element={<NewProjectPage />} />
+        <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+        <Route path="/projects/:id/search" element={<SearchPage />} />
+        <Route path="/articles/:id" element={<ArticleReaderPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+      </Routes>
+    </Layout>
+  </HashRouter>
 )

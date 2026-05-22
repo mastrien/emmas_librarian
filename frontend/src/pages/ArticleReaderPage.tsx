@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon } from 'lucide-react';
+import { Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { 
   PdfLoader, 
   PdfHighlighter, 
@@ -17,9 +17,12 @@ pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 import { projectService } from '../services/api';
 import type { Article } from '../types';
+import { HelpButton } from '../components/HelpButton';
 
 export const ArticleReaderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [inputPage, setInputPage] = useState("1");
   const [article, setArticle] = useState<Article | null>(null);
   const [highlights, setHighlights] = useState<any[]>([]);
   const [standaloneAnnotations, setStandaloneAnnotations] = useState<any[]>([]);
@@ -99,12 +102,16 @@ export const ArticleReaderPage: React.FC = () => {
   const handleResultClick = (pageNum: number) => {
     if (highlighterRef.current) {
       try {
-        highlighterRef.current.scrollTo({ position: { pageNumber: pageNum } });
+        highlighterRef.current.scrollTo({ 
+          position: { 
+            pageNumber: pageNum,
+            boundingRect: { x1: 0, y1: 0, x2: 1, y2: 1, width: 1, height: 1 }
+          } 
+        });
+        setCurrentPage(pageNum);
+        setInputPage(pageNum.toString());
       } catch (e) {
-        const pageEl = document.querySelector(`[data-page-number="${pageNum}"]`);
-        if (pageEl) {
-          pageEl.scrollIntoView({ behavior: 'smooth' });
-        }
+        console.error("Erro ao scrollar para a página:", e);
       }
     }
   };
@@ -159,6 +166,135 @@ export const ArticleReaderPage: React.FC = () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };
   }, [pdfUrl]);
+
+  useEffect(() => {
+    let isActive = true;
+    let initialTimer: any;
+    let observerTimer: any;
+
+    const cleanupDom = () => {
+      document.querySelectorAll('.textLayer span mark').forEach(mark => {
+        const parent = mark.parentNode;
+        if (parent) {
+          parent.textContent = parent.textContent; 
+        }
+      });
+      document.querySelectorAll('.textLayer').forEach(layer => {
+        Array.from(layer.attributes).forEach(attr => {
+          if (attr.name.startsWith('data-search-highlighted')) {
+            layer.removeAttribute(attr.name);
+          }
+        });
+      });
+    };
+
+    if (sidebarTab === 'search' && !isSearching && searchQuery.trim().length > 2) {
+      const query = searchQuery.trim().toLowerCase();
+      
+      const highlightText = () => {
+        if (!isActive) return;
+        const textLayers = document.querySelectorAll('.textLayer');
+        textLayers.forEach(layer => {
+          if (layer.hasAttribute('data-search-highlighted-' + query)) return;
+          layer.setAttribute('data-search-highlighted-' + query, 'true');
+          
+          const spans = layer.querySelectorAll('span');
+          spans.forEach(span => {
+            if (!span.querySelector('mark') && span.textContent && span.textContent.toLowerCase().includes(query)) {
+              const regex = new RegExp(`(${query})`, 'gi');
+              span.innerHTML = span.textContent.replace(regex, '<mark style="background-color: rgba(234, 179, 8, 0.4); color: inherit; border-radius: 2px;">$1</mark>');
+            }
+          });
+        });
+      };
+      
+      initialTimer = setTimeout(highlightText, 100);
+      
+      const observer = new MutationObserver((mutations) => {
+        let shouldHighlight = false;
+        mutations.forEach(m => {
+          if (m.addedNodes.length) shouldHighlight = true;
+        });
+        if (shouldHighlight) {
+          if (observerTimer) clearTimeout(observerTimer);
+          observerTimer = setTimeout(highlightText, 50);
+        }
+      });
+      
+      const viewer = document.getElementById('pdf-container');
+      if (viewer) {
+        observer.observe(viewer, { childList: true, subtree: true });
+      }
+      
+      return () => {
+        isActive = false;
+        clearTimeout(initialTimer);
+        if (observerTimer) clearTimeout(observerTimer);
+        observer.disconnect();
+        cleanupDom();
+      };
+    } else {
+      // Cleanup highlights if tab is changed or query is cleared
+      cleanupDom();
+    }
+  }, [searchQuery, isSearching, sidebarTab]);
+
+  useEffect(() => {
+    let scrollTimeout: any = null;
+    const handleScroll = () => {
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        // Find the element at the center of the viewport
+        const centerElement = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+        const pageElement = centerElement?.closest('[data-page-number]');
+        
+        if (pageElement) {
+          const topPage = parseInt(pageElement.getAttribute('data-page-number') || '1');
+          if (!isNaN(topPage)) {
+            setCurrentPage(prev => {
+              if (prev !== topPage) {
+                setInputPage(topPage.toString());
+                return topPage;
+              }
+              return prev;
+            });
+          }
+        }
+      }, 50); // Debounce to prevent layout thrashing
+    };
+
+    // Listen to all scroll events in capture phase to ensure we catch internal container scrolls
+    window.addEventListener('scroll', handleScroll, true);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+    };
+  }, []);
+
+  const goToPage = (pageNum: number) => {
+    if (highlighterRef.current) {
+      highlighterRef.current.scrollTo({ 
+        position: { 
+          pageNumber: pageNum,
+          boundingRect: { x1: 0, y1: 0, x2: 1, y2: 1, width: 1, height: 1 }
+        } 
+      });
+      setCurrentPage(pageNum);
+      setInputPage(pageNum.toString());
+    }
+  };
+
+  const handlePageInputSubmit = (e: React.KeyboardEvent<HTMLInputElement>, totalPages: number) => {
+    if (e.key === 'Enter') {
+      const p = parseInt(inputPage);
+      if (!isNaN(p) && p >= 1 && p <= totalPages) {
+        goToPage(p);
+      } else {
+        setInputPage(currentPage.toString());
+      }
+    }
+  };
 
   const handleFileUpload = async () => {
     if (!id) return;
@@ -311,7 +447,7 @@ export const ArticleReaderPage: React.FC = () => {
   };
 
   return (
-    <div className="fade-in" style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-main)' }}>
+    <div className="fade-in" style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-main)', overflow: 'hidden' }}>
       <header className="glass-panel" style={{ 
         padding: '1rem 1.5rem', 
         display: 'flex', 
@@ -331,6 +467,7 @@ export const ArticleReaderPage: React.FC = () => {
           <h2 style={{ margin: 0, fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-heading)' }}>
             {article.title}
           </h2>
+          <HelpButton style={{ marginLeft: '1rem', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} />
         </div>
 
         {!hasLocalFile ? (
@@ -411,15 +548,14 @@ export const ArticleReaderPage: React.FC = () => {
             <PdfLoader url={pdfUrl} beforeLoad={<div style={{ textAlign: 'center', padding: '2rem' }}><Loader2 className="animate-spin" /> Carregando PDF...</div>}>
               {(pdfDocument) => (
                 <>
-                  <div style={{ flexGrow: 1, position: 'relative', height: '100%' }}>
+                  <div id="pdf-container" style={{ flexGrow: 1, position: 'relative', height: '100%' }}>
                     <PdfHighlighter
-                      key={scale}
                       ref={highlighterRef}
                       pdfDocument={pdfDocument}
                       pdfScaleValue={scale.toString()}
                       enableAreaSelection={(event) => event.altKey}
-                      onScrollChange={() => {}}
                       scrollRef={() => {}}
+                      onScrollChange={() => {}}
                       onSelectionFinished={(
                         position,
                         content,
@@ -483,6 +619,60 @@ export const ArticleReaderPage: React.FC = () => {
                       }}
                       highlights={highlights}
                     />
+                    
+                    {/* Floating Page Navigator */}
+                    <div style={{ 
+                      position: 'absolute', 
+                      bottom: '1.5rem', 
+                      left: '50%', 
+                      transform: 'translateX(-50%)', 
+                      zIndex: 100, 
+                      display: 'flex', 
+                      gap: '0.75rem', 
+                      background: 'var(--bg-surface)', 
+                      padding: '0.5rem 1rem', 
+                      borderRadius: 'var(--radius-xl)', 
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)', 
+                      alignItems: 'center',
+                      border: '1px solid var(--border-color)'
+                    }}>
+                      <button 
+                        onClick={() => goToPage(currentPage - 1)} 
+                        disabled={currentPage <= 1}
+                        style={{ background: 'none', border: 'none', cursor: currentPage <= 1 ? 'not-allowed' : 'pointer', color: currentPage <= 1 ? 'var(--text-muted)' : 'var(--text-heading)', display: 'flex' }}
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                        <input 
+                          type="text" 
+                          value={inputPage}
+                          onChange={(e) => setInputPage(e.target.value)}
+                          onKeyDown={(e) => handlePageInputSubmit(e, pdfDocument.numPages)}
+                          onBlur={() => setInputPage(currentPage.toString())}
+                          style={{
+                            width: '40px',
+                            textAlign: 'center',
+                            padding: '0.2rem',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 'var(--radius-sm)',
+                            background: 'var(--bg-main)',
+                            color: 'var(--text-main)',
+                            fontSize: '0.9rem',
+                            fontWeight: 600,
+                            outline: 'none'
+                          }}
+                        />
+                        <span> / {pdfDocument.numPages}</span>
+                      </div>
+                      <button 
+                        onClick={() => goToPage(currentPage + 1)} 
+                        disabled={currentPage >= pdfDocument.numPages}
+                        style={{ background: 'none', border: 'none', cursor: currentPage >= pdfDocument.numPages ? 'not-allowed' : 'pointer', color: currentPage >= pdfDocument.numPages ? 'var(--text-muted)' : 'var(--text-heading)', display: 'flex' }}
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </div>
                   </div>
                   
                   {/* Sidebar with Tabs */}

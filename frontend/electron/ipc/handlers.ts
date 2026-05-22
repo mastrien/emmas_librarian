@@ -260,4 +260,9 @@ export function setupIpcHandlers() {
     }
     return null;
   });
+
+  // App Info
+  ipcMain.handle(IpcChannel.APP_GET_VERSION, () => {
+    return app.getVersion();
+  });
 }

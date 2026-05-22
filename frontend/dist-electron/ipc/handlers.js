@@ -220,4 +220,8 @@ function setupIpcHandlers() {
         }
         return null;
     });
+    // App Info
+    electron_1.ipcMain.handle(types_1.IpcChannel.APP_GET_VERSION, () => {
+        return electron_1.app.getVersion();
+    });
 }

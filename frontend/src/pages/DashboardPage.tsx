@@ -12,7 +12,21 @@ export const DashboardPage: React.FC = () => {
     const fetchProjects = async () => {
       try {
         const data = await projectService.getProjects();
-        setProjects(data);
+        
+        const projectsWithStats = await Promise.all(data.map(async (project) => {
+          const articles = await projectService.getArticles(project.id);
+          return {
+            ...project,
+            stats: {
+              total: articles.length,
+              read: articles.filter(a => a.status === 'read').length,
+              active: articles.filter(a => a.status === 'new').length,
+              archived: articles.filter(a => a.status === 'archived').length,
+            }
+          };
+        }));
+        
+        setProjects(projectsWithStats as any);
       } catch (err) {
         console.error('Erro ao buscar projetos', err);
       } finally {
@@ -68,10 +82,31 @@ export const DashboardPage: React.FC = () => {
               <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', color: 'var(--text-heading)' }}>
                 {project.name}
               </h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: 'auto' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                 <Calendar size={14} /> 
                 Criado em {new Date(project.created_at).toLocaleDateString()}
               </div>
+              
+              {/* @ts-ignore */}
+              {project.stats && (
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Ativos</span>
+                    {/* @ts-ignore */}
+                    <strong style={{ color: 'var(--color-primary)' }}>{project.stats.active}</strong>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Lidos</span>
+                    {/* @ts-ignore */}
+                    <strong style={{ color: 'var(--color-success, #10b981)' }}>{project.stats.read}</strong>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Arquivados</span>
+                    {/* @ts-ignore */}
+                    <strong style={{ color: 'var(--text-muted)' }}>{project.stats.archived}</strong>
+                  </div>
+                </div>
+              )}
             </Link>
           ))}
 
