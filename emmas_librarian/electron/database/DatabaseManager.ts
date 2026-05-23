@@ -161,6 +161,25 @@ export class DatabaseManager {
     stmt.run(status, archiveNote || null, articleId);
   }
 
+  updateArticleMetadata(articleId: number, data: Partial<ArticleInput>): void {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    const allowedFields = ['title', 'authors', 'year', 'doi', 'journal', 'abstract'];
+    for (const field of allowedFields) {
+      if (data[field as keyof ArticleInput] !== undefined) {
+        fields.push(`${field} = ?`);
+        values.push(data[field as keyof ArticleInput] || null);
+      }
+    }
+
+    if (fields.length === 0) return;
+
+    values.push(articleId);
+    const stmt = this.db.prepare(`UPDATE articles SET ${fields.join(', ')} WHERE id = ?`);
+    stmt.run(...values);
+  }
+
   // Annotations
   saveAnnotation(articleId: number, content: string): number {
     const stmt = this.db.prepare('INSERT INTO annotations (article_id, content_markdown) VALUES (?, ?)');

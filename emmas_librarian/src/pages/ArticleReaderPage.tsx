@@ -24,6 +24,15 @@ pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 import { projectService } from '../services/api';
 import type { Article } from '../types';
 import { HelpButton } from '../components/HelpButton';
+import { EditArticleModal } from '../components/EditArticleModal';
+
+const isArticleManual = (article: Article) => {
+  try {
+    return JSON.parse(article.source_databases as string).includes('Manual');
+  } catch {
+    return false;
+  }
+};
 
 export const ArticleReaderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +48,7 @@ export const ArticleReaderPage: React.FC = () => {
   
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [isEditingMetadata, setIsEditingMetadata] = useState(false);
 
   const [scale, setScale] = useState(1.0);
   const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search'>('annotations');
@@ -412,6 +422,12 @@ export const ArticleReaderPage: React.FC = () => {
     }
   };
 
+  const handleEditMetadataSubmit = async (data: any) => {
+    if (!article) return;
+    await projectService.updateArticleMetadata(article.id, data);
+    await fetchData();
+  };
+
   if (loading) return <div style={{ textAlign: 'center', padding: '2rem' }}>Carregando Leitor...</div>;
   if (!article) return <div style={{ textAlign: 'center', padding: '2rem' }}>Artigo não encontrado.</div>;
 
@@ -495,6 +511,16 @@ export const ArticleReaderPage: React.FC = () => {
           <h2 style={{ margin: 0, fontSize: '1.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-heading)' }}>
             {article.title}
           </h2>
+          {isArticleManual(article) && (
+            <button 
+              onClick={() => setIsEditingMetadata(true)} 
+              className="btn-secondary" 
+              style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              title="Editar Metadados"
+            >
+              <Edit2 size={14} /> Editar Metadados
+            </button>
+          )}
           <HelpButton style={{ marginLeft: '1rem', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} />
         </div>
 
@@ -1016,6 +1042,15 @@ export const ArticleReaderPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {isEditingMetadata && article && (
+        <EditArticleModal
+          isOpen={true}
+          onClose={() => setIsEditingMetadata(false)}
+          article={article}
+          onSubmit={handleEditMetadataSubmit}
+        />
+      )}
     </div>
   );
 };

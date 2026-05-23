@@ -68,6 +68,10 @@ export function setupIpcHandlers() {
     return db.updateArticleStatus(id, status, note);
   });
 
+  ipcMain.handle(IpcChannel.ARTICLES_UPDATE_METADATA, (event, id: number, data: any) => {
+    return db.updateArticleMetadata(id, data);
+  });
+
   // Settings
   ipcMain.handle(IpcChannel.SETTINGS_GET, (event, key: string) => {
     return db.getSetting(key);
@@ -188,6 +192,54 @@ export function setupIpcHandlers() {
     return articleId;
   });
 
+  ipcMain.handle(IpcChannel.ARTICLES_CREATE_FROM_PDFS, async (event, projectId: number, filePaths: string[]) => {
+    let addedCount = 0;
+    const pdfsDir = path.join(app.getPath('userData'), 'storage', 'pdfs');
+    if (!fs.existsSync(pdfsDir)) {
+      fs.mkdirSync(pdfsDir, { recursive: true });
+    }
+
+    for (const sourceFilePath of filePaths) {
+      try {
+        const filename = path.basename(sourceFilePath, '.pdf');
+        
+        // Save the article with title = filename
+        const articleId = db.saveArticle(projectId, {
+          title: filename,
+          authors: '',
+          source_query: 'Importação em Lote',
+          source_databases: JSON.stringify(['Manual']),
+          csl_json: JSON.stringify({}),
+        });
+
+        // Copy the PDF
+        const destPath = path.join(pdfsDir, `${articleId}_${Date.now()}.pdf`);
+        fs.copyFileSync(sourceFilePath, destPath);
+        db.updateArticleFilePath(articleId, destPath);
+
+        addedCount++;
+      } catch (err) {
+        console.error("Failed to copy PDF file for batch import:", err);
+      }
+    }
+
+    if (addedCount > 0) {
+      try {
+        db.saveSearchHistory(
+          projectId,
+          `Importação em Lote de ${addedCount} PDFs`,
+          {},
+          addedCount,
+          { "Manual": { "count": addedCount } }
+        );
+      } catch (err) {
+        console.error("Failed to log batch import to search history:", err);
+      }
+    }
+
+    return addedCount;
+  });
+
   // CSV Export
   ipcMain.handle(IpcChannel.EXPORT_CSV, async (event, projectId: number) => {
     const project = db.getProject(projectId);
@@ -220,6 +272,17 @@ export function setupIpcHandlers() {
       return filePaths[0];
     }
     return null;
+  });
+
+  ipcMain.handle(IpcChannel.DIALOG_OPEN_MULTIPLE_FILES, async (event) => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
+    });
+    if (!canceled && filePaths.length > 0) {
+      return filePaths;
+    }
+    return [];
   });
 
   // Diary

@@ -2,10 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { SearchHistoryModal } from '../components/SearchHistoryModal';
 import { DiarySection } from '../components/DiarySection';
+import { EditArticleModal } from '../components/EditArticleModal';
 
 const ArchiveModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClose: () => void, onSubmit: (note: string) => void }) => {
   const [note, setNote] = useState('');
@@ -268,6 +269,14 @@ type TabId = 'articles' | 'diary' | 'history';
 
 const ITEMS_PER_PAGE = 50;
 
+const isArticleManual = (article: Article) => {
+  try {
+    return JSON.parse(article.source_databases as string).includes('Manual');
+  } catch {
+    return false;
+  }
+};
+
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
@@ -284,6 +293,8 @@ export const ProjectDetailsPage: React.FC = () => {
   const [newName, setNewName] = useState('');
   const [activeTab, setActiveTab] = useState<TabId>('articles');
   const [currentPage, setCurrentPage] = useState(1);
+  const [editingArticle, setEditingArticle] = useState<Article | null>(null);
+  const [isImportingPdfs, setIsImportingPdfs] = useState(false);
   const navigate = useNavigate();
 
   const fetchData = async () => {
@@ -392,6 +403,29 @@ export const ProjectDetailsPage: React.FC = () => {
     await fetchData();
   };
 
+  const handleEditArticleSubmit = async (data: any) => {
+    if (!editingArticle) return;
+    await projectService.updateArticleMetadata(editingArticle.id, data);
+    await fetchData();
+  };
+
+  const handleBatchPdfImport = async () => {
+    if (!id) return;
+    try {
+      setIsImportingPdfs(true);
+      const filePaths = await projectService.openMultiplePdfsDialog();
+      if (filePaths && filePaths.length > 0) {
+        const count = await projectService.createArticlesFromPdfs(parseInt(id), filePaths);
+        alert(`${count} artigo(s) importado(s) com sucesso.`);
+        await fetchData();
+      }
+    } catch (err: any) {
+      alert(`Erro ao importar PDFs: ${err.message || err}`);
+    } finally {
+      setIsImportingPdfs(false);
+    }
+  };
+
   const filteredArticles = articles.filter(a => {
     const matchesSearch = (a.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (a.authors || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -466,6 +500,9 @@ export const ProjectDetailsPage: React.FC = () => {
           </button>
           <button onClick={() => projectService.exportBiblioshiny(project.id)} className="btn-secondary" title="Exportar no formato compatível com Biblioshiny">
             <Download size={18} /> Biblioshiny
+          </button>
+          <button onClick={handleBatchPdfImport} disabled={isImportingPdfs} className="btn-secondary" title="Adicionar vários PDFs de uma vez">
+            {isImportingPdfs ? <Loader2 size={18} className="animate-spin" /> : <CopyPlus size={18} />} Adicionar PDFs em Lote
           </button>
           <button onClick={() => setIsManualModalOpen(true)} className="btn-secondary" title="Adicionar artigo manualmente">
             <Plus size={18} /> Artigo Avulso
@@ -692,6 +729,12 @@ export const ProjectDetailsPage: React.FC = () => {
                           <CheckCircle size={14} /> Lido
                         </button>
                         
+                        {isArticleManual(article) && (
+                          <button onClick={() => setEditingArticle(article)} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Editar Metadados">
+                            <Edit2 size={14} /> Editar
+                          </button>
+                        )}
+
                         <button onClick={() => setArchivingId(article.id)} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: 'var(--color-danger)' }} title="Arquivar">
                           <Archive size={14} /> Arquivar
                         </button>
@@ -750,6 +793,15 @@ export const ProjectDetailsPage: React.FC = () => {
         onClose={() => setArchivingId(null)} 
         onSubmit={handleArchiveSubmit} 
       />
+
+      {editingArticle && (
+        <EditArticleModal
+          isOpen={true}
+          onClose={() => setEditingArticle(null)}
+          article={editingArticle}
+          onSubmit={handleEditArticleSubmit}
+        />
+      )}
 
       <ManualArticleModal
         isOpen={isManualModalOpen}

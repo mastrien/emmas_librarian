@@ -58,6 +58,10 @@ export const projectService = {
     await window.electronAPI.invoke(IpcChannel.ARTICLES_UPDATE_STATUS, articleId, status, note);
   },
 
+  async updateArticleMetadata(articleId: number, data: any): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.ARTICLES_UPDATE_METADATA, articleId, data);
+  },
+
   async getHighlights(articleId: number): Promise<Highlight[]> {
     const dbHighlights = await window.electronAPI.invoke(IpcChannel.HIGHLIGHTS_GET, articleId);
     return dbHighlights.map((h: any) => ({
@@ -109,6 +113,10 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.DIALOG_OPEN_FILE);
   },
 
+  async openMultiplePdfsDialog(): Promise<string[]> {
+    return await window.electronAPI.invoke(IpcChannel.DIALOG_OPEN_MULTIPLE_FILES);
+  },
+
   async uploadPdf(articleId: number, filePath: string): Promise<string> {
     return await window.electronAPI.invoke(IpcChannel.PDF_UPLOAD, articleId, filePath);
   },
@@ -119,6 +127,10 @@ export const projectService = {
 
   async createManualArticle(projectId: number, data: any, sourceFilePath?: string): Promise<number> {
     return await window.electronAPI.invoke(IpcChannel.ARTICLES_CREATE_MANUAL, projectId, data, sourceFilePath);
+  },
+
+  async createArticlesFromPdfs(projectId: number, filePaths: string[]): Promise<number> {
+    return await window.electronAPI.invoke(IpcChannel.ARTICLES_CREATE_FROM_PDFS, projectId, filePaths);
   },
 
   async getPdfBuffer(articleId: number): Promise<ArrayBuffer> {
