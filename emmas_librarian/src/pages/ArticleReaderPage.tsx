@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon, ChevronLeft, ChevronRight, Key } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { 
   PdfLoader, 
   PdfHighlighter, 
@@ -36,6 +37,7 @@ const isArticleManual = (article: Article) => {
 
 export const ArticleReaderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [inputPage, setInputPage] = useState("1");
   const [article, setArticle] = useState<Article | null>(null);
@@ -51,10 +53,15 @@ export const ArticleReaderPage: React.FC = () => {
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
 
   const [scale, setScale] = useState(1.0);
-  const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search'>('annotations');
+  const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search' | 'ai'>('annotations');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  const [aiSummary, setAiSummary] = useState<{ generalSummary: string; sectionSummary: string } | null>(null);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [hasAiKey, setHasAiKey] = useState(false);
+  const [showKeyAlert, setShowKeyAlert] = useState(false);
 
   const highlighterRef = useRef<any>(null);
 
@@ -64,6 +71,7 @@ export const ArticleReaderPage: React.FC = () => {
       try {
         await projectService.unlinkPdf(parseInt(id));
         setPdfUrl('');
+        setAiSummary(null);
         await fetchData();
       } catch (err) {
         alert('Erro ao desvincular o PDF');
@@ -115,6 +123,23 @@ export const ArticleReaderPage: React.FC = () => {
     }
   };
 
+  const handleGenerateSummary = async () => {
+    if (!hasAiKey) {
+      setShowKeyAlert(true);
+      return;
+    }
+    if (!id) return;
+    setIsGeneratingAi(true);
+    try {
+      const summary = await projectService.generateSummary(parseInt(id));
+      setAiSummary(summary);
+    } catch (err: any) {
+      alert("Erro ao gerar resumo: " + err.message);
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
   const handleResultClick = (pageNum: number) => {
     if (highlighterRef.current) {
       try {
@@ -135,12 +160,17 @@ export const ArticleReaderPage: React.FC = () => {
   const fetchData = useCallback(async () => {
     if (!id) return;
     try {
-      const [artData, highData, annData] = await Promise.all([
+      const [artData, highData, annData, openai, gemini, anthropic, ollama] = await Promise.all([
         projectService.getArticle(parseInt(id)),
         projectService.getHighlights(parseInt(id)),
-        projectService.getAnnotations(parseInt(id))
+        projectService.getAnnotations(parseInt(id)),
+        projectService.getSetting('api_key_openai'),
+        projectService.getSetting('api_key_gemini'),
+        projectService.getSetting('api_key_anthropic'),
+        projectService.getSetting('api_key_ollama')
       ]);
       setArticle(artData);
+      setHasAiKey(!!(openai || gemini || anthropic || ollama));
       
       const attachedAnnIds = new Set(highData.map((h: any) => h.annotation_id));
       setStandaloneAnnotations(annData.filter((a: any) => !attachedAnnIds.has(a.id)));
@@ -779,6 +809,27 @@ export const ArticleReaderPage: React.FC = () => {
                       >
                         Pesquisar
                       </button>
+                      <button
+                        onClick={() => setSidebarTab('ai')}
+                        style={{
+                          flex: 1,
+                          padding: '0.8rem',
+                          background: 'transparent',
+                          border: 'none',
+                          borderBottom: sidebarTab === 'ai' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                          color: sidebarTab === 'ai' ? 'var(--color-primary)' : 'var(--text-muted)',
+                          fontWeight: sidebarTab === 'ai' ? 600 : 500,
+                          fontSize: '0.9rem',
+                          cursor: 'pointer',
+                          transition: 'all var(--transition-fast)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.3rem'
+                        }}
+                      >
+                        Insights IA
+                      </button>
                     </div>
 
                     {/* Tab Content */}
@@ -937,7 +988,7 @@ export const ArticleReaderPage: React.FC = () => {
                           )}
                         </div>
                       </>
-                    ) : (
+                    ) : sidebarTab === 'search' ? (
                       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                         <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
                           <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-heading)', marginBottom: '1rem' }}>
@@ -1034,6 +1085,50 @@ export const ArticleReaderPage: React.FC = () => {
                           )}
                         </div>
                       </div>
+                    ) : null}
+                    {sidebarTab === 'ai' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+                        <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: 'rgba(79, 70, 229, 0.05)' }}>
+                          <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            Resumo com IA
+                          </h3>
+                          <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Gere um resumo detalhado usando o modelo configurado.</p>
+                          <button
+                            onClick={handleGenerateSummary}
+                            disabled={isGeneratingAi}
+                            className="btn-primary"
+                            style={{ width: '100%', padding: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                          >
+                            {isGeneratingAi ? (
+                              <><Loader2 size={16} className="animate-spin" /> Gerando Resumo...</>
+                            ) : (
+                              <>Gerar Resumo Mágico</>
+                            )}
+                          </button>
+                        </div>
+                        <div style={{ padding: '1rem', flexGrow: 1 }}>
+                          {!aiSummary ? (
+                            <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)' }}>
+                              Nenhum resumo gerado ainda. Clique no botão acima para iniciar.
+                            </div>
+                          ) : (
+                            <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                              <div>
+                                <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-heading)', fontSize: '0.95rem' }}>Visão Geral</h4>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: 1.6, background: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                                  {aiSummary.generalSummary}
+                                </div>
+                              </div>
+                              <div>
+                                <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-heading)', fontSize: '0.95rem' }}>Por Seções</h4>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: 1.6, background: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', whiteSpace: 'pre-wrap' }}>
+                                  {aiSummary.sectionSummary}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </>
@@ -1050,6 +1145,25 @@ export const ArticleReaderPage: React.FC = () => {
           article={article}
           onSubmit={handleEditMetadataSubmit}
         />
+      )}
+
+      {showKeyAlert && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
+          <div className="card fade-in" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-surface)', padding: '2.5rem', textAlign: 'center' }}>
+            <div style={{ background: 'color-mix(in srgb, var(--color-primary) 10%, transparent)', color: 'var(--color-primary)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <Key size={32} />
+            </div>
+            <h2 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0' }}>Chave de IA Necessária</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.5' }}>
+              Para usar os recursos mágicos de Inteligência Artificial, você precisa primeiro configurar sua chave de API (OpenAI, Gemini, Anthropic ou modelo local) nas configurações do sistema.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setShowKeyAlert(false)} className="btn-secondary" style={{ flex: 1 }}>Cancelar</button>
+              <button onClick={() => navigate('/settings')} className="btn-primary" style={{ flex: 1 }}>Configurações</button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

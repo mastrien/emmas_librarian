@@ -137,6 +137,11 @@ export const DashboardPage: React.FC = () => {
           )}
         </div>
       )}
+      <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+        <Link to="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.85rem', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', transition: 'background-color var(--transition-fast)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-surface)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+          Ao usar o sistema, você concorda com os Termos de Uso
+        </Link>
+      </div>
     </div>
   );
 };

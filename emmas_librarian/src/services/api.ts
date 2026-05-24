@@ -156,5 +156,14 @@ export const projectService = {
 
   async getAppVersion(): Promise<string> {
     return await window.electronAPI.invoke(IpcChannel.APP_GET_VERSION);
+  },
+
+  // AI
+  async generateSummary(articleId: number): Promise<{ generalSummary: string; sectionSummary: string }> {
+    return await window.electronAPI.invoke(IpcChannel.AI_GENERATE_SUMMARY, articleId);
+  },
+
+  async massiveExtraction(articleId: number, questions: string[]): Promise<Array<{ question: string; answer: string; quote: string | null }>> {
+    return await window.electronAPI.invoke(IpcChannel.AI_MASSIVE_EXTRACTION, articleId, questions);
   }
 };

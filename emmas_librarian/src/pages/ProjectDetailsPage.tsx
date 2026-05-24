@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { SearchHistoryModal } from '../components/SearchHistoryModal';
 import { DiarySection } from '../components/DiarySection';
@@ -223,7 +223,7 @@ const ManualArticleModal = ({ isOpen, onClose, onSubmit }: {
 
           <div>
             <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Documento PDF (Opcional)</label>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
               <button 
                 type="button" 
                 onClick={handleSelectFile} 
@@ -265,6 +265,134 @@ const ManualArticleModal = ({ isOpen, onClose, onSubmit }: {
   );
 };
 
+const AIExtractionModal = ({ 
+  isOpen, onClose, articlesWithPdf, 
+  aiQuestions, setAiQuestions, 
+  handleMassiveExtraction, isExtracting, extractionProgress, aiExtractionResults 
+}: any) => {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
+      <div className="card fade-in" style={{ padding: '2rem', width: '800px', maxWidth: '95%', maxHeight: '90vh', overflowY: 'auto', background: 'var(--bg-main)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h3 style={{ margin: 0, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            Investigação Massiva com IA
+          </h3>
+          <button type="button" onClick={onClose} disabled={isExtracting} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+            <XIcon size={20} />
+          </button>
+        </div>
+
+        {articlesWithPdf.length === 0 ? (
+          <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
+            Nenhum artigo com PDF vinculado encontrado neste projeto.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ padding: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+              <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                Faça perguntas aos artigos. A IA irá buscar respostas e citações diretas nos <strong>{articlesWithPdf.length} PDFs</strong> disponíveis.
+              </p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                {aiQuestions.map((q: string, idx: number) => (
+                  <div key={idx} style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input 
+                      type="text" 
+                      value={q} 
+                      onChange={(e) => {
+                        const newQ = [...aiQuestions];
+                        newQ[idx] = e.target.value;
+                        setAiQuestions(newQ);
+                      }}
+                      placeholder={`Pergunta ${idx + 1}`}
+                      disabled={isExtracting}
+                      style={{ 
+                        flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', 
+                        border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)',
+                        outline: 'none'
+                      }}
+                    />
+                    <button 
+                      onClick={() => {
+                        const newQ = aiQuestions.filter((_: any, i: number) => i !== idx);
+                        setAiQuestions(newQ.length ? newQ : ['']);
+                      }}
+                      disabled={isExtracting}
+                      className="btn-secondary"
+                      style={{ color: 'var(--color-danger)', padding: '0.5rem' }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button 
+                onClick={() => setAiQuestions([...aiQuestions, ''])}
+                disabled={isExtracting}
+                className="btn-secondary"
+                style={{ fontSize: '0.85rem' }}
+              >
+                + Adicionar Pergunta
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={handleMassiveExtraction}
+                disabled={isExtracting || aiQuestions.every((q: string) => !q.trim())}
+                className="btn-primary"
+                style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', justifyContent: 'center' }}
+              >
+                {isExtracting ? (
+                  <><Loader2 size={18} className="animate-spin" style={{ marginRight: '0.5rem' }} /> Processando ({extractionProgress.current}/{extractionProgress.total})</>
+                ) : 'Iniciar Investigação'}
+              </button>
+            </div>
+
+            {aiExtractionResults.length > 0 && (
+              <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <h4 style={{ margin: 0, color: 'var(--text-heading)' }}>Resultados</h4>
+                {aiExtractionResults.map((res: any, idx: number) => (
+                  <div key={idx} className="card" style={{ padding: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-surface)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                      <h5 style={{ margin: 0, color: 'var(--color-primary)', flex: 1 }}>{res.article.title}</h5>
+                      <Link to={`/articles/${res.article.id}`} target="_blank" className="btn-secondary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>Abrir PDF</Link>
+                    </div>
+                    {res.error ? (
+                      <div style={{ color: 'var(--color-danger)', fontSize: '0.85rem' }}>{res.error}</div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+                        {res.result.map((r: any, rIdx: number) => (
+                          <div key={rIdx} style={{ background: 'var(--bg-main)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+                            <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-heading)' }}>
+                              Q: {r.question}
+                            </div>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>
+                              <strong>R:</strong> {r.answer}
+                            </div>
+                            {r.quote && (
+                              <div style={{ fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--text-muted)', borderLeft: '3px solid var(--color-primary)', paddingLeft: '0.5rem' }}>
+                                "{r.quote}"
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
+  );
+};
+
 type TabId = 'articles' | 'diary' | 'history';
 
 const ITEMS_PER_PAGE = 50;
@@ -297,17 +425,31 @@ export const ProjectDetailsPage: React.FC = () => {
   const [isImportingPdfs, setIsImportingPdfs] = useState(false);
   const navigate = useNavigate();
 
+  const [isAIExtractionModalOpen, setIsAIExtractionModalOpen] = useState(false);
+  const [aiQuestions, setAiQuestions] = useState<string[]>(['']);
+  const [aiExtractionResults, setAiExtractionResults] = useState<any[]>([]);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 });
+  
+  const [hasAiKey, setHasAiKey] = useState(false);
+  const [showKeyAlert, setShowKeyAlert] = useState(false);
+
   const fetchData = async () => {
     if (!id) return;
     try {
-      const [projData, artData, histData] = await Promise.all([
+      const [projData, artData, histData, openai, gemini, anthropic, ollama] = await Promise.all([
         projectService.getProject(parseInt(id)),
         projectService.getArticles(parseInt(id)),
-        projectService.getSearchHistory(parseInt(id))
+        projectService.getSearchHistory(parseInt(id)),
+        projectService.getSetting('api_key_openai'),
+        projectService.getSetting('api_key_gemini'),
+        projectService.getSetting('api_key_anthropic'),
+        projectService.getSetting('api_key_ollama')
       ]);
       setProject(projData);
       setArticles(artData);
       setHistory(histData);
+      setHasAiKey(!!(openai || gemini || anthropic || ollama));
       setNewName(projData.name);
     } catch (err) {
       console.error('Erro ao carregar dados do projeto', err);
@@ -426,6 +568,35 @@ export const ProjectDetailsPage: React.FC = () => {
     }
   };
 
+  const handleMassiveExtraction = async () => {
+    const validQuestions = aiQuestions.filter(q => q.trim().length > 0);
+    if (validQuestions.length === 0) return;
+
+    const articlesWithPdf = articles.filter(a => !!a.local_file_path);
+    if (articlesWithPdf.length === 0) return;
+
+    setIsExtracting(true);
+    setExtractionProgress({ current: 0, total: articlesWithPdf.length });
+    setAiExtractionResults([]);
+
+    const results = [];
+    for (let i = 0; i < articlesWithPdf.length; i++) {
+      const article = articlesWithPdf[i];
+      setExtractionProgress({ current: i + 1, total: articlesWithPdf.length });
+      try {
+        const result = await projectService.massiveExtraction(article.id, validQuestions);
+        results.push({ article, result });
+        setAiExtractionResults([...results]);
+      } catch (err) {
+        console.error(`Erro ao extrair de ${article.title}:`, err);
+        results.push({ article, error: "Falha ao processar." });
+        setAiExtractionResults([...results]);
+      }
+    }
+
+    setIsExtracting(false);
+  };
+
   const filteredArticles = articles.filter(a => {
     const matchesSearch = (a.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (a.authors || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -456,8 +627,8 @@ export const ProjectDetailsPage: React.FC = () => {
         <ArrowLeft size={18} /> Voltar para Projetos
       </Link>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
-        <div style={{ flex: 1 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
+        <div>
           {isEditingName ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <input 
@@ -471,7 +642,8 @@ export const ProjectDetailsPage: React.FC = () => {
                   borderRadius: 'var(--radius-md)',
                   color: 'var(--text-heading)',
                   padding: '0.2rem 0.5rem',
-                  width: '60%'
+                  width: '100%',
+                  maxWidth: '600px'
                 }}
                 autoFocus
               />
@@ -494,7 +666,7 @@ export const ProjectDetailsPage: React.FC = () => {
           </p>
         </div>
         
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <button onClick={() => projectService.exportCsv(project.id)} className="btn-secondary">
             <Download size={18} /> CSV
           </button>
@@ -503,6 +675,15 @@ export const ProjectDetailsPage: React.FC = () => {
           </button>
           <button onClick={handleBatchPdfImport} disabled={isImportingPdfs} className="btn-secondary" title="Adicionar vários PDFs de uma vez">
             {isImportingPdfs ? <Loader2 size={18} className="animate-spin" /> : <CopyPlus size={18} />} Adicionar PDFs em Lote
+          </button>
+          <button onClick={() => {
+            if (!hasAiKey) {
+              setShowKeyAlert(true);
+              return;
+            }
+            setIsAIExtractionModalOpen(true);
+          }} className="btn-primary" style={{ background: 'var(--color-secondary)' }} title="Fazer perguntas para todos os PDFs com IA">
+            <Search size={18} /> IA Massiva
           </button>
           <button onClick={() => setIsManualModalOpen(true)} className="btn-secondary" title="Adicionar artigo manualmente">
             <Plus size={18} /> Artigo Avulso
@@ -817,6 +998,18 @@ export const ProjectDetailsPage: React.FC = () => {
           onRevertSearch={handleRevertSearch}
         />
       )}
+
+      <AIExtractionModal
+        isOpen={isAIExtractionModalOpen}
+        onClose={() => setIsAIExtractionModalOpen(false)}
+        articlesWithPdf={articles.filter(a => !!a.local_file_path)}
+        aiQuestions={aiQuestions}
+        setAiQuestions={setAiQuestions}
+        handleMassiveExtraction={handleMassiveExtraction}
+        isExtracting={isExtracting}
+        extractionProgress={extractionProgress}
+        aiExtractionResults={aiExtractionResults}
+      />
     </div>
   );
 };

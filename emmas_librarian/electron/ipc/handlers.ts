@@ -6,6 +6,7 @@ import { SearchOrchestrator } from '../services/SearchOrchestrator';
 import { QueryTranslator, queryTranslator } from '../services/QueryTranslator';
 import { ApiIntegrator } from '../services/ApiIntegrator';
 import { ExportService } from '../services/ExportService';
+import { AIService } from '../services/AIService';
 import { IpcChannel } from '../types';
 import { QueryBlock } from '../services/types';
 
@@ -16,6 +17,7 @@ export function setupIpcHandlers() {
   const api = new ApiIntegrator();
   const orchestrator = new SearchOrchestrator(db, translator, api);
   const exportService = new ExportService();
+  const aiService = new AIService(db);
 
   // Projects
   ipcMain.handle(IpcChannel.PROJECTS_GET_ALL, () => {
@@ -327,5 +329,22 @@ export function setupIpcHandlers() {
   // App Info
   ipcMain.handle(IpcChannel.APP_GET_VERSION, () => {
     return app.getVersion();
+  });
+
+  // AI Services
+  ipcMain.handle(IpcChannel.AI_GENERATE_SUMMARY, async (event, articleId: number) => {
+    const article = db.getArticle(articleId);
+    if (!article || !article.local_file_path || !fs.existsSync(article.local_file_path)) {
+      throw new Error("PDF not found for this article.");
+    }
+    return aiService.generateSummary(articleId, article.local_file_path);
+  });
+
+  ipcMain.handle(IpcChannel.AI_MASSIVE_EXTRACTION, async (event, articleId: number, questions: string[]) => {
+    const article = db.getArticle(articleId);
+    if (!article || !article.local_file_path || !fs.existsSync(article.local_file_path)) {
+      throw new Error("PDF not found for this article.");
+    }
+    return aiService.massiveExtraction(articleId, article.local_file_path, questions);
   });
 }

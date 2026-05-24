@@ -11,6 +11,7 @@ import { ProjectDetailsPage } from './pages/ProjectDetailsPage'
 import { SearchPage } from './pages/SearchPage'
 import { ArticleReaderPage } from './pages/ArticleReaderPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { TermsOfUsePage } from './pages/TermsOfUsePage'
 import { Layout } from './components/Layout'
 import './style.css'
 
@@ -30,6 +31,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/projects/:id/search" element={<SearchPage />} />
         <Route path="/articles/:id" element={<ArticleReaderPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/terms" element={<TermsOfUsePage />} />
       </Routes>
     </Layout>
   </HashRouter>

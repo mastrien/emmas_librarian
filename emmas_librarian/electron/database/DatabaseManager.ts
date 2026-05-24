@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
+import { safeStorage } from 'electron';
 import { Project, Article, Annotation, Highlight, DiaryEntry } from '../types';
 
 export interface ArticleInput {
@@ -242,11 +243,33 @@ export class DatabaseManager {
   // Settings
   public getSetting(key: string): string | null {
     const row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as any;
-    return row ? row.value : null;
+    if (!row) return null;
+    
+    if (key.startsWith('api_key_')) {
+      try {
+        if (safeStorage.isEncryptionAvailable()) {
+          const buffer = Buffer.from(row.value, 'base64');
+          return safeStorage.decryptString(buffer);
+        }
+      } catch (err) {
+        console.error(`Failed to decrypt setting ${key}:`, err);
+        // Fallback or just return the raw string if it wasn't actually encrypted
+        // This handles cases where keys were saved before safeStorage was implemented
+        return row.value;
+      }
+    }
+    return row.value;
   }
 
   public setSetting(key: string, value: string): void {
-    this.db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, value);
+    let finalValue = value;
+    if (key.startsWith('api_key_') && value) {
+      if (safeStorage.isEncryptionAvailable()) {
+        const encrypted = safeStorage.encryptString(value);
+        finalValue = encrypted.toString('base64');
+      }
+    }
+    this.db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, finalValue);
   }
 
   // Search History

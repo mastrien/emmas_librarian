@@ -121,4 +121,6 @@ export enum IpcChannel {
   DIARY_SAVE = 'diary:save',
   DIARY_DELETE = 'diary:delete',
   APP_GET_VERSION = 'app:getVersion',
+  AI_GENERATE_SUMMARY = 'ai:generateSummary',
+  AI_MASSIVE_EXTRACTION = 'ai:massiveExtraction',
 }
