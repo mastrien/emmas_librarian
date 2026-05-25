@@ -43,3 +43,33 @@ Você pode verificar qual a versão atual do seu aplicativo na tela de **Configu
 Se você é um desenvolvedor e deseja rodar o projeto localmente, contribuir com o código, ou entender a arquitetura (Electron + React + Vite + SQLite), consulte o nosso documento técnico:
 
 👉 [**README_FOR_DEVS.md**](README_FOR_DEVS.md)
+
+---
+
+## 📝 Patch Notes (Histórico de Atualizações)
+
+Acompanhe as últimas novidades, melhorias e correções recentes do **Emma's Librarian**:
+
+### v1.1.0
+- **Integração com IA:** Adicionado Resumo Mágico, Extração em Massa de dados e histórico de extrações.
+- **Interface (UI):** Nova barra de título nativa customizada e novo logotipo SVG.
+- **Novas Funcionalidades:** Adicionada funcionalidade de documentos de acesso rápido.
+- **Correções (Fixes):**
+  - Resolução de problemas de layout (*overflows*) e melhorias na ancoragem de destaques em PDFs.
+  - Correção na importação e resolução da biblioteca `pdf-parse` e erros de compilação TypeScript relacionados.
+  - Correção na exibição da barra de título nativa na página do leitor.
+
+### v1.0.2
+- **Gestão de Acervo:** Adicionada a capacidade de adicionar e editar artigos avulsos manualmente.
+
+### v1.0.1
+- **Leitor de PDF:** Correções na exibição e comportamento de destaques nas pesquisas do leitor.
+- **Estrutura:** Renomeação do pacote interno do frontend para `emmas_librarian`.
+
+### v1.0.0
+- **Lançamento Inicial:** Primeira versão (MVP) contendo o construtor visual de queries, busca avançada e suporte a múltiplos projetos.
+- **Funcionalidades Principais:** 
+  - Pesquisas reversíveis e controle de zoom reativo.
+  - Alternância de modo escuro (Dark Mode) e modo editor do diário.
+  - Exportação de dados formatada para CSV padrão Biblioshiny (Scopus).
+- **Correções Técnicas:** Diversas estabilizações do ambiente de produção Electron, incluindo a correção de erros do PrismJS, efeitos *glassmorphism* e builds de banco de dados nativos (better-sqlite3).
