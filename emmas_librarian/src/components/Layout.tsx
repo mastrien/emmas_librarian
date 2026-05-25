@@ -29,7 +29,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const isReader = location.pathname.startsWith('/articles/');
 
   if (isReader) {
-    return <>{children}</>;
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+        <NativeTitleBar />
+        <div style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
+          {children}
+        </div>
+      </div>
+    );
   }
 
   return (

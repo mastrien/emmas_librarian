@@ -69,3 +69,43 @@ Fine-tuning é o processo de treinar ainda mais um modelo já existente (como um
 
 **No contexto do Emma's Librarian:**
 Se o recurso de Extração Massiva com IA crescer muito, você pode pegar 500 resumos e metadados corrigidos manualmente por você, criar um dataset no formato pergunta-resposta e fazer o fine-tuning de um modelo menor (para que ele seja rápido e barato) ensinando a ele o seu padrão ouro de extração de referências.
+
+---
+
+## 5. Customizando a Barra de Título Nativa no Electron
+
+**O que é:**
+Ao invés de usar a barra de título padrão do Windows ou macOS (que contém os menus "File", "Edit" e o título do app), podemos esconder a barra padrão, manter os botões nativos de "Minimizar/Maximizar/Fechar" (preservando o Snap Layout do Windows) e desenhar nossa própria barra em HTML/React.
+
+**Como funciona no `main.ts`:**
+```typescript
+const mainWindow = new BrowserWindow({
+  // ... outras configs ...
+  titleBarStyle: 'hidden', // Esconde a barra nativa inteira
+  titleBarOverlay: { // Habilita os botões de controle de janela sobrepostos ao HTML
+    color: '#f8fafc', // Cor de fundo real da interface
+    symbolColor: '#334155' // Cor do ícone (X, etc)
+  }
+});
+```
+**Dica de Ouro para o Windows:** O Windows precisa saber qual a cor real do fundo (`color`) para conseguir calcular corretamente as cores sutis de "hover" (ao passar o mouse por cima de minimizar/maximizar). Se definirmos o fundo como transparente (`rgba(0,0,0,0)`), o sistema perde a referência e os botões de minimizar/maximizar param de reagir ao mouse!
+
+**Como habilitar o arraste (`Layout.tsx`):**
+Sem a barra do SO, o usuário não consegue mais clicar no topo para arrastar a janela. Para corrigir isso, definimos uma `div` no topo da nossa interface React com a propriedade CSS `-webkit-app-region: drag`.
+Tudo que estiver com `drag` passa a arrastar a janela. Se dentro dessa área houver algum botão ou link, precisamos colocar `-webkit-app-region: no-drag` para que o clique não seja engolido pelo arraste.
+
+**Atualização dinâmica (Modo Claro/Escuro):**
+Como o `titleBarOverlay` no Electron precisa das cores em formato HEX, e nossa interface troca de tema dinamicamente via React, criamos um evento IPC para o frontend enviar o tema atual para o Main Process atualizar a cor dos controles de janela nativos em tempo real:
+```typescript
+// No React (Frontend):
+window.electronAPI.invoke('UPDATE_TITLE_BAR', 'dark');
+
+// No Electron (Backend):
+ipcMain.handle('UPDATE_TITLE_BAR', (event, theme) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  win.setTitleBarOverlay({
+    color: theme === 'dark' ? '#0f172a' : '#f8fafc',
+    symbolColor: theme === 'dark' ? '#e2e8f0' : '#334155'
+  });
+});
+```

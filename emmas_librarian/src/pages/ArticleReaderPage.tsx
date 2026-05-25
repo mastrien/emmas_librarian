@@ -576,7 +576,7 @@ export const ArticleReaderPage: React.FC = () => {
   };
 
   return (
-    <div className="fade-in" style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-main)', overflow: 'hidden' }}>
+    <div className="fade-in" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-main)', overflow: 'hidden' }}>
       <header className="glass-panel" style={{ 
         padding: '1rem 1.5rem', 
         display: 'flex', 
