@@ -272,8 +272,9 @@ const AIExtractionModal = ({
   isOpen, onClose, articlesWithPdf, 
   aiQuestions, setAiQuestions, 
   handleMassiveExtraction, isExtracting, extractionProgress, aiExtractionResults,
-  cancelExtractionRef
+  cancelExtractionRef, investigationHistory = []
 }: any) => {
+  const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   useEffect(() => {
@@ -298,25 +299,42 @@ const AIExtractionModal = ({
           </button>
         </div>
 
-        {articlesWithPdf.length === 0 ? (
-          <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
-            Nenhum artigo com PDF vinculado encontrado neste projeto.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ padding: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-              <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: 'var(--text-main)' }}>
-                Selecione os artigos (<strong>{selectedIds.length}/{articlesWithPdf.length}</strong>) e faça perguntas. A IA buscará respostas.
-              </p>
-              
-              {!isExtracting && !isFinished && (
-                <>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <button type="button" className="btn-secondary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setSelectedIds(articlesWithPdf.map((a:any) => a.id))}>Selecionar Todos</button>
-                    <button type="button" className="btn-secondary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setSelectedIds([])}>Desmarcar Todos</button>
-                  </div>
-                  <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '0.5rem', marginBottom: '1rem', background: 'var(--bg-main)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
-                    {articlesWithPdf.map((a: any) => (
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+          <button 
+            onClick={() => setActiveTab('new')}
+            style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', borderBottom: activeTab === 'new' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'new' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: activeTab === 'new' ? 600 : 400 }}
+          >
+            Nova Investigação
+          </button>
+          <button 
+            onClick={() => setActiveTab('history')}
+            style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', borderBottom: activeTab === 'history' ? '2px solid var(--color-primary)' : '2px solid transparent', color: activeTab === 'history' ? 'var(--color-primary)' : 'var(--text-muted)', fontWeight: activeTab === 'history' ? 600 : 400 }}
+          >
+            Histórico
+          </button>
+        </div>
+
+        {activeTab === 'new' ? (
+          <>
+            {articlesWithPdf.length === 0 ? (
+              <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
+                Nenhum artigo com PDF vinculado encontrado neste projeto.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ padding: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                  <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                    Selecione os artigos (<strong>{selectedIds.length}/{articlesWithPdf.length}</strong>) e faça perguntas. A IA buscará respostas.
+                  </p>
+                  
+                  {!isExtracting && !isFinished && (
+                    <>
+                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <button type="button" className="btn-secondary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setSelectedIds(articlesWithPdf.map((a:any) => a.id))}>Selecionar Todos</button>
+                        <button type="button" className="btn-secondary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setSelectedIds([])}>Desmarcar Todos</button>
+                      </div>
+                      <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '0.5rem', marginBottom: '1rem', background: 'var(--bg-main)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
+                        {articlesWithPdf.map((a: any) => (
                       <label key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', padding: '0.5rem', borderRadius: 'var(--radius-sm)', background: selectedIds.includes(a.id) ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)' : 'var(--bg-surface)', border: selectedIds.includes(a.id) ? '1px solid var(--color-primary)' : '1px solid var(--border-color)' }}>
                         <input 
                           type="checkbox" 
@@ -457,6 +475,30 @@ const AIExtractionModal = ({
                 ))}
               </div>
             )}
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {investigationHistory.length === 0 ? (
+              <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Nenhum histórico encontrado.</div>
+            ) : (
+              investigationHistory.map((hist: any, idx: number) => {
+                const qs = JSON.parse(hist.questions || '[]');
+                const artIds = JSON.parse(hist.articles_ids || '[]');
+                return (
+                  <div key={idx} className="card" style={{ padding: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-surface)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text-heading)' }}>{new Date(hist.created_at).toLocaleString()}</span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'var(--bg-main)', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-sm)' }}>{artIds.length} Artigos</span>
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                      {qs.map((q: string, i: number) => <li key={i}>{q}</li>)}
+                    </ul>
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
       </div>
@@ -511,11 +553,13 @@ export const ProjectDetailsPage: React.FC = () => {
 
   const [projectDocuments, setProjectDocuments] = useState<any[]>([]);
   const [isQuickAccessModalOpen, setIsQuickAccessModalOpen] = useState(false);
+  
+  const [investigationHistory, setInvestigationHistory] = useState<any[]>([]);
 
   const fetchData = async () => {
     if (!id) return;
     try {
-      const [projData, artData, histData, openai, gemini, anthropic, ollama, docsData] = await Promise.all([
+      const [projData, artData, histData, openai, gemini, anthropic, ollama, docsData, invHist] = await Promise.all([
         projectService.getProject(parseInt(id)),
         projectService.getArticles(parseInt(id)),
         projectService.getSearchHistory(parseInt(id)),
@@ -523,7 +567,8 @@ export const ProjectDetailsPage: React.FC = () => {
         projectService.getSetting('api_key_gemini'),
         projectService.getSetting('api_key_anthropic'),
         projectService.getSetting('api_key_ollama'),
-        projectService.getProjectDocuments(parseInt(id))
+        projectService.getProjectDocuments(parseInt(id)),
+        projectService.getMassiveInvestigations(parseInt(id))
       ]);
       setProject(projData);
       setArticles(artData);
@@ -531,6 +576,7 @@ export const ProjectDetailsPage: React.FC = () => {
       setHasAiKey(!!(openai || gemini || anthropic || ollama));
       setNewName(projData.name);
       setProjectDocuments(docsData);
+      setInvestigationHistory(invHist);
     } catch (err) {
       console.error('Erro ao carregar dados do projeto', err);
     } finally {
@@ -670,15 +716,6 @@ export const ProjectDetailsPage: React.FC = () => {
         const result = await projectService.massiveExtraction(article.id, validQuestions);
         results.push({ article, result });
         setAiExtractionResults([...results]);
-
-        // Salvar os resultados como anotações no artigo
-        let markdownAnnotation = `**[Pesquisa com IA]**\\n\\n`;
-        result.forEach((r: any) => {
-          markdownAnnotation += `**Pergunta:** ${r.question}\\n**Resposta:** ${r.answer}\\n`;
-          if (r.quote) markdownAnnotation += `> "${r.quote}"\\n\\n`;
-          else markdownAnnotation += `\\n`;
-        });
-        await projectService.createAnnotation(article.id, markdownAnnotation);
         
       } catch (err: any) {
         console.error(`Erro ao extrair de ${article.title}:`, err);
@@ -690,6 +727,13 @@ export const ProjectDetailsPage: React.FC = () => {
         results.push({ article, error: "Falha ao processar." });
         setAiExtractionResults([...results]);
       }
+    }
+
+    if (id && results.length > 0) {
+      await projectService.saveMassiveInvestigation(parseInt(id), validQuestions, selectedIds);
+      // refetch history
+      const newHist = await projectService.getMassiveInvestigations(parseInt(id));
+      setInvestigationHistory(newHist);
     }
 
     setIsExtracting(false);
@@ -1145,6 +1189,7 @@ export const ProjectDetailsPage: React.FC = () => {
         extractionProgress={extractionProgress}
         aiExtractionResults={aiExtractionResults}
         cancelExtractionRef={cancelExtractionRef}
+        investigationHistory={investigationHistory}
       />
 
       {showQuotaModal && createPortal(

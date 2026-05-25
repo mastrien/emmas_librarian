@@ -1,4 +1,4 @@
-import type { Project, Article, Highlight, Annotation, DiaryEntry, PendingHighlight, ProjectDocument } from '../types';
+import type { Project, Article, Highlight, Annotation, DiaryEntry, PendingHighlight, ProjectDocument, MassiveInvestigation } from '../types';
 import { IpcChannel } from '../types';
 
 export const projectService = {
@@ -137,6 +137,11 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.PDF_GET, articleId);
   },
 
+  // Project Documents
+  async openProjectDocument(url: string, localFilePath?: string): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, url, localFilePath);
+  },
+
   // Diary
   async getDiaryEntries(projectId: number): Promise<DiaryEntry[]> {
     return await window.electronAPI.invoke(IpcChannel.DIARY_GET_ALL, projectId);
@@ -192,7 +197,16 @@ export const projectService = {
     await window.electronAPI.invoke(IpcChannel.PROJECT_DOCUMENTS_DELETE, id);
   },
 
-  async openProjectDocument(url?: string, filePath?: string): Promise<void> {
+  async openProjectDocumentExternal(url?: string, filePath?: string): Promise<void> {
     await window.electronAPI.invoke(IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, url, filePath);
+  },
+
+  // Massive Investigations
+  async getMassiveInvestigations(projectId: number): Promise<MassiveInvestigation[]> {
+    return await window.electronAPI.invoke(IpcChannel.MASSIVE_INVESTIGATIONS_GET, projectId);
+  },
+
+  async saveMassiveInvestigation(projectId: number, questions: string[], articlesIds: number[]): Promise<number> {
+    return await window.electronAPI.invoke(IpcChannel.MASSIVE_INVESTIGATIONS_SAVE, projectId, questions, articlesIds);
   }
 };

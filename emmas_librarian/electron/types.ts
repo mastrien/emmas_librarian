@@ -140,6 +140,8 @@ export enum IpcChannel {
   PROJECT_DOCUMENTS_CREATE = 'projectDocuments:create',
   PROJECT_DOCUMENTS_DELETE = 'projectDocuments:delete',
   PROJECT_DOCUMENT_OPEN_EXTERNAL = 'projectDocument:openExternal',
+  MASSIVE_INVESTIGATIONS_GET = 'massiveInvestigations:get',
+  MASSIVE_INVESTIGATIONS_SAVE = 'massiveInvestigations:save',
 }
 
 export interface PendingHighlight {
@@ -149,5 +151,13 @@ export interface PendingHighlight {
   context_before: string | null;
   context_after: string | null;
   comment: string | null;
+  created_at: string;
+}
+
+export interface MassiveInvestigation {
+  id: number;
+  project_id: number;
+  questions: string; // JSON string array
+  articles_ids: string; // JSON string array
   created_at: string;
 }

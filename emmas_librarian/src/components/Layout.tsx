@@ -1,22 +1,43 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Library, Plus, Settings } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 import { HelpButton } from './HelpButton';
+import { Logo } from './Logo';
+
+const NativeTitleBar = () => (
+  <div style={{
+    height: '32px',
+    width: '100%',
+    WebkitAppRegion: 'drag',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '12px',
+    fontWeight: 500,
+    color: 'var(--text-muted)',
+    backgroundColor: 'var(--bg-main)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 60
+  }} className="native-titlebar">
+    Emma's Librarian
+  </div>
+);
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const isReader = location.pathname.startsWith('/articles/');
 
   if (isReader) {
-    // The reader page usually wants full screen without the main navigation wrapper
     return <>{children}</>;
   }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <NativeTitleBar />
       <header className="glass-panel" style={{ 
         position: 'sticky', 
-        top: 0, 
+        top: '32px', 
         zIndex: 50,
         padding: '1rem 2rem',
         display: 'flex',
@@ -24,15 +45,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         justifyContent: 'space-between'
       }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--text-heading)' }}>
-          <div style={{ 
-            background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
-            padding: '0.5rem',
-            borderRadius: 'var(--radius-md)',
-            color: 'white',
-            display: 'flex'
-          }}>
-            <Library size={24} />
-          </div>
+          <Logo size={36} style={{ color: 'var(--color-primary)' }} />
           <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Emma's Librarian</h1>
         </Link>
         
@@ -45,6 +58,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <Settings size={18} /> Configurações
           </Link>
         </nav>
+
       </header>
 
       <main className="fade-in" style={{ flexGrow: 1, padding: '2rem' }}>

@@ -99,6 +99,20 @@ export class DatabaseManager {
     } catch (e) {
       console.error('Migration pending_highlights error', e);
     }
+    try {
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS massive_investigations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            questions TEXT NOT NULL,
+            articles_ids TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+      `);
+    } catch (e) {
+      console.error('Migration massive_investigations error', e);
+    }
   }
 
   // Projects
@@ -277,6 +291,21 @@ export class DatabaseManager {
   deletePendingHighlight(id: number): void {
     const stmt = this.db.prepare('DELETE FROM pending_highlights WHERE id = ?');
     stmt.run(id);
+  }
+
+  // Massive Investigations
+  saveMassiveInvestigation(projectId: number, questions: string[], articlesIds: number[]): number {
+    const stmt = this.db.prepare(`
+      INSERT INTO massive_investigations (project_id, questions, articles_ids)
+      VALUES (?, ?, ?)
+    `);
+    const info = stmt.run(projectId, JSON.stringify(questions), JSON.stringify(articlesIds));
+    return info.lastInsertRowid as number;
+  }
+
+  getMassiveInvestigations(projectId: number): any[] {
+    const stmt = this.db.prepare('SELECT * FROM massive_investigations WHERE project_id = ? ORDER BY created_at DESC');
+    return stmt.all(projectId);
   }
 
   close(): void {

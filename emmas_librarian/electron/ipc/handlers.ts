@@ -1,4 +1,4 @@
-import { ipcMain, app, dialog, shell } from 'electron';
+import { ipcMain, app, dialog, shell, BrowserWindow } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { DatabaseManager } from '../database/DatabaseManager';
@@ -18,6 +18,17 @@ export function setupIpcHandlers() {
   const orchestrator = new SearchOrchestrator(db, translator, api);
   const exportService = new ExportService();
   const aiService = new AIService(db);
+
+  // App Window Controls
+  ipcMain.handle('UPDATE_TITLE_BAR', (event, theme: 'light' | 'dark') => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) {
+      win.setTitleBarOverlay({
+        color: theme === 'dark' ? '#0f172a' : '#f8fafc',
+        symbolColor: theme === 'dark' ? '#e2e8f0' : '#334155'
+      });
+    }
+  });
 
   // Projects
   ipcMain.handle(IpcChannel.PROJECTS_GET_ALL, () => {
@@ -397,5 +408,14 @@ export function setupIpcHandlers() {
     } else if (url) {
       await shell.openExternal(url);
     }
+  });
+
+  // Massive Investigations
+  ipcMain.handle(IpcChannel.MASSIVE_INVESTIGATIONS_GET, (event, projectId: number) => {
+    return db.getMassiveInvestigations(projectId);
+  });
+
+  ipcMain.handle(IpcChannel.MASSIVE_INVESTIGATIONS_SAVE, (event, projectId: number, questions: string[], articlesIds: number[]) => {
+    return db.saveMassiveInvestigation(projectId, questions, articlesIds);
   });
 }

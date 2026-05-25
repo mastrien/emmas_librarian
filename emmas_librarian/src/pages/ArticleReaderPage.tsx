@@ -231,11 +231,18 @@ export const ArticleReaderPage: React.FC = () => {
                 annotation_id: h.annotation_id
               })));
             }
-            // If some couldn't be anchored, just delete them so we don't try again forever
-            if (unanchoredHighlights) {
+            // If some couldn't be anchored, create standalone annotations so they aren't lost
+            if (unanchoredHighlights && unanchoredHighlights.length > 0) {
               for (const unanchored of unanchoredHighlights) {
+                const markdown = `**[Destaque não ancorado]**\n\n**Comentário:** ${unanchored.comment}\n\n**Citação no texto:** "${unanchored.quote}"`;
+                await projectService.createAnnotation(parseInt(id), markdown);
                 await projectService.deletePendingHighlight(unanchored.id);
               }
+              // Refresh standalone annotations
+              const newAnnData = await projectService.getAnnotations(parseInt(id));
+              const currentHighData = await projectService.getHighlights(parseInt(id));
+              const currentAttachedAnnIds = new Set(currentHighData.map((h: any) => h.annotation_id));
+              setStandaloneAnnotations(newAnnData.filter((a: any) => !currentAttachedAnnIds.has(a.id)));
             }
           } catch (e) {
             console.error("Failed to anchor highlights:", e);
@@ -676,7 +683,7 @@ export const ArticleReaderPage: React.FC = () => {
             <p style={{ fontSize: '1rem', maxWidth: '400px', margin: 0 }}>Faça o upload do arquivo PDF deste artigo para começar a ler, anotar e fazer destaques diretamente no Emma's Librarian.</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', height: '100%', width: '100%' }}>
+          <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
             <PdfLoader 
               url={pdfUrl} 
               workerSrc={pdfWorkerUrl}
@@ -819,7 +826,9 @@ export const ArticleReaderPage: React.FC = () => {
                     borderLeft: '1px solid var(--border-color)', 
                     background: 'var(--bg-surface)', 
                     display: 'flex', 
-                    flexDirection: 'column' 
+                    flexDirection: 'column',
+                    height: '100%',
+                    overflow: 'hidden'
                   }}>
                     {/* Tab Selector */}
                     <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-main)' }}>

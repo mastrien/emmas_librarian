@@ -21,6 +21,10 @@ const savedAccent = localStorage.getItem('accent') || 'blue';
 document.documentElement.setAttribute('data-theme', savedTheme);
 document.documentElement.setAttribute('data-accent', savedAccent);
 
+if ((window as any).electronAPI) {
+  (window as any).electronAPI.invoke('UPDATE_TITLE_BAR', savedTheme);
+}
+
 createRoot(document.getElementById('root')!).render(
   <HashRouter>
     <Layout>

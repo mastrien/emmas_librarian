@@ -53,6 +53,9 @@ export const SettingsPage: React.FC = () => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
+    if ((window as any).electronAPI) {
+      (window as any).electronAPI.invoke('UPDATE_TITLE_BAR', newTheme);
+    }
   };
 
   const handleAccentChange = (newAccent: string) => {

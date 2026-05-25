@@ -19,6 +19,12 @@ function createWindow() {
     width: 1200,
     height: 800,
     show: false,
+    icon: path.join(__dirname, isDev ? '../public/favicon.ico' : '../dist/favicon.ico'),
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#f8fafc',
+      symbolColor: '#334155'
+    },
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

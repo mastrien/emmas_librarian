@@ -30,6 +30,9 @@ export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights:
       let fullText = "";
       const itemMappings: { startIndex: number; endIndex: number; item: any }[] = [];
       
+      let strippedText = "";
+      const strippedToOriginal: number[] = [];
+      
       for (const item of textContent.items as any[]) {
         const str = item.str + (item.hasEOL ? '\n' : '');
         itemMappings.push({
@@ -37,36 +40,50 @@ export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights:
           endIndex: fullText.length + str.length,
           item
         });
+        
+        for (let i = 0; i < str.length; i++) {
+          const char = str[i];
+          if (!/\\s/.test(char)) {
+            strippedText += char.toLowerCase();
+            strippedToOriginal.push(fullText.length + i);
+          }
+        }
         fullText += str;
       }
       
-      const textLower = fullText.toLowerCase();
-      
-      // Attempt 1: Exact quote match
       let queryLower = pending.quote.toLowerCase();
+      let strippedQuery = queryLower.replace(/\\s+/g, '');
+      
+      if (!strippedQuery) continue;
+
       let matches = [];
       let index = 0;
       
-      while ((index = textLower.indexOf(queryLower, index)) !== -1) {
+      while ((index = strippedText.indexOf(strippedQuery, index)) !== -1) {
         matches.push(index);
-        index += queryLower.length;
+        index += strippedQuery.length;
       }
       
       // If multiple matches, use padding
       if (matches.length > 1 && pending.context_before && pending.context_after) {
-        const expandedQuery = (pending.context_before + " " + pending.quote + " " + pending.context_after).toLowerCase();
-        let expandedIndex = textLower.indexOf(expandedQuery);
+        const strippedContextBefore = pending.context_before.toLowerCase().replace(/\\s+/g, '');
+        const strippedContextAfter = pending.context_after.toLowerCase().replace(/\\s+/g, '');
+        const expandedQuery = strippedContextBefore + strippedQuery + strippedContextAfter;
+        let expandedIndex = strippedText.indexOf(expandedQuery);
         if (expandedIndex !== -1) {
-          // Adjust to just the quote part
-          const quoteStartIndex = expandedIndex + pending.context_before.length + 1;
+          const quoteStartIndex = expandedIndex + strippedContextBefore.length;
           matches = [quoteStartIndex];
         }
       }
       
       if (matches.length === 1) {
-        // We found exactly one reliable match on this page!
-        const matchStart = matches[0];
-        const matchEnd = matchStart + queryLower.length;
+        const strippedStart = matches[0];
+        const strippedEnd = strippedStart + strippedQuery.length - 1;
+        
+        if (strippedStart < strippedToOriginal.length && strippedEnd < strippedToOriginal.length) {
+          const matchStart = strippedToOriginal[strippedStart];
+          const matchEnd = strippedToOriginal[strippedEnd] + 1;
+
         
         // Find which items overlap with the match
         const overlappingItems = itemMappings.filter(m => 
@@ -91,6 +108,7 @@ export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights:
           });
           foundPage = pageNum;
           break; // Stop searching other pages
+        }
         }
       }
     }
