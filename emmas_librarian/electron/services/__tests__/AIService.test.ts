@@ -6,8 +6,7 @@ import { DatabaseManager } from '../../database/DatabaseManager';
 vi.mock('pdf-parse', () => {
   const MockPDFParse = vi.fn().mockImplementation(() => {
     return {
-      load: vi.fn().mockResolvedValue(undefined),
-      getText: vi.fn().mockResolvedValue('Mocked PDF text content for testing purposes.')
+      getText: vi.fn().mockResolvedValue({ text: 'Mocked PDF text content for testing purposes.' })
     };
   });
   return {

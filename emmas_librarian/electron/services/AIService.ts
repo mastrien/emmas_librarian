@@ -17,10 +17,9 @@ export class AIService {
 
     const dataBuffer = fs.readFileSync(pdfPath);
     try {
-      const parser = new PDFParse();
-      await parser.load(dataBuffer);
-      const text = await parser.getText();
-      return text;
+      const parser = new PDFParse({ data: dataBuffer });
+      const result = await parser.getText();
+      return result.text;
     } catch (err) {
       console.error('Error parsing PDF:', err);
       throw new Error('Failed to parse PDF file');
@@ -29,7 +28,7 @@ export class AIService {
 
   // --- API Clients ---
 
-  private getKeys() {
+  public getKeys() {
     return {
       openai: this.db.getSetting('api_key_openai'),
       gemini: this.db.getSetting('api_key_gemini'),
