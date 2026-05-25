@@ -116,12 +116,12 @@ export function setupIpcHandlers() {
     return db.getHighlights(articleId);
   });
 
-  ipcMain.handle(IpcChannel.HIGHLIGHTS_CREATE, (event, articleId: number, color: string, positionData: string, content?: string) => {
+  ipcMain.handle(IpcChannel.HIGHLIGHTS_CREATE, (event, articleId: number, color: string, positionData: string, contentText: string | null, content?: string) => {
     let annId;
     if (content) {
       annId = db.saveAnnotation(articleId, content);
     }
-    return db.saveHighlight(articleId, color, positionData, annId);
+    return db.saveHighlight(articleId, color, positionData, contentText, annId);
   });
 
   ipcMain.handle(IpcChannel.HIGHLIGHTS_DELETE, (event, id: number) => {
@@ -415,7 +415,7 @@ export function setupIpcHandlers() {
     return db.getMassiveInvestigations(projectId);
   });
 
-  ipcMain.handle(IpcChannel.MASSIVE_INVESTIGATIONS_SAVE, (event, projectId: number, questions: string[], articlesIds: number[]) => {
-    return db.saveMassiveInvestigation(projectId, questions, articlesIds);
+  ipcMain.handle(IpcChannel.MASSIVE_INVESTIGATIONS_SAVE, (event, projectId: number, questions: string[], articlesIds: number[], modelUsed: string, status: string) => {
+    return db.saveMassiveInvestigation(projectId, questions, articlesIds, modelUsed, status);
   });
 }

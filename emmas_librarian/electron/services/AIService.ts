@@ -34,6 +34,7 @@ export class AIService {
       gemini: this.db.getSetting('api_key_gemini'),
       anthropic: this.db.getSetting('api_key_anthropic'),
       ollama: this.db.getSetting('api_key_ollama'),
+      ollamaModel: this.db.getSetting('ollama_model'),
     };
   }
 
@@ -84,7 +85,7 @@ export class AIService {
     return data.candidates[0].content.parts[0].text;
   }
 
-  private async callOllama(prompt: string, baseUrl: string): Promise<string> {
+  private async callOllama(prompt: string, baseUrl: string, model: string): Promise<string> {
     // Clean URL
     let url = baseUrl.trim();
     if (url.endsWith('/')) url = url.slice(0, -1);
@@ -94,7 +95,7 @@ export class AIService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama3', // default fallback, might be overriden by specific local config later
+        model: model, // uses the configured model or fallback
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
       }),
@@ -119,7 +120,7 @@ export class AIService {
     } else if (keys.gemini) {
       return this.callGemini(prompt, keys.gemini);
     } else if (keys.ollama) {
-      return this.callOllama(prompt, keys.ollama);
+      return this.callOllama(prompt, keys.ollama, keys.ollamaModel || 'llama3');
     } else {
       throw new Error("Nenhuma chave de IA configurada. Por favor, adicione uma chave nas configurações.");
     }

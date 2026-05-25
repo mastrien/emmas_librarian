@@ -39,6 +39,9 @@ describe('AIService', () => {
         if (key === 'api_key_openai') return 'test-openai-key';
         return null;
       }),
+      getArticle: vi.fn().mockReturnValue({ local_file_path: 'fake/path.pdf' }),
+      savePendingHighlight: vi.fn().mockReturnValue(123),
+      updateArticleAiSummary: vi.fn(),
     } as unknown as DatabaseManager;
 
     aiService = new AIService(dbMock);

@@ -187,7 +187,7 @@ export const ArticleReaderPage: React.FC = () => {
       setHighlights(highData.map((h: any) => ({
         id: h.id.toString(),
         position: h.position_data,
-        content: { text: h.comment || '' },
+        content: { text: h.content_text || h.comment || '' },
         comment: { text: h.comment || '', emoji: '' },
         annotation_id: h.annotation_id
       })));
@@ -217,6 +217,7 @@ export const ArticleReaderPage: React.FC = () => {
                   parseInt(id),
                   anchor.color,
                   anchor.position,
+                  anchor.content.text,
                   anchor.comment.text
                 );
                 await projectService.deletePendingHighlight(anchor.pendingId);
@@ -225,8 +226,8 @@ export const ArticleReaderPage: React.FC = () => {
               const newHighData = await projectService.getHighlights(parseInt(id));
               setHighlights(newHighData.map((h: any) => ({
                 id: h.id.toString(),
-                position: JSON.parse(h.position_data),
-                content: { text: h.comment || '' },
+                position: h.position_data,
+                content: { text: h.content_text || h.comment || '' },
                 comment: { text: h.comment || '', emoji: '' },
                 annotation_id: h.annotation_id
               })));
@@ -442,6 +443,7 @@ export const ArticleReaderPage: React.FC = () => {
         parseInt(id),
         'yellow',
         highlight.position,
+        highlight.content.text,
         highlight.comment.text
       );
       setHighlights([{ ...highlight, id: response.id.toString(), annotation_id: response.annotation_id }, ...highlights]);
@@ -587,7 +589,8 @@ export const ArticleReaderPage: React.FC = () => {
         borderTop: 'none',
         borderRadius: 0,
         boxShadow: 'var(--shadow-sm)',
-        zIndex: 10
+        zIndex: 10,
+        flexShrink: 0
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
           <Link to={`/projects/${article.project_id}`} style={{ textDecoration: 'none', color: 'var(--text-muted)', flexShrink: 0, transition: 'color var(--transition-fast)' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-main)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}>
@@ -663,7 +666,7 @@ export const ArticleReaderPage: React.FC = () => {
         )}
       </header>
 
-      <div style={{ flexGrow: 1, position: 'relative', height: '100%' }}>
+      <div style={{ flexGrow: 1, position: 'relative', minHeight: 0 }}>
         {!hasLocalFile ? (
           <div style={{ 
             display: 'flex', 
@@ -692,7 +695,7 @@ export const ArticleReaderPage: React.FC = () => {
               onError={(error) => console.error("PdfLoader falhou:", error)}
             >
               {(pdfDocument) => (
-                <>
+                <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
                   <div id="pdf-container" style={{ flexGrow: 1, position: 'relative', height: '100%' }}>
                     <PdfHighlighter
                       ref={highlighterRef}
@@ -1188,9 +1191,9 @@ export const ArticleReaderPage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                </>
-              )}
-            </PdfLoader>
+                </div>
+                )}
+              </PdfLoader>
           </div>
         )}
       </div>

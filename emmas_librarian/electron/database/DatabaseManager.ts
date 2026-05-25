@@ -113,6 +113,24 @@ export class DatabaseManager {
     } catch (e) {
       console.error('Migration massive_investigations error', e);
     }
+    
+    // Migrations for existing tables
+    try {
+      const miInfo = this.db.pragma('table_info(massive_investigations)') as any[];
+      if (!miInfo.some(col => col.name === 'model_used')) {
+        this.db.prepare('ALTER TABLE massive_investigations ADD COLUMN model_used TEXT').run();
+      }
+      if (!miInfo.some(col => col.name === 'status')) {
+        this.db.prepare('ALTER TABLE massive_investigations ADD COLUMN status TEXT').run();
+      }
+
+      const hlInfo = this.db.pragma('table_info(highlights)') as any[];
+      if (!hlInfo.some(col => col.name === 'content_text')) {
+        this.db.prepare('ALTER TABLE highlights ADD COLUMN content_text TEXT').run();
+      }
+    } catch (e) {
+      console.error('Schema migrations error', e);
+    }
   }
 
   // Projects
@@ -241,12 +259,12 @@ export class DatabaseManager {
   }
 
   // Highlights
-  saveHighlight(articleId: number, color: string, positionData: string, annotationId?: number): number {
+  saveHighlight(articleId: number, color: string, positionData: string, contentText: string | null, annotationId?: number): number {
     const stmt = this.db.prepare(`
-      INSERT INTO highlights (article_id, color, position_data, annotation_id)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO highlights (article_id, color, position_data, content_text, annotation_id)
+      VALUES (?, ?, ?, ?, ?)
     `);
-    const info = stmt.run(articleId, color, positionData, annotationId || null);
+    const info = stmt.run(articleId, color, positionData, contentText, annotationId || null);
     return info.lastInsertRowid as number;
   }
 
@@ -294,12 +312,12 @@ export class DatabaseManager {
   }
 
   // Massive Investigations
-  saveMassiveInvestigation(projectId: number, questions: string[], articlesIds: number[]): number {
+  saveMassiveInvestigation(projectId: number, questions: string[], articlesIds: number[], modelUsed: string, status: string): number {
     const stmt = this.db.prepare(`
-      INSERT INTO massive_investigations (project_id, questions, articles_ids)
-      VALUES (?, ?, ?)
+      INSERT INTO massive_investigations (project_id, questions, articles_ids, model_used, status)
+      VALUES (?, ?, ?, ?, ?)
     `);
-    const info = stmt.run(projectId, JSON.stringify(questions), JSON.stringify(articlesIds));
+    const info = stmt.run(projectId, JSON.stringify(questions), JSON.stringify(articlesIds), modelUsed, status);
     return info.lastInsertRowid as number;
   }
 

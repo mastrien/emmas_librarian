@@ -58,7 +58,7 @@ describe('DatabaseManager', () => {
     expect(anns).toHaveLength(1);
     expect(anns[0].content_markdown).toBe('Test Annotation');
 
-    const hlId = dbManager.saveHighlight(articleId, '#ff0', '{}', annId);
+    const hlId = dbManager.saveHighlight(articleId, '#ff0', '{}', 'Test Quote', annId);
     const highlights = dbManager.getHighlights(articleId);
     expect(highlights).toHaveLength(1);
     expect(highlights[0].color).toBe('#ff0');

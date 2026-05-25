@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS highlights (
     article_id INTEGER NOT NULL,
     color TEXT NOT NULL,
     position_data TEXT NOT NULL,
+    content_text TEXT,
     annotation_id INTEGER,
     FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
     FOREIGN KEY (annotation_id) REFERENCES annotations(id) ON DELETE SET NULL
@@ -94,6 +95,8 @@ CREATE TABLE IF NOT EXISTS massive_investigations (
     project_id INTEGER NOT NULL,
     questions TEXT NOT NULL,
     articles_ids TEXT NOT NULL,
+    model_used TEXT,
+    status TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );

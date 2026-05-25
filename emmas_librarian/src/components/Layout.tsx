@@ -18,8 +18,9 @@ const NativeTitleBar = () => (
     backgroundColor: 'var(--bg-main)',
     position: 'sticky',
     top: 0,
-    zIndex: 60
-  }} className="native-titlebar">
+    zIndex: 60,
+    flexShrink: 0
+  } as any} className="native-titlebar">
     Emma's Librarian
   </div>
 );

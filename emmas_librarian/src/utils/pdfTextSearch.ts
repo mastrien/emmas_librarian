@@ -43,7 +43,7 @@ export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights:
         
         for (let i = 0; i < str.length; i++) {
           const char = str[i];
-          if (!/\\s/.test(char)) {
+          if (!/\s/.test(char)) {
             strippedText += char.toLowerCase();
             strippedToOriginal.push(fullText.length + i);
           }
@@ -52,7 +52,7 @@ export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights:
       }
       
       let queryLower = pending.quote.toLowerCase();
-      let strippedQuery = queryLower.replace(/\\s+/g, '');
+      let strippedQuery = queryLower.replace(/\s+/g, '');
       
       if (!strippedQuery) continue;
 
@@ -66,8 +66,8 @@ export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights:
       
       // If multiple matches, use padding
       if (matches.length > 1 && pending.context_before && pending.context_after) {
-        const strippedContextBefore = pending.context_before.toLowerCase().replace(/\\s+/g, '');
-        const strippedContextAfter = pending.context_after.toLowerCase().replace(/\\s+/g, '');
+        const strippedContextBefore = pending.context_before.toLowerCase().replace(/\s+/g, '');
+        const strippedContextAfter = pending.context_after.toLowerCase().replace(/\s+/g, '');
         const expandedQuery = strippedContextBefore + strippedQuery + strippedContextAfter;
         let expandedIndex = strippedText.indexOf(expandedQuery);
         if (expandedIndex !== -1) {

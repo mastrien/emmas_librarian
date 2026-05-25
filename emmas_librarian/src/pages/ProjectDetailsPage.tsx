@@ -272,7 +272,7 @@ const AIExtractionModal = ({
   isOpen, onClose, articlesWithPdf, 
   aiQuestions, setAiQuestions, 
   handleMassiveExtraction, isExtracting, extractionProgress, aiExtractionResults,
-  cancelExtractionRef, investigationHistory = []
+  cancelExtractionRef, investigationHistory = [], articles = []
 }: any) => {
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -448,7 +448,6 @@ const AIExtractionModal = ({
                   <div key={idx} className="card" style={{ padding: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-surface)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                       <h5 style={{ margin: 0, color: 'var(--color-primary)', flex: 1 }}>{res.article.title}</h5>
-                      <Link to={`/articles/${res.article.id}`} target="_blank" className="btn-secondary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>Abrir PDF</Link>
                     </div>
                     {res.error ? (
                       <div style={{ color: 'var(--color-danger)', fontSize: '0.85rem' }}>{res.error}</div>
@@ -490,9 +489,40 @@ const AIExtractionModal = ({
                   <div key={idx} className="card" style={{ padding: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-surface)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                       <span style={{ fontWeight: 600, color: 'var(--text-heading)' }}>{new Date(hist.created_at).toLocaleString()}</span>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'var(--bg-main)', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-sm)' }}>{artIds.length} Artigos</span>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        {hist.status && (
+                          <span style={{ 
+                            fontSize: '0.75rem', 
+                            padding: '0.15rem 0.4rem', 
+                            borderRadius: '4px', 
+                            background: hist.status === 'Sucesso' ? 'var(--color-success)' : 'var(--color-danger)', 
+                            color: 'white',
+                            fontWeight: 600
+                          }}>
+                            {hist.status}
+                          </span>
+                        )}
+                        {hist.model_used && (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'var(--bg-main)', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-sm)' }}>
+                            {hist.model_used}
+                          </span>
+                        )}
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'var(--bg-main)', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-sm)' }}>{artIds.length} Artigos</span>
+                      </div>
                     </div>
-                    <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                    
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong style={{ fontSize: '0.85rem', color: 'var(--text-heading)' }}>Artigos Incluídos:</strong>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                        {artIds.map((id: number) => {
+                          const article = articles.find((a: any) => a.id === id);
+                          return article ? article.title : `Artigo #${id}`;
+                        }).join(' • ')}
+                      </div>
+                    </div>
+
+                    <strong style={{ fontSize: '0.85rem', color: 'var(--text-heading)' }}>Perguntas:</strong>
+                    <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-main)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
                       {qs.map((q: string, i: number) => <li key={i}>{q}</li>)}
                     </ul>
                   </div>
@@ -588,8 +618,13 @@ export const ProjectDetailsPage: React.FC = () => {
     fetchData();
   }, [id]);
 
-  // Reset page when filter changes
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, onlyWithPdf]);
+  const handleCloseAIExtractionModal = () => {
+    setIsAIExtractionModalOpen(false);
+    setAiQuestions(['']);
+    setAiExtractionResults([]);
+    setExtractionProgress({ current: 0, total: 0 });
+    setIsExtracting(false);
+  };
 
   const handleUploadClick = async (articleId: number) => {
     setUploadingId(articleId);
@@ -707,6 +742,7 @@ export const ProjectDetailsPage: React.FC = () => {
     setAiExtractionResults([]);
 
     const results = [];
+    let finalStatus = 'Sucesso';
     for (let i = 0; i < articlesToExtract.length; i++) {
       if (cancelExtractionRef.current) break;
 
@@ -722,15 +758,22 @@ export const ProjectDetailsPage: React.FC = () => {
         if (err.message && (err.message.includes('429') || err.message.includes('QUOTA_EXCEEDED'))) {
           setShowQuotaModal(true);
           cancelExtractionRef.current = true;
+          finalStatus = 'Erro: Quota Excedida';
           break;
         }
         results.push({ article, error: "Falha ao processar." });
         setAiExtractionResults([...results]);
+        finalStatus = 'Erro Parcial';
       }
     }
 
     if (id && results.length > 0) {
-      await projectService.saveMassiveInvestigation(parseInt(id), validQuestions, selectedIds);
+      const openai = await projectService.getSetting('api_key_openai');
+      const gemini = await projectService.getSetting('api_key_gemini');
+      const ollama = await projectService.getSetting('ollama_model');
+      const modelUsed = openai ? 'OpenAI' : gemini ? 'Gemini' : ollama ? `Ollama (${ollama})` : 'Desconhecido';
+
+      await projectService.saveMassiveInvestigation(parseInt(id), validQuestions, selectedIds, modelUsed, finalStatus);
       // refetch history
       const newHist = await projectService.getMassiveInvestigations(parseInt(id));
       setInvestigationHistory(newHist);
@@ -910,7 +953,10 @@ export const ProjectDetailsPage: React.FC = () => {
                 type="text" 
                 placeholder="Filtrar por título ou autor..." 
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
                 style={{ 
                   width: '100%', 
                   padding: '0.8rem 1rem 0.8rem 2.8rem', 
@@ -947,7 +993,10 @@ export const ProjectDetailsPage: React.FC = () => {
               <input 
                 type="checkbox" 
                 checked={onlyWithPdf} 
-                onChange={(e) => setOnlyWithPdf(e.target.checked)} 
+                onChange={(e) => {
+                  setOnlyWithPdf(e.target.checked);
+                  setCurrentPage(1);
+                }} 
                 style={{ cursor: 'pointer', accentColor: 'var(--color-primary)' }}
               />
               <span>Apenas com PDF vinculado</span>
@@ -1180,7 +1229,8 @@ export const ProjectDetailsPage: React.FC = () => {
 
       <AIExtractionModal
         isOpen={isAIExtractionModalOpen}
-        onClose={() => setIsAIExtractionModalOpen(false)}
+        onClose={handleCloseAIExtractionModal}
+        articles={articles}
         articlesWithPdf={articles.filter(a => !!a.local_file_path)}
         aiQuestions={aiQuestions}
         setAiQuestions={setAiQuestions}

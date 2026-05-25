@@ -17,6 +17,7 @@ export const SettingsPage: React.FC = () => {
   const [anthropicKey, setAnthropicKey] = useState('');
   const [geminiKey, setGeminiKey] = useState('');
   const [ollamaUrl, setOllamaUrl] = useState('');
+  const [ollamaModel, setOllamaModel] = useState('');
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -31,6 +32,7 @@ export const SettingsPage: React.FC = () => {
       const aKey = await projectService.getSetting('api_key_anthropic');
       const gKey = await projectService.getSetting('api_key_gemini');
       const olUrl = await projectService.getSetting('api_key_ollama');
+      const olMod = await projectService.getSetting('ollama_model');
 
       if (sKey) setScopusKey(sKey);
       if (wKey) setWosKey(wKey);
@@ -38,6 +40,7 @@ export const SettingsPage: React.FC = () => {
       if (aKey) setAnthropicKey(aKey);
       if (gKey) setGeminiKey(gKey);
       if (olUrl) setOllamaUrl(olUrl);
+      if (olMod) setOllamaModel(olMod);
       
       try {
         const v = await projectService.getAppVersion();
@@ -72,6 +75,7 @@ export const SettingsPage: React.FC = () => {
     await projectService.setSetting('api_key_anthropic', anthropicKey);
     await projectService.setSetting('api_key_gemini', geminiKey);
     await projectService.setSetting('api_key_ollama', ollamaUrl);
+    await projectService.setSetting('ollama_model', ollamaModel);
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -266,11 +270,19 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Ollama / DeepSeek URL <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>(Para modelos locais via API)</span></label>
-              <div style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Key size={18} /></div>
-                <input type="text" value={ollamaUrl} onChange={(e) => setOllamaUrl(e.target.value)} placeholder="http://localhost:11434/v1" style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Ollama URL <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>(Ex: http://127.0.0.1:11434/v1)</span></label>
+                <div style={{ position: 'relative' }}>
+                  <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Key size={18} /></div>
+                  <input type="text" value={ollamaUrl} onChange={(e) => setOllamaUrl(e.target.value)} placeholder="http://127.0.0.1:11434/v1" style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Modelo do Ollama</label>
+                <div style={{ position: 'relative' }}>
+                  <input type="text" value={ollamaModel} onChange={(e) => setOllamaModel(e.target.value)} placeholder="Ex: llama3.1" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none' }} />
+                </div>
               </div>
             </div>
 

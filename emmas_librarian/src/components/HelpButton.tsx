@@ -61,15 +61,34 @@ const tutorials: Record<string, { title: string, content: React.ReactNode }> = {
     )
   },
   '/settings': {
-    title: 'Guia de Configurações',
+    title: 'Guia de Configurações e APIs',
     content: (
-      <>
-        <p>Aqui você pode configurar integrações externas.</p>
-        <ul style={{ paddingLeft: '1.5rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <li><strong>Chaves de API:</strong> Adicione suas credenciais institucionais para bases como Scopus e Web of Science para poder realizar buscas através do Emma's Librarian.</li>
+      <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem' }}>
+        <p>Aqui você pode configurar integrações externas para buscas e análises com Inteligência Artificial.</p>
+        
+        <h4 style={{ color: 'var(--color-primary)', marginTop: '1.5rem', marginBottom: '0.5rem' }}>Bases de Dados (Scopus e Web of Science)</h4>
+        <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <li>As chaves para bases bibliográficas geralmente são obtidas pelos portais institucionais ou de desenvolvedores (ex: Elsevier Developer Portal para Scopus).</li>
           <li>As chaves ficam salvas apenas localmente no seu computador.</li>
         </ul>
-      </>
+
+        <h4 style={{ color: 'var(--color-primary)', marginTop: '1.5rem', marginBottom: '0.5rem' }}>Modelos de IA em Nuvem (OpenAI, Gemini, Claude)</h4>
+        <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <li><strong>OpenAI:</strong> Acesse <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>platform.openai.com</a>, faça login, vá em "API keys" e gere uma nova chave.</li>
+          <li><strong>Google Gemini:</strong> Acesse o <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>Google AI Studio</a>, clique em "Get API key" e crie sua chave.</li>
+          <li><strong>Anthropic Claude:</strong> Acesse <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>console.anthropic.com</a> para gerar sua chave.</li>
+        </ul>
+
+        <h4 style={{ color: 'var(--color-primary)', marginTop: '1.5rem', marginBottom: '0.5rem' }}>Modelos Locais com Ollama (Privacidade Total)</h4>
+        <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>O Ollama permite rodar modelos avançados de IA (como Llama 3) no seu próprio computador, sem internet e sem custo.</p>
+        <ol style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9rem' }}>
+          <li>Baixe e instale o Ollama acessando <a href="https://ollama.com" target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>ollama.com</a>.</li>
+          <li>Abra o seu terminal (Prompt de Comando ou PowerShell).</li>
+          <li>Execute o comando <code style={{ background: 'var(--bg-main)', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>ollama run llama3</code> (ou o modelo desejado). Isso irá baixar e iniciar o modelo.</li>
+          <li>O Ollama ficará rodando no endereço padrão (http://localhost:11434).</li>
+          <li>No Emma's Librarian, preencha a chave de API do Ollama com o IP do seu servidor (por padrão: <code style={{ background: 'var(--bg-main)', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>http://127.0.0.1:11434</code>) e o Nome do Modelo (ex: <code style={{ background: 'var(--bg-main)', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>llama3</code>).</li>
+        </ol>
+      </div>
     )
   },
   '/new': {

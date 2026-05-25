@@ -69,14 +69,15 @@ export const projectService = {
       article_id: h.article_id,
       color: h.color,
       position_data: JSON.parse(h.position_data),
+      content_text: h.content_text,
       annotation_id: h.annotation_id,
       comment: h.comment
     }));
   },
 
-  async createHighlight(articleId: number, color: string, positionData: any, annotationContent?: string): Promise<{ id: number; annotation_id: number | null }> {
+  async createHighlight(articleId: number, color: string, positionData: any, contentText: string | null, annotationContent?: string): Promise<{ id: number; annotation_id: number | null }> {
     const positionDataStr = JSON.stringify(positionData);
-    const id = await window.electronAPI.invoke(IpcChannel.HIGHLIGHTS_CREATE, articleId, color, positionDataStr, annotationContent);
+    const id = await window.electronAPI.invoke(IpcChannel.HIGHLIGHTS_CREATE, articleId, color, positionDataStr, contentText, annotationContent);
     return { id, annotation_id: annotationContent ? -1 : null };
   },
 
@@ -206,7 +207,7 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.MASSIVE_INVESTIGATIONS_GET, projectId);
   },
 
-  async saveMassiveInvestigation(projectId: number, questions: string[], articlesIds: number[]): Promise<number> {
-    return await window.electronAPI.invoke(IpcChannel.MASSIVE_INVESTIGATIONS_SAVE, projectId, questions, articlesIds);
+  async saveMassiveInvestigation(projectId: number, questions: string[], articlesIds: number[], modelUsed: string, status: string): Promise<number> {
+    return await window.electronAPI.invoke(IpcChannel.MASSIVE_INVESTIGATIONS_SAVE, projectId, questions, articlesIds, modelUsed, status);
   }
 };
