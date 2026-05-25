@@ -1010,6 +1010,25 @@ export const ProjectDetailsPage: React.FC = () => {
         extractionProgress={extractionProgress}
         aiExtractionResults={aiExtractionResults}
       />
+
+      {showKeyAlert && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
+          <div className="card fade-in" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-surface)', padding: '2.5rem', textAlign: 'center' }}>
+            <div style={{ background: 'color-mix(in srgb, var(--color-primary) 10%, transparent)', color: 'var(--color-primary)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <Key size={32} />
+            </div>
+            <h2 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0' }}>Chave de IA Necessária</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.5' }}>
+              Para usar os recursos de Inteligência Artificial, você precisa primeiro configurar sua chave de API (OpenAI, Gemini, Anthropic ou modelo local) nas configurações do sistema.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setShowKeyAlert(false)} className="btn-secondary" style={{ flex: 1 }}>Cancelar</button>
+              <button onClick={() => navigate('/settings')} className="btn-primary" style={{ flex: 1 }}>Configurações</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

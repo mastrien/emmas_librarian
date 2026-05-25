@@ -1102,7 +1102,7 @@ export const ArticleReaderPage: React.FC = () => {
                             {isGeneratingAi ? (
                               <><Loader2 size={16} className="animate-spin" /> Gerando Resumo...</>
                             ) : (
-                              <>Gerar Resumo Mágico</>
+                              <>Gerar Resumo com IA</>
                             )}
                           </button>
                         </div>
@@ -1155,7 +1155,7 @@ export const ArticleReaderPage: React.FC = () => {
             </div>
             <h2 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0' }}>Chave de IA Necessária</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.5' }}>
-              Para usar os recursos mágicos de Inteligência Artificial, você precisa primeiro configurar sua chave de API (OpenAI, Gemini, Anthropic ou modelo local) nas configurações do sistema.
+              Para usar os recursos de Inteligência Artificial, você precisa primeiro configurar sua chave de API (OpenAI, Gemini, Anthropic ou modelo local) nas configurações do sistema.
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button onClick={() => setShowKeyAlert(false)} className="btn-secondary" style={{ flex: 1 }}>Cancelar</button>

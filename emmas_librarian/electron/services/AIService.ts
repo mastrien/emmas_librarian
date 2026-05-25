@@ -1,8 +1,7 @@
 import fs from 'fs';
-import pdfParseModule from 'pdf-parse';
 import { DatabaseManager } from '../database/DatabaseManager';
 
-const pdfParse: any = pdfParseModule;
+const pdfParse = require('pdf-parse');
 
 export class AIService {
   private db: DatabaseManager;
