@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon, ChevronLeft, ChevronRight, Key } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { 
   PdfLoader, 
   PdfHighlighter, 
@@ -26,6 +28,7 @@ import { projectService } from '../services/api';
 import type { Article } from '../types';
 import { HelpButton } from '../components/HelpButton';
 import { EditArticleModal } from '../components/EditArticleModal';
+import { anchorPendingHighlights } from '../utils/pdfTextSearch';
 
 const isArticleManual = (article: Article) => {
   try {
@@ -62,6 +65,8 @@ export const ArticleReaderPage: React.FC = () => {
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [hasAiKey, setHasAiKey] = useState(false);
   const [showKeyAlert, setShowKeyAlert] = useState(false);
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
+  const [anchoringStatus, setAnchoringStatus] = useState<string>('');
 
   const highlighterRef = useRef<any>(null);
 
@@ -134,7 +139,11 @@ export const ArticleReaderPage: React.FC = () => {
       const summary = await projectService.generateSummary(parseInt(id));
       setAiSummary(summary);
     } catch (err: any) {
-      alert("Erro ao gerar resumo: " + err.message);
+      if (err.message && (err.message.includes('429') || err.message.includes('QUOTA_EXCEEDED'))) {
+        setShowQuotaModal(true);
+      } else {
+        alert("Erro ao gerar resumo: " + err.message);
+      }
     } finally {
       setIsGeneratingAi(false);
     }
@@ -194,7 +203,46 @@ export const ArticleReaderPage: React.FC = () => {
         }
         
         const blob = new Blob([uint8Array as any], { type: 'application/pdf' });
-        setPdfUrl(URL.createObjectURL(blob));
+        const localUrl = URL.createObjectURL(blob);
+        setPdfUrl(localUrl);
+        
+        // Process pending highlights asynchronously
+        const pendings = await projectService.getPendingHighlights(parseInt(id));
+        if (pendings && pendings.length > 0) {
+          try {
+            const { anchoredHighlights, unanchoredHighlights } = await anchorPendingHighlights(localUrl, pendings, setAnchoringStatus);
+            if (anchoredHighlights && anchoredHighlights.length > 0) {
+              for (const anchor of anchoredHighlights) {
+                await projectService.createHighlight(
+                  parseInt(id),
+                  anchor.color,
+                  anchor.position,
+                  anchor.comment.text
+                );
+                await projectService.deletePendingHighlight(anchor.pendingId);
+              }
+              // Refresh highlights after saving
+              const newHighData = await projectService.getHighlights(parseInt(id));
+              setHighlights(newHighData.map((h: any) => ({
+                id: h.id.toString(),
+                position: JSON.parse(h.position_data),
+                content: { text: h.comment || '' },
+                comment: { text: h.comment || '', emoji: '' },
+                annotation_id: h.annotation_id
+              })));
+            }
+            // If some couldn't be anchored, just delete them so we don't try again forever
+            if (unanchoredHighlights) {
+              for (const unanchored of unanchoredHighlights) {
+                await projectService.deletePendingHighlight(unanchored.id);
+              }
+            }
+          } catch (e) {
+            console.error("Failed to anchor highlights:", e);
+          } finally {
+            setAnchoringStatus('');
+          }
+        }
       }
     } catch (err) {
       console.error('Erro ao carregar artigo', err);
@@ -1115,14 +1163,14 @@ export const ArticleReaderPage: React.FC = () => {
                             <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                               <div>
                                 <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-heading)', fontSize: '0.95rem' }}>Visão Geral</h4>
-                                <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: 1.6, background: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                                  {aiSummary.generalSummary}
+                                <div className="markdown-body" style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: 1.6, background: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiSummary.generalSummary}</ReactMarkdown>
                                 </div>
                               </div>
                               <div>
                                 <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-heading)', fontSize: '0.95rem' }}>Por Seções</h4>
-                                <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: 1.6, background: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', whiteSpace: 'pre-wrap' }}>
-                                  {aiSummary.sectionSummary}
+                                <div className="markdown-body" style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: 1.6, background: 'var(--bg-main)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', whiteSpace: 'pre-wrap' }}>
+                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiSummary.sectionSummary}</ReactMarkdown>
                                 </div>
                               </div>
                             </div>
@@ -1161,6 +1209,22 @@ export const ArticleReaderPage: React.FC = () => {
               <button onClick={() => setShowKeyAlert(false)} className="btn-secondary" style={{ flex: 1 }}>Cancelar</button>
               <button onClick={() => navigate('/settings')} className="btn-primary" style={{ flex: 1 }}>Configurações</button>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {showQuotaModal && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
+          <div className="card fade-in" style={{ padding: '2rem', width: '400px', background: 'var(--bg-main)', textAlign: 'center' }}>
+            <AlertCircle size={48} style={{ color: 'var(--color-danger)', margin: '0 auto 1rem auto' }} />
+            <h3 style={{ margin: '0 0 1rem 0' }}>Limite de Cota Atingido</h3>
+            <p style={{ margin: '0 0 1.5rem 0', color: 'var(--text-muted)' }}>
+              A sua chave de API parece ter esgotado o limite de cota ou os créditos disponíveis.
+            </p>
+            <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowQuotaModal(false)}>
+              Entendi
+            </button>
           </div>
         </div>,
         document.body

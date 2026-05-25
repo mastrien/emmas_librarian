@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { safeStorage } from 'electron';
-import { Project, Article, Annotation, Highlight, DiaryEntry } from '../types';
+import { Project, Article, Annotation, Highlight, DiaryEntry, ProjectDocument } from '../types';
 
 export interface ArticleInput {
   doi?: string;
@@ -77,9 +77,27 @@ export class DatabaseManager {
       'ALTER TABLE articles ADD COLUMN issn TEXT',
       'ALTER TABLE articles ADD COLUMN citation_count INTEGER',
       'ALTER TABLE articles ADD COLUMN search_id INTEGER REFERENCES search_history(id) ON DELETE SET NULL',
+      'ALTER TABLE articles ADD COLUMN ai_summary TEXT',
     ];
     for (const sql of migrations) {
       try { this.db.exec(sql); } catch (e) { /* column already exists */ }
+    }
+
+    try {
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS pending_highlights (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            article_id INTEGER NOT NULL,
+            quote TEXT NOT NULL,
+            context_before TEXT,
+            context_after TEXT,
+            comment TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE
+        );
+      `);
+    } catch (e) {
+      console.error('Migration pending_highlights error', e);
     }
   }
 
@@ -181,6 +199,11 @@ export class DatabaseManager {
     stmt.run(...values);
   }
 
+  updateArticleAiSummary(articleId: number, summary: string): void {
+    const stmt = this.db.prepare('UPDATE articles SET ai_summary = ? WHERE id = ?');
+    stmt.run(summary, articleId);
+  }
+
   // Annotations
   saveAnnotation(articleId: number, content: string): number {
     const stmt = this.db.prepare('INSERT INTO annotations (article_id, content_markdown) VALUES (?, ?)');
@@ -234,6 +257,26 @@ export class DatabaseManager {
     if (highlight?.annotation_id) {
       this.deleteAnnotation(highlight.annotation_id);
     }
+  }
+
+  // Pending Highlights
+  savePendingHighlight(articleId: number, quote: string, contextBefore: string, contextAfter: string, comment: string): number {
+    const stmt = this.db.prepare(`
+      INSERT INTO pending_highlights (article_id, quote, context_before, context_after, comment)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    const info = stmt.run(articleId, quote, contextBefore, contextAfter, comment);
+    return info.lastInsertRowid as number;
+  }
+
+  getPendingHighlights(articleId: number): any[] {
+    const stmt = this.db.prepare('SELECT * FROM pending_highlights WHERE article_id = ?');
+    return stmt.all(articleId);
+  }
+
+  deletePendingHighlight(id: number): void {
+    const stmt = this.db.prepare('DELETE FROM pending_highlights WHERE id = ?');
+    stmt.run(id);
   }
 
   close(): void {
@@ -342,5 +385,38 @@ export class DatabaseManager {
 
   public deleteDiaryEntry(projectId: number, entryDate: string): void {
     this.db.prepare('DELETE FROM project_diary WHERE project_id = ? AND entry_date = ?').run(projectId, entryDate);
+  }
+
+  // Project Documents
+  public saveProjectDocument(projectId: number, title: string, url?: string, localFilePath?: string): number {
+    const stmt = this.db.prepare(`
+      INSERT INTO project_documents (project_id, title, url, local_file_path)
+      VALUES (?, ?, ?, ?)
+    `);
+    const info = stmt.run(projectId, title, url || null, localFilePath || null);
+    return info.lastInsertRowid as number;
+  }
+
+  public getProjectDocuments(projectId: number): ProjectDocument[] {
+    const stmt = this.db.prepare('SELECT * FROM project_documents WHERE project_id = ? ORDER BY created_at DESC');
+    return stmt.all(projectId) as ProjectDocument[];
+  }
+
+  public deleteProjectDocument(id: number): void {
+    const stmtGet = this.db.prepare('SELECT local_file_path FROM project_documents WHERE id = ?');
+    const doc = stmtGet.get(id) as { local_file_path?: string } | undefined;
+    
+    if (doc?.local_file_path) {
+      try {
+        if (fs.existsSync(doc.local_file_path)) {
+          fs.unlinkSync(doc.local_file_path);
+        }
+      } catch (err) {
+        console.error(`Failed to delete physical file for project document ${id}:`, err);
+      }
+    }
+
+    const stmt = this.db.prepare('DELETE FROM project_documents WHERE id = ?');
+    stmt.run(id);
   }
 }

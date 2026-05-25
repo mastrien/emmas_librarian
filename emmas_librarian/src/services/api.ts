@@ -1,4 +1,4 @@
-import type { Project, Article, Highlight, Annotation, DiaryEntry } from '../types';
+import type { Project, Article, Highlight, Annotation, DiaryEntry, PendingHighlight, ProjectDocument } from '../types';
 import { IpcChannel } from '../types';
 
 export const projectService = {
@@ -165,5 +165,34 @@ export const projectService = {
 
   async massiveExtraction(articleId: number, questions: string[]): Promise<Array<{ question: string; answer: string; quote: string | null }>> {
     return await window.electronAPI.invoke(IpcChannel.AI_MASSIVE_EXTRACTION, articleId, questions);
+  },
+
+  async extractMetadata(articleId: number): Promise<any> {
+    return await window.electronAPI.invoke(IpcChannel.AI_EXTRACT_METADATA, articleId);
+  },
+
+  async getPendingHighlights(articleId: number): Promise<PendingHighlight[]> {
+    return await window.electronAPI.invoke(IpcChannel.PENDING_HIGHLIGHTS_GET, articleId);
+  },
+
+  async deletePendingHighlight(id: number): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.PENDING_HIGHLIGHTS_DELETE, id);
+  },
+
+  // Project Documents
+  async getProjectDocuments(projectId: number): Promise<ProjectDocument[]> {
+    return await window.electronAPI.invoke(IpcChannel.PROJECT_DOCUMENTS_GET, projectId);
+  },
+
+  async createProjectDocument(projectId: number, title: string, url?: string, sourceFilePath?: string): Promise<number> {
+    return await window.electronAPI.invoke(IpcChannel.PROJECT_DOCUMENTS_CREATE, projectId, title, url, sourceFilePath);
+  },
+
+  async deleteProjectDocument(id: number): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.PROJECT_DOCUMENTS_DELETE, id);
+  },
+
+  async openProjectDocument(url?: string, filePath?: string): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, url, filePath);
   }
 };

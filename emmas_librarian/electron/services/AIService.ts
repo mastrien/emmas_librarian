@@ -52,6 +52,9 @@ export class AIService {
     });
 
     if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error('QUOTA_EXCEEDED');
+      }
       const err = await response.text();
       throw new Error(`OpenAI API Error: ${err}`);
     }
@@ -70,6 +73,9 @@ export class AIService {
     });
 
     if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error('QUOTA_EXCEEDED');
+      }
       const err = await response.text();
       throw new Error(`Gemini API Error: ${err}`);
     }
@@ -122,6 +128,15 @@ export class AIService {
   // --- Features ---
 
   public async generateSummary(articleId: number, pdfPath: string): Promise<{ generalSummary: string; sectionSummary: string }> {
+    const article = this.db.getArticle(articleId);
+    if (article?.ai_summary) {
+      try {
+        return JSON.parse(article.ai_summary);
+      } catch (e) {
+        // Fallback to regenerate if parsing fails
+      }
+    }
+
     const text = await this.extractTextFromPdf(pdfPath);
     // Limit text to avoid token limits on smaller models, though 4o-mini and Gemini can handle huge texts.
     // For safety, let's truncate to first ~80000 chars (approx 20k tokens)
@@ -147,6 +162,7 @@ ${truncatedText}
     
     try {
       const parsed = JSON.parse(result);
+      this.db.updateArticleAiSummary(articleId, JSON.stringify(parsed));
       return parsed;
     } catch (err) {
       console.error("Failed to parse LLM JSON:", result);
@@ -154,20 +170,26 @@ ${truncatedText}
     }
   }
 
-  public async massiveExtraction(articleId: number, pdfPath: string, questions: string[]): Promise<Array<{ question: string; answer: string; quote: string | null }>> {
+  public async massiveExtraction(articleId: number, pdfPath: string, questions: string[]): Promise<Array<{ question: string; answer: string; quote: string | null; contextBefore: string | null; contextAfter: string | null }>> {
     const text = await this.extractTextFromPdf(pdfPath);
     const truncatedText = text.substring(0, 80000);
 
     const questionsList = questions.map((q, i) => `${i + 1}. ${q}`).join('\n');
 
     const prompt = `Você é um assistente acadêmico. Baseado no texto do artigo científico abaixo, responda às perguntas fornecidas.
-Para cada pergunta, você deve extrair a resposta E UM TRECHO EXATO (quote) literal do texto que comprove sua resposta. O trecho deve ser cópia fiel (case-sensitive) do PDF para que o sistema possa buscá-lo visualmente.
+Para cada pergunta, você deve extrair a resposta E UM TRECHO EXATO (quote) literal do texto que comprove sua resposta. O trecho deve ser cópia fiel (case-sensitive) do PDF para que o sistema possa buscá-lo visualmente. Além disso, forneça o "contextBefore" (cerca de 5 a 10 palavras que vêm imediatamente antes do trecho no texto) e o "contextAfter" (cerca de 5 a 10 palavras que vêm imediatamente depois).
 
 A sua resposta deve ser EXATAMENTE um array JSON válido (sem tags markdown de código), no seguinte formato:
 [
-  { "question": "pergunta 1", "answer": "resposta descritiva", "quote": "trecho exato que comprova no texto" }
+  { 
+    "question": "pergunta 1", 
+    "answer": "resposta descritiva", 
+    "quote": "trecho exato que comprova no texto",
+    "contextBefore": "5 a 10 palavras imediatamente antes",
+    "contextAfter": "5 a 10 palavras imediatamente depois"
+  }
 ]
-Se não for possível encontrar a resposta no texto, deixe quote como null.
+Se não for possível encontrar a resposta no texto, deixe quote, contextBefore e contextAfter como null.
 
 PERGUNTAS:
 ${questionsList}
@@ -181,10 +203,60 @@ ${truncatedText}
 
     try {
       const parsed = JSON.parse(result);
+      
+      // Save pending highlights
+      for (const item of parsed) {
+        if (item.quote) {
+          try {
+            this.db.savePendingHighlight(
+              articleId, 
+              item.quote, 
+              item.contextBefore || '', 
+              item.contextAfter || '', 
+              item.answer // comment
+            );
+          } catch (e) {
+            console.error("Erro ao salvar pending highlight", e);
+          }
+        }
+      }
+
       return parsed;
     } catch (err) {
       console.error("Failed to parse LLM JSON for massive extraction:", result);
       throw new Error("A IA não retornou um formato JSON válido para extração.");
+    }
+  }
+
+  public async extractMetadataFromPdf(articleId: number, pdfPath: string): Promise<any> {
+    const text = await this.extractTextFromPdf(pdfPath);
+    const truncatedText = text.substring(0, 40000); // 40k chars usually enough for title/authors/abstract
+
+    const prompt = `Você é um assistente acadêmico. Por favor, leia o texto do artigo científico fornecido abaixo e extraia seus metadados.
+
+A sua resposta deve ser EXATAMENTE um objeto JSON válido, sem markdown, contendo as seguintes chaves. Se não encontrar o valor de alguma chave, use null:
+{
+  "title": "título do artigo",
+  "authors": "lista de autores separados por vírgula",
+  "year": "ano de publicação apenas com 4 dígitos numéricos, ex: 2024",
+  "doi": "DOI do artigo, se presente",
+  "journal": "nome da revista ou conferência",
+  "abstract": "resumo/abstract original traduzido para o idioma do texto (geralmente inglês ou português)"
+}
+
+ARTIGO:
+${truncatedText}
+`;
+
+    let result = await this.generateCompletion(prompt);
+    result = result.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    try {
+      const parsed = JSON.parse(result);
+      return parsed;
+    } catch (err) {
+      console.error("Failed to parse LLM JSON for metadata:", result);
+      throw new Error("A IA não retornou um formato JSON válido para os metadados.");
     }
   }
 }

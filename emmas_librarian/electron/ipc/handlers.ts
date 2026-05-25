@@ -1,4 +1,4 @@
-import { ipcMain, app, dialog } from 'electron';
+import { ipcMain, app, dialog, shell } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { DatabaseManager } from '../database/DatabaseManager';
@@ -346,5 +346,56 @@ export function setupIpcHandlers() {
       throw new Error("PDF not found for this article.");
     }
     return aiService.massiveExtraction(articleId, article.local_file_path, questions);
+  });
+
+  ipcMain.handle(IpcChannel.AI_EXTRACT_METADATA, async (event, articleId: number) => {
+    const article = db.getArticle(articleId);
+    if (!article || !article.local_file_path || !fs.existsSync(article.local_file_path)) {
+      throw new Error("PDF not found for this article.");
+    }
+    return aiService.extractMetadataFromPdf(articleId, article.local_file_path);
+  });
+
+  // Pending Highlights
+  ipcMain.handle(IpcChannel.PENDING_HIGHLIGHTS_GET, (event, articleId: number) => {
+    return db.getPendingHighlights(articleId);
+  });
+
+  ipcMain.handle(IpcChannel.PENDING_HIGHLIGHTS_DELETE, (event, id: number) => {
+    return db.deletePendingHighlight(id);
+  });
+
+  // Project Documents
+  ipcMain.handle(IpcChannel.PROJECT_DOCUMENTS_GET, (event, projectId: number) => {
+    return db.getProjectDocuments(projectId);
+  });
+
+  ipcMain.handle(IpcChannel.PROJECT_DOCUMENTS_CREATE, async (event, projectId: number, title: string, url?: string, sourceFilePath?: string) => {
+    let destPath: string | undefined;
+    if (sourceFilePath) {
+      try {
+        const docsDir = path.join(app.getPath('userData'), 'storage', 'project_documents');
+        if (!fs.existsSync(docsDir)) {
+          fs.mkdirSync(docsDir, { recursive: true });
+        }
+        destPath = path.join(docsDir, `doc_${projectId}_${Date.now()}.pdf`);
+        fs.copyFileSync(sourceFilePath, destPath);
+      } catch (err) {
+        console.error("Failed to copy PDF file for project document:", err);
+      }
+    }
+    return db.saveProjectDocument(projectId, title, url, destPath);
+  });
+
+  ipcMain.handle(IpcChannel.PROJECT_DOCUMENTS_DELETE, (event, id: number) => {
+    return db.deleteProjectDocument(id);
+  });
+
+  ipcMain.handle(IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, async (event, url?: string, filePath?: string) => {
+    if (filePath && fs.existsSync(filePath)) {
+      await shell.openPath(filePath);
+    } else if (url) {
+      await shell.openExternal(url);
+    }
   });
 }

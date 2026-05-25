@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X as XIcon, Loader2, Save } from 'lucide-react';
+import { X as XIcon, Loader2, Save, Sparkles } from 'lucide-react';
 import { Article } from '../types';
+import { projectService } from '../services/api';
 
 export const EditArticleModal = ({ 
   isOpen, 
@@ -21,6 +22,7 @@ export const EditArticleModal = ({
   const [journal, setJournal] = useState('');
   const [abstract, setAbstract] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
 
   useEffect(() => {
     if (isOpen && article) {
@@ -60,14 +62,48 @@ export const EditArticleModal = ({
     }
   };
 
+  const handleExtractWithAI = async () => {
+    if (!article.local_file_path) return;
+    setIsExtracting(true);
+    try {
+      const data = await projectService.extractMetadata(article.id);
+      if (data) {
+        if (data.title) setTitle(data.title);
+        if (data.authors) setAuthors(data.authors);
+        if (data.year) setYear(data.year.toString());
+        if (data.doi) setDoi(data.doi);
+        if (data.journal) setJournal(data.journal);
+        if (data.abstract) setAbstract(data.abstract);
+      }
+    } catch (err: any) {
+      alert(`Erro ao extrair metadados: ${err.message || err}`);
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
   return createPortal(
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
       <div className="card fade-in" style={{ padding: '2rem', width: '550px', maxWidth: '95%', maxHeight: '90vh', overflowY: 'auto', background: 'var(--bg-main)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 style={{ margin: 0 }}>Editar Metadados do Artigo</h3>
-          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-            <XIcon size={20} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {article.local_file_path && (
+              <button 
+                type="button" 
+                onClick={handleExtractWithAI}
+                disabled={isExtracting}
+                className="btn-secondary"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+              >
+                {isExtracting ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} style={{ color: 'var(--color-primary)' }} />}
+                Preencher com IA
+              </button>
+            )}
+            <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              <XIcon size={20} />
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

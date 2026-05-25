@@ -31,6 +31,16 @@ export interface Article {
   status: 'new' | 'read' | 'archived';
   archive_note?: string;
   search_id?: number;
+  ai_summary?: string;
+}
+
+export interface ProjectDocument {
+  id: number;
+  project_id: number;
+  title: string;
+  url?: string;
+  local_file_path?: string;
+  created_at: string;
 }
 
 export interface DiaryEntry {
@@ -125,4 +135,21 @@ export enum IpcChannel {
   APP_GET_VERSION = 'app:getVersion',
   AI_GENERATE_SUMMARY = 'ai:generateSummary',
   AI_MASSIVE_EXTRACTION = 'ai:massiveExtraction',
+  AI_EXTRACT_METADATA = 'ai:extractMetadata',
+  PENDING_HIGHLIGHTS_GET = 'pendingHighlights:get',
+  PENDING_HIGHLIGHTS_DELETE = 'pendingHighlights:delete',
+  PROJECT_DOCUMENTS_GET = 'projectDocuments:get',
+  PROJECT_DOCUMENTS_CREATE = 'projectDocuments:create',
+  PROJECT_DOCUMENTS_DELETE = 'projectDocuments:delete',
+  PROJECT_DOCUMENT_OPEN_EXTERNAL = 'projectDocument:openExternal',
+}
+
+export interface PendingHighlight {
+  id: number;
+  article_id: number;
+  quote: string;
+  context_before: string | null;
+  context_after: string | null;
+  comment: string | null;
+  created_at: string;
 }

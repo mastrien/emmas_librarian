@@ -2,11 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key, AlertCircle, Settings, Link as LinkIcon, File as FileIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { SearchHistoryModal } from '../components/SearchHistoryModal';
 import { DiarySection } from '../components/DiarySection';
 import { EditArticleModal } from '../components/EditArticleModal';
+import { ManageQuickAccessModal } from '../components/ManageQuickAccessModal';
 
 const ArchiveModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClose: () => void, onSubmit: (note: string) => void }) => {
   const [note, setNote] = useState('');
@@ -268,9 +271,20 @@ const ManualArticleModal = ({ isOpen, onClose, onSubmit }: {
 const AIExtractionModal = ({ 
   isOpen, onClose, articlesWithPdf, 
   aiQuestions, setAiQuestions, 
-  handleMassiveExtraction, isExtracting, extractionProgress, aiExtractionResults 
+  handleMassiveExtraction, isExtracting, extractionProgress, aiExtractionResults,
+  cancelExtractionRef
 }: any) => {
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (isOpen && !isExtracting && aiExtractionResults.length === 0) {
+      setSelectedIds(articlesWithPdf.map((a: any) => a.id));
+    }
+  }, [isOpen]); // Only run when modal is opened, avoid resetting when typing
+
   if (!isOpen) return null;
+
+  const isFinished = !isExtracting && aiExtractionResults.length > 0;
 
   return createPortal(
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
@@ -279,7 +293,7 @@ const AIExtractionModal = ({
           <h3 style={{ margin: 0, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             Investigação Massiva com IA
           </h3>
-          <button type="button" onClick={onClose} disabled={isExtracting} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+          <button type="button" onClick={onClose} disabled={isExtracting} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: isExtracting ? 'not-allowed' : 'pointer', opacity: isExtracting ? 0.5 : 1 }}>
             <XIcon size={20} />
           </button>
         </div>
@@ -292,64 +306,122 @@ const AIExtractionModal = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div style={{ padding: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: 'var(--text-main)' }}>
-                Faça perguntas aos artigos. A IA irá buscar respostas e citações diretas nos <strong>{articlesWithPdf.length} PDFs</strong> disponíveis.
+                Selecione os artigos (<strong>{selectedIds.length}/{articlesWithPdf.length}</strong>) e faça perguntas. A IA buscará respostas.
               </p>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-                {aiQuestions.map((q: string, idx: number) => (
-                  <div key={idx} style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input 
-                      type="text" 
-                      value={q} 
-                      onChange={(e) => {
-                        const newQ = [...aiQuestions];
-                        newQ[idx] = e.target.value;
-                        setAiQuestions(newQ);
-                      }}
-                      placeholder={`Pergunta ${idx + 1}`}
-                      disabled={isExtracting}
-                      style={{ 
-                        flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', 
-                        border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)',
-                        outline: 'none'
-                      }}
-                    />
-                    <button 
-                      onClick={() => {
-                        const newQ = aiQuestions.filter((_: any, i: number) => i !== idx);
-                        setAiQuestions(newQ.length ? newQ : ['']);
-                      }}
-                      disabled={isExtracting}
-                      className="btn-secondary"
-                      style={{ color: 'var(--color-danger)', padding: '0.5rem' }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
+              {!isExtracting && !isFinished && (
+                <>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <button type="button" className="btn-secondary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setSelectedIds(articlesWithPdf.map((a:any) => a.id))}>Selecionar Todos</button>
+                    <button type="button" className="btn-secondary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setSelectedIds([])}>Desmarcar Todos</button>
                   </div>
-                ))}
+                  <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '0.5rem', marginBottom: '1rem', background: 'var(--bg-main)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
+                    {articlesWithPdf.map((a: any) => (
+                      <label key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', padding: '0.5rem', borderRadius: 'var(--radius-sm)', background: selectedIds.includes(a.id) ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)' : 'var(--bg-surface)', border: selectedIds.includes(a.id) ? '1px solid var(--color-primary)' : '1px solid var(--border-color)' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedIds.includes(a.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedIds([...selectedIds, a.id]);
+                            else setSelectedIds(selectedIds.filter(id => id !== a.id));
+                          }}
+                          style={{ marginTop: '0.2rem' }}
+                        />
+                        <span style={{ lineHeight: '1.2', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{a.title}</span>
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                {isExtracting || isFinished ? (
+                  <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-main)', fontSize: '0.9rem' }}>
+                    {aiQuestions.filter((q: string) => q.trim().length > 0).map((q: string, idx: number) => (
+                      <li key={idx} style={{ marginBottom: '0.3rem' }}>{q}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <>
+                    {aiQuestions.map((q: string, idx: number) => (
+                      <div key={idx} style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input 
+                          type="text" 
+                          value={q} 
+                          onChange={(e) => {
+                            const newQ = [...aiQuestions];
+                            newQ[idx] = e.target.value;
+                            setAiQuestions(newQ);
+                          }}
+                          placeholder={`Pergunta ${idx + 1}`}
+                          style={{ 
+                            flex: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', 
+                            border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)',
+                            outline: 'none'
+                          }}
+                        />
+                        <button 
+                          onClick={() => {
+                            const newQ = aiQuestions.filter((_: any, i: number) => i !== idx);
+                            setAiQuestions(newQ.length ? newQ : ['']);
+                          }}
+                          className="btn-secondary"
+                          style={{ color: 'var(--color-danger)', padding: '0.5rem' }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
-              <button 
-                onClick={() => setAiQuestions([...aiQuestions, ''])}
-                disabled={isExtracting}
-                className="btn-secondary"
-                style={{ fontSize: '0.85rem' }}
-              >
-                + Adicionar Pergunta
-              </button>
+              
+              {!isExtracting && !isFinished && (
+                <button 
+                  onClick={() => setAiQuestions([...aiQuestions, ''])}
+                  className="btn-secondary"
+                  style={{ fontSize: '0.85rem' }}
+                >
+                  + Adicionar Pergunta
+                </button>
+              )}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button 
-                onClick={handleMassiveExtraction}
-                disabled={isExtracting || aiQuestions.every((q: string) => !q.trim())}
-                className="btn-primary"
-                style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', justifyContent: 'center' }}
-              >
-                {isExtracting ? (
-                  <><Loader2 size={18} className="animate-spin" style={{ marginRight: '0.5rem' }} /> Processando ({extractionProgress.current}/{extractionProgress.total})</>
-                ) : 'Iniciar Investigação'}
-              </button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              {isExtracting ? (
+                <button 
+                  onClick={() => { cancelExtractionRef.current = true; }}
+                  className="btn-secondary"
+                  style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', justifyContent: 'center', color: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}
+                >
+                  Cancelar Investigação
+                </button>
+              ) : isFinished ? (
+                <button 
+                  onClick={onClose}
+                  className="btn-primary"
+                  style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', justifyContent: 'center' }}
+                >
+                  Concluir Investigação
+                </button>
+              ) : (
+                <button 
+                  onClick={() => handleMassiveExtraction(selectedIds)}
+                  disabled={selectedIds.length === 0 || aiQuestions.every((q: string) => !q.trim())}
+                  className="btn-primary"
+                  style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', justifyContent: 'center' }}
+                >
+                  Iniciar Investigação
+                </button>
+              )}
             </div>
+
+            {isExtracting && (
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>
+                <Loader2 size={16} className="animate-spin" style={{ marginRight: '0.5rem', display: 'inline-block', verticalAlign: 'middle' }} />
+                Processando artigo {extractionProgress.current} de {extractionProgress.total}...
+              </div>
+            )}
 
             {aiExtractionResults.length > 0 && (
               <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -369,8 +441,8 @@ const AIExtractionModal = ({
                             <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-heading)' }}>
                               Q: {r.question}
                             </div>
-                            <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>
-                              <strong>R:</strong> {r.answer}
+                            <div className="markdown-body" style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>{r.answer}</ReactMarkdown>
                             </div>
                             {r.quote && (
                               <div style={{ fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--text-muted)', borderLeft: '3px solid var(--color-primary)', paddingLeft: '0.5rem' }}>
@@ -431,26 +503,34 @@ export const ProjectDetailsPage: React.FC = () => {
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 });
   
+  const cancelExtractionRef = useRef(false);
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
+
   const [hasAiKey, setHasAiKey] = useState(false);
   const [showKeyAlert, setShowKeyAlert] = useState(false);
+
+  const [projectDocuments, setProjectDocuments] = useState<any[]>([]);
+  const [isQuickAccessModalOpen, setIsQuickAccessModalOpen] = useState(false);
 
   const fetchData = async () => {
     if (!id) return;
     try {
-      const [projData, artData, histData, openai, gemini, anthropic, ollama] = await Promise.all([
+      const [projData, artData, histData, openai, gemini, anthropic, ollama, docsData] = await Promise.all([
         projectService.getProject(parseInt(id)),
         projectService.getArticles(parseInt(id)),
         projectService.getSearchHistory(parseInt(id)),
         projectService.getSetting('api_key_openai'),
         projectService.getSetting('api_key_gemini'),
         projectService.getSetting('api_key_anthropic'),
-        projectService.getSetting('api_key_ollama')
+        projectService.getSetting('api_key_ollama'),
+        projectService.getProjectDocuments(parseInt(id))
       ]);
       setProject(projData);
       setArticles(artData);
       setHistory(histData);
       setHasAiKey(!!(openai || gemini || anthropic || ollama));
       setNewName(projData.name);
+      setProjectDocuments(docsData);
     } catch (err) {
       console.error('Erro ao carregar dados do projeto', err);
     } finally {
@@ -568,27 +648,45 @@ export const ProjectDetailsPage: React.FC = () => {
     }
   };
 
-  const handleMassiveExtraction = async () => {
+  const handleMassiveExtraction = async (selectedIds: number[]) => {
     const validQuestions = aiQuestions.filter(q => q.trim().length > 0);
     if (validQuestions.length === 0) return;
 
-    const articlesWithPdf = articles.filter(a => !!a.local_file_path);
-    if (articlesWithPdf.length === 0) return;
+    const articlesToExtract = articles.filter(a => selectedIds.includes(a.id));
+    if (articlesToExtract.length === 0) return;
 
     setIsExtracting(true);
-    setExtractionProgress({ current: 0, total: articlesWithPdf.length });
+    cancelExtractionRef.current = false;
+    setExtractionProgress({ current: 0, total: articlesToExtract.length });
     setAiExtractionResults([]);
 
     const results = [];
-    for (let i = 0; i < articlesWithPdf.length; i++) {
-      const article = articlesWithPdf[i];
-      setExtractionProgress({ current: i + 1, total: articlesWithPdf.length });
+    for (let i = 0; i < articlesToExtract.length; i++) {
+      if (cancelExtractionRef.current) break;
+
+      const article = articlesToExtract[i];
+      setExtractionProgress({ current: i + 1, total: articlesToExtract.length });
       try {
         const result = await projectService.massiveExtraction(article.id, validQuestions);
         results.push({ article, result });
         setAiExtractionResults([...results]);
-      } catch (err) {
+
+        // Salvar os resultados como anotações no artigo
+        let markdownAnnotation = `**[Pesquisa com IA]**\\n\\n`;
+        result.forEach((r: any) => {
+          markdownAnnotation += `**Pergunta:** ${r.question}\\n**Resposta:** ${r.answer}\\n`;
+          if (r.quote) markdownAnnotation += `> "${r.quote}"\\n\\n`;
+          else markdownAnnotation += `\\n`;
+        });
+        await projectService.createAnnotation(article.id, markdownAnnotation);
+        
+      } catch (err: any) {
         console.error(`Erro ao extrair de ${article.title}:`, err);
+        if (err.message && (err.message.includes('429') || err.message.includes('QUOTA_EXCEEDED'))) {
+          setShowQuotaModal(true);
+          cancelExtractionRef.current = true;
+          break;
+        }
         results.push({ article, error: "Falha ao processar." });
         setAiExtractionResults([...results]);
       }
@@ -691,6 +789,43 @@ export const ProjectDetailsPage: React.FC = () => {
           <Link to={`/projects/${project.id}/search`} className="btn-primary">
             <Search size={18} /> Nova Busca
           </Link>
+        </div>
+
+        {/* Acesso rápido */}
+        <div style={{ marginTop: '0.5rem', background: 'var(--bg-surface)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-heading)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <LinkIcon size={16} /> Acesso rápido
+            </h3>
+            <button 
+              onClick={() => setIsQuickAccessModalOpen(true)} 
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.2rem', display: 'flex', transition: 'color var(--transition-fast)' }}
+              title="Gerenciar acessos rápidos"
+            >
+              <Settings size={16} />
+            </button>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {projectDocuments.length === 0 ? (
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
+                Nenhum link ou documento cadastrado. Clique na engrenagem para adicionar.
+              </div>
+            ) : (
+              projectDocuments.map(doc => (
+                <button
+                  key={doc.id}
+                  onClick={() => projectService.openProjectDocument(doc.url, doc.local_file_path)}
+                  className="btn-secondary fade-in"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', fontSize: '0.85rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}
+                  title={doc.url || doc.local_file_path}
+                >
+                  {doc.url ? <LinkIcon size={14} color="var(--color-primary)" /> : <FileIcon size={14} color="var(--color-secondary)" />}
+                  {doc.title}
+                </button>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
@@ -1009,7 +1144,24 @@ export const ProjectDetailsPage: React.FC = () => {
         isExtracting={isExtracting}
         extractionProgress={extractionProgress}
         aiExtractionResults={aiExtractionResults}
+        cancelExtractionRef={cancelExtractionRef}
       />
+
+      {showQuotaModal && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
+          <div className="card fade-in" style={{ padding: '2rem', width: '400px', background: 'var(--bg-main)', textAlign: 'center' }}>
+            <AlertCircle size={48} style={{ color: 'var(--color-danger)', margin: '0 auto 1rem auto' }} />
+            <h3 style={{ margin: '0 0 1rem 0' }}>Limite de Cota Atingido</h3>
+            <p style={{ margin: '0 0 1.5rem 0', color: 'var(--text-muted)' }}>
+              A sua chave de API (OpenAI/Anthropic/Gemini) parece ter esgotado o limite de cota ou os créditos disponíveis. Verifique o seu provedor de IA e atualize as configurações no sistema.
+            </p>
+            <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowQuotaModal(false)}>
+              Entendi
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {showKeyAlert && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
@@ -1028,6 +1180,16 @@ export const ProjectDetailsPage: React.FC = () => {
           </div>
         </div>,
         document.body
+      )}
+
+      {isQuickAccessModalOpen && project && (
+        <ManageQuickAccessModal
+          isOpen={isQuickAccessModalOpen}
+          onClose={() => setIsQuickAccessModalOpen(false)}
+          projectId={project.id}
+          documents={projectDocuments}
+          onDocumentsChanged={fetchData}
+        />
       )}
     </div>
   );
