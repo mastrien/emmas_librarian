@@ -8,7 +8,7 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "rebuild:electron": "electron-rebuild",
+    "rebuild:electron": "electron-builder install-app-deps",
     "rebuild:node": "npm rebuild better-sqlite3",
     "electron:dev": "npm run rebuild:electron && tsc -p tsconfig.electron.json && concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "vite build && tsc -p tsconfig.electron.json && electron-builder",
@@ -20,7 +20,6 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "devDependencies": {
-    "@electron/rebuild": "^4.0.4",
     "@types/better-sqlite3": "^7.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
