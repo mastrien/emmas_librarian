@@ -1,7 +1,6 @@
 import fs from 'fs';
 import { DatabaseManager } from '../database/DatabaseManager';
-
-const pdfParse = require('pdf-parse');
+import { PDFParse } from 'pdf-parse';
 
 export class AIService {
   private db: DatabaseManager;
@@ -15,10 +14,13 @@ export class AIService {
     if (!fs.existsSync(pdfPath)) {
       throw new Error(`PDF file not found: ${pdfPath}`);
     }
+
     const dataBuffer = fs.readFileSync(pdfPath);
     try {
-      const data = await pdfParse(dataBuffer);
-      return data.text;
+      const parser = new PDFParse();
+      await parser.load(dataBuffer);
+      const text = await parser.getText();
+      return text;
     } catch (err) {
       console.error('Error parsing PDF:', err);
       throw new Error('Failed to parse PDF file');
