@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session, shell, dialog } from 'electron';
+import { app, BrowserWindow, session, shell, dialog, nativeImage } from 'electron';
 import path from 'path';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
@@ -19,7 +19,7 @@ function createWindow() {
     width: 1200,
     height: 800,
     show: false,
-    icon: isDev ? path.join(__dirname, '../public/favicon.ico') : undefined,
+    icon: nativeImage.createFromPath(path.join(__dirname, isDev ? '../public/favicon.ico' : '../dist/favicon.ico')),
     titleBarStyle: 'hidden',
     titleBarOverlay: {
       color: '#f8fafc',
