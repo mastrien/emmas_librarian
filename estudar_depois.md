@@ -109,3 +109,42 @@ ipcMain.handle('UPDATE_TITLE_BAR', (event, theme) => {
   });
 });
 ```
+
+---
+
+## 6. Configuração de Ícones e Instalador (NSIS) no electron-builder
+
+**O que é:**
+O `electron-builder` é a ferramenta responsável por empacotar a nossa aplicação web (construída com React e Vite) em um executável instalável (como um `.exe` para Windows). Para gerar os instaladores de Windows, ele utiliza por padrão o NSIS (Nullsoft Scriptable Install System).
+
+**O problema que ocorria:**
+Após o build, a aplicação não exibia o ícone correto na barra de tarefas e não ficava acessível através do Menu Iniciar ou do painel de aplicativos do Windows. Isso ocorria porque:
+1. O `electron-builder` não possuía a indicação explícita de onde buscar o arquivo do ícone (o Windows exige arquivos `.ico` para lidar com a barra de tarefas, atalhos e painel de controle).
+2. O instalador NSIS não estava configurado explicitamente para forçar a criação dos atalhos no Menu Iniciar e na Área de Trabalho.
+3. A propriedade `productName` possuía aspas simples (`"Emma's Librarian"`). No ecossistema Windows, o uso de aspas e certos caracteres especiais no nome do produto pode interferir silenciosamente nos scripts do NSIS ao gerar atalhos e criar chaves de registro.
+
+**Como foi resolvido no `package.json`:**
+Ajustamos a configuração do objeto `build` para que ficasse clara e robusta:
+```json
+  "build": {
+    "appId": "com.emma.librarian",
+    "productName": "Emmas Librarian", // Aspas simples removidas
+    "win": {
+      "target": ["nsis"],
+      "icon": "build/icon.ico" // Apontamento explícito do ícone para o executável
+    },
+    "nsis": {
+      "oneClick": false, // Instalação passo a passo (não silenciosa)
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true, // Garante que o atalho seja criado no Menu Iniciar
+      "shortcutName": "Emmas Librarian" // Nome limpo e seguro para os atalhos criados
+    }
+  }
+```
+
+**Onde estudar mais:**
+- Na documentação oficial do **electron-builder**:
+  - Para configurações do Windows: [electron.build/configuration/win](https://www.electron.build/configuration/win)
+  - Para parâmetros de instalador NSIS: [electron.build/configuration/nsis](https://www.electron.build/configuration/nsis)
+- Estudar sobre **Windows AppUserModelID (AUMID)**, que é o identificador interno que o Windows usa para vincular a janela do seu aplicativo aberto ao ícone correspondente fixado na barra de tarefas.
