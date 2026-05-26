@@ -116,4 +116,24 @@ describe('AIService', () => {
     
     await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('Nenhuma chave de IA configurada');
   });
+
+  it('should extract metadata by calling completion API', async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: '{"title": "Test Title", "year": "2024"}'
+            }
+          }
+        ]
+      })
+    });
+
+    const metadata = await aiService.extractMetadataFromPdf(1, 'fake/path.pdf');
+    expect(global.fetch).toHaveBeenCalled();
+    expect(metadata.title).toBe('Test Title');
+    expect(metadata.year).toBe('2024');
+  });
 });

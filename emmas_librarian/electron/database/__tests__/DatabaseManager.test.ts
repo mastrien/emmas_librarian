@@ -101,4 +101,37 @@ describe('DatabaseManager', () => {
     const articleDeleted = dbManager.getArticle(articleId);
     expect(articleDeleted).toBeUndefined();
   });
+
+  it('manages project documents', () => {
+    const proj = dbManager.createProject('Doc Project');
+    const docId = dbManager.saveProjectDocument(proj.id, 'Test Doc', 'https://example.com', '/mock/path.pdf');
+    
+    expect(docId).toBeGreaterThan(0);
+
+    const docs = dbManager.getProjectDocuments(proj.id);
+    expect(docs).toHaveLength(1);
+    expect(docs[0].title).toBe('Test Doc');
+
+    dbManager.deleteProjectDocument(docId);
+    const docsAfterDelete = dbManager.getProjectDocuments(proj.id);
+    expect(docsAfterDelete).toHaveLength(0);
+  });
+
+  it('manages massive investigations', () => {
+    const proj = dbManager.createProject('Investigate Project');
+    const invId = dbManager.saveMassiveInvestigation(
+      proj.id,
+      ['What is this?'],
+      [1, 2, 3],
+      'GPT-4',
+      'Sucesso'
+    );
+    
+    expect(invId).toBeGreaterThan(0);
+
+    const investigations = dbManager.getMassiveInvestigations(proj.id);
+    expect(investigations).toHaveLength(1);
+    expect(investigations[0].status).toBe('Sucesso');
+    expect(investigations[0].model_used).toBe('GPT-4');
+  });
 });
