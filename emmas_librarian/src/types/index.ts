@@ -32,6 +32,7 @@ export interface Article {
   archive_note?: string;
   search_id?: number;
   ai_summary?: string;
+  created_at?: string;
 }
 
 export interface ProjectDocument {

@@ -583,6 +583,14 @@ export const ProjectDetailsPage: React.FC = () => {
   const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 });
   const [citationArticle, setCitationArticle] = useState<Article | null>(null);
   
+  const [sortOrder, setSortOrder] = useState(() => {
+    return localStorage.getItem('emmas_librarian_sort_order') || 'year-desc';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('emmas_librarian_sort_order', sortOrder);
+  }, [sortOrder]);
+  
   const cancelExtractionRef = useRef(false);
   const [showQuotaModal, setShowQuotaModal] = useState(false);
 
@@ -801,9 +809,28 @@ export const ProjectDetailsPage: React.FC = () => {
     return matchesSearch && matchesPdf;
   });
 
-  const activeArticles = filteredArticles.filter(a => a.status === 'new' || !a.status);
-  const readArticles = filteredArticles.filter(a => a.status === 'read');
-  const archivedArticles = filteredArticles.filter(a => a.status === 'archived');
+  const sortedArticles = [...filteredArticles].sort((a, b) => {
+    switch (sortOrder) {
+      case 'year-desc':
+        return (parseInt(b.year?.toString() || '0') || 0) - (parseInt(a.year?.toString() || '0') || 0);
+      case 'year-asc':
+        return (parseInt(a.year?.toString() || '0') || 0) - (parseInt(b.year?.toString() || '0') || 0);
+      case 'title-asc':
+        return (a.title || '').localeCompare(b.title || '');
+      case 'title-desc':
+        return (b.title || '').localeCompare(a.title || '');
+      case 'added-desc':
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      case 'added-asc':
+        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+      default:
+        return 0;
+    }
+  });
+
+  const activeArticles = sortedArticles.filter(a => a.status === 'new' || !a.status);
+  const readArticles = sortedArticles.filter(a => a.status === 'read');
+  const archivedArticles = sortedArticles.filter(a => a.status === 'archived');
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(activeArticles.length / ITEMS_PER_PAGE));
@@ -1026,6 +1053,33 @@ export const ProjectDetailsPage: React.FC = () => {
               />
               <span>Apenas com PDF vinculado</span>
             </label>
+
+            <div style={{ position: 'relative' }}>
+              <select 
+                value={sortOrder}
+                onChange={(e) => {
+                  setSortOrder(e.target.value);
+                  setCurrentPage(1);
+                }}
+                style={{ 
+                  padding: '0.8rem 1rem', 
+                  fontSize: '0.95rem', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: 'var(--radius-lg)',
+                  outline: 'none',
+                  background: 'var(--bg-surface)',
+                  color: 'var(--text-main)',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="year-desc">Mais Recentes (Ano)</option>
+                <option value="year-asc">Mais Antigos (Ano)</option>
+                <option value="title-asc">Título (A-Z)</option>
+                <option value="title-desc">Título (Z-A)</option>
+                <option value="added-desc">Últimos Adicionados</option>
+                <option value="added-asc">Primeiros Adicionados</option>
+              </select>
+            </div>
           </div>
 
           {readArticles.length > 0 && (
