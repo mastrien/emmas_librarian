@@ -1,5 +1,16 @@
-import type { Project, Article, Highlight, Annotation, DiaryEntry, PendingHighlight, ProjectDocument, MassiveInvestigation, QueryASTNode, DatabaseTranslationMap } from '../types';
-import { IpcChannel } from '../types';
+import { 
+  IpcChannel, 
+  type Project, 
+  type Article, 
+  type Highlight, 
+  type Annotation, 
+  type DiaryEntry, 
+  type PendingHighlight, 
+  type ProjectDocument, 
+  type MassiveInvestigation, 
+  type QueryASTNode, 
+  type DatabaseTranslationMap 
+} from '../types';
 
 export const projectService = {
   async getProjects(): Promise<Project[]> {
