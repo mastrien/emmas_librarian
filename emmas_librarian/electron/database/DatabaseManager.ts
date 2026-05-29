@@ -150,7 +150,44 @@ export class DatabaseManager {
   }
 
   deleteProject(id: number): void {
-    this.db.prepare('DELETE FROM projects WHERE id = ?').run(id);
+    const transaction = this.db.transaction(() => {
+      // 1. Delete articles and their files
+      const articles = this.db.prepare('SELECT id, local_file_path FROM articles WHERE project_id = ?').all(id) as { id: number, local_file_path?: string }[];
+      for (const article of articles) {
+        this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(article.id);
+        this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(article.id);
+        if (article.local_file_path) {
+          try {
+            if (fs.existsSync(article.local_file_path)) fs.unlinkSync(article.local_file_path);
+          } catch (err) {
+            console.error(`Failed to delete physical PDF for article ${article.id}:`, err);
+          }
+        }
+        this.db.prepare('DELETE FROM articles WHERE id = ?').run(article.id);
+      }
+
+      // 2. Delete project documents and their files
+      const docs = this.db.prepare('SELECT id, local_file_path FROM project_documents WHERE project_id = ?').all(id) as { id: number, local_file_path: string }[];
+      for (const doc of docs) {
+        if (doc.local_file_path) {
+          try {
+            if (fs.existsSync(doc.local_file_path)) fs.unlinkSync(doc.local_file_path);
+          } catch (err) {
+            console.error(`Failed to delete document file ${doc.id}:`, err);
+          }
+        }
+        this.db.prepare('DELETE FROM project_documents WHERE id = ?').run(doc.id);
+      }
+
+      // 3. Delete other related records
+      this.db.prepare('DELETE FROM search_history WHERE project_id = ?').run(id);
+      this.db.prepare('DELETE FROM project_diary WHERE project_id = ?').run(id);
+
+      // 4. Finally delete the project
+      this.db.prepare('DELETE FROM projects WHERE id = ?').run(id);
+    });
+
+    transaction();
   }
 
   getAllProjects(): Project[] {

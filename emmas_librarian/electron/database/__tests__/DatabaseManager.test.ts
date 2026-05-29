@@ -134,4 +134,23 @@ describe('DatabaseManager', () => {
     expect(investigations[0].status).toBe('Sucesso');
     expect(investigations[0].model_used).toBe('GPT-4');
   });
+
+  it('deletes a project and its cascaded records', () => {
+    const proj = dbManager.createProject('Project to Delete');
+    const articleId = dbManager.saveArticle(proj.id, {
+      title: 'Article to Delete',
+      source_query: '',
+      source_databases: '[]',
+      csl_json: '{}'
+    });
+    const annId = dbManager.saveAnnotation(articleId, 'Test Annotation');
+    dbManager.saveHighlight(articleId, '#ff0', '{}', 'Test Quote', annId);
+
+    dbManager.deleteProject(proj.id);
+
+    expect(dbManager.getProject(proj.id)).toBeUndefined();
+    expect(dbManager.getArticle(articleId)).toBeUndefined();
+    expect(dbManager.getAnnotations(articleId)).toHaveLength(0);
+    expect(dbManager.getHighlights(articleId)).toHaveLength(0);
+  });
 });
