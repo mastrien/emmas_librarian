@@ -29,7 +29,6 @@ describe('ProjectCategoriesModal', () => {
     const input = screen.getByPlaceholderText('Nome (ex: Metodologia)');
     fireEvent.change(input, { target: { value: 'New Category' } });
     
-    const submitButton = screen.getByRole('button', { name: '' }); 
     // Button with Plus icon might not have text, we can find by type submit
     const buttons = screen.getAllByRole('button');
     const submitBtn = buttons.find(b => b.getAttribute('type') === 'submit');

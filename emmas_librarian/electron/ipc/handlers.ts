@@ -7,6 +7,7 @@ import { QueryTranslator, queryTranslator } from '../services/QueryTranslator';
 import { ApiIntegrator } from '../services/ApiIntegrator';
 import { ExportService } from '../services/ExportService';
 import { AIService } from '../services/AIService';
+import { SyncService } from '../database/SyncService';
 import { IpcChannel, QueryASTNode, Article } from '../types';
 import { QueryBlock } from '../services/types';
 
@@ -18,6 +19,7 @@ export function setupIpcHandlers() {
   const orchestrator = new SearchOrchestrator(db, translator, api);
   const exportService = new ExportService();
   const aiService = new AIService(db);
+  const syncService = new SyncService(db);
 
   // App Window Controls
   ipcMain.handle('UPDATE_TITLE_BAR', (event, theme: 'light' | 'dark') => {
@@ -446,5 +448,14 @@ export function setupIpcHandlers() {
 
   ipcMain.handle(IpcChannel.CATEGORIES_GET_ALL_PROJECT_ARTICLE, (event, projectId: number) => {
     return db.getAllProjectArticleCategories(projectId);
+  });
+
+  // Sync
+  ipcMain.handle(IpcChannel.SYNC_EXPORT_PROJECT, async (event, projectId: number) => {
+    return await syncService.exportProject(projectId);
+  });
+
+  ipcMain.handle(IpcChannel.SYNC_IMPORT_PROJECT, async () => {
+    return await syncService.importProject();
   });
 }

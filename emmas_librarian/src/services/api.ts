@@ -234,5 +234,14 @@ export const projectService = {
 
   async getAllProjectArticleCategories(projectId: number): Promise<any[]> {
     return await window.electronAPI.invoke(IpcChannel.CATEGORIES_GET_ALL_PROJECT_ARTICLE, projectId);
+  },
+
+  // Sync
+  async exportProject(projectId: number): Promise<string | null> {
+    return await window.electronAPI.invoke(IpcChannel.SYNC_EXPORT_PROJECT, projectId);
+  },
+
+  async importProject(): Promise<number | null> {
+    return await window.electronAPI.invoke(IpcChannel.SYNC_IMPORT_PROJECT);
   }
 };

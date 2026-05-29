@@ -869,6 +869,15 @@ export const ProjectDetailsPage: React.FC = () => {
           <button onClick={() => projectService.exportBiblioshiny(project.id)} className="btn-secondary" title="Exportar no formato compatível com Biblioshiny">
             <Download size={18} /> Biblioshiny
           </button>
+          <button 
+            onClick={async () => {
+              await projectService.exportProject(project.id);
+            }} 
+            className="btn-secondary" 
+            title="Exportar projeto completo com PDFs (.emmapcarc)"
+          >
+            <Download size={18} /> .emmapcarc
+          </button>
           <button onClick={handleBatchPdfImport} disabled={isImportingPdfs} className="btn-secondary" title="Adicionar vários PDFs de uma vez">
             {isImportingPdfs ? <Loader2 size={18} className="animate-spin" /> : <CopyPlus size={18} />} Adicionar PDFs em Lote
           </button>

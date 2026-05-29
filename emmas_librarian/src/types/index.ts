@@ -150,6 +150,8 @@ export enum IpcChannel {
   CATEGORIES_GET_ARTICLE = 'categories:getArticle',
   CATEGORIES_SET_ARTICLE = 'categories:setArticle',
   CATEGORIES_GET_ALL_PROJECT_ARTICLE = 'categories:getAllProjectArticle',
+  SYNC_EXPORT_PROJECT = 'sync:exportProject',
+  SYNC_IMPORT_PROJECT = 'sync:importProject',
 }
 
 export interface ProjectCategory {

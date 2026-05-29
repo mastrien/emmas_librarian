@@ -59,9 +59,21 @@ export const DashboardPage: React.FC = () => {
           <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>Projetos</h1>
           <p style={{ margin: 0, color: 'var(--text-muted)' }}>Gerencie suas pesquisas e bibliotecas de artigos.</p>
         </div>
-        <Link to="/new-project" className="btn-primary">
-          <Plus size={20} /> Novo Projeto
-        </Link>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            onClick={async () => {
+              const newId = await projectService.importProject();
+              if (newId) window.location.href = `#/projects/${newId}`;
+            }} 
+            className="btn-secondary"
+            title="Importar projeto (.emmapcarc)"
+          >
+            <Download size={20} /> Importar
+          </button>
+          <Link to="/new-project" className="btn-primary">
+            <Plus size={20} /> Novo Projeto
+          </Link>
+        </div>
       </div>
 
       {loading ? (
