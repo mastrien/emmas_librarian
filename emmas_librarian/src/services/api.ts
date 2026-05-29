@@ -1,4 +1,4 @@
-import type { Project, Article, Highlight, Annotation, DiaryEntry, PendingHighlight, ProjectDocument, MassiveInvestigation } from '../types';
+import type { Project, Article, Highlight, Annotation, DiaryEntry, PendingHighlight, ProjectDocument, MassiveInvestigation, QueryASTNode, DatabaseTranslationMap } from '../types';
 import { IpcChannel } from '../types';
 
 export const projectService = {
@@ -22,7 +22,7 @@ export const projectService = {
     await window.electronAPI.invoke(IpcChannel.PROJECTS_DELETE, id);
   },
 
-  async getSearchHistory(projectId: number): Promise<any[]> {
+  async getSearchHistory(projectId: number): Promise<unknown[]> {
     return await window.electronAPI.invoke(IpcChannel.PROJECTS_GET_SEARCH_HISTORY, projectId);
   },
 
@@ -30,11 +30,11 @@ export const projectService = {
     await window.electronAPI.invoke(IpcChannel.SEARCH_REVERT, searchId);
   },
 
-  async searchAndPersist(projectId: number, queryMap: Record<string, string>, limit: number, sortBy: string, unifiedQuery: string): Promise<any> {
+  async searchAndPersist(projectId: number, queryMap: Record<string, string>, limit: number, sortBy: string, unifiedQuery: string): Promise<{ savedCount: number; breakdown: Record<string, { count: number; error?: string }> }> {
     return await window.electronAPI.invoke(IpcChannel.SEARCH_EXECUTE, projectId, queryMap, limit, sortBy, unifiedQuery);
   },
 
-  async translateQuery(ast: any): Promise<any> {
+  async translateQuery(ast: QueryASTNode): Promise<DatabaseTranslationMap> {
     return await window.electronAPI.invoke(IpcChannel.SEARCH_TRANSLATE_QUERY, ast);
   },
 
@@ -58,7 +58,7 @@ export const projectService = {
     await window.electronAPI.invoke(IpcChannel.ARTICLES_UPDATE_STATUS, articleId, status, note);
   },
 
-  async updateArticleMetadata(articleId: number, data: any): Promise<void> {
+  async updateArticleMetadata(articleId: number, data: Partial<Article>): Promise<void> {
     await window.electronAPI.invoke(IpcChannel.ARTICLES_UPDATE_METADATA, articleId, data);
   },
 
@@ -75,7 +75,7 @@ export const projectService = {
     }));
   },
 
-  async createHighlight(articleId: number, color: string, positionData: any, contentText: string | null, annotationContent?: string): Promise<{ id: number; annotation_id: number | null }> {
+  async createHighlight(articleId: number, color: string, positionData: unknown, contentText: string | null, annotationContent?: string): Promise<{ id: number; annotation_id: number | null }> {
     const positionDataStr = JSON.stringify(positionData);
     const id = await window.electronAPI.invoke(IpcChannel.HIGHLIGHTS_CREATE, articleId, color, positionDataStr, contentText, annotationContent);
     return { id, annotation_id: annotationContent ? -1 : null };
@@ -126,7 +126,7 @@ export const projectService = {
     await window.electronAPI.invoke(IpcChannel.PDF_UNLINK, articleId);
   },
 
-  async createManualArticle(projectId: number, data: any, sourceFilePath?: string): Promise<number> {
+  async createManualArticle(projectId: number, data: Partial<Article>, sourceFilePath?: string): Promise<number> {
     return await window.electronAPI.invoke(IpcChannel.ARTICLES_CREATE_MANUAL, projectId, data, sourceFilePath);
   },
 
@@ -173,7 +173,7 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.AI_MASSIVE_EXTRACTION, articleId, questions);
   },
 
-  async extractMetadata(articleId: number): Promise<any> {
+  async extractMetadata(articleId: number): Promise<{ authors?: string, year?: string, title?: string, abstract?: string, references_list?: string, error?: string, doi?: string, journal?: string }> {
     return await window.electronAPI.invoke(IpcChannel.AI_EXTRACT_METADATA, articleId);
   },
 

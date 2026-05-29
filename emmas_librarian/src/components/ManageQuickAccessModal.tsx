@@ -57,8 +57,9 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({ 
       setUrl('');
       setFilePath(undefined);
       onDocumentsChanged();
-    } catch (err: any) {
-      alert(`Erro ao adicionar documento: ${err.message || err}`);
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      alert(`Erro ao adicionar documento: ${errorMsg}`);
     } finally {
       setSubmitting(false);
     }
@@ -69,8 +70,9 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({ 
       try {
         await projectService.deleteProjectDocument(id);
         onDocumentsChanged();
-      } catch (err: any) {
-        alert(`Erro ao remover documento: ${err.message || err}`);
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        alert(`Erro ao remover documento: ${errorMsg}`);
       }
     }
   };

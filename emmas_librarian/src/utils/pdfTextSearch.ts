@@ -1,6 +1,8 @@
 import * as pdfjsLib from 'pdfjs-dist';
 
-export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights: any[], setStatus: (msg: string) => void) {
+import { PendingHighlight } from '../types';
+
+export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights: PendingHighlight[], setStatus: (msg: string) => void) {
   if (!pendingHighlights || pendingHighlights.length === 0) return { anchoredHighlights: [], unanchoredHighlights: [] };
   
   setStatus("Abrindo documento para ancorar destaques...");
@@ -28,12 +30,12 @@ export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights:
 
       // Extract text and item mappings
       let fullText = "";
-      const itemMappings: { startIndex: number; endIndex: number; item: any }[] = [];
+      const itemMappings: { startIndex: number; endIndex: number; item: { str: string; transform: number[]; width: number; height: number } }[] = [];
       
       let strippedText = "";
       const strippedToOriginal: number[] = [];
       
-      for (const item of textContent.items as any[]) {
+      for (const item of textContent.items as { str: string; transform: number[]; width: number; height: number; hasEOL?: boolean }[]) {
         const str = item.str + (item.hasEOL ? '\n' : '');
         itemMappings.push({
           startIndex: fullText.length,

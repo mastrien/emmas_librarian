@@ -28,6 +28,7 @@ import { projectService } from '../services/api';
 import type { Article } from '../types';
 import { HelpButton } from '../components/HelpButton';
 import { EditArticleModal } from '../components/EditArticleModal';
+import { QuotaModal } from '../components/QuotaModal';
 import { anchorPendingHighlights } from '../utils/pdfTextSearch';
 
 const isArticleManual = (article: Article) => {
@@ -1226,21 +1227,7 @@ export const ArticleReaderPage: React.FC = () => {
         document.body
       )}
 
-      {showQuotaModal && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
-          <div className="card fade-in" style={{ padding: '2rem', width: '400px', background: 'var(--bg-main)', textAlign: 'center' }}>
-            <AlertCircle size={48} style={{ color: 'var(--color-danger)', margin: '0 auto 1rem auto' }} />
-            <h3 style={{ margin: '0 0 1rem 0' }}>Limite de Cota Atingido</h3>
-            <p style={{ margin: '0 0 1.5rem 0', color: 'var(--text-muted)' }}>
-              A sua chave de API parece ter esgotado o limite de cota ou os créditos disponíveis.
-            </p>
-            <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowQuotaModal(false)}>
-              Entendi
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
+      <QuotaModal isOpen={showQuotaModal} onClose={() => setShowQuotaModal(false)} />
     </div>
   );
 };

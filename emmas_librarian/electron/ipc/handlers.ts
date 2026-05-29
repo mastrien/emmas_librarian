@@ -7,7 +7,7 @@ import { QueryTranslator, queryTranslator } from '../services/QueryTranslator';
 import { ApiIntegrator } from '../services/ApiIntegrator';
 import { ExportService } from '../services/ExportService';
 import { AIService } from '../services/AIService';
-import { IpcChannel } from '../types';
+import { IpcChannel, QueryASTNode, Article } from '../types';
 import { QueryBlock } from '../services/types';
 
 export function setupIpcHandlers() {
@@ -57,11 +57,11 @@ export function setupIpcHandlers() {
 
   // Search
   ipcMain.handle(IpcChannel.SEARCH_EXECUTE, async (event, projectId: number, queryMap: Record<string, string>, limit: number, sortBy: string, unifiedQuery: string) => {
-    return orchestrator.searchAndPersist(projectId, queryMap, limit, sortBy as any, unifiedQuery);
+    return orchestrator.searchAndPersist(projectId, queryMap, limit, sortBy as 'relevance' | 'citations' | 'date', unifiedQuery);
   });
 
-  ipcMain.handle(IpcChannel.SEARCH_TRANSLATE_QUERY, (event, ast: any) => {
-    return queryTranslator.translate(ast);
+  ipcMain.handle(IpcChannel.SEARCH_TRANSLATE_QUERY, (event, ast: unknown) => {
+    return queryTranslator.translate(ast as QueryASTNode);
   });
 
   ipcMain.handle(IpcChannel.SEARCH_REVERT, async (event, searchId: number) => {
@@ -81,8 +81,8 @@ export function setupIpcHandlers() {
     return db.updateArticleStatus(id, status, note);
   });
 
-  ipcMain.handle(IpcChannel.ARTICLES_UPDATE_METADATA, (event, id: number, data: any) => {
-    return db.updateArticleMetadata(id, data);
+  ipcMain.handle(IpcChannel.ARTICLES_UPDATE_METADATA, (event, id: number, data: unknown) => {
+    return db.updateArticleMetadata(id, data as Partial<Article>);
   });
 
   // Settings

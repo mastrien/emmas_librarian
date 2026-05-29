@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
@@ -586,7 +586,7 @@ export const ProjectDetailsPage: React.FC = () => {
   
   const [investigationHistory, setInvestigationHistory] = useState<any[]>([]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!id) return;
     try {
       const [projData, artData, histData, openai, gemini, anthropic, ollama, docsData, invHist] = await Promise.all([
@@ -612,7 +612,7 @@ export const ProjectDetailsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchData();
@@ -626,7 +626,7 @@ export const ProjectDetailsPage: React.FC = () => {
     setIsExtracting(false);
   };
 
-  const handleUploadClick = async (articleId: number) => {
+  const handleUploadClick = useCallback(async (articleId: number) => {
     setUploadingId(articleId);
     try {
       const filePath = await projectService.openPdfDialog();
@@ -639,9 +639,9 @@ export const ProjectDetailsPage: React.FC = () => {
     } finally {
       setUploadingId(null);
     }
-  };
+  }, [fetchData]);
 
-  const handleUnlinkClick = async (articleId: number) => {
+  const handleUnlinkClick = useCallback(async (articleId: number) => {
     if (window.confirm("Deseja realmente desvincular o PDF deste artigo? O arquivo físico será removido do armazenamento local.")) {
       try {
         await projectService.unlinkPdf(articleId);
@@ -650,7 +650,7 @@ export const ProjectDetailsPage: React.FC = () => {
         alert('Erro ao desvincular o PDF');
       }
     }
-  };
+  }, [fetchData]);
 
   const handleRevertSearch = async (searchId: number) => {
     try {
@@ -661,14 +661,14 @@ export const ProjectDetailsPage: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (articleId: number, status: 'new' | 'read' | 'archived', note?: string) => {
+  const handleStatusChange = useCallback(async (articleId: number, status: 'new' | 'read' | 'archived', note?: string) => {
     try {
       await projectService.updateArticleStatus(articleId, status, note);
-      setArticles(articles.map(a => a.id === articleId ? { ...a, status, archive_note: note } : a));
+      setArticles(prev => prev.map(a => a.id === articleId ? { ...a, status, archive_note: note } : a));
     } catch (e: any) {
       alert(`Erro ao atualizar status do artigo: ${e.message}`);
     }
-  };
+  }, []);
 
   const handleUpdateName = async () => {
     if (!id || !newName.trim()) return;

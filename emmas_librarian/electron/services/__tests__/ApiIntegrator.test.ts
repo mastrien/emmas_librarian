@@ -172,6 +172,38 @@ describe('ApiIntegrator', () => {
 
       await expect(api.searchCrossref('query=test', 'relevance', 50)).rejects.toThrow('Bad Request');
     });
+
+    it('handles empty subject and reference arrays, and default limit', async () => {
+      const mockResult = {
+        message: {
+          items: [
+            {
+              DOI: '10.1000/crossref456',
+              title: ['Empty Arrays Title'],
+              subject: [],
+              reference: [{ unstructured: 'Some unstructured ref' }, {}]
+            }
+          ]
+        }
+      };
+
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: async () => mockResult
+      } as any);
+
+      // Call without explicit limit, should default to 50
+      const articles = await api.searchCrossref('query=test', 'relevance');
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
+      expect(urlCall).toContain('rows=50');
+
+      expect(articles).toHaveLength(1);
+      const article = articles[0];
+      expect(article.authorKeywords).toBeUndefined();
+      expect(article.references).toBe('Some unstructured ref');
+    });
   });
 
   describe('searchScopus', () => {
@@ -323,6 +355,36 @@ describe('ApiIntegrator', () => {
       } as any);
 
       await expect(api.searchWoS('query', 'bad_key', 'relevance', 50)).rejects.toThrow('Chave de API inválida ou expirada');
+    });
+
+    it('handles empty keywords and default limit', async () => {
+      const mockResult = {
+        hits: [
+          {
+            uid: 'WOS:000456',
+            title: 'WoS Empty Keywords Title',
+            keywords: {
+              authorKeywords: []
+            }
+          }
+        ]
+      };
+
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: async () => mockResult
+      } as any);
+
+      // Call without explicit limit, should default to 50
+      const articles = await api.searchWoS('TS=test', 'wos_key', 'relevance');
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+      const urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
+      expect(urlCall).toContain('count=50');
+
+      expect(articles).toHaveLength(1);
+      const article = articles[0];
+      expect(article.authorKeywords).toBeUndefined();
     });
   });
 });

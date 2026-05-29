@@ -116,8 +116,9 @@ export const SearchPage: React.FC = () => {
     try {
       const res = await projectService.searchAndPersist(parseInt(id), finalQueries, limit, sortBy, astToHumanString(ast));
       setSummary(res);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao realizar busca');
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(errorMsg || 'Erro ao realizar busca');
     } finally {
       setLoading(false);
     }
@@ -267,7 +268,7 @@ export const SearchPage: React.FC = () => {
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)', fontSize: '1.1rem' }}>Critério de Ordenação</label>
               <select 
                 value={sortBy} 
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as 'relevance' | 'citations' | 'date')}
                 style={{ 
                   width: '100%', 
                   padding: '0.8rem 1rem', 

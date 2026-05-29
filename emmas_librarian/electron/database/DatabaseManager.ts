@@ -335,7 +335,7 @@ export class DatabaseManager {
     const row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as any;
     if (!row) return null;
     
-    if (key.startsWith('api_key_')) {
+    if (key.startsWith('api_key_') || key.endsWith('_api_key')) {
       try {
         if (safeStorage.isEncryptionAvailable()) {
           const buffer = Buffer.from(row.value, 'base64');
@@ -353,7 +353,7 @@ export class DatabaseManager {
 
   public setSetting(key: string, value: string): void {
     let finalValue = value;
-    if (key.startsWith('api_key_') && value) {
+    if ((key.startsWith('api_key_') || key.endsWith('_api_key')) && value) {
       if (safeStorage.isEncryptionAvailable()) {
         const encrypted = safeStorage.encryptString(value);
         finalValue = encrypted.toString('base64');
