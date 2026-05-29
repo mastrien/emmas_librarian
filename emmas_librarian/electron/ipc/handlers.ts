@@ -422,4 +422,29 @@ export function setupIpcHandlers() {
   ipcMain.handle(IpcChannel.MASSIVE_INVESTIGATIONS_SAVE, (event, projectId: number, questions: string[], articlesIds: number[], modelUsed: string, status: string) => {
     return db.saveMassiveInvestigation(projectId, questions, articlesIds, modelUsed, status);
   });
+  ipcMain.handle(IpcChannel.CATEGORIES_GET_PROJECT, (event, projectId: number) => {
+    return db.getProjectCategories(projectId);
+  });
+
+  ipcMain.handle(IpcChannel.CATEGORIES_CREATE_PROJECT, (event, projectId: number, name: string, type: string) => {
+    return db.createProjectCategory(projectId, name, type);
+  });
+
+  ipcMain.handle(IpcChannel.CATEGORIES_DELETE_PROJECT, (event, categoryId: number) => {
+    db.deleteProjectCategory(categoryId);
+    return true;
+  });
+
+  ipcMain.handle(IpcChannel.CATEGORIES_GET_ARTICLE, (event, articleId: number) => {
+    return db.getArticleCategories(articleId);
+  });
+
+  ipcMain.handle(IpcChannel.CATEGORIES_SET_ARTICLE, (event, articleId: number, categoryId: number, value: string | null) => {
+    db.setArticleCategory(articleId, categoryId, value);
+    return true;
+  });
+
+  ipcMain.handle(IpcChannel.CATEGORIES_GET_ALL_PROJECT_ARTICLE, (event, projectId: number) => {
+    return db.getAllProjectArticleCategories(projectId);
+  });
 }

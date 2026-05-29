@@ -106,12 +106,36 @@ export class DatabaseManager {
             project_id INTEGER NOT NULL,
             questions TEXT NOT NULL,
             articles_ids TEXT NOT NULL,
+            model_used TEXT,
+            status TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
         );
       `);
     } catch (e) {
       console.error('Migration massive_investigations error', e);
+    }
+
+    try {
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS project_categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            type TEXT NOT NULL DEFAULT 'text',
+            FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS article_categories (
+            article_id INTEGER NOT NULL,
+            category_id INTEGER NOT NULL,
+            value TEXT,
+            PRIMARY KEY(article_id, category_id),
+            FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
+            FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE
+        );
+      `);
+    } catch (e) {
+      console.error('Migration categories error', e);
     }
     
     // Migrations for existing tables
@@ -502,5 +526,49 @@ export class DatabaseManager {
 
     const stmt = this.db.prepare('DELETE FROM project_documents WHERE id = ?');
     stmt.run(id);
+  }
+
+  // Categories
+  public getProjectCategories(projectId: number): any[] {
+    return this.db.prepare('SELECT * FROM project_categories WHERE project_id = ?').all(projectId);
+  }
+
+  public createProjectCategory(projectId: number, name: string, type: string): number {
+    const info = this.db.prepare('INSERT INTO project_categories (project_id, name, type) VALUES (?, ?, ?)').run(projectId, name, type);
+    return info.lastInsertRowid as number;
+  }
+
+  public deleteProjectCategory(categoryId: number): void {
+    this.db.prepare('DELETE FROM project_categories WHERE id = ?').run(categoryId);
+  }
+
+  public getArticleCategories(articleId: number): any[] {
+    return this.db.prepare(`
+      SELECT ac.category_id, ac.value, pc.name, pc.type
+      FROM article_categories ac
+      JOIN project_categories pc ON ac.category_id = pc.id
+      WHERE ac.article_id = ?
+    `).all(articleId);
+  }
+
+  public getAllProjectArticleCategories(projectId: number): any[] {
+    return this.db.prepare(`
+      SELECT ac.article_id, ac.category_id, ac.value, pc.name, pc.type
+      FROM article_categories ac
+      JOIN project_categories pc ON ac.category_id = pc.id
+      WHERE pc.project_id = ?
+    `).all(projectId);
+  }
+
+  public setArticleCategory(articleId: number, categoryId: number, value: string | null): void {
+    if (value === null || value === '') {
+      this.db.prepare('DELETE FROM article_categories WHERE article_id = ? AND category_id = ?').run(articleId, categoryId);
+    } else {
+      this.db.prepare(`
+        INSERT INTO article_categories (article_id, category_id, value)
+        VALUES (?, ?, ?)
+        ON CONFLICT(article_id, category_id) DO UPDATE SET value = excluded.value
+      `).run(articleId, categoryId, value);
+    }
   }
 }

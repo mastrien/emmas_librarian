@@ -100,3 +100,20 @@ CREATE TABLE IF NOT EXISTS massive_investigations (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS project_categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'text',
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS article_categories (
+    article_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    value TEXT,
+    PRIMARY KEY(article_id, category_id),
+    FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE
+);

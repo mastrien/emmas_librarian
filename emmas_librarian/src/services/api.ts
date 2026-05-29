@@ -209,5 +209,30 @@ export const projectService = {
 
   async saveMassiveInvestigation(projectId: number, questions: string[], articlesIds: number[], modelUsed: string, status: string): Promise<number> {
     return await window.electronAPI.invoke(IpcChannel.MASSIVE_INVESTIGATIONS_SAVE, projectId, questions, articlesIds, modelUsed, status);
+  },
+
+  // Categories
+  async getProjectCategories(projectId: number): Promise<any[]> {
+    return await window.electronAPI.invoke(IpcChannel.CATEGORIES_GET_PROJECT, projectId);
+  },
+
+  async createProjectCategory(projectId: number, name: string, type: string): Promise<number> {
+    return await window.electronAPI.invoke(IpcChannel.CATEGORIES_CREATE_PROJECT, projectId, name, type);
+  },
+
+  async deleteProjectCategory(categoryId: number): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.CATEGORIES_DELETE_PROJECT, categoryId);
+  },
+
+  async getArticleCategories(articleId: number): Promise<any[]> {
+    return await window.electronAPI.invoke(IpcChannel.CATEGORIES_GET_ARTICLE, articleId);
+  },
+
+  async setArticleCategory(articleId: number, categoryId: number, value: string | null): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.CATEGORIES_SET_ARTICLE, articleId, categoryId, value);
+  },
+
+  async getAllProjectArticleCategories(projectId: number): Promise<any[]> {
+    return await window.electronAPI.invoke(IpcChannel.CATEGORIES_GET_ALL_PROJECT_ARTICLE, projectId);
   }
 };

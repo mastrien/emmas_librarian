@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key, AlertCircle, Settings, Link as LinkIcon, File as FileIcon, PieChart as PieChartIcon } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key, AlertCircle, Settings, Link as LinkIcon, File as FileIcon, PieChart as PieChartIcon, Tag } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -11,6 +11,8 @@ import { SearchHistoryModal } from '../components/SearchHistoryModal';
 import { DiarySection } from '../components/DiarySection';
 import { EditArticleModal } from '../components/EditArticleModal';
 import { ManageQuickAccessModal } from '../components/ManageQuickAccessModal';
+import { ProjectCategoriesModal } from '../components/ProjectCategoriesModal';
+import { CategoryCell } from '../components/CategoryCell';
 
 const ArchiveModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClose: () => void, onSubmit: (note: string) => void }) => {
   const [note, setNote] = useState('');
@@ -566,6 +568,9 @@ export const ProjectDetailsPage: React.FC = () => {
   const [newName, setNewName] = useState('');
   const [activeTab, setActiveTab] = useState<TabId>('articles');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
+  const [projectCategories, setProjectCategories] = useState<any[]>([]);
+  const [articleCategories, setArticleCategories] = useState<any[]>([]);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [isImportingPdfs, setIsImportingPdfs] = useState(false);
   const navigate = useNavigate();
@@ -590,7 +595,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const fetchData = useCallback(async () => {
     if (!id) return;
     try {
-      const [projData, artData, histData, openai, gemini, anthropic, ollama, docsData, invHist] = await Promise.all([
+      const [projData, artData, histData, openai, gemini, anthropic, ollama, docsData, invHist, projCategories, artCategories] = await Promise.all([
         projectService.getProject(parseInt(id)),
         projectService.getArticles(parseInt(id)),
         projectService.getSearchHistory(parseInt(id)),
@@ -599,7 +604,9 @@ export const ProjectDetailsPage: React.FC = () => {
         projectService.getSetting('api_key_anthropic'),
         projectService.getSetting('api_key_ollama'),
         projectService.getProjectDocuments(parseInt(id)),
-        projectService.getMassiveInvestigations(parseInt(id))
+        projectService.getMassiveInvestigations(parseInt(id)),
+        projectService.getProjectCategories(parseInt(id)),
+        projectService.getAllProjectArticleCategories(parseInt(id))
       ]);
       setProject(projData);
       setArticles(artData);
@@ -608,6 +615,8 @@ export const ProjectDetailsPage: React.FC = () => {
       setNewName(projData.name);
       setProjectDocuments(docsData);
       setInvestigationHistory(invHist);
+      setProjectCategories(projCategories);
+      setArticleCategories(artCategories);
     } catch (err) {
       console.error('Erro ao carregar dados do projeto', err);
     } finally {
@@ -878,6 +887,9 @@ export const ProjectDetailsPage: React.FC = () => {
           <Link to={`/projects/${project.id}/search`} className="btn-primary">
             <Search size={18} /> Nova Busca
           </Link>
+          <button onClick={() => setIsCategoriesModalOpen(true)} className="btn-secondary" title="Gerenciar categorias de artigos">
+            <Tag size={18} /> Categorias
+          </button>
         </div>
 
         {/* Acesso rápido */}
@@ -1080,6 +1092,11 @@ export const ProjectDetailsPage: React.FC = () => {
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>TÍTULO</th>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>AUTORES</th>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>BASES</th>
+                  {projectCategories.map(cat => (
+                    <th key={cat.id} style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem', textTransform: 'uppercase' }}>
+                      {cat.name}
+                    </th>
+                  ))}
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>AÇÕES</th>
                 </tr>
               </thead>
@@ -1120,6 +1137,15 @@ export const ProjectDetailsPage: React.FC = () => {
                         })}
                       </div>
                     </td>
+                    {projectCategories.map(cat => {
+                      const artCat = articleCategories.find(ac => ac.article_id === article.id && ac.category_id === cat.id);
+                      const val = artCat?.value || '';
+                      return (
+                        <td key={cat.id} style={{ padding: '1.25rem 1.5rem' }}>
+                          <CategoryCell articleId={article.id} category={cat} initialValue={val} />
+                        </td>
+                      );
+                    })}
                     <td style={{ padding: '1.25rem 1.5rem' }}>
                       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                         <Link to={`/articles/${article.id}`} className="btn-primary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}>
@@ -1269,6 +1295,15 @@ export const ProjectDetailsPage: React.FC = () => {
         isOpen={archivingId !== null} 
         onClose={() => setArchivingId(null)} 
         onSubmit={handleArchiveSubmit} 
+      />
+
+      <ProjectCategoriesModal
+        isOpen={isCategoriesModalOpen}
+        projectId={project.id}
+        onClose={() => {
+          setIsCategoriesModalOpen(false);
+          fetchData();
+        }}
       />
 
       {editingArticle && (
