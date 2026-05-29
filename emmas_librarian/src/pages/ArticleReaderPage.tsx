@@ -138,7 +138,10 @@ export const ArticleReaderPage: React.FC = () => {
     setIsGeneratingAi(true);
     try {
       const summary = await projectService.generateSummary(parseInt(id));
-      setAiSummary(summary);
+      setAiSummary({
+        generalSummary: summary.generalSummary?.replace(/\\n/g, '\n') || '',
+        sectionSummary: summary.sectionSummary?.replace(/\\n/g, '\n') || '',
+      });
     } catch (err: any) {
       if (err.message && (err.message.includes('429') || err.message.includes('QUOTA_EXCEEDED'))) {
         setShowQuotaModal(true);
@@ -301,9 +304,11 @@ export const ArticleReaderPage: React.FC = () => {
           if (!isActive) return;
           const textLayers = document.querySelectorAll('.textLayer');
           
+          const queryKey = query.replace(/[^a-z0-9]/g, '_');
+
           textLayers.forEach(layer => {
-            if (layer.hasAttribute('data-search-highlighted-' + query)) return;
-            layer.setAttribute('data-search-highlighted-' + query, 'true');
+            if (layer.hasAttribute('data-search-highlighted-' + queryKey)) return;
+            layer.setAttribute('data-search-highlighted-' + queryKey, 'true');
             
             const spans = layer.querySelectorAll('span');
             spans.forEach(span => {
@@ -699,6 +704,7 @@ export const ArticleReaderPage: React.FC = () => {
                 <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
                   <div id="pdf-container" style={{ flexGrow: 1, position: 'relative', height: '100%' }}>
                     <PdfHighlighter
+                      key={scale}
                       ref={highlighterRef}
                       pdfDocument={pdfDocument}
                       pdfScaleValue={scale.toString()}

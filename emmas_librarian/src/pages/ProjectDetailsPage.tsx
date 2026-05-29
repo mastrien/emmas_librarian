@@ -459,7 +459,7 @@ const AIExtractionModal = ({
                               Q: {r.question}
                             </div>
                             <div className="markdown-body" style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>{r.answer}</ReactMarkdown>
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>{typeof r.answer === 'string' ? r.answer.replace(/\\n/g, '\n') : r.answer}</ReactMarkdown>
                             </div>
                             {r.quote && (
                               <div style={{ fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--text-muted)', borderLeft: '3px solid var(--color-primary)', paddingLeft: '0.5rem' }}>
