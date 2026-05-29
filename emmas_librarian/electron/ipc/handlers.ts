@@ -164,6 +164,19 @@ export function setupIpcHandlers() {
   });
 
   ipcMain.handle(IpcChannel.ARTICLES_CREATE_MANUAL, async (event, projectId: number, data: any, sourceFilePath?: string) => {
+    let searchId: number | undefined = undefined;
+    try {
+      searchId = db.saveSearchHistory(
+        projectId,
+        `Adição manual de artigo avulso: ${data.title}`,
+        {},
+        1,
+        { "Manual": { "count": 1 } }
+      );
+    } catch (err) {
+      console.error("Failed to log manual article creation to search history:", err);
+    }
+
     const articleId = db.saveArticle(projectId, {
       title: data.title,
       authors: data.authors || '',
@@ -174,6 +187,7 @@ export function setupIpcHandlers() {
       source_query: 'Manual Import',
       source_databases: JSON.stringify(['Manual']),
       csl_json: JSON.stringify({}),
+      search_id: searchId,
     });
 
     if (sourceFilePath) {
@@ -190,22 +204,25 @@ export function setupIpcHandlers() {
       }
     }
 
-    try {
-      db.saveSearchHistory(
-        projectId,
-        `Adição manual de artigo avulso: ${data.title}`,
-        {},
-        1,
-        { "Manual": { "count": 1 } }
-      );
-    } catch (err) {
-      console.error("Failed to log manual article creation to search history:", err);
-    }
-
     return articleId;
   });
 
   ipcMain.handle(IpcChannel.ARTICLES_CREATE_FROM_PDFS, async (event, projectId: number, filePaths: string[]) => {
+    let searchId: number | undefined = undefined;
+    if (filePaths.length > 0) {
+      try {
+        searchId = db.saveSearchHistory(
+          projectId,
+          `Importação em Lote de ${filePaths.length} PDFs`,
+          {},
+          filePaths.length,
+          { "Manual": { "count": filePaths.length } }
+        );
+      } catch (err) {
+        console.error("Failed to log batch import to search history:", err);
+      }
+    }
+
     let addedCount = 0;
     const pdfsDir = path.join(app.getPath('userData'), 'storage', 'pdfs');
     if (!fs.existsSync(pdfsDir)) {
@@ -223,6 +240,7 @@ export function setupIpcHandlers() {
           source_query: 'Importação em Lote',
           source_databases: JSON.stringify(['Manual']),
           csl_json: JSON.stringify({}),
+          search_id: searchId,
         });
 
         // Copy the PDF
@@ -233,20 +251,6 @@ export function setupIpcHandlers() {
         addedCount++;
       } catch (err) {
         console.error("Failed to copy PDF file for batch import:", err);
-      }
-    }
-
-    if (addedCount > 0) {
-      try {
-        db.saveSearchHistory(
-          projectId,
-          `Importação em Lote de ${addedCount} PDFs`,
-          {},
-          addedCount,
-          { "Manual": { "count": addedCount } }
-        );
-      } catch (err) {
-        console.error("Failed to log batch import to search history:", err);
       }
     }
 
