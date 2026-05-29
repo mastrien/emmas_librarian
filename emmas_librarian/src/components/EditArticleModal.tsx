@@ -69,12 +69,12 @@ export const EditArticleModal = ({
     try {
       const data = await projectService.extractMetadata(article.id);
       if (data) {
-        if (data.title) setTitle(data.title);
-        if (data.authors) setAuthors(data.authors);
-        if (data.year) setYear(data.year.toString());
-        if (data.doi) setDoi(data.doi);
-        if (data.journal) setJournal(data.journal);
-        if (data.abstract) setAbstract(data.abstract);
+        setTitle(prev => prev.trim() ? prev : data.title || prev);
+        setAuthors(prev => prev.trim() ? prev : data.authors || prev);
+        setYear(prev => prev.trim() ? prev : (data.year ? data.year.toString() : prev));
+        setDoi(prev => prev.trim() ? prev : data.doi || prev);
+        setJournal(prev => prev.trim() ? prev : data.journal || prev);
+        setAbstract(prev => prev.trim() ? prev : data.abstract || prev);
       }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err);

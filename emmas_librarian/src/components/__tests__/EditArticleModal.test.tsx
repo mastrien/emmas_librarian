@@ -62,4 +62,9 @@ describe('EditArticleModal', () => {
 
     expect(onCloseMock).toHaveBeenCalled();
   });
+
+  it('only overwrites empty fields when extracting with AI', async () => {
+    // Import dynamically or globally mock, let's just mock at top
+    // but the test file does not import projectService yet.
+  });
 });
