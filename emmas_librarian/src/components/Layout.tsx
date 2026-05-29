@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Plus, Settings } from 'lucide-react';
 import { HelpButton } from './HelpButton';
 import { Logo } from './Logo';
+import { ChangelogModal } from './ChangelogModal';
+import { projectService } from '../services/api';
 
 const NativeTitleBar = () => (
   <div style={{
@@ -28,7 +30,30 @@ const NativeTitleBar = () => (
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const isReader = location.pathname.startsWith('/articles/');
+  const [showChangelog, setShowChangelog] = useState(false);
+  const [currentVersion, setCurrentVersion] = useState('');
 
+  useEffect(() => {
+    const checkVersion = async () => {
+      try {
+        const version = await projectService.getAppVersion();
+        setCurrentVersion(version);
+        const lastSeen = localStorage.getItem('last_seen_version');
+        
+        if (!lastSeen || lastSeen !== version) {
+          setShowChangelog(true);
+        }
+      } catch (err) {
+        console.error('Failed to check app version:', err);
+      }
+    };
+    checkVersion();
+  }, []);
+
+  const handleCloseChangelog = () => {
+    localStorage.setItem('last_seen_version', currentVersion);
+    setShowChangelog(false);
+  };
   if (isReader) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
@@ -36,6 +61,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         <div style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
           {children}
         </div>
+        <ChangelogModal isOpen={showChangelog} version={currentVersion} onClose={handleCloseChangelog} />
       </div>
     );
   }
@@ -72,6 +98,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <main className="fade-in" style={{ flexGrow: 1, padding: '2rem' }}>
         {children}
       </main>
+      
+      <ChangelogModal isOpen={showChangelog} version={currentVersion} onClose={handleCloseChangelog} />
     </div>
   );
 };
