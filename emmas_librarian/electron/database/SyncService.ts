@@ -4,7 +4,7 @@ import path from 'path';
 import { DatabaseManager } from './DatabaseManager';
 import { dialog } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
-import { Project, Article } from '../../src/types';
+import { Project, Article } from '../types';
 
 export class SyncService {
   constructor(private dbManager: DatabaseManager) {}

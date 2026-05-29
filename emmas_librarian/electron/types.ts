@@ -142,6 +142,16 @@ export enum IpcChannel {
   PROJECT_DOCUMENT_OPEN_EXTERNAL = 'projectDocument:openExternal',
   MASSIVE_INVESTIGATIONS_GET = 'massiveInvestigations:get',
   MASSIVE_INVESTIGATIONS_SAVE = 'massiveInvestigations:save',
+  PROJECTS_GET_WRITING_PAD = 'projects:getWritingPad',
+  PROJECTS_UPDATE_WRITING_PAD = 'projects:updateWritingPad',
+  CATEGORIES_GET_PROJECT = 'categories:getProject',
+  CATEGORIES_CREATE_PROJECT = 'categories:createProject',
+  CATEGORIES_DELETE_PROJECT = 'categories:deleteProject',
+  CATEGORIES_GET_ARTICLE = 'categories:getArticle',
+  CATEGORIES_SET_ARTICLE = 'categories:setArticle',
+  CATEGORIES_GET_ALL_PROJECT_ARTICLE = 'categories:getAllProjectArticle',
+  SYNC_EXPORT_PROJECT = 'sync:exportProject',
+  SYNC_IMPORT_PROJECT = 'sync:importProject',
 }
 
 export interface PendingHighlight {
