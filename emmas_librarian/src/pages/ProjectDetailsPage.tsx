@@ -2,10 +2,11 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key, AlertCircle, Settings, Link as LinkIcon, File as FileIcon } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key, AlertCircle, Settings, Link as LinkIcon, File as FileIcon, PieChart as PieChartIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { SearchHistoryModal } from '../components/SearchHistoryModal';
 import { DiarySection } from '../components/DiarySection';
 import { EditArticleModal } from '../components/EditArticleModal';
@@ -537,7 +538,7 @@ const AIExtractionModal = ({
   );
 };
 
-type TabId = 'articles' | 'diary' | 'history';
+type TabId = 'articles' | 'overview' | 'diary' | 'history';
 
 const ITEMS_PER_PAGE = 50;
 
@@ -802,6 +803,7 @@ export const ProjectDetailsPage: React.FC = () => {
 
   const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
     { id: 'articles', label: `Artigos (${articles.length})`, icon: <FileText size={16} /> },
+    { id: 'overview', label: 'Estatísticas', icon: <PieChartIcon size={16} /> },
     { id: 'diary', label: 'Diário', icon: <BookOpen size={16} /> },
     { id: 'history', label: `Histórico (${history.length})`, icon: <History size={16} /> },
   ];
@@ -1179,6 +1181,72 @@ export const ProjectDetailsPage: React.FC = () => {
             </div>
           )}
         </>
+      )}
+
+      {/* Tab Content: Overview */}
+      {activeTab === 'overview' && (
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <h3 style={{ margin: '0 0 1rem 0' }}>Status dos Artigos</h3>
+              <div style={{ width: '100%', height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Ativos', value: activeArticles.length, color: '#3b82f6' },
+                        { name: 'Lidos', value: readArticles.length, color: '#10b981' },
+                        { name: 'Arquivados', value: archivedArticles.length, color: '#6b7280' }
+                      ].filter(d => d.value > 0)}
+                      innerRadius={80}
+                      outerRadius={110}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {[{ name: 'Ativos', value: activeArticles.length, color: '#3b82f6' },
+                        { name: 'Lidos', value: readArticles.length, color: '#10b981' },
+                        { name: 'Arquivados', value: archivedArticles.length, color: '#6b7280' }].filter(d => d.value > 0).map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#3b82f6' }} /> Ativos ({activeArticles.length})</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#10b981' }} /> Lidos ({readArticles.length})</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#6b7280' }} /> Arquivados ({archivedArticles.length})</div>
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <h3 style={{ margin: '0 0 1rem 0' }}>Artigos por Ano</h3>
+              <div style={{ width: '100%', height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={Object.entries(
+                      filteredArticles.reduce((acc: Record<string, number>, art) => {
+                        const year = art.year ? art.year.toString() : 'N/A';
+                        acc[year] = (acc[year] || 0) + 1;
+                        return acc;
+                      }, {})
+                    ).map(([year, count]) => ({ year, count })).sort((a, b) => a.year.localeCompare(b.year))}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                  >
+                    <XAxis dataKey="year" stroke="var(--text-muted)" />
+                    <YAxis stroke="var(--text-muted)" allowDecimals={false} />
+                    <Tooltip 
+                      contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-main)' }}
+                      cursor={{ fill: 'var(--bg-main)' }}
+                    />
+                    <Bar dataKey="count" fill="var(--color-primary)" radius={[4, 4, 0, 0]} name="Quantidade" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Tab Content: Diary */}

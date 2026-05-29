@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project } from '../types';
-import { Plus, BookOpen, Calendar, ChevronRight } from 'lucide-react';
+import { Plus, BookOpen, Calendar, ChevronRight, PieChart as PieChartIcon } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 export const DashboardPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -36,6 +37,21 @@ export const DashboardPage: React.FC = () => {
     fetchProjects();
   }, []);
 
+  const globalStats = projects.reduce((acc, p: any) => {
+    if (p.stats) {
+      acc.active += p.stats.active;
+      acc.read += p.stats.read;
+      acc.archived += p.stats.archived;
+    }
+    return acc;
+  }, { active: 0, read: 0, archived: 0 });
+
+  const pieData = [
+    { name: 'Ativos', value: globalStats.active, color: '#3b82f6' },
+    { name: 'Lidos', value: globalStats.read, color: '#10b981' },
+    { name: 'Arquivados', value: globalStats.archived, color: '#6b7280' },
+  ].filter(d => d.value > 0);
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
@@ -53,8 +69,62 @@ export const DashboardPage: React.FC = () => {
           <div className="fade-in">Carregando projetos...</div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-          {projects.map(project => (
+        <>
+          {projects.length > 0 && pieData.length > 0 && (
+            <div className="fade-in" style={{
+              display: 'flex',
+              background: 'var(--bg-surface)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-color)',
+              padding: '1.5rem',
+              marginBottom: '2rem',
+              alignItems: 'center',
+              gap: '2rem'
+            }}>
+              <div style={{ width: '200px', height: '200px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}
+                      itemStyle={{ color: 'var(--text-main)' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div>
+                <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <PieChartIcon size={20} /> Visão Geral da Biblioteca
+                </h3>
+                <div style={{ display: 'flex', gap: '2rem' }}>
+                  {pieData.map((data, index) => (
+                    <div key={index}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: data.color }} />
+                        <span style={{ color: 'var(--text-muted)' }}>{data.name}</span>
+                      </div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>
+                        {data.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {projects.map(project => (
             <Link 
               key={project.id} 
               to={`/projects/${project.id}`}
@@ -136,6 +206,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           )}
         </div>
+        </>
       )}
       <div style={{ textAlign: 'center', marginTop: '3rem' }}>
         <Link to="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.85rem', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', transition: 'background-color var(--transition-fast)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-surface)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
