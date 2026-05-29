@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon, ChevronLeft, ChevronRight, Key, Check } from 'lucide-react';
+import { CopyPlus, Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon, ChevronLeft, ChevronRight, Key, Check } from 'lucide-react';
+import { CitationModal } from '../components/CitationModal';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -63,6 +64,7 @@ export const ArticleReaderPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
+  const [isCitationModalOpen, setIsCitationModalOpen] = useState(false);
 
   const [scale, setScale] = useState(1.0);
   const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search' | 'ai' | 'writer'>('annotations');
@@ -652,6 +654,14 @@ export const ArticleReaderPage: React.FC = () => {
               <Edit2 size={14} /> Editar Metadados
             </button>
           )}
+          <button 
+            onClick={() => setIsCitationModalOpen(true)}
+            className="btn-secondary" 
+            style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+            title="Gerar Citação"
+          >
+            <CopyPlus size={14} /> Citar
+          </button>
           <HelpButton style={{ marginLeft: '1rem', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} />
         </div>
 
@@ -1347,6 +1357,13 @@ export const ArticleReaderPage: React.FC = () => {
           <Check size={18} /> {toastMessage}
         </div>,
         document.body
+      )}
+      {isCitationModalOpen && article && (
+        <CitationModal
+          isOpen={isCitationModalOpen}
+          onClose={() => setIsCitationModalOpen(false)}
+          article={article}
+        />
       )}
     </div>
   );

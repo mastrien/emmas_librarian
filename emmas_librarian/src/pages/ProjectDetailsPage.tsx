@@ -13,6 +13,7 @@ import { EditArticleModal } from '../components/EditArticleModal';
 import { ManageQuickAccessModal } from '../components/ManageQuickAccessModal';
 import { ProjectCategoriesModal } from '../components/ProjectCategoriesModal';
 import { CategoryCell } from '../components/CategoryCell';
+import { CitationModal } from '../components/CitationModal';
 
 const ArchiveModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClose: () => void, onSubmit: (note: string) => void }) => {
   const [note, setNote] = useState('');
@@ -580,6 +581,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const [aiExtractionResults, setAiExtractionResults] = useState<any[]>([]);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 });
+  const [citationArticle, setCitationArticle] = useState<Article | null>(null);
   
   const cancelExtractionRef = useRef(false);
   const [showQuotaModal, setShowQuotaModal] = useState(false);
@@ -1185,6 +1187,10 @@ export const ProjectDetailsPage: React.FC = () => {
                           <Archive size={14} /> Arquivar
                         </button>
 
+                        <button onClick={() => setCitationArticle(article)} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Gerar Citação">
+                          <CopyPlus size={14} /> Citar
+                        </button>
+
                         {article.doi && (
                           <a href={`https://doi.org/${article.doi}`} target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)' }} title="Abrir no Navegador">
                             <ExternalLink size={16} />
@@ -1398,6 +1404,11 @@ export const ProjectDetailsPage: React.FC = () => {
           onDocumentsChanged={fetchData}
         />
       )}
+      <CitationModal
+        isOpen={!!citationArticle}
+        onClose={() => setCitationArticle(null)}
+        article={citationArticle}
+      />
     </div>
   );
 };
