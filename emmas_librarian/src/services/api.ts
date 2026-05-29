@@ -18,6 +18,14 @@ export const projectService = {
     await window.electronAPI.invoke(IpcChannel.PROJECTS_UPDATE, id, name);
   },
 
+  async getProjectWritingPad(id: number): Promise<string | null> {
+    return await window.electronAPI.invoke(IpcChannel.PROJECTS_GET_WRITING_PAD, id);
+  },
+
+  async updateProjectWritingPad(id: number, content: string): Promise<void> {
+    return await window.electronAPI.invoke(IpcChannel.PROJECTS_UPDATE_WRITING_PAD, id, content);
+  },
+
   async deleteProject(id: number): Promise<void> {
     await window.electronAPI.invoke(IpcChannel.PROJECTS_DELETE, id);
   },

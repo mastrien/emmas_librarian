@@ -45,6 +45,14 @@ export function setupIpcHandlers() {
     return db.getProject(projectId);
   });
 
+  ipcMain.handle(IpcChannel.PROJECTS_GET_WRITING_PAD, async (event, projectId: number) => {
+    return db.getProjectWritingPad(projectId);
+  });
+
+  ipcMain.handle(IpcChannel.PROJECTS_UPDATE_WRITING_PAD, async (event, projectId: number, content: string) => {
+    return db.updateProjectWritingPad(projectId, content);
+  });
+
   ipcMain.handle(IpcChannel.PROJECTS_GET_SEARCH_HISTORY, async (event, projectId: number) => {
     return db.getSearchHistory(projectId);
   });

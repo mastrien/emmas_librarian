@@ -103,6 +103,8 @@ export enum IpcChannel {
   PROJECTS_UPDATE = 'projects:update',
   PROJECTS_DELETE = 'projects:delete',
   PROJECTS_GET_SEARCH_HISTORY = 'projects:getSearchHistory',
+  PROJECTS_GET_WRITING_PAD = 'projects:getWritingPad',
+  PROJECTS_UPDATE_WRITING_PAD = 'projects:updateWritingPad',
   SEARCH_EXECUTE = 'search:execute',
   SEARCH_TRANSLATE_QUERY = 'search:translateQuery',
   SEARCH_REVERT = 'search:revert',

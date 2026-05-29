@@ -78,6 +78,7 @@ export class DatabaseManager {
       'ALTER TABLE articles ADD COLUMN citation_count INTEGER',
       'ALTER TABLE articles ADD COLUMN search_id INTEGER REFERENCES search_history(id) ON DELETE SET NULL',
       'ALTER TABLE articles ADD COLUMN ai_summary TEXT',
+      'ALTER TABLE projects ADD COLUMN writing_pad TEXT',
     ];
     for (const sql of migrations) {
       try { this.db.exec(sql); } catch (e) { /* column already exists */ }
@@ -165,8 +166,17 @@ export class DatabaseManager {
   }
 
   getProject(id: number): Project | undefined {
-    const stmt = this.db.prepare('SELECT * FROM projects WHERE id = ?');
-    return stmt.get(id) as Project | undefined;
+    return this.db.prepare('SELECT * FROM projects WHERE id = ?').get(id) as Project | undefined;
+  }
+
+  updateProjectWritingPad(id: number, content: string) {
+    const stmt = this.db.prepare('UPDATE projects SET writing_pad = ? WHERE id = ?');
+    stmt.run(content, id);
+  }
+
+  getProjectWritingPad(id: number): string | null {
+    const row = this.db.prepare('SELECT writing_pad FROM projects WHERE id = ?').get(id) as { writing_pad?: string };
+    return row?.writing_pad || null;
   }
 
   updateProject(id: number, name: string): void {

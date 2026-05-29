@@ -65,7 +65,7 @@ export const ArticleReaderPage: React.FC = () => {
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
 
   const [scale, setScale] = useState(1.0);
-  const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search' | 'ai'>('annotations');
+  const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search' | 'ai' | 'writer'>('annotations');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -76,6 +76,10 @@ export const ArticleReaderPage: React.FC = () => {
   const [showKeyAlert, setShowKeyAlert] = useState(false);
   const [showQuotaModal, setShowQuotaModal] = useState(false);
   const [anchoringStatus, setAnchoringStatus] = useState<string>('');
+  
+  const [writingPadContent, setWritingPadContent] = useState('');
+  const [isSavingPad, setIsSavingPad] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const highlighterRef = useRef<any>(null);
 
@@ -91,6 +95,25 @@ export const ArticleReaderPage: React.FC = () => {
         alert('Erro ao desvincular o PDF');
       }
     }
+  };
+
+  const handlePadChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setWritingPadContent(val);
+    
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    
+    setIsSavingPad(true);
+    saveTimeoutRef.current = setTimeout(async () => {
+      if (article?.project_id) {
+        try {
+          await projectService.updateProjectWritingPad(article.project_id, val);
+        } catch (error) {
+          console.error("Erro ao salvar rascunho:", error);
+        }
+      }
+      setIsSavingPad(false);
+    }, 1000);
   };
 
   const handleSearch = async (pdfDoc: any) => {
@@ -181,17 +204,23 @@ export const ArticleReaderPage: React.FC = () => {
   const fetchData = useCallback(async () => {
     if (!id) return;
     try {
-      const [artData, highData, annData, openai, gemini, anthropic, ollama] = await Promise.all([
-        projectService.getArticle(parseInt(id)),
+      const artData = await projectService.getArticle(parseInt(id));
+      
+      const [highData, annData, openai, gemini, anthropic, ollama, padContent] = await Promise.all([
         projectService.getHighlights(parseInt(id)),
         projectService.getAnnotations(parseInt(id)),
         projectService.getSetting('api_key_openai'),
         projectService.getSetting('api_key_gemini'),
         projectService.getSetting('api_key_anthropic'),
-        projectService.getSetting('api_key_ollama')
+        projectService.getSetting('api_key_ollama'),
+        projectService.getProjectWritingPad(artData.project_id)
       ]);
       setArticle(artData);
       setHasAiKey(!!(openai || gemini || anthropic || ollama));
+      
+      if (padContent !== null && padContent !== undefined) {
+        setWritingPadContent(padContent);
+      }
       
       const attachedAnnIds = new Set(highData.map((h: any) => h.annotation_id));
       setStandaloneAnnotations(annData.filter((a: any) => !attachedAnnIds.has(a.id)));
@@ -919,6 +948,28 @@ export const ArticleReaderPage: React.FC = () => {
                       >
                         Insights IA
                       </button>
+                      <button
+                        onClick={() => setSidebarTab('writer')}
+                        style={{
+                          flex: 1,
+                          padding: '0.8rem',
+                          background: 'transparent',
+                          border: 'none',
+                          borderBottom: sidebarTab === 'writer' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                          color: sidebarTab === 'writer' ? 'var(--color-primary)' : 'var(--text-muted)',
+                          fontWeight: sidebarTab === 'writer' ? 600 : 500,
+                          fontSize: '0.9rem',
+                          cursor: 'pointer',
+                          transition: 'all var(--transition-fast)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.3rem'
+                        }}
+                        title="Rascunho de Escrita do Projeto"
+                      >
+                        <Edit2 size={16} /> Rascunho
+                      </button>
                     </div>
 
                     {/* Tab Content */}
@@ -1217,6 +1268,40 @@ export const ArticleReaderPage: React.FC = () => {
                             </div>
                           )}
                         </div>
+                      </div>
+                    )}
+                    
+                    {sidebarTab === 'writer' && (
+                      <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-main)' }}>
+                        <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem', color: 'var(--text-heading)' }}>
+                              Rascunho do Projeto
+                            </h3>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                              Este texto é compartilhado entre todos os artigos do projeto.
+                            </p>
+                          </div>
+                          {isSavingPad && <Loader2 size={16} className="animate-spin text-muted" />}
+                        </div>
+                        <textarea
+                          value={writingPadContent}
+                          onChange={handlePadChange}
+                          placeholder="Comece a escrever seu rascunho aqui... (suporta texto puro e Markdown)"
+                          style={{
+                            flexGrow: 1,
+                            width: '100%',
+                            border: 'none',
+                            padding: '1rem',
+                            resize: 'none',
+                            outline: 'none',
+                            fontFamily: 'inherit',
+                            fontSize: '0.9rem',
+                            lineHeight: '1.6',
+                            background: 'transparent',
+                            color: 'var(--text-main)'
+                          }}
+                        />
                       </div>
                     )}
                   </div>
