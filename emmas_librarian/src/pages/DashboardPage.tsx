@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project } from '../types';
-import { Plus, BookOpen, Calendar, ChevronRight, PieChart as PieChartIcon } from 'lucide-react';
+import { Plus, BookOpen, Calendar, ChevronRight, PieChart as PieChartIcon, Download } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 export const DashboardPage: React.FC = () => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon, ChevronLeft, ChevronRight, Key } from 'lucide-react';
+import { Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon, ChevronLeft, ChevronRight, Key, Check } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -51,6 +51,14 @@ export const ArticleReaderPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string>('');
+  
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2000);
+  };
   
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -742,34 +750,48 @@ export const ArticleReaderPage: React.FC = () => {
                           />
                         );
 
+                        const handleContextMenu = (e: React.MouseEvent) => {
+                          if (highlight.content && highlight.content.text) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(highlight.content.text);
+                            showToast('Texto copiado!');
+                          }
+                        };
+
                         if (!highlight.comment?.text) {
-                          return <React.Fragment key={index}>{component}</React.Fragment>;
+                          return (
+                            <div key={index} onContextMenu={handleContextMenu}>
+                              {component}
+                            </div>
+                          );
                         }
 
                         return (
-                          <Popup
-                            popupContent={
-                              <div className="card fade-in" style={{ 
-                                padding: '0.75rem 1rem', 
-                                border: '1px solid var(--border-color)', 
-                                boxShadow: 'var(--shadow-md)',
-                                fontSize: '0.85rem',
-                                maxWidth: '220px',
-                                wordBreak: 'break-word',
-                                color: 'var(--text-main)',
-                                lineHeight: '1.4'
-                              }}>
-                                {highlight.comment.text}
-                              </div>
-                            }
-                            onMouseOver={(popupContent) =>
-                              setTip(highlight, (highlight) => popupContent)
-                            }
-                            onMouseOut={hideTip}
-                            key={index}
-                          >
-                            {component}
-                          </Popup>
+                          <div key={index} onContextMenu={handleContextMenu}>
+                            <Popup
+                              popupContent={
+                                <div className="card fade-in" style={{ 
+                                  padding: '0.75rem 1rem', 
+                                  border: '1px solid var(--border-color)', 
+                                  boxShadow: 'var(--shadow-md)',
+                                  fontSize: '0.85rem',
+                                  maxWidth: '220px',
+                                  wordBreak: 'break-word',
+                                  color: 'var(--text-main)',
+                                  lineHeight: '1.4'
+                                }}>
+                                  {highlight.comment.text}
+                                </div>
+                              }
+                              onMouseOver={(popupContent) =>
+                                setTip(highlight, (highlight) => popupContent)
+                              }
+                              onMouseOut={hideTip}
+                            >
+                              {component}
+                            </Popup>
+                          </div>
                         );
                       }}
                       highlights={highlights}
@@ -1234,6 +1256,13 @@ export const ArticleReaderPage: React.FC = () => {
       )}
 
       <QuotaModal isOpen={showQuotaModal} onClose={() => setShowQuotaModal(false)} />
+      
+      {toastMessage && createPortal(
+        <div style={{ position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', background: 'var(--color-primary)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-full)', boxShadow: 'var(--shadow-lg)', zIndex: 99999, fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem', animation: 'fadeIn 0.2s ease-out' }}>
+          <Check size={18} /> {toastMessage}
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
