@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project } from '../types';
@@ -132,14 +133,14 @@ export const DashboardPage: React.FC = () => {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {isDragging && (
+      {isDragging && createPortal(
         <div style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
           width: '100vw', height: '100vh',
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
           backdropFilter: 'blur(4px)',
-          zIndex: 9999,
+          zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -148,7 +149,8 @@ export const DashboardPage: React.FC = () => {
           <h2 style={{ color: 'white', fontSize: '3rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <Download size={60} /> Solte o arquivo .emmapcarc em qualquer lugar para importar
           </h2>
-        </div>
+        </div>,
+        document.body
       )}
 
 
@@ -267,6 +269,12 @@ export const DashboardPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+          <Link to="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.85rem', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', transition: 'background-color var(--transition-fast)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-surface)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+            Ao usar o sistema, você concorda com os Termos de Uso
+          </Link>
+        </div>
         
         {!loading && projects.length > 0 && hasData && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', marginTop: '3rem' }}>
@@ -366,11 +374,7 @@ export const DashboardPage: React.FC = () => {
         )}
         </>
       )}
-      <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-        <Link to="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.85rem', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', transition: 'background-color var(--transition-fast)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-surface)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-          Ao usar o sistema, você concorda com os Termos de Uso
-        </Link>
-      </div>
+      
     </div>
   );
 };

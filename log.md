@@ -236,3 +236,6 @@
 
 ### Ciclo 15: Estilização de Inputs do Modal de Categorias
 - **O que foi feito:** Adicionada a classe \.input-field\ no \style.css\ central para estilizar os inputs do modal de categorias, garantindo consistência visual (com bordas, padding e foco adequados para os temas dark e light).
+
+### Ciclo 16: Correção do Painel de Drag and Drop
+- **O que foi feito:** Envolvemos os modais de drag and drop (tanto no Dashboard quanto nos Detalhes do Projeto) utilizando o \createPortal\ do React. Isso garante que, independente do contêiner pai estar utilizando animações como \	ransform: translateY\ (que forçam um novo contexto de empilhamento), a área de drop e seu texto de alerta sejam renderizados perfeitamente fixados no corpo da página e no centro da viewport inteira.

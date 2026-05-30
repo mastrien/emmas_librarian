@@ -910,13 +910,13 @@ export const ProjectDetailsPage: React.FC = () => {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {isDragging && (
+      {isDragging && createPortal(
         <div style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
           backdropFilter: 'blur(4px)',
-          zIndex: 9999,
+          zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -925,7 +925,8 @@ export const ProjectDetailsPage: React.FC = () => {
           <h2 style={{ color: 'white', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <CopyPlus size={40} /> Solte seus PDFs aqui para importar
           </h2>
-        </div>
+        </div>,
+        document.body
       )}
 
       <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
