@@ -227,3 +227,6 @@
 
 ### Ciclo 12: Restauração de Gráficos e Posicionamento na base
 - **O que foi feito:** O gráfico de 'Arquivos Físicos' (com PDF vs sem PDF) foi reincorporado. A seção inteira contendo os 3 mostradores (agora com proporção 1/3 para cada, usando span 4) foi novamente movida, desta vez para a base da página, logo abaixo da grade de listagem de projetos.
+
+### Ciclo 13: Correção do ImportProject
+- **O que foi feito:** Corrigido o bug na importação de projeto onde o 'SyncService' falhava tentando acessar uma propriedade \storageDir\ inexistente em \DatabaseManager\. Agora o caminho absoluto das pastas de storage de PDFs e Documentos é resgatado de forma segura através do \pp.getPath('userData')\ para gravar os arquivos da importação na pasta local correta.

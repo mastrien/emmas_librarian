@@ -2,7 +2,7 @@ import AdmZip from 'adm-zip';
 import fs from 'fs';
 import path from 'path';
 import { DatabaseManager } from './DatabaseManager';
-import { dialog } from 'electron';
+import { dialog, app } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import { Project, Article } from '../types';
 
@@ -104,7 +104,11 @@ export class SyncService {
         );
         const pid = projResult.lastInsertRowid;
 
-        const baseStorageDir = (this.dbManager as any).storageDir;
+        const basePdfsDir = path.join(app.getPath('userData'), 'storage', 'pdfs');
+        if (!fs.existsSync(basePdfsDir)) fs.mkdirSync(basePdfsDir, { recursive: true });
+
+        const baseDocsDir = path.join(app.getPath('userData'), 'storage', 'project_documents');
+        if (!fs.existsSync(baseDocsDir)) fs.mkdirSync(baseDocsDir, { recursive: true });
 
         // Article Map (oldId -> newId)
         const articleMap = new Map<number, number>();
@@ -116,7 +120,7 @@ export class SyncService {
             const fileName = path.basename(art.local_file_path);
             const pdfEntry = zip.getEntry(`pdfs/${fileName}`);
             if (pdfEntry) {
-              const destPath = path.join(baseStorageDir, `${uuidv4()}_${fileName}`);
+              const destPath = path.join(basePdfsDir, `${uuidv4()}_${fileName}`);
               fs.writeFileSync(destPath, pdfEntry.getData());
               newPdfPath = destPath;
             }
@@ -152,7 +156,7 @@ export class SyncService {
             const fileName = path.basename(doc.local_file_path);
             const docEntry = zip.getEntry(`docs/${fileName}`);
             if (docEntry) {
-              const destPath = path.join(baseStorageDir, `${uuidv4()}_${fileName}`);
+              const destPath = path.join(baseDocsDir, `${uuidv4()}_${fileName}`);
               fs.writeFileSync(destPath, docEntry.getData());
               newDocPath = destPath;
             }
