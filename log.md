@@ -242,3 +242,6 @@
 
 ### Ciclo 17: Estilo do Botão de Categorizar no Leitor
 - **O que foi feito:** O botão flutuante de 'Categorizar' na tela de leitura de PDF recebeu um upgrade visual: as bordas agora estão em formato de pílula (2rem), o gradiente linear foi substituído pela cor primária sólida e adicionamos o texto 'Categorizar' ao lado do ícone para deixar sua função perfeitamente clara e intuitiva para o usuário.
+
+### Ciclo 18: Aba de Categorias e Exportação CSV/XLSX
+- **O que foi feito:** O conteúdo da guia 'Categorias' foi finalmente implementado na página de detalhes do projeto. Esta aba agora exibe uma matriz completa de Artigos vs Categorias, facilitando a visualização rápida de quais dados foram extraídos ou preenchidos. Além disso, os botões de exportação (CSV e XLSX) foram inseridos diretamente nesta nova aba, como especificado no plano de implementação.
