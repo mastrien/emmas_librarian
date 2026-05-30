@@ -186,7 +186,7 @@ export const DashboardPage: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
               
               <div className="fade-in" style={{
-                gridColumn: 'span 5',
+                gridColumn: 'span 4',
                 display: 'flex',
                 background: 'transparent',
                 alignItems: 'center',
@@ -230,7 +230,7 @@ export const DashboardPage: React.FC = () => {
               </div>
 
               <div className="fade-in" style={{
-                gridColumn: 'span 5',
+                gridColumn: 'span 4',
                 display: 'flex',
                 background: 'transparent',
                 alignItems: 'center',
@@ -273,7 +273,7 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ gridColumn: 'span 2' }}>
+              <div style={{ gridColumn: 'span 4' }}>
                 <DashboardCalendar diarySet={globalStats.diarySet} />
               </div>
             </div>

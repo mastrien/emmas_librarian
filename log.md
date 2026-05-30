@@ -212,3 +212,6 @@
 
 ### Ciclo 7: Ajuste no Cabeçalho do Calendário
 - **O que foi feito:** O cabeçalho do componente \DashboardCalendar\ foi reorganizado. O título 'Atividade no Diário' foi centralizado na primeira linha, e o seletor de meses foi movido para a linha de baixo com botões alinhados às extremidades, otimizando o espaço na coluna menor.
+
+### Ciclo 8: Revertido ordenação do calendário no Dashboard
+- **O que foi feito:** O span da grid de 12 colunas foi ajustado de volta para 1 terço (span 4) para cada mostrador (Gráfico Geral, Gráfico Físico e Calendário).
