@@ -38,7 +38,7 @@ describe('ProjectCategoriesModal', () => {
     fireEvent.click(submitBtn!);
 
     await waitFor(() => {
-      expect(projectService.createProjectCategory).toHaveBeenCalledWith(1, 'New Category', 'text');
+      expect(projectService.createProjectCategory).toHaveBeenCalledWith(1, 'New Category', 'text', '');
     });
   });
 
