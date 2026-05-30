@@ -8,7 +8,9 @@ Cite.plugins.config.get('@csl').locales.add('pt-BR', ptBrLocale);
 
 export type CitationStyle = 'abnt' | 'apa' | 'vancouver' | 'harvard1' | 'ieee';
 
-export function generateCitation(article: any, style: CitationStyle = 'abnt'): string {
+export type CitationOutputFormat = 'text' | 'html' | 'bibtex';
+
+export function generateCitation(article: any, style: CitationStyle = 'abnt', format: CitationOutputFormat = 'text'): string {
   try {
     const data: any = {
       id: article.id,
@@ -38,8 +40,13 @@ export function generateCitation(article: any, style: CitationStyle = 'abnt'): s
     const finalData = article.csl_json ? JSON.parse(article.csl_json) : data;
 
     const cite = new Cite(finalData);
+
+    if (format === 'bibtex') {
+      return cite.format('bibtex');
+    }
+
     return cite.format('bibliography', {
-      format: 'text',
+      format: format === 'html' ? 'html' : 'text',
       template: style,
       lang: style === 'abnt' ? 'pt-BR' : 'en-US'
     }).trim();
