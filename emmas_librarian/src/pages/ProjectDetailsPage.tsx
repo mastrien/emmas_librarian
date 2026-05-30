@@ -1458,6 +1458,130 @@ export const ProjectDetailsPage: React.FC = () => {
               </div>
             </div>
           </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+            {/* Open Access Pie */}
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <h3 style={{ margin: '0 0 1rem 0' }}>Acesso Aberto (Open Access)</h3>
+              <div style={{ width: '100%', height: '300px', position: 'relative' }}>
+                <Pie
+                  data={{
+                    labels: ['Open Access', 'Closed Access', 'Desconhecido'],
+                    datasets: [{
+                      data: [
+                        filteredArticles.filter(a => a.is_oa === 1).length,
+                        filteredArticles.filter(a => a.is_oa === 0).length,
+                        filteredArticles.filter(a => a.is_oa !== 1 && a.is_oa !== 0).length
+                      ],
+                      backgroundColor: ['#10b981', '#ef4444', '#9ca3af'],
+                      borderWidth: 0,
+                    }]
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } }
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Document Types Pie */}
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <h3 style={{ margin: '0 0 1rem 0' }}>Tipos de Documentos</h3>
+              <div style={{ width: '100%', height: '300px', position: 'relative' }}>
+                <Pie
+                  data={(() => {
+                    const counts = filteredArticles.reduce((acc: Record<string, number>, art) => {
+                      const type = art.document_type || 'Desconhecido';
+                      acc[type] = (acc[type] || 0) + 1;
+                      return acc;
+                    }, {});
+                    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+                    return {
+                      labels: sorted.map(i => i[0]),
+                      datasets: [{
+                        data: sorted.map(i => i[1]),
+                        backgroundColor: ['#8b5cf6', '#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#6366f1', '#14b8a6', '#f43f5e', '#84cc16', '#64748b'],
+                        borderWidth: 0,
+                      }]
+                    };
+                  })()}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } }
+                  }}
+                />
+              </div>
+            </div>
+            
+            {/* Publishers Bar */}
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <h3 style={{ margin: '0 0 1rem 0' }}>Top 10 Editoras / Publishers</h3>
+              <div style={{ width: '100%', height: '300px', position: 'relative' }}>
+                <Bar
+                  data={(() => {
+                    const counts = filteredArticles.reduce((acc: Record<string, number>, art) => {
+                      const pub = art.publisher || 'Desconhecido';
+                      acc[pub] = (acc[pub] || 0) + 1;
+                      return acc;
+                    }, {});
+                    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+                    return {
+                      labels: sorted.map(i => i[0].length > 15 ? i[0].substring(0, 15) + '...' : i[0]),
+                      datasets: [{
+                        label: 'Artigos',
+                        data: sorted.map(i => i[1]),
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 4,
+                      }]
+                    };
+                  })()}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, color: '#9ca3af' },
+                        grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                      },
+                      x: {
+                        ticks: { color: '#9ca3af' },
+                        grid: { display: false }
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* DOI Presence */}
+            <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <h3 style={{ margin: '0 0 1rem 0' }}>Presença de DOI</h3>
+              <div style={{ width: '100%', height: '300px', position: 'relative' }}>
+                <Pie
+                  data={{
+                    labels: ['Com DOI', 'Sem DOI'],
+                    datasets: [{
+                      data: [
+                        filteredArticles.filter(a => !!a.doi).length,
+                        filteredArticles.filter(a => !a.doi).length
+                      ],
+                      backgroundColor: ['#3b82f6', '#f59e0b'],
+                      borderWidth: 0,
+                    }]
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } }
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

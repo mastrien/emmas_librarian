@@ -22,6 +22,8 @@ export interface Article {
   affiliations?: string;
   references_list?: string;
   document_type?: string;
+  publisher?: string;
+  is_oa?: number;
   issn?: string;
   citation_count?: number;
   source_query: string;
