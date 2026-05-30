@@ -54,13 +54,10 @@ export const DashboardCalendar: React.FC<{ diarySet: Set<string> }> = ({ diarySe
 
   return (
     <div className="fade-in" style={{
-      background: 'var(--bg-surface)',
-      borderRadius: 'var(--radius-lg)',
-      border: '1px solid var(--border-color)',
-      padding: '1.5rem',
+      background: 'transparent',
       display: 'flex',
       flexDirection: 'column',
-      minWidth: '350px'
+      height: '100%',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h3 style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

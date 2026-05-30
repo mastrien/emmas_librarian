@@ -206,3 +206,6 @@
 
 ### Ciclo 5: Restauração do Gráfico de Status no Dashboard
 - **O que foi feito:** O gráfico de pizza de artigos Ativos/Lidos/Arquivados foi restaurado na página inicial (Dashboard). O layout em grid foi ajustado para exibir lado a lado o gráfico de progresso geral, o gráfico de arquivos físicos (PDFs) e o calendário de atividades, dividindo o espaço igualmente através da propriedade gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))'.
+
+### Ciclo 6: Ajuste Fino na Grid do Dashboard
+- **O que foi feito:** O layout do Dashboard foi ajustado para utilizar uma convenção de grid de 12 colunas. Os cards dos gráficos foram alterados para ocupar 5 colunas cada (span 5), enquanto o calendário foi reduzido para ocupar 2 colunas (span 2). Além disso, o fundo dos gráficos foi tornado transparente, a classe card e suas bordas foram removidas para melhor integração visual, e a altura dos gráficos foi levemente reduzida para evitar cards muito altos.
