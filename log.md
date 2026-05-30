@@ -245,3 +245,6 @@
 
 ### Ciclo 18: Aba de Categorias e Exportação CSV/XLSX
 - **O que foi feito:** O conteúdo da guia 'Categorias' foi finalmente implementado na página de detalhes do projeto. Esta aba agora exibe uma matriz completa de Artigos vs Categorias, facilitando a visualização rápida de quais dados foram extraídos ou preenchidos. Além disso, os botões de exportação (CSV e XLSX) foram inseridos diretamente nesta nova aba, como especificado no plano de implementação.
+
+### Ciclo 19: Melhorias nas Categorias
+- **O que foi feito:** 1) Corrigido o bug onde as categorias do artigo no painel lateral desapareciam após o fechamento e reabertura do painel (agora os dados são re-buscados no useEffect ao abrir o painel). 2) As categorias do tipo enum agora permitem edição local! Foi adicionada uma opção + Adicionar nova opção... que solicita o novo valor ao usuário via prompt, salva no banco de dados e seleciona a nova opção, persistindo as mudanças imediatamente na interface e no banco de dados sem precisar ir até o painel central.

@@ -557,6 +557,10 @@ export class DatabaseManager {
     return info.lastInsertRowid as number;
   }
 
+  public updateProjectCategory(categoryId: number, name: string, type: string, options?: string): void {
+    this.db.prepare('UPDATE project_categories SET name = ?, type = ?, options = ? WHERE id = ?').run(name, type, options || null, categoryId);
+  }
+
   public deleteProjectCategory(categoryId: number): void {
     this.db.prepare('DELETE FROM project_categories WHERE id = ?').run(categoryId);
   }

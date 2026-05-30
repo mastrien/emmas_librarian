@@ -316,6 +316,12 @@ export const ArticleReaderPage: React.FC = () => {
   }, [fetchData]);
 
   useEffect(() => {
+    if (isCategoriesOpen) {
+      fetchData();
+    }
+  }, [isCategoriesOpen, fetchData]);
+
+  useEffect(() => {
     return () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };

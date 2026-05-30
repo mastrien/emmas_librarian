@@ -466,6 +466,11 @@ export function setupIpcHandlers() {
     return db.createProjectCategory(projectId, name, type, options);
   });
 
+  ipcMain.handle(IpcChannel.CATEGORIES_UPDATE_PROJECT, (event, categoryId: number, name: string, type: string, options?: string) => {
+    db.updateProjectCategory(categoryId, name, type, options);
+    return true;
+  });
+
   ipcMain.handle(IpcChannel.CATEGORIES_DELETE_PROJECT, (event, categoryId: number) => {
     db.deleteProjectCategory(categoryId);
     return true;

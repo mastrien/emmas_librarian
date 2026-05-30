@@ -44,11 +44,43 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
   }
 
   if (category.type === 'enum') {
-    const options = category.options ? category.options.split(',').map(o => o.trim()) : [];
+    const initialOptions = category.options ? category.options.split(',').map(o => o.trim()) : [];
+    const [localOptions, setLocalOptions] = useState(initialOptions);
+
+    const handleChange = async (val: string) => {
+      if (val === '__ADD_NEW__') {
+        const newOpt = window.prompt('Digite a nova opção para esta categoria:');
+        if (newOpt && newOpt.trim()) {
+          const trimmed = newOpt.trim();
+          if (!localOptions.includes(trimmed)) {
+            const updatedOptions = [...localOptions, trimmed].join(', ');
+            try {
+              await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions);
+              setLocalOptions([...localOptions, trimmed]);
+              handleSave(trimmed);
+            } catch (err) {
+              console.error(err);
+              alert('Erro ao adicionar opção.');
+            }
+          } else {
+            handleSave(trimmed);
+          }
+        }
+      } else {
+        handleSave(val);
+      }
+    };
+
+    // Make sure the selected value is in localOptions, just in case
+    const optionsToRender = [...localOptions];
+    if (value && !optionsToRender.includes(value)) {
+      optionsToRender.push(value);
+    }
+
     return (
       <select 
         value={value} 
-        onChange={(e) => handleSave(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
         style={{
           background: 'var(--bg-surface)',
           color: 'var(--text-main)',
@@ -60,9 +92,10 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
         }}
       >
         <option value="">-</option>
-        {options.map((opt, idx) => (
+        {optionsToRender.map((opt, idx) => (
           <option key={idx} value={opt}>{opt}</option>
         ))}
+        <option value="__ADD_NEW__">+ Adicionar nova opção...</option>
       </select>
     );
   }

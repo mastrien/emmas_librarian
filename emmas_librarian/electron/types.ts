@@ -147,6 +147,7 @@ export enum IpcChannel {
   PROJECTS_UPDATE_WRITING_PAD = 'projects:updateWritingPad',
   CATEGORIES_GET_PROJECT = 'categories:getProject',
   CATEGORIES_CREATE_PROJECT = 'categories:createProject',
+  CATEGORIES_UPDATE_PROJECT = 'categories:updateProject',
   CATEGORIES_DELETE_PROJECT = 'categories:deleteProject',
   CATEGORIES_GET_ARTICLE = 'categories:getArticle',
   CATEGORIES_SET_ARTICLE = 'categories:setArticle',

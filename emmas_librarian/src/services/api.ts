@@ -294,6 +294,10 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.CATEGORIES_CREATE_PROJECT, projectId, name, type, options);
   },
 
+  async updateProjectCategory(categoryId: number, name: string, type: string, options?: string): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.CATEGORIES_UPDATE_PROJECT, categoryId, name, type, options);
+  },
+
   async deleteProjectCategory(categoryId: number): Promise<void> {
     await window.electronAPI.invoke(IpcChannel.CATEGORIES_DELETE_PROJECT, categoryId);
   },
