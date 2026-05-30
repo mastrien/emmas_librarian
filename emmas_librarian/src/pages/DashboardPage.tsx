@@ -3,11 +3,15 @@ import { Link } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project } from '../types';
 import { Plus, BookOpen, Calendar, ChevronRight, PieChart as PieChartIcon, Download } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Pie } from 'react-chartjs-2';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 export const DashboardPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -46,14 +50,69 @@ export const DashboardPage: React.FC = () => {
     return acc;
   }, { active: 0, read: 0, archived: 0 });
 
-  const pieData = [
-    { name: 'Ativos', value: globalStats.active, color: '#3b82f6' },
-    { name: 'Lidos', value: globalStats.read, color: '#10b981' },
-    { name: 'Arquivados', value: globalStats.archived, color: '#6b7280' },
-  ].filter(d => d.value > 0);
+  const chartData = {
+    labels: ['Ativos', 'Lidos', 'Arquivados'],
+    datasets: [
+      {
+        data: [globalStats.active, globalStats.read, globalStats.archived],
+        backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],
+        borderWidth: 0,
+      },
+    ],
+  };
+
+  const hasData = globalStats.active > 0 || globalStats.read > 0 || globalStats.archived > 0;
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const emmapcarcFiles = files.filter(f => f.name.endsWith('.emmapcarc'));
+    
+    if (emmapcarcFiles.length > 0) {
+      // @ts-ignore - path exists in electron File objects
+      const filePath = emmapcarcFiles[0].path || emmapcarcFiles[0].name;
+      const newId = await projectService.importProject(filePath);
+      if (newId) window.location.href = `#/projects/${newId}`;
+    }
+  };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div 
+      style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', minHeight: '80vh' }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div style={{
+          position: 'absolute',
+          top: -20, left: -20, right: -20, bottom: -20,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: 'var(--radius-xl)',
+          border: '4px dashed var(--color-primary)'
+        }}>
+          <h2 style={{ color: 'white', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <Download size={40} /> Solte o arquivo .emmapcarc para importar
+          </h2>
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
         <div>
           <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>Projetos</h1>
@@ -82,7 +141,7 @@ export const DashboardPage: React.FC = () => {
         </div>
       ) : (
         <>
-          {projects.length > 0 && pieData.length > 0 && (
+          {projects.length > 0 && hasData && (
             <div className="fade-in" style={{
               display: 'flex',
               background: 'var(--bg-surface)',
@@ -93,43 +152,42 @@ export const DashboardPage: React.FC = () => {
               alignItems: 'center',
               gap: '2rem'
             }}>
-              <div style={{ width: '200px', height: '200px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}
-                      itemStyle={{ color: 'var(--text-main)' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div style={{ width: '200px', height: '200px', position: 'relative' }}>
+                <Pie 
+                  data={chartData} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                      }
+                    }
+                  }} 
+                />
               </div>
               <div>
                 <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <PieChartIcon size={20} /> Visão Geral da Biblioteca
                 </h3>
                 <div style={{ display: 'flex', gap: '2rem' }}>
-                  {pieData.map((data, index) => (
-                    <div key={index}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                        <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: data.color }} />
-                        <span style={{ color: 'var(--text-muted)' }}>{data.name}</span>
+                  {chartData.datasets[0].data.map((val, index) => {
+                    if (val === 0) return null;
+                    return (
+                      <div key={index}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                          <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: chartData.datasets[0].backgroundColor[index] }} />
+                          <span style={{ color: 'var(--text-muted)' }}>{chartData.labels[index]}</span>
+                        </div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>
+                          {val}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>
-                        {data.value}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

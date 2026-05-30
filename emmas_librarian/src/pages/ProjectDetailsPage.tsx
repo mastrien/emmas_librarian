@@ -6,7 +6,27 @@ import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, 
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+} from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
+
+ChartJS.register(
+  ArcElement,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 import { SearchHistoryModal } from '../components/SearchHistoryModal';
 import { DiarySection } from '../components/DiarySection';
 import { EditArticleModal } from '../components/EditArticleModal';
@@ -574,6 +594,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const [articleCategories, setArticleCategories] = useState<any[]>([]);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [isImportingPdfs, setIsImportingPdfs] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const navigate = useNavigate();
 
   const [isAIExtractionModalOpen, setIsAIExtractionModalOpen] = useState(false);
@@ -749,6 +770,40 @@ export const ProjectDetailsPage: React.FC = () => {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (!id) return;
+
+    const files = Array.from(e.dataTransfer.files);
+    const pdfFiles = files.filter(f => f.name.toLowerCase().endsWith('.pdf'));
+    
+    if (pdfFiles.length > 0) {
+      try {
+        setIsImportingPdfs(true);
+        // @ts-ignore
+        const filePaths = pdfFiles.map(f => f.path || f.name);
+        const count = await projectService.createArticlesFromPdfs(parseInt(id), filePaths);
+        alert(`${count} artigo(s) importado(s) com sucesso.`);
+        await fetchData();
+      } catch (err: any) {
+        alert(`Erro ao importar PDFs: ${err.message || err}`);
+      } finally {
+        setIsImportingPdfs(false);
+      }
+    }
+  };
+
   const handleMassiveExtraction = async (selectedIds: number[]) => {
     const validQuestions = aiQuestions.filter(q => q.trim().length > 0);
     if (validQuestions.length === 0) return;
@@ -847,7 +902,32 @@ export const ProjectDetailsPage: React.FC = () => {
   ];
 
   return (
-    <div className="fade-in" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div 
+      className="fade-in" 
+      style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', minHeight: '80vh' }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div style={{
+          position: 'absolute',
+          top: -20, left: -20, right: -20, bottom: -20,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: 'var(--radius-xl)',
+          border: '4px dashed var(--color-primary)'
+        }}>
+          <h2 style={{ color: 'white', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <CopyPlus size={40} /> Solte seus PDFs aqui para importar
+          </h2>
+        </div>
+      )}
+
       <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
         <ArrowLeft size={18} /> Voltar para Projetos
       </Link>
@@ -1284,29 +1364,30 @@ export const ProjectDetailsPage: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
             <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <h3 style={{ margin: '0 0 1rem 0' }}>Status dos Artigos</h3>
-              <div style={{ width: '100%', height: '300px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: 'Ativos', value: activeArticles.length, color: '#3b82f6' },
-                        { name: 'Lidos', value: readArticles.length, color: '#10b981' },
-                        { name: 'Arquivados', value: archivedArticles.length, color: '#6b7280' }
-                      ].filter(d => d.value > 0)}
-                      innerRadius={80}
-                      outerRadius={110}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {[{ name: 'Ativos', value: activeArticles.length, color: '#3b82f6' },
-                        { name: 'Lidos', value: readArticles.length, color: '#10b981' },
-                        { name: 'Arquivados', value: archivedArticles.length, color: '#6b7280' }].filter(d => d.value > 0).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div style={{ width: '100%', height: '300px', position: 'relative' }}>
+                <Pie
+                  data={{
+                    labels: ['Ativos', 'Lidos', 'Arquivados'],
+                    datasets: [{
+                      data: [activeArticles.length, readArticles.length, archivedArticles.length],
+                      backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],
+                      borderWidth: 0,
+                    }]
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                      }
+                    }
+                  }}
+                />
               </div>
               <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#3b82f6' }} /> Ativos ({activeArticles.length})</div>
@@ -1317,27 +1398,62 @@ export const ProjectDetailsPage: React.FC = () => {
 
             <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <h3 style={{ margin: '0 0 1rem 0' }}>Artigos por Ano</h3>
-              <div style={{ width: '100%', height: '300px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={Object.entries(
+              <div style={{ width: '100%', height: '300px', position: 'relative' }}>
+                <Bar
+                  data={{
+                    labels: Object.entries(
                       filteredArticles.reduce((acc: Record<string, number>, art) => {
                         const year = art.year ? art.year.toString() : 'N/A';
                         acc[year] = (acc[year] || 0) + 1;
                         return acc;
                       }, {})
-                    ).map(([year, count]) => ({ year, count })).sort((a, b) => a.year.localeCompare(b.year))}
-                    margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
-                  >
-                    <XAxis dataKey="year" stroke="var(--text-muted)" />
-                    <YAxis stroke="var(--text-muted)" allowDecimals={false} />
-                    <Tooltip 
-                      contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-main)' }}
-                      cursor={{ fill: 'var(--bg-main)' }}
-                    />
-                    <Bar dataKey="count" fill="var(--color-primary)" radius={[4, 4, 0, 0]} name="Quantidade" />
-                  </BarChart>
-                </ResponsiveContainer>
+                    ).sort(([a], [b]) => a.localeCompare(b)).map(([year]) => year),
+                    datasets: [{
+                      label: 'Quantidade',
+                      data: Object.entries(
+                        filteredArticles.reduce((acc: Record<string, number>, art) => {
+                          const year = art.year ? art.year.toString() : 'N/A';
+                          acc[year] = (acc[year] || 0) + 1;
+                          return acc;
+                        }, {})
+                      ).sort(([a], [b]) => a.localeCompare(b)).map(([, count]) => count),
+                      backgroundColor: '#3b82f6',
+                      borderRadius: 4,
+                    }]
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                      }
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        ticks: {
+                          stepSize: 1,
+                          color: '#9ca3af'
+                        },
+                        grid: {
+                          color: 'rgba(156, 163, 175, 0.1)'
+                        }
+                      },
+                      x: {
+                        ticks: {
+                          color: '#9ca3af'
+                        },
+                        grid: {
+                          display: false
+                        }
+                      }
+                    }
+                  }}
+                />
               </div>
             </div>
           </div>

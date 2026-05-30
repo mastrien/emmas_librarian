@@ -72,15 +72,19 @@ export class SyncService {
     }
   }
 
-  public async importProject(): Promise<number | null> {
-    const { canceled, filePaths } = await dialog.showOpenDialog({
-      title: 'Importar Projeto',
-      filters: [{ name: 'Emma\'s Librarian Project', extensions: ['emmapcarc'] }],
-      properties: ['openFile']
-    });
+  public async importProject(providedPath?: string): Promise<number | null> {
+    let importPath = providedPath;
 
-    if (canceled || filePaths.length === 0) return null;
-    const importPath = filePaths[0];
+    if (!importPath) {
+      const { canceled, filePaths } = await dialog.showOpenDialog({
+        title: 'Importar Projeto',
+        filters: [{ name: 'Emma\'s Librarian Project', extensions: ['emmapcarc'] }],
+        properties: ['openFile']
+      });
+
+      if (canceled || filePaths.length === 0) return null;
+      importPath = filePaths[0];
+    }
 
     try {
       const zip = new AdmZip(importPath);
@@ -93,10 +97,9 @@ export class SyncService {
       
       const newProjectId = db.transaction(() => {
         // Insert Project
-        const insertProj = db.prepare('INSERT INTO projects (name, description, created_at, updated_at) VALUES (?, ?, ?, ?)');
+        const insertProj = db.prepare('INSERT INTO projects (name, created_at, updated_at) VALUES (?, ?, ?)');
         const projResult = insertProj.run(
           data.project.name + ' (Importado)',
-          data.project.description,
           new Date().toISOString(),
           new Date().toISOString()
         );

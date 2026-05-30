@@ -463,7 +463,7 @@ export function setupIpcHandlers() {
     return await syncService.exportProject(projectId);
   });
 
-  ipcMain.handle(IpcChannel.SYNC_IMPORT_PROJECT, async () => {
-    return await syncService.importProject();
+  ipcMain.handle(IpcChannel.SYNC_IMPORT_PROJECT, async (event, filePath?: string) => {
+    return await syncService.importProject(filePath);
   });
 }

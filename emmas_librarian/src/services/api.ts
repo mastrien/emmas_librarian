@@ -1,15 +1,15 @@
-import { 
-  IpcChannel, 
-  type Project, 
-  type Article, 
-  type Highlight, 
-  type Annotation, 
-  type DiaryEntry, 
-  type PendingHighlight, 
-  type ProjectDocument, 
-  type MassiveInvestigation, 
-  type QueryASTNode, 
-  type DatabaseTranslationMap 
+import {
+  IpcChannel,
+  type Project,
+  type Article,
+  type Highlight,
+  type Annotation,
+  type DiaryEntry,
+  type PendingHighlight,
+  type ProjectDocument,
+  type MassiveInvestigation,
+  type QueryASTNode,
+  type DatabaseTranslationMap,
 } from '../types';
 
 export const projectService = {
@@ -49,7 +49,13 @@ export const projectService = {
     await window.electronAPI.invoke(IpcChannel.SEARCH_REVERT, searchId);
   },
 
-  async searchAndPersist(projectId: number, queryMap: Record<string, string>, limit: number, sortBy: string, unifiedQuery: string): Promise<{ savedCount: number; breakdown: Record<string, { count: number; error?: string }> }> {
+  async searchAndPersist(
+    projectId: number,
+    queryMap: Record<string, string>,
+    limit: number,
+    sortBy: string,
+    unifiedQuery: string,
+  ): Promise<{ savedCount: number; breakdown: Record<string, { count: number; error?: string }> }> {
     return await window.electronAPI.invoke(IpcChannel.SEARCH_EXECUTE, projectId, queryMap, limit, sortBy, unifiedQuery);
   },
 
@@ -90,13 +96,26 @@ export const projectService = {
       position_data: JSON.parse(h.position_data),
       content_text: h.content_text,
       annotation_id: h.annotation_id,
-      comment: h.comment
+      comment: h.comment,
     }));
   },
 
-  async createHighlight(articleId: number, color: string, positionData: unknown, contentText: string | null, annotationContent?: string): Promise<{ id: number; annotation_id: number | null }> {
+  async createHighlight(
+    articleId: number,
+    color: string,
+    positionData: unknown,
+    contentText: string | null,
+    annotationContent?: string,
+  ): Promise<{ id: number; annotation_id: number | null }> {
     const positionDataStr = JSON.stringify(positionData);
-    const id = await window.electronAPI.invoke(IpcChannel.HIGHLIGHTS_CREATE, articleId, color, positionDataStr, contentText, annotationContent);
+    const id = await window.electronAPI.invoke(
+      IpcChannel.HIGHLIGHTS_CREATE,
+      articleId,
+      color,
+      positionDataStr,
+      contentText,
+      annotationContent,
+    );
     return { id, annotation_id: annotationContent ? -1 : null };
   },
 
@@ -188,11 +207,25 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.AI_GENERATE_SUMMARY, articleId);
   },
 
-  async massiveExtraction(articleId: number, questions: string[]): Promise<Array<{ question: string; answer: string; quote: string | null }>> {
+  async massiveExtraction(
+    articleId: number,
+    questions: string[],
+  ): Promise<Array<{ question: string; answer: string; quote: string | null }>> {
     return await window.electronAPI.invoke(IpcChannel.AI_MASSIVE_EXTRACTION, articleId, questions);
   },
 
-  async extractMetadata(articleId: number): Promise<{ authors?: string, year?: string, title?: string, abstract?: string, references_list?: string, error?: string, doi?: string, journal?: string }> {
+  async extractMetadata(
+    articleId: number,
+  ): Promise<{
+    authors?: string;
+    year?: string;
+    title?: string;
+    abstract?: string;
+    references_list?: string;
+    error?: string;
+    doi?: string;
+    journal?: string;
+  }> {
     return await window.electronAPI.invoke(IpcChannel.AI_EXTRACT_METADATA, articleId);
   },
 
@@ -209,7 +242,12 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.PROJECT_DOCUMENTS_GET, projectId);
   },
 
-  async createProjectDocument(projectId: number, title: string, url?: string, sourceFilePath?: string): Promise<number> {
+  async createProjectDocument(
+    projectId: number,
+    title: string,
+    url?: string,
+    sourceFilePath?: string,
+  ): Promise<number> {
     return await window.electronAPI.invoke(IpcChannel.PROJECT_DOCUMENTS_CREATE, projectId, title, url, sourceFilePath);
   },
 
@@ -226,8 +264,21 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.MASSIVE_INVESTIGATIONS_GET, projectId);
   },
 
-  async saveMassiveInvestigation(projectId: number, questions: string[], articlesIds: number[], modelUsed: string, status: string): Promise<number> {
-    return await window.electronAPI.invoke(IpcChannel.MASSIVE_INVESTIGATIONS_SAVE, projectId, questions, articlesIds, modelUsed, status);
+  async saveMassiveInvestigation(
+    projectId: number,
+    questions: string[],
+    articlesIds: number[],
+    modelUsed: string,
+    status: string,
+  ): Promise<number> {
+    return await window.electronAPI.invoke(
+      IpcChannel.MASSIVE_INVESTIGATIONS_SAVE,
+      projectId,
+      questions,
+      articlesIds,
+      modelUsed,
+      status,
+    );
   },
 
   // Categories
@@ -260,7 +311,7 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.SYNC_EXPORT_PROJECT, projectId);
   },
 
-  async importProject(): Promise<number | null> {
-    return await window.electronAPI.invoke(IpcChannel.SYNC_IMPORT_PROJECT);
-  }
+  async importProject(filePath?: string): Promise<number | null> {
+    return await window.electronAPI.invoke(IpcChannel.SYNC_IMPORT_PROJECT, filePath);
+  },
 };
