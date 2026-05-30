@@ -218,3 +218,6 @@
 
 ### Ciclo 9: Destaque para o dia atual no DashboardCalendar
 - **O que foi feito:** O código do calendário agora compara se o item renderizado corresponde ao dia de hoje (isToday). Caso seja hoje, e não possua atividade para preencher o fundo, será desenhada uma borda grossa (2px) com a cor primária de destaque, além do número ficar em negrito para facilitar a rápida identificação visual.
+
+### Ciclo 10: Limpeza de gráficos e Reposicionamento
+- **O que foi feito:** O gráfico de 'Arquivos Físicos' foi removido e os mostradores restantes (Progresso Geral e Calendário) foram movidos para o topo da página, ficando acima do título 'Projetos'. O layout foi atualizado de forma que cada elemento ocupe metade da tela (span 6 no grid de 12 colunas) de maneira limpa.
