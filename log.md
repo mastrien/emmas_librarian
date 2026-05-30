@@ -224,3 +224,6 @@
 
 ### Ciclo 11: Ajuste de Proporção no Dashboard
 - **O que foi feito:** A proporção dos elementos foi alterada. O gráfico de Progresso Geral agora ocupa um espaço consideravelmente maior (span 9, e foi ampliado de 100px para 120px com fontes maiores), enquanto o Calendário foi reduzido para ser bem menor (span 3), dando o destaque adequado ao resumo das atividades.
+
+### Ciclo 12: Restauração de Gráficos e Posicionamento na base
+- **O que foi feito:** O gráfico de 'Arquivos Físicos' (com PDF vs sem PDF) foi reincorporado. A seção inteira contendo os 3 mostradores (agora com proporção 1/3 para cada, usando span 4) foi novamente movida, desta vez para a base da página, logo abaixo da grade de listagem de projetos.
