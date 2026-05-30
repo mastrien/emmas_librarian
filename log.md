@@ -233,3 +233,6 @@
 
 ### Ciclo 14: Correção da ordenação de Adicionados
 - **O que foi feito:** Ajustado o método de ordenação por \Últimos Adicionados\ e \Primeiros Adicionados\. A tabela não possuía a coluna \created_at\ para artigos, o que resultava em falha na ordenação baseada em data. Substituímos a lógica para utilizar a coluna \id\ da tabela, que cumpre perfeitamente a mesma função já que os IDs são auto-incrementados de forma contínua.
+
+### Ciclo 15: Estilização de Inputs do Modal de Categorias
+- **O que foi feito:** Adicionada a classe \.input-field\ no \style.css\ central para estilizar os inputs do modal de categorias, garantindo consistência visual (com bordas, padding e foco adequados para os temas dark e light).
