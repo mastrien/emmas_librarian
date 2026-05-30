@@ -209,3 +209,6 @@
 
 ### Ciclo 6: Ajuste Fino na Grid do Dashboard
 - **O que foi feito:** O layout do Dashboard foi ajustado para utilizar uma convenção de grid de 12 colunas. Os cards dos gráficos foram alterados para ocupar 5 colunas cada (span 5), enquanto o calendário foi reduzido para ocupar 2 colunas (span 2). Além disso, o fundo dos gráficos foi tornado transparente, a classe card e suas bordas foram removidas para melhor integração visual, e a altura dos gráficos foi levemente reduzida para evitar cards muito altos.
+
+### Ciclo 7: Ajuste no Cabeçalho do Calendário
+- **O que foi feito:** O cabeçalho do componente \DashboardCalendar\ foi reorganizado. O título 'Atividade no Diário' foi centralizado na primeira linha, e o seletor de meses foi movido para a linha de baixo com botões alinhados às extremidades, otimizando o espaço na coluna menor.

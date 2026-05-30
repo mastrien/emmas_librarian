@@ -59,13 +59,13 @@ export const DashboardCalendar: React.FC<{ diarySet: Set<string> }> = ({ diarySe
       flexDirection: 'column',
       height: '100%',
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h3 style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+        <h3 style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
           <CalendarIcon size={20} /> Atividade no Diário
         </h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
           <button onClick={prevMonth} className="btn-secondary" style={{ padding: '0.2rem' }}><ChevronLeft size={16}/></button>
-          <span style={{ fontSize: '0.9rem', fontWeight: 500, minWidth: '110px', textAlign: 'center' }}>
+          <span style={{ fontSize: '0.9rem', fontWeight: 500, textAlign: 'center' }}>
             {monthNames[month]} {year}
           </span>
           <button onClick={nextMonth} className="btn-secondary" style={{ padding: '0.2rem' }}><ChevronRight size={16}/></button>
