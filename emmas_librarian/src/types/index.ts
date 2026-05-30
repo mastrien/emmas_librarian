@@ -127,6 +127,7 @@ export enum IpcChannel {
   ARTICLES_CREATE_MANUAL = 'articles:createManual',
   EXPORT_CSV = 'export:csv',
   EXPORT_BIBLIOSHINY = 'export:biblioshiny',
+  EXPORT_XLSX = 'export:xlsx',
   DIALOG_OPEN_FILE = 'dialog:openFile',
   DIALOG_OPEN_MULTIPLE_FILES = 'dialog:openMultipleFiles',
   ARTICLES_CREATE_FROM_PDFS = 'articles:createFromPdfs',

@@ -1,4 +1,5 @@
 import { Article } from '../types';
+import * as xlsx from 'xlsx';
 
 export class ExportService {
   
@@ -31,6 +32,43 @@ export class ExportService {
 
     return [header.join(','), ...rows.map(r => r.join(','))].join('\n');
   }
+
+  /**
+   * Generates a Buffer containing the XLSX file data.
+   */
+  public exportToXlsx(articles: Article[], projectCategories: any[] = [], articleCategories: any[] = []): Buffer {
+    const header = ["id", "doi", "title", "authors", "year", "source", "status", ...projectCategories.map(c => c.name)];
+    
+    const rows = articles.map(a => {
+      const row = [
+        a.id,
+        a.doi || '',
+        a.title || '',
+        a.authors || '',
+        a.year || '',
+        a.source_databases || '',
+        a.status
+      ];
+
+      // Add category values for this article
+      projectCategories.forEach(cat => {
+        const articleCat = articleCategories.find(ac => ac.article_id === a.id && ac.category_id === cat.id);
+        const val = articleCat ? articleCat.value : '';
+        row.push(val || '');
+      });
+
+      return row;
+    });
+
+    const worksheetData = [header, ...rows];
+    const worksheet = xlsx.utils.aoa_to_sheet(worksheetData);
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Artigos");
+    
+    const excelBuffer = xlsx.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+    return excelBuffer;
+  }
+
 
   /**
    * Formats a list of articles as Scopus/Biblioshiny 45-column CSV layout.

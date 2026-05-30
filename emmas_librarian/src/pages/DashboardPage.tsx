@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project } from '../types';
 import { Plus, BookOpen, Calendar, ChevronRight, PieChart as PieChartIcon, Download } from 'lucide-react';
+import { DashboardCalendar } from '../components/DashboardCalendar';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
 
@@ -102,35 +103,39 @@ export const DashboardPage: React.FC = () => {
     const emmapcarcFiles = files.filter(f => f.name.endsWith('.emmapcarc'));
     
     if (emmapcarcFiles.length > 0) {
-      // @ts-ignore - path exists in electron File objects
-      const filePath = emmapcarcFiles[0].path || emmapcarcFiles[0].name;
-      const newId = await projectService.importProject(filePath);
-      if (newId) window.location.href = `#/projects/${newId}`;
+      try {
+        // @ts-ignore
+        const filePath = window.electronAPI && window.electronAPI.getPathForFile ? window.electronAPI.getPathForFile(emmapcarcFiles[0]) : (emmapcarcFiles[0].path || emmapcarcFiles[0].name);
+        const newId = await projectService.importProject(filePath);
+        if (newId) window.location.href = `#/projects/${newId}`;
+      } catch (err: any) {
+        alert('Erro ao importar projeto: ' + (err.message || err));
+      }
     }
   };
 
   return (
     <div 
-      style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', minHeight: '80vh' }}
+      style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', minHeight: '100vh' }}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {isDragging && (
         <div style={{
-          position: 'absolute',
-          top: -20, left: -20, right: -20, bottom: -20,
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          width: '100vw', height: '100vh',
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
           backdropFilter: 'blur(4px)',
-          zIndex: 50,
+          zIndex: 9999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: 'var(--radius-xl)',
-          border: '4px dashed var(--color-primary)'
+          border: '8px dashed var(--color-primary)'
         }}>
-          <h2 style={{ color: 'white', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <Download size={40} /> Solte o arquivo .emmapcarc para importar
+          <h2 style={{ color: 'white', fontSize: '3rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <Download size={60} /> Solte o arquivo .emmapcarc em qualquer lugar para importar
           </h2>
         </div>
       )}
@@ -142,8 +147,12 @@ export const DashboardPage: React.FC = () => {
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button 
             onClick={async () => {
-              const newId = await projectService.importProject();
-              if (newId) window.location.href = `#/projects/${newId}`;
+              try {
+                const newId = await projectService.importProject();
+                if (newId) window.location.href = `#/projects/${newId}`;
+              } catch (err: any) {
+                alert('Erro ao importar projeto: ' + (err.message || err));
+              }
             }} 
             className="btn-secondary"
             title="Importar projeto (.emmapcarc)"
@@ -213,38 +222,7 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="fade-in" style={{
-                background: 'var(--bg-surface)',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px solid var(--border-color)',
-                padding: '1.5rem',
-              }}>
-                <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Calendar size={20} /> Atividade no Diário (30 dias)
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '6px', marginTop: '1.5rem' }}>
-                  {last30Days.map((day, i) => (
-                    <div 
-                      key={i} 
-                      title={`${new Date(day.date).toLocaleDateString()}: ${day.active ? 'Com anotação' : 'Sem anotação'}`}
-                      style={{
-                        aspectRatio: '1',
-                        borderRadius: '4px',
-                        backgroundColor: day.active ? 'var(--color-primary)' : 'var(--bg-main)',
-                        border: day.active ? 'none' : '1px solid var(--border-color)',
-                        opacity: day.active ? 1 : 0.6,
-                        boxShadow: day.active ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
-                      }}
-                    />
-                  ))}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  <span>Menos</span>
-                  <div style={{ width: 12, height: 12, borderRadius: 2, background: 'var(--bg-main)', border: '1px solid var(--border-color)', opacity: 0.6 }} />
-                  <div style={{ width: 12, height: 12, borderRadius: 2, background: 'var(--color-primary)' }} />
-                  <span>Mais</span>
-                </div>
-              </div>
+              <DashboardCalendar diarySet={globalStats.diarySet} />
             </div>
           )}
           

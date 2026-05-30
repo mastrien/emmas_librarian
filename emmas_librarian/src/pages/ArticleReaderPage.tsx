@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { CopyPlus, Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon, ChevronLeft, ChevronRight, Key, Check } from 'lucide-react';
+import { CopyPlus, Trash2, Edit2, Plus, ArrowLeft, Loader2, Upload, AlertCircle, ZoomIn, ZoomOut, Search, X as XIcon, ChevronLeft, ChevronRight, Key, Check, Tags } from 'lucide-react';
 import { CitationModal } from '../components/CitationModal';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
@@ -68,7 +68,8 @@ export const ArticleReaderPage: React.FC = () => {
   const [isCitationModalOpen, setIsCitationModalOpen] = useState(false);
 
   const [scale, setScale] = useState(1.0);
-  const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search' | 'ai' | 'writer' | 'categories'>('annotations');
+  const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search' | 'ai' | 'writer'>('annotations');
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -966,23 +967,6 @@ export const ArticleReaderPage: React.FC = () => {
                       >
                         Insights IA
                       </button>
-                      <button
-                        onClick={() => setSidebarTab('categories')}
-                        style={{
-                          flex: 1,
-                          padding: '0.8rem',
-                          background: 'transparent',
-                          border: 'none',
-                          borderBottom: sidebarTab === 'categories' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                          color: sidebarTab === 'categories' ? 'var(--color-primary)' : 'var(--text-muted)',
-                          fontWeight: sidebarTab === 'categories' ? 600 : 500,
-                          fontSize: '0.9rem',
-                          cursor: 'pointer',
-                          transition: 'all var(--transition-fast)'
-                        }}
-                      >
-                        Categorias
-                      </button>
                     </div>
 
                     {/* Tab Content */}
@@ -1283,42 +1267,10 @@ export const ArticleReaderPage: React.FC = () => {
                         </div>
                       </div>
                     )}
-                    {sidebarTab === 'categories' && id && (
-                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', padding: '1rem' }}>
-                        <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: 'var(--text-heading)' }}>
-                          Categorias
-                        </h3>
-                        {projectCategories.length === 0 ? (
-                          <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)' }}>
-                            Nenhuma categoria cadastrada no projeto.
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {projectCategories.map((cat) => {
-                              const articleCat = articleCategories.find((ac: any) => ac.category_id === cat.id);
-                              return (
-                                <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                  <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>
-                                    {cat.name}
-                                  </label>
-                                  <div>
-                                    <CategoryCell 
-                                      articleId={parseInt(id)} 
-                                      category={cat} 
-                                      initialValue={articleCat ? articleCat.value : ''} 
-                                    />
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
-                )}
-              </PdfLoader>
+              )}
+            </PdfLoader>
           </div>
         )}
       </div>
@@ -1365,6 +1317,50 @@ export const ArticleReaderPage: React.FC = () => {
           onClose={() => setIsCitationModalOpen(false)}
           article={article}
         />
+      )}
+      {/* Floating Categories Button */}
+      {id && (
+        <div style={{ position: 'fixed', bottom: '2rem', left: '2rem', zIndex: 100 }}>
+          {isCategoriesOpen && (
+            <div className="card fade-in" style={{
+              position: 'absolute', bottom: '100%', left: 0, marginBottom: '1rem',
+              width: '300px', background: 'var(--bg-main)', padding: '1rem',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-heading)' }}>Categorias</h3>
+                <button onClick={() => setIsCategoriesOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                  <XIcon size={16} />
+                </button>
+              </div>
+              {projectCategories.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>
+                  Nenhuma categoria cadastrada.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
+                  {projectCategories.map((cat) => {
+                    const articleCat = articleCategories.find((ac: any) => ac.category_id === cat.id);
+                    return (
+                      <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>{cat.name}</label>
+                        <CategoryCell articleId={parseInt(id)} category={cat} initialValue={articleCat ? articleCat.value : ''} />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+          <button 
+            onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
+            className="btn-primary" 
+            style={{ borderRadius: 'var(--radius-full)', padding: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+            title="Categorias do Artigo"
+          >
+            <Tags size={24} />
+          </button>
+        </div>
       )}
     </div>
   );

@@ -291,6 +291,30 @@ export function setupIpcHandlers() {
     return null;
   });
 
+  // XLSX Export
+  ipcMain.handle(IpcChannel.EXPORT_XLSX, async (event, projectId: number) => {
+    const project = db.getProject(projectId);
+    const articles = db.getArticlesByProject(projectId);
+    const projectCategories = db.getProjectCategories(projectId);
+    const articleCategories = db.getAllProjectArticleCategories(projectId);
+    
+    if (!project) throw new Error("Project not found");
+
+    const xlsxBuffer = exportService.exportToXlsx(articles, projectCategories, articleCategories);
+
+    const { canceled, filePath } = await dialog.showSaveDialog({
+      title: 'Export Articles XLSX',
+      defaultPath: `project_${projectId}_export.xlsx`,
+      filters: [{ name: 'Excel Files', extensions: ['xlsx'] }]
+    });
+
+    if (!canceled && filePath) {
+      fs.writeFileSync(filePath, xlsxBuffer);
+      return filePath;
+    }
+    return null;
+  });
+
   // Dialog for file open
   ipcMain.handle(IpcChannel.DIALOG_OPEN_FILE, async (event) => {
     const { canceled, filePaths } = await dialog.showOpenDialog({

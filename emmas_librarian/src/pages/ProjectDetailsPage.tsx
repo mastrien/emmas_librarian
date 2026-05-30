@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key, AlertCircle, Settings, Link as LinkIcon, File as FileIcon, PieChart as PieChartIcon, Tag } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key, AlertCircle, Settings, Link as LinkIcon, File as FileIcon, PieChart as PieChartIcon, Tag, Tags, Brain } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -561,7 +561,7 @@ const AIExtractionModal = ({
   );
 };
 
-type TabId = 'articles' | 'overview' | 'diary' | 'history';
+type TabId = 'articles' | 'overview' | 'diary' | 'history' | 'categories';
 
 const ITEMS_PER_PAGE = 50;
 
@@ -792,7 +792,7 @@ export const ProjectDetailsPage: React.FC = () => {
       try {
         setIsImportingPdfs(true);
         // @ts-ignore
-        const filePaths = pdfFiles.map(f => f.path || f.name);
+        const filePaths = pdfFiles.map(f => window.electronAPI && window.electronAPI.getPathForFile ? window.electronAPI.getPathForFile(f) : (f.path || f.name));
         const count = await projectService.createArticlesFromPdfs(parseInt(id), filePaths);
         alert(`${count} artigo(s) importado(s) com sucesso.`);
         await fetchData();
@@ -898,6 +898,7 @@ export const ProjectDetailsPage: React.FC = () => {
     { id: 'articles', label: `Artigos (${articles.length})`, icon: <FileText size={16} /> },
     { id: 'overview', label: 'Estatísticas', icon: <PieChartIcon size={16} /> },
     { id: 'diary', label: 'Diário', icon: <BookOpen size={16} /> },
+    { id: 'categories', label: 'Categorias', icon: <Tags size={16} /> },
     { id: 'history', label: `Histórico (${history.length})`, icon: <History size={16} /> },
   ];
 
@@ -911,15 +912,14 @@ export const ProjectDetailsPage: React.FC = () => {
     >
       {isDragging && (
         <div style={{
-          position: 'absolute',
-          top: -20, left: -20, right: -20, bottom: -20,
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
           backdropFilter: 'blur(4px)',
-          zIndex: 50,
+          zIndex: 9999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: 'var(--radius-xl)',
           border: '4px dashed var(--color-primary)'
         }}>
           <h2 style={{ color: 'white', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -975,9 +975,17 @@ export const ProjectDetailsPage: React.FC = () => {
           <button onClick={() => projectService.exportBiblioshiny(project.id)} className="btn-secondary" title="Exportar no formato compatível com Biblioshiny">
             <Download size={18} /> Biblioshiny
           </button>
-          <button onClick={() => projectService.exportCsv(project.id)} className="btn-secondary" title="Exportar CSV de Artigos e Categorias">
-            <Download size={18} /> CSV
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={() => setIsAIExtractionModalOpen(true)} className="btn-primary" title="Extração Inteligente IA">
+            <Brain size={18} /> Extração IA
           </button>
+          <button onClick={() => document.getElementById('batch-pdf-upload')?.click()} className="btn-secondary" title="Importar PDFs em Lote">
+            <Upload size={18} /> Importar PDFs
+          </button>
+          <button onClick={() => setIsManualModalOpen(true)} className="btn-secondary" title="Adicionar artigo manualmente">
+            <Plus size={18} /> Manual
+          </button>
+        </div>
           <button 
             onClick={async () => {
               await projectService.exportProject(project.id);
@@ -986,21 +994,6 @@ export const ProjectDetailsPage: React.FC = () => {
             title="Exportar projeto completo com PDFs (.emmapcarc)"
           >
             <Download size={18} /> .emmapcarc
-          </button>
-          <button onClick={handleBatchPdfImport} disabled={isImportingPdfs} className="btn-secondary" title="Adicionar vários PDFs de uma vez">
-            {isImportingPdfs ? <Loader2 size={18} className="animate-spin" /> : <CopyPlus size={18} />} Adicionar PDFs em Lote
-          </button>
-          <button onClick={() => {
-            if (!hasAiKey) {
-              setShowKeyAlert(true);
-              return;
-            }
-            setIsAIExtractionModalOpen(true);
-          }} className="btn-primary" style={{ background: 'var(--color-secondary)' }} title="Fazer perguntas para todos os PDFs com IA">
-            <Search size={18} /> IA Massiva
-          </button>
-          <button onClick={() => setIsManualModalOpen(true)} className="btn-secondary" title="Adicionar artigo manualmente">
-            <Plus size={18} /> Artigo Avulso
           </button>
           <Link to={`/projects/${project.id}/search`} className="btn-primary">
             <Search size={18} /> Nova Busca
@@ -1236,12 +1229,6 @@ export const ProjectDetailsPage: React.FC = () => {
                 <tr style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>TÍTULO</th>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>AUTORES</th>
-                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>BASES</th>
-                  {projectCategories.map(cat => (
-                    <th key={cat.id} style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem', textTransform: 'uppercase' }}>
-                      {cat.name}
-                    </th>
-                  ))}
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>AÇÕES</th>
                 </tr>
               </thead>
@@ -1263,35 +1250,6 @@ export const ProjectDetailsPage: React.FC = () => {
                       {article.authors}
                     </td>
                     <td style={{ padding: '1.25rem 1.5rem' }}>
-                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                        {JSON.parse(article.source_databases as any).map((base: string) => {
-                          const isManual = base === 'Manual';
-                          return (
-                            <span key={base} style={{ 
-                              padding: '0.2rem 0.6rem', 
-                              background: isManual ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-surface)', 
-                              border: isManual ? '1px solid var(--color-danger)' : '1px solid var(--border-color)',
-                              borderRadius: 'var(--radius-xl)', 
-                              fontSize: '0.75rem', 
-                              fontWeight: 600,
-                              color: isManual ? 'var(--color-danger)' : 'var(--color-primary)'
-                            }} title={isManual ? "Metadados adicionados manualmente (podem conter erros)" : undefined}>
-                              {isManual ? '⚠️ Manual' : base}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </td>
-                    {projectCategories.map(cat => {
-                      const artCat = articleCategories.find(ac => ac.article_id === article.id && ac.category_id === cat.id);
-                      const val = artCat?.value || '';
-                      return (
-                        <td key={cat.id} style={{ padding: '1.25rem 1.5rem' }}>
-                          <CategoryCell articleId={article.id} category={cat} initialValue={val} />
-                        </td>
-                      );
-                    })}
-                    <td style={{ padding: '1.25rem 1.5rem' }}>
                       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                         {article.local_file_path ? (
                           <>
@@ -1303,8 +1261,8 @@ export const ProjectDetailsPage: React.FC = () => {
                             </button>
                           </>
                         ) : (
-                          <button onClick={() => handleUploadClick(article.id)} disabled={uploadingId === article.id} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Buscar por DOI">
-                            {uploadingId === article.id ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Buscar por DOI
+                          <button onClick={() => handleUploadClick(article.id)} disabled={uploadingId === article.id} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Vincular PDF">
+                            {uploadingId === article.id ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} PDF
                           </button>
                         )}
 
@@ -1327,8 +1285,8 @@ export const ProjectDetailsPage: React.FC = () => {
                         </button>
 
                         {article.doi && (
-                          <a href={`https://doi.org/${article.doi}`} target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)' }} title="Abrir no Navegador">
-                            <ExternalLink size={16} />
+                          <a href={`https://doi.org/${article.doi}`} target="_blank" rel="noreferrer" className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', textDecoration: 'none' }} title="Abrir no Navegador">
+                            <ExternalLink size={14} /> Buscar por DOI
                           </a>
                         )}
                       </div>

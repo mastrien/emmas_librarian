@@ -97,10 +97,9 @@ export class SyncService {
       
       const newProjectId = db.transaction(() => {
         // Insert Project
-        const insertProj = db.prepare('INSERT INTO projects (name, created_at, updated_at) VALUES (?, ?, ?)');
+        const insertProj = db.prepare('INSERT INTO projects (name, created_at) VALUES (?, ?)');
         const projResult = insertProj.run(
           data.project.name + ' (Importado)',
-          new Date().toISOString(),
           new Date().toISOString()
         );
         const pid = projResult.lastInsertRowid;
@@ -125,17 +124,14 @@ export class SyncService {
 
           const insertArt = db.prepare(`
             INSERT INTO articles (
-              project_id, title, authors, abstract, year, doi, journal, 
-              source_databases, pmid, pubmed_central_id, url, status, 
-              created_at, updated_at, local_file_path, extraction_status,
-              notes, ai_summary, citation_count, affiliations, is_open_access, keywords
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              project_id, doi, title, authors, year, source_query, source_databases, 
+              csl_json, local_file_path, status, archive_note
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `);
+          
           const artRes = insertArt.run(
-            pid, art.title, art.authors, art.abstract, art.year, art.doi, art.journal,
-            art.source_databases, art.pmid, art.pubmed_central_id, art.url, art.status,
-            new Date().toISOString(), new Date().toISOString(), newPdfPath, art.extraction_status,
-            art.notes, art.ai_summary, art.citation_count, art.affiliations, art.is_open_access, art.keywords
+            pid, art.doi, art.title, art.authors, art.year, art.source_query, art.source_databases,
+            art.csl_json, newPdfPath, art.status, art.archive_note
           );
           articleMap.set(art.id, artRes.lastInsertRowid);
         }
@@ -144,16 +140,16 @@ export class SyncService {
         for (const sh of data.searchHistory) {
           db.prepare(`
             INSERT INTO search_history (
-              project_id, query, timestamp, results_count, filters, source_databases
-            ) VALUES (?, ?, ?, ?, ?, ?)
-          `).run(pid, sh.query, sh.timestamp, sh.results_count, sh.filters, sh.source_databases);
+              project_id, unified_query, translated_queries, total_results, results_breakdown
+            ) VALUES (?, ?, ?, ?, ?)
+          `).run(pid, sh.unified_query, sh.translated_queries, sh.total_results, sh.results_breakdown);
         }
 
         // Insert Project Docs
         for (const doc of data.projectDocs) {
           let newDocPath = null;
-          if (doc.file_path) {
-            const fileName = path.basename(doc.file_path);
+          if (doc.local_file_path) {
+            const fileName = path.basename(doc.local_file_path);
             const docEntry = zip.getEntry(`docs/${fileName}`);
             if (docEntry) {
               const destPath = path.join(baseStorageDir, `${uuidv4()}_${fileName}`);
@@ -163,18 +159,18 @@ export class SyncService {
           }
 
           db.prepare(`
-            INSERT INTO project_documents (project_id, file_path, file_name, created_at, content)
-            VALUES (?, ?, ?, ?, ?)
-          `).run(pid, newDocPath, doc.file_name, doc.created_at, doc.content);
+            INSERT INTO project_documents (project_id, title, url, local_file_path)
+            VALUES (?, ?, ?, ?)
+          `).run(pid, doc.title, doc.url, newDocPath);
         }
 
         // Insert Project Categories and mapping
         const categoryMap = new Map<number, number>();
         for (const cat of data.projCategories) {
           const res = db.prepare(`
-            INSERT INTO project_categories (project_id, name, type)
-            VALUES (?, ?, ?)
-          `).run(pid, cat.name, cat.type);
+            INSERT INTO project_categories (project_id, name, type, options)
+            VALUES (?, ?, ?, ?)
+          `).run(pid, cat.name, cat.type, cat.options);
           categoryMap.set(cat.id, res.lastInsertRowid);
         }
 
@@ -194,18 +190,18 @@ export class SyncService {
         for (const mi of data.massiveInvs) {
           const res = db.prepare(`
             INSERT INTO massive_investigations (
-              project_id, created_at, status, model_used, questions_json, articles_ids_json
+              project_id, created_at, status, model_used, questions, articles_ids
             ) VALUES (?, ?, ?, ?, ?, ?)
-          `).run(pid, mi.created_at, mi.status, mi.model_used, mi.questions_json, mi.articles_ids_json);
+          `).run(pid, mi.created_at, mi.status, mi.model_used, mi.questions, mi.articles_ids);
           const miId = res.lastInsertRowid;
 
           // Replace article ids in questions/articles
           // Wait, actually massive investigations just have json. It would be complex to remap article IDs inside articles_ids_json.
           // Let's just remap them if possible.
           try {
-            const oldIds: number[] = JSON.parse(mi.articles_ids_json);
+            const oldIds: number[] = JSON.parse(mi.articles_ids);
             const newIds = oldIds.map(id => articleMap.get(id)).filter(Boolean);
-            db.prepare('UPDATE massive_investigations SET articles_ids_json = ? WHERE id = ?').run(JSON.stringify(newIds), miId);
+            db.prepare('UPDATE massive_investigations SET articles_ids = ? WHERE id = ?').run(JSON.stringify(newIds), miId);
           } catch (e) {
             // ignore
           }

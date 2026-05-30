@@ -71,6 +71,10 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.EXPORT_CSV, projectId);
   },
 
+  async exportXlsx(projectId: number): Promise<string | null> {
+    return await window.electronAPI.invoke(IpcChannel.EXPORT_XLSX, projectId);
+  },
+
   async exportBiblioshiny(projectId: number): Promise<string | null> {
     return await window.electronAPI.invoke(IpcChannel.EXPORT_BIBLIOSHINY, projectId);
   },
