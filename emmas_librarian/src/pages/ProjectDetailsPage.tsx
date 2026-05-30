@@ -875,9 +875,9 @@ export const ProjectDetailsPage: React.FC = () => {
       case 'title-desc':
         return (b.title || '').localeCompare(a.title || '');
       case 'added-desc':
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        return (b.id || 0) - (a.id || 0);
       case 'added-asc':
-        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        return (a.id || 0) - (b.id || 0);
       default:
         return 0;
     }

@@ -230,3 +230,6 @@
 
 ### Ciclo 13: Correção do ImportProject
 - **O que foi feito:** Corrigido o bug na importação de projeto onde o 'SyncService' falhava tentando acessar uma propriedade \storageDir\ inexistente em \DatabaseManager\. Agora o caminho absoluto das pastas de storage de PDFs e Documentos é resgatado de forma segura através do \pp.getPath('userData')\ para gravar os arquivos da importação na pasta local correta.
+
+### Ciclo 14: Correção da ordenação de Adicionados
+- **O que foi feito:** Ajustado o método de ordenação por \Últimos Adicionados\ e \Primeiros Adicionados\. A tabela não possuía a coluna \created_at\ para artigos, o que resultava em falha na ordenação baseada em data. Substituímos a lógica para utilizar a coluna \id\ da tabela, que cumpre perfeitamente a mesma função já que os IDs são auto-incrementados de forma contínua.
