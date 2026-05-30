@@ -24,10 +24,14 @@ export const DashboardCalendar: React.FC<{ diarySet: Set<string> }> = ({ diarySe
   for (let i = 1; i <= daysInMonth; i++) {
     const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
     const active = diarySet.has(dStr);
+    
+    const todayDate = new Date();
+    const isToday = todayDate.getFullYear() === year && todayDate.getMonth() === month && todayDate.getDate() === i;
+
     days.push(
       <div 
         key={`day-${i}`} 
-        title={`${new Date(year, month, i).toLocaleDateString()}: ${active ? 'Com atividade' : 'Sem atividade'}`}
+        title={`${new Date(year, month, i).toLocaleDateString()}: ${active ? 'Com atividade' : 'Sem atividade'}${isToday ? ' (Hoje)' : ''}`}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -35,13 +39,14 @@ export const DashboardCalendar: React.FC<{ diarySet: Set<string> }> = ({ diarySe
           aspectRatio: '1',
           borderRadius: '4px',
           backgroundColor: active ? 'var(--color-primary)' : 'var(--bg-main)',
-          border: active ? 'none' : '1px solid var(--border-color)',
-          color: active ? 'white' : 'var(--text-muted)',
+          border: isToday ? '2px solid var(--color-primary)' : (active ? 'none' : '1px solid var(--border-color)'),
+          color: active ? 'white' : (isToday ? 'var(--color-primary)' : 'var(--text-muted)'),
           fontSize: '0.8rem',
-          fontWeight: active ? 'bold' : 'normal',
-          opacity: active ? 1 : 0.7,
+          fontWeight: (active || isToday) ? 'bold' : 'normal',
+          opacity: active || isToday ? 1 : 0.7,
           boxShadow: active ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-          cursor: 'default'
+          cursor: 'default',
+          boxSizing: 'border-box'
         }}
       >
         {i}

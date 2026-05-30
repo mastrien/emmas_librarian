@@ -215,3 +215,6 @@
 
 ### Ciclo 8: Revertido ordenação do calendário no Dashboard
 - **O que foi feito:** O span da grid de 12 colunas foi ajustado de volta para 1 terço (span 4) para cada mostrador (Gráfico Geral, Gráfico Físico e Calendário).
+
+### Ciclo 9: Destaque para o dia atual no DashboardCalendar
+- **O que foi feito:** O código do calendário agora compara se o item renderizado corresponde ao dia de hoje (isToday). Caso seja hoje, e não possua atividade para preencher o fundo, será desenhada uma borda grossa (2px) com a cor primária de destaque, além do número ficar em negrito para facilitar a rápida identificação visual.
