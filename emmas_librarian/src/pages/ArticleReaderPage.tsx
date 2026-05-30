@@ -27,6 +27,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 import { projectService } from '../services/api';
 import type { Article } from '../types';
+import { CategoryCell } from '../components/CategoryCell';
 import { HelpButton } from '../components/HelpButton';
 import { EditArticleModal } from '../components/EditArticleModal';
 import { QuotaModal } from '../components/QuotaModal';
@@ -67,10 +68,13 @@ export const ArticleReaderPage: React.FC = () => {
   const [isCitationModalOpen, setIsCitationModalOpen] = useState(false);
 
   const [scale, setScale] = useState(1.0);
-  const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search' | 'ai' | 'writer'>('annotations');
+  const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search' | 'ai' | 'writer' | 'categories'>('annotations');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  const [projectCategories, setProjectCategories] = useState<any[]>([]);
+  const [articleCategories, setArticleCategories] = useState<any[]>([]);
 
   const [aiSummary, setAiSummary] = useState<{ generalSummary: string; sectionSummary: string } | null>(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
@@ -208,17 +212,21 @@ export const ArticleReaderPage: React.FC = () => {
     try {
       const artData = await projectService.getArticle(parseInt(id));
       
-      const [highData, annData, openai, gemini, anthropic, ollama, padContent] = await Promise.all([
+      const [highData, annData, openai, gemini, anthropic, ollama, padContent, pCats, aCats] = await Promise.all([
         projectService.getHighlights(parseInt(id)),
         projectService.getAnnotations(parseInt(id)),
         projectService.getSetting('api_key_openai'),
         projectService.getSetting('api_key_gemini'),
         projectService.getSetting('api_key_anthropic'),
         projectService.getSetting('api_key_ollama'),
-        projectService.getProjectWritingPad(artData.project_id)
+        projectService.getProjectWritingPad(artData.project_id),
+        projectService.getProjectCategories(artData.project_id),
+        projectService.getArticleCategories(parseInt(id))
       ]);
       setArticle(artData);
       setHasAiKey(!!(openai || gemini || anthropic || ollama));
+      setProjectCategories(pCats);
+      setArticleCategories(aCats);
       
       if (padContent !== null && padContent !== undefined) {
         setWritingPadContent(padContent);
@@ -958,6 +966,23 @@ export const ArticleReaderPage: React.FC = () => {
                       >
                         Insights IA
                       </button>
+                      <button
+                        onClick={() => setSidebarTab('categories')}
+                        style={{
+                          flex: 1,
+                          padding: '0.8rem',
+                          background: 'transparent',
+                          border: 'none',
+                          borderBottom: sidebarTab === 'categories' ? '2px solid var(--color-primary)' : '2px solid transparent',
+                          color: sidebarTab === 'categories' ? 'var(--color-primary)' : 'var(--text-muted)',
+                          fontWeight: sidebarTab === 'categories' ? 600 : 500,
+                          fontSize: '0.9rem',
+                          cursor: 'pointer',
+                          transition: 'all var(--transition-fast)'
+                        }}
+                      >
+                        Categorias
+                      </button>
                     </div>
 
                     {/* Tab Content */}
@@ -1256,6 +1281,38 @@ export const ArticleReaderPage: React.FC = () => {
                             </div>
                           )}
                         </div>
+                      </div>
+                    )}
+                    {sidebarTab === 'categories' && id && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', padding: '1rem' }}>
+                        <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: 'var(--text-heading)' }}>
+                          Categorias
+                        </h3>
+                        {projectCategories.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)' }}>
+                            Nenhuma categoria cadastrada no projeto.
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {projectCategories.map((cat) => {
+                              const articleCat = articleCategories.find((ac: any) => ac.category_id === cat.id);
+                              return (
+                                <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                  <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                                    {cat.name}
+                                  </label>
+                                  <div>
+                                    <CategoryCell 
+                                      articleId={parseInt(id)} 
+                                      category={cat} 
+                                      initialValue={articleCat ? articleCat.value : ''} 
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

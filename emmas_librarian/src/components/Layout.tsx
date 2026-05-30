@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Plus, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { HelpButton } from './HelpButton';
 import { Logo } from './Logo';
 import { ChangelogModal } from './ChangelogModal';

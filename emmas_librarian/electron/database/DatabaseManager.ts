@@ -141,6 +141,15 @@ export class DatabaseManager {
     
     // Migrations for existing tables
     try {
+      const pcInfo = this.db.pragma('table_info(project_categories)') as any[];
+      if (!pcInfo.some(col => col.name === 'options')) {
+        this.db.exec(`ALTER TABLE project_categories ADD COLUMN options TEXT;`);
+      }
+    } catch (e) {
+      console.error('Migration project_categories options error', e);
+    }
+
+    try {
       const miInfo = this.db.pragma('table_info(massive_investigations)') as any[];
       if (!miInfo.some(col => col.name === 'model_used')) {
         this.db.prepare('ALTER TABLE massive_investigations ADD COLUMN model_used TEXT').run();
@@ -543,8 +552,8 @@ export class DatabaseManager {
     return this.db.prepare('SELECT * FROM project_categories WHERE project_id = ?').all(projectId);
   }
 
-  public createProjectCategory(projectId: number, name: string, type: string): number {
-    const info = this.db.prepare('INSERT INTO project_categories (project_id, name, type) VALUES (?, ?, ?)').run(projectId, name, type);
+  public createProjectCategory(projectId: number, name: string, type: string, options?: string): number {
+    const info = this.db.prepare('INSERT INTO project_categories (project_id, name, type, options) VALUES (?, ?, ?, ?)').run(projectId, name, type, options || null);
     return info.lastInsertRowid as number;
   }
 

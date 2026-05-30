@@ -51,9 +51,16 @@ export default defineConfig({
     react(),
   ],
   base: './',
+  optimizeDeps: {
+    include: ['recharts', 'lodash']
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
 });
+

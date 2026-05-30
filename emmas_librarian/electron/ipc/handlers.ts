@@ -271,10 +271,12 @@ export function setupIpcHandlers() {
   ipcMain.handle(IpcChannel.EXPORT_CSV, async (event, projectId: number) => {
     const project = db.getProject(projectId);
     const articles = db.getArticlesByProject(projectId);
+    const projectCategories = db.getProjectCategories(projectId);
+    const articleCategories = db.getAllProjectArticleCategories(projectId);
     
     if (!project) throw new Error("Project not found");
 
-    const csvContent = exportService.exportToCsv(articles);
+    const csvContent = exportService.exportToCsv(articles, projectCategories, articleCategories);
 
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: 'Export Articles CSV',
@@ -436,8 +438,8 @@ export function setupIpcHandlers() {
     return db.getProjectCategories(projectId);
   });
 
-  ipcMain.handle(IpcChannel.CATEGORIES_CREATE_PROJECT, (event, projectId: number, name: string, type: string) => {
-    return db.createProjectCategory(projectId, name, type);
+  ipcMain.handle(IpcChannel.CATEGORIES_CREATE_PROJECT, (event, projectId: number, name: string, type: string, options?: string) => {
+    return db.createProjectCategory(projectId, name, type, options);
   });
 
   ipcMain.handle(IpcChannel.CATEGORIES_DELETE_PROJECT, (event, categoryId: number) => {

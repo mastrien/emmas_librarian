@@ -43,6 +43,30 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
     );
   }
 
+  if (category.type === 'enum') {
+    const options = category.options ? category.options.split(',').map(o => o.trim()) : [];
+    return (
+      <select 
+        value={value} 
+        onChange={(e) => handleSave(e.target.value)}
+        style={{
+          background: 'var(--bg-surface)',
+          color: 'var(--text-main)',
+          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--radius-sm)',
+          padding: '0.2rem 0.5rem',
+          fontSize: '0.85rem',
+          maxWidth: '120px'
+        }}
+      >
+        <option value="">-</option>
+        {options.map((opt, idx) => (
+          <option key={idx} value={opt}>{opt}</option>
+        ))}
+      </select>
+    );
+  }
+
   if (isEditing) {
     return (
       <input

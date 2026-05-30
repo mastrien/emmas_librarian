@@ -605,7 +605,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const [citationArticle, setCitationArticle] = useState<Article | null>(null);
   
   const [sortOrder, setSortOrder] = useState(() => {
-    return localStorage.getItem('emmas_librarian_sort_order') || 'year-desc';
+    return localStorage.getItem('emmas_librarian_sort_order') || 'added-desc';
   });
 
   useEffect(() => {
@@ -974,6 +974,9 @@ export const ProjectDetailsPage: React.FC = () => {
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <button onClick={() => projectService.exportBiblioshiny(project.id)} className="btn-secondary" title="Exportar no formato compatível com Biblioshiny">
             <Download size={18} /> Biblioshiny
+          </button>
+          <button onClick={() => projectService.exportCsv(project.id)} className="btn-secondary" title="Exportar CSV de Artigos e Categorias">
+            <Download size={18} /> CSV
           </button>
           <button 
             onClick={async () => {

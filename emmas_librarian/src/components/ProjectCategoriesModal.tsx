@@ -15,6 +15,7 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
   const [loading, setLoading] = useState(true);
   const [newCatName, setNewCatName] = useState('');
   const [newCatType, setNewCatType] = useState('text');
+  const [newCatOptions, setNewCatOptions] = useState('');
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
@@ -41,8 +42,9 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
 
     setAdding(true);
     try {
-      await projectService.createProjectCategory(projectId, newCatName.trim(), newCatType);
+      await projectService.createProjectCategory(projectId, newCatName.trim(), newCatType, newCatOptions.trim());
       setNewCatName('');
+      setNewCatOptions('');
       await loadCategories();
     } catch (err) {
       console.error(err);
@@ -79,28 +81,42 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
           </button>
         </div>
 
-        <form onSubmit={handleAdd} style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
-          <input 
-            type="text" 
-            className="input-field" 
-            placeholder="Nome (ex: Metodologia)" 
-            value={newCatName}
-            onChange={(e) => setNewCatName(e.target.value)}
-            required
-            style={{ flex: 1 }}
-          />
-          <select 
-            className="input-field" 
-            value={newCatType}
-            onChange={(e) => setNewCatType(e.target.value)}
-            style={{ width: '120px' }}
-          >
-            <option value="text">Texto</option>
-            <option value="boolean">Sim/Não</option>
-          </select>
-          <button type="submit" className="btn-primary" disabled={adding || !newCatName.trim()} style={{ padding: '0.5rem' }}>
-            {adding ? <Loader2 size={20} className="spin" /> : <Plus size={20} />}
-          </button>
+        <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="Nome (ex: Metodologia)" 
+              value={newCatName}
+              onChange={(e) => setNewCatName(e.target.value)}
+              required
+              style={{ flex: 1 }}
+            />
+            <select 
+              className="input-field" 
+              value={newCatType}
+              onChange={(e) => setNewCatType(e.target.value)}
+              style={{ width: '150px' }}
+            >
+              <option value="text">Texto</option>
+              <option value="boolean">Sim/Não</option>
+              <option value="enum">Lista de Opções</option>
+            </select>
+            <button type="submit" className="btn-primary" disabled={adding || !newCatName.trim()} style={{ padding: '0.5rem' }}>
+              {adding ? <Loader2 size={20} className="spin" /> : <Plus size={20} />}
+            </button>
+          </div>
+          {newCatType === 'enum' && (
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="Opções separadas por vírgula (ex: Qualitativa, Quantitativa)" 
+              value={newCatOptions}
+              onChange={(e) => setNewCatOptions(e.target.value)}
+              required
+              style={{ width: '100%' }}
+            />
+          )}
         </form>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

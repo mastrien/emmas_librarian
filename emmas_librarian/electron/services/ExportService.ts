@@ -5,17 +5,30 @@ export class ExportService {
   /**
    * Formats a list of articles as standard CSV content.
    */
-  public exportToCsv(articles: Article[]): string {
-    const header = ["id", "doi", "title", "authors", "year", "source", "status"];
-    const rows = articles.map(a => [
-      a.id,
-      a.doi || '',
-      `"${(a.title || '').replace(/"/g, '""')}"`,
-      `"${(a.authors || '').replace(/"/g, '""')}"`,
-      a.year || '',
-      `"${(a.source_databases || '').replace(/"/g, '""')}"`,
-      a.status
-    ]);
+  public exportToCsv(articles: Article[], projectCategories: any[] = [], articleCategories: any[] = []): string {
+    const header = ["id", "doi", "title", "authors", "year", "source", "status", ...projectCategories.map(c => c.name)];
+    
+    const rows = articles.map(a => {
+      const row = [
+        a.id,
+        a.doi || '',
+        `"${(a.title || '').replace(/"/g, '""')}"`,
+        `"${(a.authors || '').replace(/"/g, '""')}"`,
+        a.year || '',
+        `"${(a.source_databases || '').replace(/"/g, '""')}"`,
+        a.status
+      ];
+
+      // Add category values for this article
+      projectCategories.forEach(cat => {
+        const articleCat = articleCategories.find(ac => ac.article_id === a.id && ac.category_id === cat.id);
+        const val = articleCat ? articleCat.value : '';
+        row.push(`"${(val || '').replace(/"/g, '""')}"`);
+      });
+
+      return row;
+    });
+
     return [header.join(','), ...rows.map(r => r.join(','))].join('\n');
   }
 

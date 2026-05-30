@@ -42,4 +42,4 @@ createRoot(document.getElementById('root')!).render(
       </Suspense>
     </Layout>
   </HashRouter>
-)
+);

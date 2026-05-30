@@ -162,6 +162,7 @@ export interface ProjectCategory {
   project_id: number;
   name: string;
   type: string; // e.g. 'text', 'select', 'multiselect', etc.
+  options?: string; // Comma-separated options for select/multiselect
 }
 
 export interface ArticleCategory {
