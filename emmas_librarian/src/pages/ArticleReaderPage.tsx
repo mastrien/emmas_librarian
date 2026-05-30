@@ -958,28 +958,6 @@ export const ArticleReaderPage: React.FC = () => {
                       >
                         Insights IA
                       </button>
-                      <button
-                        onClick={() => setSidebarTab('writer')}
-                        style={{
-                          flex: 1,
-                          padding: '0.8rem',
-                          background: 'transparent',
-                          border: 'none',
-                          borderBottom: sidebarTab === 'writer' ? '2px solid var(--color-primary)' : '2px solid transparent',
-                          color: sidebarTab === 'writer' ? 'var(--color-primary)' : 'var(--text-muted)',
-                          fontWeight: sidebarTab === 'writer' ? 600 : 500,
-                          fontSize: '0.9rem',
-                          cursor: 'pointer',
-                          transition: 'all var(--transition-fast)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.3rem'
-                        }}
-                        title="Rascunho de Escrita do Projeto"
-                      >
-                        <Edit2 size={16} /> Rascunho
-                      </button>
                     </div>
 
                     {/* Tab Content */}
@@ -1278,40 +1256,6 @@ export const ArticleReaderPage: React.FC = () => {
                             </div>
                           )}
                         </div>
-                      </div>
-                    )}
-                    
-                    {sidebarTab === 'writer' && (
-                      <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-main)' }}>
-                        <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem', color: 'var(--text-heading)' }}>
-                              Rascunho do Projeto
-                            </h3>
-                            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                              Este texto é compartilhado entre todos os artigos do projeto.
-                            </p>
-                          </div>
-                          {isSavingPad && <Loader2 size={16} className="animate-spin text-muted" />}
-                        </div>
-                        <textarea
-                          value={writingPadContent}
-                          onChange={handlePadChange}
-                          placeholder="Comece a escrever seu rascunho aqui... (suporta texto puro e Markdown)"
-                          style={{
-                            flexGrow: 1,
-                            width: '100%',
-                            border: 'none',
-                            padding: '1rem',
-                            resize: 'none',
-                            outline: 'none',
-                            fontFamily: 'inherit',
-                            fontSize: '0.9rem',
-                            lineHeight: '1.6',
-                            background: 'transparent',
-                            color: 'var(--text-main)'
-                          }}
-                        />
                       </div>
                     )}
                   </div>
