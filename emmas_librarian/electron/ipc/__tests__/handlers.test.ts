@@ -78,6 +78,8 @@ vi.mock('../../database/DatabaseManager', () => {
       deleteProjectDocument: vi.fn(),
       getMassiveInvestigations: vi.fn().mockReturnValue([]),
       saveMassiveInvestigation: vi.fn(),
+      getProjectCategories: vi.fn().mockReturnValue([]),
+      getAllProjectArticleCategories: vi.fn().mockReturnValue([]),
     }))
   };
 });

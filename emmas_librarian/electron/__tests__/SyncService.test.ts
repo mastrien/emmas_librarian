@@ -2,6 +2,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { SyncService } from '../database/SyncService';
 
 vi.mock('electron', () => ({
+  app: {
+    getPath: vi.fn().mockReturnValue('/mock/path')
+  },
   dialog: {
     showSaveDialog: vi.fn().mockResolvedValue({ canceled: false, filePath: '/tmp/test.emmapcarc' }),
     showOpenDialog: vi.fn().mockResolvedValue({ canceled: false, filePaths: ['/tmp/test.emmapcarc'] })
