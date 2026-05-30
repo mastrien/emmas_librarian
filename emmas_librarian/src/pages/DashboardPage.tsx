@@ -153,14 +153,14 @@ export const DashboardPage: React.FC = () => {
       {!loading && projects.length > 0 && hasData && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
           <div className="fade-in" style={{
-            gridColumn: 'span 6',
+            gridColumn: 'span 9',
             display: 'flex',
             background: 'transparent',
             alignItems: 'center',
-            gap: '1rem',
+            gap: '1.5rem',
             flexDirection: 'row'
           }}>
-            <div style={{ width: '100px', height: '100px', position: 'relative', flexShrink: 0 }}>
+            <div style={{ width: '120px', height: '120px', position: 'relative', flexShrink: 0 }}>
               <Pie 
                 data={statusChartData} 
                 options={{
@@ -174,19 +174,19 @@ export const DashboardPage: React.FC = () => {
               />
             </div>
             <div>
-              <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
-                <PieChartIcon size={16} /> Progresso Geral
+              <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
+                <PieChartIcon size={18} /> Progresso Geral
               </h3>
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
                 {statusChartData.datasets[0].data.map((val, index) => {
                   if (val === 0) return null;
                   return (
                     <div key={index}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: statusChartData.datasets[0].backgroundColor[index] }} />
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{statusChartData.labels[index]}</span>
+                        <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: statusChartData.datasets[0].backgroundColor[index] }} />
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{statusChartData.labels[index]}</span>
                       </div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-heading)' }}>
+                      <div style={{ fontSize: '1.3rem', fontWeight: 600, color: 'var(--text-heading)' }}>
                         {val}
                       </div>
                     </div>
@@ -196,7 +196,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ gridColumn: 'span 6' }}>
+          <div style={{ gridColumn: 'span 3' }}>
             <DashboardCalendar diarySet={globalStats.diarySet} />
           </div>
         </div>

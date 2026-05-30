@@ -221,3 +221,6 @@
 
 ### Ciclo 10: Limpeza de gráficos e Reposicionamento
 - **O que foi feito:** O gráfico de 'Arquivos Físicos' foi removido e os mostradores restantes (Progresso Geral e Calendário) foram movidos para o topo da página, ficando acima do título 'Projetos'. O layout foi atualizado de forma que cada elemento ocupe metade da tela (span 6 no grid de 12 colunas) de maneira limpa.
+
+### Ciclo 11: Ajuste de Proporção no Dashboard
+- **O que foi feito:** A proporção dos elementos foi alterada. O gráfico de Progresso Geral agora ocupa um espaço consideravelmente maior (span 9, e foi ampliado de 100px para 120px com fontes maiores), enquanto o Calendário foi reduzido para ser bem menor (span 3), dando o destaque adequado ao resumo das atividades.
