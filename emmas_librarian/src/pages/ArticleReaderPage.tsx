@@ -1355,10 +1355,19 @@ export const ArticleReaderPage: React.FC = () => {
           <button 
             onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
             className="btn-primary" 
-            style={{ borderRadius: 'var(--radius-full)', padding: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+            style={{ 
+              borderRadius: '2rem', 
+              padding: '0.8rem 1.5rem', 
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              background: 'var(--color-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
             title="Categorias do Artigo"
           >
-            <Tags size={24} />
+            <Tags size={20} />
+            Categorizar
           </button>
         </div>
       )}

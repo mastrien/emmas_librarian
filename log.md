@@ -239,3 +239,6 @@
 
 ### Ciclo 16: Correção do Painel de Drag and Drop
 - **O que foi feito:** Envolvemos os modais de drag and drop (tanto no Dashboard quanto nos Detalhes do Projeto) utilizando o \createPortal\ do React. Isso garante que, independente do contêiner pai estar utilizando animações como \	ransform: translateY\ (que forçam um novo contexto de empilhamento), a área de drop e seu texto de alerta sejam renderizados perfeitamente fixados no corpo da página e no centro da viewport inteira.
+
+### Ciclo 17: Estilo do Botão de Categorizar no Leitor
+- **O que foi feito:** O botão flutuante de 'Categorizar' na tela de leitura de PDF recebeu um upgrade visual: as bordas agora estão em formato de pílula (2rem), o gradiente linear foi substituído pela cor primária sólida e adicionamos o texto 'Categorizar' ao lado do ícone para deixar sua função perfeitamente clara e intuitiva para o usuário.
