@@ -20,6 +20,7 @@ export const DashboardPage: React.FC = () => {
         
         const projectsWithStats = await Promise.all(data.map(async (project) => {
           const articles = await projectService.getArticles(project.id);
+          const diaryEntries = await projectService.getDiaryEntries(project.id);
           return {
             ...project,
             stats: {
@@ -27,6 +28,8 @@ export const DashboardPage: React.FC = () => {
               read: articles.filter(a => a.status === 'read').length,
               active: articles.filter(a => a.status === 'new').length,
               archived: articles.filter(a => a.status === 'archived').length,
+              withPdf: articles.filter(a => !!a.local_file_path).length,
+              diaryDates: diaryEntries.map(d => d.entry_date),
             }
           };
         }));
@@ -46,22 +49,40 @@ export const DashboardPage: React.FC = () => {
       acc.active += p.stats.active;
       acc.read += p.stats.read;
       acc.archived += p.stats.archived;
+      acc.total += p.stats.total;
+      acc.withPdf += p.stats.withPdf;
+      if (p.stats.diaryDates) {
+        p.stats.diaryDates.forEach((date: string) => {
+          acc.diarySet.add(date);
+        });
+      }
     }
     return acc;
-  }, { active: 0, read: 0, archived: 0 });
+  }, { active: 0, read: 0, archived: 0, total: 0, withPdf: 0, diarySet: new Set<string>() });
+
+  // Generate heatmap data for last 30 days
+  const last30Days = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (29 - i));
+    const dateStr = d.toISOString().split('T')[0];
+    return {
+      date: dateStr,
+      active: globalStats.diarySet.has(dateStr)
+    };
+  });
 
   const chartData = {
-    labels: ['Ativos', 'Lidos', 'Arquivados'],
+    labels: ['Com PDF Vinculado', 'Sem PDF'],
     datasets: [
       {
-        data: [globalStats.active, globalStats.read, globalStats.archived],
-        backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],
+        data: [globalStats.withPdf, globalStats.total - globalStats.withPdf],
+        backgroundColor: ['#10b981', '#6b7280'],
         borderWidth: 0,
       },
     ],
   };
 
-  const hasData = globalStats.active > 0 || globalStats.read > 0 || globalStats.archived > 0;
+  const hasData = globalStats.total > 0;
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -142,52 +163,86 @@ export const DashboardPage: React.FC = () => {
       ) : (
         <>
           {projects.length > 0 && hasData && (
-            <div className="fade-in" style={{
-              display: 'flex',
-              background: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-color)',
-              padding: '1.5rem',
-              marginBottom: '2rem',
-              alignItems: 'center',
-              gap: '2rem'
-            }}>
-              <div style={{ width: '200px', height: '200px', position: 'relative' }}>
-                <Pie 
-                  data={chartData} 
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { display: false },
-                      tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        padding: 12,
-                        cornerRadius: 8,
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+              <div className="fade-in" style={{
+                display: 'flex',
+                background: 'var(--bg-surface)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--border-color)',
+                padding: '1.5rem',
+                alignItems: 'center',
+                gap: '2rem'
+              }}>
+                <div style={{ width: '200px', height: '200px', position: 'relative' }}>
+                  <Pie 
+                    data={chartData} 
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          backgroundColor: 'rgba(0,0,0,0.8)',
+                          padding: 12,
+                          cornerRadius: 8,
+                        }
                       }
-                    }
-                  }} 
-                />
+                    }} 
+                  />
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <PieChartIcon size={20} /> Visão Geral da Biblioteca
+                  </h3>
+                  <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                    {chartData.datasets[0].data.map((val, index) => {
+                      if (val === 0) return null;
+                      return (
+                        <div key={index}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                            <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: chartData.datasets[0].backgroundColor[index] }} />
+                            <span style={{ color: 'var(--text-muted)' }}>{chartData.labels[index]}</span>
+                          </div>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>
+                            {val}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-              <div>
+
+              <div className="fade-in" style={{
+                background: 'var(--bg-surface)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--border-color)',
+                padding: '1.5rem',
+              }}>
                 <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <PieChartIcon size={20} /> Visão Geral da Biblioteca
+                  <Calendar size={20} /> Atividade no Diário (30 dias)
                 </h3>
-                <div style={{ display: 'flex', gap: '2rem' }}>
-                  {chartData.datasets[0].data.map((val, index) => {
-                    if (val === 0) return null;
-                    return (
-                      <div key={index}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                          <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: chartData.datasets[0].backgroundColor[index] }} />
-                          <span style={{ color: 'var(--text-muted)' }}>{chartData.labels[index]}</span>
-                        </div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>
-                          {val}
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '6px', marginTop: '1.5rem' }}>
+                  {last30Days.map((day, i) => (
+                    <div 
+                      key={i} 
+                      title={`${new Date(day.date).toLocaleDateString()}: ${day.active ? 'Com anotação' : 'Sem anotação'}`}
+                      style={{
+                        aspectRatio: '1',
+                        borderRadius: '4px',
+                        backgroundColor: day.active ? 'var(--color-primary)' : 'var(--bg-main)',
+                        border: day.active ? 'none' : '1px solid var(--border-color)',
+                        opacity: day.active ? 1 : 0.6,
+                        boxShadow: day.active ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+                      }}
+                    />
+                  ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  <span>Menos</span>
+                  <div style={{ width: 12, height: 12, borderRadius: 2, background: 'var(--bg-main)', border: '1px solid var(--border-color)', opacity: 0.6 }} />
+                  <div style={{ width: 12, height: 12, borderRadius: 2, background: 'var(--color-primary)' }} />
+                  <span>Mais</span>
                 </div>
               </div>
             </div>

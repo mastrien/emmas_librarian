@@ -972,9 +972,6 @@ export const ProjectDetailsPage: React.FC = () => {
         </div>
         
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <button onClick={() => projectService.exportCsv(project.id)} className="btn-secondary">
-            <Download size={18} /> CSV
-          </button>
           <button onClick={() => projectService.exportBiblioshiny(project.id)} className="btn-secondary" title="Exportar no formato compatível com Biblioshiny">
             <Download size={18} /> Biblioshiny
           </button>
@@ -1293,17 +1290,18 @@ export const ProjectDetailsPage: React.FC = () => {
                     })}
                     <td style={{ padding: '1.25rem 1.5rem' }}>
                       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <Link to={`/articles/${article.id}`} className="btn-primary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}>
-                          <FileText size={14} /> Ler
-                        </Link>
-
                         {article.local_file_path ? (
-                          <button onClick={() => handleUnlinkClick(article.id)} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: 'var(--color-danger)' }} title="Desvincular PDF">
-                            <XIcon size={14} />
-                          </button>
+                          <>
+                            <Link to={`/articles/${article.id}`} className="btn-primary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}>
+                              <FileText size={14} /> Ler
+                            </Link>
+                            <button onClick={() => handleUnlinkClick(article.id)} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: 'var(--color-danger)' }} title="Desvincular PDF">
+                              <XIcon size={14} />
+                            </button>
+                          </>
                         ) : (
-                          <button onClick={() => handleUploadClick(article.id)} disabled={uploadingId === article.id} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Vincular PDF Local">
-                            {uploadingId === article.id ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                          <button onClick={() => handleUploadClick(article.id)} disabled={uploadingId === article.id} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Buscar por DOI">
+                            {uploadingId === article.id ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Buscar por DOI
                           </button>
                         )}
 
