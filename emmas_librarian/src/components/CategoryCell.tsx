@@ -12,6 +12,11 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
   const [value, setValue] = useState(initialValue);
   const [isEditing, setIsEditing] = useState(false);
 
+  const initialOptions = category.type === 'enum' && category.options ? category.options.split(',').map(o => o.trim()) : [];
+  const [localOptions, setLocalOptions] = useState(initialOptions);
+  const [isAddingNewOption, setIsAddingNewOption] = useState(false);
+  const [newOptionValue, setNewOptionValue] = useState('');
+
   const handleSave = async (newValue: string) => {
     setValue(newValue);
     setIsEditing(false);
@@ -44,32 +49,59 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
   }
 
   if (category.type === 'enum') {
-    const initialOptions = category.options ? category.options.split(',').map(o => o.trim()) : [];
-    const [localOptions, setLocalOptions] = useState(initialOptions);
-
-    const handleChange = async (val: string) => {
+    const handleEnumChange = async (val: string) => {
       if (val === '__ADD_NEW__') {
-        const newOpt = window.prompt('Digite a nova opção para esta categoria:');
-        if (newOpt && newOpt.trim()) {
-          const trimmed = newOpt.trim();
-          if (!localOptions.includes(trimmed)) {
-            const updatedOptions = [...localOptions, trimmed].join(', ');
-            try {
-              await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions);
-              setLocalOptions([...localOptions, trimmed]);
-              handleSave(trimmed);
-            } catch (err) {
-              console.error(err);
-              alert('Erro ao adicionar opção.');
-            }
-          } else {
-            handleSave(trimmed);
-          }
-        }
+        setIsAddingNewOption(true);
+        setNewOptionValue('');
       } else {
         handleSave(val);
       }
     };
+
+    const saveNewOption = async () => {
+      if (newOptionValue && newOptionValue.trim()) {
+        const trimmed = newOptionValue.trim();
+        if (!localOptions.includes(trimmed)) {
+          const updatedOptions = [...localOptions, trimmed].join(', ');
+          try {
+            await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions);
+            setLocalOptions([...localOptions, trimmed]);
+            handleSave(trimmed);
+          } catch (err) {
+            console.error(err);
+            alert('Erro ao adicionar opção.');
+          }
+        } else {
+          handleSave(trimmed);
+        }
+      }
+      setIsAddingNewOption(false);
+    };
+
+    if (isAddingNewOption) {
+      return (
+        <input
+          autoFocus
+          value={newOptionValue}
+          onChange={(e) => setNewOptionValue(e.target.value)}
+          onBlur={saveNewOption}
+          placeholder="Nova opção..."
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') saveNewOption();
+            if (e.key === 'Escape') setIsAddingNewOption(false);
+          }}
+          style={{
+            background: 'var(--bg-surface)',
+            color: 'var(--text-main)',
+            border: '1px solid var(--color-primary)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '0.2rem 0.5rem',
+            fontSize: '0.85rem',
+            width: '120px'
+          }}
+        />
+      );
+    }
 
     // Make sure the selected value is in localOptions, just in case
     const optionsToRender = [...localOptions];
@@ -80,7 +112,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
     return (
       <select 
         value={value} 
-        onChange={(e) => handleChange(e.target.value)}
+        onChange={(e) => handleEnumChange(e.target.value)}
         style={{
           background: 'var(--bg-surface)',
           color: 'var(--text-main)',

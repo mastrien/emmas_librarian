@@ -248,3 +248,6 @@
 
 ### Ciclo 19: Melhorias nas Categorias
 - **O que foi feito:** 1) Corrigido o bug onde as categorias do artigo no painel lateral desapareciam após o fechamento e reabertura do painel (agora os dados são re-buscados no useEffect ao abrir o painel). 2) As categorias do tipo enum agora permitem edição local! Foi adicionada uma opção + Adicionar nova opção... que solicita o novo valor ao usuário via prompt, salva no banco de dados e seleciona a nova opção, persistindo as mudanças imediatamente na interface e no banco de dados sem precisar ir até o painel central.
+
+### Ciclo 20: Input Nativo em Vez de Window Prompt
+- **O que foi feito:** Substituímos o uso de \window.prompt\ (que é bloqueado pelo ambiente nativo do Electron por questões de segurança) por um campo de \<input>\ dinâmico renderizado in-loco. Agora, ao clicar em '+ Adicionar nova opção...', o select se transforma em um input com foco automático para a digitação fluida. Além disso, corrigimos um erro fatal silencioso na estrutura de Hooks do React movendo-os para o escopo global do componente.
