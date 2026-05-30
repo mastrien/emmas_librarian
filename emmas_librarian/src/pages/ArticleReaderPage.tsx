@@ -207,6 +207,19 @@ export const ArticleReaderPage: React.FC = () => {
       }
     }
   };
+  const fetchCategories = useCallback(async () => {
+    if (!id || !article) return;
+    try {
+      const [pCats, aCats] = await Promise.all([
+        projectService.getProjectCategories(article.project_id),
+        projectService.getArticleCategories(parseInt(id))
+      ]);
+      setProjectCategories(pCats);
+      setArticleCategories(aCats);
+    } catch (err) {
+      console.error('Erro ao carregar categorias dinâmicas', err);
+    }
+  }, [id, article]);
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -317,9 +330,9 @@ export const ArticleReaderPage: React.FC = () => {
 
   useEffect(() => {
     if (isCategoriesOpen) {
-      fetchData();
+      fetchCategories();
     }
-  }, [isCategoriesOpen, fetchData]);
+  }, [isCategoriesOpen, fetchCategories]);
 
   useEffect(() => {
     return () => {

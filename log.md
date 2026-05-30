@@ -251,3 +251,6 @@
 
 ### Ciclo 20: Input Nativo em Vez de Window Prompt
 - **O que foi feito:** Substituímos o uso de \window.prompt\ (que é bloqueado pelo ambiente nativo do Electron por questões de segurança) por um campo de \<input>\ dinâmico renderizado in-loco. Agora, ao clicar em '+ Adicionar nova opção...', o select se transforma em um input com foco automático para a digitação fluida. Além disso, corrigimos um erro fatal silencioso na estrutura de Hooks do React movendo-os para o escopo global do componente.
+
+### Ciclo 21: Performance ao Abrir Categorias e Ajuste do Link DOI
+- **O que foi feito:** 1) Resolvi o problema de renderização massiva no leitor de PDF. O botão de abrir categorias estava chamando a função principal \etchData\, que reconstruía tudo (estado de carregamento, highlights, PDF buffer, resetando componentes e perdendo a posição de rolagem). Criei uma função otimizada \etchCategories\ que atualiza exclusivamente os dados das categorias no painel. 2) Finalizado o botão de DOI com o texto 'Buscar por DOI' na tabela principal.

@@ -122,8 +122,8 @@ export const ArticleTable: React.FC<ArticleTableProps> = memo(({
                   </button>
 
                   {article.doi && (
-                    <a href={`https://doi.org/${article.doi}`} target="_blank" rel="noreferrer" style={{ color: 'var(--text-muted)' }} title="Abrir no Navegador">
-                      <ExternalLink size={16} />
+                    <a href={`https://doi.org/${article.doi}`} target="_blank" rel="noreferrer" className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', textDecoration: 'none' }} title="Abrir no Navegador">
+                      <ExternalLink size={14} /> Buscar por DOI
                     </a>
                   )}
                 </div>
