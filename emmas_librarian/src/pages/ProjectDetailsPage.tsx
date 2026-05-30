@@ -1468,9 +1468,27 @@ export const ProjectDetailsPage: React.FC = () => {
                     labels: ['Open Access', 'Closed Access', 'Desconhecido'],
                     datasets: [{
                       data: [
-                        filteredArticles.filter(a => a.is_oa === 1).length,
-                        filteredArticles.filter(a => a.is_oa === 0).length,
-                        filteredArticles.filter(a => a.is_oa !== 1 && a.is_oa !== 0).length
+                        filteredArticles.filter(a => {
+                          let isOa = a.is_oa;
+                          if (isOa === undefined && a.csl_json) {
+                            try { const csl = typeof a.csl_json === 'string' ? JSON.parse(a.csl_json) : a.csl_json; isOa = csl.is_oa ? 1 : 0; } catch (e) {}
+                          }
+                          return isOa === 1;
+                        }).length,
+                        filteredArticles.filter(a => {
+                          let isOa = a.is_oa;
+                          if (isOa === undefined && a.csl_json) {
+                            try { const csl = typeof a.csl_json === 'string' ? JSON.parse(a.csl_json) : a.csl_json; isOa = csl.is_oa ? 1 : 0; } catch (e) {}
+                          }
+                          return isOa === 0;
+                        }).length,
+                        filteredArticles.filter(a => {
+                          let isOa = a.is_oa;
+                          if (isOa === undefined && a.csl_json) {
+                            try { const csl = typeof a.csl_json === 'string' ? JSON.parse(a.csl_json) : a.csl_json; isOa = csl.is_oa !== undefined ? (csl.is_oa ? 1 : 0) : -1; } catch (e) {}
+                          }
+                          return isOa !== 1 && isOa !== 0;
+                        }).length
                       ],
                       backgroundColor: ['#10b981', '#ef4444', '#9ca3af'],
                       borderWidth: 0,
@@ -1522,8 +1540,12 @@ export const ProjectDetailsPage: React.FC = () => {
                 <Bar
                   data={(() => {
                     const counts = filteredArticles.reduce((acc: Record<string, number>, art) => {
-                      const pub = art.publisher || 'Desconhecido';
-                      acc[pub] = (acc[pub] || 0) + 1;
+                      let pub = art.publisher;
+                      if (!pub && art.csl_json) {
+                        try { const csl = typeof art.csl_json === 'string' ? JSON.parse(art.csl_json) : art.csl_json; pub = csl.publisher; } catch (e) {}
+                      }
+                      const finalPub = pub || 'Desconhecido';
+                      acc[finalPub] = (acc[finalPub] || 0) + 1;
                       return acc;
                     }, {});
                     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
