@@ -83,6 +83,17 @@ export const DashboardPage: React.FC = () => {
     ],
   };
 
+  const statusChartData = {
+    labels: ['Ativos', 'Lidos', 'Arquivados'],
+    datasets: [
+      {
+        data: [globalStats.active, globalStats.read, globalStats.archived],
+        backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],
+        borderWidth: 0,
+      },
+    ],
+  };
+
   const hasData = globalStats.total > 0;
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -172,17 +183,63 @@ export const DashboardPage: React.FC = () => {
       ) : (
         <>
           {projects.length > 0 && hasData && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
-              <div className="fade-in" style={{
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+              
+              <div className="fade-in card" style={{
                 display: 'flex',
                 background: 'var(--bg-surface)',
-                borderRadius: 'var(--radius-lg)',
                 border: '1px solid var(--border-color)',
                 padding: '1.5rem',
                 alignItems: 'center',
-                gap: '2rem'
+                gap: '1.5rem',
+                flexDirection: 'row'
               }}>
-                <div style={{ width: '200px', height: '200px', position: 'relative' }}>
+                <div style={{ width: '120px', height: '120px', position: 'relative', flexShrink: 0 }}>
+                  <Pie 
+                    data={statusChartData} 
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 }
+                      }
+                    }} 
+                  />
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
+                    <PieChartIcon size={18} /> Progresso Geral
+                  </h3>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {statusChartData.datasets[0].data.map((val, index) => {
+                      if (val === 0) return null;
+                      return (
+                        <div key={index}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                            <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: statusChartData.datasets[0].backgroundColor[index] }} />
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{statusChartData.labels[index]}</span>
+                          </div>
+                          <div style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-heading)' }}>
+                            {val}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="fade-in card" style={{
+                display: 'flex',
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                padding: '1.5rem',
+                alignItems: 'center',
+                gap: '1.5rem',
+                flexDirection: 'row'
+              }}>
+                <div style={{ width: '120px', height: '120px', position: 'relative', flexShrink: 0 }}>
                   <Pie 
                     data={chartData} 
                     options={{
@@ -190,29 +247,25 @@ export const DashboardPage: React.FC = () => {
                       maintainAspectRatio: false,
                       plugins: {
                         legend: { display: false },
-                        tooltip: {
-                          backgroundColor: 'rgba(0,0,0,0.8)',
-                          padding: 12,
-                          cornerRadius: 8,
-                        }
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 }
                       }
                     }} 
                   />
                 </div>
                 <div>
-                  <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <PieChartIcon size={20} /> Visão Geral da Biblioteca
+                  <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
+                    <PieChartIcon size={18} /> Arquivos Físicos
                   </h3>
-                  <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                     {chartData.datasets[0].data.map((val, index) => {
                       if (val === 0) return null;
                       return (
                         <div key={index}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                            <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: chartData.datasets[0].backgroundColor[index] }} />
-                            <span style={{ color: 'var(--text-muted)' }}>{chartData.labels[index]}</span>
+                            <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: chartData.datasets[0].backgroundColor[index] as string }} />
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{chartData.labels[index]}</span>
                           </div>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>
+                          <div style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-heading)' }}>
                             {val}
                           </div>
                         </div>

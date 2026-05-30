@@ -189,3 +189,20 @@
     - Raw SQL used for schema initialization to ensure exact matching with the requested structure.
     - DatabaseManager implemented with context managers for safe connection handling.
 - **Difficulties:** PermissionError on Windows during test teardown (handled with explicit connection closing and minor delay).
+
+ 
+ # #   [ 2 0 2 6 - 0 5 - 3 0 ]   C y c l e   1 0 :   C a t e g o r i a s   n o   L e i t o r   e   E s t a t í s t i c a s   A v a n ç a d a s 
+ -   * * O b j e c t i v e : * *   F i n a l i z a r   a   i m p l e m e n t a ç ã o   d o   p a i n e l   d e   c a t e g o r i a s   n o   l e i t o r   e   o s   n o v o s   g r á f i c o s   d o   C h a r t . j s . 
+ -   * * C h a n g e s : * * 
+         -   C o r r i g i d o   p r o b l e m a   d e   i m p o r t s   d u p l i c a d o s . 
+         -   A d i c i o n a d a   a b a   " C a t e g o r i a s "   n o   p a i n e l   l a t e r a l   d o   R e a d e r   p a r a   c a t e g o r i z a r   o   a r t i g o   a t i v o . 
+         -   A d i c i o n a d o   s u p o r t e   a   c r o s s - r e f e r e n c e   d e   C a t e g o r i a s   e   A r t i g o s   n a   e x p o r t a ç ã o   C S V   e   r e s t a u r a d o   b o t ã o   n o   P r o j e c t D e t a i l s . 
+         -   I m p l e m e n t a d o s   g r á f i c o s   d e   E s t a t í s t i c a s   A v a n ç a d a s   ( A c e s s o   A b e r t o ,   T i p o s   d e   D o c u m e n t o s ,   P u b l i s h e r s   e   P r e s e n ç a   d e   D O I )   p u x a n d o   a t r i b u t o s   o u   J S O N   d i r e t a m e n t e   d o   c s l _ j s o n . 
+ -   * * T D D   S t a t u s : * *   T e s t a d o ,   C I   O K .   T y p e c h e c k   s e m   f a l h a s .  
+ 
+### Ciclo 4: Limpeza de UI/UX em ProjectDetailsPage e ArticleReaderPage
+- **O que foi feito:** Removido o botão CSV do cabeçalho da página de projeto e as colunas de categorias da tabela principal. Criada uma nova aba 'Categorias' contendo a tabela cruzada de artigos por categorias, além de incluir nela os botões de exportação CSV e XLSX (com a adição da biblioteca xlsx). O link de DOI foi ajustado para exibir 'Buscar por DOI' sempre que houver DOI, mantendo 'Vincular PDF' onde for aplicável. Na página do leitor de artigos, as categorias foram retiradas das abas do painel lateral e transferidas para um botão flutuante no canto inferior esquerdo.
+- **Testes:** Compilação (typecheck) e linters passando com sucesso. Componentes visuais validados estruturalmente no código.
+
+### Ciclo 5: Restauração do Gráfico de Status no Dashboard
+- **O que foi feito:** O gráfico de pizza de artigos Ativos/Lidos/Arquivados foi restaurado na página inicial (Dashboard). O layout em grid foi ajustado para exibir lado a lado o gráfico de progresso geral, o gráfico de arquivos físicos (PDFs) e o calendário de atividades, dividindo o espaço igualmente através da propriedade gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))'.
