@@ -38,6 +38,7 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
   const [isEditMode, setIsEditMode] = useState(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editorRef = useRef<MDXEditorMethods>(null);
+  const currentEditDateRef = useRef<string | null>(null);
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -56,7 +57,10 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
       await projectService.saveDiaryEntry(projectId, selectedDate, content);
     }
     
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    
     setSelectedDate(date);
+    currentEditDateRef.current = date;
     setHasChanges(false);
     const entry = await projectService.getDiaryEntry(projectId, date);
     const newContent = entry?.content || '';
@@ -75,15 +79,18 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
   };
 
   const handleContentChange = (newContent: string) => {
+    if (currentEditDateRef.current !== selectedDate) return;
+    
     setContent(newContent);
     setHasChanges(true);
     
     // Auto-save after 2s of inactivity
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    const dateToSave = selectedDate;
     saveTimerRef.current = setTimeout(async () => {
-      if (selectedDate && newContent.trim()) {
+      if (dateToSave && newContent.trim()) {
         setSaving(true);
-        await projectService.saveDiaryEntry(projectId, selectedDate, newContent);
+        await projectService.saveDiaryEntry(projectId, dateToSave, newContent);
         await loadEntries();
         setSaving(false);
         setHasChanges(false);

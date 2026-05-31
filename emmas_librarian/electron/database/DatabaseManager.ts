@@ -162,6 +162,22 @@ export class DatabaseManager {
       if (!hlInfo.some(col => col.name === 'content_text')) {
         this.db.prepare('ALTER TABLE highlights ADD COLUMN content_text TEXT').run();
       }
+
+      // Deduplicate project_diary entries (keep the latest one)
+      this.db.exec(`
+        DELETE FROM project_diary 
+        WHERE id NOT IN (
+          SELECT MAX(id) 
+          FROM project_diary 
+          GROUP BY project_id, entry_date
+        );
+      `);
+      
+      // Enforce unique project_diary entries by index, in case the constraint was missing in older schemas
+      this.db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_project_diary_unique 
+        ON project_diary(project_id, entry_date);
+      `);
     } catch (e) {
       console.error('Schema migrations error', e);
     }
