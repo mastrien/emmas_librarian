@@ -191,66 +191,70 @@
 - **Difficulties:** PermissionError on Windows during test teardown (handled with explicit connection closing and minor delay).
 
  
- # #   [ 2 0 2 6 - 0 5 - 3 0 ]   C y c l e   1 0 :   C a t e g o r i a s   n o   L e i t o r   e   E s t a t Ì s t i c a s   A v a n Á a d a s 
- -   * * O b j e c t i v e : * *   F i n a l i z a r   a   i m p l e m e n t a Á „ o   d o   p a i n e l   d e   c a t e g o r i a s   n o   l e i t o r   e   o s   n o v o s   g r · f i c o s   d o   C h a r t . j s . 
+ # #   [ 2 0 2 6 - 0 5 - 3 0 ]   C y c l e   1 0 :   C a t e g o r i a s   n o   L e i t o r   e   E s t a t √≠ s t i c a s   A v a n √ß a d a s 
+ -   * * O b j e c t i v e : * *   F i n a l i z a r   a   i m p l e m e n t a √ß √£ o   d o   p a i n e l   d e   c a t e g o r i a s   n o   l e i t o r   e   o s   n o v o s   g r √° f i c o s   d o   C h a r t . j s . 
  -   * * C h a n g e s : * * 
          -   C o r r i g i d o   p r o b l e m a   d e   i m p o r t s   d u p l i c a d o s . 
          -   A d i c i o n a d a   a b a   " C a t e g o r i a s "   n o   p a i n e l   l a t e r a l   d o   R e a d e r   p a r a   c a t e g o r i z a r   o   a r t i g o   a t i v o . 
-         -   A d i c i o n a d o   s u p o r t e   a   c r o s s - r e f e r e n c e   d e   C a t e g o r i a s   e   A r t i g o s   n a   e x p o r t a Á „ o   C S V   e   r e s t a u r a d o   b o t „ o   n o   P r o j e c t D e t a i l s . 
-         -   I m p l e m e n t a d o s   g r · f i c o s   d e   E s t a t Ì s t i c a s   A v a n Á a d a s   ( A c e s s o   A b e r t o ,   T i p o s   d e   D o c u m e n t o s ,   P u b l i s h e r s   e   P r e s e n Á a   d e   D O I )   p u x a n d o   a t r i b u t o s   o u   J S O N   d i r e t a m e n t e   d o   c s l _ j s o n . 
+         -   A d i c i o n a d o   s u p o r t e   a   c r o s s - r e f e r e n c e   d e   C a t e g o r i a s   e   A r t i g o s   n a   e x p o r t a √ß √£ o   C S V   e   r e s t a u r a d o   b o t √£ o   n o   P r o j e c t D e t a i l s . 
+         -   I m p l e m e n t a d o s   g r √° f i c o s   d e   E s t a t √≠ s t i c a s   A v a n √ß a d a s   ( A c e s s o   A b e r t o ,   T i p o s   d e   D o c u m e n t o s ,   P u b l i s h e r s   e   P r e s e n √ß a   d e   D O I )   p u x a n d o   a t r i b u t o s   o u   J S O N   d i r e t a m e n t e   d o   c s l _ j s o n . 
  -   * * T D D   S t a t u s : * *   T e s t a d o ,   C I   O K .   T y p e c h e c k   s e m   f a l h a s .  
  
 ### Ciclo 4: Limpeza de UI/UX em ProjectDetailsPage e ArticleReaderPage
-- **O que foi feito:** Removido o bot„o CSV do cabeÁalho da p·gina de projeto e as colunas de categorias da tabela principal. Criada uma nova aba 'Categorias' contendo a tabela cruzada de artigos por categorias, alÈm de incluir nela os botıes de exportaÁ„o CSV e XLSX (com a adiÁ„o da biblioteca xlsx). O link de DOI foi ajustado para exibir 'Buscar por DOI' sempre que houver DOI, mantendo 'Vincular PDF' onde for aplic·vel. Na p·gina do leitor de artigos, as categorias foram retiradas das abas do painel lateral e transferidas para um bot„o flutuante no canto inferior esquerdo.
-- **Testes:** CompilaÁ„o (typecheck) e linters passando com sucesso. Componentes visuais validados estruturalmente no cÛdigo.
+- **O que foi feito:** Removido o bot√£o CSV do cabe√ßalho da p√°gina de projeto e as colunas de categorias da tabela principal. Criada uma nova aba 'Categorias' contendo a tabela cruzada de artigos por categorias, al√©m de incluir nela os bot√µes de exporta√ß√£o CSV e XLSX (com a adi√ß√£o da biblioteca xlsx). O link de DOI foi ajustado para exibir 'Buscar por DOI' sempre que houver DOI, mantendo 'Vincular PDF' onde for aplic√°vel. Na p√°gina do leitor de artigos, as categorias foram retiradas das abas do painel lateral e transferidas para um bot√£o flutuante no canto inferior esquerdo.
+- **Testes:** Compila√ß√£o (typecheck) e linters passando com sucesso. Componentes visuais validados estruturalmente no c√≥digo.
 
-### Ciclo 5: RestauraÁ„o do Gr·fico de Status no Dashboard
-- **O que foi feito:** O gr·fico de pizza de artigos Ativos/Lidos/Arquivados foi restaurado na p·gina inicial (Dashboard). O layout em grid foi ajustado para exibir lado a lado o gr·fico de progresso geral, o gr·fico de arquivos fÌsicos (PDFs) e o calend·rio de atividades, dividindo o espaÁo igualmente atravÈs da propriedade gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))'.
+### Ciclo 5: Restaura√ß√£o do Gr√°fico de Status no Dashboard
+- **O que foi feito:** O gr√°fico de pizza de artigos Ativos/Lidos/Arquivados foi restaurado na p√°gina inicial (Dashboard). O layout em grid foi ajustado para exibir lado a lado o gr√°fico de progresso geral, o gr√°fico de arquivos f√≠sicos (PDFs) e o calend√°rio de atividades, dividindo o espa√ßo igualmente atrav√©s da propriedade gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))'.
 
 ### Ciclo 6: Ajuste Fino na Grid do Dashboard
-- **O que foi feito:** O layout do Dashboard foi ajustado para utilizar uma convenÁ„o de grid de 12 colunas. Os cards dos gr·ficos foram alterados para ocupar 5 colunas cada (span 5), enquanto o calend·rio foi reduzido para ocupar 2 colunas (span 2). AlÈm disso, o fundo dos gr·ficos foi tornado transparente, a classe card e suas bordas foram removidas para melhor integraÁ„o visual, e a altura dos gr·ficos foi levemente reduzida para evitar cards muito altos.
+- **O que foi feito:** O layout do Dashboard foi ajustado para utilizar uma conven√ß√£o de grid de 12 colunas. Os cards dos gr√°ficos foram alterados para ocupar 5 colunas cada (span 5), enquanto o calend√°rio foi reduzido para ocupar 2 colunas (span 2). Al√©m disso, o fundo dos gr√°ficos foi tornado transparente, a classe card e suas bordas foram removidas para melhor integra√ß√£o visual, e a altura dos gr√°ficos foi levemente reduzida para evitar cards muito altos.
 
-### Ciclo 7: Ajuste no CabeÁalho do Calend·rio
-- **O que foi feito:** O cabeÁalho do componente \DashboardCalendar\ foi reorganizado. O tÌtulo 'Atividade no Di·rio' foi centralizado na primeira linha, e o seletor de meses foi movido para a linha de baixo com botıes alinhados ‡s extremidades, otimizando o espaÁo na coluna menor.
+### Ciclo 7: Ajuste no Cabe√ßalho do Calend√°rio
+- **O que foi feito:** O cabe√ßalho do componente \DashboardCalendar\ foi reorganizado. O t√≠tulo 'Atividade no Di√°rio' foi centralizado na primeira linha, e o seletor de meses foi movido para a linha de baixo com bot√µes alinhados √†s extremidades, otimizando o espa√ßo na coluna menor.
 
-### Ciclo 8: Revertido ordenaÁ„o do calend·rio no Dashboard
-- **O que foi feito:** O span da grid de 12 colunas foi ajustado de volta para 1 terÁo (span 4) para cada mostrador (Gr·fico Geral, Gr·fico FÌsico e Calend·rio).
+### Ciclo 8: Revertido ordena√ß√£o do calend√°rio no Dashboard
+- **O que foi feito:** O span da grid de 12 colunas foi ajustado de volta para 1 ter√ßo (span 4) para cada mostrador (Gr√°fico Geral, Gr√°fico F√≠sico e Calend√°rio).
 
 ### Ciclo 9: Destaque para o dia atual no DashboardCalendar
-- **O que foi feito:** O cÛdigo do calend·rio agora compara se o item renderizado corresponde ao dia de hoje (isToday). Caso seja hoje, e n„o possua atividade para preencher o fundo, ser· desenhada uma borda grossa (2px) com a cor prim·ria de destaque, alÈm do n˙mero ficar em negrito para facilitar a r·pida identificaÁ„o visual.
+- **O que foi feito:** O c√≥digo do calend√°rio agora compara se o item renderizado corresponde ao dia de hoje (isToday). Caso seja hoje, e n√£o possua atividade para preencher o fundo, ser√° desenhada uma borda grossa (2px) com a cor prim√°ria de destaque, al√©m do n√∫mero ficar em negrito para facilitar a r√°pida identifica√ß√£o visual.
 
-### Ciclo 10: Limpeza de gr·ficos e Reposicionamento
-- **O que foi feito:** O gr·fico de 'Arquivos FÌsicos' foi removido e os mostradores restantes (Progresso Geral e Calend·rio) foram movidos para o topo da p·gina, ficando acima do tÌtulo 'Projetos'. O layout foi atualizado de forma que cada elemento ocupe metade da tela (span 6 no grid de 12 colunas) de maneira limpa.
+### Ciclo 10: Limpeza de gr√°ficos e Reposicionamento
+- **O que foi feito:** O gr√°fico de 'Arquivos F√≠sicos' foi removido e os mostradores restantes (Progresso Geral e Calend√°rio) foram movidos para o topo da p√°gina, ficando acima do t√≠tulo 'Projetos'. O layout foi atualizado de forma que cada elemento ocupe metade da tela (span 6 no grid de 12 colunas) de maneira limpa.
 
-### Ciclo 11: Ajuste de ProporÁ„o no Dashboard
-- **O que foi feito:** A proporÁ„o dos elementos foi alterada. O gr·fico de Progresso Geral agora ocupa um espaÁo consideravelmente maior (span 9, e foi ampliado de 100px para 120px com fontes maiores), enquanto o Calend·rio foi reduzido para ser bem menor (span 3), dando o destaque adequado ao resumo das atividades.
+### Ciclo 11: Ajuste de Propor√ß√£o no Dashboard
+- **O que foi feito:** A propor√ß√£o dos elementos foi alterada. O gr√°fico de Progresso Geral agora ocupa um espa√ßo consideravelmente maior (span 9, e foi ampliado de 100px para 120px com fontes maiores), enquanto o Calend√°rio foi reduzido para ser bem menor (span 3), dando o destaque adequado ao resumo das atividades.
 
-### Ciclo 12: RestauraÁ„o de Gr·ficos e Posicionamento na base
-- **O que foi feito:** O gr·fico de 'Arquivos FÌsicos' (com PDF vs sem PDF) foi reincorporado. A seÁ„o inteira contendo os 3 mostradores (agora com proporÁ„o 1/3 para cada, usando span 4) foi novamente movida, desta vez para a base da p·gina, logo abaixo da grade de listagem de projetos.
+### Ciclo 12: Restaura√ß√£o de Gr√°ficos e Posicionamento na base
+- **O que foi feito:** O gr√°fico de 'Arquivos F√≠sicos' (com PDF vs sem PDF) foi reincorporado. A se√ß√£o inteira contendo os 3 mostradores (agora com propor√ß√£o 1/3 para cada, usando span 4) foi novamente movida, desta vez para a base da p√°gina, logo abaixo da grade de listagem de projetos.
 
-### Ciclo 13: CorreÁ„o do ImportProject
-- **O que foi feito:** Corrigido o bug na importaÁ„o de projeto onde o 'SyncService' falhava tentando acessar uma propriedade \storageDir\ inexistente em \DatabaseManager\. Agora o caminho absoluto das pastas de storage de PDFs e Documentos È resgatado de forma segura atravÈs do \pp.getPath('userData')\ para gravar os arquivos da importaÁ„o na pasta local correta.
+### Ciclo 13: Corre√ß√£o do ImportProject
+- **O que foi feito:** Corrigido o bug na importa√ß√£o de projeto onde o 'SyncService' falhava tentando acessar uma propriedade \storageDir\ inexistente em \DatabaseManager\. Agora o caminho absoluto das pastas de storage de PDFs e Documentos √© resgatado de forma segura atrav√©s do \pp.getPath('userData')\ para gravar os arquivos da importa√ß√£o na pasta local correta.
 
-### Ciclo 14: CorreÁ„o da ordenaÁ„o de Adicionados
-- **O que foi feito:** Ajustado o mÈtodo de ordenaÁ„o por \⁄ltimos Adicionados\ e \Primeiros Adicionados\. A tabela n„o possuÌa a coluna \created_at\ para artigos, o que resultava em falha na ordenaÁ„o baseada em data. SubstituÌmos a lÛgica para utilizar a coluna \id\ da tabela, que cumpre perfeitamente a mesma funÁ„o j· que os IDs s„o auto-incrementados de forma contÌnua.
+### Ciclo 14: Corre√ß√£o da ordena√ß√£o de Adicionados
+- **O que foi feito:** Ajustado o m√©todo de ordena√ß√£o por \√öltimos Adicionados\ e \Primeiros Adicionados\. A tabela n√£o possu√≠a a coluna \created_at\ para artigos, o que resultava em falha na ordena√ß√£o baseada em data. Substitu√≠mos a l√≥gica para utilizar a coluna \id\ da tabela, que cumpre perfeitamente a mesma fun√ß√£o j√° que os IDs s√£o auto-incrementados de forma cont√≠nua.
 
-### Ciclo 15: EstilizaÁ„o de Inputs do Modal de Categorias
-- **O que foi feito:** Adicionada a classe \.input-field\ no \style.css\ central para estilizar os inputs do modal de categorias, garantindo consistÍncia visual (com bordas, padding e foco adequados para os temas dark e light).
+### Ciclo 15: Estiliza√ß√£o de Inputs do Modal de Categorias
+- **O que foi feito:** Adicionada a classe \.input-field\ no \style.css\ central para estilizar os inputs do modal de categorias, garantindo consist√™ncia visual (com bordas, padding e foco adequados para os temas dark e light).
 
-### Ciclo 16: CorreÁ„o do Painel de Drag and Drop
-- **O que foi feito:** Envolvemos os modais de drag and drop (tanto no Dashboard quanto nos Detalhes do Projeto) utilizando o \createPortal\ do React. Isso garante que, independente do contÍiner pai estar utilizando animaÁıes como \	ransform: translateY\ (que forÁam um novo contexto de empilhamento), a ·rea de drop e seu texto de alerta sejam renderizados perfeitamente fixados no corpo da p·gina e no centro da viewport inteira.
+### Ciclo 16: Corre√ß√£o do Painel de Drag and Drop
+- **O que foi feito:** Envolvemos os modais de drag and drop (tanto no Dashboard quanto nos Detalhes do Projeto) utilizando o \createPortal\ do React. Isso garante que, independente do cont√™iner pai estar utilizando anima√ß√µes como \	ransform: translateY\ (que for√ßam um novo contexto de empilhamento), a √°rea de drop e seu texto de alerta sejam renderizados perfeitamente fixados no corpo da p√°gina e no centro da viewport inteira.
 
-### Ciclo 17: Estilo do Bot„o de Categorizar no Leitor
-- **O que foi feito:** O bot„o flutuante de 'Categorizar' na tela de leitura de PDF recebeu um upgrade visual: as bordas agora est„o em formato de pÌlula (2rem), o gradiente linear foi substituÌdo pela cor prim·ria sÛlida e adicionamos o texto 'Categorizar' ao lado do Ìcone para deixar sua funÁ„o perfeitamente clara e intuitiva para o usu·rio.
+### Ciclo 17: Estilo do Bot√£o de Categorizar no Leitor
+- **O que foi feito:** O bot√£o flutuante de 'Categorizar' na tela de leitura de PDF recebeu um upgrade visual: as bordas agora est√£o em formato de p√≠lula (2rem), o gradiente linear foi substitu√≠do pela cor prim√°ria s√≥lida e adicionamos o texto 'Categorizar' ao lado do √≠cone para deixar sua fun√ß√£o perfeitamente clara e intuitiva para o usu√°rio.
 
-### Ciclo 18: Aba de Categorias e ExportaÁ„o CSV/XLSX
-- **O que foi feito:** O conte˙do da guia 'Categorias' foi finalmente implementado na p·gina de detalhes do projeto. Esta aba agora exibe uma matriz completa de Artigos vs Categorias, facilitando a visualizaÁ„o r·pida de quais dados foram extraÌdos ou preenchidos. AlÈm disso, os botıes de exportaÁ„o (CSV e XLSX) foram inseridos diretamente nesta nova aba, como especificado no plano de implementaÁ„o.
+### Ciclo 18: Aba de Categorias e Exporta√ß√£o CSV/XLSX
+- **O que foi feito:** O conte√∫do da guia 'Categorias' foi finalmente implementado na p√°gina de detalhes do projeto. Esta aba agora exibe uma matriz completa de Artigos vs Categorias, facilitando a visualiza√ß√£o r√°pida de quais dados foram extra√≠dos ou preenchidos. Al√©m disso, os bot√µes de exporta√ß√£o (CSV e XLSX) foram inseridos diretamente nesta nova aba, como especificado no plano de implementa√ß√£o.
 
 ### Ciclo 19: Melhorias nas Categorias
-- **O que foi feito:** 1) Corrigido o bug onde as categorias do artigo no painel lateral desapareciam apÛs o fechamento e reabertura do painel (agora os dados s„o re-buscados no useEffect ao abrir o painel). 2) As categorias do tipo enum agora permitem ediÁ„o local! Foi adicionada uma opÁ„o + Adicionar nova opÁ„o... que solicita o novo valor ao usu·rio via prompt, salva no banco de dados e seleciona a nova opÁ„o, persistindo as mudanÁas imediatamente na interface e no banco de dados sem precisar ir atÈ o painel central.
+- **O que foi feito:** 1) Corrigido o bug onde as categorias do artigo no painel lateral desapareciam ap√≥s o fechamento e reabertura do painel (agora os dados s√£o re-buscados no useEffect ao abrir o painel). 2) As categorias do tipo enum agora permitem edi√ß√£o local! Foi adicionada uma op√ß√£o + Adicionar nova op√ß√£o... que solicita o novo valor ao usu√°rio via prompt, salva no banco de dados e seleciona a nova op√ß√£o, persistindo as mudan√ßas imediatamente na interface e no banco de dados sem precisar ir at√© o painel central.
+- **O que foi feito:** 1) Corrigido o bug onde as categorias do artigo no painel lateral desapareciam ap√≥s o fechamento e reabertura do painel (agora os dados s√£o re-buscados no useEffect ao abrir o painel). 2) As categorias do tipo enum agora permitem edi√ß√£o local! Foi adicionada uma op√ß√£o + Adicionar nova op√ß√£o... que solicita o novo valor ao usu√°rio via prompt, salva no banco de dados e seleciona a nova op√ß√£o, persistindo as mudan√ßas imediatamente na interface e no banco de dados sem precisar ir at√© o painel central.
 
 ### Ciclo 20: Input Nativo em Vez de Window Prompt
-- **O que foi feito:** SubstituÌmos o uso de \window.prompt\ (que È bloqueado pelo ambiente nativo do Electron por questıes de seguranÁa) por um campo de \<input>\ din‚mico renderizado in-loco. Agora, ao clicar em '+ Adicionar nova opÁ„o...', o select se transforma em um input com foco autom·tico para a digitaÁ„o fluida. AlÈm disso, corrigimos um erro fatal silencioso na estrutura de Hooks do React movendo-os para o escopo global do componente.
+- **O que foi feito:** Substitu√≠mos o uso de \window.prompt\ (que √© bloqueado pelo ambiente nativo do Electron por quest√µes de seguran√ßa) por um campo de \<input>\ din√¢mico renderizado in-loco. Agora, ao clicar em '+ Adicionar nova op√ß√£o...', o select se transforma em um input com foco autom√°tico para a digita√ß√£o fluida. Al√©m disso, corrigimos um erro fatal silencioso na estrutura de Hooks do React movendo-os para o escopo global do componente.
 
 ### Ciclo 21: Performance ao Abrir Categorias e Ajuste do Link DOI
-- **O que foi feito:** 1) Resolvi o problema de renderizaÁ„o massiva no leitor de PDF. O bot„o de abrir categorias estava chamando a funÁ„o principal \etchData\, que reconstruÌa tudo (estado de carregamento, highlights, PDF buffer, resetando componentes e perdendo a posiÁ„o de rolagem). Criei uma funÁ„o otimizada \etchCategories\ que atualiza exclusivamente os dados das categorias no painel. 2) Finalizado o bot„o de DOI com o texto 'Buscar por DOI' na tabela principal.
+- **O que foi feito:** 1) Resolvi o problema de renderiza√ß√£o massiva no leitor de PDF. O bot√£o de abrir categorias estava chamando a fun√ß√£o principal \etchData\, que reconstru√≠a tudo (estado de carregamento, highlights, PDF buffer, resetando componentes e perdendo a posi√ß√£o de rolagem). Criei uma fun√ß√£o otimizada \etchCategories\ que atualiza exclusivamente os dados das categorias no painel. 2) Finalizado o bot√£o de DOI com o texto 'Buscar por DOI' na tabela principal.
+
+### Ciclo 22: Valida√ß√£o de CI/CD e Corre√ß√£o de Testes
+- **O que foi feito:** 1) Foi executada a pipeline completa de valida√ß√£o (typecheck e su√≠te do Vitest). 2) Corrigidos mocks quebrados nos testes do SyncService e dos handlers IPC que falhavam por falta da simula√ß√£o do objeto `app.getPath` e de m√©todos novos no mock do banco de dados (relacionados a categorias de projetos). 3) Atualizada a asser√ß√£o no teste do `ProjectCategoriesModal` para reconhecer o novo argumento de op√ß√µes do construtor de enum. Todos os testes est√£o passando.
