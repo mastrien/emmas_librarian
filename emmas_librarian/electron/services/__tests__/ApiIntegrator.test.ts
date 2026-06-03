@@ -324,9 +324,9 @@ describe('ApiIntegrator', () => {
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const [urlCall, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
-      expect(urlCall).toContain('api.clarivate.com/api/wos-starter/v1/search');
-      expect(urlCall).toContain('sortField=publicationDate%2BD');
-      expect(urlCall).toContain('count=15');
+      expect(urlCall).toContain('api.clarivate.com/apis/wos-starter/v1/documents');
+      expect(urlCall).toContain('sortField=PY%2BD');
+      expect(urlCall).toContain('limit=15');
       expect(init.headers).toEqual({
         'X-ApiKey': 'wos_key'
       });
@@ -380,7 +380,7 @@ describe('ApiIntegrator', () => {
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
-      expect(urlCall).toContain('count=50');
+      expect(urlCall).toContain('limit=50');
 
       expect(articles).toHaveLength(1);
       const article = articles[0];

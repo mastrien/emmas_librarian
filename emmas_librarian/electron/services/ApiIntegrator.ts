@@ -4,7 +4,7 @@ export class ApiIntegrator {
   private OPENALEX_URL = "https://api.openalex.org/works";
   private CROSSREF_URL = "https://api.crossref.org/works";
   private SCOPUS_URL = "https://api.elsevier.com/content/search/scopus";
-  private WOS_URL = "https://api.clarivate.com/api/wos-starter/v1/search";
+  private WOS_URL = "https://api.clarivate.com/apis/wos-starter/v1/documents";
 
   async searchOpenAlex(filterStr: string, sortBy: 'relevance' | 'citations' | 'date', limit: number = 50): Promise<NormalizedArticle[]> {
     try {
@@ -104,15 +104,14 @@ export class ApiIntegrator {
     if (!apiKey) return [];
     try {
       const url = new URL(this.WOS_URL);
-      url.searchParams.append("dbId", "WOK");
-      url.searchParams.append("usrQuery", queryStr);
-      url.searchParams.append("count", String(Math.min(limit, 100))); // WoS Starter max is 100
-      url.searchParams.append("firstRecord", "1");
+      url.searchParams.append("q", queryStr);
+      url.searchParams.append("limit", String(Math.min(limit, 50)));
+      url.searchParams.append("page", "1");
       
-      // Starter API sorting: relevance, timesCited, publicationDate
-      if (sortBy === 'citations') url.searchParams.append("sortField", "timesCited+D");
-      else if (sortBy === 'date') url.searchParams.append("sortField", "publicationDate+D");
-      else url.searchParams.append("sortField", "relevance");
+      // Starter API sorting: Field+Direction
+      if (sortBy === 'citations') url.searchParams.append("sortField", "TS+D");
+      else if (sortBy === 'date') url.searchParams.append("sortField", "PY+D");
+      else url.searchParams.append("sortField", "RS+D");
 
       const response = await fetch(url.toString(), {
         headers: { "X-ApiKey": apiKey }
