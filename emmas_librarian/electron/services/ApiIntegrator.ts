@@ -133,8 +133,21 @@ export class ApiIntegrator {
       let errorMessage = `Erro ${response.status} no Web of Science`;
       try {
         const errorData = JSON.parse(responseText);
-        errorMessage = errorData.message || errorData.error || errorData.description || errorData.details || errorMessage;
-        if (errorData.details && typeof errorData.details === 'object') {
+        const rawMessage = errorData.message || errorData.error || errorData.description || errorData.details;
+        if (rawMessage) {
+          if (typeof rawMessage === 'object') {
+            if (rawMessage.message) {
+              errorMessage = String(rawMessage.message);
+            } else if (rawMessage.error && typeof rawMessage.error === 'object' && rawMessage.error.message) {
+              errorMessage = String(rawMessage.error.message);
+            } else {
+              errorMessage = JSON.stringify(rawMessage);
+            }
+          } else {
+            errorMessage = String(rawMessage);
+          }
+        }
+        if (errorData.details && typeof errorData.details === 'object' && errorData.details !== rawMessage) {
           errorMessage += `: ${JSON.stringify(errorData.details)}`;
         }
       } catch {

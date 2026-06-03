@@ -389,5 +389,52 @@ describe('ApiIntegrator', () => {
       const article = articles[0];
       expect(article.authorKeywords).toBeUndefined();
     });
+
+    it('handles nested WoS JSON error structures gracefully', async () => {
+      // Test case 1: error object with message
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: async () => JSON.stringify({
+          error: {
+            message: 'Ocorreu um erro na consulta do WoS'
+          }
+        })
+      } as any);
+
+      await expect(api.searchWoS('invalid_query', 'wos_key', 'relevance'))
+        .rejects.toThrow('Ocorreu um erro na consulta do WoS');
+
+      // Test case 2: raw message is object without message property
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: async () => JSON.stringify({
+          error: {
+            code: 'INVALID_QUERY',
+            reason: 'Unknown field'
+          }
+        })
+      } as any);
+
+      await expect(api.searchWoS('invalid_query', 'wos_key', 'relevance'))
+        .rejects.toThrow('{"code":"INVALID_QUERY","reason":"Unknown field"}');
+
+      // Test case 3: error details present
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: async () => JSON.stringify({
+          message: 'Bad Request',
+          details: {
+            invalidFields: ['q']
+          }
+        })
+      } as any);
+
+      await expect(api.searchWoS('invalid_query', 'wos_key', 'relevance'))
+        .rejects.toThrow('Bad Request: {"invalidFields":["q"]}');
+    });
   });
 });
+
