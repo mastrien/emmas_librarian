@@ -350,6 +350,29 @@ describe('ApiIntegrator', () => {
       expect(article.source_databases).toEqual(['Web of Science']);
     });
 
+    it('correctly maps all sort options to WoS sortField format', async () => {
+      const mockResult = { hits: [] };
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: async () => mockResult
+      } as any);
+
+      // Relevance sort
+      await api.searchWoS('TS=test', 'wos_key', 'relevance');
+      let urlCall = vi.mocked(fetch).mock.calls[vi.mocked(fetch).mock.calls.length - 1][0] as string;
+      expect(urlCall).toContain('sortField=RS%2BD');
+
+      // Citations sort
+      await api.searchWoS('TS=test', 'wos_key', 'citations');
+      urlCall = vi.mocked(fetch).mock.calls[vi.mocked(fetch).mock.calls.length - 1][0] as string;
+      expect(urlCall).toContain('sortField=TC%2BD');
+
+      // Date sort
+      await api.searchWoS('TS=test', 'wos_key', 'date');
+      urlCall = vi.mocked(fetch).mock.calls[vi.mocked(fetch).mock.calls.length - 1][0] as string;
+      expect(urlCall).toContain('sortField=PY%2BD');
+    });
+
     it('throws key invalid error on 401 response', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: false,

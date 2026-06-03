@@ -110,7 +110,7 @@ export class ApiIntegrator {
       url.searchParams.append("page", "1");
       
       // Starter API sorting: Field+Direction
-      if (sortBy === 'citations') url.searchParams.append("sortField", "TS+D");
+      if (sortBy === 'citations') url.searchParams.append("sortField", "TC+D");
       else if (sortBy === 'date') url.searchParams.append("sortField", "PY+D");
       else url.searchParams.append("sortField", "RS+D");
 
