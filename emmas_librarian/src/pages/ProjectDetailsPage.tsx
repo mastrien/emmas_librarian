@@ -952,6 +952,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const activeArticles = sortedArticles.filter(a => a.status === 'new' || !a.status);
   const readArticles = sortedArticles.filter(a => a.status === 'read');
   const archivedArticles = sortedArticles.filter(a => a.status === 'archived');
+  const nonArchivedArticles = sortedArticles.filter(a => a.status !== 'archived');
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(activeArticles.length / ITEMS_PER_PAGE));
@@ -1706,14 +1707,14 @@ export const ProjectDetailsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {activeArticles.length === 0 ? (
+                {nonArchivedArticles.length === 0 ? (
                   <tr>
                     <td colSpan={projectCategories.length + 1} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                       Nenhum artigo encontrado.
                     </td>
                   </tr>
                 ) : (
-                  activeArticles.map(article => (
+                  nonArchivedArticles.map(article => (
                     <tr key={article.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background var(--transition-fast)' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-main)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                       <td style={{ padding: '1rem 1.5rem', maxWidth: '300px' }}>
                         <div style={{ fontWeight: 600, color: 'var(--text-heading)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '0.25rem' }} title={article.title}>

@@ -29,19 +29,26 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div>
-            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--text-heading)' }}>🚀 Novas Funcionalidades</h3>
+            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.8</h3>
             <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
-              <li><strong>Categorias de Seleção Múltipla:</strong> Adicionado suporte a categorias do tipo "seleção múltipla" (multi-select), permitindo selecionar várias opções simultaneamente para classificar cada artigo.</li>
+              <li><strong>Artigos Lidos nas Categorias:</strong> Correção na tabela de categorias para exibir também os artigos marcados como lidos, e não apenas os ativos.</li>
             </ul>
           </div>
 
           <div>
-            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--text-heading)' }}>🐛 Correções de Bugs e Melhorias</h3>
+            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.7</h3>
             <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
               <li><strong>Melhoria na Ancoragem de Destaques:</strong> Nova normalização de caracteres do PDF (como ligaduras, aspas e travessões) que melhora a vinculação automática com o texto.</li>
               <li><strong>Quebras de Linha nas Anotações:</strong> Suporte completo para renderização de quebras de linha (\n) nos comentários, anotações e no popup de hover no leitor.</li>
               <li><strong>Sincronização do Diário:</strong> Resolução de inconsistências de persistência de dados e condições de corrida no diário do projeto.</li>
               <li><strong>Gerenciamento de Opções:</strong> Substituição do prompt nativo por campos de input dinâmicos na criação de opções para categorias de enum.</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.6</h3>
+            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
+              <li><strong>Categorias de Seleção Múltipla:</strong> Adicionado suporte a categorias do tipo "seleção múltipla" (multi-select), permitindo selecionar várias opções simultaneamente para classificar cada artigo.</li>
             </ul>
           </div>
 
