@@ -365,7 +365,7 @@ export const ArticleReaderPage: React.FC = () => {
             // If some couldn't be anchored, create standalone annotations so they aren't lost
             if (unanchoredHighlights && unanchoredHighlights.length > 0) {
               for (const unanchored of unanchoredHighlights) {
-                const markdown = `**[Destaque não ancorado]**\n\n**Comentário:** ${unanchored.comment}\n\n**Citação no texto:** "${unanchored.quote}"`;
+                const markdown = `[Destaque não ancorado]\n\nComentário: ${unanchored.comment}\n\nCitação no texto: "${unanchored.quote}"`;
                 await projectService.createAnnotation(parseInt(id), markdown);
                 await projectService.deletePendingHighlight(unanchored.id);
               }
@@ -866,7 +866,8 @@ export const ArticleReaderPage: React.FC = () => {
                                   maxWidth: '220px',
                                   wordBreak: 'break-word',
                                   color: 'var(--text-main)',
-                                  lineHeight: '1.4'
+                                  lineHeight: '1.4',
+                                  whiteSpace: 'pre-wrap'
                                 }}>
                                   {highlight.comment.text}
                                 </div>
@@ -1088,7 +1089,7 @@ export const ArticleReaderPage: React.FC = () => {
                                         </div>
                                       </div>
                                     ) : (
-                                      a.content_markdown
+                                      <span style={{ whiteSpace: 'pre-wrap' }}>{a.content_markdown}</span>
                                     )}
                                   </div>
                                 </div>
@@ -1153,7 +1154,7 @@ export const ArticleReaderPage: React.FC = () => {
                                     ) : (
                                       h.comment?.text && (
                                         <div style={{ color: 'var(--text-heading)', fontWeight: 500 }}>
-                                          {h.comment.text}
+                                          <span style={{ whiteSpace: 'pre-wrap' }}>{h.comment.text}</span>
                                         </div>
                                       )
                                     )}

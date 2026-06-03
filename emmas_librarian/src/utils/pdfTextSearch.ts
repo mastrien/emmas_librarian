@@ -2,6 +2,35 @@ import * as pdfjsLib from 'pdfjs-dist';
 
 import { PendingHighlight } from '../types';
 
+/**
+ * Normalizes a string to make PDF text matching more robust.
+ * PDFs often encode ligatures (ﬁ, ﬂ), em/en dashes, curly quotes,
+ * soft hyphens, and non-breaking spaces differently from what an AI
+ * would reproduce in a verbatim quote.
+ */
+function normalizePdfText(str: string): string {
+  return str
+    // Ligatures
+    .replace(/ﬁ/g, 'fi')
+    .replace(/ﬂ/g, 'fl')
+    .replace(/ﬀ/g, 'ff')
+    .replace(/ﬃ/g, 'ffi')
+    .replace(/ﬄ/g, 'ffl')
+    .replace(/ﬅ/g, 'ft')
+    .replace(/ﬆ/g, 'st')
+    // Em dash, en dash, minus sign → hyphen
+    .replace(/[\u2013\u2014\u2015\u2212]/g, '-')
+    // Curly/smart quotes → straight
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    // Non-breaking space, zero-width chars, BOM → regular space / empty
+    .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, ' ')
+    // Soft hyphen (invisible in rendered text but present in PDF byte stream)
+    .replace(/\u00AD/g, '')
+    // NFKC normalization handles accented chars encoded with combining diacritics
+    .normalize('NFKC');
+}
+
 export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights: PendingHighlight[], setStatus: (msg: string) => void) {
   if (!pendingHighlights || pendingHighlights.length === 0) return { anchoredHighlights: [], unanchoredHighlights: [] };
   
@@ -46,15 +75,17 @@ export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights:
         for (let i = 0; i < str.length; i++) {
           const char = str[i];
           if (!/\s/.test(char)) {
-            strippedText += char.toLowerCase();
+            // Normalize each character before adding to strippedText so that
+            // ligatures, dashes, and smart quotes in the PDF match what the AI quoted.
+            strippedText += normalizePdfText(char).toLowerCase();
             strippedToOriginal.push(fullText.length + i);
           }
         }
         fullText += str;
       }
       
-      let queryLower = pending.quote.toLowerCase();
-      let strippedQuery = queryLower.replace(/\s+/g, '');
+      // Normalize the AI-provided quote the same way before comparing
+      let strippedQuery = normalizePdfText(pending.quote).toLowerCase().replace(/\s+/g, '');
       
       if (!strippedQuery) continue;
 
@@ -66,10 +97,10 @@ export async function anchorPendingHighlights(pdfUrl: string, pendingHighlights:
         index += strippedQuery.length;
       }
       
-      // If multiple matches, use padding
+      // If multiple matches, use context padding to disambiguate
       if (matches.length > 1 && pending.context_before && pending.context_after) {
-        const strippedContextBefore = pending.context_before.toLowerCase().replace(/\s+/g, '');
-        const strippedContextAfter = pending.context_after.toLowerCase().replace(/\s+/g, '');
+        const strippedContextBefore = normalizePdfText(pending.context_before).toLowerCase().replace(/\s+/g, '');
+        const strippedContextAfter = normalizePdfText(pending.context_after).toLowerCase().replace(/\s+/g, '');
         const expandedQuery = strippedContextBefore + strippedQuery + strippedContextAfter;
         let expandedIndex = strippedText.indexOf(expandedQuery);
         if (expandedIndex !== -1) {

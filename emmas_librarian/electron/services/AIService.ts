@@ -211,7 +211,7 @@ ${truncatedText}
           try {
             const originalIndex = questions.findIndex(q => q === item.question);
             const questionNumber = originalIndex !== -1 ? originalIndex + 1 : "?";
-            const formattedAnswer = `**Pergunta ${questionNumber}:** ${item.question}\n\n**Resposta:** ${item.answer}`;
+            const formattedAnswer = `Pergunta ${questionNumber}: ${item.question}\n\nResposta: ${item.answer}`;
 
             this.db.savePendingHighlight(
               articleId, 

@@ -31,24 +31,17 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
           <div>
             <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--text-heading)' }}>🚀 Novas Funcionalidades</h3>
             <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
-              <li><strong>Gráficos e Estatísticas:</strong> Nova aba de estatísticas e gráficos de resumo no Dashboard.</li>
-              <li><strong>Categorização de Artigos:</strong> Sistema flexível para adicionar categorias personalizadas aos seus artigos.</li>
-              <li><strong>Exportar/Importar Projetos:</strong> Leve seus projetos para onde quiser com o novo formato `.emmapcarc`.</li>
-              <li><strong>Citações Bibliográficas:</strong> Geração automática de referências em ABNT/APA a partir dos seus artigos.</li>
-              <li><strong>Guia de Escrita:</strong> Nova seção na barra lateral com dicas de formatação.</li>
-              <li><strong>Ordenação Personalizada:</strong> Organize os artigos do projeto por data de adição, mais antigos, ou ordem alfabética.</li>
-              <li><strong>Copiar Texto do PDF:</strong> Agora você pode copiar facilmente o texto dos destaques no leitor com o botão direito.</li>
+              <li><strong>Categorias de Seleção Múltipla:</strong> Adicionado suporte a categorias do tipo "seleção múltipla" (multi-select), permitindo selecionar várias opções simultaneamente para classificar cada artigo.</li>
             </ul>
           </div>
 
           <div>
-            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--text-heading)' }}>🐛 Correções de Bugs</h3>
+            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--text-heading)' }}>🐛 Correções de Bugs e Melhorias</h3>
             <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
-              <li>Correção de crash na renderização de destaques de busca com espaços.</li>
-              <li>Fix do Zoom no Leitor de PDF que não atualizava visualmente.</li>
-              <li>Preencher com IA agora respeita campos que você já preencheu manualmente.</li>
-              <li>Erros de banco de dados ao excluir projetos com anexos foram corrigidos.</li>
-              <li>Formatação corrigida no chat de IA para quebras de linha (`\n`).</li>
+              <li><strong>Melhoria na Ancoragem de Destaques:</strong> Nova normalização de caracteres do PDF (como ligaduras, aspas e travessões) que melhora a vinculação automática com o texto.</li>
+              <li><strong>Quebras de Linha nas Anotações:</strong> Suporte completo para renderização de quebras de linha (\n) nos comentários, anotações e no popup de hover no leitor.</li>
+              <li><strong>Sincronização do Diário:</strong> Resolução de inconsistências de persistência de dados e condições de corrida no diário do projeto.</li>
+              <li><strong>Gerenciamento de Opções:</strong> Substituição do prompt nativo por campos de input dinâmicos na criação de opções para categorias de enum.</li>
             </ul>
           </div>
 
