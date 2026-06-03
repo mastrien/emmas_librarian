@@ -45,6 +45,27 @@ describe('DatabaseManager Settings & Extra', () => {
     expect(decrypted).toBe('another-secret');
   });
 
+  it('handles fallback names for scopus and wos API keys', () => {
+    // 1. Scopus: save as scopus_api_key, retrieve via api_key_scopus
+    dbManager.setSetting('scopus_api_key', 'scopus-val-1');
+    expect(dbManager.getSetting('api_key_scopus')).toBe('scopus-val-1');
+
+    // 2. Scopus: save as api_key_scopus, retrieve via scopus_api_key (if scopus_api_key deleted or not set)
+    const db = (dbManager as any).db;
+    db.prepare('DELETE FROM settings WHERE key = ?').run('scopus_api_key');
+    dbManager.setSetting('api_key_scopus', 'scopus-val-2');
+    expect(dbManager.getSetting('scopus_api_key')).toBe('scopus-val-2');
+
+    // 3. WoS: save as wos_api_key, retrieve via api_key_wos
+    dbManager.setSetting('wos_api_key', 'wos-val-1');
+    expect(dbManager.getSetting('api_key_wos')).toBe('wos-val-1');
+
+    // 4. WoS: save as api_key_wos, retrieve via wos_api_key
+    db.prepare('DELETE FROM settings WHERE key = ?').run('wos_api_key');
+    dbManager.setSetting('api_key_wos', 'wos-val-2');
+    expect(dbManager.getSetting('wos_api_key')).toBe('wos-val-2');
+  });
+
   it('manages diary entries', () => {
     const proj = dbManager.createProject('Diary Project');
     const date = '2023-10-15';

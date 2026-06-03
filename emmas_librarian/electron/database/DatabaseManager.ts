@@ -428,7 +428,22 @@ export class DatabaseManager {
 
   // Settings
   public getSetting(key: string): string | null {
-    const row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as any;
+    let row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as any;
+    if (!row) {
+      // Fallbacks for scopus and wos keys due to naming inconsistency in settings vs search
+      let fallbackKey: string | null = null;
+      if (key === 'scopus_api_key') fallbackKey = 'api_key_scopus';
+      else if (key === 'api_key_scopus') fallbackKey = 'scopus_api_key';
+      else if (key === 'wos_api_key') fallbackKey = 'api_key_wos';
+      else if (key === 'api_key_wos') fallbackKey = 'wos_api_key';
+
+      if (fallbackKey) {
+        row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(fallbackKey) as any;
+        if (row) {
+          key = fallbackKey;
+        }
+      }
+    }
     if (!row) return null;
     
     if (key.startsWith('api_key_') || key.endsWith('_api_key')) {

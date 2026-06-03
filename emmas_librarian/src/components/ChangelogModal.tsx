@@ -29,6 +29,15 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div>
+            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.9</h3>
+            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
+              <li><strong>Correção no Reconhecimento de Chaves de API:</strong> Resolvida a inconsistência de nomes nas chaves do Scopus e Web of Science entre as configurações e o motor de busca.</li>
+              <li><strong>Retrocompatibilidade de Credenciais:</strong> Adicionado suporte a fallbacks inteligentes para carregar e descriptografar de forma nativa chaves já armazenadas em qualquer convenção de nomenclatura.</li>
+              <li><strong>Garantia de Integridade:</strong> Inclusão de novos testes de regressão no banco de dados e orquestrador de chamadas de busca das APIs.</li>
+            </ul>
+          </div>
+
+          <div>
             <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.8</h3>
             <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
               <li><strong>Artigos Lidos nas Categorias:</strong> Correção na tabela de categorias para exibir também os artigos marcados como lidos, e não apenas os ativos.</li>

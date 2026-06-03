@@ -26,8 +26,8 @@ export const SettingsPage: React.FC = () => {
   useEffect(() => {
     // Load API keys from DB
     const loadKeys = async () => {
-      const sKey = await projectService.getSetting('api_key_scopus');
-      const wKey = await projectService.getSetting('api_key_wos');
+      const sKey = await projectService.getSetting('scopus_api_key');
+      const wKey = await projectService.getSetting('wos_api_key');
       const oKey = await projectService.getSetting('api_key_openai');
       const aKey = await projectService.getSetting('api_key_anthropic');
       const gKey = await projectService.getSetting('api_key_gemini');
@@ -69,8 +69,8 @@ export const SettingsPage: React.FC = () => {
 
   const handleSaveKeys = async () => {
     setSaving(true);
-    await projectService.setSetting('api_key_scopus', scopusKey);
-    await projectService.setSetting('api_key_wos', wosKey);
+    await projectService.setSetting('scopus_api_key', scopusKey);
+    await projectService.setSetting('wos_api_key', wosKey);
     await projectService.setSetting('api_key_openai', openaiKey);
     await projectService.setSetting('api_key_anthropic', anthropicKey);
     await projectService.setSetting('api_key_gemini', geminiKey);

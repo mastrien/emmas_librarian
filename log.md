@@ -1,5 +1,16 @@
 # Development Log - Emma's Librarian
 
+### Ciclo 23 [2026-06-03]: Correção de Chaves de API e Lançamento v1.1.9
+- **Objetivo:** Investigar e corrigir a falha no reconhecimento de chaves de API da Scopus e WoS após a inclusão de chaves de IA, e homologar/lançar a versão v1.1.9.
+- **Alterações:**
+  - Ajustada a gravação e leitura de chaves de API da Scopus e WoS em `SettingsPage.tsx` para usar de forma consistente os nomes `scopus_api_key` e `wos_api_key`.
+  - Implementado mecanismo de fallback transparente em `DatabaseManager.getSetting()` para aceitar tanto `scopus_api_key`/`api_key_scopus` quanto `wos_api_key`/`api_key_wos`, garantindo retrocompatibilidade com chaves criptografadas via `safeStorage` já salvas no banco de dados.
+  - Criados testes de regressão na camada do banco de dados (`DatabaseManager.extra.test.ts`) e no orquestrador (`SearchOrchestrator.test.ts`) para garantir o funcionamento contínuo do fluxo.
+  - Atualizada a versão no `package.json` e `package-lock.json` para `1.1.9`.
+  - Atualizado o componente de notas de atualização `ChangelogModal.tsx` detalhando as melhorias da versão.
+- **Testes:** Executada a pipeline estática de typecheck e suíte completa do Vitest com 100% de sucesso (85 testes passando).
+
+
 ## [2026-05-18 05:45] Cycle 13: PDF Reader Roadblocks and Diagnostics
 - **Objective:** Fix the persistent PDF viewer failures and document current state.
 - **Problem:**
