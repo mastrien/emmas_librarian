@@ -1047,7 +1047,7 @@ export const ProjectDetailsPage: React.FC = () => {
           <button onClick={() => setIsAIExtractionModalOpen(true)} className="btn-primary" title="Extração Inteligente IA">
             <Brain size={18} /> Extração IA
           </button>
-          <button onClick={() => document.getElementById('batch-pdf-upload')?.click()} className="btn-secondary" title="Importar PDFs em Lote">
+          <button onClick={handleBatchPdfImport} className="btn-secondary" title="Importar PDFs em Lote">
             <Upload size={18} /> Importar PDFs
           </button>
           <button onClick={() => setIsManualModalOpen(true)} className="btn-secondary" title="Adicionar artigo manualmente">
@@ -1510,41 +1510,41 @@ export const ProjectDetailsPage: React.FC = () => {
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-            {/* Open Access Pie */}
+            {/* Source Databases Pie */}
             <div className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <h3 style={{ margin: '0 0 1rem 0' }}>Acesso Aberto (Open Access)</h3>
+              <h3 style={{ margin: '0 0 1rem 0' }}>Bases de Dados de Origem</h3>
               <div style={{ width: '100%', height: '300px', position: 'relative' }}>
                 <Pie
-                  data={{
-                    labels: ['Open Access', 'Closed Access', 'Desconhecido'],
-                    datasets: [{
-                      data: [
-                        filteredArticles.filter(a => {
-                          let isOa = a.is_oa;
-                          if (isOa === undefined && a.csl_json) {
-                            try { const csl = typeof a.csl_json === 'string' ? JSON.parse(a.csl_json) : a.csl_json; isOa = csl.is_oa ? 1 : 0; } catch (e) {}
-                          }
-                          return isOa === 1;
-                        }).length,
-                        filteredArticles.filter(a => {
-                          let isOa = a.is_oa;
-                          if (isOa === undefined && a.csl_json) {
-                            try { const csl = typeof a.csl_json === 'string' ? JSON.parse(a.csl_json) : a.csl_json; isOa = csl.is_oa ? 1 : 0; } catch (e) {}
-                          }
-                          return isOa === 0;
-                        }).length,
-                        filteredArticles.filter(a => {
-                          let isOa = a.is_oa;
-                          if (isOa === undefined && a.csl_json) {
-                            try { const csl = typeof a.csl_json === 'string' ? JSON.parse(a.csl_json) : a.csl_json; isOa = csl.is_oa !== undefined ? (csl.is_oa ? 1 : 0) : -1; } catch (e) {}
-                          }
-                          return isOa !== 1 && isOa !== 0;
-                        }).length
-                      ],
-                      backgroundColor: ['#10b981', '#ef4444', '#9ca3af'],
-                      borderWidth: 0,
-                    }]
-                  }}
+                  data={(() => {
+                    const counts = filteredArticles.reduce((acc: Record<string, number>, art) => {
+                      let bases: string[] = [];
+                      if (art.source_databases) {
+                        try {
+                          bases = typeof art.source_databases === 'string' 
+                            ? JSON.parse(art.source_databases) 
+                            : art.source_databases;
+                        } catch (e) {
+                          bases = [art.source_databases];
+                        }
+                      }
+                      if (!bases || !Array.isArray(bases) || bases.length === 0) {
+                        bases = ['Desconhecido'];
+                      }
+                      for (const base of bases) {
+                        acc[base] = (acc[base] || 0) + 1;
+                      }
+                      return acc;
+                    }, {});
+                    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+                    return {
+                      labels: sorted.map(i => i[0]),
+                      datasets: [{
+                        data: sorted.map(i => i[1]),
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'],
+                        borderWidth: 0,
+                      }]
+                    };
+                  })()}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,

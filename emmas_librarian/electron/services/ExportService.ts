@@ -155,7 +155,7 @@ export class ExportService {
         this.escCsv(a.references_list || ''),                                  // 26 References
         this.escCsv(''),                                                       // 27 Correspondence Address
         this.escCsv(''),                                                       // 28 Editors
-        this.escCsv(''),                                                       // 29 Publisher
+        this.escCsv(a.publisher || ''),                                        // 29 Publisher
         this.escCsv(''),                                                       // 30 Sponsors
         this.escCsv(''),                                                       // 31 Conference name
         this.escCsv(''),                                                       // 32 Conference date
@@ -169,7 +169,7 @@ export class ExportService {
         this.escCsv(''),                                                       // 40 Abbreviated Source Title
         this.escCsv(a.document_type || 'Article'),                             // 41 Document Type
         this.escCsv('Final'),                                                  // 42 Publication Stage
-        this.escCsv(''),                                                       // 43 Open Access
+        this.escCsv(a.is_oa === 1 ? 'All Open Access' : ''),                   // 43 Open Access
         this.escCsv('Scopus'),                                                 // 44 Source
         this.escCsv(`2-s2.0-${a.id}`)                                          // 45 EID
       ].join(',');

@@ -24,4 +24,6 @@ export interface NormalizedArticle {
   citationCount?: number;
   source_databases: string[];
   csl_json: any;
+  is_oa?: number;
+  publisher?: string;
 }

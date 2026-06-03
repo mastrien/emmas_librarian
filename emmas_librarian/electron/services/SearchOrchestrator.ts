@@ -74,7 +74,9 @@ export class SearchOrchestrator {
         source_query: JSON.stringify(queryMap),
         source_databases: JSON.stringify(article.source_databases),
         csl_json: JSON.stringify(article.csl_json),
-        search_id: searchId
+        search_id: searchId,
+        is_oa: article.is_oa,
+        publisher: article.publisher
       });
       savedCount++;
     }

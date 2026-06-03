@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS articles (
     local_file_path TEXT,
     status TEXT DEFAULT 'new',
     archive_note TEXT,
+    is_oa INTEGER,
+    publisher TEXT,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
@@ -112,6 +114,8 @@ CREATE TABLE IF NOT EXISTS articles (
     local_file_path TEXT,
     status TEXT DEFAULT 'new',
     archive_note TEXT,
+    is_oa INTEGER,
+    publisher TEXT,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 

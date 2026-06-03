@@ -25,6 +25,8 @@ export interface ArticleInput {
   source_databases: string;
   csl_json: string;
   search_id?: number;
+  is_oa?: number;
+  publisher?: string;
 }
 
 export type HighlightWithComment = Highlight & { comment?: string };
@@ -79,9 +81,43 @@ export class DatabaseManager {
       'ALTER TABLE articles ADD COLUMN search_id INTEGER REFERENCES search_history(id) ON DELETE SET NULL',
       'ALTER TABLE articles ADD COLUMN ai_summary TEXT',
       'ALTER TABLE projects ADD COLUMN writing_pad TEXT',
+      'ALTER TABLE articles ADD COLUMN is_oa INTEGER',
+      'ALTER TABLE articles ADD COLUMN publisher TEXT',
     ];
     for (const sql of migrations) {
       try { this.db.exec(sql); } catch (e) { /* column already exists */ }
+    }
+
+    // One-time backfill of is_oa and publisher columns from csl_json for existing articles
+    try {
+      const checkBackfill = this.db.prepare("SELECT value FROM settings WHERE key = 'backfilled_is_oa_publisher'").get() as { value: string } | undefined;
+      if (!checkBackfill || checkBackfill.value !== 'true') {
+        const articlesToBackfill = this.db.prepare(`
+          SELECT id, csl_json FROM articles WHERE csl_json IS NOT NULL
+        `).all() as { id: number, csl_json: string }[];
+
+        if (articlesToBackfill.length > 0) {
+          const updateStmt = this.db.prepare(`
+            UPDATE articles SET is_oa = ?, publisher = ? WHERE id = ?
+          `);
+          
+          const transaction = this.db.transaction((items) => {
+            for (const art of items) {
+              try {
+                const csl = JSON.parse(art.csl_json);
+                let isOa = csl.is_oa !== undefined ? (csl.is_oa ? 1 : 0) : null;
+                let publisher = csl.publisher || null;
+                updateStmt.run(isOa, publisher, art.id);
+              } catch (e) {}
+            }
+          });
+          transaction(articlesToBackfill);
+        }
+        
+        this.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('backfilled_is_oa_publisher', 'true')").run();
+      }
+    } catch (err) {
+      console.error("Failed to backfill articles is_oa/publisher:", err);
     }
 
     try {
@@ -258,9 +294,9 @@ export class DatabaseManager {
   saveArticle(projectId: number, data: ArticleInput): number {
     const stmt = this.db.prepare(`
       INSERT INTO articles (project_id, doi, title, authors, year, source_query, source_databases, csl_json,
-        abstract, author_keywords, index_keywords, journal, volume, issue, pages, affiliations, references_list, document_type, issn, citation_count, search_id)
+        abstract, author_keywords, index_keywords, journal, volume, issue, pages, affiliations, references_list, document_type, issn, citation_count, search_id, is_oa, publisher)
       VALUES (@project_id, @doi, @title, @authors, @year, @source_query, @source_databases, @csl_json,
-        @abstract, @author_keywords, @index_keywords, @journal, @volume, @issue, @pages, @affiliations, @references_list, @document_type, @issn, @citation_count, @search_id)
+        @abstract, @author_keywords, @index_keywords, @journal, @volume, @issue, @pages, @affiliations, @references_list, @document_type, @issn, @citation_count, @search_id, @is_oa, @publisher)
     `);
     const info = stmt.run({
       project_id: projectId,
@@ -284,6 +320,8 @@ export class DatabaseManager {
       issn: data.issn || null,
       citation_count: data.citation_count || null,
       search_id: data.search_id || null,
+      is_oa: data.is_oa !== undefined ? data.is_oa : null,
+      publisher: data.publisher || null,
     });
     return info.lastInsertRowid as number;
   }

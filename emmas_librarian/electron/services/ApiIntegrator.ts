@@ -233,13 +233,18 @@ export class ApiIntegrator {
     const issn = raw.primary_location?.source?.issn_l;
     const citationCount = raw.cited_by_count;
     
+    const isOa = raw.open_access?.is_oa ? 1 : 0;
+    const publisher = raw.primary_location?.source?.host_organization_name || raw.primary_location?.source?.publisher || undefined;
+
     const cslJson = {
       id: raw.id,
       type: "article-journal",
       title: raw.title,
       DOI: doi,
       issued: { "date-parts": [[year]] },
-      author: authors
+      author: authors,
+      is_oa: isOa,
+      publisher: publisher
     };
 
     return {
@@ -260,7 +265,9 @@ export class ApiIntegrator {
       issn,
       citationCount,
       source_databases: ["OpenAlex"],
-      csl_json: cslJson
+      csl_json: cslJson,
+      is_oa: isOa,
+      publisher: publisher
     };
   }
 
@@ -304,13 +311,16 @@ export class ApiIntegrator {
     const issn = raw.ISSN?.[0];
     const citationCount = raw['is-referenced-by-count'];
     
+    const publisher = raw.publisher || undefined;
+
     const cslJson = {
       id: raw.DOI,
       type: "article-journal",
       title: title,
       DOI: raw.DOI,
       issued: raw.issued,
-      author: raw.author || []
+      author: raw.author || [],
+      publisher: publisher
     };
 
     return {
@@ -330,7 +340,8 @@ export class ApiIntegrator {
       issn,
       citationCount,
       source_databases: ["Crossref"],
-      csl_json: cslJson
+      csl_json: cslJson,
+      publisher: publisher
     };
   }
 
@@ -352,6 +363,19 @@ export class ApiIntegrator {
     const citationCount = citedByRaw != null ? parseInt(citedByRaw, 10) : undefined;
     const issn = raw['prism:issn'] || undefined;
 
+    const isOa = raw.openaccess === '1' || raw.openaccess === 1 || raw.openaccess === 'true' || raw.openaccess === true ? 1 : 0;
+
+    const cslJson = {
+      id: doi || raw["dc:identifier"],
+      type: "article-journal",
+      title,
+      DOI: doi,
+      issued: year ? { "date-parts": [[year]] } : undefined,
+      author: [{ family: authors }],
+      is_oa: isOa,
+      publisher: undefined
+    };
+
     return {
       doi,
       title,
@@ -367,14 +391,9 @@ export class ApiIntegrator {
       citationCount,
       issn,
       source_databases: ["Scopus"],
-      csl_json: {
-        id: doi || raw["dc:identifier"],
-        type: "article-journal",
-        title,
-        DOI: doi,
-        issued: year ? { "date-parts": [[year]] } : undefined,
-        author: [{ family: authors }]
-      }
+      csl_json: cslJson,
+      is_oa: isOa,
+      publisher: undefined
     };
   }
 
@@ -395,6 +414,17 @@ export class ApiIntegrator {
     const documentType = raw.doctype || raw.source?.documentType || undefined;
     const citationCount = raw.citations?.length ?? raw.citationCount ?? undefined;
 
+    const cslJson = {
+      id: doi || raw.uid,
+      type: "article-journal",
+      title,
+      DOI: doi,
+      issued: year ? { "date-parts": [[year]] } : undefined,
+      author: (raw.names?.authors || []).map((a: any) => ({ family: a.displayName })),
+      is_oa: undefined,
+      publisher: undefined
+    };
+
     return {
       doi,
       title,
@@ -409,14 +439,9 @@ export class ApiIntegrator {
       documentType,
       citationCount,
       source_databases: ["Web of Science"],
-      csl_json: {
-        id: doi || raw.uid,
-        type: "article-journal",
-        title,
-        DOI: doi,
-        issued: year ? { "date-parts": [[year]] } : undefined,
-        author: (raw.names?.authors || []).map((a: any) => ({ family: a.displayName }))
-      }
+      csl_json: cslJson,
+      is_oa: undefined,
+      publisher: undefined
     };
   }
 }

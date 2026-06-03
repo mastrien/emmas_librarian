@@ -61,6 +61,8 @@ export interface Article {
   status: 'new' | 'read' | 'archived';
   search_id?: number;
   ai_summary?: string;
+  is_oa?: number;
+  publisher?: string;
 }
 
 export interface ProjectDocument {
