@@ -300,12 +300,43 @@ const AIExtractionModal = ({
 }: any) => {
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [savedPresets, setSavedPresets] = useState<{name: string, questions: string[]}[]>([]);
 
   useEffect(() => {
     if (isOpen && !isExtracting && aiExtractionResults.length === 0) {
       setSelectedIds(articlesWithPdf.map((a: any) => a.id));
     }
+    if (isOpen) {
+      projectService.getSetting('saved_ai_questions').then(val => {
+        if (val) {
+          try {
+            setSavedPresets(JSON.parse(val));
+          } catch(e){}
+        }
+      });
+    }
   }, [isOpen]); // Only run when modal is opened, avoid resetting when typing
+
+  const handleSavePreset = () => {
+    const name = prompt('Digite um nome para este conjunto de perguntas:');
+    if (name && name.trim()) {
+      const validQuestions = aiQuestions.filter((q: string) => q.trim().length > 0);
+      if (validQuestions.length === 0) {
+        alert('Não há perguntas válidas para salvar.');
+        return;
+      }
+      const newPresets = [...savedPresets, { name: name.trim(), questions: validQuestions }];
+      setSavedPresets(newPresets);
+      projectService.setSetting('saved_ai_questions', JSON.stringify(newPresets));
+    }
+  };
+
+  const handleDeletePreset = (idx: number) => {
+    if (!confirm('Deseja realmente excluir este conjunto salvo?')) return;
+    const newPresets = savedPresets.filter((_, i) => i !== idx);
+    setSavedPresets(newPresets);
+    projectService.setSetting('saved_ai_questions', JSON.stringify(newPresets));
+  };
 
   if (!isOpen) return null;
 
@@ -385,6 +416,41 @@ const AIExtractionModal = ({
                   </ul>
                 ) : (
                   <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>Perguntas de Investigação:</label>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        {savedPresets.length > 0 && (
+                          <select 
+                            onChange={(e) => {
+                              if (e.target.value !== '') {
+                                setAiQuestions(savedPresets[parseInt(e.target.value)].questions);
+                                e.target.value = '';
+                              }
+                            }}
+                            className="form-input"
+                            style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', width: '150px' }}
+                          >
+                            <option value="">Carregar Salvo...</option>
+                            {savedPresets.map((p, idx) => (
+                              <option key={idx} value={idx}>{p.name}</option>
+                            ))}
+                          </select>
+                        )}
+                        <button type="button" onClick={handleSavePreset} className="btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem' }}>Salvar Conjunto</button>
+                      </div>
+                    </div>
+
+                    {savedPresets.length > 0 && (
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                        {savedPresets.map((p, idx) => (
+                          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '0.2rem 0.4rem', fontSize: '0.75rem' }}>
+                            <span>{p.name}</span>
+                            <button onClick={() => handleDeletePreset(idx)} style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 0.2rem' }}>&times;</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     {aiQuestions.map((q: string, idx: number) => (
                       <div key={idx} style={{ display: 'flex', gap: '0.5rem' }}>
                         <input 
@@ -997,10 +1063,10 @@ export const ProjectDetailsPage: React.FC = () => {
             <Download size={18} /> .emmapcarc
           </button>
           <Link to={`/projects/${project.id}/search`} className="btn-primary">
-            <Search size={18} /> Nova Busca
+            <Search size={18} /> Nova busca
           </Link>
           <button onClick={() => setIsCategoriesModalOpen(true)} className="btn-secondary" title="Gerenciar categorias de artigos">
-            <Tag size={18} /> Categorias
+            <Tag size={18} /> Criar categorias
           </button>
         </div>
 
@@ -1230,6 +1296,7 @@ export const ProjectDetailsPage: React.FC = () => {
                 <tr style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>TÍTULO</th>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>AUTORES</th>
+                  <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>BASES</th>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>AÇÕES</th>
                 </tr>
               </thead>
@@ -1249,6 +1316,30 @@ export const ProjectDetailsPage: React.FC = () => {
                         <Calendar size={14} color="var(--text-muted)" /> {article.year || 'N/A'}
                       </div>
                       {article.authors}
+                    </td>
+                    <td style={{ padding: '1.25rem 1.5rem' }}>
+                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        {article.source_databases ? (
+                          JSON.parse(article.source_databases as string).map((base: string) => {
+                            const isManual = base === 'Manual';
+                            return (
+                              <span key={base} style={{ 
+                                padding: '0.2rem 0.6rem', 
+                                background: isManual ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-surface)', 
+                                border: isManual ? '1px solid var(--color-danger)' : '1px solid var(--border-color)',
+                                borderRadius: 'var(--radius-xl)', 
+                                fontSize: '0.75rem', 
+                                fontWeight: 600,
+                                color: isManual ? 'var(--color-danger)' : 'var(--color-primary)'
+                              }} title={isManual ? "Metadados adicionados manualmente (podem conter erros)" : undefined}>
+                                {isManual ? '⚠️ Manual' : base}
+                              </span>
+                            );
+                          })
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>-</span>
+                        )}
+                      </div>
                     </td>
                     <td style={{ padding: '1.25rem 1.5rem' }}>
                       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>

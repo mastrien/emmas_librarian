@@ -12,7 +12,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
   const [value, setValue] = useState(initialValue);
   const [isEditing, setIsEditing] = useState(false);
 
-  const initialOptions = category.type === 'enum' && category.options ? category.options.split(',').map(o => o.trim()) : [];
+  const initialOptions = (category.type === 'enum' || category.type === 'multiselect') && category.options ? category.options.split(',').map(o => o.trim()) : [];
   const [localOptions, setLocalOptions] = useState(initialOptions);
   const [isAddingNewOption, setIsAddingNewOption] = useState(false);
   const [newOptionValue, setNewOptionValue] = useState('');
@@ -129,6 +129,146 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
         ))}
         <option value="__ADD_NEW__">+ Adicionar nova opção...</option>
       </select>
+    );
+  }
+
+  if (category.type === 'multiselect') {
+    const selectedValues = value ? value.split(',').map(v => v.trim()).filter(Boolean) : [];
+
+    const saveWithoutClosing = async (newValue: string) => {
+      setValue(newValue);
+      try {
+        await projectService.setArticleCategory(articleId, category.id, newValue);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const handleToggleOption = (opt: string) => {
+      let newSelected;
+      if (selectedValues.includes(opt)) {
+        newSelected = selectedValues.filter(v => v !== opt);
+      } else {
+        newSelected = [...selectedValues, opt];
+      }
+      saveWithoutClosing(newSelected.join(', '));
+    };
+
+    const saveNewOptionMultiselect = async () => {
+      if (newOptionValue && newOptionValue.trim()) {
+        const trimmed = newOptionValue.trim();
+        if (!localOptions.includes(trimmed)) {
+          const updatedOptions = [...localOptions, trimmed].join(', ');
+          try {
+            await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions);
+            setLocalOptions([...localOptions, trimmed]);
+            
+            const newSelected = [...selectedValues, trimmed];
+            saveWithoutClosing(newSelected.join(', '));
+          } catch (err) {
+            console.error(err);
+            alert('Erro ao adicionar opção.');
+          }
+        } else {
+          if (!selectedValues.includes(trimmed)) {
+            saveWithoutClosing([...selectedValues, trimmed].join(', '));
+          }
+        }
+      }
+      setIsAddingNewOption(false);
+      setNewOptionValue('');
+    };
+
+    if (isAddingNewOption) {
+      return (
+        <input
+          autoFocus
+          value={newOptionValue}
+          onChange={(e) => setNewOptionValue(e.target.value)}
+          onBlur={saveNewOptionMultiselect}
+          placeholder="Nova opção..."
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') saveNewOptionMultiselect();
+            if (e.key === 'Escape') setIsAddingNewOption(false);
+          }}
+          style={{
+            background: 'var(--bg-surface)',
+            color: 'var(--text-main)',
+            border: '1px solid var(--color-primary)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '0.2rem 0.5rem',
+            fontSize: '0.85rem',
+            width: '120px'
+          }}
+        />
+      );
+    }
+
+    if (isEditing) {
+      const optionsToRender = [...localOptions];
+      selectedValues.forEach(val => {
+        if (!optionsToRender.includes(val)) {
+          optionsToRender.push(val);
+        }
+      });
+
+      return (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.3rem',
+          background: 'var(--bg-surface)',
+          padding: '0.5rem',
+          borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--color-primary)',
+          minWidth: '140px'
+        }}>
+          {optionsToRender.map((opt, idx) => (
+            <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+              <input 
+                type="checkbox" 
+                checked={selectedValues.includes(opt)}
+                onChange={() => handleToggleOption(opt)}
+                style={{ margin: 0 }}
+              />
+              {opt}
+            </label>
+          ))}
+          <div 
+            style={{ fontSize: '0.8rem', color: 'var(--color-primary)', cursor: 'pointer', marginTop: '0.2rem' }}
+            onClick={() => { setIsAddingNewOption(true); setNewOptionValue(''); }}
+          >
+            + Adicionar nova...
+          </div>
+          <div 
+            style={{ fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer', textAlign: 'center', marginTop: '0.4rem', paddingTop: '0.4rem', borderTop: '1px solid var(--border-color)' }}
+            onClick={() => setIsEditing(false)}
+          >
+            Concluir
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div 
+        onClick={() => setIsEditing(true)}
+        style={{
+          cursor: 'pointer',
+          minHeight: '20px',
+          minWidth: '60px',
+          display: 'inline-block',
+          fontSize: '0.85rem',
+          padding: '0.2rem 0.5rem',
+          borderRadius: 'var(--radius-sm)',
+          background: selectedValues.length > 0 ? 'var(--bg-surface)' : 'transparent',
+          border: selectedValues.length > 0 ? '1px solid var(--border-color)' : '1px dashed var(--border-color)',
+          color: selectedValues.length > 0 ? 'var(--text-main)' : 'var(--text-muted)',
+          wordBreak: 'break-word'
+        }}
+      >
+        {selectedValues.length > 0 ? selectedValues.join(', ') : 'Adicionar'}
+      </div>
     );
   }
 

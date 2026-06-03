@@ -5,13 +5,76 @@ import { CitationModal } from '../components/CitationModal';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { 
-  PdfLoader, 
-  PdfHighlighter, 
-  Highlight, 
-  Popup, 
-  AreaHighlight 
-} from 'react-pdf-highlighter';
+import { PdfLoader, PdfHighlighter, Highlight, Popup, AreaHighlight } from 'react-pdf-highlighter';
+
+const TipContent = ({ position, content, hideTipAndSelection, addHighlight }: any) => {
+  const [color, setColor] = useState('yellow');
+  const [text, setText] = useState('');
+  
+  return (
+    <div className="card fade-in" style={{ 
+      padding: '1rem', 
+      width: '240px',
+      border: '1px solid var(--border-color)',
+      boxShadow: 'var(--shadow-lg)'
+    }}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', justifyContent: 'center' }}>
+        {['yellow', 'lightgreen', 'lightblue', 'lightpink', 'plum'].map(c => (
+          <button 
+            key={c}
+            onClick={() => setColor(c)}
+            style={{ 
+              width: '24px', height: '24px', borderRadius: '50%', border: color === c ? '2px solid var(--color-primary)' : '2px solid transparent',
+              backgroundColor: c, cursor: 'pointer', padding: 0
+            }}
+          />
+        ))}
+      </div>
+      <textarea 
+        placeholder="Adicionar nota (opcional)..." 
+        value={text}
+        onChange={e => setText(e.target.value)}
+        style={{ 
+          width: '100%', 
+          height: '70px', 
+          marginBottom: '0.75rem', 
+          display: 'block',
+          padding: '0.6rem',
+          borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--border-color)',
+          background: 'var(--bg-main)',
+          color: 'var(--text-main)',
+          fontSize: '0.85rem',
+          outline: 'none',
+          resize: 'none',
+          transition: 'border-color var(--transition-fast)'
+        }}
+        onFocus={(e) => e.currentTarget.style.borderColor = 'var(--color-primary)'}
+        onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+      />
+      <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <button 
+          onClick={() => {
+            addHighlight({ content, position, comment: { text }, color });
+            hideTipAndSelection();
+          }}
+          className="btn-primary"
+          style={{ flexGrow: 1, padding: '0.5rem', fontSize: '0.85rem' }}
+        >
+          Destacar
+        </button>
+        <button 
+          onClick={hideTipAndSelection}
+          className="btn-secondary"
+          style={{ padding: '0.5rem', fontSize: '0.85rem' }}
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+};
+
 import 'react-pdf-highlighter/dist/style/AreaHighlight.css';
 import 'react-pdf-highlighter/dist/style/Highlight.css';
 import 'react-pdf-highlighter/dist/style/MouseSelection.css';
@@ -254,6 +317,7 @@ export const ArticleReaderPage: React.FC = () => {
         position: h.position_data,
         content: { text: h.content_text || h.comment || '' },
         comment: { text: h.comment || '', emoji: '' },
+        color: h.color || 'yellow',
         annotation_id: h.annotation_id
       })));
       if (artData.local_file_path) {
@@ -294,6 +358,7 @@ export const ArticleReaderPage: React.FC = () => {
                 position: h.position_data,
                 content: { text: h.content_text || h.comment || '' },
                 comment: { text: h.comment || '', emoji: '' },
+                color: h.color || 'yellow',
                 annotation_id: h.annotation_id
               })));
             }
@@ -514,7 +579,7 @@ export const ArticleReaderPage: React.FC = () => {
     try {
       const response = await projectService.createHighlight(
         parseInt(id),
-        'yellow',
+        highlight.color || 'yellow',
         highlight.position,
         highlight.content.text,
         highlight.comment.text
@@ -598,56 +663,7 @@ export const ArticleReaderPage: React.FC = () => {
     content: any,
     hideTipAndSelection: () => void
   ) => {
-    return (
-      <div className="card fade-in" style={{ 
-        padding: '1rem', 
-        width: '240px',
-        border: '1px solid var(--border-color)',
-        boxShadow: 'var(--shadow-lg)'
-      }}>
-        <textarea 
-          id="tip-textarea"
-          placeholder="Adicionar nota (opcional)..." 
-          style={{ 
-            width: '100%', 
-            height: '70px', 
-            marginBottom: '0.75rem', 
-            display: 'block',
-            padding: '0.6rem',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border-color)',
-            background: 'var(--bg-main)',
-            color: 'var(--text-main)',
-            fontSize: '0.85rem',
-            outline: 'none',
-            resize: 'none',
-            transition: 'border-color var(--transition-fast)'
-          }}
-          onFocus={(e) => e.currentTarget.style.borderColor = 'var(--color-primary)'}
-          onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
-        />
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button 
-            onClick={() => {
-              const textarea = document.getElementById('tip-textarea') as HTMLTextAreaElement;
-              addHighlight({ content, position, comment: { text: textarea.value } });
-              hideTipAndSelection();
-            }}
-            className="btn-primary"
-            style={{ flexGrow: 1, padding: '0.5rem', fontSize: '0.85rem' }}
-          >
-            Destacar
-          </button>
-          <button 
-            onClick={hideTipAndSelection}
-            className="btn-secondary"
-            style={{ padding: '0.5rem', fontSize: '0.85rem' }}
-          >
-            Cancelar
-          </button>
-        </div>
-      </div>
-    );
+    return <TipContent position={position} content={content} hideTipAndSelection={hideTipAndSelection} addHighlight={addHighlight} />;
   };
 
   return (
@@ -803,18 +819,22 @@ export const ArticleReaderPage: React.FC = () => {
                       ) => {
                         const isTextHighlight = !Boolean(highlight.content && highlight.content.image);
 
-                        const component = isTextHighlight ? (
-                          <Highlight
-                            isScrolledTo={isScrolledTo}
-                            position={highlight.position}
-                            comment={highlight.comment}
-                          />
-                        ) : (
-                          <AreaHighlight
-                            isScrolledTo={isScrolledTo}
-                            highlight={highlight}
-                            onChange={() => {}}
-                          />
+                        const component = (
+                          <div className={`custom-highlight custom-highlight-${highlight.color || 'yellow'}`}>
+                            {isTextHighlight ? (
+                              <Highlight
+                                isScrolledTo={isScrolledTo}
+                                position={highlight.position}
+                                comment={highlight.comment}
+                              />
+                            ) : (
+                              <AreaHighlight
+                                isScrolledTo={isScrolledTo}
+                                highlight={highlight}
+                                onChange={() => {}}
+                              />
+                            )}
+                          </div>
                         );
 
                         const handleContextMenu = (e: React.MouseEvent) => {

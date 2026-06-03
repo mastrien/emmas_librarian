@@ -32,12 +32,49 @@ export function generateCitation(article: any, style: CitationStyle = 'abnt', fo
       data.issued = { 'date-parts': [[article.year]] };
     }
 
-    if (article.doi) {
-      data.DOI = article.doi.trim();
+    if (article.doi !== undefined) {
+      data.DOI = article.doi ? article.doi.trim() : '';
     }
 
-    // Try to use csl_json if present
-    const finalData = article.csl_json ? JSON.parse(article.csl_json) : data;
+    if (article.journal !== undefined) {
+      data['container-title'] = article.journal ? article.journal.trim() : '';
+    }
+
+    if (article.volume !== undefined) {
+      data.volume = article.volume ? article.volume.trim() : '';
+    }
+
+    if (article.issue !== undefined) {
+      data.issue = article.issue ? article.issue.trim() : '';
+    }
+
+    if (article.page !== undefined) {
+      data.page = article.page ? article.page.trim() : '';
+    }
+
+    if (article.url !== undefined) {
+      data.URL = article.url ? article.url.trim() : '';
+    }
+
+    if (article.accessed) {
+      const parts = article.accessed.split('-');
+      if (parts.length === 3) {
+        data.accessed = { 'date-parts': [[parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2])]] };
+      }
+    } else if (article.accessed === '') {
+      data.accessed = undefined;
+    }
+
+    // Try to use csl_json if present, merging with our explicit data so manual edits take precedence
+    let finalData = data;
+    if (article.csl_json) {
+      try {
+        const cslData = JSON.parse(article.csl_json);
+        finalData = { ...cslData, ...data };
+      } catch (e) {
+        console.error('Failed to parse csl_json', e);
+      }
+    }
 
     const cite = new Cite(finalData);
 

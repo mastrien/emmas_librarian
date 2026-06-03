@@ -18,12 +18,6 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
   const [newCatOptions, setNewCatOptions] = useState('');
   const [adding, setAdding] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadCategories();
-    }
-  }, [isOpen, projectId]);
-
   const loadCategories = async () => {
     setLoading(true);
     try {
@@ -35,6 +29,13 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadCategories();
+    }
+  }, [isOpen, projectId]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,12 +102,13 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
               <option value="text">Texto</option>
               <option value="boolean">Sim/Não</option>
               <option value="enum">Lista de Opções</option>
+              <option value="multiselect">Múltipla Escolha</option>
             </select>
             <button type="submit" className="btn-primary" disabled={adding || !newCatName.trim()} style={{ padding: '0.5rem' }}>
               {adding ? <Loader2 size={20} className="spin" /> : <Plus size={20} />}
             </button>
           </div>
-          {newCatType === 'enum' && (
+          {(newCatType === 'enum' || newCatType === 'multiselect') && (
             <input 
               type="text" 
               className="input-field" 
@@ -131,7 +133,7 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
               <div key={cat.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
                 <div>
                   <div style={{ fontWeight: 500, color: 'var(--text-heading)' }}>{cat.name}</div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Tipo: {cat.type === 'boolean' ? 'Sim/Não' : 'Texto'}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Tipo: {cat.type === 'boolean' ? 'Sim/Não' : cat.type === 'enum' ? 'Lista de Opções' : cat.type === 'multiselect' ? 'Múltipla Escolha' : 'Texto'}</div>
                 </div>
                 <button type="button" onClick={() => handleDelete(cat.id)} style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0.5rem' }} title="Excluir categoria">
                   <Trash2 size={18} />
