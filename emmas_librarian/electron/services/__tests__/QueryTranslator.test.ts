@@ -47,7 +47,7 @@ describe('QueryTranslator', () => {
 
     const result = queryTranslator.translate(ast);
     expect(result.scopus.query).toContain('(AUTH({Smith})) AND (NOT ABS("rat"))');
-    expect(result.wos.query).toContain('(AU="Smith") AND (NOT AB="rat")');
+    expect(result.wos.query).toContain('(AU="Smith") AND (NOT TS="rat")');
     expect(result.openalex.query).toContain('author.search:Smith,abstract.search:!rat');
     expect(result.crossref.isValid).toBe(false); // Crossref doesn't support NOT
   });

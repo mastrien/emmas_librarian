@@ -74,7 +74,7 @@ export class QueryTranslator {
       const fieldMap: Record<QueryField, string> = {
         all: 'TS',
         title: 'TI',
-        abstract: 'AB',
+        abstract: 'TS', // Fallback to TS (Topic) since AB (Abstract) is not supported in the Starter API
         authors: 'AU'
       };
       const field = fieldMap[node.field];

@@ -104,8 +104,10 @@ export class ApiIntegrator {
     if (!apiKey) return [];
     try {
       const url = new URL(this.WOS_URL);
+      url.searchParams.append("db", "WOS");
       url.searchParams.append("q", queryStr);
       url.searchParams.append("limit", String(Math.min(limit, 50)));
+      url.searchParams.append("databaseId", "WOS");
       url.searchParams.append("page", "1");
       
       // Starter API sorting: Field+Direction
@@ -114,7 +116,10 @@ export class ApiIntegrator {
       else url.searchParams.append("sortField", "RS+D");
 
       const response = await fetch(url.toString(), {
-        headers: { "X-ApiKey": apiKey }
+        headers: { 
+          "X-ApiKey": apiKey,
+          "Accept": "application/json"
+        }
       });
 
       if (response.ok) {
@@ -123,8 +128,21 @@ export class ApiIntegrator {
         return hits.map((item: any) => this.normalizeWoS(item));
       }
       if (response.status === 401) throw new Error("Chave de API inválida ou expirada");
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Erro ${response.status} no Web of Science`);
+      
+      const responseText = await response.text().catch(() => "");
+      let errorMessage = `Erro ${response.status} no Web of Science`;
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.message || errorData.error || errorData.description || errorData.details || errorMessage;
+        if (errorData.details && typeof errorData.details === 'object') {
+          errorMessage += `: ${JSON.stringify(errorData.details)}`;
+        }
+      } catch {
+        if (responseText) {
+          errorMessage = `${errorMessage} - ${responseText}`;
+        }
+      }
+      throw new Error(errorMessage);
     } catch (e: any) {
       console.error("WoS fetch error", e);
       throw e;
