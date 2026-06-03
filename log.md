@@ -6,6 +6,7 @@
   - Ajustada a gravação e leitura de chaves de API da Scopus e WoS em `SettingsPage.tsx` para usar de forma consistente os nomes `scopus_api_key` e `wos_api_key`.
   - Implementado mecanismo de fallback transparente em `DatabaseManager.getSetting()` para aceitar tanto `scopus_api_key`/`api_key_scopus` quanto `wos_api_key`/`api_key_wos`, garantindo retrocompatibilidade com chaves criptografadas via `safeStorage` já salvas no banco de dados.
   - Criados testes de regressão na camada do banco de dados (`DatabaseManager.extra.test.ts`) e no orquestrador (`SearchOrchestrator.test.ts`) para garantir o funcionamento contínuo do fluxo.
+  - Corrigido o erro 400 da Web of Science Starter API mapeando o campo `abstract` para o tag `TS` (uma vez que o Starter API não aceita o tag de busca direta de abstract `AB`), adicionando os parâmetros de identificação obrigatórios `db=WOS` e `databaseId=WOS`, inserindo o cabeçalho `"Accept": "application/json"`, e otimizando o extrator de mensagens de erro detalhadas.
   - Atualizada a versão no `package.json` e `package-lock.json` para `1.1.9`.
   - Atualizado o componente de notas de atualização `ChangelogModal.tsx` detalhando as melhorias da versão.
 - **Testes:** Executada a pipeline estática de typecheck e suíte completa do Vitest com 100% de sucesso (85 testes passando).
