@@ -326,7 +326,6 @@ describe('ApiIntegrator', () => {
       const [urlCall, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
       expect(urlCall).toContain('api.clarivate.com/apis/wos-starter/v1/documents');
       expect(urlCall).toContain('db=WOS');
-      expect(urlCall).toContain('databaseId=WOS');
       expect(urlCall).toContain('sortField=PY%2BD');
       expect(urlCall).toContain('limit=15');
       expect(init.headers).toEqual({

@@ -107,7 +107,6 @@ export class ApiIntegrator {
       url.searchParams.append("db", "WOS");
       url.searchParams.append("q", queryStr);
       url.searchParams.append("limit", String(Math.min(limit, 50)));
-      url.searchParams.append("databaseId", "WOS");
       url.searchParams.append("page", "1");
       
       // Starter API sorting: Field+Direction
