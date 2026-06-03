@@ -62,8 +62,23 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
         abstract: abstract.trim() || undefined
       }, filePath);
       onClose();
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
+    } catch (err: any) {
+      let errorMsg = 'Erro desconhecido';
+      if (err) {
+        if (err.message) {
+          errorMsg = err.message;
+        } else if (typeof err === 'string') {
+          errorMsg = err;
+        } else if (typeof err === 'object') {
+          try {
+            errorMsg = err.error || JSON.stringify(err);
+          } catch {
+            errorMsg = String(err);
+          }
+        } else {
+          errorMsg = String(err);
+        }
+      }
       alert(`Erro ao adicionar artigo: ${errorMsg}`);
     } finally {
       setSubmitting(false);

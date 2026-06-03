@@ -18,9 +18,24 @@ export const NewProjectPage: React.FC = () => {
     try {
       const project = await projectService.createProject(name);
       navigate(`/projects/${project.id}`);
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      setError(errorMsg || 'Erro ao criar projeto');
+    } catch (err: any) {
+      let errorMsg = 'Erro ao criar projeto';
+      if (err) {
+        if (err.message) {
+          errorMsg = err.message;
+        } else if (typeof err === 'string') {
+          errorMsg = err;
+        } else if (typeof err === 'object') {
+          try {
+            errorMsg = err.error || JSON.stringify(err);
+          } catch {
+            errorMsg = String(err);
+          }
+        } else {
+          errorMsg = String(err);
+        }
+      }
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

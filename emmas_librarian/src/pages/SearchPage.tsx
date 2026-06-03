@@ -116,9 +116,25 @@ export const SearchPage: React.FC = () => {
     try {
       const res = await projectService.searchAndPersist(parseInt(id), finalQueries, limit, sortBy, astToHumanString(ast));
       setSummary(res);
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      setError(errorMsg || 'Erro ao realizar busca');
+    } catch (err: any) {
+      console.error('Search error:', err);
+      let errorMsg = 'Erro ao realizar busca';
+      if (err) {
+        if (err.message) {
+          errorMsg = err.message;
+        } else if (typeof err === 'string') {
+          errorMsg = err;
+        } else if (typeof err === 'object') {
+          try {
+            errorMsg = err.error || JSON.stringify(err);
+          } catch {
+            errorMsg = String(err);
+          }
+        } else {
+          errorMsg = String(err);
+        }
+      }
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
