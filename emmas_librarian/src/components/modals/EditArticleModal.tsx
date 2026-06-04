@@ -200,6 +200,9 @@ export const EditArticleModal = ({
                   fontFamily: 'inherit'
                 }}
               />
+              <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', lineHeight: '1.2' }}>
+                Use ponto e vírgula (;) ou vírgula (,) para separar múltiplos autores. Se usar vírgula, use nomes completos (ex: 'João Silva, Maria Souza') para evitar que nomes simples sejam lidos como um único autor.
+              </span>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Ano</label>

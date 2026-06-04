@@ -34,4 +34,44 @@ describe('citationService', () => {
     expect(cite).toContain('45');
     expect(cite).toContain('67');
   });
+
+  it('should parse comma-separated authors and apply et al. truncation appropriately', () => {
+    const article = {
+      id: 4,
+      title: 'Testing Multi Author Comma Separated',
+      authors: 'John Doe, Jane Smith, Robert Smith, Mary Williams',
+      year: 2021
+    };
+
+    // By default, abnt uses et al. for 4 or more authors
+    const citeWithEtAl = generateCitation(article, 'abnt', 'text', true);
+    expect(citeWithEtAl).toContain('DOE, John et al.');
+    expect(citeWithEtAl).not.toContain('SMITH, Jane');
+
+    // With useEtAl = false, it should list all authors
+    const citeWithoutEtAl = generateCitation(article, 'abnt', 'text', false);
+    expect(citeWithoutEtAl).toContain('DOE, John');
+    expect(citeWithoutEtAl).toContain('SMITH, Jane');
+    expect(citeWithoutEtAl).toContain('SMITH, Robert');
+    expect(citeWithoutEtAl).toContain('WILLIAMS, Mary');
+  });
+
+  it('should parse semicolon-separated authors and apply et al. truncation appropriately', () => {
+    const article = {
+      id: 5,
+      title: 'Testing Multi Author Semicolon Separated',
+      authors: 'John Doe; Jane Smith; Robert Smith; Mary Williams',
+      year: 2021
+    };
+
+    const citeWithEtAl = generateCitation(article, 'abnt', 'text', true);
+    expect(citeWithEtAl).toContain('DOE, John et al.');
+    expect(citeWithEtAl).not.toContain('SMITH, Jane');
+
+    const citeWithoutEtAl = generateCitation(article, 'abnt', 'text', false);
+    expect(citeWithoutEtAl).toContain('DOE, John');
+    expect(citeWithoutEtAl).toContain('SMITH, Jane');
+    expect(citeWithoutEtAl).toContain('SMITH, Robert');
+    expect(citeWithoutEtAl).toContain('WILLIAMS, Mary');
+  });
 });

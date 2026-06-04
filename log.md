@@ -1,5 +1,31 @@
 # Development Log - Emma's Librarian
 
+### Ciclo 32 [2026-06-04]: Opção para Ativar/Desativar "et al" em Citações com Múltiplos Autores
+- **Objetivo:** Adicionar checkbox na interface individual e em massa de citações para permitir que o usuário ative ou desative o truncamento automático de autores ("et al."), corrigindo o parser de autores para suportar strings separadas por vírgula.
+- **Alterações:**
+  - Adicionado suporte ao parâmetro `useEtAl` em `generateCitation` no [citationService.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/services/citationService.ts), gerando variantes de estilos CSL sem truncamento (ex: `abnt-no-etal`).
+  - Implementada a função robusta `parseAuthors` no [citationService.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/services/citationService.ts) para resolver e separar nomes de autores delimitados por vírgula (padrão do banco SQLite e APIs de busca) ou ponto e vírgula, garantindo que o CSL Engine identifique o número correto de autores.
+  - Adicionado o checkbox de controle no modal de citação individual [CitationModal.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/components/modals/CitationModal.tsx).
+  - Adicionado o checkbox de controle global no modal de citação em massa [MassCitationModal.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/components/modals/MassCitationModal.tsx).
+  - Adicionadas descrições instrutivas instruindo sobre a diferenciação de múltiplos autores (usando `;` ou `,` com nomes completos) abaixo dos campos de input de Autores nos modais [ManualArticleModal.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/components/modals/ManualArticleModal.tsx), [EditArticleModal.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/components/modals/EditArticleModal.tsx), [CitationModal.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/components/modals/CitationModal.tsx) e [MassCitationModal.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/components/modals/MassCitationModal.tsx).
+  - Corrigido o modal de citação em massa [MassCitationModal.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/components/modals/MassCitationModal.tsx) configurando a barra de rolagem em um container interno e ocultando o overflow externo, o que previne o transbordo da barra de rolagem nas bordas arredondadas do card do modal.
+  - Padronizada a estrutura visual e os ícones indicadores dinâmicos (`ChevronRight`/`ChevronDown` de tamanho 16) entre o accordion de "Artigos Lidos" e "Artigos Arquivados" em [ProjectDetailsPage.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/pages/ProjectDetailsPage.tsx).
+  - Adicionado estilo CSS `.custom-accordion` no [style.css](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/style.css) para ocultar o marcador nativo (`::-webkit-details-marker`) do navegador nas tags `<details>`, garantindo consistência visual.
+  - Atualizada e expandida a suíte de testes [MassCitationModal.test.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/components/__tests__/MassCitationModal.test.tsx) para validar a propagação do estado do checkbox e o mock da função de citação.
+  - Adicionados testes de unidade em [citationService.test.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/services/__tests__/citationService.test.ts) validando o parsing de múltiplos autores por vírgulas e ponto e vírgulas, além da correta alternância da regra de "et al.".
+- **Testes:** Executada a suíte completa de testes (incluindo 76 testes de frontend no Vitest) com 100% de sucesso.
+
+### Ciclo 31 [2026-06-04]: Robustez de Citações, Edição de Metadados e Citação em Massa
+- **Objetivo:** Adicionar persistência para campos ricos de citação, cópia com formatação rica no clipboard, reset de metadados padrão via CSL JSON e citação em massa.
+- **Alterações:**
+  - Adicionadas as colunas `url` e `accessed` na tabela `articles` do SQLite via migração e no esquema inicial `schema.sql`.
+  - Atualizado o método `updateArticleMetadata` e `saveArticle` no `DatabaseManager.ts` para persistir e tratar `url` e `accessed` nas citações.
+  - Atualizadas as tipagens da interface `Article` no Electron e no React.
+  - Implementada a cópia com formatação rica via `ClipboardItem` (HTML + Plain text) no botão de cópia de citação.
+  - Adicionados botões de "Salvar Metadados" e "Resetar" (usando dados extraídos do `csl_json` ou originais do banco) no `CitationModal.tsx`.
+  - Criado o componente `MassCitationModal.tsx` integrado no accordion de "Artigos Lidos" em `ProjectDetailsPage.tsx`, oferecendo suporte a filtros (estilo, exibição, ordenação), edição inline persistente de metadados, reset padrão e cópia rica em massa.
+- **Testes:** Criados testes de unidade em `DatabaseManager.test.ts` e uma suíte completa de testes no frontend `MassCitationModal.test.tsx` cobrindo todas as novas regras. Todos os 161 testes do projeto passando com 100% de sucesso.
+
 ### Ciclo 30 [2026-06-03]: Lançamento da Release v1.1.10 e Melhorias Visuais/UX
 - **Objetivo:** Homologar, corrigir bugs e lançar a versão v1.1.10.
 - **Alterações:**

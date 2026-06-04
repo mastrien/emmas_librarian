@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { generateCitation, CitationStyle, CitationOutputFormat } from '../../services/citationService';
-import { X, Copy, Check, FileText, Code, Braces, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Copy, Check, FileText, Code, Braces, ChevronDown, ChevronUp, Save, RotateCcw } from 'lucide-react';
+import { projectService } from '../../services/api';
 
 interface CitationModalProps {
   isOpen: boolean;
   onClose: () => void;
   article: any;
+  onArticleUpdated?: () => void;
 }
 
-export function CitationModal({ isOpen, onClose, article }: CitationModalProps) {
+export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: CitationModalProps) {
   const [style, setStyle] = useState<CitationStyle>('abnt');
   const [format, setFormat] = useState<CitationOutputFormat>('html');
   const [citationText, setCitationText] = useState('');
   const [copied, setCopied] = useState(false);
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const [editableArticle, setEditableArticle] = useState<any>({});
+  const [saving, setSaving] = useState(false);
+  const [useEtAl, setUseEtAl] = useState(true);
 
   useEffect(() => {
     if (isOpen && article) {
@@ -33,22 +37,121 @@ export function CitationModal({ isOpen, onClose, article }: CitationModalProps) 
         accessed: article.accessed || '' // Format expected: YYYY-MM-DD
       });
       setIsAccordionOpen(false);
+      setUseEtAl(true);
     }
   }, [isOpen, article]);
 
   useEffect(() => {
     if (isOpen && editableArticle.title !== undefined) {
-      setCitationText(generateCitation(editableArticle, style, format));
+      setCitationText(generateCitation(editableArticle, style, format, useEtAl));
     }
-  }, [isOpen, editableArticle, style, format]);
+  }, [isOpen, editableArticle, style, format, useEtAl]);
 
   if (!isOpen || !article) return null;
 
-  const handleCopy = () => {
-    const textToCopy = format === 'html' ? citationText.replace(/<[^>]+>/g, '') : citationText;
-    navigator.clipboard.writeText(textToCopy);
+  const handleCopy = async () => {
+    const plainText = format === 'html' ? citationText.replace(/<[^>]+>/g, '') : citationText;
+    if (format === 'html') {
+      try {
+        const htmlBlob = new Blob([citationText], { type: 'text/html' });
+        const textBlob = new Blob([plainText], { type: 'text/plain' });
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'text/html': htmlBlob,
+            'text/plain': textBlob
+          })
+        ]);
+      } catch (err) {
+        console.error('Failed to copy rich text, falling back to plain text:', err);
+        await navigator.clipboard.writeText(plainText);
+      }
+    } else {
+      await navigator.clipboard.writeText(plainText);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await projectService.updateArticleMetadata(article.id, {
+        title: editableArticle.title,
+        authors: editableArticle.authors,
+        year: editableArticle.year ? parseInt(editableArticle.year) : undefined,
+        doi: editableArticle.doi,
+        journal: editableArticle.journal,
+        volume: editableArticle.volume,
+        issue: editableArticle.issue,
+        pages: editableArticle.page || editableArticle.pages,
+        url: editableArticle.url,
+        accessed: editableArticle.accessed
+      });
+      if (onArticleUpdated) {
+        onArticleUpdated();
+      }
+      alert('Metadados salvos com sucesso!');
+    } catch (err) {
+      console.error('Erro ao salvar metadados:', err);
+      alert('Erro ao salvar metadados.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    if (article.csl_json) {
+      try {
+        const csl = typeof article.csl_json === 'string' ? JSON.parse(article.csl_json) : article.csl_json;
+        
+        let authorsString = '';
+        if (csl.author && Array.isArray(csl.author)) {
+          authorsString = csl.author.map((auth: any) => {
+            if (auth.family && auth.given) {
+              return `${auth.given} ${auth.family}`;
+            }
+            return auth.literal || auth.family || auth.given || '';
+          }).filter(Boolean).join('; ');
+        }
+        
+        let yearString = '';
+        if (csl.issued && csl.issued['date-parts'] && csl.issued['date-parts'][0]) {
+          yearString = csl.issued['date-parts'][0][0]?.toString() || '';
+        }
+
+        setEditableArticle({
+          ...editableArticle,
+          title: csl.title || '',
+          authors: authorsString,
+          year: yearString,
+          doi: csl.DOI || '',
+          journal: csl['container-title'] || '',
+          volume: csl.volume || '',
+          issue: csl.issue || '',
+          page: csl.page || '',
+          url: csl.URL || '',
+          accessed: ''
+        });
+        return;
+      } catch (err) {
+        console.error("Failed to parse csl_json for reset", err);
+      }
+    }
+
+    // Fallback to database values
+    setEditableArticle({
+      ...article,
+      title: article.title || '',
+      authors: article.authors || '',
+      year: article.year?.toString() || '',
+      doi: article.doi || '',
+      journal: article.journal || '',
+      volume: article.volume || '',
+      issue: article.issue || '',
+      page: article.page || article.pages || '',
+      url: article.url || '',
+      accessed: article.accessed || ''
+    });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,19 +170,30 @@ export function CitationModal({ isOpen, onClose, article }: CitationModalProps) 
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Estilo da Citação:</label>
-            <select 
-              value={style} 
-              onChange={e => setStyle(e.target.value as CitationStyle)}
-              style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-main)', fontFamily: 'inherit' }}
-            >
-              <option value="abnt">ABNT</option>
-              <option value="apa">APA</option>
-              <option value="vancouver">Vancouver</option>
-              <option value="harvard1">Harvard</option>
-              <option value="ieee">IEEE</option>
-            </select>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Estilo da Citação:</label>
+              <select 
+                value={style} 
+                onChange={e => setStyle(e.target.value as CitationStyle)}
+                style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-main)', fontFamily: 'inherit' }}
+              >
+                <option value="abnt">ABNT</option>
+                <option value="apa">APA</option>
+                <option value="vancouver">Vancouver</option>
+                <option value="harvard1">Harvard</option>
+                <option value="ieee">IEEE</option>
+              </select>
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+              <input 
+                type="checkbox" 
+                checked={useEtAl} 
+                onChange={e => setUseEtAl(e.target.checked)} 
+                style={{ cursor: 'pointer' }}
+              />
+              Usar "et al." para múltiplos autores
+            </label>
           </div>
 
           <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
@@ -106,8 +220,11 @@ export function CitationModal({ isOpen, onClose, article }: CitationModalProps) 
                     <input name="title" value={editableArticle.title || ''} onChange={handleChange} style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)' }} />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Autores (separados por ;)</label>
+                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Autores (separados por ; ou ,)</label>
                     <input name="authors" value={editableArticle.authors || ''} onChange={handleChange} style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)' }} />
+                    <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem', lineHeight: '1.2' }}>
+                      Se usar vírgula, use nomes completos (ex: 'João Silva, Maria Souza') para evitar que nomes simples sejam lidos como um único autor.
+                    </span>
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -147,6 +264,25 @@ export function CitationModal({ isOpen, onClose, article }: CitationModalProps) 
                     <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Acesso em</label>
                     <input name="accessed" type="date" value={editableArticle.accessed || ''} onChange={handleChange} style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)' }} />
                   </div>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <button 
+                    type="button" 
+                    onClick={handleReset} 
+                    className="btn-secondary" 
+                    style={{ padding: '0.4rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem' }}
+                  >
+                    <RotateCcw size={14} /> Resetar
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={handleSave} 
+                    disabled={saving} 
+                    className="btn-primary" 
+                    style={{ padding: '0.4rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem' }}
+                  >
+                    <Save size={14} /> {saving ? 'Salvando...' : 'Salvar Metadados'}
+                  </button>
                 </div>
               </div>
             </div>

@@ -58,6 +58,8 @@ export interface Article {
   source_databases: string;
   csl_json: string;
   local_file_path?: string;
+  url?: string;
+  accessed?: string;
   status: 'new' | 'read' | 'archived';
   search_id?: number;
   ai_summary?: string;

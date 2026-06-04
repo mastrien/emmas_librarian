@@ -48,6 +48,17 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div>
+            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.11</h3>
+            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
+              <li><strong>Controle de "et al." em Citações:</strong> Adicionado checkbox nos modais de citação individual e em massa para ativar/desativar o uso de "et al." na lista de autores.</li>
+              <li><strong>Leitura de Autores por Vírgulas:</strong> Correção do parser de autores para suportar adequadamente nomes separados por vírgula em metadados importados.</li>
+              <li><strong>Instruções de Preenchimento:</strong> Inclusão de textos de ajuda explicativos sobre o padrão de identificação de múltiplos autores nos formulários de cadastro e edição.</li>
+              <li><strong>Padronização de Accordions:</strong> Ajuste visual e estrutural completo dos ícones dinâmicos (`ChevronRight`/`ChevronDown`) e remoção das setas nativas do navegador nos accordions de artigos lidos e arquivados.</li>
+              <li><strong>Ajustes de Rolagem:</strong> Correção do transbordo da barra de rolagem nas bordas arredondadas do modal de citação em massa.</li>
+            </ul>
+          </div>
+
+          <div>
             <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.10</h3>
             <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
               <li><strong>Melhoria de Layout nos Modais:</strong> Correção do transbordo da barra de rolagem (clipping do scrollbar) nas bordas arredondadas nos modais do sistema.</li>

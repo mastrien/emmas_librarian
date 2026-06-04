@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS articles (
     archive_note TEXT,
     is_oa INTEGER,
     publisher TEXT,
+    url TEXT,
+    accessed TEXT,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
@@ -116,6 +118,8 @@ CREATE TABLE IF NOT EXISTS articles (
     archive_note TEXT,
     is_oa INTEGER,
     publisher TEXT,
+    url TEXT,
+    accessed TEXT,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 

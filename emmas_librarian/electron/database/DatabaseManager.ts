@@ -27,6 +27,8 @@ export interface ArticleInput {
   search_id?: number;
   is_oa?: number;
   publisher?: string;
+  url?: string;
+  accessed?: string;
 }
 
 export type HighlightWithComment = Highlight & { comment?: string };
@@ -83,6 +85,8 @@ export class DatabaseManager {
       'ALTER TABLE projects ADD COLUMN writing_pad TEXT',
       'ALTER TABLE articles ADD COLUMN is_oa INTEGER',
       'ALTER TABLE articles ADD COLUMN publisher TEXT',
+      'ALTER TABLE articles ADD COLUMN url TEXT',
+      'ALTER TABLE articles ADD COLUMN accessed TEXT',
     ];
     for (const sql of migrations) {
       try { this.db.exec(sql); } catch (e) { /* column already exists */ }
@@ -294,9 +298,9 @@ export class DatabaseManager {
   saveArticle(projectId: number, data: ArticleInput): number {
     const stmt = this.db.prepare(`
       INSERT INTO articles (project_id, doi, title, authors, year, source_query, source_databases, csl_json,
-        abstract, author_keywords, index_keywords, journal, volume, issue, pages, affiliations, references_list, document_type, issn, citation_count, search_id, is_oa, publisher)
+        abstract, author_keywords, index_keywords, journal, volume, issue, pages, affiliations, references_list, document_type, issn, citation_count, search_id, is_oa, publisher, url, accessed)
       VALUES (@project_id, @doi, @title, @authors, @year, @source_query, @source_databases, @csl_json,
-        @abstract, @author_keywords, @index_keywords, @journal, @volume, @issue, @pages, @affiliations, @references_list, @document_type, @issn, @citation_count, @search_id, @is_oa, @publisher)
+        @abstract, @author_keywords, @index_keywords, @journal, @volume, @issue, @pages, @affiliations, @references_list, @document_type, @issn, @citation_count, @search_id, @is_oa, @publisher, @url, @accessed)
     `);
     const info = stmt.run({
       project_id: projectId,
@@ -322,6 +326,8 @@ export class DatabaseManager {
       search_id: data.search_id || null,
       is_oa: data.is_oa !== undefined ? data.is_oa : null,
       publisher: data.publisher || null,
+      url: data.url || null,
+      accessed: data.accessed || null
     });
     return info.lastInsertRowid as number;
   }
@@ -350,7 +356,7 @@ export class DatabaseManager {
     const fields: string[] = [];
     const values: any[] = [];
 
-    const allowedFields = ['title', 'authors', 'year', 'doi', 'journal', 'abstract'];
+    const allowedFields = ['title', 'authors', 'year', 'doi', 'journal', 'abstract', 'volume', 'issue', 'pages', 'url', 'accessed'];
     for (const field of allowedFields) {
       if (data[field as keyof ArticleInput] !== undefined) {
         fields.push(`${field} = ?`);

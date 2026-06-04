@@ -964,6 +964,7 @@ export const ArticleReaderPage: React.FC = () => {
           isOpen={isCitationModalOpen}
           onClose={() => setIsCitationModalOpen(false)}
           article={article}
+          onArticleUpdated={fetchData}
         />
       )}
       {/* Floating Categories Button */}

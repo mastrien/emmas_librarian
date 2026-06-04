@@ -10,8 +10,81 @@ export type CitationStyle = 'abnt' | 'apa' | 'vancouver' | 'harvard1' | 'ieee';
 
 export type CitationOutputFormat = 'text' | 'html' | 'bibtex';
 
-export function generateCitation(article: any, style: CitationStyle = 'abnt', format: CitationOutputFormat = 'text'): string {
+export function parseAuthors(authorsStr: string): any[] {
+  if (!authorsStr) return [];
+  
+  let rawAuthors: string[] = [];
+  if (authorsStr.includes(';')) {
+    rawAuthors = authorsStr.split(';');
+  } else if (authorsStr.includes(',')) {
+    const parts = authorsStr.split(',');
+    if (parts.length === 2) {
+      // Exactly one comma. Could be "Family, Given" (1 author) or "Author A, Author B" (2 authors)
+      const part1 = parts[0].trim();
+      const part2 = parts[1].trim();
+      const part1HasSpace = part1.includes(' ');
+      const part2HasSpace = part2.includes(' ');
+      
+      if (part1HasSpace && part2HasSpace) {
+        rawAuthors = [part1, part2];
+      } else {
+        rawAuthors = [authorsStr];
+      }
+    } else {
+      rawAuthors = parts;
+    }
+  } else {
+    rawAuthors = [authorsStr];
+  }
+
+  return rawAuthors
+    .map(authorStr => {
+      authorStr = authorStr.trim();
+      if (!authorStr) return null;
+      
+      // If the individual author string has a comma, parse as "Family, Given"
+      if (authorStr.includes(',')) {
+        const parts = authorStr.split(',');
+        if (parts.length === 2) {
+          return { family: parts[0].trim(), given: parts[1].trim() };
+        }
+      }
+      
+      // Otherwise, parse as "Given Family"
+      const parts = authorStr.split(/\s+/);
+      if (parts.length > 1) {
+        const family = parts.pop();
+        const given = parts.join(' ');
+        return { family, given };
+      }
+      return { literal: authorStr };
+    })
+    .filter(Boolean);
+}
+
+export function generateCitation(article: any, style: CitationStyle = 'abnt', format: CitationOutputFormat = 'text', useEtAl: boolean = true): string {
   try {
+    let finalStyle = style;
+    if (!useEtAl) {
+      const targetStyleName = `${style}-no-etal`;
+      const config = Cite.plugins.config.get('@csl');
+      if (config && config.templates) {
+        const templates = config.templates;
+        const hasTemplate = typeof templates.has === 'function' ? templates.has(targetStyleName) : !!templates.get(targetStyleName);
+        if (!hasTemplate) {
+          const baseXml = templates.get(style);
+          if (baseXml) {
+            const modifiedXml = baseXml
+              .replace(/et-al-min="\d+"/g, 'et-al-min="99"')
+              .replace(/et-al-use-first="\d+"/g, 'et-al-use-first="99"')
+              .replace(/et-al-subsequent-min="\d+"/g, 'et-al-subsequent-min="99"')
+              .replace(/et-al-subsequent-use-first="\d+"/g, 'et-al-subsequent-use-first="99"');
+            templates.add(targetStyleName, modifiedXml);
+          }
+        }
+        finalStyle = targetStyleName as any;
+      }
+    }
     const data: any = {
       id: article.id,
       type: 'article-journal', // Default to journal article
@@ -19,13 +92,7 @@ export function generateCitation(article: any, style: CitationStyle = 'abnt', fo
     };
 
     if (article.authors) {
-      data.author = article.authors.split(';').map((authorStr: string) => {
-        const parts = authorStr.trim().split(/\s+/);
-        if (parts.length > 1) {
-          return { family: parts.pop(), given: parts.join(' ') };
-        }
-        return { literal: authorStr.trim() };
-      });
+      data.author = parseAuthors(article.authors);
     }
 
     if (article.year) {
@@ -86,7 +153,7 @@ export function generateCitation(article: any, style: CitationStyle = 'abnt', fo
 
     return cite.format('bibliography', {
       format: format === 'html' ? 'html' : 'text',
-      template: style,
+      template: finalStyle,
       lang: style === 'abnt' ? 'pt-BR' : 'en-US'
     }).trim();
   } catch (error) {

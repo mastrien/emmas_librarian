@@ -153,4 +153,39 @@ describe('DatabaseManager', () => {
     expect(dbManager.getAnnotations(articleId)).toHaveLength(0);
     expect(dbManager.getHighlights(articleId)).toHaveLength(0);
   });
+
+  it('saves, retrieves and updates article citation metadata including volume, pages, url, accessed', () => {
+    const proj = dbManager.createProject('ProjCitation');
+    const articleId = dbManager.saveArticle(proj.id, {
+      title: 'Original Title',
+      source_query: 'test',
+      source_databases: '["OpenAlex"]',
+      csl_json: '{}'
+    });
+
+    dbManager.updateArticleMetadata(articleId, {
+      title: 'Custom Title',
+      authors: 'João Silva; Maria Oliveira',
+      year: 2022,
+      doi: '10.1000/xyz789',
+      journal: 'Revista Editada',
+      volume: '11',
+      issue: '3',
+      pages: '146-160',
+      url: 'https://example.com/custom-url',
+      accessed: '2026-06-04'
+    } as any);
+
+    const updated = dbManager.getArticle(articleId) as any;
+    expect(updated).toBeDefined();
+    expect(updated.title).toBe('Custom Title');
+    expect(updated.authors).toBe('João Silva; Maria Oliveira');
+    expect(updated.year).toBe(2022);
+    expect(updated.doi).toBe('10.1000/xyz789');
+    expect(updated.journal).toBe('Revista Editada');
+    expect(updated.volume).toBe('11');
+    expect(updated.pages).toBe('146-160');
+    expect(updated.url).toBe('https://example.com/custom-url');
+    expect(updated.accessed).toBe('2026-06-04');
+  });
 });

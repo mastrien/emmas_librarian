@@ -30,6 +30,8 @@ export interface Article {
   source_databases?: string;
   csl_json?: string | any;
   local_file_path?: string;
+  url?: string;
+  accessed?: string;
   status: 'new' | 'read' | 'archived';
   archive_note?: string;
   search_id?: number;

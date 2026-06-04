@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key, AlertCircle, Settings, Link as LinkIcon, File as FileIcon, PieChart as PieChartIcon, Tag, Tags, Brain, SlidersHorizontal, Filter } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, ChevronDown, Plus, CopyPlus, Key, AlertCircle, Settings, Link as LinkIcon, File as FileIcon, PieChart as PieChartIcon, Tag, Tags, Brain, SlidersHorizontal, Filter } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -35,6 +35,7 @@ import { ProjectCategoriesModal } from '../components/modals/ProjectCategoriesMo
 import { CategoryCell } from '../components/common/CategoryCell';
 import { CitationModal } from '../components/modals/CitationModal';
 import { ArticleDetailsModal } from '../components/modals/ArticleDetailsModal';
+import { MassCitationModal } from '../components/modals/MassCitationModal';
 
 const ArchiveModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClose: () => void, onSubmit: (note: string) => void }) => {
   const [note, setNote] = useState('');
@@ -694,6 +695,9 @@ export const ProjectDetailsPage: React.FC = () => {
 
   const [projectDocuments, setProjectDocuments] = useState<any[]>([]);
   const [isQuickAccessModalOpen, setIsQuickAccessModalOpen] = useState(false);
+  const [isMassCitationModalOpen, setIsMassCitationModalOpen] = useState(false);
+  const [isReadArticlesOpen, setIsReadArticlesOpen] = useState(false);
+  const [isArchivedArticlesOpen, setIsArchivedArticlesOpen] = useState(false);
   
   const [investigationHistory, setInvestigationHistory] = useState<any[]>([]);
 
@@ -1543,9 +1547,23 @@ export const ProjectDetailsPage: React.FC = () => {
 
             <div style={{ flex: 1, minWidth: 0 }}>
               {readArticles.length > 0 && (
-            <details style={{ marginBottom: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', padding: '1rem' }}>
-              <summary style={{ fontWeight: 600, color: 'var(--color-primary)', cursor: 'pointer', outline: 'none' }}>
-                Artigos Lidos ({readArticles.length})
+            <details 
+              className="custom-accordion"
+              onToggle={(e) => setIsReadArticlesOpen((e.target as HTMLDetailsElement).open)}
+              style={{ marginBottom: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', padding: '1rem' }}
+            >
+              <summary style={{ fontWeight: 600, color: 'var(--color-primary)', cursor: 'pointer', outline: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {isReadArticlesOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  <span>Artigos Lidos ({readArticles.length})</span>
+                </div>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); e.preventDefault(); setIsMassCitationModalOpen(true); }} 
+                  className="btn-primary" 
+                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                >
+                  <CopyPlus size={12} /> Citação em Massa
+                </button>
               </summary>
               <div style={{ marginTop: '1rem' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
@@ -1570,9 +1588,16 @@ export const ProjectDetailsPage: React.FC = () => {
           )}
 
           {archivedArticles.length > 0 && (
-            <details style={{ marginBottom: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', padding: '1rem' }}>
-              <summary style={{ fontWeight: 600, color: 'var(--color-danger)', cursor: 'pointer', outline: 'none' }}>
-                Artigos Arquivados ({archivedArticles.length})
+            <details 
+              className="custom-accordion"
+              onToggle={(e) => setIsArchivedArticlesOpen((e.target as HTMLDetailsElement).open)}
+              style={{ marginBottom: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', padding: '1rem' }}
+            >
+              <summary style={{ fontWeight: 600, color: 'var(--color-danger)', cursor: 'pointer', outline: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {isArchivedArticlesOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  <span>Artigos Arquivados ({archivedArticles.length})</span>
+                </div>
               </summary>
               <div style={{ marginTop: '1rem' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
@@ -2249,7 +2274,16 @@ export const ProjectDetailsPage: React.FC = () => {
         isOpen={!!citationArticle}
         onClose={() => setCitationArticle(null)}
         article={citationArticle}
+        onArticleUpdated={fetchData}
       />
+      {isMassCitationModalOpen && (
+        <MassCitationModal
+          isOpen={isMassCitationModalOpen}
+          onClose={() => setIsMassCitationModalOpen(false)}
+          articles={readArticles}
+          onArticlesUpdated={fetchData}
+        />
+      )}
       <ArticleDetailsModal
         isOpen={!!selectedArticleForDetails}
         onClose={() => setSelectedArticleForDetails(null)}
