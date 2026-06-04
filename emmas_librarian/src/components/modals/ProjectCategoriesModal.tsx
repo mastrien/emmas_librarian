@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Trash2, Tag, Loader2 } from 'lucide-react';
-import { projectService } from '../services/api';
-import { ProjectCategory } from '../types';
+import { projectService } from '../../services/api';
+import { ProjectCategory } from '../../types';
 
 interface ProjectCategoriesModalProps {
   isOpen: boolean;

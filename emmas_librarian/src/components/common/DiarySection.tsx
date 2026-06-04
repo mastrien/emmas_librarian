@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { projectService } from '../services/api';
-import { DiaryEntry } from '../types';
+import { projectService } from '../../services/api';
+import { DiaryEntry } from '../../types';
 import { Plus, Trash2, Calendar, BookOpen, Save, Eye, Edit2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {

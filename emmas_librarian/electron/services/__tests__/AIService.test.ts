@@ -2,11 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AIService } from '../AIService';
 import { DatabaseManager } from '../../database/DatabaseManager';
 
+// Define mock variable before vi.mock
+const mockGetText = vi.fn().mockResolvedValue({ text: 'Mocked PDF text content for testing purposes.' });
+
 // Mock the pdf-parse dependency
 vi.mock('pdf-parse', () => {
   const MockPDFParse = vi.fn().mockImplementation(() => {
     return {
-      getText: vi.fn().mockResolvedValue({ text: 'Mocked PDF text content for testing purposes.' })
+      getText: mockGetText
     };
   });
   return {
@@ -135,5 +138,100 @@ describe('AIService', () => {
     expect(global.fetch).toHaveBeenCalled();
     expect(metadata.title).toBe('Test Title');
     expect(metadata.year).toBe('2024');
+  });
+
+  it('should prioritize Gemini if OpenAI key is not present but Gemini is', async () => {
+    dbMock.getSetting = vi.fn((key: string) => {
+      if (key === 'api_key_gemini') return 'test-gemini-key';
+      return null;
+    });
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: '{"generalSummary": "Gemini Summary", "sectionSummary": ""}' }] } }]
+      })
+    });
+
+    const summary = await aiService.generateSummary(1, 'fake/path.pdf');
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('generativelanguage.googleapis.com'), expect.any(Object));
+    expect(summary.generalSummary).toBe('Gemini Summary');
+  });
+
+  it('should call Ollama if only Ollama key is present', async () => {
+    dbMock.getSetting = vi.fn((key: string) => {
+      if (key === 'api_key_ollama') return 'http://localhost:11434';
+      if (key === 'ollama_model') return 'my-model';
+      return null;
+    });
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: '{"generalSummary": "Ollama Summary", "sectionSummary": ""}' } }]
+      })
+    });
+
+    const summary = await aiService.generateSummary(1, 'fake/path.pdf');
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('http://localhost:11434/chat/completions'), expect.any(Object));
+    expect(summary.generalSummary).toBe('Ollama Summary');
+  });
+
+  it('should throw QUOTA_EXCEEDED when API returns 429', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429
+    });
+
+    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('QUOTA_EXCEEDED');
+  });
+
+  it('should throw error when API returns other error status', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => 'Internal Server Error'
+    });
+
+    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('OpenAI API Error: Internal Server Error');
+  });
+
+  it('should throw error on invalid JSON response in generateSummary', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'invalid json' } }]
+      })
+    });
+
+    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('A IA não retornou um formato JSON válido.');
+  });
+
+  it('should throw error on invalid JSON response in massiveExtraction', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'invalid json' } }]
+      })
+    });
+
+    await expect(aiService.massiveExtraction(1, 'fake/path.pdf', ['Q1?'])).rejects.toThrow('A IA não retornou um formato JSON válido para extração.');
+  });
+
+  it('should throw error on invalid JSON response in extractMetadataFromPdf', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'invalid json' } }]
+      })
+    });
+
+    await expect(aiService.extractMetadataFromPdf(1, 'fake/path.pdf')).rejects.toThrow('A IA não retornou um formato JSON válido para os metadados.');
+  });
+
+  it('should throw error when PDF parsing fails', async () => {
+    mockGetText.mockRejectedValueOnce(new Error('Parse Error'));
+
+    await expect(aiService.extractTextFromPdf('fake/path.pdf')).rejects.toThrow('Failed to parse PDF file');
   });
 });

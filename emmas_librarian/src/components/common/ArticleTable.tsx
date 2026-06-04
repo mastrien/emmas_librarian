@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, FileText, X as XIcon, Upload, CheckCircle, Edit2, Archive, ExternalLink, Loader2 } from 'lucide-react';
-import { Article } from '../types';
+import { Article } from '../../types';
 import { TableVirtuoso } from 'react-virtuoso';
 
 interface ArticleTableProps {

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
-import { ArticleTable } from '../ArticleTable';
+import { ArticleTable } from '../common/ArticleTable';
 import { Article } from '../../types';
 
 // Mock react-virtuoso so we don't have to deal with ResizeObservers and height constraints in jsdom

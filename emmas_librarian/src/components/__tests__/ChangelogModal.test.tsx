@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { ChangelogModal } from '../ChangelogModal';
+import { ChangelogModal } from '../modals/ChangelogModal';
 
 describe('ChangelogModal', () => {
   it('does not render when isOpen is false', () => {

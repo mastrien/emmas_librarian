@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { QueryBuilder } from '../components/QueryBuilder';
+import { QueryBuilder } from '../components/common/QueryBuilder';
 import { projectService } from '../services/api';
 import { Project, QueryASTNode, DatabaseTranslationMap } from '../types';
 import { Search, Loader2, ArrowLeft, AlertTriangle, AlertCircle, Edit2, RotateCcw, Key } from 'lucide-react';
-import { SearchSummaryModal } from '../components/SearchSummaryModal';
+import { SearchSummaryModal } from '../components/modals/SearchSummaryModal';
 import { createPortal } from 'react-dom';
 
 const DATABASES = [

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ProjectCategory } from '../types';
-import { projectService } from '../services/api';
+import { ProjectCategory } from '../../types';
+import { projectService } from '../../services/api';
 
 interface CategoryCellProps {
   articleId: number;

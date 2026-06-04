@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { CategoryCell } from '../CategoryCell';
+import { CategoryCell } from '../common/CategoryCell';
 import { projectService } from '../../services/api';
 
 vi.mock('../../services/api', () => ({

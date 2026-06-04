@@ -5,7 +5,7 @@
 import { StrictMode, Suspense, lazy } from 'react'
 import * as ReactDOMClient from 'react-dom/client'
 import { HashRouter, Routes, Route } from 'react-router-dom'
-import { Layout } from './components/Layout'
+import { Layout } from './components/common/Layout'
 
 // Suppress React 19 warnings originating from third-party libraries (e.g. react-pdf-highlighter)
 const originalConsoleError = console.error;

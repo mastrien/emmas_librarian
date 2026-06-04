@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, Calendar, User, BookOpen, Link as LinkIcon, Tag, Unlock, Lock, GraduationCap, Building, Layers, Hash, Bookmark } from 'lucide-react';
-import { Article } from '../types';
+import { Article } from '../../types';
 
 interface ArticleDetailsModalProps {
   isOpen: boolean;

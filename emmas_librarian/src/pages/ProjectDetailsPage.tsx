@@ -27,14 +27,14 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-import { SearchHistoryModal } from '../components/SearchHistoryModal';
-import { DiarySection } from '../components/DiarySection';
-import { EditArticleModal } from '../components/EditArticleModal';
-import { ManageQuickAccessModal } from '../components/ManageQuickAccessModal';
-import { ProjectCategoriesModal } from '../components/ProjectCategoriesModal';
-import { CategoryCell } from '../components/CategoryCell';
-import { CitationModal } from '../components/CitationModal';
-import { ArticleDetailsModal } from '../components/ArticleDetailsModal';
+import { SearchHistoryModal } from '../components/modals/SearchHistoryModal';
+import { DiarySection } from '../components/common/DiarySection';
+import { EditArticleModal } from '../components/modals/EditArticleModal';
+import { ManageQuickAccessModal } from '../components/modals/ManageQuickAccessModal';
+import { ProjectCategoriesModal } from '../components/modals/ProjectCategoriesModal';
+import { CategoryCell } from '../components/common/CategoryCell';
+import { CitationModal } from '../components/modals/CitationModal';
+import { ArticleDetailsModal } from '../components/modals/ArticleDetailsModal';
 
 const ArchiveModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClose: () => void, onSubmit: (note: string) => void }) => {
   const [note, setNote] = useState('');

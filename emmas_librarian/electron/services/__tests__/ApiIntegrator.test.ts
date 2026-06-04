@@ -458,5 +458,119 @@ describe('ApiIntegrator', () => {
         .rejects.toThrow('Bad Request: {"invalidFields":["q"]}');
     });
   });
+
+  describe('ApiIntegrator fallback branches and edge cases', () => {
+    it('returns empty array when api keys are missing for Scopus or WoS', async () => {
+      expect(await api.searchScopus('query', '', 'relevance')).toEqual([]);
+      expect(await api.searchWoS('query', '', 'relevance')).toEqual([]);
+    });
+
+    it('covers searchOpenAlex sort and filter branches', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({ results: [] })
+      } as any);
+
+      // No clean filter and date sort
+      await api.searchOpenAlex('', 'date');
+      let urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
+      expect(urlCall).not.toContain('filter');
+      expect(urlCall).toContain('sort=publication_date%3Adesc');
+
+      // relevance sort
+      await api.searchOpenAlex('', 'relevance');
+      urlCall = vi.mocked(fetch).mock.calls[1][0] as string;
+      expect(urlCall).toContain('sort=relevance_score%3Adesc');
+    });
+
+    it('covers searchScopus date and relevance sort branches', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({ 'search-results': { entry: [] } })
+      } as any);
+
+      await api.searchScopus('q', 'key', 'date');
+      let urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
+      expect(urlCall).toContain('sort=pubyear');
+
+      await api.searchScopus('q', 'key', 'relevance');
+      urlCall = vi.mocked(fetch).mock.calls[1][0] as string;
+      expect(urlCall).toContain('sort=relevancy');
+    });
+
+    it('covers searchWoS date and relevance sort branches', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({ hits: [] })
+      } as any);
+
+      await api.searchWoS('q', 'key', 'date');
+      let urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
+      expect(urlCall).toContain('sortField=PY%2BD');
+
+      await api.searchWoS('q', 'key', 'relevance');
+      urlCall = vi.mocked(fetch).mock.calls[1][0] as string;
+      expect(urlCall).toContain('sortField=RS%2BD');
+    });
+
+    it('covers non-JSON error response in searchWoS', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: false,
+        status: 502,
+        text: async () => 'Bad Gateway'
+      } as any);
+
+      await expect(api.searchWoS('q', 'key', 'relevance')).rejects.toThrow('Erro 502 no Web of Science - Bad Gateway');
+    });
+
+    it('covers searchOpenAlex non-JSON error handling', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => { throw new Error('Not JSON'); }
+      } as any);
+
+      await expect(api.searchOpenAlex('q', 'relevance')).rejects.toThrow('Erro 500 no OpenAlex');
+    });
+
+    it('normalizes articles with missing or strange values correctly', () => {
+      // 1. normalizeOpenAlex
+      const rawOpenAlex = {
+        doi: '10.1000/xyz',
+        authorships: [
+          { author: { display_name: 'SingleName' } },
+          { author: null }
+        ],
+        keywords: ['DirectKeywordString']
+      };
+      const normalizedAlex = (api as any).normalizeOpenAlex(rawOpenAlex);
+      expect(normalizedAlex.doi).toBe('10.1000/xyz');
+      expect(normalizedAlex.authors).toBe('SingleName');
+      expect(normalizedAlex.authorKeywords).toBe('DirectKeywordString');
+
+      // 2. normalizeCrossref
+      const rawCrossref = {
+        issued: {}, // missing date-parts
+        author: [
+          { given: 'John', family: 'Doe' },
+          { given: 'Alice' } // missing family
+        ],
+        abstract: 'Abstract with no HTML tags'
+      };
+      const normalizedCrossref = (api as any).normalizeCrossref(rawCrossref);
+      expect(normalizedCrossref.year).toBeUndefined();
+      expect(normalizedCrossref.authors).toBe('John Doe, Alice');
+      expect(normalizedCrossref.abstract).toBe('Abstract with no HTML tags');
+
+      // 3. normalizeScopus creator fallback
+      const rawScopus = {
+        'dc:creator': 'Creator Name',
+        'prism:coverDate': '2026-06-03'
+      };
+      const normalizedScopus = (api as any).normalizeScopus(rawScopus);
+      expect(normalizedScopus.authors).toBe('Creator Name');
+      expect(normalizedScopus.year).toBe(2026);
+    });
+  });
 });
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { QueryASTNode, QueryGroupNode, QueryRuleNode, QueryField, QueryOperator } from '../types';
+import { QueryASTNode, QueryGroupNode, QueryRuleNode, QueryField, QueryOperator } from '../../types';
 import { Plus, Trash2, GitBranch } from 'lucide-react';
 
 interface Props {

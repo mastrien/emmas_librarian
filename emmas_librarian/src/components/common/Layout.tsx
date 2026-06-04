@@ -3,8 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { Settings } from 'lucide-react';
 import { HelpButton } from './HelpButton';
 import { Logo } from './Logo';
-import { ChangelogModal } from './ChangelogModal';
-import { projectService } from '../services/api';
+import { ChangelogModal } from '../modals/ChangelogModal';
+import { projectService } from '../../services/api';
 
 const NativeTitleBar = () => (
   <div style={{

@@ -21,7 +21,7 @@ vi.mock('../../services/api', () => ({
 vi.mock('../../components/ArticleModal', () => ({
   ArticleModal: () => <div data-testid="article-modal" />
 }));
-vi.mock('../../components/SearchHistoryModal', () => ({
+vi.mock('../../components/modals/SearchHistoryModal', () => ({
   SearchHistoryModal: () => <div data-testid="search-history-modal" />
 }));
 

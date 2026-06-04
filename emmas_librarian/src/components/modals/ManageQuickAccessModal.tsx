@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X as XIcon, Link as LinkIcon, File as FileIcon, Trash2, Plus, Loader2, Upload } from 'lucide-react';
-import { projectService } from '../services/api';
-import { ProjectDocument } from '../types';
+import { projectService } from '../../services/api';
+import { ProjectDocument } from '../../types';
 
 interface ManageQuickAccessModalProps {
   isOpen: boolean;
