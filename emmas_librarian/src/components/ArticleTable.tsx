@@ -69,7 +69,7 @@ export const ArticleTable: React.FC<ArticleTableProps> = memo(({
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                   {(() => {
                     try {
-                      return JSON.parse(article.source_databases).map((base: string) => {
+                      return JSON.parse(article.source_databases || '[]').map((base: string) => {
                         const isManual = base === 'Manual';
                         return (
                           <span key={base} style={{ 
@@ -89,6 +89,22 @@ export const ArticleTable: React.FC<ArticleTableProps> = memo(({
                       return null;
                     }
                   })()}
+                  {article.is_oa === 1 && (
+                    <span style={{ 
+                      padding: '0.2rem 0.6rem', 
+                      background: 'rgba(16, 185, 129, 0.1)', 
+                      border: '1px solid var(--color-success, #10b981)',
+                      borderRadius: 'var(--radius-xl)', 
+                      fontSize: '0.75rem', 
+                      fontWeight: 600,
+                      color: 'var(--color-success, #10b981)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.2rem'
+                    }}>
+                      🔓 Acesso Aberto
+                    </span>
+                  )}
                 </div>
               </td>
               <td style={{ padding: '1.25rem 1.5rem' }}>

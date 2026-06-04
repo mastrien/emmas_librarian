@@ -1,5 +1,70 @@
 # Development Log - Emma's Librarian
 
+### Ciclo 30 [2026-06-03]: Lançamento da Release v1.1.10 e Melhorias Visuais/UX
+- **Objetivo:** Homologar, corrigir bugs e lançar a versão v1.1.10.
+- **Alterações:**
+  - Padronizado o filtro "Novos" para "Ativos" em toda a interface do projeto.
+  - Implementada a rolagem natural e global para os elementos de resumo e referências no modal de detalhes.
+  - Ajustado o layout de todos os modais para conter a rolagem internamente e fazer o clipping da barra de rolagem nas bordas arredondadas.
+  - Adicionadas as ações de "Desmarcar" e "Restaurar" conforme o status atual dos artigos.
+  - Adicionadas ações rápidas de "Detalhes" e "Citar" nos artigos da lista de lidos.
+  - Invertida a posição visual dos autores e citações na tabela principal e removido o margin-left das citações.
+  - Adicionado patch no `main.tsx` para interceptar e mitigar erros/avisos do React 19 em bibliotecas externas.
+  - Atualizado o Changelog e bumped version no `package.json` e `package-lock.json`.
+- **Testes:** Executada a suíte do Vitest com sucesso absoluto em todas as 19 suítes de frontend.
+
+### Ciclo 29 [2026-06-03]: Modal de Edição Unificado com Volume, Edição e Páginas (Item 5)
+- **Objetivo:** Adicionar os campos bibliográficos ricos (volume, issue, pages) ao modal de edição de metadados para garantir integridade e unificação dos metadados salvos no banco.
+- **Alterações:**
+  - Adicionados estados e mapeamentos para `volume`, `issue` e `pages` em `EditArticleModal.tsx`.
+  - Integrada a atualização desses campos na rotina de submissão do formulário (`onSubmit`) e na funcionalidade de preenchimento inteligente via IA (`handleExtractWithAI`).
+  - Implementada a renderização destes campos em uma grade responsiva de 3 colunas no formulário do modal.
+  - Atualizado `EditArticleModal.test.tsx` para assegurar que os metadados ricos sejam corretamente carregados no formulário e enviados de volta na submissão.
+- **Testes:** Executada a suíte de testes de `EditArticleModal.test.tsx` com 100% de sucesso.
+
+### Ciclo 28 [2026-06-03]: Filtro Lateral e Nuvem de Palavras-Chave (Item 4)
+- **Objetivo:** Adicionar painel de filtros lateral colapsável com filtragem por status, base de dados de origem, tipo de documento e uma nuvem de palavras-chave interativa.
+- **Alterações:**
+  - Adicionados estados para controle do painel de filtros (`isSidebarOpen`, `statusFilter`, `selectedDatabases`, `selectedDocType`, `selectedKeyword`) em `ProjectDetailsPage.tsx`.
+  - Implementada a renderização do painel lateral (`Filtros Avançados`) com layouts premium e responsivos, contendo seleções para status (Todos, Novos, Lidos, Arquivados), bases de dados (checkboxes dinâmicos com contagens), tipo de documento (select dropdown) e nuvem de tags das 15 palavras-chave mais frequentes no projeto.
+  - Atualizada a filtragem da tabela principal (`activeArticles`) para combinar todos os critérios do painel lateral.
+  - Adicionado botão de atalho `Filtros` com ícone `SlidersHorizontal` na barra de ferramentas para colapsar/abrir o painel.
+  - Criado o caso de teste abrangente em `ProjectDetailsPage.test.tsx` simulando a abertura do painel, a filtragem de status, bases de dados e cliques na nuvem de tags.
+- **Testes:** Executada a suíte de testes de `ProjectDetailsPage.test.tsx` com 100% de sucesso.
+
+### Ciclo 27 [2026-06-03]: Badge e Filtro de Acesso Aberto (Item 3)
+- **Objetivo:** Adicionar badge visual para artigos Open Access (is_oa === 1) e filtro rápido na listagem.
+- **Alterações:**
+  - Adicionado suporte a `onlyOpenAccess` state em `ProjectDetailsPage.tsx`.
+  - Atualizada a função `filteredArticles` para respeitar o filtro de acesso aberto.
+  - Adicionado checkbox "Apenas Acesso Aberto" à barra de ferramentas em `ProjectDetailsPage.tsx`.
+  - Adicionado o badge visual `🔓 Acesso Aberto` na coluna BASES das tabelas em `ProjectDetailsPage.tsx` e `ArticleTable.tsx`.
+  - Criados testes unitários adicionais em `ProjectDetailsPage.test.tsx` e `ArticleTable.test.tsx` para cobrir o funcionamento do badge e filtro de acesso aberto.
+- **Testes:** Executadas as suítes de teste de componentes/páginas via Vitest com 100% de sucesso.
+
+### Ciclo 26 [2026-06-03]: Fallback do Leitor de Artigos (Item 2)
+- **Objetivo:** Implementar visualização fallback no leitor de artigos quando não há PDF vinculado.
+- **Alterações:**
+  - Atualizada a página `ArticleReaderPage.tsx` para exibir uma mensagem de aviso, botão de upload, botão para buscar por DOI, e visualizar o resumo original (abstract) se disponível quando `local_file_path` for nulo.
+  - Corrigido o teste correspondente em `ArticleReaderPage.test.tsx` para assegurar que a tela se comporta corretamente e exibe os elementos fallback.
+- **Testes:** Executado teste unitário `ArticleReaderPage.test.tsx` via Vitest com 100% de sucesso.
+
+### Ciclo 25 [2026-06-03]: Modal de Detalhes, Citações e Ordenação
+- **Objetivo:** Adicionar visualização detalhada do artigo, exibição de contagem de citações na tabela de artigos e permitir ordenação dos artigos por contagem de citações.
+- **Alterações:**
+  - Criado o componente `ArticleDetailsModal.tsx` em `src/components/` para exibir de forma organizada todos os metadados ricos do artigo.
+  - Integrado o modal no `ProjectDetailsPage.tsx`, tornando os títulos dos artigos clicáveis com estilos premium.
+  - Adicionado suporte a exibição de contagem de citações (usando `🎓` e valor do banco) na tabela do projeto.
+  - Criadas opções de ordenação `citations-desc` (Mais citados) e `citations-asc` (Menos citados) e sua lógica na listagem de artigos.
+- **Testes:** Executada a suíte básica de testes com 100% de sucesso.
+
+### Ciclo 24 [2026-06-03]: Correção de Bugs de Metadados e Resumo IA
+- **Objetivo:** Resolver os bugs de inconsistência no mapeamento de páginas de citações e otimizar o carregamento do resumo de IA em cache no leitor de PDF.
+- **Alterações:**
+  - Corrigido o mapeamento do campo `pages` (plural) vindo do SQLite para a propriedade `page` (singular) esperada pelo gerador de citações em `CitationModal.tsx` e `citationService.ts`.
+  - Implementado o auto-carregamento e parsing do campo `ai_summary` em `ArticleReaderPage.tsx` durante a inicialização, evitando a necessidade de clicar em "Gerar" para ler um resumo já existente no banco de dados.
+- **Testes:** Adicionados casos de teste específicos no Vitest em `citationService.test.ts` e `ArticleReaderPage.test.tsx`, com 100% de sucesso.
+
 ### Ciclo 23 [2026-06-03]: Correção de Chaves de API e Lançamento v1.1.9
 - **Objetivo:** Investigar e corrigir a falha no reconhecimento de chaves de API da Scopus e WoS após a inclusão de chaves de IA, e homologar/lançar a versão v1.1.9.
 - **Alterações:**

@@ -26,9 +26,9 @@ export interface Article {
   is_oa?: number;
   issn?: string;
   citation_count?: number;
-  source_query: string;
-  source_databases: string;
-  csl_json: string | any;
+  source_query?: string;
+  source_databases?: string;
+  csl_json?: string | any;
   local_file_path?: string;
   status: 'new' | 'read' | 'archived';
   archive_note?: string;

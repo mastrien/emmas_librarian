@@ -28,7 +28,7 @@ export function CitationModal({ isOpen, onClose, article }: CitationModalProps) 
         journal: article.journal || '',
         volume: article.volume || '',
         issue: article.issue || '',
-        page: article.page || '',
+        page: article.page || article.pages || '',
         url: article.url || '',
         accessed: article.accessed || '' // Format expected: YYYY-MM-DD
       });

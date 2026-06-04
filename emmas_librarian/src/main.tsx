@@ -3,9 +3,58 @@
 // See public/vendor/prismjs/ and the error report in relatorio_erro_prism.md.
 
 import { StrictMode, Suspense, lazy } from 'react'
-import { createRoot } from 'react-dom/client'
+import * as ReactDOMClient from 'react-dom/client'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { Layout } from './components/Layout'
+
+// Suppress React 19 warnings originating from third-party libraries (e.g. react-pdf-highlighter)
+const originalConsoleError = console.error;
+console.error = (...args: any[]) => {
+  if (typeof args[0] === 'string') {
+    if (args[0].includes('You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before')) {
+      return;
+    }
+    if (args[0].includes('Unknown event handler property') && args[0].includes('onUpdate')) {
+      return;
+    }
+  }
+  originalConsoleError.apply(console, args);
+};
+
+const originalConsoleWarn = console.warn;
+console.warn = (...args: any[]) => {
+  if (typeof args[0] === 'string') {
+    if (args[0].includes('You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before')) {
+      return;
+    }
+    if (args[0].includes('Unknown event handler property') && args[0].includes('onUpdate')) {
+      return;
+    }
+  }
+  originalConsoleWarn.apply(console, args);
+};
+
+// Patch createRoot globally to reuse the same root on a container,
+// preventing react-pdf-highlighter from re-creating roots.
+try {
+  const originalCreateRoot = ReactDOMClient.createRoot;
+  Object.defineProperty(ReactDOMClient, 'createRoot', {
+    configurable: true,
+    writable: true,
+    value: function(container: any, options?: any) {
+      if (container && container._reactRoot) {
+        return container._reactRoot;
+      }
+      const root = originalCreateRoot(container, options);
+      if (container) {
+        container._reactRoot = root;
+      }
+      return root;
+    }
+  });
+} catch (err) {
+  // Safe fallback if target environment freezes module exports
+}
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then(module => ({ default: module.DashboardPage })))
 const NewProjectPage = lazy(() => import('./pages/NewProjectPage').then(module => ({ default: module.NewProjectPage })))
@@ -26,7 +75,7 @@ if ((window as any).electronAPI) {
   (window as any).electronAPI.invoke('UPDATE_TITLE_BAR', savedTheme);
 }
 
-createRoot(document.getElementById('root')!).render(
+ReactDOMClient.createRoot(document.getElementById('root')!).render(
   <HashRouter>
     <Layout>
       <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8 text-gray-500">Loading...</div>}>

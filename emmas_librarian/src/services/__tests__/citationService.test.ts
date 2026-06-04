@@ -21,4 +21,17 @@ describe('citationService', () => {
     const cite = generateCitation(article, 'apa');
     expect(cite).toContain('No Data Article');
   });
+
+  it('should generate citation with pages field from the database', () => {
+    const article = {
+      id: 3,
+      title: 'Article with Pages Field',
+      authors: 'Alice Johnson',
+      year: 2022,
+      pages: '45-67'
+    };
+    const cite = generateCitation(article, 'abnt');
+    expect(cite).toContain('45');
+    expect(cite).toContain('67');
+  });
 });

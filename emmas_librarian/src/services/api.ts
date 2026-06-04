@@ -229,6 +229,9 @@ export const projectService = {
     error?: string;
     doi?: string;
     journal?: string;
+    volume?: string;
+    issue?: string;
+    pages?: string;
   }> {
     return await window.electronAPI.invoke(IpcChannel.AI_EXTRACT_METADATA, articleId);
   },

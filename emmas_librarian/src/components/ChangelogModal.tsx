@@ -13,8 +13,27 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
 
   return createPortal(
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-      <div className="card fade-in" style={{ padding: '2rem', width: '550px', maxWidth: '95%', maxHeight: '90vh', overflowY: 'auto', background: 'var(--bg-main)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+      <div 
+        className="card fade-in" 
+        style={{ 
+          width: '550px', 
+          maxWidth: '95%', 
+          maxHeight: '90vh', 
+          background: 'var(--bg-main)',
+          borderRadius: 'var(--radius-lg)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <div style={{
+          padding: '2rem',
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
           <div>
             <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Sparkles className="text-primary" size={24} color="var(--color-primary)" /> 
@@ -28,6 +47,18 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div>
+            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.10</h3>
+            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
+              <li><strong>Melhoria de Layout nos Modais:</strong> Correção do transbordo da barra de rolagem (clipping do scrollbar) nas bordas arredondadas nos modais do sistema.</li>
+              <li><strong>Rolagem de Resumo e Referências:</strong> Remoção da rolagem interna nas caixas de resumo e referências, integrando-as à rolagem global do modal.</li>
+              <li><strong>Padronização de Status de Artigos:</strong> Renomeação do filtro "Novos" para "Ativos", unificando a nomenclatura do sistema.</li>
+              <li><strong>Ações Contextuais de Artigos:</strong> Exibição inteligente de botões como "Desmarcar" e "Restaurar" de acordo com o status atual do artigo.</li>
+              <li><strong>Mais Opções para Artigos Lidos:</strong> Adição de botões para abrir detalhes e gerar citações diretamente nos artigos da lista de lidos.</li>
+              <li><strong>Ajustes Visuais e de Console:</strong> Inversão de posição dos autores/citações e correção de erros/avisos do console relacionados ao React 19.</li>
+            </ul>
+          </div>
+
           <div>
             <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.9</h3>
             <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
@@ -74,6 +105,7 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
           <button onClick={onClose} className="btn-primary">
             Entendido, vamos lá!
           </button>
+        </div>
         </div>
       </div>
     </div>,

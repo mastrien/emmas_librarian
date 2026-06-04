@@ -13,6 +13,9 @@ describe('EditArticleModal', () => {
     journal: 'Original Journal',
     doi: '10.1000/old',
     abstract: 'Original Abstract',
+    volume: '12',
+    issue: '3',
+    pages: '100-110',
     source_query: '',
     source_databases: '["Manual"]',
     csl_json: '{}',
@@ -33,6 +36,9 @@ describe('EditArticleModal', () => {
     expect(screen.getByDisplayValue('Original Journal')).toBeDefined();
     expect(screen.getByDisplayValue('10.1000/old')).toBeDefined();
     expect(screen.getByDisplayValue('Original Abstract')).toBeDefined();
+    expect(screen.getByDisplayValue('12')).toBeDefined();
+    expect(screen.getByDisplayValue('3')).toBeDefined();
+    expect(screen.getByDisplayValue('100-110')).toBeDefined();
   });
 
   it('calls onSubmit with updated data when form is submitted', () => {
@@ -43,13 +49,19 @@ describe('EditArticleModal', () => {
     const titleInput = screen.getByDisplayValue('Original Title');
     fireEvent.change(titleInput, { target: { value: 'New Title' } });
 
+    const volumeInput = screen.getByDisplayValue('12');
+    fireEvent.change(volumeInput, { target: { value: '14' } });
+
     const saveBtn = screen.getByText('Salvar Alterações');
     fireEvent.click(saveBtn);
 
     expect(onSubmitMock).toHaveBeenCalledWith(expect.objectContaining({
       title: 'New Title',
       authors: 'Author A',
-      year: 2020
+      year: 2020,
+      volume: '14',
+      issue: '3',
+      pages: '100-110'
     }));
   });
 

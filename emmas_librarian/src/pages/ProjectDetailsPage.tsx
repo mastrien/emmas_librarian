@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { projectService } from '../services/api';
 import { Project, Article } from '../types';
-import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key, AlertCircle, Settings, Link as LinkIcon, File as FileIcon, PieChart as PieChartIcon, Tag, Tags, Brain } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Calendar, Search, Download, Upload, Loader2, CheckCircle, Archive, History, Edit2, Trash2, Check, X as XIcon, BookOpen, ChevronLeft, ChevronRight, Plus, CopyPlus, Key, AlertCircle, Settings, Link as LinkIcon, File as FileIcon, PieChart as PieChartIcon, Tag, Tags, Brain, SlidersHorizontal, Filter } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -34,6 +34,7 @@ import { ManageQuickAccessModal } from '../components/ManageQuickAccessModal';
 import { ProjectCategoriesModal } from '../components/ProjectCategoriesModal';
 import { CategoryCell } from '../components/CategoryCell';
 import { CitationModal } from '../components/CitationModal';
+import { ArticleDetailsModal } from '../components/ArticleDetailsModal';
 
 const ArchiveModal = ({ isOpen, onClose, onSubmit }: { isOpen: boolean, onClose: () => void, onSubmit: (note: string) => void }) => {
   const [note, setNote] = useState('');
@@ -646,6 +647,12 @@ export const ProjectDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [onlyWithPdf, setOnlyWithPdf] = useState(false);
+  const [onlyOpenAccess, setOnlyOpenAccess] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<'new' | 'read' | 'archived' | 'all'>('new');
+  const [selectedDatabases, setSelectedDatabases] = useState<string[]>([]);
+  const [selectedDocType, setSelectedDocType] = useState<string>('');
+  const [selectedKeyword, setSelectedKeyword] = useState<string>('');
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [archivingId, setArchivingId] = useState<number | null>(null);
@@ -669,6 +676,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 });
   const [citationArticle, setCitationArticle] = useState<Article | null>(null);
+  const [selectedArticleForDetails, setSelectedArticleForDetails] = useState<Article | null>(null);
   
   const [sortOrder, setSortOrder] = useState(() => {
     return localStorage.getItem('emmas_librarian_sort_order') || 'added-desc';
@@ -923,11 +931,59 @@ export const ProjectDetailsPage: React.FC = () => {
     setIsExtracting(false);
   };
 
+  const keywordFrequencies = React.useMemo(() => {
+    const freqs: { [key: string]: number } = {};
+    articles.forEach(a => {
+      const parse = (kStr?: string) => kStr ? kStr.split(';').map(k => k.trim()).filter(Boolean) : [];
+      const keywords = [...parse(a.author_keywords), ...parse(a.index_keywords)];
+      keywords.forEach(kw => {
+        const trimmed = kw.trim();
+        if (trimmed) {
+          freqs[trimmed] = (freqs[trimmed] || 0) + 1;
+        }
+      });
+    });
+    return Object.entries(freqs)
+      .map(([keyword, count]) => ({ keyword, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 15);
+  }, [articles]);
+
+  const uniqueDatabases = React.useMemo(() => {
+    const dbs = new Set<string>();
+    articles.forEach(a => {
+      if (a.source_databases) {
+        try {
+          const parsed = JSON.parse(a.source_databases);
+          if (Array.isArray(parsed)) {
+            parsed.forEach(db => dbs.add(db));
+          } else {
+            dbs.add(parsed);
+          }
+        } catch {
+          dbs.add(a.source_databases);
+        }
+      }
+    });
+    return Array.from(dbs);
+  }, [articles]);
+
+  const uniqueDocTypes = React.useMemo(() => {
+    const types = new Set<string>();
+    articles.forEach(a => {
+      if (a.document_type) {
+        types.add(a.document_type);
+      }
+    });
+    return Array.from(types);
+  }, [articles]);
+
   const filteredArticles = articles.filter(a => {
     const matchesSearch = (a.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (a.authors || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPdf = !onlyWithPdf || !!a.local_file_path;
-    return matchesSearch && matchesPdf;
+    const matchesOpenAccess = !onlyOpenAccess || a.is_oa === 1;
+    return matchesSearch && matchesPdf && matchesOpenAccess;
   });
 
   const sortedArticles = [...filteredArticles].sort((a, b) => {
@@ -944,12 +1000,50 @@ export const ProjectDetailsPage: React.FC = () => {
         return (b.id || 0) - (a.id || 0);
       case 'added-asc':
         return (a.id || 0) - (b.id || 0);
+      case 'citations-desc':
+        return (b.citation_count || 0) - (a.citation_count || 0);
+      case 'citations-asc':
+        return (a.citation_count || 0) - (b.citation_count || 0);
       default:
         return 0;
     }
   });
 
-  const activeArticles = sortedArticles.filter(a => a.status === 'new' || !a.status);
+  const activeArticles = sortedArticles.filter(a => {
+    // 1. Status filter
+    if (statusFilter === 'new') {
+      if (a.status !== 'new' && !!a.status) return false;
+    } else if (statusFilter === 'read') {
+      if (a.status !== 'read') return false;
+    } else if (statusFilter === 'archived') {
+      if (a.status !== 'archived') return false;
+    }
+
+    // 2. Database filter
+    if (selectedDatabases.length > 0) {
+      try {
+        const articleBases = JSON.parse(a.source_databases || '[]');
+        const hasMatch = selectedDatabases.some(db => articleBases.includes(db));
+        if (!hasMatch) return false;
+      } catch {
+        if (a.source_databases && !selectedDatabases.includes(a.source_databases)) return false;
+      }
+    }
+
+    // 3. Document Type filter
+    if (selectedDocType) {
+      if (a.document_type !== selectedDocType) return false;
+    }
+
+    // 4. Keyword tag cloud filter
+    if (selectedKeyword) {
+      const parseKeywords = (kStr?: string) => kStr ? kStr.split(';').map(k => k.trim().toLowerCase()).filter(Boolean) : [];
+      const keywords = [...parseKeywords(a.author_keywords), ...parseKeywords(a.index_keywords)];
+      if (!keywords.includes(selectedKeyword.toLowerCase())) return false;
+    }
+
+    return true;
+  });
   const readArticles = sortedArticles.filter(a => a.status === 'read');
   const archivedArticles = sortedArticles.filter(a => a.status === 'archived');
   const nonArchivedArticles = sortedArticles.filter(a => a.status !== 'archived');
@@ -1195,6 +1289,55 @@ export const ProjectDetailsPage: React.FC = () => {
               <span>Apenas com PDF vinculado</span>
             </label>
 
+            <label style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              cursor: 'pointer',
+              fontSize: '0.95rem',
+              fontWeight: 500,
+              color: 'var(--text-main)',
+              userSelect: 'none',
+              padding: '0.5rem 1rem',
+              background: onlyOpenAccess ? 'var(--bg-surface)' : 'transparent',
+              border: '1px solid ' + (onlyOpenAccess ? 'var(--color-primary)' : 'var(--border-color)'),
+              borderRadius: 'var(--radius-lg)',
+              transition: 'all var(--transition-fast)',
+              boxShadow: onlyOpenAccess ? 'var(--shadow-sm)' : 'none'
+            }}>
+              <input 
+                type="checkbox" 
+                checked={onlyOpenAccess} 
+                onChange={(e) => {
+                  setOnlyOpenAccess(e.target.checked);
+                  setCurrentPage(1);
+                }} 
+                style={{ cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+              />
+              <span>Apenas Acesso Aberto</span>
+            </label>
+
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="btn-secondary"
+              style={{
+                padding: '0.5rem 1rem',
+                fontSize: '0.95rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: isSidebarOpen ? 'var(--bg-surface)' : 'transparent',
+                border: '1px solid ' + (isSidebarOpen ? 'var(--color-primary)' : 'var(--border-color)'),
+                borderRadius: 'var(--radius-lg)',
+                color: isSidebarOpen ? 'var(--color-primary)' : 'var(--text-main)',
+                boxShadow: isSidebarOpen ? 'var(--shadow-sm)' : 'none',
+                cursor: 'pointer',
+                transition: 'all var(--transition-fast)'
+              }}
+            >
+              <SlidersHorizontal size={18} /> Filtros
+            </button>
+
             <div style={{ position: 'relative' }}>
               <select 
                 value={sortOrder}
@@ -1219,11 +1362,187 @@ export const ProjectDetailsPage: React.FC = () => {
                 <option value="title-desc">Título (Z-A)</option>
                 <option value="added-desc">Últimos Adicionados</option>
                 <option value="added-asc">Primeiros Adicionados</option>
+                <option value="citations-desc">Mais Citados (Citações)</option>
+                <option value="citations-asc">Menos Citados (Citações)</option>
               </select>
             </div>
           </div>
 
-          {readArticles.length > 0 && (
+          <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', width: '100%' }}>
+            {isSidebarOpen && (
+              <div className="card glass-panel fade-in" style={{
+                width: '280px',
+                flexShrink: 0,
+                padding: '1.5rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.5rem',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-surface)',
+                borderRadius: 'var(--radius-lg)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+                  <span style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--text-heading)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Filter size={16} /> Filtros Avançados
+                  </span>
+                  {(statusFilter !== 'all' || selectedDatabases.length > 0 || selectedDocType || selectedKeyword) && (
+                    <button 
+                      onClick={() => {
+                        setStatusFilter('all');
+                        setSelectedDatabases([]);
+                        setSelectedDocType('');
+                        setSelectedKeyword('');
+                        setCurrentPage(1);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--color-primary)',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        fontWeight: 500,
+                        padding: 0
+                      }}
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>STATUS</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {[
+                      { id: 'all', label: 'Todos' },
+                      { id: 'new', label: 'Ativos' },
+                      { id: 'read', label: 'Lidos' },
+                      { id: 'archived', label: 'Arquivados' }
+                    ].map(st => (
+                      <label key={st.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', color: 'var(--text-main)' }}>
+                        <input 
+                          type="radio" 
+                          name="status-filter"
+                          aria-label={st.label}
+                          checked={statusFilter === st.id}
+                          onChange={() => {
+                            setStatusFilter(st.id as any);
+                            setCurrentPage(1);
+                          }}
+                          style={{ accentColor: 'var(--color-primary)' }}
+                        />
+                        <span>{st.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Databases Filter */}
+                {uniqueDatabases.length > 0 && (
+                  <div>
+                    <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>BASES DE DADOS</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {uniqueDatabases.map(db => {
+                        const isChecked = selectedDatabases.includes(db);
+                        return (
+                          <label key={db} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', color: 'var(--text-main)' }}>
+                            <input 
+                              type="checkbox" 
+                              aria-label={db}
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedDatabases([...selectedDatabases, db]);
+                                } else {
+                                  setSelectedDatabases(selectedDatabases.filter(d => d !== db));
+                                }
+                                setCurrentPage(1);
+                              }}
+                              style={{ accentColor: 'var(--color-primary)' }}
+                            />
+                            <span>{db}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Document Type Filter */}
+                {uniqueDocTypes.length > 0 && (
+                  <div>
+                    <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>TIPO DE DOCUMENTO</h4>
+                    <select
+                      value={selectedDocType}
+                      onChange={(e) => {
+                        setSelectedDocType(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        fontSize: '0.9rem',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border-color)',
+                        background: 'var(--bg-main)',
+                        color: 'var(--text-main)'
+                      }}
+                    >
+                      <option value="">Todos os tipos</option>
+                      {uniqueDocTypes.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Tag Cloud Filter */}
+                {keywordFrequencies.length > 0 && (
+                  <div>
+                    <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>NUVEM DE PALAVRAS-CHAVE</h4>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                      {keywordFrequencies.map(({ keyword, count }) => {
+                        const isActive = selectedKeyword.toLowerCase() === keyword.toLowerCase();
+                        return (
+                          <button
+                            key={keyword}
+                            onClick={() => {
+                              if (isActive) {
+                                setSelectedKeyword('');
+                              } else {
+                                setSelectedKeyword(keyword);
+                              }
+                              setCurrentPage(1);
+                            }}
+                            style={{
+                              padding: '0.25rem 0.5rem',
+                              fontSize: '0.75rem',
+                              borderRadius: 'var(--radius-sm)',
+                              border: '1px solid',
+                              borderColor: isActive ? 'var(--color-primary)' : 'var(--border-color)',
+                              background: isActive ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)' : 'var(--bg-main)',
+                              color: isActive ? 'var(--color-primary)' : 'var(--text-main)',
+                              cursor: 'pointer',
+                              fontWeight: isActive ? 600 : 400,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              transition: 'all var(--transition-fast)'
+                            }}
+                          >
+                            <span>{keyword}</span>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>({count})</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {readArticles.length > 0 && (
             <details style={{ marginBottom: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', padding: '1rem' }}>
               <summary style={{ fontWeight: 600, color: 'var(--color-primary)', cursor: 'pointer', outline: 'none' }}>
                 Artigos Lidos ({readArticles.length})
@@ -1234,9 +1553,11 @@ export const ProjectDetailsPage: React.FC = () => {
                     {readArticles.map(article => (
                       <tr key={article.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                         <td style={{ padding: '0.75rem 1rem' }}>{article.title}</td>
-                        <td style={{ padding: '0.75rem 1rem', width: '200px' }}>
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <td style={{ padding: '0.75rem 1rem', width: '320px' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                             <Link to={`/articles/${article.id}`} className="btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}>Ver</Link>
+                            <button onClick={() => setSelectedArticleForDetails(article)} className="btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}>Detalhes</button>
+                            <button onClick={() => setCitationArticle(article)} className="btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}>Citar</button>
                             <button onClick={() => handleStatusChange(article.id, 'new')} className="btn-secondary" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}>Desmarcar</button>
                           </div>
                         </td>
@@ -1292,7 +1613,7 @@ export const ProjectDetailsPage: React.FC = () => {
           )}
 
           <div className="card" style={{ overflowX: 'auto', border: 'none', marginBottom: '2rem' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <table data-testid="main-articles-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
                   <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem' }}>TÍTULO</th>
@@ -1305,7 +1626,27 @@ export const ProjectDetailsPage: React.FC = () => {
                 {paginatedArticles.map(article => (
                   <tr key={article.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background var(--transition-fast)' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-main)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     <td style={{ padding: '1.25rem 1.5rem', maxWidth: '350px' }}>
-                      <div style={{ fontWeight: 600, color: 'var(--text-heading)', marginBottom: '0.25rem', lineHeight: '1.4' }}>{article.title}</div>
+                      <div 
+                        onClick={() => setSelectedArticleForDetails(article)}
+                        style={{ 
+                          fontWeight: 600, 
+                          color: 'var(--color-primary)', 
+                          cursor: 'pointer', 
+                          marginBottom: '0.25rem', 
+                          lineHeight: '1.4',
+                          transition: 'color var(--transition-fast)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = 'color-mix(in srgb, var(--color-primary) 80%, black)';
+                          e.currentTarget.style.textDecoration = 'underline';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = 'var(--color-primary)';
+                          e.currentTarget.style.textDecoration = 'none';
+                        }}
+                      >
+                        {article.title}
+                      </div>
                       {article.doi && (
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                           DOI: {article.doi}
@@ -1313,10 +1654,29 @@ export const ProjectDetailsPage: React.FC = () => {
                       )}
                     </td>
                     <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-main)', fontSize: '0.9rem', maxWidth: '250px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-                        <Calendar size={14} color="var(--text-muted)" /> {article.year || 'N/A'}
+                      <div style={{ marginBottom: '0.4rem', fontWeight: 500 }}>
+                        {article.authors || 'Autores desconhecidos'}
                       </div>
-                      {article.authors}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <Calendar size={14} color="var(--text-muted)" /> {article.year || 'N/A'}
+                        </div>
+                        {article.citation_count !== undefined && article.citation_count !== null && (
+                          <span style={{ 
+                            fontSize: '0.8rem', 
+                            color: 'var(--color-primary)', 
+                            fontWeight: 600,
+                            background: 'var(--bg-main)',
+                            padding: '0.1rem 0.4rem',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--border-color)',
+                            display: 'inline-flex',
+                            alignItems: 'center'
+                          }}>
+                            🎓 {article.citation_count} {article.citation_count === 1 ? 'citação' : 'citações'}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td style={{ padding: '1.25rem 1.5rem' }}>
                       <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
@@ -1340,6 +1700,22 @@ export const ProjectDetailsPage: React.FC = () => {
                         ) : (
                           <span style={{ color: 'var(--text-muted)' }}>-</span>
                         )}
+                        {article.is_oa === 1 && (
+                          <span style={{ 
+                            padding: '0.2rem 0.6rem', 
+                            background: 'rgba(16, 185, 129, 0.1)', 
+                            border: '1px solid var(--color-success, #10b981)',
+                            borderRadius: 'var(--radius-xl)', 
+                            fontSize: '0.75rem', 
+                            fontWeight: 600,
+                            color: 'var(--color-success, #10b981)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.2rem'
+                          }}>
+                            🔓 Acesso Aberto
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td style={{ padding: '1.25rem 1.5rem' }}>
@@ -1359,9 +1735,15 @@ export const ProjectDetailsPage: React.FC = () => {
                           </button>
                         )}
 
-                        <button onClick={() => handleStatusChange(article.id, 'read')} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Marcar como Lido">
-                          <CheckCircle size={14} /> Lido
-                        </button>
+                        {article.status === 'read' ? (
+                          <button onClick={() => handleStatusChange(article.id, 'new')} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Desmarcar como Lido">
+                            <CheckCircle size={14} /> Desmarcar
+                          </button>
+                        ) : article.status !== 'archived' ? (
+                          <button onClick={() => handleStatusChange(article.id, 'read')} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Marcar como Lido">
+                            <CheckCircle size={14} /> Lido
+                          </button>
+                        ) : null}
                         
                         {isArticleManual(article) && (
                           <button onClick={() => setEditingArticle(article)} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Editar Metadados">
@@ -1369,9 +1751,15 @@ export const ProjectDetailsPage: React.FC = () => {
                           </button>
                         )}
 
-                        <button onClick={() => setArchivingId(article.id)} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: 'var(--color-danger)' }} title="Arquivar">
-                          <Archive size={14} /> Arquivar
-                        </button>
+                        {article.status === 'archived' ? (
+                          <button onClick={() => handleStatusChange(article.id, 'new')} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Restaurar Artigo">
+                            <History size={14} /> Restaurar
+                          </button>
+                        ) : (
+                          <button onClick={() => setArchivingId(article.id)} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: 'var(--color-danger)' }} title="Arquivar">
+                            <Archive size={14} /> Arquivar
+                          </button>
+                        )}
 
                         <button onClick={() => setCitationArticle(article)} className="btn-secondary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }} title="Gerar Citação">
                           <CopyPlus size={14} /> Citar
@@ -1407,6 +1795,8 @@ export const ProjectDetailsPage: React.FC = () => {
               </button>
             </div>
           )}
+        </div>
+      </div>
         </>
       )}
 
@@ -1859,6 +2249,11 @@ export const ProjectDetailsPage: React.FC = () => {
         isOpen={!!citationArticle}
         onClose={() => setCitationArticle(null)}
         article={citationArticle}
+      />
+      <ArticleDetailsModal
+        isOpen={!!selectedArticleForDetails}
+        onClose={() => setSelectedArticleForDetails(null)}
+        article={selectedArticleForDetails}
       />
     </div>
   );

@@ -20,6 +20,9 @@ export const EditArticleModal = ({
   const [year, setYear] = useState('');
   const [doi, setDoi] = useState('');
   const [journal, setJournal] = useState('');
+  const [volume, setVolume] = useState('');
+  const [issue, setIssue] = useState('');
+  const [pages, setPages] = useState('');
   const [abstract, setAbstract] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -31,6 +34,9 @@ export const EditArticleModal = ({
       setYear(article.year ? article.year.toString() : '');
       setDoi(article.doi || '');
       setJournal(article.journal || '');
+      setVolume(article.volume || '');
+      setIssue(article.issue || '');
+      setPages(article.pages || '');
       setAbstract(article.abstract || '');
       setSubmitting(false);
     }
@@ -52,6 +58,9 @@ export const EditArticleModal = ({
         year: year.trim() ? parseInt(year.trim()) : undefined,
         doi: doi.trim() || undefined,
         journal: journal.trim() || undefined,
+        volume: volume.trim() || undefined,
+        issue: issue.trim() || undefined,
+        pages: pages.trim() || undefined,
         abstract: abstract.trim() || undefined
       });
       onClose();
@@ -77,7 +86,7 @@ export const EditArticleModal = ({
       setSubmitting(false);
     }
   };
-
+ 
   const handleExtractWithAI = async () => {
     if (!article.local_file_path) return;
     setIsExtracting(true);
@@ -89,6 +98,9 @@ export const EditArticleModal = ({
         setYear(prev => prev.trim() ? prev : (data.year ? data.year.toString() : prev));
         setDoi(prev => prev.trim() ? prev : data.doi || prev);
         setJournal(prev => prev.trim() ? prev : data.journal || prev);
+        setVolume(prev => prev.trim() ? prev : data.volume || prev);
+        setIssue(prev => prev.trim() ? prev : data.issue || prev);
+        setPages(prev => prev.trim() ? prev : data.pages || prev);
         setAbstract(prev => prev.trim() ? prev : data.abstract || prev);
       }
     } catch (err: any) {
@@ -116,8 +128,27 @@ export const EditArticleModal = ({
 
   return createPortal(
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-      <div className="card fade-in" style={{ padding: '2rem', width: '550px', maxWidth: '95%', maxHeight: '90vh', overflowY: 'auto', background: 'var(--bg-main)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div 
+        className="card fade-in" 
+        style={{ 
+          width: '550px', 
+          maxWidth: '95%', 
+          maxHeight: '90vh', 
+          background: 'var(--bg-main)',
+          borderRadius: 'var(--radius-lg)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <div style={{
+          padding: '2rem',
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 style={{ margin: 0 }}>Editar Metadados do Artigo</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {article.local_file_path && (
@@ -217,6 +248,51 @@ export const EditArticleModal = ({
             </div>
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Volume</label>
+              <input 
+                type="text" 
+                value={volume} 
+                onChange={(e) => setVolume(e.target.value)}
+                style={{ 
+                  width: '100%', padding: '0.6rem 0.8rem', 
+                  borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)',
+                  outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-main)',
+                  fontFamily: 'inherit'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Edição (Issue)</label>
+              <input 
+                type="text" 
+                value={issue} 
+                onChange={(e) => setIssue(e.target.value)}
+                style={{ 
+                  width: '100%', padding: '0.6rem 0.8rem', 
+                  borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)',
+                  outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-main)',
+                  fontFamily: 'inherit'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Páginas</label>
+              <input 
+                type="text" 
+                value={pages} 
+                onChange={(e) => setPages(e.target.value)}
+                style={{ 
+                  width: '100%', padding: '0.6rem 0.8rem', 
+                  borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)',
+                  outline: 'none', background: 'var(--bg-surface)', color: 'var(--text-main)',
+                  fontFamily: 'inherit'
+                }}
+              />
+            </div>
+          </div>
+
           <div>
             <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Resumo</label>
             <textarea 
@@ -239,6 +315,7 @@ export const EditArticleModal = ({
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>,
     document.body

@@ -87,8 +87,27 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
 
   return createPortal(
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-      <div className="card fade-in" style={{ padding: '2rem', width: '550px', maxWidth: '95%', maxHeight: '90vh', overflowY: 'auto', background: 'var(--bg-main)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div 
+        className="card fade-in" 
+        style={{ 
+          width: '550px', 
+          maxWidth: '95%', 
+          maxHeight: '90vh', 
+          background: 'var(--bg-main)',
+          borderRadius: 'var(--radius-lg)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <div style={{
+          padding: '2rem',
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 style={{ margin: 0 }}>Adicionar Artigo Avulso</h3>
           <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <XIcon size={20} />
@@ -237,6 +256,7 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>,
     document.body

@@ -66,7 +66,7 @@ describe('ArticleTable', () => {
     onStatusChange: vi.fn(),
     onEditClick: vi.fn(),
     onArchiveClick: vi.fn(),
-    isArticleManual: (article: Article) => article.source_databases.includes('Manual')
+    isArticleManual: (article: Article) => (article.source_databases || '').includes('Manual')
   };
 
   const renderComponent = (props = {}) => {
@@ -129,5 +129,16 @@ describe('ArticleTable', () => {
     const archiveBtns = screen.getAllByRole('button').filter(b => b.title === 'Arquivar');
     fireEvent.click(archiveBtns[0]);
     expect(defaultProps.onArchiveClick).toHaveBeenCalledWith(1);
+  });
+
+  it('renders Acesso Aberto badge when is_oa is 1', () => {
+    const articlesWithOa = [
+      {
+        ...mockArticles[0],
+        is_oa: 1
+      }
+    ];
+    renderComponent({ paginatedArticles: articlesWithOa, activeArticlesLength: 1 });
+    expect(screen.getByText('🔓 Acesso Aberto')).toBeDefined();
   });
 });

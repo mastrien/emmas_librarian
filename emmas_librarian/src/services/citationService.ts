@@ -50,6 +50,8 @@ export function generateCitation(article: any, style: CitationStyle = 'abnt', fo
 
     if (article.page !== undefined) {
       data.page = article.page ? article.page.trim() : '';
+    } else if (article.pages !== undefined) {
+      data.page = article.pages ? article.pages.trim() : '';
     }
 
     if (article.url !== undefined) {

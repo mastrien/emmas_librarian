@@ -10,7 +10,7 @@ const tutorials: Record<string, { title: string, content: React.ReactNode }> = {
       <>
         <p>Bem-vindo ao Emma's Librarian! Este é o seu painel principal.</p>
         <ul style={{ paddingLeft: '1.5rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <li><strong>Projetos:</strong> Aqui você vê todos os seus projetos de pesquisa. Cada card exibe um resumo da quantidade de artigos do projeto (Lidos, Novos/Ativos e Arquivados).</li>
+          <li><strong>Projetos:</strong> Aqui você vê todos os seus projetos de pesquisa. Cada card exibe um resumo da quantidade de artigos do projeto (Lidos, Ativos e Arquivados).</li>
           <li><strong>Novo Projeto:</strong> Clique no botão "Novo Projeto" no canto superior direito para iniciar uma nova pesquisa bibliográfica.</li>
         </ul>
       </>
