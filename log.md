@@ -1,5 +1,14 @@
 # Development Log - Emma's Librarian
 
+### Ciclo 34 [2026-06-05]: Backup Automático no Startup e Rotação GFS (Etapa 1)
+- **Objetivo:** Implementar backups automáticos comprimidos com gzip na inicialização do aplicativo, com checagem de integridade estrutural (`PRAGMA integrity_check`) e política de retenção GFS (Grandfather-Father-Son) para otimizar espaço de armazenamento.
+- **Alterações:**
+  - **BackupManager:** Criado o serviço [BackupManager.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/services/BackupManager.ts) com suporte a gzip (módulo `zlib`), checagem de integridade de banco de dados do SQLite, e expurgo automático de arquivos seguindo política GFS (7 diários, 4 semanais, 12 mensais).
+  - **Integração no Startup:** Acoplada a inicialização assíncrona do backup no carregamento de handlers em [handlers.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/ipc/handlers.ts).
+  - **Suíte de Testes:** Desenvolvidos testes em [BackupManager.test.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/__tests__/BackupManager.test.ts) validando a compressão, checagem de integridade, desativação via configurações, e expurgo do GFS.
+  - **Ajustes de Mocking:** Corrigido o mock de `fs` em [handlers.test.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/ipc/__tests__/handlers.test.ts) adicionando `readdirSync` para evitar console de erro sob teste.
+- **Testes:** Executada a suíte completa de testes no Vitest com 100% de sucesso (171 testes passando sem avisos).
+
 ### Ciclo 33 [2026-06-05]: Isolamento de Ambientes e Correção da Importação/Exportação (.emmapcarc)
 - **Objetivo:** Garantir isolamento de dados 100% autônomo entre desenvolvimento e produção, e corrigir o bug crítico de exportação/importação de projetos (`.emmapcarc`) onde anotações, destaques, destaques pendentes e diário de projeto eram perdidos.
 - **Alterações:**

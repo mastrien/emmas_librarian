@@ -211,12 +211,12 @@ O desenvolvimento será estruturado em 4 etapas de desenvolvimento contínuo:
 - [x] Documentar o progresso no `log.md` e realizar commits atômicos locais em inglês.
 
 ### Etapa 1: Backend e Lógica de Armazenamento (Backups Automáticos & WAL)
-- [x] Implementar o isolamento completo dos ambientes configurando o path de `userData` para `./dev_data` em desenvolvimento.
-- [ ] Criar o serviço `BackupManager.ts` em `electron/services/`.
-- [ ] Implementar a cópia e compressão comprimida (`gzip`) do banco no startup.
-- [ ] Criar algoritmo de limpeza baseado na política GFS.
-- [ ] Adicionar checagem de integridade (`PRAGMA integrity_check`).
-- [ ] Testar cenários de inicialização (startup rápido e impacto em performance).
+- [x] Implementar o isolamento completo dos ambientes configurando o path de `userData` para `./dev_data` in desenvolvimento.
+- [x] Criar o serviço `BackupManager.ts` em `electron/services/`.
+- [x] Implementar a cópia e compressão comprimida (`gzip`) do banco no startup.
+- [x] Criar algoritmo de limpeza baseado na política GFS.
+- [x] Adicionar checagem de integridade (`PRAGMA integrity_check`).
+- [x] Testar cenários de inicialização (startup rápido e impacto em performance).
 
 ### Etapa 2: Lixeira, Histórico do Diário e Schema
 - [ ] Criar script de migração no SQLite para adicionar a coluna `deleted_at` e a tabela `project_diary_history`.

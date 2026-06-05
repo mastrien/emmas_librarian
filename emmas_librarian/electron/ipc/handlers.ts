@@ -8,12 +8,34 @@ import { ApiIntegrator } from '../services/ApiIntegrator';
 import { ExportService } from '../services/ExportService';
 import { AIService } from '../services/AIService';
 import { SyncService } from '../database/SyncService';
+import { BackupManager } from '../services/BackupManager';
 import { IpcChannel, QueryASTNode, Article } from '../types';
 import { QueryBlock } from '../services/types';
 
 export function setupIpcHandlers() {
   const dbPath = path.join(app.getPath('userData'), 'emma.db');
   const db = new DatabaseManager(dbPath);
+  const backupsDir = path.join(app.getPath('userData'), 'backups');
+  const backupManager = new BackupManager(db, dbPath, backupsDir);
+
+  // Run auto backup and GFS rotation asynchronously on startup
+  Promise.resolve().then(async () => {
+    try {
+      const backupPath = await backupManager.runAutoBackup();
+      if (backupPath) {
+        console.log(`Auto backup created successfully at: ${backupPath}`);
+      }
+    } catch (err) {
+      console.error('Auto backup failed:', err);
+    } finally {
+      try {
+        backupManager.rotateBackups();
+      } catch (err) {
+        console.error('Backup rotation failed:', err);
+      }
+    }
+  });
+
   const translator = new QueryTranslator();
   const api = new ApiIntegrator();
   const orchestrator = new SearchOrchestrator(db, translator, api);

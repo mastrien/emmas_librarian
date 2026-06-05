@@ -35,9 +35,10 @@ vi.mock('fs', () => {
       existsSync: vi.fn(),
       mkdirSync: vi.fn(),
       copyFileSync: vi.fn(),
-      readFileSync: vi.fn(),
+      readFileSync: vi.fn().mockReturnValue(Buffer.from('')),
       unlinkSync: vi.fn(),
       writeFileSync: vi.fn(),
+      readdirSync: vi.fn().mockReturnValue([]),
     }
   };
 });
@@ -80,6 +81,7 @@ vi.mock('../../database/DatabaseManager', () => {
       saveMassiveInvestigation: vi.fn(),
       getProjectCategories: vi.fn().mockReturnValue([]),
       getAllProjectArticleCategories: vi.fn().mockReturnValue([]),
+      checkIntegrity: vi.fn().mockReturnValue(true),
     }))
   };
 });

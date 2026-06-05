@@ -470,6 +470,19 @@ export class DatabaseManager {
     this.db.close();
   }
 
+  public checkIntegrity(): boolean {
+    try {
+      const result = this.db.pragma('integrity_check') as any[];
+      if (!result || result.length === 0) return false;
+      const firstRow = result[0];
+      const val = firstRow.integrity_check || firstRow['integrity_check'];
+      return val === 'ok';
+    } catch (e) {
+      console.error('Failed to check database integrity:', e);
+      return false;
+    }
+  }
+
   // Settings
   public getSetting(key: string): string | null {
     let row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as any;
