@@ -80,6 +80,29 @@ Acompanhe as últimas novidades, melhorias e correções recentes do **Emma's Li
 ### v1.1.6
 - **Multi-select:** Suporte a categorias de seleção múltipla para classificação flexível de artigos.
 
+### v1.1.5
+- **Matriz de Categorias:** Nova visualização em matriz para gerenciar categorias do projeto e exportação dedicada.
+- **Edição Inline:** Possibilidade de editar opções de categorias diretamente na tabela.
+- **UI Dinâmica:** Substituição de prompts nativos por modais de input para criação de opções de categorias.
+
+### v1.1.4
+- **Dashboard Avançado:** Inclusão de novos gráficos de estatísticas (distribuição por ano, tipo e periódicos).
+- **Heatmap do Diário:** Adicionado mapa de calor de atividade do diário no dashboard global.
+- **Arrastar e Soltar:** Suporte a importação de projetos (`.emmapcarc`) e adição em massa de PDFs via drag-and-drop.
+
+### v1.1.3
+- **Gestão de Referências:** Implementação de gerador de citações completo com suporte a BibTeX e prévia HTML (ABNT padrão).
+- **Guia de Escrita:** Adicionado bloco de notas (writing pad) integrado ao leitor de artigos.
+- **Contexto de Destaques:** Opção de copiar texto destacado via menu de contexto (botão direito).
+
+### v1.1.2
+- **Importação/Exportação:** Lançamento inicial da funcionalidade de portabilidade de projetos entre dispositivos.
+- **Estatísticas Iniciais:** Gráficos de pizza para contagem de PDFs e status de leitura.
+
+### v1.1.1
+- **Correções de Build:** Estabilização de ícones no Windows e atalhos do instalador NSIS.
+- **Ordenação:** Adicionada ordenação personalizada de artigos (por data de adição, título, etc).
+
 ### v1.1.0
 - **Integração com IA:** Adicionado Resumo Mágico, Extração em Massa de dados e histórico de extrações.
 - **Interface (UI):** Nova barra de título nativa customizada e novo logotipo SVG.
