@@ -56,6 +56,30 @@ Acompanhe as últimas novidades, melhorias e correções recentes do **Emma's Li
 - **Importação e Exportação:** Correções críticas na persistência de dados durante o ciclo de exportação e importação de projetos (`.emmapcarc`), garantindo a integridade de todos os metadados.
 - **Estabilidade:** Melhorias no tratamento de concorrência do banco de dados (WAL checkpointing) e isolamento de ambiente para evitar conflitos de arquivos.
 
+### v1.1.11
+- **Controle de "et al." em Citações:** Adicionado suporte para ativar/desativar o uso de "et al." nos modais de citação individual e em massa.
+- **Melhorias de Parser:** Correção na leitura de autores separados por vírgula em metadados importados e novas instruções de preenchimento.
+- **UI/UX:** Padronização completa dos ícones de accordions (`ChevronRight`/`ChevronDown`) e correções de transbordo de rolagem.
+
+### v1.1.10
+- **Ações Contextuais:** Botões inteligentes (abrir detalhes, gerar citação, restaurar) adicionados diretamente na lista de artigos lidos e ativos.
+- **Correções de Layout:** Remoção de barras de rolagem redundantes e melhoria no clipping de scrollbars em modais arredondados.
+- **Nomenclatura:** Unificação do termo "Novos" para "Ativos" em todo o sistema.
+
+### v1.1.9
+- **Segurança de API:** Resolução de inconsistências em chaves do Scopus/WoS e adição de suporte a retrocompatibilidade de credenciais criptografadas.
+- **Integridade:** Novos testes de regressão para o motor de busca e banco de dados.
+
+### v1.1.8
+- **Categorias e Lidos:** Correção na tabela de categorias para exibir corretamente artigos marcados como lidos.
+
+### v1.1.7
+- **Leitor de PDF:** Melhoria na ancoragem de destaques e suporte a quebras de linha em anotações.
+- **Sincronização:** Resolução de condições de corrida na persistência do diário do projeto.
+
+### v1.1.6
+- **Multi-select:** Suporte a categorias de seleção múltipla para classificação flexível de artigos.
+
 ### v1.1.0
 - **Integração com IA:** Adicionado Resumo Mágico, Extração em Massa de dados e histórico de extrações.
 - **Interface (UI):** Nova barra de título nativa customizada e novo logotipo SVG.
