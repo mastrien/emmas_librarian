@@ -519,4 +519,30 @@ export function setupIpcHandlers() {
   ipcMain.handle(IpcChannel.SYNC_IMPORT_PROJECT, async (event, filePath?: string) => {
     return await syncService.importProject(filePath);
   });
+
+  // Trash Bin
+  ipcMain.handle(IpcChannel.TRASH_GET_ITEMS, () => {
+    return db.getTrashItems();
+  });
+
+  ipcMain.handle(IpcChannel.TRASH_RESTORE_ITEM, (event, type: 'project' | 'article' | 'annotation', id: number) => {
+    return db.restoreTrashItem(type, id);
+  });
+
+  ipcMain.handle(IpcChannel.TRASH_PERMANENT_DELETE, (event, type: 'project' | 'article' | 'annotation', id: number) => {
+    return db.deleteTrashItemPermanent(type, id);
+  });
+
+  ipcMain.handle(IpcChannel.TRASH_EMPTY, () => {
+    return db.emptyTrash();
+  });
+
+  // Diary History
+  ipcMain.handle(IpcChannel.DIARY_GET_HISTORY, (event, projectId: number, entryDate: string) => {
+    return db.getDiaryEntryHistory(projectId, entryDate);
+  });
+
+  ipcMain.handle(IpcChannel.DIARY_RESTORE_VERSION, (event, versionId: number) => {
+    return db.restoreDiaryEntryVersion(versionId);
+  });
 }

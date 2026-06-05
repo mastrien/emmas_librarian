@@ -7,6 +7,10 @@ vi.mock('../../services/api', () => ({
   projectService: {
     getSetting: vi.fn().mockResolvedValue('value'),
     setSetting: vi.fn().mockResolvedValue(undefined),
+    getTrashItems: vi.fn().mockResolvedValue([]),
+    restoreTrashItem: vi.fn().mockResolvedValue(undefined),
+    deleteTrashItemPermanent: vi.fn().mockResolvedValue(undefined),
+    emptyTrash: vi.fn().mockResolvedValue(undefined),
   }
 }));
 

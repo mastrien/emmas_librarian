@@ -202,6 +202,30 @@ export const projectService = {
     await window.electronAPI.invoke(IpcChannel.DIARY_DELETE, projectId, entryDate);
   },
 
+  async getTrashItems(): Promise<any[]> {
+    return await window.electronAPI.invoke(IpcChannel.TRASH_GET_ITEMS);
+  },
+
+  async restoreTrashItem(type: 'project' | 'article' | 'annotation', id: number): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.TRASH_RESTORE_ITEM, type, id);
+  },
+
+  async deleteTrashItemPermanent(type: 'project' | 'article' | 'annotation', id: number): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.TRASH_PERMANENT_DELETE, type, id);
+  },
+
+  async emptyTrash(): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.TRASH_EMPTY);
+  },
+
+  async getDiaryEntryHistory(projectId: number, entryDate: string): Promise<any[]> {
+    return await window.electronAPI.invoke(IpcChannel.DIARY_GET_HISTORY, projectId, entryDate);
+  },
+
+  async restoreDiaryEntryVersion(versionId: number): Promise<void> {
+    await window.electronAPI.invoke(IpcChannel.DIARY_RESTORE_VERSION, versionId);
+  },
+
   async getAppVersion(): Promise<string> {
     return await window.electronAPI.invoke(IpcChannel.APP_GET_VERSION);
   },

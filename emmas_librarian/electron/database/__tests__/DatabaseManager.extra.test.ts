@@ -294,7 +294,7 @@ describe('DatabaseManager Settings & Extra', () => {
     dbManager.updateArticleFilePath(articleId, tempFile1);
     dbManager.saveProjectDocument(proj.id, 'Doc', undefined, tempFile2);
 
-    dbManager.deleteProject(proj.id);
+    dbManager.deleteProjectPermanent(proj.id);
     expect(fs.existsSync(tempFile1)).toBe(false);
     expect(fs.existsSync(tempFile2)).toBe(false);
 
@@ -310,7 +310,151 @@ describe('DatabaseManager Settings & Extra', () => {
       throw new Error('Unlink failed');
     });
 
-    dbManager.deleteProject(proj2.id);
+    dbManager.deleteProjectPermanent(proj2.id);
+  });
+
+  describe('Trash Bin & Soft Delete', () => {
+    it('should soft-delete project, article, and annotation, and hide them from default queries', () => {
+      const proj = dbManager.createProject('Soft Delete Project');
+      const articleId = dbManager.saveArticle(proj.id, {
+        title: 'Soft Delete Article', source_query: '', source_databases: '[]', csl_json: '{}'
+      });
+      const annId = dbManager.saveAnnotation(articleId, 'Soft Delete Annotation');
+
+      // Verify they are initially retrieved
+      expect(dbManager.getAllProjects().some(p => p.id === proj.id)).toBe(true);
+      expect(dbManager.getArticlesByProject(proj.id).some(a => a.id === articleId)).toBe(true);
+      expect(dbManager.getAnnotations(articleId).some(an => an.id === annId)).toBe(true);
+
+      // Perform soft deletes
+      dbManager.deleteAnnotation(annId);
+      dbManager.deleteArticle(articleId);
+      dbManager.deleteProject(proj.id);
+
+      // Verify they are filtered out in default queries
+      expect(dbManager.getAllProjects().some(p => p.id === proj.id)).toBe(false);
+      expect(dbManager.getArticlesByProject(proj.id).some(a => a.id === articleId)).toBe(false);
+      expect(dbManager.getAnnotations(articleId).some(an => an.id === annId)).toBe(false);
+
+      // Verify getProject and getArticle also filter out deleted items
+      expect(dbManager.getProject(proj.id)).toBeUndefined();
+      expect(dbManager.getArticle(articleId)).toBeUndefined();
+    });
+
+    it('should list soft-deleted items in the trash bin', () => {
+      const proj = dbManager.createProject('Trash Bin Project');
+      const articleId = dbManager.saveArticle(proj.id, {
+        title: 'Trash Bin Article', source_query: '', source_databases: '[]', csl_json: '{}'
+      });
+      const annId = dbManager.saveAnnotation(articleId, 'Trash Bin Annotation');
+
+      dbManager.deleteAnnotation(annId);
+      dbManager.deleteArticle(articleId);
+      dbManager.deleteProject(proj.id);
+
+      const trash = dbManager.getTrashItems();
+      expect(trash).toBeDefined();
+      
+      const deletedProj = trash.find((t: any) => t.type === 'project' && t.id === proj.id);
+      const deletedArt = trash.find((t: any) => t.type === 'article' && t.id === articleId);
+      const deletedAnn = trash.find((t: any) => t.type === 'annotation' && t.id === annId);
+
+      expect(deletedProj).toBeDefined();
+      expect(deletedProj.title).toBe('Trash Bin Project');
+      expect(deletedArt).toBeDefined();
+      expect(deletedArt.title).toBe('Trash Bin Article');
+      expect(deletedAnn).toBeDefined();
+      expect(deletedAnn.title).toBe('Trash Bin Annotation');
+    });
+
+    it('should restore soft-deleted items from the trash bin', () => {
+      const proj = dbManager.createProject('Restore Project');
+      dbManager.deleteProject(proj.id);
+      expect(dbManager.getProject(proj.id)).toBeUndefined();
+
+      dbManager.restoreTrashItem('project', proj.id);
+      expect(dbManager.getProject(proj.id)).toBeDefined();
+      expect(dbManager.getProject(proj.id)?.name).toBe('Restore Project');
+    });
+
+    it('should permanently delete items from the trash bin', () => {
+      const proj = dbManager.createProject('Permanent Project');
+      dbManager.deleteProject(proj.id);
+
+      dbManager.deleteTrashItemPermanent('project', proj.id);
+      
+      // Attempting to restore or fetch after permanent delete should fail/be null
+      const trash = dbManager.getTrashItems();
+      expect(trash.some((t: any) => t.type === 'project' && t.id === proj.id)).toBe(false);
+    });
+
+    it('should empty the trash bin permanently', () => {
+      const proj = dbManager.createProject('Empty Project');
+      dbManager.deleteProject(proj.id);
+
+      dbManager.emptyTrash();
+      expect(dbManager.getTrashItems()).toHaveLength(0);
+    });
+  });
+
+  describe('Diary Versioning', () => {
+    it('should record diary history and keep only latest 10 versions', () => {
+      const proj = dbManager.createProject('Diary Hist Project');
+      const date = '2026-06-05';
+
+      // First save
+      dbManager.saveDiaryEntry(proj.id, date, 'Version 1');
+      expect(dbManager.getDiaryEntryHistory(proj.id, date)).toHaveLength(0);
+
+      // Second save (should backup Version 1)
+      dbManager.saveDiaryEntry(proj.id, date, 'Version 2');
+      let history = dbManager.getDiaryEntryHistory(proj.id, date);
+      expect(history).toHaveLength(1);
+      expect(history[0].content).toBe('Version 1');
+
+      // Do 11 more saves (total 13 versions, so 12 history entries)
+      for (let i = 3; i <= 13; i++) {
+        dbManager.saveDiaryEntry(proj.id, date, `Version ${i}`);
+      }
+
+      // History should be capped at 10 versions
+      history = dbManager.getDiaryEntryHistory(proj.id, date);
+      expect(history).toHaveLength(10);
+      // Newest first
+      expect(history[0].content).toBe('Version 12');
+      expect(history[9].content).toBe('Version 3');
+    });
+
+    it('should record history on delete diary entry', () => {
+      const proj = dbManager.createProject('Diary Del Project');
+      const date = '2026-06-05';
+
+      dbManager.saveDiaryEntry(proj.id, date, 'To delete content');
+      dbManager.deleteDiaryEntry(proj.id, date);
+
+      // Verify entry is deleted from active project_diary
+      expect(dbManager.getDiaryEntry(proj.id, date)).toBeUndefined();
+
+      // Verify the deleted content was sent to history
+      const history = dbManager.getDiaryEntryHistory(proj.id, date);
+      expect(history).toHaveLength(1);
+      expect(history[0].content).toBe('To delete content');
+    });
+
+    it('should restore a specific diary entry version from history', () => {
+      const proj = dbManager.createProject('Diary Restore Project');
+      const date = '2026-06-05';
+
+      dbManager.saveDiaryEntry(proj.id, date, 'Old Content');
+      dbManager.saveDiaryEntry(proj.id, date, 'New Content');
+
+      const history = dbManager.getDiaryEntryHistory(proj.id, date);
+      expect(history).toHaveLength(1);
+      const oldVersionId = history[0].id;
+
+      dbManager.restoreDiaryEntryVersion(oldVersionId);
+      expect(dbManager.getDiaryEntry(proj.id, date)?.content).toBe('Old Content');
+    });
   });
 });
 

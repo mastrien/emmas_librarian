@@ -1,5 +1,12 @@
 # Development Log - Emma's Librarian
 
+### Ciclo 35 [2026-06-05]: Histórico do Diário na UI e Ajustes na Lixeira (Etapa 2)
+- **Objetivo:** Concluir a Etapa 2 do plano de backup adicionando a interface de histórico e rollback de diário, e corrigindo mocks do frontend para execução limpa de testes.
+- **Alterações:**
+  - **Interface do Diário:** Modificado o componente [DiarySection.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/components/common/DiarySection.tsx) para incluir um botão "Histórico" (usando o ícone `History` da biblioteca `lucide-react`) que abre um modal interativo exibindo a lista de versões passadas da página de diário (com preview e data/hora localizadas). Ao clicar em "Restaurar", a versão selecionada é recuperada e reaberta no editor markdown.
+  - **Mocks dos Testes:** Atualizado [SettingsPage.test.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/pages/__tests__/SettingsPage.test.tsx) para incluir mocks das funções de lixeira (`getTrashItems`, `restoreTrashItem`, `deleteTrashItemPermanent`, `emptyTrash`), eliminando mensagens de erro de tipo do console durante a execução dos testes.
+- **Testes:** Suíte completa executada com sucesso absoluto via Vitest (179 testes passando em 32 arquivos).
+
 ### Ciclo 34 [2026-06-05]: Backup Automático no Startup e Rotação GFS (Etapa 1)
 - **Objetivo:** Implementar backups automáticos comprimidos com gzip na inicialização do aplicativo, com checagem de integridade estrutural (`PRAGMA integrity_check`) e política de retenção GFS (Grandfather-Father-Son) para otimizar espaço de armazenamento.
 - **Alterações:**

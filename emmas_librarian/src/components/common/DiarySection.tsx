@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { projectService } from '../../services/api';
 import { DiaryEntry } from '../../types';
-import { Plus, Trash2, Calendar, BookOpen, Save, Eye, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Calendar, BookOpen, Save, Eye, Edit2, History } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
   MDXEditor,
@@ -36,6 +36,8 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [isEditMode, setIsEditMode] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyList, setHistoryList] = useState<any[]>([]);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editorRef = useRef<MDXEditorMethods>(null);
   const currentEditDateRef = useRef<string | null>(null);
@@ -115,6 +117,34 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
     setContent('');
     setConfirmDelete(false);
     await loadEntries();
+  };
+
+  const handleOpenHistory = async () => {
+    if (!selectedDate) return;
+    try {
+      const hist = await projectService.getDiaryEntryHistory(projectId, selectedDate);
+      setHistoryList(hist);
+      setShowHistory(true);
+    } catch (err) {
+      console.error('Failed to load diary history:', err);
+    }
+  };
+
+  const handleRestoreVersion = async (versionId: number) => {
+    try {
+      await projectService.restoreDiaryEntryVersion(versionId);
+      if (selectedDate) {
+        const entry = await projectService.getDiaryEntry(projectId, selectedDate);
+        const newContent = entry?.content || '';
+        setContent(newContent);
+        editorRef.current?.setMarkdown(newContent);
+        setHasChanges(false);
+      }
+      await loadEntries();
+      setShowHistory(false);
+    } catch (err) {
+      console.error('Failed to restore diary version:', err);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -199,6 +229,14 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
                     </button>
                   </>
                 )}
+                <button 
+                  onClick={handleOpenHistory} 
+                  className="btn-secondary" 
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                  title="Histórico de Versões"
+                >
+                  <History size={14} /> Histórico
+                </button>
                 <button 
                   onClick={() => setIsEditMode(!isEditMode)} 
                   className="btn-secondary" 
@@ -293,6 +331,60 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button onClick={() => setConfirmDelete(false)} className="btn-secondary" style={{ flex: 1 }}>Cancelar</button>
               <button onClick={handleDelete} className="btn-primary" style={{ flex: 1, background: 'var(--color-danger)' }}>Excluir</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* History modal */}
+      {showHistory && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, backdropFilter: 'blur(4px)' }}>
+          <div className="card fade-in" style={{ padding: '2rem', width: '500px', maxWidth: '90%', maxHeight: '80vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)' }}>
+            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--text-heading)' }}>Histórico de Versões</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+              Selecione uma versão anterior para restaurar no diário de <strong>{selectedDate && formatDate(selectedDate)}</strong>.
+            </p>
+            
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', paddingRight: '0.5rem' }}>
+              {historyList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-muted)' }}>
+                  Nenhuma versão anterior encontrada.
+                </div>
+              ) : (
+                historyList.map((entry) => (
+                  <div key={entry.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem', background: 'var(--bg-main)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-heading)' }}>
+                        {new Date(entry.updated_at).toLocaleString('pt-BR')}
+                      </span>
+                      <button 
+                        onClick={() => handleRestoreVersion(entry.id)} 
+                        className="btn-primary" 
+                        style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                      >
+                        Restaurar
+                      </button>
+                    </div>
+                    <div style={{ 
+                      fontSize: '0.8rem', 
+                      color: 'var(--text-muted)', 
+                      whiteSpace: 'pre-wrap', 
+                      maxHeight: '60px', 
+                      overflow: 'hidden',
+                      borderLeft: '2px solid var(--border-color)',
+                      paddingLeft: '0.5rem',
+                      fontStyle: entry.content ? 'normal' : 'italic'
+                    }}>
+                      {entry.content ? (entry.content.length > 150 ? entry.content.substring(0, 150) + '...' : entry.content) : '(Vazio)'}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowHistory(false)} className="btn-secondary" style={{ padding: '0.5rem 1.5rem' }}>Fechar</button>
             </div>
           </div>
         </div>,

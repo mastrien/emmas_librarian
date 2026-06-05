@@ -82,6 +82,12 @@ vi.mock('../../database/DatabaseManager', () => {
       getProjectCategories: vi.fn().mockReturnValue([]),
       getAllProjectArticleCategories: vi.fn().mockReturnValue([]),
       checkIntegrity: vi.fn().mockReturnValue(true),
+      getTrashItems: vi.fn().mockReturnValue([]),
+      restoreTrashItem: vi.fn(),
+      deleteTrashItemPermanent: vi.fn(),
+      emptyTrash: vi.fn(),
+      getDiaryEntryHistory: vi.fn().mockReturnValue([]),
+      restoreDiaryEntryVersion: vi.fn(),
     }))
   };
 });
@@ -226,8 +232,17 @@ describe('IPC Handlers', () => {
     // Documents
     expect(await callHandler(IpcChannel.PROJECT_DOCUMENTS_GET, 1)).toEqual([]);
     expect(await callHandler(IpcChannel.PROJECT_DOCUMENTS_CREATE, 1, 'title')).toBe(1);
-    
     // Investigations
     expect(await callHandler(IpcChannel.MASSIVE_INVESTIGATIONS_GET, 1)).toEqual([]);
+
+    // Trash Bin
+    expect(await callHandler(IpcChannel.TRASH_GET_ITEMS)).toEqual([]);
+    await callHandler(IpcChannel.TRASH_RESTORE_ITEM, 'project', 1);
+    await callHandler(IpcChannel.TRASH_PERMANENT_DELETE, 'project', 1);
+    await callHandler(IpcChannel.TRASH_EMPTY);
+
+    // Diary History
+    expect(await callHandler(IpcChannel.DIARY_GET_HISTORY, 1, '2026-06-05')).toEqual([]);
+    await callHandler(IpcChannel.DIARY_RESTORE_VERSION, 1);
   });
 });

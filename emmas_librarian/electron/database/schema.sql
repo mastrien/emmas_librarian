@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_executed_at TIMESTAMP
+    last_executed_at TIMESTAMP,
+    deleted_at DATETIME DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS articles (
@@ -24,6 +25,7 @@ CREATE TABLE IF NOT EXISTS articles (
     publisher TEXT,
     url TEXT,
     accessed TEXT,
+    deleted_at DATETIME DEFAULT NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
@@ -33,6 +35,7 @@ CREATE TABLE IF NOT EXISTS annotations (
     highlight_id INTEGER,
     content_markdown TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    deleted_at DATETIME DEFAULT NULL,
     FOREIGN KEY(article_id) REFERENCES articles(id),
     FOREIGN KEY(highlight_id) REFERENCES highlights(id)
 );
@@ -100,7 +103,8 @@ CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_executed_at TIMESTAMP
+    last_executed_at TIMESTAMP,
+    deleted_at DATETIME DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS articles (
@@ -120,6 +124,7 @@ CREATE TABLE IF NOT EXISTS articles (
     publisher TEXT,
     url TEXT,
     accessed TEXT,
+    deleted_at DATETIME DEFAULT NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
@@ -129,6 +134,7 @@ CREATE TABLE IF NOT EXISTS annotations (
     highlight_id INTEGER,
     content_markdown TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    deleted_at DATETIME DEFAULT NULL,
     FOREIGN KEY(article_id) REFERENCES articles(id),
     FOREIGN KEY(highlight_id) REFERENCES highlights(id)
 );
@@ -217,4 +223,13 @@ CREATE TABLE IF NOT EXISTS article_categories (
     PRIMARY KEY(article_id, category_id),
     FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
     FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS project_diary_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    entry_date TEXT NOT NULL,
+    content TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { projectService } from '../services/api';
-import { Settings, Moon, Sun, Key, Save, CheckCircle, Brain, ShieldAlert } from 'lucide-react';
+import { Settings, Moon, Sun, Key, Save, CheckCircle, Brain, ShieldAlert, Trash2, RotateCcw, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const SettingsPage: React.FC = () => {
@@ -23,9 +23,12 @@ export const SettingsPage: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [appVersion, setAppVersion] = useState('');
 
+  const [autoBackups, setAutoBackups] = useState(true);
+  const [trashItems, setTrashItems] = useState<any[]>([]);
+
   useEffect(() => {
-    // Load API keys from DB
-    const loadKeys = async () => {
+    // Load settings from DB
+    const loadSettings = async () => {
       const sKey = await projectService.getSetting('scopus_api_key');
       const wKey = await projectService.getSetting('wos_api_key');
       const oKey = await projectService.getSetting('api_key_openai');
@@ -33,6 +36,7 @@ export const SettingsPage: React.FC = () => {
       const gKey = await projectService.getSetting('api_key_gemini');
       const olUrl = await projectService.getSetting('api_key_ollama');
       const olMod = await projectService.getSetting('ollama_model');
+      const backupsEnabledSetting = await projectService.getSetting('enable_auto_backups');
 
       if (sKey) setScopusKey(sKey);
       if (wKey) setWosKey(wKey);
@@ -41,6 +45,7 @@ export const SettingsPage: React.FC = () => {
       if (gKey) setGeminiKey(gKey);
       if (olUrl) setOllamaUrl(olUrl);
       if (olMod) setOllamaModel(olMod);
+      setAutoBackups(backupsEnabledSetting !== 'false');
       
       try {
         const v = await projectService.getAppVersion();
@@ -48,8 +53,15 @@ export const SettingsPage: React.FC = () => {
       } catch (err) {
         console.error('Failed to get app version:', err);
       }
+
+      try {
+        const trash = await projectService.getTrashItems();
+        setTrashItems(trash);
+      } catch (err) {
+        console.error('Failed to load trash items:', err);
+      }
     };
-    loadKeys();
+    loadSettings();
   }, []);
 
   const handleThemeChange = (newTheme: 'light' | 'dark') => {
@@ -79,6 +91,51 @@ export const SettingsPage: React.FC = () => {
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleToggleAutoBackups = async (enabled: boolean) => {
+    setAutoBackups(enabled);
+    await projectService.setSetting('enable_auto_backups', enabled ? 'true' : 'false');
+  };
+
+  const loadTrash = async () => {
+    try {
+      const trash = await projectService.getTrashItems();
+      setTrashItems(trash);
+    } catch (err) {
+      console.error('Failed to reload trash:', err);
+    }
+  };
+
+  const handleRestore = async (type: 'project' | 'article' | 'annotation', id: number) => {
+    try {
+      await projectService.restoreTrashItem(type, id);
+      await loadTrash();
+    } catch (err) {
+      console.error('Failed to restore item:', err);
+    }
+  };
+
+  const handlePermanentDelete = async (type: 'project' | 'article' | 'annotation', id: number) => {
+    if (confirm('Tem certeza que deseja excluir permanentemente este item? Esta ação não pode ser desfeita.')) {
+      try {
+        await projectService.deleteTrashItemPermanent(type, id);
+        await loadTrash();
+      } catch (err) {
+        console.error('Failed to delete item permanently:', err);
+      }
+    }
+  };
+
+  const handleEmptyTrash = async () => {
+    if (confirm('Tem certeza que deseja esvaziar a lixeira? Todos os itens serão apagados permanentemente.')) {
+      try {
+        await projectService.emptyTrash();
+        await loadTrash();
+      } catch (err) {
+        console.error('Failed to empty trash:', err);
+      }
+    }
   };
 
   return (
@@ -293,6 +350,86 @@ export const SettingsPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Backup Settings Section */}
+        <div className="card" style={{ padding: '2rem' }}>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Save size={24} color="var(--color-primary)" /> Backup & Segurança
+          </h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+            Configure como o Emma's Librarian protege seus dados locais contra exclusões acidentais ou falhas.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', userSelect: 'none' }}>
+              <input
+                type="checkbox"
+                checked={autoBackups}
+                onChange={(e) => handleToggleAutoBackups(e.target.checked)}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+              />
+              <div>
+                <span style={{ fontWeight: 600, color: 'var(--text-heading)' }}>
+                  Habilitar backups automáticos locais (Recomendado)
+                </span>
+                <span style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                  Cria um backup comprimido (gzip) do banco de dados na inicialização com retenção inteligente (GFS).
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Lixeira Section */}
+        <div className="card" style={{ padding: '2rem' }}>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Trash2 size={24} color="var(--color-danger)" /> Lixeira (Trash Bin)
+          </h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+            Itens excluídos permanecem aqui e podem ser recuperados. Excluir permanentemente removerá os dados e os arquivos PDF do disco.
+          </p>
+
+          {trashItems.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-muted)' }}>
+              A lixeira está vazia.
+            </div>
+          ) : (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                <button onClick={handleEmptyTrash} className="btn-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                  <Trash2 size={16} /> Esvaziar Lixeira
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '300px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                {trashItems.map((item) => (
+                  <div key={`${item.type}-${item.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-main)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 'bold', padding: '0.2rem 0.5rem', borderRadius: '4px', background: item.type === 'project' ? 'rgba(59, 130, 246, 0.1)' : item.type === 'article' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)', color: item.type === 'project' ? '#3b82f6' : item.type === 'article' ? '#10b981' : '#f59e0b' }}>
+                          {item.type === 'project' ? 'Projeto' : item.type === 'article' ? 'Artigo' : 'Anotação'}
+                        </span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-heading)' }}>{item.title}</span>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        Excluído em: {new Date(item.deleted_at).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => handleRestore(item.type, item.id)} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <RotateCcw size={14} /> Restaurar
+                      </button>
+                      <button onClick={() => handlePermanentDelete(item.type, item.id)} className="btn-danger" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <X size={14} /> Excluir
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* App Info Section */}

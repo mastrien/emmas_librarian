@@ -87,6 +87,17 @@ export class DatabaseManager {
       'ALTER TABLE articles ADD COLUMN publisher TEXT',
       'ALTER TABLE articles ADD COLUMN url TEXT',
       'ALTER TABLE articles ADD COLUMN accessed TEXT',
+      'ALTER TABLE projects ADD COLUMN deleted_at DATETIME DEFAULT NULL',
+      'ALTER TABLE articles ADD COLUMN deleted_at DATETIME DEFAULT NULL',
+      'ALTER TABLE annotations ADD COLUMN deleted_at DATETIME DEFAULT NULL',
+      `CREATE TABLE IF NOT EXISTS project_diary_history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          project_id INTEGER NOT NULL,
+          entry_date TEXT NOT NULL,
+          content TEXT NOT NULL,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+      )`
     ];
     for (const sql of migrations) {
       try { this.db.exec(sql); } catch (e) { /* column already exists */ }
@@ -231,7 +242,7 @@ export class DatabaseManager {
   }
 
   getProject(id: number): Project | undefined {
-    return this.db.prepare('SELECT * FROM projects WHERE id = ?').get(id) as Project | undefined;
+    return this.db.prepare('SELECT * FROM projects WHERE id = ? AND deleted_at IS NULL').get(id) as Project | undefined;
   }
 
   updateProjectWritingPad(id: number, content: string) {
@@ -249,6 +260,10 @@ export class DatabaseManager {
   }
 
   deleteProject(id: number): void {
+    this.db.prepare("UPDATE projects SET deleted_at = datetime('now') WHERE id = ?").run(id);
+  }
+
+  deleteProjectPermanent(id: number): void {
     const transaction = this.db.transaction(() => {
       // 1. Delete articles and their files
       const articles = this.db.prepare('SELECT id, local_file_path FROM articles WHERE project_id = ?').all(id) as { id: number, local_file_path?: string }[];
@@ -281,6 +296,7 @@ export class DatabaseManager {
       // 3. Delete other related records
       this.db.prepare('DELETE FROM search_history WHERE project_id = ?').run(id);
       this.db.prepare('DELETE FROM project_diary WHERE project_id = ?').run(id);
+      this.db.prepare('DELETE FROM project_diary_history WHERE project_id = ?').run(id);
 
       // 4. Finally delete the project
       this.db.prepare('DELETE FROM projects WHERE id = ?').run(id);
@@ -290,7 +306,7 @@ export class DatabaseManager {
   }
 
   getAllProjects(): Project[] {
-    const stmt = this.db.prepare('SELECT * FROM projects ORDER BY created_at DESC');
+    const stmt = this.db.prepare('SELECT * FROM projects WHERE deleted_at IS NULL ORDER BY created_at DESC');
     return stmt.all() as Project[];
   }
 
@@ -333,12 +349,20 @@ export class DatabaseManager {
   }
 
   getArticle(id: number): Article | undefined {
-    const stmt = this.db.prepare('SELECT * FROM articles WHERE id = ?');
+    const stmt = this.db.prepare(`
+      SELECT a.* FROM articles a
+      JOIN projects p ON a.project_id = p.id
+      WHERE a.id = ? AND a.deleted_at IS NULL AND p.deleted_at IS NULL
+    `);
     return stmt.get(id) as Article | undefined;
   }
 
   getArticlesByProject(projectId: number): Article[] {
-    const stmt = this.db.prepare('SELECT * FROM articles WHERE project_id = ?');
+    const stmt = this.db.prepare(`
+      SELECT a.* FROM articles a
+      JOIN projects p ON a.project_id = p.id
+      WHERE a.project_id = ? AND a.deleted_at IS NULL AND p.deleted_at IS NULL
+    `);
     return stmt.all(projectId) as Article[];
   }
 
@@ -384,7 +408,13 @@ export class DatabaseManager {
   }
 
   getAnnotations(articleId: number): Annotation[] {
-    const stmt = this.db.prepare('SELECT * FROM annotations WHERE article_id = ? ORDER BY created_at DESC');
+    const stmt = this.db.prepare(`
+      SELECT an.* FROM annotations an
+      JOIN articles a ON an.article_id = a.id
+      JOIN projects p ON a.project_id = p.id
+      WHERE an.article_id = ? AND an.deleted_at IS NULL AND a.deleted_at IS NULL AND p.deleted_at IS NULL
+      ORDER BY an.created_at DESC
+    `);
     return stmt.all(articleId) as Annotation[];
   }
 
@@ -394,7 +424,7 @@ export class DatabaseManager {
   }
 
   deleteAnnotation(id: number): void {
-    const stmt = this.db.prepare('DELETE FROM annotations WHERE id = ?');
+    const stmt = this.db.prepare("UPDATE annotations SET deleted_at = datetime('now') WHERE id = ?");
     stmt.run(id);
   }
 
@@ -412,8 +442,10 @@ export class DatabaseManager {
     const stmt = this.db.prepare(`
       SELECT h.*, a.content_markdown as comment
       FROM highlights h
-      LEFT JOIN annotations a ON h.annotation_id = a.id
-      WHERE h.article_id = ?
+      JOIN articles art ON h.article_id = art.id
+      JOIN projects p ON art.project_id = p.id
+      LEFT JOIN annotations a ON h.annotation_id = a.id AND a.deleted_at IS NULL
+      WHERE h.article_id = ? AND art.deleted_at IS NULL AND p.deleted_at IS NULL
     `);
     return stmt.all(articleId) as HighlightWithComment[];
   }
@@ -584,10 +616,29 @@ export class DatabaseManager {
 
   // Diary
   public saveDiaryEntry(projectId: number, entryDate: string, content: string): void {
+    const existing = this.getDiaryEntry(projectId, entryDate);
+    if (existing) {
+      this.db.prepare(`
+        INSERT INTO project_diary_history (project_id, entry_date, content)
+        VALUES (?, ?, ?)
+      `).run(projectId, entryDate, existing.content);
+    }
+
     this.db.prepare(`
       INSERT OR REPLACE INTO project_diary (project_id, entry_date, content)
       VALUES (?, ?, ?)
     `).run(projectId, entryDate, content);
+
+    // Keep only latest 10 versions in history
+    this.db.prepare(`
+      DELETE FROM project_diary_history
+      WHERE project_id = ? AND entry_date = ?
+        AND id NOT IN (
+          SELECT id FROM project_diary_history
+          WHERE project_id = ? AND entry_date = ?
+          ORDER BY id DESC LIMIT 10
+        )
+    `).run(projectId, entryDate, projectId, entryDate);
   }
 
   public getDiaryEntries(projectId: number): DiaryEntry[] {
@@ -599,6 +650,24 @@ export class DatabaseManager {
   }
 
   public deleteDiaryEntry(projectId: number, entryDate: string): void {
+    const existing = this.getDiaryEntry(projectId, entryDate);
+    if (existing) {
+      this.db.prepare(`
+        INSERT INTO project_diary_history (project_id, entry_date, content)
+        VALUES (?, ?, ?)
+      `).run(projectId, entryDate, existing.content);
+
+      // Keep only latest 10 versions in history
+      this.db.prepare(`
+        DELETE FROM project_diary_history
+        WHERE project_id = ? AND entry_date = ?
+          AND id NOT IN (
+            SELECT id FROM project_diary_history
+            WHERE project_id = ? AND entry_date = ?
+            ORDER BY id DESC LIMIT 10
+          )
+      `).run(projectId, entryDate, projectId, entryDate);
+    }
     this.db.prepare('DELETE FROM project_diary WHERE project_id = ? AND entry_date = ?').run(projectId, entryDate);
   }
 
@@ -680,6 +749,68 @@ export class DatabaseManager {
         VALUES (?, ?, ?)
         ON CONFLICT(article_id, category_id) DO UPDATE SET value = excluded.value
       `).run(articleId, categoryId, value);
+    }
+  }
+
+  public deleteArticle(id: number): void {
+    const stmt = this.db.prepare("UPDATE articles SET deleted_at = datetime('now') WHERE id = ?");
+    stmt.run(id);
+  }
+
+  public getTrashItems(): any[] {
+    const projects = this.db.prepare("SELECT id, 'project' as type, name as title, deleted_at FROM projects WHERE deleted_at IS NOT NULL").all();
+    const articles = this.db.prepare("SELECT id, 'article' as type, title, deleted_at FROM articles WHERE deleted_at IS NOT NULL").all();
+    const annotations = this.db.prepare("SELECT id, 'annotation' as type, content_markdown as title, deleted_at FROM annotations WHERE deleted_at IS NOT NULL").all();
+    return [...projects, ...articles, ...annotations];
+  }
+
+  public restoreTrashItem(type: 'project' | 'article' | 'annotation', id: number): void {
+    if (type === 'project') {
+      this.db.prepare("UPDATE projects SET deleted_at = NULL WHERE id = ?").run(id);
+    } else if (type === 'article') {
+      this.db.prepare("UPDATE articles SET deleted_at = NULL WHERE id = ?").run(id);
+    } else if (type === 'annotation') {
+      this.db.prepare("UPDATE annotations SET deleted_at = NULL WHERE id = ?").run(id);
+    }
+  }
+
+  public deleteTrashItemPermanent(type: 'project' | 'article' | 'annotation', id: number): void {
+    if (type === 'project') {
+      this.deleteProjectPermanent(id);
+    } else if (type === 'article') {
+      const article = this.db.prepare('SELECT local_file_path FROM articles WHERE id = ?').get(id) as { local_file_path?: string } | undefined;
+      if (article) {
+        this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(id);
+        this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(id);
+        if (article.local_file_path) {
+          try {
+            if (fs.existsSync(article.local_file_path)) fs.unlinkSync(article.local_file_path);
+          } catch (err) {
+            console.error(`Failed to delete physical PDF for article ${id}:`, err);
+          }
+        }
+        this.db.prepare('DELETE FROM articles WHERE id = ?').run(id);
+      }
+    } else if (type === 'annotation') {
+      this.db.prepare('DELETE FROM annotations WHERE id = ?').run(id);
+    }
+  }
+
+  public emptyTrash(): void {
+    const items = this.getTrashItems();
+    for (const item of items) {
+      this.deleteTrashItemPermanent(item.type, item.id);
+    }
+  }
+
+  public getDiaryEntryHistory(projectId: number, entryDate: string): any[] {
+    return this.db.prepare('SELECT * FROM project_diary_history WHERE project_id = ? AND entry_date = ? ORDER BY id DESC').all(projectId, entryDate);
+  }
+
+  public restoreDiaryEntryVersion(versionId: number): void {
+    const hist = this.db.prepare('SELECT * FROM project_diary_history WHERE id = ?').get(versionId) as any;
+    if (hist) {
+      this.saveDiaryEntry(hist.project_id, hist.entry_date, hist.content);
     }
   }
 }

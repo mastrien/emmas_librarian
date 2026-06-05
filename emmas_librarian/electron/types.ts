@@ -158,6 +158,12 @@ export enum IpcChannel {
   CATEGORIES_GET_ALL_PROJECT_ARTICLE = 'categories:getAllProjectArticle',
   SYNC_EXPORT_PROJECT = 'sync:exportProject',
   SYNC_IMPORT_PROJECT = 'sync:importProject',
+  TRASH_GET_ITEMS = 'trash:getItems',
+  TRASH_RESTORE_ITEM = 'trash:restoreItem',
+  TRASH_PERMANENT_DELETE = 'trash:permanentDelete',
+  TRASH_EMPTY = 'trash:empty',
+  DIARY_GET_HISTORY = 'diary:getHistory',
+  DIARY_RESTORE_VERSION = 'diary:restoreVersion',
 }
 
 export interface PendingHighlight {
