@@ -50,6 +50,12 @@ Se você é um desenvolvedor e deseja rodar o projeto localmente, contribuir com
 
 Acompanhe as últimas novidades, melhorias e correções recentes do **Emma's Librarian**:
 
+### v1.1.12
+- **Sistema de Backup e Lixeira:** Implementação do BackupManager com rotação GFS (Grandfather-Father-Son) e lixeira para recuperação de projetos e artigos excluídos.
+- **Histórico do Diário:** Adicionado suporte a histórico de versões para o diário do projeto, permitindo visualizar e restaurar alterações passadas.
+- **Importação e Exportação:** Correções críticas na persistência de dados durante o ciclo de exportação e importação de projetos (`.emmapcarc`), garantindo a integridade de todos os metadados.
+- **Estabilidade:** Melhorias no tratamento de concorrência do banco de dados (WAL checkpointing) e isolamento de ambiente para evitar conflitos de arquivos.
+
 ### v1.1.0
 - **Integração com IA:** Adicionado Resumo Mágico, Extração em Massa de dados e histórico de extrações.
 - **Interface (UI):** Nova barra de título nativa customizada e novo logotipo SVG.

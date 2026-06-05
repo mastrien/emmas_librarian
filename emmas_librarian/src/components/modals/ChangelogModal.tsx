@@ -48,6 +48,17 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div>
+            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.12</h3>
+            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
+              <li><strong>Sistema de Backup e Lixeira:</strong> Implementação completa de backups automáticos (rotação GFS) e lixeira para recuperação segura de projetos, artigos e anotações.</li>
+              <li><strong>Histórico do Diário:</strong> O diário do projeto agora armazena versões passadas, permitindo a restauração de textos anteriores diretamente pela interface.</li>
+              <li><strong>Integridade de Importação/Exportação:</strong> Resolução de falhas que causavam perda de dados de categorias e histórico ao mover projetos entre computadores via arquivos `.emmapcarc`.</li>
+              <li><strong>Correções de Banco de Dados:</strong> Otimização da persistência (checkpointing WAL) e tratamento de erros de colunas inexistentes em migrações automáticas.</li>
+              <li><strong>Melhorias de UI:</strong> Novos modais de restauração, botões de lixeira estilizados e feedbacks visuais aprimorados.</li>
+            </ul>
+          </div>
+
+          <div>
             <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.11</h3>
             <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
               <li><strong>Controle de "et al." em Citações:</strong> Adicionado checkbox nos modais de citação individual e em massa para ativar/desativar o uso de "et al." na lista de autores.</li>
