@@ -14,6 +14,8 @@ vi.mock('../../services/api', () => ({
     exportBackup: vi.fn().mockResolvedValue(null),
     restoreBackupOverride: vi.fn().mockResolvedValue(false),
     restoreBackupMerge: vi.fn().mockResolvedValue(0),
+    listAutoBackups: vi.fn().mockResolvedValue([]),
+    restoreAutoBackup: vi.fn().mockResolvedValue(false),
   }
 }));
 

@@ -17,15 +17,19 @@ vi.mock('fs', () => ({
     unlinkSync: vi.fn(),
     writeFileSync: vi.fn(),
     readFileSync: vi.fn(),
+    statSync: vi.fn(),
   }
 }));
 
 vi.mock('zlib', () => {
   const mockGzip = vi.fn().mockReturnValue(Buffer.from('compressed_db_data'));
+  const mockGunzip = vi.fn().mockReturnValue(Buffer.from('decompressed_db_data'));
   return {
     gzipSync: mockGzip,
+    gunzipSync: mockGunzip,
     default: {
-      gzipSync: mockGzip
+      gzipSync: mockGzip,
+      gunzipSync: mockGunzip
     }
   };
 });
@@ -121,5 +125,35 @@ describe('BackupManager', () => {
     expect(unlinkedFiles).not.toContain('emma_backup_2026-05-17.db.gz');
     expect(unlinkedFiles).not.toContain('emma_backup_2026-04-30.db.gz');
     expect(unlinkedFiles).not.toContain('random_file.txt');
+  });
+
+  it('lists automatic GFS backups correctly sorted', () => {
+    const files = [
+      'emma_backup_2026-06-04.db.gz',
+      'emma_backup_2026-06-05.db.gz',
+      'random_file.txt'
+    ];
+    vi.mocked(fs.readdirSync).mockReturnValue(files as any);
+    vi.mocked(fs.statSync).mockReturnValue({ size: 10240, mtime: new Date() } as any);
+
+    const manager = new BackupManager(mockDbManager, dbPath, backupsDir);
+    const list = manager.listAutoBackups();
+
+    expect(list).toHaveLength(2);
+    expect(list[0].filename).toBe('emma_backup_2026-06-05.db.gz');
+    expect(list[0].sizeBytes).toBe(10240);
+  });
+
+  it('restores automatic GFS backup successfully', () => {
+    const mockClose = vi.fn();
+    mockDbManager.close = mockClose;
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    const manager = new BackupManager(mockDbManager, dbPath, backupsDir);
+    const result = manager.restoreAutoBackup('emma_backup_2026-06-05.db.gz');
+
+    expect(result).toBe(true);
+    expect(mockClose).toHaveBeenCalled();
+    expect(fs.writeFileSync).toHaveBeenCalledWith(dbPath, expect.any(Buffer));
   });
 });

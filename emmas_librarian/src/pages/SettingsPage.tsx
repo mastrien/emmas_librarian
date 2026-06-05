@@ -25,10 +25,18 @@ export const SettingsPage: React.FC = () => {
 
   const [autoBackups, setAutoBackups] = useState(true);
   const [trashItems, setTrashItems] = useState<any[]>([]);
+  const [autoBackupsList, setAutoBackupsList] = useState<{ filename: string; date: string; sizeBytes: number }[]>([]);
 
   useEffect(() => {
     // Load settings from DB
     const loadSettings = async () => {
+      try {
+        const list = await projectService.listAutoBackups();
+        setAutoBackupsList(list);
+      } catch (err) {
+        console.error('Failed to load auto backups on init:', err);
+      }
+
       const sKey = await projectService.getSetting('scopus_api_key');
       const wKey = await projectService.getSetting('wos_api_key');
       const oKey = await projectService.getSetting('api_key_openai');
@@ -134,6 +142,29 @@ export const SettingsPage: React.FC = () => {
         await loadTrash();
       } catch (err) {
         console.error('Failed to empty trash:', err);
+      }
+    }
+  };
+
+  const loadAutoBackups = async () => {
+    try {
+      const list = await projectService.listAutoBackups();
+      setAutoBackupsList(list);
+    } catch (err) {
+      console.error('Failed to load auto backups:', err);
+    }
+  };
+
+  const handleRestoreAutoBackup = async (filename: string) => {
+    if (confirm(`ATENÇÃO: Isso irá SOBRESCREVER todos os dados atuais (projetos, artigos, PDFs, etc) com o conteúdo do backup automático "${filename}". Todos os dados atuais não salvos em backups serão PERDIDOS permanentemente. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?`)) {
+      try {
+        const success = await projectService.restoreAutoBackup(filename);
+        if (!success) {
+          alert('Restauração cancelada.');
+        }
+      } catch (err) {
+        console.error('Failed to restore auto backup:', err);
+        alert('Erro ao restaurar backup automático.');
       }
     }
   };
@@ -436,6 +467,39 @@ export const SettingsPage: React.FC = () => {
                   <Shuffle size={16} /> Importar e Mesclar
                 </button>
               </div>
+            </div>
+
+            <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
+              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: 'var(--text-heading)' }}>Histórico de Backups Automáticos</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                Cópia(s) comprimida(s) (.gz) salvas localmente na inicialização com rotação GFS. Clique em restaurar para voltar o sistema ao estado correspondente (sobrescreve banco de dados e reinicia).
+              </p>
+              
+              {autoBackupsList.length === 0 ? (
+                <div style={{ padding: '1rem', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                  Nenhum backup automático disponível ainda.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                  {autoBackupsList.map(b => (
+                    <div key={b.filename} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+                      <div>
+                        <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-heading)' }}>{b.date}</span>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {(b.sizeBytes / 1024).toFixed(1)} KB (gzip)
+                        </span>
+                      </div>
+                      <button 
+                        onClick={() => handleRestoreAutoBackup(b.filename)} 
+                        className="btn-secondary" 
+                        style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                      >
+                        <RotateCcw size={12} /> Restaurar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

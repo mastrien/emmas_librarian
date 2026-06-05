@@ -422,6 +422,7 @@ export class SyncService {
     }
 
     const tempDir = path.join(app.getPath('userData'), 'temp_restore_' + uuidv4());
+    let tempDb: Database.Database | null = null;
     try {
       const zip = new AdmZip(importPath);
       const dbEntry = zip.getEntry('emma.db');
@@ -433,7 +434,75 @@ export class SyncService {
       fs.writeFileSync(tempDbPath, dbEntry.getData());
 
       // Open temp db
-      const tempDb = new Database(tempDbPath);
+      tempDb = new Database(tempDbPath);
+
+      // Run migrations on temp db to guarantee it has the current schema
+      const tempMigrations = [
+        'ALTER TABLE articles ADD COLUMN archive_note TEXT',
+        'ALTER TABLE articles ADD COLUMN abstract TEXT',
+        'ALTER TABLE articles ADD COLUMN author_keywords TEXT',
+        'ALTER TABLE articles ADD COLUMN index_keywords TEXT',
+        'ALTER TABLE articles ADD COLUMN journal TEXT',
+        'ALTER TABLE articles ADD COLUMN volume TEXT',
+        'ALTER TABLE articles ADD COLUMN issue TEXT',
+        'ALTER TABLE articles ADD COLUMN pages TEXT',
+        'ALTER TABLE articles ADD COLUMN affiliations TEXT',
+        'ALTER TABLE articles ADD COLUMN references_list TEXT',
+        'ALTER TABLE articles ADD COLUMN document_type TEXT',
+        'ALTER TABLE articles ADD COLUMN issn TEXT',
+        'ALTER TABLE articles ADD COLUMN citation_count INTEGER',
+        'ALTER TABLE articles ADD COLUMN search_id INTEGER REFERENCES search_history(id) ON DELETE SET NULL',
+        'ALTER TABLE articles ADD COLUMN ai_summary TEXT',
+        'ALTER TABLE projects ADD COLUMN writing_pad TEXT',
+        'ALTER TABLE articles ADD COLUMN is_oa INTEGER',
+        'ALTER TABLE articles ADD COLUMN publisher TEXT',
+        'ALTER TABLE articles ADD COLUMN url TEXT',
+        'ALTER TABLE articles ADD COLUMN accessed TEXT',
+        'ALTER TABLE projects ADD COLUMN deleted_at DATETIME DEFAULT NULL',
+        'ALTER TABLE articles ADD COLUMN deleted_at DATETIME DEFAULT NULL',
+        'ALTER TABLE annotations ADD COLUMN deleted_at DATETIME DEFAULT NULL',
+        `CREATE TABLE IF NOT EXISTS project_diary_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            entry_date TEXT NOT NULL,
+            content TEXT NOT NULL,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+        )`
+      ];
+      for (const sql of tempMigrations) {
+        try { tempDb.exec(sql); } catch (e) { /* ignore if already exists */ }
+      }
+
+      // Add options column to project_categories if missing
+      try {
+        const pcInfo = tempDb.pragma('table_info(project_categories)') as any[];
+        if (pcInfo && !pcInfo.some(col => col.name === 'options')) {
+          tempDb.exec(`ALTER TABLE project_categories ADD COLUMN options TEXT;`);
+        }
+      } catch (e) {}
+
+      // Add other columns if missing
+      try {
+        const miInfo = tempDb.pragma('table_info(massive_investigations)') as any[];
+        if (miInfo && miInfo.length > 0) {
+          if (!miInfo.some(col => col.name === 'model_used')) {
+            tempDb.prepare('ALTER TABLE massive_investigations ADD COLUMN model_used TEXT').run();
+          }
+          if (!miInfo.some(col => col.name === 'status')) {
+            tempDb.prepare('ALTER TABLE massive_investigations ADD COLUMN status TEXT').run();
+          }
+        }
+      } catch (e) {}
+
+      try {
+        const hlInfo = tempDb.pragma('table_info(highlights)') as any[];
+        if (hlInfo && hlInfo.length > 0) {
+          if (!hlInfo.some(col => col.name === 'content_text')) {
+            tempDb.prepare('ALTER TABLE highlights ADD COLUMN content_text TEXT').run();
+          }
+        }
+      } catch (e) {}
 
       // Active db
       const activeDb = (this.dbManager as any).db;
@@ -646,12 +715,18 @@ export class SyncService {
         importedCount++;
       }
 
-      tempDb.close();
       return importedCount;
     } catch (err) {
       console.error('Erro ao mesclar backup:', err);
       throw err;
     } finally {
+      if (tempDb) {
+        try {
+          tempDb.close();
+        } catch (e) {
+          console.error('Erro ao fechar tempDb:', e);
+        }
+      }
       // Clean up temp dir
       try {
         if (fs.existsSync(tempDir)) {

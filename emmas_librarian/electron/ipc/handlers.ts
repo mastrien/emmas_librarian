@@ -558,4 +558,17 @@ export function setupIpcHandlers() {
   ipcMain.handle(IpcChannel.BACKUP_RESTORE_MERGE, () => {
     return syncService.restoreBackupMerge();
   });
+
+  ipcMain.handle(IpcChannel.BACKUP_LIST_AUTO, () => {
+    return backupManager.listAutoBackups();
+  });
+
+  ipcMain.handle(IpcChannel.BACKUP_RESTORE_AUTO, (event, filename: string) => {
+    const success = backupManager.restoreAutoBackup(filename);
+    if (success) {
+      app.relaunch();
+      app.exit(0);
+    }
+    return success;
+  });
 }

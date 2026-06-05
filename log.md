@@ -1,5 +1,14 @@
 # Development Log - Emma's Librarian
 
+### Ciclo 37 [2026-06-05]: Restauro GFS na UI, Estilo da Lixeira e Robustez de Backup
+- **Objetivo:** Implementar exibição e recuperação direta de backups automáticos GFS na interface do usuário, estilizar os botões da lixeira, e corrigir erros de travamento por colunas inexistentes e travamento de arquivos SQLite (EPERM).
+- **Alterações:**
+  - **Lixeira (UI):** Adicionada a classe CSS `.btn-danger` no arquivo [style.css](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/style.css) para estilizar os botões de ação destrutiva na interface da Lixeira.
+  - **Restauração e Robustez:** Alterado o método `restoreBackupMerge` em [SyncService.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/database/SyncService.ts) para executar as migrações no banco de dados temporário antes das consultas de merge, evitando falhas por colunas como `deleted_at` ausentes em backups antigos. Fechamento do `tempDb` foi movido para o bloco `finally` para liberar os bloqueios de arquivo e sanar o erro de permissão (EPERM).
+  - **Histórico e Recuperação GFS:** Implementados os métodos `listAutoBackups` e `restoreAutoBackup` no arquivo [BackupManager.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/services/BackupManager.ts) e mapeados os respectivos canais IPC em [types.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/types.ts). Na interface, o componente [SettingsPage.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/pages/SettingsPage.tsx) agora lista e permite que o usuário restaure backups locais do histórico GFS, com confirmação e reinicialização imediata.
+  - **Testes Unitários:** Adicionados mocks em [SettingsPage.test.tsx](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/src/pages/__tests__/SettingsPage.test.tsx) e testes robustos em [BackupManager.test.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/__tests__/BackupManager.test.ts) validando a ordenação, listagem e restauração adequada dos backups locais comprimidos.
+- **Testes:** Suíte completa rodando com sucesso absoluto via Vitest (185 testes passando). Executada pipeline estática de typecheck sem erros.
+
 ### Ciclo 36 [2026-06-05]: Correção de Tipos TS, Ajustes de Compilação e Validação do Backup Manual (Etapa 3)
 - **Objetivo:** Resolver erros de compilação do TypeScript no build do Electron, restaurar a conformidade estrita de tipos nas queries do `SyncService.ts` e validar a suíte completa de testes para encerramento da Etapa 3.
 - **Alterações:**

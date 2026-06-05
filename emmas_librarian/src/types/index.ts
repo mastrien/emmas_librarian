@@ -170,6 +170,8 @@ export enum IpcChannel {
   BACKUP_EXPORT = 'backup:export',
   BACKUP_RESTORE_OVERRIDE = 'backup:restoreOverride',
   BACKUP_RESTORE_MERGE = 'backup:restoreMerge',
+  BACKUP_LIST_AUTO = 'backup:listAuto',
+  BACKUP_RESTORE_AUTO = 'backup:restoreAuto',
 }
 
 export interface ProjectCategory {

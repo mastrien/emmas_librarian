@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { gzipSync } from 'zlib';
+import { gzipSync, gunzipSync } from 'zlib';
 
 export class BackupManager {
   constructor(
@@ -134,5 +134,51 @@ export class BackupManager {
         }
       }
     }
+  }
+
+  public listAutoBackups(): { filename: string; date: string; sizeBytes: number }[] {
+    if (!fs.existsSync(this.backupsDir)) return [];
+
+    const files = fs.readdirSync(this.backupsDir);
+    const backupFiles = files.filter(f => f.startsWith('emma_backup_') && f.endsWith('.db.gz'));
+
+    const list = backupFiles.map(filename => {
+      const filePath = path.join(this.backupsDir, filename);
+      const stat = fs.statSync(filePath);
+      
+      const match = filename.match(/emma_backup_(\d{4}-\d{2}-\d{2})/);
+      const dateStr = match ? match[1] : new Date(stat.mtime).toISOString().split('T')[0];
+
+      return {
+        filename,
+        date: dateStr,
+        sizeBytes: stat.size
+      };
+    });
+
+    list.sort((a, b) => b.date.localeCompare(a.date));
+    return list;
+  }
+
+  public restoreAutoBackup(filename: string): boolean {
+    const backupFilePath = path.join(this.backupsDir, filename);
+    if (!fs.existsSync(backupFilePath)) {
+      throw new Error(`Backup file ${filename} not found`);
+    }
+
+    const compressed = fs.readFileSync(backupFilePath);
+    const decompressed = gunzipSync(compressed);
+
+    // Close active db connection
+    this.dbManager.close();
+
+    // Overwrite emma.db
+    const walPath = `${this.dbPath}-wal`;
+    const shmPath = `${this.dbPath}-shm`;
+    if (fs.existsSync(walPath)) fs.unlinkSync(walPath);
+    if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath);
+
+    fs.writeFileSync(this.dbPath, decompressed);
+    return true;
   }
 }

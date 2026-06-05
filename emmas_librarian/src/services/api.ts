@@ -238,6 +238,14 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.BACKUP_RESTORE_MERGE);
   },
 
+  async listAutoBackups(): Promise<{ filename: string; date: string; sizeBytes: number }[]> {
+    return await window.electronAPI.invoke(IpcChannel.BACKUP_LIST_AUTO);
+  },
+
+  async restoreAutoBackup(filename: string): Promise<boolean> {
+    return await window.electronAPI.invoke(IpcChannel.BACKUP_RESTORE_AUTO, filename);
+  },
+
   async getAppVersion(): Promise<string> {
     return await window.electronAPI.invoke(IpcChannel.APP_GET_VERSION);
   },
