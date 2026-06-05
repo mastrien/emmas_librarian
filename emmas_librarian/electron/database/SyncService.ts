@@ -57,6 +57,9 @@ export class SyncService {
 
       const diaryEntries = db.prepare('SELECT * FROM project_diary WHERE project_id = ?').all(projectId);
 
+      // Export diary version history so rollback data is preserved across environments
+      const diaryHistory = db.prepare('SELECT * FROM project_diary_history WHERE project_id = ?').all(projectId);
+
       const exportData = {
         project,
         articles,
@@ -68,7 +71,8 @@ export class SyncService {
         annotations,
         highlights,
         pendingHighlights,
-        diaryEntries
+        diaryEntries,
+        diaryHistory
       };
 
       const zip = new AdmZip();
@@ -97,6 +101,7 @@ export class SyncService {
     }
   }
 
+
   public async importProject(providedPath?: string): Promise<number | null> {
     let importPath = providedPath;
 
@@ -121,11 +126,13 @@ export class SyncService {
       const db = (this.dbManager as any).db;
       
       const newProjectId = db.transaction(() => {
-        // Insert Project
-        const insertProj = db.prepare('INSERT INTO projects (name, created_at) VALUES (?, ?)');
+        // Insert Project (preserves writing_pad and last_executed_at)
+        const insertProj = db.prepare('INSERT INTO projects (name, created_at, last_executed_at, writing_pad) VALUES (?, ?, ?, ?)');
         const projResult = insertProj.run(
           data.project.name + ' (Importado)',
-          new Date().toISOString()
+          new Date().toISOString(),
+          data.project.last_executed_at || null,
+          data.project.writing_pad || null
         );
         const pid = projResult.lastInsertRowid;
 
@@ -153,14 +160,23 @@ export class SyncService {
 
           const insertArt = db.prepare(`
             INSERT INTO articles (
-              project_id, doi, title, authors, year, source_query, source_databases, 
-              csl_json, local_file_path, status, archive_note
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              project_id, doi, title, authors, year, source_query, source_databases,
+              csl_json, local_file_path, status, archive_note,
+              abstract, author_keywords, index_keywords, journal, volume, issue, pages,
+              affiliations, references_list, document_type, issn, citation_count,
+              ai_summary, is_oa, publisher, url, accessed
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `);
           
           const artRes = insertArt.run(
             pid, art.doi, art.title, art.authors, art.year, art.source_query, art.source_databases,
-            art.csl_json, newPdfPath, art.status, art.archive_note
+            art.csl_json, newPdfPath, art.status, art.archive_note,
+            art.abstract || null, art.author_keywords || null, art.index_keywords || null,
+            art.journal || null, art.volume || null, art.issue || null, art.pages || null,
+            art.affiliations || null, art.references_list || null, art.document_type || null,
+            art.issn || null, art.citation_count || null,
+            art.ai_summary || null, art.is_oa ?? null, art.publisher || null,
+            art.url || null, art.accessed || null
           );
           articleMap.set(art.id, artRes.lastInsertRowid);
         }
@@ -242,6 +258,7 @@ export class SyncService {
         for (const ann of annotationsToImport) {
           const newArtId = articleMap.get(ann.article_id);
           if (newArtId) {
+            // highlight_id linkage is resolved after highlights are inserted
             const res = db.prepare(`
               INSERT INTO annotations (article_id, content_markdown, created_at)
               VALUES (?, ?, ?)
@@ -282,6 +299,15 @@ export class SyncService {
             INSERT OR REPLACE INTO project_diary (project_id, entry_date, content)
             VALUES (?, ?, ?)
           `).run(pid, de.entry_date, de.content);
+        }
+
+        // Insert Diary Version History (preserves rollback capability across environments)
+        const diaryHistoryToImport = data.diaryHistory || [];
+        for (const dh of diaryHistoryToImport) {
+          db.prepare(`
+            INSERT INTO project_diary_history (project_id, entry_date, content, updated_at)
+            VALUES (?, ?, ?, ?)
+          `).run(pid, dh.entry_date, dh.content, dh.updated_at);
         }
 
         return pid;

@@ -1,5 +1,14 @@
 # Development Log - Emma's Librarian
 
+### Ciclo 38 [2026-06-05]: Correção do Backup por Sobrescrita — WAL Checkpoint Antes da Leitura/Restauração
+- **Objetivo:** Corrigir o backup manual por sobrescrita (`.emmabak`) que não estava funcionando. O problema raiz era que o arquivo `emma.db` era lido diretamente do disco sem forçar um WAL checkpoint (SQLite WAL mode mantém dados pendentes em arquivo separado `-wal`), o que resultava em backups com dados incompletos ou desatualizados.
+- **Alterações:**
+  - **DatabaseManager:** Adicionado método público `checkpoint()` em [DatabaseManager.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/database/DatabaseManager.ts) que executa `PRAGMA wal_checkpoint(TRUNCATE)` para descarregar todos os dados pendentes do arquivo WAL para o arquivo principal do banco antes de qualquer operação de cópia a nível de arquivo.
+  - **SyncService — exportBackup:** Adicionada chamada a `db.pragma('wal_checkpoint(TRUNCATE)')` em [SyncService.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/database/SyncService.ts) imediatamente antes de `fs.readFileSync(dbPath)`, garantindo que o arquivo lido contenha todos os dados efetivamente persistidos.
+  - **SyncService — restoreBackupOverride:** Adicionada chamada a `this.dbManager.checkpoint()` antes de `this.dbManager.close()` no método de restauração por sobrescrita, assegurando consistência do banco antes do fechamento da conexão.
+  - **Testes Unitários:** Atualizado [SyncService.test.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/__tests__/SyncService.test.ts) para adicionar mock de `pragma` ao `mockDbManager.db` e validar que `wal_checkpoint(TRUNCATE)` é chamado tanto no `exportBackup` quanto no `restoreBackupOverride`.
+- **Testes:** SyncService.test.ts: 15 testes passando. Typecheck sem erros. (Nota: DatabaseManager.test.ts e SearchOrchestrator.test.ts apresentam falha de infraestrutura pré-existente — módulo nativo `better-sqlite3` compilado para versão Node diferente, causado pelo processo Electron rodando em paralelo.)
+
 ### Ciclo 37 [2026-06-05]: Restauro GFS na UI, Estilo da Lixeira e Robustez de Backup
 - **Objetivo:** Implementar exibição e recuperação direta de backups automáticos GFS na interface do usuário, estilizar os botões da lixeira, e corrigir erros de travamento por colunas inexistentes e travamento de arquivos SQLite (EPERM).
 - **Alterações:**

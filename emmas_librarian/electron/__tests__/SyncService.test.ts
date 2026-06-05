@@ -161,17 +161,19 @@ describe('SyncService', () => {
     expect(result).toBe(10);
   });
 
-  it('exports highlights, annotations, pending highlights, and project diary entries successfully', async () => {
+  it('exports highlights, annotations, pending highlights, diary entries, and diary history successfully', async () => {
     const mockAddFile = vi.fn();
     (globalThis as any).mockAddFile = mockAddFile;
 
     mockDbManager.db.prepare = vi.fn((sql) => {
       let mockReturn: any[] = [];
       if (sql.includes('FROM projects')) {
-        return { get: () => ({ id: 1, name: 'Test' }) };
+        return { get: () => ({ id: 1, name: 'Test', writing_pad: 'pad content', last_executed_at: '2026-01-01' }) };
       }
       if (sql.includes('FROM annotations')) {
         mockReturn = [{ id: 10, article_id: 2, content_markdown: 'Note 1' }];
+      } else if (sql.includes('FROM project_diary_history')) {
+        mockReturn = [{ id: 5, project_id: 1, entry_date: '2026-06-05', content: 'Old version', updated_at: '2026-06-05T10:00:00' }];
       } else if (sql.includes('FROM highlights')) {
         mockReturn = [{ id: 20, article_id: 2, color: 'yellow', position_data: '{}', annotation_id: 10 }];
       } else if (sql.includes('FROM pending_highlights')) {
@@ -194,6 +196,9 @@ describe('SyncService', () => {
     expect(parsedData).toHaveProperty('highlights');
     expect(parsedData).toHaveProperty('pendingHighlights');
     expect(parsedData).toHaveProperty('diaryEntries');
+    // Diary history must be exported too
+    expect(parsedData).toHaveProperty('diaryHistory');
+    expect(parsedData.diaryHistory[0].content).toBe('Old version');
 
     expect(parsedData.annotations[0].content_markdown).toBe('Note 1');
     expect(parsedData.highlights[0].color).toBe('yellow');
@@ -201,7 +206,7 @@ describe('SyncService', () => {
     expect(parsedData.diaryEntries[0].content).toBe('Diary text');
   });
 
-  it('imports project with annotations, highlights, pending highlights, and diary entries remapping IDs successfully', async () => {
+  it('imports project with all fields: annotations, highlights, diary, diary history, and all article columns', async () => {
     const runSpy = vi.fn().mockReturnValue({ lastInsertRowid: 777 });
     mockDbManager.db.prepare = vi.fn().mockReturnValue({
       run: runSpy,
@@ -210,29 +215,50 @@ describe('SyncService', () => {
 
     (globalThis as any).mockGetEntry.mockReturnValueOnce({
       getData: () => Buffer.from(JSON.stringify({
-        project: { name: 'Test' },
-        articles: [{ id: 100, title: 'Art Title' }],
+        project: { name: 'Test', writing_pad: 'My notes', last_executed_at: '2026-01-01T00:00:00Z' },
+        articles: [{
+          id: 100, title: 'Art Title', doi: '10.1/test', authors: 'A; B', year: 2024,
+          source_query: 'query', source_databases: 'pubmed', csl_json: '{}',
+          status: 'included', archive_note: null,
+          abstract: 'Abstract text', author_keywords: 'kw1', index_keywords: 'ik1',
+          journal: 'J Nature', volume: '10', issue: '2', pages: '1-10',
+          affiliations: 'Univ X', references_list: '[]', document_type: 'Article',
+          issn: '1234-5678', citation_count: 42, ai_summary: 'AI summary',
+          is_oa: 1, publisher: 'Springer', url: 'https://doi.org/test', accessed: '2026-06-05'
+        }],
         searchHistory: [],
         projectDocs: [],
         projCategories: [],
         articleCategories: [],
         massiveInvs: [],
-        annotations: [{ id: 10, article_id: 100, content_markdown: 'Note 1' }],
-        highlights: [{ id: 20, article_id: 100, color: 'yellow', position_data: '{}', annotation_id: 10 }],
-        pendingHighlights: [{ id: 30, article_id: 100, quote: 'test' }],
-        diaryEntries: [{ id: 40, project_id: 99, entry_date: '2026-06-05', content: 'Diary text' }]
+        annotations: [{ id: 10, article_id: 100, content_markdown: 'Note 1', created_at: '2026-06-05' }],
+        highlights: [{ id: 20, article_id: 100, color: 'yellow', position_data: '{}', annotation_id: 10, content_text: 'text' }],
+        pendingHighlights: [{ id: 30, article_id: 100, quote: 'test', context_before: '', context_after: '', comment: null, created_at: '2026-06-05' }],
+        diaryEntries: [{ id: 40, project_id: 99, entry_date: '2026-06-05', content: 'Diary text' }],
+        diaryHistory: [{ id: 50, project_id: 99, entry_date: '2026-06-05', content: 'Old version', updated_at: '2026-06-05T10:00:00' }]
       }))
     });
 
     const service = new SyncService(mockDbManager);
     const result = await service.importProject();
-    expect(result).toBe(777); // returns new project id
+    expect(result).toBe(777);
 
     const preparedSQLs = mockDbManager.db.prepare.mock.calls.map((c: any) => c[0]);
+    // All entities must be inserted
     expect(preparedSQLs.some((sql: string) => sql.includes('INSERT INTO annotations'))).toBe(true);
     expect(preparedSQLs.some((sql: string) => sql.includes('INSERT INTO highlights'))).toBe(true);
     expect(preparedSQLs.some((sql: string) => sql.includes('INSERT INTO pending_highlights'))).toBe(true);
     expect(preparedSQLs.some((sql: string) => sql.includes('INSERT OR REPLACE INTO project_diary'))).toBe(true);
+    // Diary history must also be imported
+    expect(preparedSQLs.some((sql: string) => sql.includes('INSERT INTO project_diary_history'))).toBe(true);
+    // Project must include writing_pad
+    expect(preparedSQLs.some((sql: string) => sql.includes('writing_pad'))).toBe(true);
+    // Articles must include all extended fields
+    const artInsert = preparedSQLs.find((sql: string) => sql.includes('INSERT INTO articles'));
+    expect(artInsert).toContain('abstract');
+    expect(artInsert).toContain('ai_summary');
+    expect(artInsert).toContain('is_oa');
+    expect(artInsert).toContain('journal');
   });
 
   describe('Full Backup & Restore', () => {
