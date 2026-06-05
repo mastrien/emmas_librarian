@@ -1,5 +1,17 @@
 # Development Log - Emma's Librarian
 
+### Ciclo 39 [2026-06-05]: Correção de Completude da Exportação/Importação de Projeto (.emmapcarc)
+- **Objetivo:** Verificar e corrigir a integridade do round-trip de exportação/importação de projetos via `.emmapcarc`, garantindo que nenhum dado seja silenciosamente descartado.
+- **Problemas Encontrados e Corrigidos:**
+  - **Artigos (import):** O `INSERT INTO articles` incluía apenas 11 campos; todos os campos adicionados por migrações (`abstract`, `author_keywords`, `index_keywords`, `journal`, `volume`, `issue`, `pages`, `affiliations`, `references_list`, `document_type`, `issn`, `citation_count`, `ai_summary`, `is_oa`, `publisher`, `url`, `accessed`) eram ignorados na importação, apesar de estarem presentes no JSON exportado.
+  - **Projeto (import):** `writing_pad` e `last_executed_at` não eram restaurados na importação.
+  - **Histórico do Diário (export/import):** A tabela `project_diary_history` não era exportada nem importada — o histórico de versões para rollback era perdido ao migrar entre ambientes.
+- **Alterações:**
+  - **Exportação (`exportProject`):** Adicionada query `SELECT * FROM project_diary_history WHERE project_id = ?` e campo `diaryHistory` no payload do `project.json` em [SyncService.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/database/SyncService.ts).
+  - **Importação (`importProject`):** Expandido `INSERT INTO projects` para incluir `last_executed_at` e `writing_pad`; expandido `INSERT INTO articles` para todos os 28 campos; adicionado loop de inserção de `project_diary_history` com remapeamento de `project_id`.
+  - **Testes:** Atualizado [SyncService.test.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/__tests__/SyncService.test.ts) com payload completo e asserções para: `diaryHistory` exportado, `INSERT INTO project_diary_history` na importação, `writing_pad` no INSERT de projeto, e campos `abstract`, `ai_summary`, `is_oa`, `journal` no INSERT de artigo.
+- **Testes:** SyncService.test.ts: 15 testes passando. Typecheck sem erros.
+
 ### Ciclo 38 [2026-06-05]: Correção do Backup por Sobrescrita — WAL Checkpoint Antes da Leitura/Restauração
 - **Objetivo:** Corrigir o backup manual por sobrescrita (`.emmabak`) que não estava funcionando. O problema raiz era que o arquivo `emma.db` era lido diretamente do disco sem forçar um WAL checkpoint (SQLite WAL mode mantém dados pendentes em arquivo separado `-wal`), o que resultava em backups com dados incompletos ou desatualizados.
 - **Alterações:**
