@@ -226,6 +226,18 @@ export const projectService = {
     await window.electronAPI.invoke(IpcChannel.DIARY_RESTORE_VERSION, versionId);
   },
 
+  async exportBackup(): Promise<string | null> {
+    return await window.electronAPI.invoke(IpcChannel.BACKUP_EXPORT);
+  },
+
+  async restoreBackupOverride(): Promise<boolean> {
+    return await window.electronAPI.invoke(IpcChannel.BACKUP_RESTORE_OVERRIDE);
+  },
+
+  async restoreBackupMerge(): Promise<number> {
+    return await window.electronAPI.invoke(IpcChannel.BACKUP_RESTORE_MERGE);
+  },
+
   async getAppVersion(): Promise<string> {
     return await window.electronAPI.invoke(IpcChannel.APP_GET_VERSION);
   },

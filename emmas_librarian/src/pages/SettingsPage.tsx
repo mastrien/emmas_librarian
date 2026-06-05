@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { projectService } from '../services/api';
-import { Settings, Moon, Sun, Key, Save, CheckCircle, Brain, ShieldAlert, Trash2, RotateCcw, X } from 'lucide-react';
+import { Settings, Moon, Sun, Key, Save, CheckCircle, Brain, ShieldAlert, Trash2, RotateCcw, X, Download, Upload, Shuffle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const SettingsPage: React.FC = () => {
@@ -135,6 +135,46 @@ export const SettingsPage: React.FC = () => {
       } catch (err) {
         console.error('Failed to empty trash:', err);
       }
+    }
+  };
+
+  const handleExportBackup = async () => {
+    try {
+      const backupPath = await projectService.exportBackup();
+      if (backupPath) {
+        alert(`Backup completo criado com sucesso em:\n${backupPath}`);
+      }
+    } catch (err) {
+      console.error('Failed to export backup:', err);
+      alert('Erro ao criar backup completo.');
+    }
+  };
+
+  const handleRestoreBackupOverride = async () => {
+    if (confirm('ATENÇÃO: Isso irá SOBRESCREVER todos os dados atuais (projetos, artigos, PDFs, etc) com as informações do backup. Todos os dados atuais não salvos em backups serão PERDIDOS permanentemente. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?')) {
+      try {
+        const success = await projectService.restoreBackupOverride();
+        if (!success) {
+          alert('Restauração cancelada pelo usuário.');
+        }
+      } catch (err) {
+        console.error('Failed to restore backup:', err);
+        alert('Erro ao restaurar backup.');
+      }
+    }
+  };
+
+  const handleRestoreBackupMerge = async () => {
+    try {
+      const count = await projectService.restoreBackupMerge();
+      if (count > 0) {
+        alert(`${count} projetos novos foram importados e mesclados com sucesso!`);
+      } else if (count === 0) {
+        alert('Nenhum projeto novo encontrado no backup para importar (todos os projetos já existem no seu banco atual).');
+      }
+    } catch (err) {
+      console.error('Failed to merge backup:', err);
+      alert('Erro ao mesclar backup.');
     }
   };
 
@@ -378,6 +418,25 @@ export const SettingsPage: React.FC = () => {
                 </span>
               </div>
             </label>
+
+            <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
+              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: 'var(--text-heading)' }}>Backup Manual Completo</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+                Gere um arquivo contendo todas as informações do banco de dados (projetos, artigos, anotações, diário) e todos os arquivos PDF locais. Isso permite migrar seus dados para outro dispositivo.
+              </p>
+              
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <button onClick={handleExportBackup} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Download size={16} /> Criar Backup Completo
+                </button>
+                <button onClick={handleRestoreBackupOverride} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-danger)' }}>
+                  <Upload size={16} /> Restaurar e Sobrescrever
+                </button>
+                <button onClick={handleRestoreBackupMerge} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Shuffle size={16} /> Importar e Mesclar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

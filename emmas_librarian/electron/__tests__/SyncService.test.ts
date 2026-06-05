@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SyncService } from '../database/SyncService';
-import { dialog } from 'electron';
+import { dialog, app } from 'electron';
 import fs from 'fs';
 
 vi.mock('electron', () => ({
   app: {
-    getPath: vi.fn().mockReturnValue('/mock/userData')
+    getPath: vi.fn().mockReturnValue('/mock/userData'),
+    relaunch: vi.fn(),
+    exit: vi.fn(),
+    getVersion: vi.fn().mockReturnValue('1.1.11')
   },
   dialog: {
     showSaveDialog: vi.fn().mockImplementation((...args) => (globalThis as any).mockShowSaveDialog(...args)),
@@ -21,8 +24,10 @@ vi.mock('adm-zip', () => {
       }
     }),
     addLocalFile: vi.fn(),
+    addLocalFolder: vi.fn(),
     writeZip: vi.fn(),
-    getEntry: vi.fn().mockImplementation((...args) => (globalThis as any).mockGetEntry(...args))
+    getEntry: vi.fn().mockImplementation((...args) => (globalThis as any).mockGetEntry(...args)),
+    getEntries: vi.fn().mockReturnValue([])
   }));
   return {
     default: MockZip
@@ -34,6 +39,8 @@ vi.mock('fs', () => ({
     existsSync: vi.fn().mockReturnValue(true),
     mkdirSync: vi.fn(),
     writeFileSync: vi.fn(),
+    readFileSync: vi.fn().mockReturnValue(Buffer.from('mock db data')),
+    unlinkSync: vi.fn(),
   }
 }));
 
@@ -225,5 +232,63 @@ describe('SyncService', () => {
     expect(preparedSQLs.some((sql: string) => sql.includes('INSERT INTO highlights'))).toBe(true);
     expect(preparedSQLs.some((sql: string) => sql.includes('INSERT INTO pending_highlights'))).toBe(true);
     expect(preparedSQLs.some((sql: string) => sql.includes('INSERT OR REPLACE INTO project_diary'))).toBe(true);
+  });
+
+  describe('Full Backup & Restore', () => {
+    it('exports backup successfully', async () => {
+      const mockAddFile = vi.fn();
+      const mockAddLocalFolder = vi.fn();
+      const mockWriteZip = vi.fn();
+      
+      (globalThis as any).mockAddFile = mockAddFile;
+      (globalThis as any).mockShowSaveDialog.mockResolvedValueOnce({ canceled: false, filePath: '/tmp/backup.emmabak' });
+
+      // Mock database prepared queries for count
+      mockDbManager.db.prepare = vi.fn().mockReturnValue({
+        get: vi.fn().mockReturnValue({ count: 5 })
+      });
+
+      const service = new SyncService(mockDbManager);
+      const result = await service.exportBackup();
+
+      expect(result).toBe('/tmp/backup.emmabak');
+      expect(mockAddFile).toHaveBeenCalled();
+      const metadataCall = mockAddFile.mock.calls.find((call: any) => call[0] === 'backup_metadata.json');
+      expect(metadataCall).toBeDefined();
+      const metadata = JSON.parse(metadataCall![1].toString('utf-8'));
+      expect(metadata.projectCount).toBe(5);
+    });
+
+    it('returns null on export backup if canceled', async () => {
+      (globalThis as any).mockShowSaveDialog.mockResolvedValueOnce({ canceled: true });
+      const service = new SyncService(mockDbManager);
+      const result = await service.exportBackup();
+      expect(result).toBeNull();
+    });
+
+    it('restores backup override successfully', async () => {
+      const mockGetEntry = vi.fn().mockReturnValue({
+        getData: () => Buffer.from('mock db data')
+      });
+      (globalThis as any).mockGetEntry = mockGetEntry;
+      
+      const mockClose = vi.fn();
+      mockDbManager.close = mockClose;
+
+      const service = new SyncService(mockDbManager);
+      const result = await service.restoreBackupOverride('/tmp/backup.emmabak');
+
+      expect(result).toBe(true);
+      expect(mockClose).toHaveBeenCalled();
+      expect(app.relaunch).toHaveBeenCalled();
+      expect(app.exit).toHaveBeenCalled();
+    });
+
+    it('returns false on restore backup override if canceled', async () => {
+      (globalThis as any).mockShowOpenDialog.mockResolvedValueOnce({ canceled: true });
+      const service = new SyncService(mockDbManager);
+      const result = await service.restoreBackupOverride();
+      expect(result).toBe(false);
+    });
   });
 });

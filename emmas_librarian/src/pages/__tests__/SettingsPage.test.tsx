@@ -11,6 +11,9 @@ vi.mock('../../services/api', () => ({
     restoreTrashItem: vi.fn().mockResolvedValue(undefined),
     deleteTrashItemPermanent: vi.fn().mockResolvedValue(undefined),
     emptyTrash: vi.fn().mockResolvedValue(undefined),
+    exportBackup: vi.fn().mockResolvedValue(null),
+    restoreBackupOverride: vi.fn().mockResolvedValue(false),
+    restoreBackupMerge: vi.fn().mockResolvedValue(0),
   }
 }));
 

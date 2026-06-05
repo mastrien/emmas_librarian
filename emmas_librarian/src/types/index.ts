@@ -167,6 +167,9 @@ export enum IpcChannel {
   TRASH_EMPTY = 'trash:empty',
   DIARY_GET_HISTORY = 'diary:getHistory',
   DIARY_RESTORE_VERSION = 'diary:restoreVersion',
+  BACKUP_EXPORT = 'backup:export',
+  BACKUP_RESTORE_OVERRIDE = 'backup:restoreOverride',
+  BACKUP_RESTORE_MERGE = 'backup:restoreMerge',
 }
 
 export interface ProjectCategory {

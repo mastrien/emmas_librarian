@@ -1,5 +1,13 @@
 # Development Log - Emma's Librarian
 
+### Ciclo 36 [2026-06-05]: Correção de Tipos TS, Ajustes de Compilação e Validação do Backup Manual (Etapa 3)
+- **Objetivo:** Resolver erros de compilação do TypeScript no build do Electron, restaurar a conformidade estrita de tipos nas queries do `SyncService.ts` e validar a suíte completa de testes para encerramento da Etapa 3.
+- **Alterações:**
+  - **DatabaseManager:** Removido método duplicado `close()` no arquivo [DatabaseManager.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/database/DatabaseManager.ts).
+  - **SyncService:** Ajustados retornos de `all()` em `restoreBackupMerge` adicionando conversão explícita `as any[]` no arquivo [SyncService.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/database/SyncService.ts), resolvendo erros de tipo `unknown`.
+  - **Testes Unitários:** Inserida asserção de não-nulo `metadataCall![1]` no arquivo [SyncService.test.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/__tests__/SyncService.test.ts) para evitar alertas de possível valor indefinido.
+- **Testes:** Suíte completa com 183 testes passando sem falhas via Vitest. Executado `npm run typecheck` sem qualquer erro pendente.
+
 ### Ciclo 35 [2026-06-05]: Histórico do Diário na UI e Ajustes na Lixeira (Etapa 2)
 - **Objetivo:** Concluir a Etapa 2 do plano de backup adicionando a interface de histórico e rollback de diário, e corrigindo mocks do frontend para execução limpa de testes.
 - **Alterações:**

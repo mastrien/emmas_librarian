@@ -498,10 +498,6 @@ export class DatabaseManager {
     return stmt.all(projectId);
   }
 
-  close(): void {
-    this.db.close();
-  }
-
   public checkIntegrity(): boolean {
     try {
       const result = this.db.pragma('integrity_check') as any[];
@@ -812,5 +808,9 @@ export class DatabaseManager {
     if (hist) {
       this.saveDiaryEntry(hist.project_id, hist.entry_date, hist.content);
     }
+  }
+
+  public close(): void {
+    this.db.close();
   }
 }

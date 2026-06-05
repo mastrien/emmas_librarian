@@ -545,4 +545,17 @@ export function setupIpcHandlers() {
   ipcMain.handle(IpcChannel.DIARY_RESTORE_VERSION, (event, versionId: number) => {
     return db.restoreDiaryEntryVersion(versionId);
   });
+
+  // Manual Backup & Restore
+  ipcMain.handle(IpcChannel.BACKUP_EXPORT, () => {
+    return syncService.exportBackup();
+  });
+
+  ipcMain.handle(IpcChannel.BACKUP_RESTORE_OVERRIDE, () => {
+    return syncService.restoreBackupOverride();
+  });
+
+  ipcMain.handle(IpcChannel.BACKUP_RESTORE_MERGE, () => {
+    return syncService.restoreBackupMerge();
+  });
 }
