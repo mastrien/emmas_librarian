@@ -310,23 +310,26 @@ export class SyncService {
 
       const zip = new AdmZip();
 
-      // 1. Copy db file to zip
+      // 1. Flush WAL to main db file before reading, to ensure backup is consistent
+      const db = (this.dbManager as any).db; // Access better-sqlite3
+      db.pragma('wal_checkpoint(TRUNCATE)');
+
+      // 2. Copy db file to zip
       if (fs.existsSync(dbPath)) {
         zip.addFile('emma.db', fs.readFileSync(dbPath));
       }
 
-      // 2. Add PDFs
+      // 3. Add PDFs
       if (fs.existsSync(basePdfsDir)) {
         zip.addLocalFolder(basePdfsDir, 'storage/pdfs');
       }
 
-      // 3. Add Project Documents
+      // 4. Add Project Documents
       if (fs.existsSync(baseDocsDir)) {
         zip.addLocalFolder(baseDocsDir, 'storage/project_documents');
       }
 
-      // 4. Add metadata file
-      const db = (this.dbManager as any).db; // Access better-sqlite3
+      // 5. Add metadata file
       const projectCount = db.prepare('SELECT count(*) as count FROM projects WHERE deleted_at IS NULL').get().count;
       const articleCount = db.prepare('SELECT count(*) as count FROM articles WHERE deleted_at IS NULL').get().count;
 
@@ -345,6 +348,7 @@ export class SyncService {
       throw err;
     }
   }
+
 
   public async restoreBackupOverride(providedPath?: string): Promise<boolean> {
     let importPath = providedPath;
@@ -365,7 +369,8 @@ export class SyncService {
       const dbEntry = zip.getEntry('emma.db');
       if (!dbEntry) throw new Error('Arquivo de backup inválido (não contém emma.db)');
 
-      // 1. Close db connection
+      // 1. Checkpoint WAL to ensure main db file is up-to-date, then close connection
+      this.dbManager.checkpoint();
       this.dbManager.close();
 
       // 2. Overwrite emma.db

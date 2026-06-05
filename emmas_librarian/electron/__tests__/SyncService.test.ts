@@ -67,6 +67,7 @@ describe('SyncService', () => {
     mockDbManager = {
       db: {
         transaction: vi.fn(fn => fn),
+        pragma: vi.fn(),
         prepare: vi.fn().mockReturnValue({
           get: vi.fn().mockReturnValue({ id: 1, name: 'Test' }),
           all: vi.fn().mockReturnValue([]),
@@ -235,7 +236,7 @@ describe('SyncService', () => {
   });
 
   describe('Full Backup & Restore', () => {
-    it('exports backup successfully', async () => {
+    it('exports backup successfully and checkpoints WAL before reading DB', async () => {
       const mockAddFile = vi.fn();
       const mockAddLocalFolder = vi.fn();
       const mockWriteZip = vi.fn();
@@ -243,7 +244,9 @@ describe('SyncService', () => {
       (globalThis as any).mockAddFile = mockAddFile;
       (globalThis as any).mockShowSaveDialog.mockResolvedValueOnce({ canceled: false, filePath: '/tmp/backup.emmabak' });
 
+      const mockPragma = vi.fn();
       // Mock database prepared queries for count
+      mockDbManager.db.pragma = mockPragma;
       mockDbManager.db.prepare = vi.fn().mockReturnValue({
         get: vi.fn().mockReturnValue({ count: 5 })
       });
@@ -253,6 +256,8 @@ describe('SyncService', () => {
 
       expect(result).toBe('/tmp/backup.emmabak');
       expect(mockAddFile).toHaveBeenCalled();
+      // Verify WAL checkpoint was called to ensure data consistency
+      expect(mockPragma).toHaveBeenCalledWith('wal_checkpoint(TRUNCATE)');
       const metadataCall = mockAddFile.mock.calls.find((call: any) => call[0] === 'backup_metadata.json');
       expect(metadataCall).toBeDefined();
       const metadata = JSON.parse(metadataCall![1].toString('utf-8'));
@@ -266,19 +271,22 @@ describe('SyncService', () => {
       expect(result).toBeNull();
     });
 
-    it('restores backup override successfully', async () => {
+    it('restores backup override successfully and checkpoints WAL before close', async () => {
       const mockGetEntry = vi.fn().mockReturnValue({
         getData: () => Buffer.from('mock db data')
       });
       (globalThis as any).mockGetEntry = mockGetEntry;
       
       const mockClose = vi.fn();
+      const mockCheckpoint = vi.fn();
       mockDbManager.close = mockClose;
+      mockDbManager.checkpoint = mockCheckpoint;
 
       const service = new SyncService(mockDbManager);
       const result = await service.restoreBackupOverride('/tmp/backup.emmabak');
 
       expect(result).toBe(true);
+      expect(mockCheckpoint).toHaveBeenCalled();
       expect(mockClose).toHaveBeenCalled();
       expect(app.relaunch).toHaveBeenCalled();
       expect(app.exit).toHaveBeenCalled();

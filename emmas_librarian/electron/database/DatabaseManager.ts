@@ -810,6 +810,15 @@ export class DatabaseManager {
     }
   }
 
+  /**
+   * Runs a WAL checkpoint to flush all pending writes from the WAL file into the
+   * main database file. Call this before any file-level backup/copy operation to
+   * ensure data consistency.
+   */
+  public checkpoint(): void {
+    this.db.pragma('wal_checkpoint(TRUNCATE)');
+  }
+
   public close(): void {
     this.db.close();
   }
