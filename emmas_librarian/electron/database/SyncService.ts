@@ -36,6 +36,26 @@ export class SyncService {
         WHERE pc.project_id = ?
       `).all(projectId);
 
+      const annotations = db.prepare(`
+        SELECT a.* FROM annotations a
+        JOIN articles art ON a.article_id = art.id
+        WHERE art.project_id = ?
+      `).all(projectId);
+
+      const highlights = db.prepare(`
+        SELECT h.* FROM highlights h
+        JOIN articles art ON h.article_id = art.id
+        WHERE art.project_id = ?
+      `).all(projectId);
+
+      const pendingHighlights = db.prepare(`
+        SELECT ph.* FROM pending_highlights ph
+        JOIN articles art ON ph.article_id = art.id
+        WHERE art.project_id = ?
+      `).all(projectId);
+
+      const diaryEntries = db.prepare('SELECT * FROM project_diary WHERE project_id = ?').all(projectId);
+
       const exportData = {
         project,
         articles,
@@ -43,7 +63,11 @@ export class SyncService {
         projectDocs,
         massiveInvs,
         projCategories,
-        articleCategories
+        articleCategories,
+        annotations,
+        highlights,
+        pendingHighlights,
+        diaryEntries
       };
 
       const zip = new AdmZip();
@@ -209,6 +233,54 @@ export class SyncService {
           } catch (e) {
             // ignore
           }
+        }
+
+        // Insert Annotations
+        const annotationMap = new Map<number, number>();
+        const annotationsToImport = data.annotations || [];
+        for (const ann of annotationsToImport) {
+          const newArtId = articleMap.get(ann.article_id);
+          if (newArtId) {
+            const res = db.prepare(`
+              INSERT INTO annotations (article_id, content_markdown, created_at)
+              VALUES (?, ?, ?)
+            `).run(newArtId, ann.content_markdown, ann.created_at);
+            annotationMap.set(ann.id, res.lastInsertRowid);
+          }
+        }
+
+        // Insert Highlights
+        const highlightsToImport = data.highlights || [];
+        for (const hl of highlightsToImport) {
+          const newArtId = articleMap.get(hl.article_id);
+          if (newArtId) {
+            const newAnnId = hl.annotation_id ? annotationMap.get(hl.annotation_id) : null;
+            db.prepare(`
+              INSERT INTO highlights (article_id, color, position_data, content_text, annotation_id)
+              VALUES (?, ?, ?, ?, ?)
+            `).run(newArtId, hl.color, hl.position_data, hl.content_text, newAnnId);
+          }
+        }
+
+        // Insert Pending Highlights
+        const pendingHighlightsToImport = data.pendingHighlights || [];
+        for (const ph of pendingHighlightsToImport) {
+          const newArtId = articleMap.get(ph.article_id);
+          if (newArtId) {
+            db.prepare(`
+              INSERT INTO pending_highlights (article_id, quote, context_before, context_after, comment, created_at)
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).run(newArtId, ph.quote, ph.context_before, ph.context_after, ph.comment, ph.created_at);
+          }
+        }
+
+        // Insert Diary Entries
+        const diaryEntriesToImport = data.diaryEntries || [];
+        for (const de of diaryEntriesToImport) {
+          db.prepare(`
+            INSERT OR REPLACE INTO project_diary (project_id, entry_date, content)
+            VALUES (?, ?, ?)
+          `).run(pid, de.entry_date, de.content);
         }
 
         return pid;

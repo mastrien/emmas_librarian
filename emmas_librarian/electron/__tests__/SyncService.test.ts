@@ -15,7 +15,11 @@ vi.mock('electron', () => ({
 
 vi.mock('adm-zip', () => {
   const MockZip = vi.fn().mockImplementation(() => ({
-    addFile: vi.fn(),
+    addFile: vi.fn().mockImplementation((...args) => {
+      if ((globalThis as any).mockAddFile) {
+        (globalThis as any).mockAddFile(...args);
+      }
+    }),
     addLocalFile: vi.fn(),
     writeZip: vi.fn(),
     getEntry: vi.fn().mockImplementation((...args) => (globalThis as any).mockGetEntry(...args))
@@ -38,6 +42,7 @@ describe('SyncService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (globalThis as any).mockAddFile = vi.fn();
     (globalThis as any).mockShowSaveDialog = vi.fn().mockResolvedValue({ canceled: false, filePath: '/tmp/test.emmapcarc' });
     (globalThis as any).mockShowOpenDialog = vi.fn().mockResolvedValue({ canceled: false, filePaths: ['/tmp/test.emmapcarc'] });
     (globalThis as any).mockGetEntry = vi.fn().mockReturnValue({
@@ -146,5 +151,79 @@ describe('SyncService', () => {
     const service = new SyncService(mockDbManager);
     const result = await service.importProject();
     expect(result).toBe(10);
+  });
+
+  it('exports highlights, annotations, pending highlights, and project diary entries successfully', async () => {
+    const mockAddFile = vi.fn();
+    (globalThis as any).mockAddFile = mockAddFile;
+
+    mockDbManager.db.prepare = vi.fn((sql) => {
+      let mockReturn: any[] = [];
+      if (sql.includes('FROM projects')) {
+        return { get: () => ({ id: 1, name: 'Test' }) };
+      }
+      if (sql.includes('FROM annotations')) {
+        mockReturn = [{ id: 10, article_id: 2, content_markdown: 'Note 1' }];
+      } else if (sql.includes('FROM highlights')) {
+        mockReturn = [{ id: 20, article_id: 2, color: 'yellow', position_data: '{}', annotation_id: 10 }];
+      } else if (sql.includes('FROM pending_highlights')) {
+        mockReturn = [{ id: 30, article_id: 2, quote: 'test' }];
+      } else if (sql.includes('FROM project_diary')) {
+        mockReturn = [{ id: 40, project_id: 1, entry_date: '2026-06-05', content: 'Diary text' }];
+      }
+      return { all: () => mockReturn };
+    });
+
+    const service = new SyncService(mockDbManager);
+    await service.exportProject(1);
+
+    expect(mockAddFile).toHaveBeenCalled();
+    const [filename, contentBuffer] = mockAddFile.mock.calls[0];
+    expect(filename).toBe('project.json');
+    const parsedData = JSON.parse(contentBuffer.toString('utf-8'));
+
+    expect(parsedData).toHaveProperty('annotations');
+    expect(parsedData).toHaveProperty('highlights');
+    expect(parsedData).toHaveProperty('pendingHighlights');
+    expect(parsedData).toHaveProperty('diaryEntries');
+
+    expect(parsedData.annotations[0].content_markdown).toBe('Note 1');
+    expect(parsedData.highlights[0].color).toBe('yellow');
+    expect(parsedData.pendingHighlights[0].quote).toBe('test');
+    expect(parsedData.diaryEntries[0].content).toBe('Diary text');
+  });
+
+  it('imports project with annotations, highlights, pending highlights, and diary entries remapping IDs successfully', async () => {
+    const runSpy = vi.fn().mockReturnValue({ lastInsertRowid: 777 });
+    mockDbManager.db.prepare = vi.fn().mockReturnValue({
+      run: runSpy,
+      all: vi.fn().mockReturnValue([])
+    });
+
+    (globalThis as any).mockGetEntry.mockReturnValueOnce({
+      getData: () => Buffer.from(JSON.stringify({
+        project: { name: 'Test' },
+        articles: [{ id: 100, title: 'Art Title' }],
+        searchHistory: [],
+        projectDocs: [],
+        projCategories: [],
+        articleCategories: [],
+        massiveInvs: [],
+        annotations: [{ id: 10, article_id: 100, content_markdown: 'Note 1' }],
+        highlights: [{ id: 20, article_id: 100, color: 'yellow', position_data: '{}', annotation_id: 10 }],
+        pendingHighlights: [{ id: 30, article_id: 100, quote: 'test' }],
+        diaryEntries: [{ id: 40, project_id: 99, entry_date: '2026-06-05', content: 'Diary text' }]
+      }))
+    });
+
+    const service = new SyncService(mockDbManager);
+    const result = await service.importProject();
+    expect(result).toBe(777); // returns new project id
+
+    const preparedSQLs = mockDbManager.db.prepare.mock.calls.map((c: any) => c[0]);
+    expect(preparedSQLs.some((sql: string) => sql.includes('INSERT INTO annotations'))).toBe(true);
+    expect(preparedSQLs.some((sql: string) => sql.includes('INSERT INTO highlights'))).toBe(true);
+    expect(preparedSQLs.some((sql: string) => sql.includes('INSERT INTO pending_highlights'))).toBe(true);
+    expect(preparedSQLs.some((sql: string) => sql.includes('INSERT OR REPLACE INTO project_diary'))).toBe(true);
   });
 });

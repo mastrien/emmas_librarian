@@ -1,5 +1,14 @@
 # Development Log - Emma's Librarian
 
+### Ciclo 33 [2026-06-05]: Isolamento de Ambientes e Correção da Importação/Exportação (.emmapcarc)
+- **Objetivo:** Garantir isolamento de dados 100% autônomo entre desenvolvimento e produção, e corrigir o bug crítico de exportação/importação de projetos (`.emmapcarc`) onde anotações, destaques, destaques pendentes e diário de projeto eram perdidos.
+- **Alterações:**
+  - **Isolamento de Dados:** Configurado o redirecionamento global do Electron em [main.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/main.ts#L11-L17) para salvar dados do desenvolvedor no diretório local `./dev_data` (banco de dados, PDFs, backups locais), mantendo a integridade dos dados de produção em `%APPDATA%`.
+  - **Exportação Corrigida:** Modificado o método `exportProject` em [SyncService.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/database/SyncService.ts#L36-L56) para consultar e empacotar no `.emmapcarc` os dados de anotações (`annotations`), marcações (`highlights`), destaques pendentes (`pending_highlights`) e do diário (`project_diary`).
+  - **Importação com Remapeamento:** Modificado o método `importProject` em [SyncService.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/database/SyncService.ts#L209-L257) para importar esses registros remapeando os IDs antigos de artigos e anotações para as novas chaves auto-incrementais recém-geradas pela transação no banco de dados receptor.
+  - **Testes de Integração:** Expandida a suíte de testes [SyncService.test.ts](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/electron/__tests__/SyncService.test.ts) adicionando testes que cobrem a serialização e a inserção remapeada dos dados adicionais do projeto.
+- **Testes:** Suíte de testes do Vitest executada com sucesso absoluto em todas as 31 suítes locais (166 testes passando).
+
 ### Ciclo 32 [2026-06-04]: Opção para Ativar/Desativar "et al" em Citações com Múltiplos Autores
 - **Objetivo:** Adicionar checkbox na interface individual e em massa de citações para permitir que o usuário ative ou desative o truncamento automático de autores ("et al."), corrigindo o parser de autores para suportar strings separadas por vírgula.
 - **Alterações:**

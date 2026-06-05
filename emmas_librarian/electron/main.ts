@@ -11,6 +11,12 @@ import { setupIpcHandlers } from './ipc/handlers';
 
 const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
 
+if (isDev) {
+  // Use a local 'dev_data' directory in the project root during development to isolate data
+  const devDataPath = path.join(process.cwd(), 'dev_data');
+  app.setPath('userData', devDataPath);
+}
+
 // Fix for GPU Cache creation errors in terminal
 app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
 
