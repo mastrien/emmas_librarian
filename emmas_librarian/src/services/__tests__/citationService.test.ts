@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateCitation } from '../citationService';
+import { generateCitation, parseAuthors } from '../citationService';
 
 describe('citationService', () => {
   it('should generate ABNT citation for a basic article', () => {
@@ -75,3 +75,50 @@ describe('citationService', () => {
     expect(citeWithoutEtAl).toContain('WILLIAMS, Mary');
   });
 });
+
+describe('parseAuthors', () => {
+  it('extracts family name when author is in "Given Family" format (semicolon list)', () => {
+    const result = parseAuthors('João Silva; Maria Souza');
+    expect(result[0]).toEqual({ family: 'Silva', given: 'João' });
+    expect(result[1]).toEqual({ family: 'Souza', given: 'Maria' });
+  });
+
+  it('extracts family name when author is in "Family, Given" format', () => {
+    const result = parseAuthors('Silva, João');
+    expect(result[0]).toEqual({ family: 'Silva', given: 'João' });
+  });
+
+  it('extracts family from multi-word given name "Given Middle Family"', () => {
+    const result = parseAuthors('Mary Jane Watson');
+    expect(result[0]).toEqual({ family: 'Watson', given: 'Mary Jane' });
+  });
+
+  it('returns literal for single-word author (no family/given split possible)', () => {
+    const result = parseAuthors('Platão');
+    expect(result[0]).toEqual({ literal: 'Platão' });
+  });
+
+  it('returns empty array for empty string', () => {
+    expect(parseAuthors('')).toEqual([]);
+  });
+
+  it('parses mixed semicolon list with "Family, Given" entries', () => {
+    const result = parseAuthors('Smith, John; Doe, Jane');
+    expect(result[0]).toEqual({ family: 'Smith', given: 'John' });
+    expect(result[1]).toEqual({ family: 'Doe', given: 'Jane' });
+  });
+
+  it('handles single author with no comma as "Given Family"', () => {
+    const result = parseAuthors('Ana Paula Oliveira');
+    expect(result[0]).toEqual({ family: 'Oliveira', given: 'Ana Paula' });
+  });
+
+  it('handles exactly two comma-separated full names as two authors', () => {
+    // "João Silva, Maria Souza" — both parts have spaces → two authors
+    const result = parseAuthors('João Silva, Maria Souza');
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({ family: 'Silva', given: 'João' });
+    expect(result[1]).toEqual({ family: 'Souza', given: 'Maria' });
+  });
+});
+

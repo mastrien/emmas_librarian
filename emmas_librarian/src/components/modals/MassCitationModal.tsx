@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { generateCitation, CitationStyle, CitationOutputFormat } from '../../services/citationService';
+import { generateCitation, parseAuthors, CitationStyle, CitationOutputFormat } from '../../services/citationService';
 import { X, Copy, Check, FileText, Code, Braces, Save, RotateCcw, Edit3 } from 'lucide-react';
 import { projectService } from '../../services/api';
 import { Article } from '../../types';
@@ -50,16 +50,20 @@ export function MassCitationModal({ isOpen, onClose, articles, onArticlesUpdated
 
   if (!isOpen) return null;
 
-  const getFirstAuthor = (authorsStr: string) => {
+  const getFirstAuthorLastName = (authorsStr: string) => {
     if (!authorsStr) return '';
-    return authorsStr.split(';')[0]?.trim() || '';
+    const parsed = parseAuthors(authorsStr);
+    if (parsed.length === 0) return '';
+    const first = parsed[0];
+    // Use the family (surname) field; fall back to literal if unavailable
+    return first.family || first.literal || '';
   };
 
   const getSortedArticles = () => {
     return [...localArticles].sort((a, b) => {
       if (sortBy === 'author') {
-        const authorA = getFirstAuthor(a.authors);
-        const authorB = getFirstAuthor(b.authors);
+        const authorA = getFirstAuthorLastName(a.authors);
+        const authorB = getFirstAuthorLastName(b.authors);
         return authorA.localeCompare(authorB, 'pt-BR');
       } else {
         const yearA = parseInt(a.year) || 0;
