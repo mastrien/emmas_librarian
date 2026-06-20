@@ -188,4 +188,68 @@ describe('DatabaseManager', () => {
     expect(updated.url).toBe('https://example.com/custom-url');
     expect(updated.accessed).toBe('2026-06-04');
   });
+
+  it('manages project categories with relational options and legacy fallback', () => {
+    const proj = dbManager.createProject('Category Project');
+    const articleId = dbManager.saveArticle(proj.id, {
+      title: 'Article for categories',
+      source_query: '',
+      source_databases: '[]',
+      csl_json: '{}'
+    });
+
+    // 1. Create a category with initial options array
+    const catId = dbManager.createProjectCategory(
+      proj.id, 
+      'Metodologia', 
+      'enum', 
+      [{ name: 'Qualitativa' }, { name: 'Quantitativa' }]
+    );
+    expect(catId).toBeGreaterThan(0);
+
+    // 2. Retrieve categories and check parsedOptions structure
+    let categories = dbManager.getProjectCategories(proj.id);
+    expect(categories).toHaveLength(1);
+    expect(categories[0].parsedOptions).toHaveLength(2);
+    expect(categories[0].parsedOptions![0].name).toBe('Qualitativa');
+    expect(categories[0].parsedOptions![0].id).toBeGreaterThan(0);
+    const qualId = categories[0].parsedOptions![0].id;
+
+    // 3. Set article category using ID string
+    dbManager.setArticleCategory(articleId, catId, String(qualId));
+
+    // 4. Retrieve article category and ensure it resolves back to the name
+    let articleCats = dbManager.getAllProjectArticleCategories(proj.id);
+    expect(articleCats).toHaveLength(1);
+    expect(articleCats[0].value).toBe('Qualitativa');
+    expect(articleCats[0].option_ids).toContain(qualId);
+
+    // 5. Update options (rename 'Qualitativa' to 'Qualitativa Modificada' and add 'Mista')
+    dbManager.updateProjectCategory(
+      catId,
+      'Metodologia Updated',
+      'enum',
+      [
+        { id: qualId, name: 'Qualitativa Modificada' },
+        { name: 'Mista' }
+      ]
+    );
+
+    // 6. Verify article still references the modified option correctly
+    articleCats = dbManager.getAllProjectArticleCategories(proj.id);
+    expect(articleCats[0].value).toBe('Qualitativa Modificada');
+
+    // 7. Verify options structure is updated
+    categories = dbManager.getProjectCategories(proj.id);
+    expect(categories[0].name).toBe('Metodologia Updated');
+    expect(categories[0].parsedOptions).toHaveLength(2);
+    expect(categories[0].parsedOptions?.map((o: any) => o.name)).toEqual(['Qualitativa Modificada', 'Mista']);
+
+    // 8. Legacy fallback check: Set using string name instead of ID
+    dbManager.setArticleCategory(articleId, catId, 'Mista');
+    articleCats = dbManager.getAllProjectArticleCategories(proj.id);
+    expect(articleCats[0].value).toBe('Mista');
+    const mistaId = categories[0].parsedOptions?.find((o: any) => o.name === 'Mista')?.id;
+    expect(articleCats[0].option_ids).toContain(mistaId);
+  });
 });

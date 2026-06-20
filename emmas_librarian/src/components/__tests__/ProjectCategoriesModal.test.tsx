@@ -27,7 +27,14 @@ describe('ProjectCategoriesModal', () => {
     });
 
     const input = screen.getByPlaceholderText('Nome (ex: Metodologia)');
-    fireEvent.change(input, { target: { value: 'New Category' } });
+    fireEvent.change(input, { target: { value: 'New Enum Category' } });
+
+    // Change type to enum to show options input
+    const selects = screen.getAllByRole('combobox');
+    fireEvent.change(selects[0], { target: { value: 'enum' } });
+
+    const optionsInput = screen.getByPlaceholderText('Opções separadas por vírgula (ex: Qualitativa, Quantitativa)');
+    fireEvent.change(optionsInput, { target: { value: 'Opt1, Opt2' } });
     
     // Button with Plus icon might not have text, we can find by type submit
     const buttons = screen.getAllByRole('button');
@@ -38,7 +45,8 @@ describe('ProjectCategoriesModal', () => {
     fireEvent.click(submitBtn!);
 
     await waitFor(() => {
-      expect(projectService.createProjectCategory).toHaveBeenCalledWith(1, 'New Category', 'text', '');
+      // It should pass an array of objects
+      expect(projectService.createProjectCategory).toHaveBeenCalledWith(1, 'New Enum Category', 'enum', [{ name: 'Opt1' }, { name: 'Opt2' }]);
     });
   });
 
