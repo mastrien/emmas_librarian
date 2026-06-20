@@ -16,7 +16,9 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
     setValue(initialValue);
   }, [initialValue]);
 
-  const initialOptions = (category.type === 'enum' || category.type === 'multiselect') && category.options ? category.options.split(',').map(o => o.trim()) : [];
+  const initialOptions = (category.type === 'enum' || category.type === 'multiselect') 
+    ? (category.parsedOptions ? category.parsedOptions.map(o => o.name) : category.options ? category.options.split(',').map(o => o.trim()) : []) 
+    : [];
   const [localOptions, setLocalOptions] = useState(initialOptions);
   const [isAddingNewOption, setIsAddingNewOption] = useState(false);
   const [newOptionValue, setNewOptionValue] = useState('');
@@ -66,7 +68,8 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
       if (newOptionValue && newOptionValue.trim()) {
         const trimmed = newOptionValue.trim();
         if (!localOptions.includes(trimmed)) {
-          const updatedOptions = [...localOptions, trimmed].join(', ');
+          const updatedOptions = category.parsedOptions ? [...category.parsedOptions] : localOptions.map(n => ({name: n}));
+          updatedOptions.push({name: trimmed});
           try {
             await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions);
             setLocalOptions([...localOptions, trimmed]);
@@ -162,7 +165,10 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
       if (newOptionValue && newOptionValue.trim()) {
         const trimmed = newOptionValue.trim();
         if (!localOptions.includes(trimmed)) {
-          const updatedOptions = [...localOptions, trimmed].join(', ');
+          // If we have parsedOptions, we preserve their IDs
+          const updatedOptions = category.parsedOptions ? [...category.parsedOptions] : localOptions.map(n => ({name: n}));
+          updatedOptions.push({name: trimmed});
+          
           try {
             await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions);
             setLocalOptions([...localOptions, trimmed]);

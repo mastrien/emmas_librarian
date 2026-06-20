@@ -337,11 +337,11 @@ export const projectService = {
     return await window.electronAPI.invoke(IpcChannel.CATEGORIES_GET_PROJECT, projectId);
   },
 
-  async createProjectCategory(projectId: number, name: string, type: string, options?: string): Promise<number> {
+  async createProjectCategory(projectId: number, name: string, type: string, options?: any): Promise<number> {
     return await window.electronAPI.invoke(IpcChannel.CATEGORIES_CREATE_PROJECT, projectId, name, type, options);
   },
 
-  async updateProjectCategory(categoryId: number, name: string, type: string, options?: string): Promise<void> {
+  async updateProjectCategory(categoryId: number, name: string, type: string, options?: any): Promise<void> {
     await window.electronAPI.invoke(IpcChannel.CATEGORIES_UPDATE_PROJECT, categoryId, name, type, options);
   },
 

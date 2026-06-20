@@ -175,7 +175,14 @@ export class DatabaseManager {
             project_id INTEGER NOT NULL,
             name TEXT NOT NULL,
             type TEXT NOT NULL DEFAULT 'text',
+            options TEXT,
             FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS project_category_options (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE
         );
         CREATE TABLE IF NOT EXISTS article_categories (
             article_id INTEGER NOT NULL,
@@ -185,19 +192,65 @@ export class DatabaseManager {
             FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
             FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE
         );
+        CREATE TABLE IF NOT EXISTS article_category_selections (
+            article_id INTEGER NOT NULL,
+            category_id INTEGER NOT NULL,
+            option_id INTEGER NOT NULL,
+            PRIMARY KEY(article_id, category_id, option_id),
+            FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
+            FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE,
+            FOREIGN KEY(option_id) REFERENCES project_category_options(id) ON DELETE CASCADE
+        );
       `);
-    } catch (e) {
-      console.error('Migration categories error', e);
-    }
-    
-    // Migrations for existing tables
-    try {
+      
       const pcInfo = this.db.pragma('table_info(project_categories)') as any[];
       if (!pcInfo.some(col => col.name === 'options')) {
         this.db.exec(`ALTER TABLE project_categories ADD COLUMN options TEXT;`);
       }
+
+      // Migração de dados de options para IDs relacionais
+      const checkBackfill = this.db.prepare("SELECT value FROM settings WHERE key = 'backfilled_category_options'").get() as { value: string } | undefined;
+      if (!checkBackfill || checkBackfill.value !== 'true') {
+        const transaction = this.db.transaction(() => {
+          const cats = this.db.prepare("SELECT id, type, options FROM project_categories WHERE type IN ('enum', 'multiselect')").all() as any[];
+          const insertOptionStmt = this.db.prepare("INSERT INTO project_category_options (category_id, name) VALUES (?, ?)");
+          const insertSelectionStmt = this.db.prepare("INSERT INTO article_category_selections (article_id, category_id, option_id) VALUES (?, ?, ?)");
+
+          for (const cat of cats) {
+            if (cat.options) {
+              const opts = cat.options.split(',').map((o: string) => o.trim()).filter(Boolean);
+              const optionMap = new Map<string, number>();
+              
+              for (const opt of opts) {
+                const res = insertOptionStmt.run(cat.id, opt);
+                optionMap.set(opt, res.lastInsertRowid as number);
+              }
+
+              const assignments = this.db.prepare("SELECT article_id, value FROM article_categories WHERE category_id = ?").all(cat.id) as any[];
+              for (const assign of assignments) {
+                if (assign.value) {
+                  const selectedOpts = assign.value.split(',').map((o: string) => o.trim()).filter(Boolean);
+                  for (const selected of selectedOpts) {
+                    let optId = optionMap.get(selected);
+                    if (!optId) {
+                      const res = insertOptionStmt.run(cat.id, selected);
+                      optId = res.lastInsertRowid as number;
+                      optionMap.set(selected, optId);
+                    }
+                    try {
+                      insertSelectionStmt.run(assign.article_id, cat.id, optId);
+                    } catch (e) { } // duplicate ignore
+                  }
+                }
+              }
+            }
+          }
+        });
+        transaction();
+        this.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('backfilled_category_options', 'true')").run();
+      }
     } catch (e) {
-      console.error('Migration project_categories options error', e);
+      console.error('Migration categories error', e);
     }
 
     try {
@@ -702,16 +755,63 @@ export class DatabaseManager {
 
   // Categories
   public getProjectCategories(projectId: number): any[] {
-    return this.db.prepare('SELECT * FROM project_categories WHERE project_id = ?').all(projectId);
+    const cats = this.db.prepare('SELECT * FROM project_categories WHERE project_id = ?').all(projectId) as any[];
+    for (const cat of cats) {
+      if (cat.type === 'enum' || cat.type === 'multiselect') {
+        cat.parsedOptions = this.db.prepare('SELECT id, name FROM project_category_options WHERE category_id = ? ORDER BY id ASC').all(cat.id);
+      }
+    }
+    return cats;
   }
 
-  public createProjectCategory(projectId: number, name: string, type: string, options?: string): number {
-    const info = this.db.prepare('INSERT INTO project_categories (project_id, name, type, options) VALUES (?, ?, ?, ?)').run(projectId, name, type, options || null);
-    return info.lastInsertRowid as number;
+  public createProjectCategory(projectId: number, name: string, type: string, options?: any): number {
+    const info = this.db.prepare('INSERT INTO project_categories (project_id, name, type) VALUES (?, ?, ?)').run(projectId, name, type);
+    const catId = info.lastInsertRowid as number;
+    if ((type === 'enum' || type === 'multiselect') && Array.isArray(options)) {
+      this.syncProjectCategoryOptions(catId, options);
+    } else if (typeof options === 'string') {
+      // Legacy support during transition
+      this.db.prepare('UPDATE project_categories SET options = ? WHERE id = ?').run(options, catId);
+    }
+    return catId;
   }
 
-  public updateProjectCategory(categoryId: number, name: string, type: string, options?: string): void {
-    this.db.prepare('UPDATE project_categories SET name = ?, type = ?, options = ? WHERE id = ?').run(name, type, options || null, categoryId);
+  public updateProjectCategory(categoryId: number, name: string, type: string, options?: any): void {
+    this.db.prepare('UPDATE project_categories SET name = ?, type = ? WHERE id = ?').run(name, type, categoryId);
+    if ((type === 'enum' || type === 'multiselect') && Array.isArray(options)) {
+      this.syncProjectCategoryOptions(categoryId, options);
+    } else if (typeof options === 'string') {
+      this.db.prepare('UPDATE project_categories SET options = ? WHERE id = ?').run(options, categoryId);
+    }
+  }
+
+  public syncProjectCategoryOptions(categoryId: number, options: {id?: number, name: string}[]): void {
+    const existing = this.db.prepare('SELECT id FROM project_category_options WHERE category_id = ?').all(categoryId) as {id: number}[];
+    const existingIds = new Set(existing.map(e => e.id));
+    const toKeep = new Set<number>();
+
+    const updateStmt = this.db.prepare('UPDATE project_category_options SET name = ? WHERE id = ? AND category_id = ?');
+    const insertStmt = this.db.prepare('INSERT INTO project_category_options (category_id, name) VALUES (?, ?)');
+    const deleteStmt = this.db.prepare('DELETE FROM project_category_options WHERE id = ? AND category_id = ?');
+
+    const transaction = this.db.transaction(() => {
+      for (const opt of options) {
+        if (opt.id) {
+          updateStmt.run(opt.name, opt.id, categoryId);
+          toKeep.add(opt.id);
+        } else {
+          const res = insertStmt.run(categoryId, opt.name);
+          toKeep.add(res.lastInsertRowid as number);
+        }
+      }
+
+      for (const id of existingIds) {
+        if (!toKeep.has(id)) {
+          deleteStmt.run(id, categoryId);
+        }
+      }
+    });
+    transaction();
   }
 
   public deleteProjectCategory(categoryId: number): void {
@@ -719,32 +819,123 @@ export class DatabaseManager {
   }
 
   public getArticleCategories(articleId: number): any[] {
-    return this.db.prepare(`
+    const textAndBool = this.db.prepare(`
       SELECT ac.category_id, ac.value, pc.name, pc.type
       FROM article_categories ac
       JOIN project_categories pc ON ac.category_id = pc.id
       WHERE ac.article_id = ?
     `).all(articleId);
+
+    const selections = this.db.prepare(`
+      SELECT acs.category_id, acs.option_id, pco.name as option_name, pc.name, pc.type
+      FROM article_category_selections acs
+      JOIN project_categories pc ON acs.category_id = pc.id
+      JOIN project_category_options pco ON acs.option_id = pco.id
+      WHERE acs.article_id = ?
+    `).all(articleId) as any[];
+
+    // Group selections by category_id
+    const selMap = new Map<number, any>();
+    for (const sel of selections) {
+      if (!selMap.has(sel.category_id)) {
+        selMap.set(sel.category_id, {
+          category_id: sel.category_id,
+          name: sel.name,
+          type: sel.type,
+          option_ids: [],
+          option_names: []
+        });
+      }
+      const entry = selMap.get(sel.category_id);
+      entry.option_ids.push(sel.option_id);
+      entry.option_names.push(sel.option_name);
+    }
+    
+    // Compatibility for frontend `value` string
+    for (const entry of selMap.values()) {
+      entry.value = entry.option_names.join(', ');
+    }
+
+    return [...textAndBool, ...Array.from(selMap.values())];
   }
 
   public getAllProjectArticleCategories(projectId: number): any[] {
-    return this.db.prepare(`
+    const textAndBool = this.db.prepare(`
       SELECT ac.article_id, ac.category_id, ac.value, pc.name, pc.type
       FROM article_categories ac
       JOIN project_categories pc ON ac.category_id = pc.id
       WHERE pc.project_id = ?
     `).all(projectId);
+
+    const selections = this.db.prepare(`
+      SELECT acs.article_id, acs.category_id, acs.option_id, pco.name as option_name, pc.name, pc.type
+      FROM article_category_selections acs
+      JOIN project_categories pc ON acs.category_id = pc.id
+      JOIN project_category_options pco ON acs.option_id = pco.id
+      WHERE pc.project_id = ?
+    `).all(projectId) as any[];
+
+    const selMap = new Map<string, any>();
+    for (const sel of selections) {
+      const key = `${sel.article_id}-${sel.category_id}`;
+      if (!selMap.has(key)) {
+        selMap.set(key, {
+          article_id: sel.article_id,
+          category_id: sel.category_id,
+          name: sel.name,
+          type: sel.type,
+          option_ids: [],
+          option_names: []
+        });
+      }
+      const entry = selMap.get(key);
+      entry.option_ids.push(sel.option_id);
+      entry.option_names.push(sel.option_name);
+    }
+    
+    // Compatibility for frontend `value` string
+    for (const entry of selMap.values()) {
+      entry.value = entry.option_names.join(', ');
+    }
+
+    return [...textAndBool, ...Array.from(selMap.values())];
   }
 
-  public setArticleCategory(articleId: number, categoryId: number, value: string | null): void {
-    if (value === null || value === '') {
-      this.db.prepare('DELETE FROM article_categories WHERE article_id = ? AND category_id = ?').run(articleId, categoryId);
+  public setArticleCategory(articleId: number, categoryId: number, value: any): void {
+    const pc = this.db.prepare('SELECT type FROM project_categories WHERE id = ?').get(categoryId) as { type: string } | undefined;
+    if (!pc) return;
+
+    if (pc.type === 'enum' || pc.type === 'multiselect') {
+      // value should be an array of option IDs, or a comma-separated string of option IDs/names if legacy
+      this.db.prepare('DELETE FROM article_category_selections WHERE article_id = ? AND category_id = ?').run(articleId, categoryId);
+      
+      let idsToInsert: number[] = [];
+      if (Array.isArray(value)) {
+        idsToInsert = value.map(Number).filter(n => !isNaN(n));
+      } else if (typeof value === 'string' && value.trim() !== '') {
+        // legacy support: try to match by name or id
+        const parts = value.split(',').map(s => s.trim()).filter(Boolean);
+        const options = this.db.prepare('SELECT id, name FROM project_category_options WHERE category_id = ?').all(categoryId) as {id: number, name: string}[];
+        for (const p of parts) {
+          const exact = options.find(o => o.name === p || String(o.id) === p);
+          if (exact) idsToInsert.push(exact.id);
+        }
+      }
+
+      const insertStmt = this.db.prepare('INSERT INTO article_category_selections (article_id, category_id, option_id) VALUES (?, ?, ?)');
+      for (const optId of idsToInsert) {
+        try { insertStmt.run(articleId, categoryId, optId); } catch(e) {}
+      }
     } else {
-      this.db.prepare(`
-        INSERT INTO article_categories (article_id, category_id, value)
-        VALUES (?, ?, ?)
-        ON CONFLICT(article_id, category_id) DO UPDATE SET value = excluded.value
-      `).run(articleId, categoryId, value);
+      if (value === null || value === '') {
+        this.db.prepare('DELETE FROM article_categories WHERE article_id = ? AND category_id = ?').run(articleId, categoryId);
+      } else {
+        this.db.prepare(`
+          INSERT INTO article_categories (article_id, category_id, value)
+          VALUES (?, ?, ?)
+          ON CONFLICT(article_id, category_id) DO UPDATE SET value = excluded.value
+        `).run(articleId, categoryId, String(value));
+      }
     }
   }
 

@@ -174,19 +174,27 @@ export enum IpcChannel {
   BACKUP_RESTORE_AUTO = 'backup:restoreAuto',
 }
 
+export interface CategoryOption {
+  id?: number;
+  name: string;
+}
+
 export interface ProjectCategory {
   id: number;
   project_id: number;
   name: string;
-  type: string; // e.g. 'text', 'select', 'multiselect', etc.
-  options?: string; // Comma-separated options for select/multiselect
+  type: string; // e.g. 'text', 'boolean', 'enum', 'multiselect'
+  options?: string; // Legacy comma-separated options
+  parsedOptions?: CategoryOption[]; // Relational array of options
 }
 
 export interface ArticleCategory {
   category_id: number;
   name: string;
   type: string;
-  value: string;
+  value?: string;
+  option_ids?: number[];
+  option_names?: string[];
 }
 
 export interface PendingHighlight {

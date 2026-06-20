@@ -20,14 +20,20 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
   const [editingCatId, setEditingCatId] = useState<number | null>(null);
   const [editCatName, setEditCatName] = useState('');
   const [editCatType, setEditCatType] = useState('text');
-  const [editCatOptions, setEditCatOptions] = useState('');
+  const [editCatOptions, setEditCatOptions] = useState<{id?: number, name: string}[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadCategories();
+    }
+  }, [isOpen]);
 
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const cats = await projectService.getProjectCategories(projectId);
-      setCategories(cats);
+      const data = await projectService.getProjectCategories(projectId);
+      setCategories(data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -35,22 +41,16 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
     }
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      loadCategories();
-    }
-  }, [isOpen, projectId]);
-
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
-
     setAdding(true);
     try {
-      await projectService.createProjectCategory(projectId, newCatName.trim(), newCatType, newCatOptions.trim());
+      const parsedOpts = newCatOptions.split(',').map(s => s.trim()).filter(Boolean).map(name => ({ name }));
+      await projectService.createProjectCategory(projectId, newCatName.trim(), newCatType, parsedOpts);
       setNewCatName('');
       setNewCatOptions('');
+      setNewCatType('text');
       await loadCategories();
     } catch (err) {
       console.error(err);
@@ -60,7 +60,7 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Tem certeza? Isso removerá a categoria de todos os artigos deste projeto.')) return;
+    if (!window.confirm('Tem certeza? Isso removerá a categoria de todos os artigos deste projeto.')) return;
     try {
       await projectService.deleteProjectCategory(id);
       await loadCategories();
@@ -73,7 +73,14 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
     setEditingCatId(cat.id);
     setEditCatName(cat.name);
     setEditCatType(cat.type);
-    setEditCatOptions(cat.options || '');
+    
+    if (cat.parsedOptions) {
+      setEditCatOptions(cat.parsedOptions);
+    } else if (cat.options) {
+      setEditCatOptions(cat.options.split(',').map(s => ({ name: s.trim() })).filter(o => o.name));
+    } else {
+      setEditCatOptions([]);
+    }
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
@@ -82,7 +89,8 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
 
     setSavingEdit(true);
     try {
-      await projectService.updateProjectCategory(editingCatId, editCatName.trim(), editCatType, editCatOptions.trim());
+      const cleanOpts = editCatOptions.map(o => ({...o, name: o.name.trim()})).filter(o => o.name);
+      await projectService.updateProjectCategory(editingCatId, editCatName.trim(), editCatType, cleanOpts);
       setEditingCatId(null);
       await loadCategories();
     } catch (err) {
@@ -182,14 +190,31 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
                     </select>
                   </div>
                   {(editCatType === 'enum' || editCatType === 'multiselect') && (
-                    <input 
-                      type="text" 
-                      className="input-field" 
-                      placeholder="Opções separadas por vírgula" 
-                      value={editCatOptions}
-                      onChange={(e) => setEditCatOptions(e.target.value)}
-                      required
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'var(--bg-main)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
+                      <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Opções (edite, remova ou adicione):</label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {editCatOptions.map((opt, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'var(--bg-surface)', padding: '0.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                            <input 
+                              type="text" 
+                              value={opt.name}
+                              onChange={(e) => {
+                                const newOpts = [...editCatOptions];
+                                newOpts[i].name = e.target.value;
+                                setEditCatOptions(newOpts);
+                              }}
+                              style={{ border: 'none', background: 'transparent', color: 'var(--text-main)', fontSize: '0.85rem', outline: 'none', width: Math.max(50, opt.name.length * 8) + 'px' }}
+                            />
+                            <button type="button" onClick={() => setEditCatOptions(editCatOptions.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                        <button type="button" onClick={() => setEditCatOptions([...editCatOptions, {name: 'Nova opção'}])} style={{ background: 'var(--bg-surface)', border: '1px dashed var(--border-color)', color: 'var(--text-main)', borderRadius: 'var(--radius-sm)', padding: '0.25rem 0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem' }}>
+                          <Plus size={14} /> Adicionar
+                        </button>
+                      </div>
+                    </div>
                   )}
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                     <button type="button" onClick={() => setEditingCatId(null)} className="btn-secondary" style={{ padding: '0.4rem 1rem' }}>Cancelar</button>

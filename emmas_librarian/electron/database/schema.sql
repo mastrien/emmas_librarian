@@ -216,6 +216,13 @@ CREATE TABLE IF NOT EXISTS project_categories (
     FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS project_category_options (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS article_categories (
     article_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
@@ -223,6 +230,16 @@ CREATE TABLE IF NOT EXISTS article_categories (
     PRIMARY KEY(article_id, category_id),
     FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
     FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS article_category_selections (
+    article_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    option_id INTEGER NOT NULL,
+    PRIMARY KEY(article_id, category_id, option_id),
+    FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE,
+    FOREIGN KEY(option_id) REFERENCES project_category_options(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS project_diary_history (
