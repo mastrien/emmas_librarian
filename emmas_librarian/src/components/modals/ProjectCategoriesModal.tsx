@@ -17,6 +17,11 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
   const [newCatType, setNewCatType] = useState('text');
   const [newCatOptions, setNewCatOptions] = useState('');
   const [adding, setAdding] = useState(false);
+  const [editingCatId, setEditingCatId] = useState<number | null>(null);
+  const [editCatName, setEditCatName] = useState('');
+  const [editCatType, setEditCatType] = useState('text');
+  const [editCatOptions, setEditCatOptions] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const loadCategories = async () => {
     setLoading(true);
@@ -61,6 +66,29 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
       await loadCategories();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const startEditing = (cat: ProjectCategory) => {
+    setEditingCatId(cat.id);
+    setEditCatName(cat.name);
+    setEditCatType(cat.type);
+    setEditCatOptions(cat.options || '');
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingCatId === null || !editCatName.trim()) return;
+
+    setSavingEdit(true);
+    try {
+      await projectService.updateProjectCategory(editingCatId, editCatName.trim(), editCatType, editCatOptions.trim());
+      setEditingCatId(null);
+      await loadCategories();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -130,15 +158,62 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
             </div>
           ) : (
             categories.map(cat => (
-              <div key={cat.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                <div>
-                  <div style={{ fontWeight: 500, color: 'var(--text-heading)' }}>{cat.name}</div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Tipo: {cat.type === 'boolean' ? 'Sim/Não' : cat.type === 'enum' ? 'Lista de Opções' : cat.type === 'multiselect' ? 'Múltipla Escolha' : 'Texto'}</div>
+              editingCatId === cat.id ? (
+                <form key={cat.id} onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-primary)' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input 
+                      type="text" 
+                      className="input-field" 
+                      value={editCatName}
+                      onChange={(e) => setEditCatName(e.target.value)}
+                      required
+                      style={{ flex: 1 }}
+                    />
+                    <select 
+                      className="input-field" 
+                      value={editCatType}
+                      onChange={(e) => setEditCatType(e.target.value)}
+                      style={{ width: '150px' }}
+                    >
+                      <option value="text">Texto</option>
+                      <option value="boolean">Sim/Não</option>
+                      <option value="enum">Lista de Opções</option>
+                      <option value="multiselect">Múltipla Escolha</option>
+                    </select>
+                  </div>
+                  {(editCatType === 'enum' || editCatType === 'multiselect') && (
+                    <input 
+                      type="text" 
+                      className="input-field" 
+                      placeholder="Opções separadas por vírgula" 
+                      value={editCatOptions}
+                      onChange={(e) => setEditCatOptions(e.target.value)}
+                      required
+                    />
+                  )}
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                    <button type="button" onClick={() => setEditingCatId(null)} className="btn-secondary" style={{ padding: '0.4rem 1rem' }}>Cancelar</button>
+                    <button type="submit" className="btn-primary" disabled={savingEdit || !editCatName.trim()} style={{ padding: '0.4rem 1rem' }}>
+                      {savingEdit ? <Loader2 size={16} className="spin" /> : 'Salvar'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div key={cat.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                  <div>
+                    <div style={{ fontWeight: 500, color: 'var(--text-heading)' }}>{cat.name}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Tipo: {cat.type === 'boolean' ? 'Sim/Não' : cat.type === 'enum' ? 'Lista de Opções' : cat.type === 'multiselect' ? 'Múltipla Escolha' : 'Texto'}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    <button type="button" onClick={() => startEditing(cat)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }} title="Editar categoria">
+                      <Tag size={18} />
+                    </button>
+                    <button type="button" onClick={() => handleDelete(cat.id)} style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0.5rem' }} title="Excluir categoria">
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
-                <button type="button" onClick={() => handleDelete(cat.id)} style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0.5rem' }} title="Excluir categoria">
-                  <Trash2 size={18} />
-                </button>
-              </div>
+              )
             ))
           )}
         </div>

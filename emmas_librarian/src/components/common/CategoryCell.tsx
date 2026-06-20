@@ -12,6 +12,10 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
   const [value, setValue] = useState(initialValue);
   const [isEditing, setIsEditing] = useState(false);
 
+  React.useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
   const initialOptions = (category.type === 'enum' || category.type === 'multiselect') && category.options ? category.options.split(',').map(o => o.trim()) : [];
   const [localOptions, setLocalOptions] = useState(initialOptions);
   const [isAddingNewOption, setIsAddingNewOption] = useState(false);

@@ -100,13 +100,23 @@ export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
                       <textarea
                         value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
+                        onChange={(e) => {
+                          e.target.style.height = 'auto';
+                          e.target.style.height = e.target.scrollHeight + 'px';
+                          setEditContent(e.target.value);
+                        }}
+                        ref={(el) => {
+                          if (el) {
+                            el.style.height = 'auto';
+                            el.style.height = el.scrollHeight + 'px';
+                          }
+                        }}
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                          width: '100%', height: '60px', padding: '0.5rem',
+                          width: '100%', minHeight: '60px', padding: '0.5rem',
                           borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)',
                           background: 'var(--bg-main)', color: 'var(--text-main)',
-                          fontSize: '0.85rem', outline: 'none', resize: 'none'
+                          fontSize: '0.85rem', outline: 'none', resize: 'vertical'
                         }}
                       />
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -115,7 +125,7 @@ export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <span style={{ whiteSpace: 'pre-wrap' }}>{a.content_markdown}</span>
+                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{a.content_markdown}</span>
                   )}
                 </div>
               </div>
@@ -160,12 +170,22 @@ export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }} onClick={e => e.stopPropagation()}>
                       <textarea
                         value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
+                        onChange={(e) => {
+                          e.target.style.height = 'auto';
+                          e.target.style.height = e.target.scrollHeight + 'px';
+                          setEditContent(e.target.value);
+                        }}
+                        ref={(el) => {
+                          if (el) {
+                            el.style.height = 'auto';
+                            el.style.height = el.scrollHeight + 'px';
+                          }
+                        }}
                         style={{
-                          width: '100%', height: '60px', padding: '0.5rem',
+                          width: '100%', minHeight: '60px', padding: '0.5rem',
                           borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)',
                           background: 'var(--bg-main)', color: 'var(--text-main)',
-                          fontSize: '0.85rem', outline: 'none', resize: 'none'
+                          fontSize: '0.85rem', outline: 'none', resize: 'vertical'
                         }}
                       />
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -176,7 +196,7 @@ export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
                   ) : (
                     h.comment?.text && (
                       <div style={{ color: 'var(--text-heading)', fontWeight: 500 }}>
-                        <span style={{ whiteSpace: 'pre-wrap' }}>{h.comment.text}</span>
+                        <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{h.comment.text}</span>
                       </div>
                     )
                   )}

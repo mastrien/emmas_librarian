@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ArticleReaderPage } from '../ArticleReaderPage';
 import { projectService } from '../../services/api';
 
 vi.mock('react-pdf-highlighter', () => ({
-  PdfHighlighter: () => <div data-testid="pdf-highlighter" />,
+  PdfLoader: ({ children }: any) => <div data-testid="pdf-loader">{children({ numPages: 10, getPage: vi.fn() })}</div>,
+  PdfHighlighter: () => <div data-testid="pdf-highlighter" className="pdfViewer" />,
   Highlight: () => <div data-testid="highlight" />,
   Popup: () => <div data-testid="popup" />,
   AreaHighlight: () => <div data-testid="area-highlight" />,
@@ -94,4 +95,5 @@ describe('ArticleReaderPage', () => {
       expect(getAllByText('Vincular PDF Local').length).toBeGreaterThan(0);
     });
   });
+
 });

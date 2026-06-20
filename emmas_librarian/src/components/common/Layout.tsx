@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Settings } from 'lucide-react';
+import { Settings, Gift } from 'lucide-react';
 import { HelpButton } from './HelpButton';
 import { Logo } from './Logo';
 import { ChangelogModal } from '../modals/ChangelogModal';
@@ -85,6 +85,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         
         <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <HelpButton />
+          <button onClick={() => setShowChangelog(true)} className="btn-secondary" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Gift size={18} /> Novidades
+          </button>
           <Link to="/" className="btn-secondary" style={{ padding: '0.5rem 1rem' }}>
             Projetos
           </Link>

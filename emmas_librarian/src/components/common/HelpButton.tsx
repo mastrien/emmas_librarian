@@ -23,7 +23,7 @@ const tutorials: Record<string, { title: string, content: React.ReactNode }> = {
         <p>Nesta página você gerencia os artigos do seu projeto e acompanha o progresso da revisão.</p>
         <ul style={{ paddingLeft: '1.5rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <li><strong>Nova Busca:</strong> Clique para procurar novos artigos nas bases de dados conectadas.</li>
-          <li><strong>Filtros e Status:</strong> Use as abas para alternar entre artigos novos, em revisão e aprovados.</li>
+          <li><strong>Categorias:</strong> Crie categorias personalizadas (texto, múltipla escolha, sim/não) para classificar os artigos da sua revisão clicando no botão "Gerenciar Categorias".</li>
           <li><strong>Leitura:</strong> Clique no título de um artigo para abrir o Leitor de PDF e fazer anotações.</li>
           <li><strong>Exportar:</strong> Você pode exportar as referências para o Biblioshiny usando o botão no topo da tela.</li>
           <li><strong>Diário:</strong> Uma aba dedicada para registrar decisões metodológicas, ideias e notas de pesquisa que ficam vinculadas à data atual.</li>
@@ -54,8 +54,15 @@ const tutorials: Record<string, { title: string, content: React.ReactNode }> = {
         <ul style={{ paddingLeft: '1.5rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <li><strong>Upload:</strong> Se o artigo não tiver PDF, clique em "Vincular PDF Local" para fazer o upload do arquivo do seu computador.</li>
           <li><strong>Destaques:</strong> Selecione qualquer texto no PDF e um menu aparecerá permitindo adicionar um comentário e destacar o texto (fichamento).</li>
-          <li><strong>Anotações Avulsas:</strong> Na barra lateral, você pode adicionar notas gerais que não estão ligadas a um texto específico.</li>
-          <li><strong>Busca Inteligente:</strong> Use a aba "Pesquisar" na barra lateral para encontrar termos no documento. Os termos serão destacados no texto.</li>
+          <li><strong>Categorização Rápida:</strong> Clique no botão de Categorias flutuante (canto inferior esquerdo) para preencher as categorias deste artigo sem sair da tela.</li>
+          <li><strong>Barra Lateral:</strong>
+            <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <li><strong>Anotações:</strong> Veja e edite seus destaques e anotações avulsas.</li>
+              <li><strong>Pesquisar:</strong> Encontre termos no documento (os resultados serão destacados em amarelo no PDF).</li>
+              <li><strong>Insights IA:</strong> Gere resumos automáticos (Geral e por Seção) usando a chave de API configurada.</li>
+              <li><strong>Rascunho:</strong> Um bloco de notas vinculado ao projeto que salva automaticamente enquanto você digita.</li>
+            </ul>
+          </li>
         </ul>
       </>
     )

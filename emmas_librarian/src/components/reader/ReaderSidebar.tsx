@@ -6,6 +6,7 @@ import { AiInsightsTab } from './AiInsightsTab';
 interface ReaderSidebarProps {
   sidebarTab: 'annotations' | 'search' | 'ai' | 'writer';
   setSidebarTab: (tab: 'annotations' | 'search' | 'ai' | 'writer') => void;
+  width?: number;
   
   // AnnotationsTab Props
   highlights: any[];
@@ -41,6 +42,7 @@ interface ReaderSidebarProps {
 export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
   sidebarTab,
   setSidebarTab,
+  width = 320,
   
   highlights,
   standaloneAnnotations,
@@ -71,7 +73,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
 }) => {
   return (
     <div style={{ 
-      width: '320px', 
+      width: `${width}px`, 
       borderLeft: '1px solid var(--border-color)', 
       background: 'var(--bg-surface)', 
       display: 'flex', 

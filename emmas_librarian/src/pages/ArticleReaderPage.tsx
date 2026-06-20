@@ -69,6 +69,60 @@ export const ArticleReaderPage: React.FC = () => {
   const [isCitationModalOpen, setIsCitationModalOpen] = useState(false);
 
   const [scale, setScale] = useState(1.0);
+  const scrollPositionRef = useRef<number>(0);
+
+  const handleZoom = (updater: number | ((s: number) => number)) => {
+    setScale(s => {
+      const newScale = typeof updater === 'function' ? updater(s) : updater;
+      return newScale;
+    });
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey) {
+        if (e.key === '=' || e.key === '+') {
+          e.preventDefault();
+          setScale(s => Math.min(s + 0.2, 3));
+        } else if (e.key === '-') {
+          e.preventDefault();
+          setScale(s => Math.max(s - 0.2, 0.5));
+        } else if (e.key === '0') {
+          e.preventDefault();
+          setScale(1.0);
+        }
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+          setScale(s => Math.min(s + 0.1, 3));
+        } else if (e.deltaY > 0) {
+          setScale(s => Math.max(s - 0.1, 0.5));
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (highlighterRef.current && highlighterRef.current.viewer) {
+      highlighterRef.current.viewer.currentScaleValue = scale.toString();
+    }
+  }, [scale]);
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    return parseInt(localStorage.getItem('emma_sidebar_width') || '320', 10);
+  });
+  const isDraggingSidebar = useRef(false);
   const [sidebarTab, setSidebarTab] = useState<'annotations' | 'search' | 'ai' | 'writer'>('annotations');
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -486,6 +540,39 @@ export const ArticleReaderPage: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingSidebar.current) return;
+      const newWidth = Math.max(350, Math.min(800, window.innerWidth - e.clientX));
+      if (newWidth !== sidebarWidth) {
+        setSidebarWidth(newWidth);
+      }
+    };
+    const handleMouseUp = () => {
+      if (isDraggingSidebar.current) {
+        isDraggingSidebar.current = false;
+        document.body.style.cursor = 'default';
+        document.body.style.userSelect = 'auto';
+        localStorage.setItem('emma_sidebar_width', sidebarWidth.toString());
+      }
+    };
+    
+    const handleBlur = () => {
+      isDraggingSidebar.current = false;
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('blur', handleBlur);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [sidebarWidth]);
+
   const goToPage = (pageNum: number) => {
     if (highlighterRef.current) {
       highlighterRef.current.scrollTo({ 
@@ -677,28 +764,24 @@ export const ArticleReaderPage: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)' }}>
               <button 
-                onClick={() => setScale(s => Math.max(0.5, parseFloat((s - 0.1).toFixed(1))))} 
-                className="btn-secondary" 
-                style={{ padding: '0.3rem', border: 'none', background: 'transparent' }} 
-                title="Zoom Out"
+                onClick={() => handleZoom(s => Math.max(0.5, parseFloat((s - 0.1).toFixed(1))))} 
+                style={{ background: 'none', border: 'none', color: 'var(--text-heading)', cursor: 'pointer' }}
+                title="Menos zoom"
               >
-                <ZoomOut size={16} />
+                <ZoomOut size={18} />
               </button>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, padding: '0 0.5rem', minWidth: '45px', textAlign: 'center', color: 'var(--text-main)' }}>
-                {Math.round(scale * 100)}%
-              </span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)', minWidth: '40px', textAlign: 'center' }}>{Math.round(scale * 100)}%</span>
               <button 
-                onClick={() => setScale(s => Math.min(2.5, parseFloat((s + 0.1).toFixed(1))))} 
-                className="btn-secondary" 
-                style={{ padding: '0.3rem', border: 'none', background: 'transparent' }} 
-                title="Zoom In"
+                onClick={() => handleZoom(s => Math.min(2.5, parseFloat((s + 0.1).toFixed(1))))} 
+                style={{ background: 'none', border: 'none', color: 'var(--text-heading)', cursor: 'pointer' }}
+                title="Mais zoom"
               >
-                <ZoomIn size={16} />
+                <ZoomIn size={18} />
               </button>
               <button 
-                onClick={() => setScale(1.0)} 
+                onClick={() => handleZoom(1.0)} 
                 className="btn-secondary" 
-                style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem', border: 'none', background: 'transparent', color: 'var(--text-muted)' }}
+                style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', height: '24px' }}
               >
                 Reset
               </button>
@@ -735,7 +818,6 @@ export const ArticleReaderPage: React.FC = () => {
                 <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
                   <div id="pdf-container" style={{ flexGrow: 1, position: 'relative', height: '100%' }}>
                     <PdfHighlighter
-                      key={scale}
                       ref={highlighterRef}
                       pdfDocument={pdfDocument}
                       pdfScaleValue={scale.toString()}
@@ -880,8 +962,35 @@ export const ArticleReaderPage: React.FC = () => {
                     </div>
                   </div>
                   
+                  {/* Resizer Handle */}
+                  <div
+                    style={{
+                      width: '4px',
+                      cursor: 'col-resize',
+                      background: 'var(--border-color)',
+                      flexShrink: 0,
+                      zIndex: 10,
+                      transition: 'background 0.2s ease'
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      isDraggingSidebar.current = true;
+                      document.body.style.cursor = 'col-resize';
+                      document.body.style.userSelect = 'none';
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'var(--color-primary)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isDraggingSidebar.current) {
+                        e.currentTarget.style.background = 'var(--border-color)';
+                      }
+                    }}
+                  />
+
                   {/* Sidebar with Tabs */}
                   <ReaderSidebar
+                    width={sidebarWidth}
                     sidebarTab={sidebarTab}
                     setSidebarTab={setSidebarTab}
                     
