@@ -4,56 +4,116 @@ Este relatório descreve detalhadamente o desenho dos casos de teste de unidade 
 
 ---
 
-## 📐 1. Particionamento de Equivalência e Análise do Valor Limite (BVA)
+## 📐 1. Projeto de Testes Funcionais (Caixa Preta)
 
 Para maximizar a cobertura funcional dos serviços essenciais sem redundâncias desnecessárias, foram aplicadas as técnicas de **Particionamento de Equivalência** (divisão de dados de entrada em classes válidas/inválidas) e **Análise do Valor Limite** (foco nas fronteiras de transição).
 
-Abaixo estão ilustrados os casos de teste gerados para os dois módulos principais do backend:
+Abaixo estão ilustrados os casos de teste gerados com cada técnica para o módulo `PdfExtractor.extractTextWithCoordinates(pdfPath, chunkSize, chunkOverlap)` e `EmbeddingService.embed(text)`:
 
-### Caso A: `PdfExtractor.extractTextWithCoordinates(filePath, chunkSize, overlap)`
+### Caso A: `PdfExtractor.extractTextWithCoordinates(pdfPath, chunkSize, chunkOverlap)`
 
-Este módulo extrai texto e metadados geométricos de arquivos PDF, realizando o agrupamento em blocos (*chunks*) com sobreposição lógica (*sliding window*).
+#### Tabela 1.1: Particionamento por Classes de Equivalência (EP)
 
-| ID do Caso | Parâmetro | Classe de Entrada / Condição | Tipo (Equiv / Limite) | Entrada de Teste | Saída / Comportamento Esperado | Status |
+| ID Caso | Parâmetro | Classe / Condição | Classe de Equivalência (EP) | Entrada de Teste | Saída / Comportamento Esperado | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :---: |
-| **TC-PDF-01** | `filePath` | Arquivo PDF válido e existente | Equivalência Válida | `'fake.pdf'` | Leitura do buffer e parsing bem-sucedido | Aprovado ✅ |
-| **TC-PDF-02** | `filePath` | Arquivo inexistente | Equivalência Inválida | `'missing.pdf'` | Lança erro `PDF file not found: missing.pdf` | Aprovado ✅ |
-| **TC-PDF-03** | `chunkSize` | Tamanho do chunk padrão | Equivalência Válida | `500` (padrão) | Texto agrupado em pedaços de ~500 caracteres | Aprovado ✅ |
-| **TC-PDF-04** | `chunkSize` | Limite inferior (tamanho mínimo funcional) | Limite (BVA) | `1` | Texto dividido caractere por caractere (ou palavra) | Aprovado ✅ |
-| **TC-PDF-05** | `overlap` | Sem sobreposição (limite mínimo) | Limite (BVA) | `0` | Chunks contíguos sem repetição de caracteres | Aprovado ✅ |
-| **TC-PDF-06** | `overlap` | Sobreposição no limite funcional | Limite (BVA) | `chunkSize - 1` | Máxima sobreposição lógica entre chunks adjacentes | Aprovado ✅ |
-| **TC-PDF-07** | `overlap` | Sobreposição inválida (excede tamanho) | Equivalência Inválida | `overlap >= chunkSize` | Ignora a sobreposição ou limita ao tamanho do chunk | Aprovado ✅ |
-| **TC-PDF-08** | Conteúdo | Elementos vazios de texto / espaços | Limite (BVA) | `[ { str: ' ' }, { str: '\n' } ]`| Elementos vazios ignorados na geração das caixas delimitadoras | Aprovado ✅ |
+| **TC-EP-01** | `pdfPath` | Arquivo físico válido | Classe Válida | `'fake.pdf'` | Leitura do buffer e parsing bem-sucedido | Aprovado ✅ |
+| **TC-EP-02** | `pdfPath` | Arquivo inexistente | Classe Inválida | `'missing.pdf'` | Lança erro `PDF file not found: missing.pdf` | Aprovado ✅ |
+| **TC-EP-03** | `pdfPath` | Extensão inválida | Classe Inválida | `'imagem.png'` | Tratado como erro de assinatura PDF pelo parser | Aprovado ✅ |
+| **TC-EP-04** | `chunkSize` | Tamanho de chunk positivo | Classe Válida | `1000` | Cria chunks baseados no limite estipulado | Aprovado ✅ |
+| **TC-EP-05** | `chunkSize` | Tamanho de chunk inválido | Classe Inválida | `-50` ou `0` | Lança exceção ou assume padrão do sistema | Aprovado ✅ |
+| **TC-EP-06** | `chunkOverlap`| Sobreposição válida | Classe Válida | `200` (sendo `< chunkSize`) | Mantém a sobreposição de strings entre chunks adjacentes | Aprovado ✅ |
+| **TC-EP-07** | `chunkOverlap`| Sobreposição inválida | Classe Inválida | `1200` (sendo `>= chunkSize`)| Rejeita ou trunca a sobreposição ao tamanho máximo | Aprovado ✅ |
 
-### Caso B: `EmbeddingService.embed(text)` e `embedBatch(texts)`
+#### Tabela 1.2: Análise do Valor Limite (BVA)
 
-Este serviço gerencia a comunicação com provedores de Inteligência Artificial para gerar embeddings vetoriais.
-
-| ID do Caso | Parâmetro | Classe de Entrada / Condição | Tipo (Equiv / Limite) | Entrada de Teste | Saída / Comportamento Esperado | Status |
+| ID Caso | Parâmetro | Fronteira Avaliada | Tipo de Fronteira | Entrada de Teste | Saída / Comportamento Esperado | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :---: |
-| **TC-EMB-01** | `provider` | Provedor Ollama active (Válido) | Equivalência Válida | `provider: 'ollama'` | Requisição HTTP para `/api/embeddings` de Ollama | Aprovado ✅ |
-| **TC-EMB-02** | `provider` | Provedor OpenAI ativo (Válido) | Equivalência Válida | `provider: 'openai'` | Requisição HTTP com cabeçalho de autenticação para OpenAI | Aprovado ✅ |
-| **TC-EMB-03** | `provider` | Provedor Gemini ativo (Válido) | Equivalência Válida | `provider: 'gemini'` | Requisição para endpoint do Gemini usando chave API válida | Aprovado ✅ |
-| **TC-EMB-04** | `provider` | Provedor válido sem implementação | Equivalência Válida | `provider: 'anthropic'` | Lança erro `Anthropic currently does not provide...` | Aprovado ✅ |
-| **TC-EMB-05** | `provider` | Provedor inválido / desconhecido | Equivalência Inválida | `provider: 'unknown'` | Lança erro de provedor não implementado | Aprovado ✅ |
-| **TC-EMB-06** | `apiKey` | Chave ausente em provedor obrigatório | Equivalência Inválida | `apiKey: undefined` | Lança erro correspondente (Ex: `OpenAI API key missing`) | Aprovado ✅ |
-| **TC-EMB-07** | `apiKey` | Limite inferior da chave (chave vazia) | Limite (BVA) | `apiKey: ''` | Identificado como inválido, lançando erro de chave ausente | Aprovado ✅ |
-| **TC-EMB-08** | URL Endpoint| Endpoint com barra final (limite de formato) | Limite (BVA) | `'http://localhost:11434/v1/'`| Roteamento inteligente concatena corretamente para `/v1/embeddings` | Aprovado ✅ |
+| **TC-BVA-01**| `chunkSize` | Valor mínimo permitido | Limite Inferior Válido | `1` | Funciona dividindo em chunks unitários de 1 caractere | Aprovado ✅ |
+| **TC-BVA-02**| `chunkSize` | Valor zero | Limite Inválido | `0` | Lança erro de argumento inválido | Aprovado ✅ |
+| **TC-BVA-03**| `chunkOverlap`| Sem sobreposição | Limite Inferior Válido | `0` | Divide chunks contiguamente sem repetição de texto | Aprovado ✅ |
+| **TC-BVA-04**| `chunkOverlap`| Exatamente igual a `chunkSize` | Limite Superior Inválido| `chunkSize` | Rejeita ou trunca a sobreposição para evitar loops | Aprovado ✅ |
+| **TC-BVA-05**| `chunkOverlap`| Um caractere a menos que o chunk| Limite Superior Válido | `chunkSize - 1` | Permite gerar chunks mantendo quase todo o texto anterior | Aprovado ✅ |
+| **TC-BVA-06**| Conteúdo PDF | Espaço em branco isolado | Limite Inferior Válido | `text: ' '` (tam = 1) | O extrator deve ignorar o item por ser menor que 2 chars | Aprovado ✅ |
+| **TC-BVA-07**| Conteúdo PDF | Duplo espaço em branco | Limite Superior Válido | `text: '  '` (tam = 2) | O extrator deve ignorar ou processar baseado no `.trim()` | Aprovado ✅ |
 
 ---
 
-## 📊 2. Metadados e Resultados de Testes de Unidade, Mutação e Cobertura
+### Caso B: `EmbeddingService.embed(text)` e `embedBatch(texts)`
 
-Abaixo estão consolidadas as métricas empíricas extraídas das execuções de testes unitários (`Vitest`), mutações de código (`Stryker Mutator`) e cobertura de linhas e desvios:
+#### Tabela 1.3: Classes de Equivalência e Valores Limites do Serviço de Embeddings
 
-### Resumo de Execução dos Testes de Unidade (`Vitest`)
-* **Arquivos de Teste executados**: 46 arquivos (`46 passed`)
-* **Total de Casos de Teste executados**: 278 casos (276 passados, 2 ignorados/skipped)
-* **Tempo de Execução (Duration)**: 48.80 segundos
-* **Tecnologias principais**: Vitest, `@testing-library/react`, Happy DOM.
+| ID Caso | Parâmetro | Classe / Condição | Tipo (EP / BVA) | Entrada de Teste | Saída / Comportamento Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :---: |
+| **TC-EMB-01** | `provider` | Provedor Ollama ativo (Válido) | EP Válida | `provider: 'ollama'` | Requisição HTTP para `/api/embeddings` de Ollama | Aprovado ✅ |
+| **TC-EMB-02** | `provider` | Provedor OpenAI ativo (Válido) | EP Válida | `provider: 'openai'` | Requisição com cabeçalho de autenticação para OpenAI | Aprovado ✅ |
+| **TC-EMB-03** | `provider` | Provedor Gemini ativo (Válido) | EP Válida | `provider: 'gemini'` | Requisição para endpoint do Gemini usando chave API válida | Aprovado ✅ |
+| **TC-EMB-04** | `provider` | Provedor válido sem implementação | EP Válida | `provider: 'anthropic'` | Lança erro `Anthropic currently does not provide...` | Aprovado ✅ |
+| **TC-EMB-05** | `provider` | Provedor inválido / desconhecido | EP Inválida | `provider: 'unknown'` | Lança erro de provedor não implementado | Aprovado ✅ |
+| **TC-EMB-06** | `apiKey` | Chave ausente em provedor obrigatório | EP Inválida | `apiKey: undefined` | Lança erro correspondente (Ex: `OpenAI API key missing`) | Aprovado ✅ |
+| **TC-EMB-07** | `apiKey` | Limite inferior da chave (chave vazia) | BVA | `apiKey: ''` | Identificado como inválido, lançando erro de chave ausente | Aprovado ✅ |
+| **TC-EMB-08** | URL Endpoint| Endpoint com barra final (limite de formato)| BVA | `'http://localhost:11434/v1/'`| Roteamento inteligente concatena corretamente para `/v1/embeddings` | Aprovado ✅ |
 
-### Métricas de Cobertura e Qualidade
-Abaixo, compara-se o estado da cobertura e a pontuação de mutações da base de código em relação ao início do ciclo de refatoração:
+---
+
+## 💻 2. Projeto de Testes Estruturais (Caixa Branca)
+
+Os testes estruturais validam a cobertura de ramificações internas do código e o ciclo de vida das variáveis ao longo dos caminhos lógicos do extrator `PdfExtractor.ts`.
+
+### Técnica C: Caminhos (Ramificação e Condição)
+
+Foca na cobertura de desvios (*branches*) do fluxo de controle e das combinações booleanas internas dos comandos condicionais (`if`).
+
+* **Condições Críticas Mapeadas**: 
+  1. `if (currentText.trim().length > 0 && currentBboxes.length > 0)` (Linha 43)
+  2. `if (!text.trim() && text.length < 2)` (Linha 74)
+
+#### Tabela 2.1: Casos de Teste de Ramificação e Condição
+
+| ID Caso | Caminho / Condição Avaliada | Expressão Lógica Evaluada | Entrada de Dados | Fluxo de Controle Executado |
+| :--- | :--- | :--- | :--- | :--- |
+| **TC-STR-01**| Branch do Arquivo Existente (Falso) | `!fs.existsSync` = `true` | Arquivo inexistente | Desvia direto para o lançamento do erro `new Error` |
+| **TC-STR-02**| Condição Combinada 1 (Verdadeiro) | `currentText.trim() > 0` AND `currentBboxes > 0` = `true && true` | Chunks acumulados com bboxes válidas | Executa a função interna `pushCurrentChunk()`, criando o chunk |
+| **TC-STR-03**| Condição Combinada 2 (Falso) | `currentText.trim() > 0` AND `currentBboxes > 0` = `false && true` | String apenas com espaços em branco | Ignora o empacotamento do chunk e resguarda o fluxo |
+| **TC-STR-04**| Filtro de Spacing 1 (Verdadeiro) | `!text.trim()` AND `text.length < 2` = `true && true` | Item do PDF = `"\n"` (quebra de linha) | Aciona `continue` ignorando a linha e não alterando acumuladores |
+| **TC-STR-05**| Filtro de Spacing 2 (Falso) | `!text.trim()` AND `text.length < 2` = `true && false`| Item do PDF = `"   "` (3 espaços) | Não entra no `if` e acumula no texto, validando limiar de espaçamento |
+| **TC-STR-06**| Limite do Loop (Chunk Cheio) | `currentText.length >= chunkSize` = `true` | Texto acumulado ultrapassa limite | Entra no bloco de quebra de chunk e processa a lógica de *overlap* |
+
+---
+
+### Técnica D: Fluxo de Dados (Def-Use Pairs)
+
+Testa o ciclo de vida das variáveis ao longo da execução, mapeando onde uma variável é definida (**Def**) e onde ela é lida/consumida (**Use**).
+
+* **Variáveis Críticas Monitoradas**: 
+  1. `currentText` (Texto acumulado do chunk atual)
+  2. `keepText` (Texto de sobreposição retroativo calculado)
+
+#### Tabela 2.2: Casos de Teste de Def-Uso (Fluxo de Dados)
+
+| ID Caso | Variável | Par Def-Uso (Def -> Use) | Linha Def | Linha Uso | Cenário de Teste / Ação |
+| :--- | :--- | :--- | :---: | :---: | :--- |
+| **TC-DF-01** | `currentText`| Def inicial -> Use 1 | 39 | 43 | Execução do método auxiliar `pushCurrentChunk` com o chunk ainda vazio. |
+| **TC-DF-02** | `currentText`| Def de concatenação -> Use 2 | 84 | 88 | Acúmulo de caracteres de texto de itens normais do PDF até atingir o limite `chunkSize`. |
+| **TC-DF-03** | `currentText`| Def de overlap -> Use 3 | 115 | 123 | Término do loop de leitura de páginas, restando o texto calculado pelo *sliding window* para empacotamento final. |
+| **TC-DF-04** | `keepText` | Def inicial -> Use 1 | 93 | 110 | Inicialização do texto de sobreposição no início do cálculo de retrocesso da *sliding window*. |
+| **TC-DF-05** | `keepText` | Def de cálculo -> Use 2 | 102 | 115 | Reconstrução do texto de sobreposição com base nos índices retroativos de `textContent.items`. |
+
+---
+
+## 📊 3. Análise dos Pontos Mais Fracos e Cobertura (Stryker Mutation Report)
+
+Abaixo estão consolidadas as métricas empíricas de qualidade extraídas das execuções de testes unitários (`Vitest`), mutações de código (`Stryker Mutator` no arquivo `mutation.html`) e cobertura de linhas e desvios:
+
+### Análise dos Pontos Mais Fracos (Pior Cobertura de Mutantes)
+A extração do relatório revelou os 5 arquivos de código produtivo mais suscetíveis a regressões e falhas silenciosas:
+
+1. **`AIModelConfigRepository.ts` (62.07%)**: Presença de 9 mutantes sobreviventes associados a strings de configuração estática no repositório.
+2. **`PdfExtractor.ts` (67.39%)**: Presença de 27 mutantes sobreviventes concentrados nas condições do limite de caractere e indexações do parser do PDF.
+3. **`QueryTranslator.ts` (70.59%)**: Lacunas em caminhos de tratamento de erros e formatação lógica de queries.
+4. **`ApiIntegrator.ts` (71.03%)**: Grande volume de mutantes sobreviventes (144) em blocos de requisição concorrente a APIs de provedores externos.
+5. **`QuestionSetRepository.ts` (79.59%)**: Mutantes sobreviventes nas verificações de duplicados de questionários.
+
+### Resumo das Métricas de Cobertura Global
 
 | Métrica de Qualidade | Início (Baseline) | Estado Atual | Variação | Limiar de Aceitação | Status |
 | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -64,12 +124,9 @@ Abaixo, compara-se o estado da cobertura e a pontuação de mutações da base d
 | **Mutantes Sobreviventes (Survived)** | 102 | **111** | `+9` | N/A | **Monitorado** |
 | **Sem Cobertura de Mutação (No Coverage)**| 73 | **38** | `-35` | N/A | **Melhorado ✅** |
 
-> [!NOTE]
-> As mutações de código foram validadas focando nos serviços críticos `PdfExtractor.ts` e `citationService.ts`, onde foram eliminados mais da metade dos mutantes que antes sobreviviam sem cobertura de teste unitário.
-
 ---
 
-## 🧬 3. Metodologia de Teste de Integração: Justificativa do Modelo Bottom-Up
+## 🧬 4. Metodologia de Teste de Integração: Justificativa do Modelo Bottom-Up
 
 A integração da suíte de testes de backend do **Emma's Librarian** adotou uma estratégia **Bottom-Up** (de baixo para cima). Neste modelo, os componentes de menor granularidade (infraestrutura e utilitários da base) são exaustivamente validados antes que os módulos de controle superiores sejam integrados.
 
@@ -121,7 +178,7 @@ graph TD
 
 ---
 
-## 🚀 4. Resultados Empíricos dos Testes de Desempenho (k6 vs. JMeter)
+## 🚀 5. Resultados Empíricos dos Testes de Desempenho (k6 vs. JMeter)
 
 Cinco tipos de testes de performance foram modelados nas rotas do servidor de testes ([performance-harness.js](file:///C:/root_lab/antigravity/emmas_librarian/emmas_librarian/performance-tests/performance-harness.js)):
 * **Carga (Load)**: Comportamento sob concorrência esperada (20 Usuários Virtuais).
@@ -132,7 +189,7 @@ Cinco tipos de testes de performance foram modelados nas rotas do servidor de te
 
 Abaixo estão os resultados consolidados obtidos na execução de ambas as ferramentas:
 
-### Tabela 1: Resultados Empíricos dos Testes de Performance com k6
+### Tabela 5.1: Resultados Empíricos dos Testes de Performance com k6
 * **Configuração**: Execução local de 40 segundos, rampa de usuários virtuais (VUs) de 0 até 20.
 * **Vazão Média Geral**: 25.36 requisições/segundo.
 * **Total de Requisições**: 1020 com **0% de falhas nos Assertions (1632/1632 sucessos)**.
@@ -147,7 +204,7 @@ Abaixo estão os resultados consolidados obtidos na execução de ambas as ferra
 
 ---
 
-### Tabela 2: Resultados Empíricos dos Testes de Performance com Apache JMeter
+### Tabela 5.2: Resultados Empíricos dos Testes de Performance com Apache JMeter
 * **Configuração**: Execução local não interativa de 30 segundos, 20 threads concorrentes.
 * **Vazão Média Geral**: 33.1 requisições/segundo.
 * **Total de Requisições**: 1000 com **0% de taxa de erro HTTP (0.00%)**.
