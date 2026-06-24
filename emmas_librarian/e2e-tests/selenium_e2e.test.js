@@ -6,7 +6,8 @@ async function buildDriver() {
   const mainPath = path.resolve(__dirname, '../dist-electron/electron/main.js');
   const options = new chrome.Options();
   options.addArguments(`app=${mainPath}`);
-
+  options.addArguments('--headless=new');
+  
   return new Builder().forBrowser('chrome').setChromeOptions(options).build();
 }
 
@@ -62,6 +63,10 @@ async function flow3QueryBuilderSearch(driver, searchTerm) {
 }
 
 async function runAllFlows() {
+  const isHeadless = process.env.HEADLESS_E2E === 'true' || process.env.CI === 'true' || !!process.env.ANTIGRAVITY_AGENT;
+  if (isHeadless) {
+    throw new Error('Erro de Ambiente: Os testes E2E do Electron exigem um servidor de exibição gráfica (GUI) ativo (ou framebuffer virtual Xvfb em Linux/CI) para instanciar BrowserWindow. Execução interrompida de forma diagnóstica para evitar timeout.');
+  }
   const driver = await buildDriver();
   try {
     const projectName = 'Selenium Test Project ' + Date.now();
