@@ -49,7 +49,7 @@ export default defineConfig({
   plugins: [prismjsExternalPlugin(), react()],
   base: './',
   optimizeDeps: {
-    include: ['recharts', 'lodash'],
+    include: ['lodash'],
   },
   build: {
     outDir: 'dist',

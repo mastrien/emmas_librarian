@@ -6,7 +6,12 @@ async function buildDriver() {
   const mainPath = path.resolve(__dirname, '../dist-electron/electron/main.js');
   const options = new chrome.Options();
   options.addArguments(`app=${mainPath}`);
-  options.addArguments('--headless=new');
+  
+  const ext = process.platform === 'win32' ? '.exe' : '';
+  const electronPath = process.platform === 'darwin'
+    ? path.resolve(__dirname, '../node_modules/electron/dist/Electron.app/Contents/MacOS/Electron')
+    : path.resolve(__dirname, `../node_modules/electron/dist/electron${ext}`);
+  options.setBinaryPath(electronPath);
   
   return new Builder().forBrowser('chrome').setChromeOptions(options).build();
 }
@@ -46,20 +51,44 @@ async function flow2UploadAndRead(driver, articleTitle) {
   );
   await articleCell.click();
 
-  await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Detalhes do Artigo')]")), 5000);
+  await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'AUTORES')]")), 5000);
+
+  const closeBtn = await driver.findElement(By.xpath("//button[contains(., 'Fechar')]"));
+  await closeBtn.click();
+  await driver.wait(until.stalenessOf(closeBtn), 5000);
 }
 
 async function flow3QueryBuilderSearch(driver, searchTerm) {
-  const searchNav = await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Busca')]")), 5000);
+  const searchNav = await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Nova busca')]")), 5000);
   await searchNav.click();
 
   const searchInput = await driver.wait(until.elementLocated(By.css('input[placeholder*="Termo de busca"]')), 5000);
   await searchInput.sendKeys(searchTerm);
 
-  const searchBtn = await driver.findElement(By.xpath("//button[contains(., 'Buscar')]"));
+  const searchBtn = await driver.findElement(By.xpath("//button[contains(., 'Fazer Busca')]"));
   await searchBtn.click();
 
+  const summaryBtn = await driver.wait(
+    until.elementLocated(By.xpath("//button[contains(., 'Ver Artigos do Projeto')]")),
+    10000
+  );
+  await driver.wait(until.elementIsVisible(summaryBtn), 10000);
+  await summaryBtn.click();
+
   await driver.wait(until.elementLocated(By.xpath(`//table//*[contains(text(), '${searchTerm}')]`)), 5000);
+}
+
+async function closeChangelogIfPresent(driver) {
+  try {
+    const btn = await driver.wait(
+      until.elementLocated(By.xpath("//button[contains(., 'Entendido, vamos lá!')]")),
+      2000
+    );
+    await driver.wait(until.elementIsVisible(btn), 2000);
+    await btn.click();
+  } catch (e) {
+    // Changelog modal not shown
+  }
 }
 
 async function runAllFlows() {
@@ -69,6 +98,7 @@ async function runAllFlows() {
   }
   const driver = await buildDriver();
   try {
+    await closeChangelogIfPresent(driver);
     const projectName = 'Selenium Test Project ' + Date.now();
     await flow1CreateProject(driver, projectName);
     await flow2UploadAndRead(driver, 'E2E Selenium Manual Article');
@@ -80,7 +110,10 @@ async function runAllFlows() {
 }
 
 if (require.main === module) {
-  runAllFlows().catch(console.error);
+  runAllFlows().catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
 }
 
 module.exports = {

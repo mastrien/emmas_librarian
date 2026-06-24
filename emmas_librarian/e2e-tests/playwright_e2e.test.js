@@ -5,7 +5,7 @@ const { test, expect } = require('@playwright/test');
 async function launchApp() {
   const mainPath = path.resolve(__dirname, '../dist-electron/electron/main.js');
   const electronApp = await electron.launch({
-    args: [mainPath, '--headless'],
+    args: [mainPath],
   });
   return electronApp;
 }
@@ -13,6 +13,13 @@ async function launchApp() {
 async function getFirstWindow(electronApp) {
   const window = await electronApp.firstWindow();
   await window.waitForLoadState('domcontentloaded');
+  try {
+    const changelogBtn = window.locator('button:has-text("Entendido, vamos lá!")');
+    await changelogBtn.waitFor({ state: 'visible', timeout: 2000 });
+    await changelogBtn.click();
+  } catch (e) {
+    // Changelog modal not shown
+  }
   return window;
 }
 
@@ -30,14 +37,22 @@ async function flow2UploadAndRead(window, articleTitle) {
   await window.click('button[type="submit"]');
 
   await window.click(`text="${articleTitle}"`);
-  const titleHeader = window.locator('h3', { hasText: 'Detalhes do Artigo' });
-  await expect(titleHeader).toBeVisible();
+  const autoresHeader = window.locator('div', { hasText: 'AUTORES' }).first();
+  await expect(autoresHeader).toBeVisible();
+
+  await window.click('button:has-text("Fechar")');
+  await window.waitForSelector('button:has-text("Fechar")', { state: 'detached' });
 }
 
 async function flow3QueryBuilderSearch(window, searchTerm) {
-  await window.click('text="Busca"');
+  await window.click('text="Nova busca"');
   await window.fill('input[placeholder="Termo de busca..."]', searchTerm);
-  await window.click('button:has-text("Buscar")');
+  await window.click('button:has-text("Fazer Busca")');
+
+  const summaryBtn = window.locator('button:has-text("Ver Artigos do Projeto")');
+  await summaryBtn.waitFor({ state: 'visible', timeout: 10000 });
+  await summaryBtn.click();
+
   const resultRow = window.locator('table >> text=' + searchTerm);
   await expect(resultRow).toBeVisible();
 }

@@ -92,22 +92,36 @@ function handleVolumeQuery(req, res, db) {
   res.end(JSON.stringify({ status: 'success', count: results.length, limit, offset }));
 }
 
-function requestListener(req, res, db) {
-  const url = new URL(req.url, 'http://localhost');
+function getHandler(req, url) {
+  if (url.pathname === '/' || url.pathname === '/health') {
+    return (rq, rs) => {
+      rs.writeHead(200, { 'Content-Type': 'application/json' });
+      rs.end(JSON.stringify({ status: 'ok' }));
+    };
+  }
   if (req.method === 'POST' && url.pathname === '/parse-pdf') {
-    return handleParsePdf(req, res);
+    return (rq, rs) => handleParsePdf(rq, rs);
   }
   if (req.method === 'POST' && url.pathname === '/stress-db') {
-    return handleStressDb(req, res, db);
+    return handleStressDb;
   }
   if (req.method === 'GET' && url.pathname === '/search-capacity') {
-    return handleSearchCapacity(req, res, db);
+    return handleSearchCapacity;
   }
   if (req.method === 'GET' && url.pathname === '/soak-session') {
-    return handleSoakSession(req, res);
+    return (rq, rs) => handleSoakSession(rq, rs);
   }
   if (req.method === 'GET' && url.pathname === '/volume-query') {
-    return handleVolumeQuery(req, res, db);
+    return handleVolumeQuery;
+  }
+  return null;
+}
+
+function requestListener(req, res, db) {
+  const url = new URL(req.url, 'http://localhost');
+  const handler = getHandler(req, url);
+  if (handler) {
+    return handler(req, res, db);
   }
   res.writeHead(404, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ error: 'Not Found' }));
