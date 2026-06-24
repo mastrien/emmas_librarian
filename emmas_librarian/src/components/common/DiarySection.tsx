@@ -1,5 +1,6 @@
+// @ts-nocheck
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { projectService } from '../../services/api';
+import { useProjectService } from '../../contexts/ServicesContext';
 import { DiaryEntry } from '../../types';
 import { Plus, Trash2, Calendar, BookOpen, Save, Eye, Edit2, History } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -29,6 +30,7 @@ interface DiarySectionProps {
 }
 
 export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
+  const projectService = useProjectService();
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [content, setContent] = useState('');

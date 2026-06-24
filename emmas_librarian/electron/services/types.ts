@@ -23,7 +23,7 @@ export interface NormalizedArticle {
   issn?: string;
   citationCount?: number;
   source_databases: string[];
-  csl_json: any;
+  csl_json: unknown;
   is_oa?: number;
   publisher?: string;
 }

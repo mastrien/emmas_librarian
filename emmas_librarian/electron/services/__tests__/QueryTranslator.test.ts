@@ -7,13 +7,11 @@ describe('QueryTranslator', () => {
     const ast: QueryASTNode = {
       type: 'group',
       logicalOperator: 'AND',
-      children: [
-        { type: 'rule', field: 'title', operator: 'contains', value: 'test' }
-      ]
+      children: [{ type: 'rule', field: 'title', operator: 'contains', value: 'test' }],
     };
-    
+
     const result = queryTranslator.translate(ast);
-    
+
     expect(result.scopus.isValid).toBe(true);
     expect(result.scopus.query).toContain('TITLE("test")');
 
@@ -27,10 +25,10 @@ describe('QueryTranslator', () => {
       logicalOperator: 'OR',
       children: [
         { type: 'rule', field: 'title', operator: 'contains', value: 'a' },
-        { type: 'rule', field: 'abstract', operator: 'contains', value: 'b' }
-      ]
+        { type: 'rule', field: 'abstract', operator: 'contains', value: 'b' },
+      ],
     };
-    
+
     const result = queryTranslator.translate(ast);
     expect(result.crossref.isValid).toBe(false);
   });
@@ -41,8 +39,8 @@ describe('QueryTranslator', () => {
       logicalOperator: 'AND',
       children: [
         { type: 'rule', field: 'authors', operator: 'exact', value: 'Smith' },
-        { type: 'rule', field: 'abstract', operator: 'not_contains', value: 'rat' }
-      ]
+        { type: 'rule', field: 'abstract', operator: 'not_contains', value: 'rat' },
+      ],
     };
 
     const result = queryTranslator.translate(ast);
@@ -59,8 +57,8 @@ describe('QueryTranslator', () => {
       logicalOperator: 'OR',
       children: [
         { type: 'rule', field: 'title', operator: 'contains', value: 'cat' },
-        { type: 'rule', field: 'title', operator: 'not_contains', value: 'dog' }
-      ]
+        { type: 'rule', field: 'title', operator: 'not_contains', value: 'dog' },
+      ],
     };
     expect(queryTranslator.translate(validAst).openalex.query).toBe('title.search:cat|!dog');
 
@@ -70,8 +68,8 @@ describe('QueryTranslator', () => {
       logicalOperator: 'OR',
       children: [
         { type: 'rule', field: 'title', operator: 'contains', value: 'cat' },
-        { type: 'rule', field: 'abstract', operator: 'contains', value: 'dog' }
-      ]
+        { type: 'rule', field: 'abstract', operator: 'contains', value: 'dog' },
+      ],
     };
     expect(queryTranslator.translate(invalidAst).openalex.isValid).toBe(false);
   });

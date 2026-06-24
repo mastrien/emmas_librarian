@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ProjectCategory } from '../../types';
-import { projectService } from '../../services/api';
+import { useProjectService } from '../../contexts/ServicesContext';
 
 interface CategoryCellProps {
   articleId: number;
@@ -9,6 +9,7 @@ interface CategoryCellProps {
 }
 
 export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category, initialValue }) => {
+  const projectService = useProjectService();
   const [value, setValue] = useState(initialValue);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -16,9 +17,14 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
     setValue(initialValue);
   }, [initialValue]);
 
-  const initialOptions = (category.type === 'enum' || category.type === 'multiselect') 
-    ? (category.parsedOptions ? category.parsedOptions.map(o => o.name) : category.options ? category.options.split(',').map(o => o.trim()) : []) 
-    : [];
+  const initialOptions =
+    category.type === 'enum' || category.type === 'multiselect'
+      ? category.parsedOptions
+        ? category.parsedOptions.map((o) => o.name)
+        : category.options
+          ? category.options.split(',').map((o) => o.trim())
+          : []
+      : [];
   const [localOptions, setLocalOptions] = useState(initialOptions);
   const [isAddingNewOption, setIsAddingNewOption] = useState(false);
   const [newOptionValue, setNewOptionValue] = useState('');
@@ -35,8 +41,8 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
 
   if (category.type === 'boolean') {
     return (
-      <select 
-        value={value} 
+      <select
+        value={value}
         onChange={(e) => handleSave(e.target.value)}
         style={{
           background: 'var(--bg-surface)',
@@ -44,7 +50,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
           border: '1px solid var(--border-color)',
           borderRadius: 'var(--radius-sm)',
           padding: '0.2rem 0.5rem',
-          fontSize: '0.85rem'
+          fontSize: '0.85rem',
         }}
       >
         <option value="">-</option>
@@ -68,10 +74,12 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
       if (newOptionValue && newOptionValue.trim()) {
         const trimmed = newOptionValue.trim();
         if (!localOptions.includes(trimmed)) {
-          const updatedOptions = category.parsedOptions ? [...category.parsedOptions] : localOptions.map(n => ({name: n}));
-          updatedOptions.push({name: trimmed});
+          const updatedOptions = category.parsedOptions
+            ? [...category.parsedOptions]
+            : localOptions.map((n) => ({ name: n }));
+          updatedOptions.push({ name: trimmed });
           try {
-            await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions);
+            await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions as any);
             setLocalOptions([...localOptions, trimmed]);
             handleSave(trimmed);
           } catch (err) {
@@ -104,7 +112,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
             borderRadius: 'var(--radius-sm)',
             padding: '0.2rem 0.5rem',
             fontSize: '0.85rem',
-            width: '120px'
+            width: '120px',
           }}
         />
       );
@@ -117,8 +125,8 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
     }
 
     return (
-      <select 
-        value={value} 
+      <select
+        value={value}
         onChange={(e) => handleEnumChange(e.target.value)}
         style={{
           background: 'var(--bg-surface)',
@@ -127,12 +135,14 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
           borderRadius: 'var(--radius-sm)',
           padding: '0.2rem 0.5rem',
           fontSize: '0.85rem',
-          maxWidth: '120px'
+          maxWidth: '120px',
         }}
       >
         <option value="">-</option>
         {optionsToRender.map((opt, idx) => (
-          <option key={idx} value={opt}>{opt}</option>
+          <option key={idx} value={opt}>
+            {opt}
+          </option>
         ))}
         <option value="__ADD_NEW__">+ Adicionar nova opção...</option>
       </select>
@@ -140,7 +150,12 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
   }
 
   if (category.type === 'multiselect') {
-    const selectedValues = value ? value.split(',').map(v => v.trim()).filter(Boolean) : [];
+    const selectedValues = value
+      ? value
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean)
+      : [];
 
     const saveWithoutClosing = async (newValue: string) => {
       setValue(newValue);
@@ -154,7 +169,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
     const handleToggleOption = (opt: string) => {
       let newSelected;
       if (selectedValues.includes(opt)) {
-        newSelected = selectedValues.filter(v => v !== opt);
+        newSelected = selectedValues.filter((v) => v !== opt);
       } else {
         newSelected = [...selectedValues, opt];
       }
@@ -166,13 +181,15 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
         const trimmed = newOptionValue.trim();
         if (!localOptions.includes(trimmed)) {
           // If we have parsedOptions, we preserve their IDs
-          const updatedOptions = category.parsedOptions ? [...category.parsedOptions] : localOptions.map(n => ({name: n}));
-          updatedOptions.push({name: trimmed});
-          
+          const updatedOptions = category.parsedOptions
+            ? [...category.parsedOptions]
+            : localOptions.map((n) => ({ name: n }));
+          updatedOptions.push({ name: trimmed });
+
           try {
-            await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions);
+            await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions as any);
             setLocalOptions([...localOptions, trimmed]);
-            
+
             const newSelected = [...selectedValues, trimmed];
             saveWithoutClosing(newSelected.join(', '));
           } catch (err) {
@@ -208,7 +225,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
             borderRadius: 'var(--radius-sm)',
             padding: '0.2rem 0.5rem',
             fontSize: '0.85rem',
-            width: '120px'
+            width: '120px',
           }}
         />
       );
@@ -216,27 +233,32 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
 
     if (isEditing) {
       const optionsToRender = [...localOptions];
-      selectedValues.forEach(val => {
+      selectedValues.forEach((val) => {
         if (!optionsToRender.includes(val)) {
           optionsToRender.push(val);
         }
       });
 
       return (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.3rem',
-          background: 'var(--bg-surface)',
-          padding: '0.5rem',
-          borderRadius: 'var(--radius-sm)',
-          border: '1px solid var(--color-primary)',
-          minWidth: '140px'
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.3rem',
+            background: 'var(--bg-surface)',
+            padding: '0.5rem',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--color-primary)',
+            minWidth: '140px',
+          }}
+        >
           {optionsToRender.map((opt, idx) => (
-            <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer' }}>
-              <input 
-                type="checkbox" 
+            <label
+              key={idx}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', cursor: 'pointer' }}
+            >
+              <input
+                type="checkbox"
                 checked={selectedValues.includes(opt)}
                 onChange={() => handleToggleOption(opt)}
                 style={{ margin: 0 }}
@@ -244,14 +266,25 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
               {opt}
             </label>
           ))}
-          <div 
+          <div
             style={{ fontSize: '0.8rem', color: 'var(--color-primary)', cursor: 'pointer', marginTop: '0.2rem' }}
-            onClick={() => { setIsAddingNewOption(true); setNewOptionValue(''); }}
+            onClick={() => {
+              setIsAddingNewOption(true);
+              setNewOptionValue('');
+            }}
           >
             + Adicionar nova...
           </div>
-          <div 
-            style={{ fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer', textAlign: 'center', marginTop: '0.4rem', paddingTop: '0.4rem', borderTop: '1px solid var(--border-color)' }}
+          <div
+            style={{
+              fontSize: '0.8rem',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              textAlign: 'center',
+              marginTop: '0.4rem',
+              paddingTop: '0.4rem',
+              borderTop: '1px solid var(--border-color)',
+            }}
             onClick={() => setIsEditing(false)}
           >
             Concluir
@@ -261,7 +294,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
     }
 
     return (
-      <div 
+      <div
         onClick={() => setIsEditing(true)}
         style={{
           cursor: 'pointer',
@@ -274,7 +307,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
           background: selectedValues.length > 0 ? 'var(--bg-surface)' : 'transparent',
           border: selectedValues.length > 0 ? '1px solid var(--border-color)' : '1px dashed var(--border-color)',
           color: selectedValues.length > 0 ? 'var(--text-main)' : 'var(--text-muted)',
-          wordBreak: 'break-word'
+          wordBreak: 'break-word',
         }}
       >
         {selectedValues.length > 0 ? selectedValues.join(', ') : 'Adicionar'}
@@ -303,14 +336,14 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
           borderRadius: 'var(--radius-sm)',
           padding: '0.2rem 0.5rem',
           fontSize: '0.85rem',
-          width: '100px'
+          width: '100px',
         }}
       />
     );
   }
 
   return (
-    <div 
+    <div
       onClick={() => setIsEditing(true)}
       style={{
         cursor: 'pointer',
@@ -322,7 +355,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
         borderRadius: 'var(--radius-sm)',
         background: value ? 'var(--bg-surface)' : 'transparent',
         border: value ? '1px solid var(--border-color)' : '1px dashed var(--border-color)',
-        color: value ? 'var(--text-main)' : 'var(--text-muted)'
+        color: value ? 'var(--text-main)' : 'var(--text-muted)',
       }}
     >
       {value || 'Adicionar'}

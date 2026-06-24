@@ -1,18 +1,23 @@
 import React from 'react';
 
-export const Logo: React.FC<{ size?: number; className?: string; style?: React.CSSProperties }> = ({ size = 24, className, style }) => (
-  <svg 
-    version="1.0" 
+export const Logo: React.FC<{ size?: number; className?: string; style?: React.CSSProperties }> = ({
+  size = 24,
+  className,
+  style,
+}) => (
+  <svg
+    version="1.0"
     xmlns="http://www.w3.org/2000/svg"
-    width={size} 
-    height={size} 
+    width={size}
+    height={size}
     viewBox="0 0 500.000000 500.000000"
     preserveAspectRatio="xMidYMid meet"
     className={className}
     style={style}
   >
     <g transform="translate(0.000000,500.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none">
-      <path d="M2790 4794 c-14 -2 -50 -9 -80 -14 -30 -5 -156 -17 -280 -25 -333
+      <path
+        d="M2790 4794 c-14 -2 -50 -9 -80 -14 -30 -5 -156 -17 -280 -25 -333
 -23 -504 -43 -584 -66 -413 -122 -756 -640 -907 -1367 -54 -263 -85 -619 -77
 -872 l6 -145 -36 -85 c-92 -224 -131 -379 -139 -555 -9 -213 27 -330 148 -480
 35 -44 136 -181 224 -304 159 -223 202 -269 282 -310 45 -23 164 -51 214 -51
@@ -54,7 +59,8 @@ c-90 -108 -270 -288 -288 -288 -29 0 -223 96 -353 175 -162 98 -302 204 -417
 -164 -24 -22 30 -33 52 -26 54 24 8 261 153 328 201 39 27 72 48 74 46 2 -2
 -23 -43 -55 -91z m-1375 -37 c29 -44 70 -101 90 -124 20 -24 42 -53 50 -63 13
 -19 12 -19 -14 -9 -45 17 -100 65 -138 122 -33 49 -45 81 -61 163 -5 26 -4 28
-7 11 6 -10 36 -55 66 -100z"/>
+7 11 6 -10 36 -55 66 -100z"
+      />
     </g>
   </svg>
 );

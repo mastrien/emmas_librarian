@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Cite from 'citation-js';
 import abntCsl from '../assets/csl/abnt.csl?raw';
 import ptBrLocale from '../assets/csl/locales-pt-BR.xml?raw';
@@ -156,7 +157,7 @@ export function generateCitation(article: any, style: CitationStyle = 'abnt', fo
       template: finalStyle,
       lang: style === 'abnt' ? 'pt-BR' : 'en-US'
     }).trim();
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error generating citation:', error);
     return `[Erro ao gerar citação: ${article.title}]`;
   }

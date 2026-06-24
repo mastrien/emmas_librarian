@@ -5,7 +5,7 @@ interface SearchTabProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   isSearching: boolean;
-  searchResults: any[];
+  searchResults: Array<{ pageNumber: number; snippet: string }>;
   onSearch: (e: React.FormEvent) => void;
   onResultClick: (pageNum: number) => void;
 }

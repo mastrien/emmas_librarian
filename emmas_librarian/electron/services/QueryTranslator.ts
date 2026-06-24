@@ -1,13 +1,21 @@
-import { QueryASTNode, QueryRuleNode, QueryGroupNode, DatabaseTranslationMap, QueryTranslationResult, QueryField, QueryOperator } from '../types';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  QueryASTNode,
+  QueryRuleNode,
+  QueryGroupNode,
+  DatabaseTranslationMap,
+  QueryTranslationResult,
+  QueryField,
+  QueryOperator,
+} from '../types';
 
 export class QueryTranslator {
-  
   public translate(ast: QueryASTNode): DatabaseTranslationMap {
     return {
       scopus: this.translateToScopus(ast),
       wos: this.translateToWoS(ast),
       openalex: this.translateToOpenAlex(ast),
-      crossref: this.translateToCrossref(ast)
+      crossref: this.translateToCrossref(ast),
     };
   }
 
@@ -27,7 +35,7 @@ export class QueryTranslator {
         all: 'ALL',
         title: 'TITLE',
         abstract: 'ABS',
-        authors: 'AUTH'
+        authors: 'AUTH',
       };
       const field = fieldMap[node.field];
       const val = node.operator === 'exact' ? `{${node.value}}` : `"${node.value}"`;
@@ -39,8 +47,8 @@ export class QueryTranslator {
     } else {
       const groupNode = node as QueryGroupNode;
       if (groupNode.children.length === 0) return '';
-      
-      const parts = groupNode.children.map(child => {
+
+      const parts = groupNode.children.map((child) => {
         let childStr = this.scopusVisit(child);
         if (child.type === 'rule' && child.operator === 'not_contains') {
           // If it's a NOT rule inside an AND/OR group, Scopus prefers AND NOT.
@@ -52,7 +60,7 @@ export class QueryTranslator {
       return parts.join(` ${groupNode.logicalOperator} `);
     }
   }
-  
+
   private scopusRuleWithoutNot(node: QueryRuleNode): string {
     const fieldMap: Record<QueryField, string> = { all: 'ALL', title: 'TITLE', abstract: 'ABS', authors: 'AUTH' };
     const val = node.operator === 'exact' ? `{${node.value}}` : `"${node.value}"`;
@@ -75,18 +83,18 @@ export class QueryTranslator {
         all: 'TS',
         title: 'TI',
         abstract: 'TS', // Fallback to TS (Topic) since AB (Abstract) is not supported in the Starter API
-        authors: 'AU'
+        authors: 'AU',
       };
       const field = fieldMap[node.field];
       const val = `"${node.value}"`;
       if (node.operator === 'not_contains') {
-        return `NOT ${field}=${val}`; 
+        return `NOT ${field}=${val}`;
       }
       return `${field}=${val}`;
     } else {
       const groupNode = node as QueryGroupNode;
       if (groupNode.children.length === 0) return '';
-      const parts = groupNode.children.map(child => `(${this.wosVisit(child)})`);
+      const parts = groupNode.children.map((child) => `(${this.wosVisit(child)})`);
       return parts.join(` ${groupNode.logicalOperator} `);
     }
   }
@@ -108,7 +116,7 @@ export class QueryTranslator {
         all: 'default.search',
         title: 'title.search',
         abstract: 'abstract.search',
-        authors: 'author.search'
+        authors: 'author.search',
       };
       const field = fieldMap[node.field];
       const val = node.value.replace(/,/g, '').replace(/\|/g, ''); // strip special chars
@@ -119,32 +127,37 @@ export class QueryTranslator {
     } else {
       const groupNode = node as QueryGroupNode;
       if (groupNode.children.length === 0) return '';
-      
+
       if (groupNode.logicalOperator === 'AND') {
         // AND in OpenAlex is comma-separated
-        const parts = groupNode.children.map(child => this.openalexVisit(child));
+        const parts = groupNode.children.map((child) => this.openalexVisit(child));
         return parts.join(',');
       } else {
         // OR in OpenAlex is pipe |
         // BUT it only works if all children are rules targeting the EXACT SAME field.
-        const isAllRules = groupNode.children.every(c => c.type === 'rule');
+        const isAllRules = groupNode.children.every((c) => c.type === 'rule');
         if (!isAllRules) {
           throw new Error('OpenAlex não suporta grupos OR com subgrupos aninhados.');
         }
-        
+
         const rules = groupNode.children as QueryRuleNode[];
         const firstField = rules[0].field;
-        const sameField = rules.every(r => r.field === firstField);
-        
+        const sameField = rules.every((r) => r.field === firstField);
+
         if (!sameField) {
           throw new Error('OpenAlex não suporta operador OR entre campos diferentes.');
         }
-        
+
         // They are all same field!
-        const fieldMap: Record<QueryField, string> = { all: 'default.search', title: 'title.search', abstract: 'abstract.search', authors: 'author.search' };
+        const fieldMap: Record<QueryField, string> = {
+          all: 'default.search',
+          title: 'title.search',
+          abstract: 'abstract.search',
+          authors: 'author.search',
+        };
         const mappedField = fieldMap[firstField];
-        
-        const vals = rules.map(r => r.operator === 'not_contains' ? `!${r.value}` : r.value);
+
+        const vals = rules.map((r) => (r.operator === 'not_contains' ? `!${r.value}` : r.value));
         return `${mappedField}:${vals.join('|')}`;
       }
     }
@@ -178,13 +191,13 @@ export class QueryTranslator {
         all: 'query',
         title: 'query.title',
         abstract: 'query',
-        authors: 'query.author'
+        authors: 'query.author',
       };
-      
+
       if (node.operator === 'not_contains') {
         throw new Error('Crossref não suporta exclusão (NOT).');
       }
-      
+
       const field = fieldMap[node.field];
       params[field] = [node.value];
     } else {
@@ -192,7 +205,7 @@ export class QueryTranslator {
       if (groupNode.logicalOperator === 'OR') {
         throw new Error('Crossref não suporta operador OR lógico entre campos diferentes.');
       }
-      
+
       for (const child of groupNode.children) {
         const childParams = this.crossrefCollect(child);
         for (const [key, values] of Object.entries(childParams)) {

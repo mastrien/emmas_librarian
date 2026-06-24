@@ -12,10 +12,10 @@ describe('ChangelogModal', () => {
   it('renders correctly with version and closes on button click', () => {
     const onClose = vi.fn();
     render(<ChangelogModal isOpen={true} version="2.0.0" onClose={onClose} />);
-    
+
     // Check if version is rendered
     expect(screen.getByText('Novidades da Versão 2.0.0')).toBeDefined();
-    
+
     // Check if new features text is present
     expect(screen.getByText('Categorias de Seleção Múltipla:')).toBeDefined();
 

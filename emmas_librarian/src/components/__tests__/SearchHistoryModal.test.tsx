@@ -8,11 +8,14 @@ describe('SearchHistoryModal', () => {
     {
       id: 1,
       unified_query: 'machine learning OR artificial intelligence',
-      translated_queries: JSON.stringify({ openalex: 'machine learning OR artificial intelligence', wos: 'TS=("machine learning" OR "artificial intelligence")' }),
+      translated_queries: JSON.stringify({
+        openalex: 'machine learning OR artificial intelligence',
+        wos: 'TS=("machine learning" OR "artificial intelligence")',
+      }),
       total_results: 15,
       results_breakdown: JSON.stringify({ openalex: { count: 10 }, wos: { count: 5 } }),
-      created_at: '2026-06-03T12:00:00.000Z'
-    }
+      created_at: '2026-06-03T12:00:00.000Z',
+    },
   ];
 
   beforeEach(() => {
@@ -21,16 +24,12 @@ describe('SearchHistoryModal', () => {
   });
 
   it('does not render when isOpen is false', () => {
-    const { container } = render(
-      <SearchHistoryModal isOpen={false} onClose={vi.fn()} history={mockHistory} />
-    );
+    const { container } = render(<SearchHistoryModal isOpen={false} onClose={vi.fn()} history={mockHistory} />);
     expect(container.innerHTML).toBe('');
   });
 
   it('renders "Nenhuma busca registrada ainda" when history is empty', () => {
-    render(
-      <SearchHistoryModal isOpen={true} onClose={vi.fn()} history={[]} />
-    );
+    render(<SearchHistoryModal isOpen={true} onClose={vi.fn()} history={[]} />);
     expect(screen.getByText('Nenhuma busca registrada ainda.')).toBeInTheDocument();
   });
 
@@ -38,12 +37,7 @@ describe('SearchHistoryModal', () => {
     const onClose = vi.fn();
     const onRevertSearch = vi.fn();
     render(
-      <SearchHistoryModal
-        isOpen={true}
-        onClose={onClose}
-        history={mockHistory}
-        onRevertSearch={onRevertSearch}
-      />
+      <SearchHistoryModal isOpen={true} onClose={onClose} history={mockHistory} onRevertSearch={onRevertSearch} />,
     );
 
     expect(screen.getAllByText('Histórico de Buscas')[0]).toBeInTheDocument();
@@ -64,14 +58,7 @@ describe('SearchHistoryModal', () => {
   });
 
   it('renders history content in embedded mode', () => {
-    render(
-      <SearchHistoryModal
-        isOpen={true}
-        onClose={vi.fn()}
-        history={mockHistory}
-        embedded={true}
-      />
-    );
+    render(<SearchHistoryModal isOpen={true} onClose={vi.fn()} history={mockHistory} embedded={true} />);
 
     // No close button in embedded mode
     expect(screen.queryByRole('button', { name: 'X' })).toBeNull();

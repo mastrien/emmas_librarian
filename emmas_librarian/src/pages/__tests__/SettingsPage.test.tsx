@@ -1,30 +1,27 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { SettingsPage } from '../SettingsPage';
 
+import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
+import { projectService } from '../../services/api';
+
+const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
-  projectService: {
-    getSetting: vi.fn().mockResolvedValue('value'),
-    setSetting: vi.fn().mockResolvedValue(undefined),
-    getTrashItems: vi.fn().mockResolvedValue([]),
-    restoreTrashItem: vi.fn().mockResolvedValue(undefined),
-    deleteTrashItemPermanent: vi.fn().mockResolvedValue(undefined),
-    emptyTrash: vi.fn().mockResolvedValue(undefined),
-    exportBackup: vi.fn().mockResolvedValue(null),
-    restoreBackupOverride: vi.fn().mockResolvedValue(false),
-    restoreBackupMerge: vi.fn().mockResolvedValue(0),
-    listAutoBackups: vi.fn().mockResolvedValue([]),
-    restoreAutoBackup: vi.fn().mockResolvedValue(false),
-  }
+  projectService: {}
 }));
 
 describe('SettingsPage', () => {
+  beforeEach(() => {
+    Object.assign(projectService, fakeService);
+    fakeService.reset();
+  });
+
   it('renders correctly', async () => {
     const { container } = render(
       <BrowserRouter>
         <SettingsPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
     expect(container).toBeInTheDocument();
   });

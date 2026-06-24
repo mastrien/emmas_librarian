@@ -7,8 +7,8 @@ describe('citationService', () => {
       id: 1,
       title: 'Testing Citation Formatting',
       authors: 'John Doe; Jane Smith',
-      year: 2021
-    };
+      year: 2021,
+    } as unknown as import('../../types').Article;
 
     const cite = generateCitation(article, 'abnt');
     expect(cite).toContain('DOE, John; SMITH, Jane');
@@ -17,7 +17,7 @@ describe('citationService', () => {
   });
 
   it('should fallback gracefully if data is missing', () => {
-    const article = { id: 2, title: 'No Data Article' };
+    const article = { id: 2, title: 'No Data Article' } as unknown as import('../../types').Article;
     const cite = generateCitation(article, 'apa');
     expect(cite).toContain('No Data Article');
   });
@@ -28,8 +28,8 @@ describe('citationService', () => {
       title: 'Article with Pages Field',
       authors: 'Alice Johnson',
       year: 2022,
-      pages: '45-67'
-    };
+      pages: '45-67',
+    } as unknown as import('../../types').Article;
     const cite = generateCitation(article, 'abnt');
     expect(cite).toContain('45');
     expect(cite).toContain('67');
@@ -40,8 +40,8 @@ describe('citationService', () => {
       id: 4,
       title: 'Testing Multi Author Comma Separated',
       authors: 'John Doe, Jane Smith, Robert Smith, Mary Williams',
-      year: 2021
-    };
+      year: 2021,
+    } as unknown as import('../../types').Article;
 
     // By default, abnt uses et al. for 4 or more authors
     const citeWithEtAl = generateCitation(article, 'abnt', 'text', true);
@@ -61,8 +61,8 @@ describe('citationService', () => {
       id: 5,
       title: 'Testing Multi Author Semicolon Separated',
       authors: 'John Doe; Jane Smith; Robert Smith; Mary Williams',
-      year: 2021
-    };
+      year: 2021,
+    } as unknown as import('../../types').Article;
 
     const citeWithEtAl = generateCitation(article, 'abnt', 'text', true);
     expect(citeWithEtAl).toContain('DOE, John et al.');
@@ -121,4 +121,3 @@ describe('parseAuthors', () => {
     expect(result[1]).toEqual({ family: 'Souza', given: 'Maria' });
   });
 });
-

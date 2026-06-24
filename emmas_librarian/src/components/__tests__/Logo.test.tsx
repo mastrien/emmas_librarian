@@ -13,9 +13,7 @@ describe('Logo Component', () => {
   });
 
   it('renders SVG with custom size, className, and style', () => {
-    const { container } = render(
-      <Logo size={48} className="custom-logo" style={{ color: 'red' }} />
-    );
+    const { container } = render(<Logo size={48} className="custom-logo" style={{ color: 'red' }} />);
     const svg = container.querySelector('svg');
     expect(svg).toBeInTheDocument();
     expect(svg?.getAttribute('width')).toBe('48');

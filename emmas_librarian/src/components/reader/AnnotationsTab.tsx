@@ -1,9 +1,11 @@
 import React from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 
+import { Annotation } from '../../types';
+
 interface AnnotationsTabProps {
-  highlights: any[];
-  standaloneAnnotations: any[];
+  highlights: unknown[];
+  standaloneAnnotations: Annotation[];
   newAnnotationText: string;
   setNewAnnotationText: (val: string) => void;
   editingId: string | null;
@@ -13,10 +15,10 @@ interface AnnotationsTabProps {
   onCreateStandaloneAnnotation: () => void;
   onDeleteHighlight: (highlightId: string, e: React.MouseEvent) => void;
   onDeleteStandaloneAnnotation: (annId: string) => void;
-  onEditHighlightAnnotation: (h: any, e: React.MouseEvent) => void;
-  onEditStandaloneAnnotation: (a: any) => void;
+  onEditHighlightAnnotation: (h: unknown, e: React.MouseEvent) => void;
+  onEditStandaloneAnnotation: (a: Annotation) => void;
   onSaveEdit: (idToSave: string, annotationId: number, isStandalone: boolean) => void;
-  onHighlightClick: (h: any) => void;
+  onHighlightClick: (h: unknown) => void;
 }
 
 export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
@@ -91,7 +93,7 @@ export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
                   <button onClick={() => onEditStandaloneAnnotation(a)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} title="Editar">
                     <Edit2 size={14} />
                   </button>
-                  <button onClick={() => onDeleteStandaloneAnnotation(a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)' }} title="Excluir">
+                  <button onClick={() => onDeleteStandaloneAnnotation(a.id.toString())} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)' }} title="Excluir">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -131,7 +133,8 @@ export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
               </div>
             ))}
 
-            {highlights.map((h, idx) => {
+            {highlights.map((hRaw, idx) => {
+              const h = hRaw as { id: string; position?: { pageNumber?: number; boundingRect?: { pageNumber?: number } }; content?: { text: string }; comment?: { text: string }; annotation_id?: number };
               const pageNum = h.position?.boundingRect?.pageNumber || h.position?.pageNumber;
               return (
                 <div 
@@ -164,7 +167,7 @@ export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
                     </div>
                   )}
                   <div style={{ borderLeft: '3px solid var(--color-primary)', paddingLeft: '0.75rem', marginBottom: '0.5rem', color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.85rem', paddingRight: '2.5rem' }}>
-                    "{h.content?.text?.substring(0, 80)}{h.content?.text?.length > 80 ? '...' : ''}"
+                    "{h.content?.text?.substring(0, 80)}{(h.content?.text?.length ?? 0) > 80 ? '...' : ''}"
                   </div>
                   {editingId === h.id ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }} onClick={e => e.stopPropagation()}>
@@ -189,7 +192,7 @@ export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
                         }}
                       />
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button onClick={(e) => { e.stopPropagation(); onSaveEdit(h.id, h.annotation_id, false); }} className="btn-primary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.8rem' }}>Salvar</button>
+                        <button onClick={(e) => { e.stopPropagation(); onSaveEdit(h.id, h.annotation_id!, false); }} className="btn-primary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.8rem' }}>Salvar</button>
                         <button onClick={(e) => { e.stopPropagation(); setEditingId(null); }} className="btn-secondary" style={{ flex: 1, padding: '0.25rem', fontSize: '0.8rem' }}>Cancelar</button>
                       </div>
                     </div>

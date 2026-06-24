@@ -1,27 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ProjectCategoriesModal } from '../modals/ProjectCategoriesModal';
+
+import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
 
+const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
-  projectService: {
-    getProjectCategories: vi.fn(),
-    createProjectCategory: vi.fn(),
-    deleteProjectCategory: vi.fn(),
-  }
+  projectService: {}
 }));
 
 describe('ProjectCategoriesModal', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    (projectService.getProjectCategories as any).mockResolvedValue([
-      { id: 1, project_id: 1, name: 'Method', type: 'text' }
+    Object.assign(projectService, fakeService);
+    fakeService.reset();
+    fakeService.getProjectCategories.mockResolvedValue([
+      { id: 1, project_id: 1, name: 'Method', type: 'text' },
     ]);
   });
 
   it('renders categories and allows creating new ones', async () => {
     render(<ProjectCategoriesModal isOpen={true} projectId={1} onClose={() => {}} />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Method')).toBeInTheDocument();
     });
@@ -35,18 +35,21 @@ describe('ProjectCategoriesModal', () => {
 
     const optionsInput = screen.getByPlaceholderText('Opções separadas por vírgula (ex: Qualitativa, Quantitativa)');
     fireEvent.change(optionsInput, { target: { value: 'Opt1, Opt2' } });
-    
+
     // Button with Plus icon might not have text, we can find by type submit
     const buttons = screen.getAllByRole('button');
-    const submitBtn = buttons.find(b => b.getAttribute('type') === 'submit');
+    const submitBtn = buttons.find((b) => b.getAttribute('type') === 'submit');
     expect(submitBtn).toBeDefined();
 
-    (projectService.createProjectCategory as any).mockResolvedValue(2);
+    fakeService.createProjectCategory.mockResolvedValue(2);
     fireEvent.click(submitBtn!);
 
     await waitFor(() => {
       // It should pass an array of objects
-      expect(projectService.createProjectCategory).toHaveBeenCalledWith(1, 'New Enum Category', 'enum', [{ name: 'Opt1' }, { name: 'Opt2' }]);
+      expect(fakeService.createProjectCategory).toHaveBeenCalledWith(1, 'New Enum Category', 'enum', [
+        { name: 'Opt1' },
+        { name: 'Opt2' },
+      ]);
     });
   });
 

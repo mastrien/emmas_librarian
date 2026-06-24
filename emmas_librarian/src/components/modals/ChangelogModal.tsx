@@ -12,125 +12,368 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
   if (!isOpen) return null;
 
   return createPortal(
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999 }}>
-      <div 
-        className="card fade-in" 
-        style={{ 
-          width: '550px', 
-          maxWidth: '95%', 
-          maxHeight: '90vh', 
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 99999,
+      }}
+    >
+      <div
+        className="card fade-in"
+        style={{
+          width: '550px',
+          maxWidth: '95%',
+          maxHeight: '90vh',
           background: 'var(--bg-main)',
           borderRadius: 'var(--radius-lg)',
           overflow: 'hidden',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
         }}
       >
-        <div style={{
-          padding: '2rem',
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-          <div>
-            <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Sparkles className="text-primary" size={24} color="var(--color-primary)" /> 
-              Novidades da Versão {version}
-            </h2>
-            <p style={{ margin: 0, color: 'var(--text-muted)' }}>Veja o que mudou no Emma's Librarian.</p>
-          </div>
-          <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-            <X size={24} />
-          </button>
-        </div>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div>
-            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.12</h3>
-            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
-              <li><strong>Sistema de Backup e Lixeira:</strong> Implementação completa de backups automáticos (rotação GFS) e lixeira para recuperação segura de projetos, artigos e anotações.</li>
-              <li><strong>Histórico do Diário:</strong> O diário do projeto agora armazena versões passadas, permitindo a restauração de textos anteriores diretamente pela interface.</li>
-              <li><strong>Integridade de Importação/Exportação:</strong> Resolução de falhas que causavam perda de dados de categorias e histórico ao mover projetos entre computadores via arquivos `.emmapcarc`.</li>
-              <li><strong>Correções de Banco de Dados:</strong> Otimização da persistência (checkpointing WAL) e tratamento de erros de colunas inexistentes em migrações automáticas.</li>
-              <li><strong>Melhorias de UI:</strong> Novos modais de restauração, botões de lixeira estilizados e feedbacks visuais aprimorados.</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.11</h3>
-            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
-              <li><strong>Controle de "et al." em Citações:</strong> Adicionado checkbox nos modais de citação individual e em massa para ativar/desativar o uso de "et al." na lista de autores.</li>
-              <li><strong>Leitura de Autores por Vírgulas:</strong> Correção do parser de autores para suportar adequadamente nomes separados por vírgula em metadados importados.</li>
-              <li><strong>Instruções de Preenchimento:</strong> Inclusão de textos de ajuda explicativos sobre o padrão de identificação de múltiplos autores nos formulários de cadastro e edição.</li>
-              <li><strong>Padronização de Accordions:</strong> Ajuste visual e estrutural completo dos ícones dinâmicos (`ChevronRight`/`ChevronDown`) e remoção das setas nativas do navegador nos accordions de artigos lidos e arquivados.</li>
-              <li><strong>Ajustes de Rolagem:</strong> Correção do transbordo da barra de rolagem nas bordas arredondadas do modal de citação em massa.</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.10</h3>
-            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
-              <li><strong>Melhoria de Layout nos Modais:</strong> Correção do transbordo da barra de rolagem (clipping do scrollbar) nas bordas arredondadas nos modais do sistema.</li>
-              <li><strong>Rolagem de Resumo e Referências:</strong> Remoção da rolagem interna nas caixas de resumo e referências, integrando-as à rolagem global do modal.</li>
-              <li><strong>Padronização de Status de Artigos:</strong> Renomeação do filtro "Novos" para "Ativos", unificando a nomenclatura do sistema.</li>
-              <li><strong>Ações Contextuais de Artigos:</strong> Exibição inteligente de botões como "Desmarcar" e "Restaurar" de acordo com o status atual do artigo.</li>
-              <li><strong>Mais Opções para Artigos Lidos:</strong> Adição de botões para abrir detalhes e gerar citações diretamente nos artigos da lista de lidos.</li>
-              <li><strong>Ajustes Visuais e de Console:</strong> Inversão de posição dos autores/citações e correção de erros/avisos do console relacionados ao React 19.</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.9</h3>
-            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
-              <li><strong>Correção no Reconhecimento de Chaves de API:</strong> Resolvida a inconsistência de nomes nas chaves do Scopus e Web of Science entre as configurações e o motor de busca.</li>
-              <li><strong>Retrocompatibilidade de Credenciais:</strong> Adicionado suporte a fallbacks inteligentes para carregar e descriptografar de forma nativa chaves já armazenadas em qualquer convenção de nomenclatura.</li>
-              <li><strong>Garantia de Integridade:</strong> Inclusão de novos testes de regressão no banco de dados e orquestrador de chamadas de busca das APIs.</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.8</h3>
-            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
-              <li><strong>Artigos Lidos nas Categorias:</strong> Correção na tabela de categorias para exibir também os artigos marcados como lidos, e não apenas os ativos.</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.7</h3>
-            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
-              <li><strong>Melhoria na Ancoragem de Destaques:</strong> Nova normalização de caracteres do PDF (como ligaduras, aspas e travessões) que melhora a vinculação automática com o texto.</li>
-              <li><strong>Quebras de Linha nas Anotações:</strong> Suporte completo para renderização de quebras de linha (\n) nos comentários, anotações e no popup de hover no leitor.</li>
-              <li><strong>Sincronização do Diário:</strong> Resolução de inconsistências de persistência de dados e condições de corrida no diário do projeto.</li>
-              <li><strong>Gerenciamento de Opções:</strong> Substituição do prompt nativo por campos de input dinâmicos na criação de opções para categorias de enum.</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 style={{ margin: '0 0 0.75rem 0', color: 'var(--color-primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Versão 1.1.6</h3>
-            <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'var(--text-main)' }}>
-              <li><strong>Categorias de Seleção Múltipla:</strong> Adicionado suporte a categorias do tipo "seleção múltipla" (multi-select), permitindo selecionar várias opções simultaneamente para classificar cada artigo.</li>
-            </ul>
-          </div>
-
-          <div style={{ padding: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-            <AlertCircle size={20} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
+        <div
+          style={{
+            padding: '2rem',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: '1.5rem',
+            }}
+          >
             <div>
-              <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600 }}>Aviso Importante</p>
-              <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>Certifique-se de configurar suas chaves de API nas configurações se deseja continuar usando os resumos de IA e busca avançada.</p>
+              <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Sparkles className="text-primary" size={24} color="var(--color-primary)" />
+                Novidades da Versão {version}
+              </h2>
+              <p style={{ margin: 0, color: 'var(--text-muted)' }}>Veja o que mudou no Emma's Librarian.</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
+                Versão 1.1.12
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Sistema de Backup e Lixeira:</strong> Implementação completa de backups automáticos (rotação
+                  GFS) e lixeira para recuperação segura de projetos, artigos e anotações.
+                </li>
+                <li>
+                  <strong>Histórico do Diário:</strong> O diário do projeto agora armazena versões passadas, permitindo
+                  a restauração de textos anteriores diretamente pela interface.
+                </li>
+                <li>
+                  <strong>Integridade de Importação/Exportação:</strong> Resolução de falhas que causavam perda de dados
+                  de categorias e histórico ao mover projetos entre computadores via arquivos `.emmapcarc`.
+                </li>
+                <li>
+                  <strong>Correções de Banco de Dados:</strong> Otimização da persistência (checkpointing WAL) e
+                  tratamento de erros de colunas inexistentes em migrações automáticas.
+                </li>
+                <li>
+                  <strong>Melhorias de UI:</strong> Novos modais de restauração, botões de lixeira estilizados e
+                  feedbacks visuais aprimorados.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
+                Versão 1.1.11
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Controle de "et al." em Citações:</strong> Adicionado checkbox nos modais de citação
+                  individual e em massa para ativar/desativar o uso de "et al." na lista de autores.
+                </li>
+                <li>
+                  <strong>Leitura de Autores por Vírgulas:</strong> Correção do parser de autores para suportar
+                  adequadamente nomes separados por vírgula em metadados importados.
+                </li>
+                <li>
+                  <strong>Instruções de Preenchimento:</strong> Inclusão de textos de ajuda explicativos sobre o padrão
+                  de identificação de múltiplos autores nos formulários de cadastro e edição.
+                </li>
+                <li>
+                  <strong>Padronização de Accordions:</strong> Ajuste visual e estrutural completo dos ícones dinâmicos
+                  (`ChevronRight`/`ChevronDown`) e remoção das setas nativas do navegador nos accordions de artigos
+                  lidos e arquivados.
+                </li>
+                <li>
+                  <strong>Ajustes de Rolagem:</strong> Correção do transbordo da barra de rolagem nas bordas
+                  arredondadas do modal de citação em massa.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
+                Versão 1.1.10
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Melhoria de Layout nos Modais:</strong> Correção do transbordo da barra de rolagem (clipping
+                  do scrollbar) nas bordas arredondadas nos modais do sistema.
+                </li>
+                <li>
+                  <strong>Rolagem de Resumo e Referências:</strong> Remoção da rolagem interna nas caixas de resumo e
+                  referências, integrando-as à rolagem global do modal.
+                </li>
+                <li>
+                  <strong>Padronização de Status de Artigos:</strong> Renomeação do filtro "Novos" para "Ativos",
+                  unificando a nomenclatura do sistema.
+                </li>
+                <li>
+                  <strong>Ações Contextuais de Artigos:</strong> Exibição inteligente de botões como "Desmarcar" e
+                  "Restaurar" de acordo com o status atual do artigo.
+                </li>
+                <li>
+                  <strong>Mais Opções para Artigos Lidos:</strong> Adição de botões para abrir detalhes e gerar citações
+                  diretamente nos artigos da lista de lidos.
+                </li>
+                <li>
+                  <strong>Ajustes Visuais e de Console:</strong> Inversão de posição dos autores/citações e correção de
+                  erros/avisos do console relacionados ao React 19.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
+                Versão 1.1.9
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Correção no Reconhecimento de Chaves de API:</strong> Resolvida a inconsistência de nomes nas
+                  chaves do Scopus e Web of Science entre as configurações e o motor de busca.
+                </li>
+                <li>
+                  <strong>Retrocompatibilidade de Credenciais:</strong> Adicionado suporte a fallbacks inteligentes para
+                  carregar e descriptografar de forma nativa chaves já armazenadas em qualquer convenção de
+                  nomenclatura.
+                </li>
+                <li>
+                  <strong>Garantia de Integridade:</strong> Inclusão de novos testes de regressão no banco de dados e
+                  orquestrador de chamadas de busca das APIs.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
+                Versão 1.1.8
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Artigos Lidos nas Categorias:</strong> Correção na tabela de categorias para exibir também os
+                  artigos marcados como lidos, e não apenas os ativos.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
+                Versão 1.1.7
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Melhoria na Ancoragem de Destaques:</strong> Nova normalização de caracteres do PDF (como
+                  ligaduras, aspas e travessões) que melhora a vinculação automática com o texto.
+                </li>
+                <li>
+                  <strong>Quebras de Linha nas Anotações:</strong> Suporte completo para renderização de quebras de
+                  linha (\n) nos comentários, anotações e no popup de hover no leitor.
+                </li>
+                <li>
+                  <strong>Sincronização do Diário:</strong> Resolução de inconsistências de persistência de dados e
+                  condições de corrida no diário do projeto.
+                </li>
+                <li>
+                  <strong>Gerenciamento de Opções:</strong> Substituição do prompt nativo por campos de input dinâmicos
+                  na criação de opções para categorias de enum.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
+                Versão 1.1.6
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Categorias de Seleção Múltipla:</strong> Adicionado suporte a categorias do tipo "seleção
+                  múltipla" (multi-select), permitindo selecionar várias opções simultaneamente para classificar cada
+                  artigo.
+                </li>
+              </ul>
+            </div>
+
+            <div
+              style={{
+                padding: '1rem',
+                background: 'var(--bg-surface)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-color)',
+                display: 'flex',
+                gap: '1rem',
+                alignItems: 'flex-start',
+              }}
+            >
+              <AlertCircle size={20} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600 }}>Aviso Importante</p>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                  Certifique-se de configurar suas chaves de API nas configurações se deseja continuar usando os resumos
+                  de IA e busca avançada.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} className="btn-primary">
-            Entendido, vamos lá!
-          </button>
-        </div>
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+            <button onClick={onClose} className="btn-primary">
+              Entendido, vamos lá!
+            </button>
+          </div>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };

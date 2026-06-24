@@ -97,6 +97,17 @@ CREATE TABLE IF NOT EXISTS project_documents (
     FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS question_sets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER,
+    name TEXT NOT NULL,
+    description TEXT,
+    questions TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
 PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS projects (
@@ -250,3 +261,66 @@ CREATE TABLE IF NOT EXISTS project_diary_history (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS question_sets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER,
+    name TEXT NOT NULL,
+    description TEXT,
+    questions TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS investigation_results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    investigation_id INTEGER NOT NULL,
+    article_id INTEGER NOT NULL,
+    question TEXT NOT NULL,
+    answer TEXT,
+    quote TEXT,
+    status TEXT DEFAULT 'success',
+    error_message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(investigation_id) REFERENCES massive_investigations(id) ON DELETE CASCADE,
+    FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_inv_results_investigation
+    ON investigation_results(investigation_id);
+CREATE INDEX IF NOT EXISTS idx_inv_results_article
+    ON investigation_results(article_id);
+
+CREATE TABLE IF NOT EXISTS ai_model_config (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    skill TEXT NOT NULL UNIQUE,
+    provider TEXT NOT NULL,
+    model_name TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO ai_model_config (skill, provider, model_name) VALUES
+    ('metadata', 'gemini', 'gemini-2.5-flash'),
+    ('summary', 'gemini', 'gemini-2.5-flash'),
+    ('extraction', 'gemini', 'gemini-2.5-flash'),
+    ('embeddings', 'ollama', 'nomic-embed-text');
+
+-- Metadados dos chunks (relacional)
+CREATE TABLE IF NOT EXISTS pdf_chunks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    article_id INTEGER NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    text_content TEXT NOT NULL,
+    page_number INTEGER NOT NULL,
+    bbox_x REAL,
+    bbox_y REAL,
+    bbox_w REAL,
+    bbox_h REAL,
+    token_count INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE
+);
+
+-- Vetores (sqlite-vec)
+-- A tabela pdf_chunk_embeddings é criada dinamicamente no VectorStore.ts para suportar dimensões variadas.

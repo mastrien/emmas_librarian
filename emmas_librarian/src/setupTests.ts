@@ -5,7 +5,10 @@ Object.defineProperty(window, 'electronAPI', {
   value: {
     invoke: vi.fn().mockResolvedValue(null),
     on: vi.fn(),
-    getPathForFile: vi.fn().mockImplementation((file: any) => file.path || file.name),
+    getPathForFile: vi.fn().mockImplementation((file: { path: string, name?: string }) => file.path || file.name),
   },
   writable: true,
 });
+
+if (typeof global.URL.createObjectURL === "undefined") { global.URL.createObjectURL = vi.fn(() => "blob:mock"); }
+

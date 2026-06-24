@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SearchOrchestrator } from '../SearchOrchestrator';
 import { QueryTranslator } from '../QueryTranslator';
 import { ApiIntegrator } from '../ApiIntegrator';
-import { DatabaseManager } from '../../database/DatabaseManager';
+import { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import { NormalizedArticle } from '../types';
 
 // Mock electron's safeStorage before importing anything that might use it
@@ -10,17 +10,17 @@ vi.mock('electron', () => ({
   safeStorage: {
     isEncryptionAvailable: vi.fn(() => true),
     encryptString: vi.fn((str) => Buffer.from(`encrypted_${str}`)),
-    decryptString: vi.fn((buf) => buf.toString().replace('encrypted_', ''))
-  }
+    decryptString: vi.fn((buf) => buf.toString().replace('encrypted_', '')),
+  },
 }));
 
 describe('SearchOrchestrator', () => {
-  let db: DatabaseManager;
+  let db: DatabaseAdapter;
   let orchestrator: SearchOrchestrator;
   let api: ApiIntegrator;
 
   beforeEach(() => {
-    db = new DatabaseManager(':memory:');
+    db = new DatabaseAdapter(':memory:');
     const translator = new QueryTranslator();
     api = new ApiIntegrator();
     orchestrator = new SearchOrchestrator(db, translator, api);
@@ -28,19 +28,31 @@ describe('SearchOrchestrator', () => {
 
   it('deduplicates articles and merges sources', async () => {
     const proj = db.createProject('Test');
-    
+
     const item1: NormalizedArticle = {
-      doi: '10.123/abc', title: 'Test Article', source_databases: ['OpenAlex'], csl_json: {}
+      doi: '10.123/abc',
+      title: 'Test Article',
+      source_databases: ['OpenAlex'],
+      csl_json: {},
     };
     const item2: NormalizedArticle = {
-      doi: '10.123/abc', title: 'Test Article', source_databases: ['Crossref'], csl_json: {}
+      doi: '10.123/abc',
+      title: 'Test Article',
+      source_databases: ['Crossref'],
+      csl_json: {},
     };
 
     vi.spyOn(api, 'searchOpenAlex').mockResolvedValue([item1]);
     vi.spyOn(api, 'searchCrossref').mockResolvedValue([item2]);
 
-    const res = await orchestrator.searchAndPersist(proj.id, { openalex: 'filter=title.search:test', crossref: 'query=test' }, 100, 'relevance', 'title contains "test"');
-    
+    const res = await orchestrator.searchAndPersist(
+      proj.id,
+      { openalex: 'filter=title.search:test', crossref: 'query=test' },
+      100,
+      'relevance',
+      'title contains "test"',
+    );
+
     expect(res.savedCount).toBe(1);
     const articles = db.getArticlesByProject(proj.id);
     expect(articles).toHaveLength(1);
@@ -63,7 +75,7 @@ describe('SearchOrchestrator', () => {
       { scopus: 'title("test")', wos: 'TS=test' },
       50,
       'relevance',
-      'title contains "test"'
+      'title contains "test"',
     );
 
     // Verify both keys were decrypted and passed properly

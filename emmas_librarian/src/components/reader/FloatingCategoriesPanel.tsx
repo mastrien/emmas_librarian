@@ -2,12 +2,14 @@ import React from 'react';
 import { Tags, X as XIcon } from 'lucide-react';
 import { CategoryCell } from '../common/CategoryCell';
 
+import { ProjectCategory, ArticleCategory } from '../../types';
+
 interface FloatingCategoriesPanelProps {
   articleId: number;
   isCategoriesOpen: boolean;
   setIsCategoriesOpen: (open: boolean) => void;
-  projectCategories: any[];
-  articleCategories: any[];
+  projectCategories: ProjectCategory[];
+  articleCategories: ArticleCategory[];
 }
 
 export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = ({
@@ -38,11 +40,11 @@ export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = (
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
               {projectCategories.map((cat) => {
-                const articleCat = articleCategories.find((ac: any) => ac.category_id === cat.id);
+                const articleCat = articleCategories.find((ac: ArticleCategory) => ac.category_id === cat.id);
                 return (
                   <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                     <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>{cat.name}</label>
-                    <CategoryCell articleId={articleId} category={cat} initialValue={articleCat ? articleCat.value : ''} />
+                    <CategoryCell articleId={articleId} category={cat} initialValue={articleCat?.value || ''} />
                   </div>
                 );
               })}

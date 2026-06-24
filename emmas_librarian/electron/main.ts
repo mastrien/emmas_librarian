@@ -7,7 +7,7 @@ import { autoUpdater } from 'electron-updater';
 autoUpdater.logger = log;
 log.info('App starting...');
 
-import { setupIpcHandlers } from './ipc/handlers';
+import { setupIpcRegistries } from './ipc/ipcRegistries';
 
 const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
 
@@ -29,7 +29,7 @@ function createWindow() {
     titleBarStyle: 'hidden',
     titleBarOverlay: {
       color: '#f8fafc',
-      symbolColor: '#334155'
+      symbolColor: '#334155',
     },
     webPreferences: {
       nodeIntegration: false,
@@ -61,10 +61,10 @@ function createWindow() {
   });
 
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    const csp = isDev 
+    const csp = isDev
       ? "default-src 'self' http://localhost:* ws://localhost:* blob: https://unpkg.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:*; img-src 'self' data: blob:; connect-src 'self' http://localhost:* ws://localhost:* blob:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; worker-src 'self' blob:;"
       : "default-src 'self' blob: https://unpkg.com; script-src 'self'; img-src 'self' data: blob:; connect-src 'self' blob:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; worker-src 'self' blob:;";
-      
+
     callback({
       responseHeaders: {
         ...details.responseHeaders,
@@ -85,27 +85,30 @@ process.on('uncaughtException', (error) => {
   dialog.showErrorBox('Main Process Error', error.message || String(error));
 });
 
-app.whenReady().then(() => {
-  try {
-    setupIpcHandlers();
-    createWindow();
-    
-    // Check for updates after the app is ready and window is created
-    if (!isDev) {
-      autoUpdater.checkForUpdatesAndNotify();
-    }
-  } catch (err: any) {
-    console.error('Error during app startup:', err);
-    dialog.showErrorBox('Startup Error', err.message || String(err));
-  }
+app
+  .whenReady()
+  .then(() => {
+    try {
+      setupIpcRegistries();
+      createWindow();
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+      // Check for updates after the app is ready and window is created
+      if (!isDev) {
+        autoUpdater.checkForUpdatesAndNotify();
+      }
+    } catch (err: unknown) {
+      console.error('Error during app startup:', err);
+      dialog.showErrorBox('Startup Error', (err as Error).message || String(err));
+    }
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to start app:', err);
+    dialog.showErrorBox('Initialization Error', (err as Error).message || String(err));
   });
-}).catch((err) => {
-  console.error('Failed to start app:', err);
-  dialog.showErrorBox('Initialization Error', err.message || String(err));
-});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

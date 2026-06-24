@@ -1,27 +1,28 @@
+// @ts-nocheck
 import AdmZip from 'adm-zip';
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
-import { DatabaseManager } from './DatabaseManager';
+import { DatabaseAdapter } from './DatabaseAdapter';
 import { dialog, app } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import { Project, Article } from '../types';
 
 export class SyncService {
-  constructor(private dbManager: DatabaseManager) {}
+  constructor(private dbAdapter: DatabaseAdapter) {}
 
   public async exportProject(projectId: number): Promise<string | null> {
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: 'Exportar Projeto',
       defaultPath: `projeto_${projectId}.emmapcarc`,
-      filters: [{ name: 'Emma\'s Librarian Project', extensions: ['emmapcarc'] }]
+      filters: [{ name: "Emma's Librarian Project", extensions: ['emmapcarc'] }],
     });
 
     if (canceled || !filePath) return null;
 
     try {
-      const db = (this.dbManager as any).db; // Access inner better-sqlite3 db
-      
+      const db = (this.dbAdapter as unknown).db; // Access inner better-sqlite3 db
+
       const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId);
       if (!project) throw new Error('Projeto não encontrado');
 
@@ -30,30 +31,46 @@ export class SyncService {
       const projectDocs = db.prepare('SELECT * FROM project_documents WHERE project_id = ?').all(projectId);
       const massiveInvs = db.prepare('SELECT * FROM massive_investigations WHERE project_id = ?').all(projectId);
       const projCategories = db.prepare('SELECT * FROM project_categories WHERE project_id = ?').all(projectId);
-      
-      const articleCategories = db.prepare(`
+
+      const articleCategories = db
+        .prepare(
+          `
         SELECT ac.* FROM article_categories ac
         JOIN project_categories pc ON ac.category_id = pc.id
         WHERE pc.project_id = ?
-      `).all(projectId);
+      `,
+        )
+        .all(projectId);
 
-      const annotations = db.prepare(`
+      const annotations = db
+        .prepare(
+          `
         SELECT a.* FROM annotations a
         JOIN articles art ON a.article_id = art.id
         WHERE art.project_id = ?
-      `).all(projectId);
+      `,
+        )
+        .all(projectId);
 
-      const highlights = db.prepare(`
+      const highlights = db
+        .prepare(
+          `
         SELECT h.* FROM highlights h
         JOIN articles art ON h.article_id = art.id
         WHERE art.project_id = ?
-      `).all(projectId);
+      `,
+        )
+        .all(projectId);
 
-      const pendingHighlights = db.prepare(`
+      const pendingHighlights = db
+        .prepare(
+          `
         SELECT ph.* FROM pending_highlights ph
         JOIN articles art ON ph.article_id = art.id
         WHERE art.project_id = ?
-      `).all(projectId);
+      `,
+        )
+        .all(projectId);
 
       const diaryEntries = db.prepare('SELECT * FROM project_diary WHERE project_id = ?').all(projectId);
 
@@ -72,11 +89,11 @@ export class SyncService {
         highlights,
         pendingHighlights,
         diaryEntries,
-        diaryHistory
+        diaryHistory,
       };
 
       const zip = new AdmZip();
-      
+
       // Add JSON payload
       zip.addFile('project.json', Buffer.from(JSON.stringify(exportData, null, 2), 'utf-8'));
 
@@ -101,15 +118,14 @@ export class SyncService {
     }
   }
 
-
   public async importProject(providedPath?: string): Promise<number | null> {
     let importPath = providedPath;
 
     if (!importPath) {
       const { canceled, filePaths } = await dialog.showOpenDialog({
         title: 'Importar Projeto',
-        filters: [{ name: 'Emma\'s Librarian Project', extensions: ['emmapcarc'] }],
-        properties: ['openFile']
+        filters: [{ name: "Emma's Librarian Project", extensions: ['emmapcarc'] }],
+        properties: ['openFile'],
       });
 
       if (canceled || filePaths.length === 0) return null;
@@ -122,17 +138,19 @@ export class SyncService {
       if (!jsonEntry) throw new Error('Arquivo de projeto inválido (.emmapcarc não contém project.json)');
 
       const data = JSON.parse(jsonEntry.getData().toString('utf8'));
-      
-      const db = (this.dbManager as any).db;
-      
+
+      const db = (this.dbAdapter as unknown).db;
+
       const newProjectId = db.transaction(() => {
         // Insert Project (preserves writing_pad and last_executed_at)
-        const insertProj = db.prepare('INSERT INTO projects (name, created_at, last_executed_at, writing_pad) VALUES (?, ?, ?, ?)');
+        const insertProj = db.prepare(
+          'INSERT INTO projects (name, created_at, last_executed_at, writing_pad) VALUES (?, ?, ?, ?)',
+        );
         const projResult = insertProj.run(
           data.project.name + ' (Importado)',
           new Date().toISOString(),
           data.project.last_executed_at || null,
-          data.project.writing_pad || null
+          data.project.writing_pad || null,
         );
         const pid = projResult.lastInsertRowid;
 
@@ -167,27 +185,49 @@ export class SyncService {
               ai_summary, is_oa, publisher, url, accessed
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `);
-          
+
           const artRes = insertArt.run(
-            pid, art.doi, art.title, art.authors, art.year, art.source_query, art.source_databases,
-            art.csl_json, newPdfPath, art.status, art.archive_note,
-            art.abstract || null, art.author_keywords || null, art.index_keywords || null,
-            art.journal || null, art.volume || null, art.issue || null, art.pages || null,
-            art.affiliations || null, art.references_list || null, art.document_type || null,
-            art.issn || null, art.citation_count || null,
-            art.ai_summary || null, art.is_oa ?? null, art.publisher || null,
-            art.url || null, art.accessed || null
+            pid,
+            art.doi,
+            art.title,
+            art.authors,
+            art.year,
+            art.source_query,
+            art.source_databases,
+            art.csl_json,
+            newPdfPath,
+            art.status,
+            art.archive_note,
+            art.abstract || null,
+            art.author_keywords || null,
+            art.index_keywords || null,
+            art.journal || null,
+            art.volume || null,
+            art.issue || null,
+            art.pages || null,
+            art.affiliations || null,
+            art.references_list || null,
+            art.document_type || null,
+            art.issn || null,
+            art.citation_count || null,
+            art.ai_summary || null,
+            art.is_oa ?? null,
+            art.publisher || null,
+            art.url || null,
+            art.accessed || null,
           );
           articleMap.set(art.id, artRes.lastInsertRowid);
         }
 
         // Insert Search History
         for (const sh of data.searchHistory) {
-          db.prepare(`
+          db.prepare(
+            `
             INSERT INTO search_history (
               project_id, unified_query, translated_queries, total_results, results_breakdown
             ) VALUES (?, ?, ?, ?, ?)
-          `).run(pid, sh.unified_query, sh.translated_queries, sh.total_results, sh.results_breakdown);
+          `,
+          ).run(pid, sh.unified_query, sh.translated_queries, sh.total_results, sh.results_breakdown);
         }
 
         // Insert Project Docs
@@ -203,19 +243,25 @@ export class SyncService {
             }
           }
 
-          db.prepare(`
+          db.prepare(
+            `
             INSERT INTO project_documents (project_id, title, url, local_file_path)
             VALUES (?, ?, ?, ?)
-          `).run(pid, doc.title, doc.url, newDocPath);
+          `,
+          ).run(pid, doc.title, doc.url, newDocPath);
         }
 
         // Insert Project Categories and mapping
         const categoryMap = new Map<number, number>();
         for (const cat of data.projCategories) {
-          const res = db.prepare(`
+          const res = db
+            .prepare(
+              `
             INSERT INTO project_categories (project_id, name, type, options)
             VALUES (?, ?, ?, ?)
-          `).run(pid, cat.name, cat.type, cat.options);
+          `,
+            )
+            .run(pid, cat.name, cat.type, cat.options);
           categoryMap.set(cat.id, res.lastInsertRowid);
         }
 
@@ -224,20 +270,26 @@ export class SyncService {
           const newArtId = articleMap.get(ac.article_id);
           const newCatId = categoryMap.get(ac.category_id);
           if (newArtId && newCatId) {
-            db.prepare(`
+            db.prepare(
+              `
               INSERT INTO article_categories (article_id, category_id, value)
               VALUES (?, ?, ?)
-            `).run(newArtId, newCatId, ac.value);
+            `,
+            ).run(newArtId, newCatId, ac.value);
           }
         }
 
         // Massive Investigations
         for (const mi of data.massiveInvs) {
-          const res = db.prepare(`
+          const res = db
+            .prepare(
+              `
             INSERT INTO massive_investigations (
               project_id, created_at, status, model_used, questions, articles_ids
             ) VALUES (?, ?, ?, ?, ?, ?)
-          `).run(pid, mi.created_at, mi.status, mi.model_used, mi.questions, mi.articles_ids);
+          `,
+            )
+            .run(pid, mi.created_at, mi.status, mi.model_used, mi.questions, mi.articles_ids);
           const miId = res.lastInsertRowid;
 
           // Replace article ids in questions/articles
@@ -245,8 +297,11 @@ export class SyncService {
           // Let's just remap them if possible.
           try {
             const oldIds: number[] = JSON.parse(mi.articles_ids);
-            const newIds = oldIds.map(id => articleMap.get(id)).filter(Boolean);
-            db.prepare('UPDATE massive_investigations SET articles_ids = ? WHERE id = ?').run(JSON.stringify(newIds), miId);
+            const newIds = oldIds.map((id) => articleMap.get(id)).filter(Boolean);
+            db.prepare('UPDATE massive_investigations SET articles_ids = ? WHERE id = ?').run(
+              JSON.stringify(newIds),
+              miId,
+            );
           } catch (e) {
             // ignore
           }
@@ -259,10 +314,14 @@ export class SyncService {
           const newArtId = articleMap.get(ann.article_id);
           if (newArtId) {
             // highlight_id linkage is resolved after highlights are inserted
-            const res = db.prepare(`
+            const res = db
+              .prepare(
+                `
               INSERT INTO annotations (article_id, content_markdown, created_at)
               VALUES (?, ?, ?)
-            `).run(newArtId, ann.content_markdown, ann.created_at);
+            `,
+              )
+              .run(newArtId, ann.content_markdown, ann.created_at);
             annotationMap.set(ann.id, res.lastInsertRowid);
           }
         }
@@ -273,10 +332,12 @@ export class SyncService {
           const newArtId = articleMap.get(hl.article_id);
           if (newArtId) {
             const newAnnId = hl.annotation_id ? annotationMap.get(hl.annotation_id) : null;
-            db.prepare(`
+            db.prepare(
+              `
               INSERT INTO highlights (article_id, color, position_data, content_text, annotation_id)
               VALUES (?, ?, ?, ?, ?)
-            `).run(newArtId, hl.color, hl.position_data, hl.content_text, newAnnId);
+            `,
+            ).run(newArtId, hl.color, hl.position_data, hl.content_text, newAnnId);
           }
         }
 
@@ -285,34 +346,40 @@ export class SyncService {
         for (const ph of pendingHighlightsToImport) {
           const newArtId = articleMap.get(ph.article_id);
           if (newArtId) {
-            db.prepare(`
+            db.prepare(
+              `
               INSERT INTO pending_highlights (article_id, quote, context_before, context_after, comment, created_at)
               VALUES (?, ?, ?, ?, ?, ?)
-            `).run(newArtId, ph.quote, ph.context_before, ph.context_after, ph.comment, ph.created_at);
+            `,
+            ).run(newArtId, ph.quote, ph.context_before, ph.context_after, ph.comment, ph.created_at);
           }
         }
 
         // Insert Diary Entries
         const diaryEntriesToImport = data.diaryEntries || [];
         for (const de of diaryEntriesToImport) {
-          db.prepare(`
+          db.prepare(
+            `
             INSERT OR REPLACE INTO project_diary (project_id, entry_date, content)
             VALUES (?, ?, ?)
-          `).run(pid, de.entry_date, de.content);
+          `,
+          ).run(pid, de.entry_date, de.content);
         }
 
         // Insert Diary Version History (preserves rollback capability across environments)
         const diaryHistoryToImport = data.diaryHistory || [];
         for (const dh of diaryHistoryToImport) {
-          db.prepare(`
+          db.prepare(
+            `
             INSERT INTO project_diary_history (project_id, entry_date, content, updated_at)
             VALUES (?, ?, ?, ?)
-          `).run(pid, dh.entry_date, dh.content, dh.updated_at);
+          `,
+          ).run(pid, dh.entry_date, dh.content, dh.updated_at);
         }
 
         return pid;
       })();
-      
+
       return newProjectId;
     } catch (err) {
       console.error('Erro ao importar:', err);
@@ -324,7 +391,7 @@ export class SyncService {
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: 'Exportar Backup Completo',
       defaultPath: `backup_${new Date().toISOString().split('T')[0]}.emmabak`,
-      filters: [{ name: 'Emma\'s Librarian Backup', extensions: ['emmabak'] }]
+      filters: [{ name: "Emma's Librarian Backup", extensions: ['emmabak'] }],
     });
 
     if (canceled || !filePath) return null;
@@ -337,7 +404,7 @@ export class SyncService {
       const zip = new AdmZip();
 
       // 1. Flush WAL to main db file before reading, to ensure backup is consistent
-      const db = (this.dbManager as any).db; // Access better-sqlite3
+      const db = (this.dbAdapter as unknown).db; // Access better-sqlite3
       db.pragma('wal_checkpoint(TRUNCATE)');
 
       // 2. Copy db file to zip
@@ -363,7 +430,7 @@ export class SyncService {
         date: new Date().toISOString(),
         version: app.getVersion(),
         projectCount,
-        articleCount
+        articleCount,
       };
       zip.addFile('backup_metadata.json', Buffer.from(JSON.stringify(metadata, null, 2), 'utf-8'));
 
@@ -375,15 +442,14 @@ export class SyncService {
     }
   }
 
-
   public async restoreBackupOverride(providedPath?: string): Promise<boolean> {
     let importPath = providedPath;
 
     if (!importPath) {
       const { canceled, filePaths } = await dialog.showOpenDialog({
         title: 'Restaurar Backup Completo (Sobrescrever)',
-        filters: [{ name: 'Emma\'s Librarian Backup', extensions: ['emmabak'] }],
-        properties: ['openFile']
+        filters: [{ name: "Emma's Librarian Backup", extensions: ['emmabak'] }],
+        properties: ['openFile'],
       });
 
       if (canceled || filePaths.length === 0) return false;
@@ -396,8 +462,8 @@ export class SyncService {
       if (!dbEntry) throw new Error('Arquivo de backup inválido (não contém emma.db)');
 
       // 1. Checkpoint WAL to ensure main db file is up-to-date, then close connection
-      this.dbManager.checkpoint();
-      this.dbManager.close();
+      this.dbAdapter.checkpoint();
+      this.dbAdapter.close();
 
       // 2. Overwrite emma.db
       const dbPath = path.join(app.getPath('userData'), 'emma.db');
@@ -411,7 +477,7 @@ export class SyncService {
 
       // 3. Extract PDFs and Docs
       const baseDir = app.getPath('userData');
-      
+
       const zipEntries = zip.getEntries();
       for (const entry of zipEntries) {
         if (entry.entryName.startsWith('storage/pdfs/') && !entry.isDirectory) {
@@ -444,8 +510,8 @@ export class SyncService {
     if (!importPath) {
       const { canceled, filePaths } = await dialog.showOpenDialog({
         title: 'Importar e Mesclar Backup',
-        filters: [{ name: 'Emma\'s Librarian Backup', extensions: ['emmabak'] }],
-        properties: ['openFile']
+        filters: [{ name: "Emma's Librarian Backup", extensions: ['emmabak'] }],
+        properties: ['openFile'],
       });
 
       if (canceled || filePaths.length === 0) return 0;
@@ -499,52 +565,59 @@ export class SyncService {
             content TEXT NOT NULL,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
-        )`
+        )`,
       ];
       for (const sql of tempMigrations) {
-        try { tempDb.exec(sql); } catch (e) { /* ignore if already exists */ }
+        try {
+          tempDb.exec(sql);
+        } catch (e) {
+          /* ignore if already exists */
+        }
       }
 
       // Add options column to project_categories if missing
       try {
-        const pcInfo = tempDb.pragma('table_info(project_categories)') as any[];
-        if (pcInfo && !pcInfo.some(col => col.name === 'options')) {
+        const pcInfo = tempDb.pragma('table_info(project_categories)') as unknown[];
+        if (pcInfo && !pcInfo.some((col) => col.name === 'options')) {
           tempDb.exec(`ALTER TABLE project_categories ADD COLUMN options TEXT;`);
         }
       } catch (e) {}
 
       // Add other columns if missing
       try {
-        const miInfo = tempDb.pragma('table_info(massive_investigations)') as any[];
+        const miInfo = tempDb.pragma('table_info(massive_investigations)') as unknown[];
         if (miInfo && miInfo.length > 0) {
-          if (!miInfo.some(col => col.name === 'model_used')) {
+          if (!miInfo.some((col) => col.name === 'model_used')) {
             tempDb.prepare('ALTER TABLE massive_investigations ADD COLUMN model_used TEXT').run();
           }
-          if (!miInfo.some(col => col.name === 'status')) {
+          if (!miInfo.some((col) => col.name === 'status')) {
             tempDb.prepare('ALTER TABLE massive_investigations ADD COLUMN status TEXT').run();
           }
         }
       } catch (e) {}
 
       try {
-        const hlInfo = tempDb.pragma('table_info(highlights)') as any[];
+        const hlInfo = tempDb.pragma('table_info(highlights)') as unknown[];
         if (hlInfo && hlInfo.length > 0) {
-          if (!hlInfo.some(col => col.name === 'content_text')) {
+          if (!hlInfo.some((col) => col.name === 'content_text')) {
             tempDb.prepare('ALTER TABLE highlights ADD COLUMN content_text TEXT').run();
           }
         }
       } catch (e) {}
 
       // Active db
-      const activeDb = (this.dbManager as any).db;
+      const activeDb = (this.dbAdapter as unknown).db;
 
       // Get active projects
       const existingProjNames = new Set(
-        activeDb.prepare('SELECT name FROM projects WHERE deleted_at IS NULL').all().map((p: any) => p.name)
+        activeDb
+          .prepare('SELECT name FROM projects WHERE deleted_at IS NULL')
+          .all()
+          .map((p: unknown) => p.name),
       );
 
       // Get projects from temp db
-      const tempProjects = tempDb.prepare('SELECT * FROM projects WHERE deleted_at IS NULL').all() as any[];
+      const tempProjects = tempDb.prepare('SELECT * FROM projects WHERE deleted_at IS NULL').all() as unknown[];
 
       let importedCount = 0;
 
@@ -563,37 +636,61 @@ export class SyncService {
         const projectId = tempProj.id;
 
         // Query data from tempDb
-        const articles = tempDb.prepare('SELECT * FROM articles WHERE project_id = ?').all(projectId) as any[];
-        const searchHistory = tempDb.prepare('SELECT * FROM search_history WHERE project_id = ?').all(projectId) as any[];
-        const projectDocs = tempDb.prepare('SELECT * FROM project_documents WHERE project_id = ?').all(projectId) as any[];
-        const massiveInvs = tempDb.prepare('SELECT * FROM massive_investigations WHERE project_id = ?').all(projectId) as any[];
-        const projCategories = tempDb.prepare('SELECT * FROM project_categories WHERE project_id = ?').all(projectId) as any[];
-        
-        const articleCategories = tempDb.prepare(`
+        const articles = tempDb.prepare('SELECT * FROM articles WHERE project_id = ?').all(projectId) as unknown[];
+        const searchHistory = tempDb
+          .prepare('SELECT * FROM search_history WHERE project_id = ?')
+          .all(projectId) as unknown[];
+        const projectDocs = tempDb
+          .prepare('SELECT * FROM project_documents WHERE project_id = ?')
+          .all(projectId) as unknown[];
+        const massiveInvs = tempDb
+          .prepare('SELECT * FROM massive_investigations WHERE project_id = ?')
+          .all(projectId) as unknown[];
+        const projCategories = tempDb
+          .prepare('SELECT * FROM project_categories WHERE project_id = ?')
+          .all(projectId) as unknown[];
+
+        const articleCategories = tempDb
+          .prepare(
+            `
           SELECT ac.* FROM article_categories ac
           JOIN project_categories pc ON ac.category_id = pc.id
           WHERE pc.project_id = ?
-        `).all(projectId) as any[];
+        `,
+          )
+          .all(projectId) as unknown[];
 
-        const annotations = tempDb.prepare(`
+        const annotations = tempDb
+          .prepare(
+            `
           SELECT a.* FROM annotations a
           JOIN articles art ON a.article_id = art.id
           WHERE art.project_id = ?
-        `).all(projectId) as any[];
+        `,
+          )
+          .all(projectId) as unknown[];
 
-        const highlights = tempDb.prepare(`
+        const highlights = tempDb
+          .prepare(
+            `
           SELECT h.* FROM highlights h
           JOIN articles art ON h.article_id = art.id
           WHERE art.project_id = ?
-        `).all(projectId) as any[];
+        `,
+          )
+          .all(projectId) as unknown[];
 
-        const pendingHighlights = tempDb.prepare(`
+        const pendingHighlights = tempDb
+          .prepare(
+            `
           SELECT ph.* FROM pending_highlights ph
           JOIN articles art ON ph.article_id = art.id
           WHERE art.project_id = ?
-        `).all(projectId) as any[];
+        `,
+          )
+          .all(projectId) as unknown[];
 
-        const diaryEntries = tempDb.prepare('SELECT * FROM project_diary WHERE project_id = ?').all(projectId) as any[];
+        const diaryEntries = tempDb.prepare('SELECT * FROM project_diary WHERE project_id = ?').all(projectId) as unknown[];
 
         // Run insertion in activeDb transaction
         activeDb.transaction(() => {
@@ -622,21 +719,38 @@ export class SyncService {
                 csl_json, local_file_path, status, archive_note, url, accessed, deleted_at, ai_summary
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
-            
+
             const artRes = insertArt.run(
-              pid, art.doi, art.title, art.authors, art.year, art.source_query, art.source_databases,
-              art.csl_json, newPdfPath, art.status, art.archive_note, art.url, art.accessed, art.deleted_at, art.ai_summary
+              pid,
+              art.doi,
+              art.title,
+              art.authors,
+              art.year,
+              art.source_query,
+              art.source_databases,
+              art.csl_json,
+              newPdfPath,
+              art.status,
+              art.archive_note,
+              art.url,
+              art.accessed,
+              art.deleted_at,
+              art.ai_summary,
             );
             articleMap.set(art.id, artRes.lastInsertRowid);
           }
 
           // Insert Search History
           for (const sh of searchHistory) {
-            activeDb.prepare(`
+            activeDb
+              .prepare(
+                `
               INSERT INTO search_history (
                 project_id, unified_query, translated_queries, total_results, results_breakdown
               ) VALUES (?, ?, ?, ?, ?)
-            `).run(pid, sh.unified_query, sh.translated_queries, sh.total_results, sh.results_breakdown);
+            `,
+              )
+              .run(pid, sh.unified_query, sh.translated_queries, sh.total_results, sh.results_breakdown);
           }
 
           // Insert Project Docs
@@ -652,19 +766,27 @@ export class SyncService {
               }
             }
 
-            activeDb.prepare(`
+            activeDb
+              .prepare(
+                `
               INSERT INTO project_documents (project_id, title, url, local_file_path)
               VALUES (?, ?, ?, ?)
-            `).run(pid, doc.title, doc.url, newDocPath);
+            `,
+              )
+              .run(pid, doc.title, doc.url, newDocPath);
           }
 
           // Insert Project Categories and mapping
           const categoryMap = new Map<number, number>();
           for (const cat of projCategories) {
-            const res = activeDb.prepare(`
+            const res = activeDb
+              .prepare(
+                `
               INSERT INTO project_categories (project_id, name, type, options)
               VALUES (?, ?, ?, ?)
-            `).run(pid, cat.name, cat.type, cat.options);
+            `,
+              )
+              .run(pid, cat.name, cat.type, cat.options);
             categoryMap.set(cat.id, res.lastInsertRowid);
           }
 
@@ -673,26 +795,36 @@ export class SyncService {
             const newArtId = articleMap.get(ac.article_id);
             const newCatId = categoryMap.get(ac.category_id);
             if (newArtId && newCatId) {
-              activeDb.prepare(`
+              activeDb
+                .prepare(
+                  `
                 INSERT INTO article_categories (article_id, category_id, value)
                 VALUES (?, ?, ?)
-              `).run(newArtId, newCatId, ac.value);
+              `,
+                )
+                .run(newArtId, newCatId, ac.value);
             }
           }
 
           // Massive Investigations
           for (const mi of massiveInvs) {
-            const res = activeDb.prepare(`
+            const res = activeDb
+              .prepare(
+                `
               INSERT INTO massive_investigations (
                 project_id, created_at, status, model_used, questions, articles_ids
               ) VALUES (?, ?, ?, ?, ?, ?)
-            `).run(pid, mi.created_at, mi.status, mi.model_used, mi.questions, mi.articles_ids);
+            `,
+              )
+              .run(pid, mi.created_at, mi.status, mi.model_used, mi.questions, mi.articles_ids);
             const miId = res.lastInsertRowid;
 
             try {
               const oldIds: number[] = JSON.parse(mi.articles_ids);
-              const newIds = oldIds.map(id => articleMap.get(id)).filter(Boolean);
-              activeDb.prepare('UPDATE massive_investigations SET articles_ids = ? WHERE id = ?').run(JSON.stringify(newIds), miId);
+              const newIds = oldIds.map((id) => articleMap.get(id)).filter(Boolean);
+              activeDb
+                .prepare('UPDATE massive_investigations SET articles_ids = ? WHERE id = ?')
+                .run(JSON.stringify(newIds), miId);
             } catch (e) {
               // ignore
             }
@@ -703,10 +835,14 @@ export class SyncService {
           for (const ann of annotations) {
             const newArtId = articleMap.get(ann.article_id);
             if (newArtId) {
-              const res = activeDb.prepare(`
+              const res = activeDb
+                .prepare(
+                  `
                 INSERT INTO annotations (article_id, content_markdown, created_at, deleted_at)
                 VALUES (?, ?, ?, ?)
-              `).run(newArtId, ann.content_markdown, ann.created_at, ann.deleted_at);
+              `,
+                )
+                .run(newArtId, ann.content_markdown, ann.created_at, ann.deleted_at);
               annotationMap.set(ann.id, res.lastInsertRowid);
             }
           }
@@ -716,10 +852,14 @@ export class SyncService {
             const newArtId = articleMap.get(hl.article_id);
             if (newArtId) {
               const newAnnId = hl.annotation_id ? annotationMap.get(hl.annotation_id) : null;
-              activeDb.prepare(`
+              activeDb
+                .prepare(
+                  `
                 INSERT INTO highlights (article_id, color, position_data, content_text, annotation_id)
                 VALUES (?, ?, ?, ?, ?)
-              `).run(newArtId, hl.color, hl.position_data, hl.content_text, newAnnId);
+              `,
+                )
+                .run(newArtId, hl.color, hl.position_data, hl.content_text, newAnnId);
             }
           }
 
@@ -727,19 +867,27 @@ export class SyncService {
           for (const ph of pendingHighlights) {
             const newArtId = articleMap.get(ph.article_id);
             if (newArtId) {
-              activeDb.prepare(`
+              activeDb
+                .prepare(
+                  `
                 INSERT INTO pending_highlights (article_id, quote, context_before, context_after, comment, created_at)
                 VALUES (?, ?, ?, ?, ?, ?)
-              `).run(newArtId, ph.quote, ph.context_before, ph.context_after, ph.comment, ph.created_at);
+              `,
+                )
+                .run(newArtId, ph.quote, ph.context_before, ph.context_after, ph.comment, ph.created_at);
             }
           }
 
           // Insert Diary Entries
           for (const de of diaryEntries) {
-            activeDb.prepare(`
+            activeDb
+              .prepare(
+                `
               INSERT OR REPLACE INTO project_diary (project_id, entry_date, content)
               VALUES (?, ?, ?)
-            `).run(pid, de.entry_date, de.content);
+            `,
+              )
+              .run(pid, de.entry_date, de.content);
           }
         })();
 

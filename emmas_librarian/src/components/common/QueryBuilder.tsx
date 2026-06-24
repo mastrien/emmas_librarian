@@ -8,37 +8,52 @@ interface Props {
 }
 
 export const QueryBuilder: React.FC<Props> = ({ node, onChange }) => {
-  
   if (node.type === 'rule') {
     return (
       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-        <select 
-          value={node.field} 
+        <select
+          value={node.field}
           onChange={(e) => onChange({ ...node, field: e.target.value as QueryField })}
-          style={{ padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', outline: 'none' }}
+          style={{
+            padding: '0.5rem',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--border-color)',
+            outline: 'none',
+          }}
         >
           <option value="all">Todos os Campos</option>
           <option value="title">Título</option>
           <option value="abstract">Resumo</option>
           <option value="authors">Autores</option>
         </select>
-        
-        <select 
-          value={node.operator} 
+
+        <select
+          value={node.operator}
           onChange={(e) => onChange({ ...node, operator: e.target.value as QueryOperator })}
-          style={{ padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', outline: 'none' }}
+          style={{
+            padding: '0.5rem',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--border-color)',
+            outline: 'none',
+          }}
         >
           <option value="contains">Contém</option>
           <option value="exact">Exato</option>
           <option value="not_contains">Não Contém</option>
         </select>
 
-        <input 
-          type="text" 
-          value={node.value} 
+        <input
+          type="text"
+          value={node.value}
           onChange={(e) => onChange({ ...node, value: e.target.value })}
           placeholder="Termo de busca..."
-          style={{ flexGrow: 1, padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', outline: 'none' }}
+          style={{
+            flexGrow: 1,
+            padding: '0.5rem',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--border-color)',
+            outline: 'none',
+          }}
         />
       </div>
     );
@@ -62,36 +77,45 @@ export const QueryBuilder: React.FC<Props> = ({ node, onChange }) => {
   const addRule = () => {
     onChange({
       ...groupNode,
-      children: [...groupNode.children, { type: 'rule', field: 'all', operator: 'contains', value: '' }]
+      children: [...groupNode.children, { type: 'rule', field: 'all', operator: 'contains', value: '' }],
     });
   };
 
   const addGroup = () => {
     onChange({
       ...groupNode,
-      children: [...groupNode.children, { type: 'group', logicalOperator: 'AND', children: [{ type: 'rule', field: 'all', operator: 'contains', value: '' }] }]
+      children: [
+        ...groupNode.children,
+        {
+          type: 'group',
+          logicalOperator: 'AND',
+          children: [{ type: 'rule', field: 'all', operator: 'contains', value: '' }],
+        },
+      ],
     });
   };
 
   return (
-    <div style={{ 
-      borderLeft: `2px solid ${groupNode.logicalOperator === 'AND' ? 'var(--color-primary)' : 'var(--color-secondary)'}`, 
-      paddingLeft: '1rem', 
-      marginBottom: '1rem' 
-    }}>
+    <div
+      style={{
+        borderLeft: `2px solid ${groupNode.logicalOperator === 'AND' ? 'var(--color-primary)' : 'var(--color-secondary)'}`,
+        paddingLeft: '1rem',
+        marginBottom: '1rem',
+      }}
+    >
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
-        <select 
-          value={groupNode.logicalOperator} 
+        <select
+          value={groupNode.logicalOperator}
           onChange={(e) => onChange({ ...groupNode, logicalOperator: e.target.value as 'AND' | 'OR' })}
-          style={{ 
-            padding: '0.3rem 0.5rem', 
-            borderRadius: 'var(--radius-sm)', 
-            border: 'none', 
+          style={{
+            padding: '0.3rem 0.5rem',
+            borderRadius: 'var(--radius-sm)',
+            border: 'none',
             background: groupNode.logicalOperator === 'AND' ? 'var(--color-primary)' : 'var(--color-secondary)',
             color: 'white',
             fontWeight: 600,
             outline: 'none',
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           <option value="AND">E (AND)</option>
@@ -99,10 +123,20 @@ export const QueryBuilder: React.FC<Props> = ({ node, onChange }) => {
         </select>
 
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button type="button" onClick={addRule} className="btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}>
+          <button
+            type="button"
+            onClick={addRule}
+            className="btn-secondary"
+            style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}
+          >
             <Plus size={14} /> Regra
           </button>
-          <button type="button" onClick={addGroup} className="btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}>
+          <button
+            type="button"
+            onClick={addGroup}
+            className="btn-secondary"
+            style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}
+          >
             <GitBranch size={14} /> Subgrupo
           </button>
         </div>
@@ -115,7 +149,18 @@ export const QueryBuilder: React.FC<Props> = ({ node, onChange }) => {
               <QueryBuilder node={child} onChange={(newChild) => updateChild(index, newChild)} />
             </div>
             {groupNode.children.length > 1 && (
-              <button type="button" onClick={() => removeChild(index)} style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0.5rem' }} title="Remover">
+              <button
+                type="button"
+                onClick={() => removeChild(index)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--color-danger)',
+                  cursor: 'pointer',
+                  padding: '0.5rem',
+                }}
+                title="Remover"
+              >
                 <Trash2 size={16} />
               </button>
             )}

@@ -28,7 +28,7 @@ describe('ExportService', () => {
       index_keywords: 'Artificial Intelligence; Machine Learning',
       references_list: 'Ref 1; Ref 2',
       issn: '1234-5678',
-      document_type: 'Article'
+      document_type: 'Article',
     },
     {
       id: 2,
@@ -52,20 +52,20 @@ describe('ExportService', () => {
       index_keywords: '',
       references_list: '',
       issn: '',
-      document_type: ''
-    }
+      document_type: '',
+    },
   ];
 
   describe('exportToCsv', () => {
     it('correctly exports a list of articles as standard CSV content', () => {
       const csv = exportService.exportToCsv(mockArticles);
-      
+
       const lines = csv.split('\n');
       expect(lines.length).toBe(3); // Header + 2 data rows
-      
+
       // Check headers
       expect(lines[0]).toBe('id,doi,title,authors,year,source,status');
-      
+
       // Check row 1
       const row1 = lines[1];
       expect(row1).toContain('1');
@@ -75,7 +75,7 @@ describe('ExportService', () => {
       expect(row1).toContain('2024');
       expect(row1).toContain('"OpenAlex"');
       expect(row1).toContain('new');
-      
+
       // Check row 2
       const row2 = lines[2];
       expect(row2).toContain('2');
@@ -104,14 +104,14 @@ describe('ExportService', () => {
           year: 2022,
           doi: '',
           source_databases: 'WoS, "Scopus"',
-          status: 'new'
-        }
+          status: 'new',
+        },
       ];
-      
+
       const csv = exportService.exportToCsv(articles);
       const lines = csv.split('\n');
       const dataRow = lines[1];
-      
+
       expect(dataRow).toContain('"Paper with ""Quotes"""');
       expect(dataRow).toContain('"Doe, ""Johnny"""');
       expect(dataRow).toContain('"WoS, ""Scopus"""');
@@ -121,10 +121,10 @@ describe('ExportService', () => {
   describe('exportToBiblioshiny', () => {
     it('starts with a UTF-8 BOM and contains exactly 45 columns in header and data rows', () => {
       const csv = exportService.exportToBiblioshiny(mockArticles);
-      
+
       // Verify BOM
       expect(csv.startsWith('\uFEFF')).toBe(true);
-      
+
       // Strip BOM for further checks
       const cleanCsv = csv.slice(1);
       const lines = cleanCsv.split('\r\n');
@@ -181,7 +181,9 @@ describe('ExportService', () => {
       expect(row1Cols[13]).toBe('https://doi.org/10.1000/xyz123'); // Link
       expect(row1Cols[14]).toBe('AI Institute, Brazil'); // Affiliations
       // Authors with affiliations
-      expect(row1Cols[15]).toBe('Doe J., AI Institute, Brazil; Smith JJ., AI Institute, Brazil; Silva AB., AI Institute, Brazil');
+      expect(row1Cols[15]).toBe(
+        'Doe J., AI Institute, Brazil; Smith JJ., AI Institute, Brazil; Silva AB., AI Institute, Brazil',
+      );
       // Abstract handles escaping and normalizes whitespace
       expect(row1Cols[16]).toBe('This is a "beautiful" abstract with   newlines and   carriage returns.');
       expect(row1Cols[17]).toBe('AI; ML; Deep Learning');
@@ -222,15 +224,15 @@ describe('ExportService', () => {
           authors,
           year: 2026,
           source_databases: 'Scopus',
-          status: 'new'
+          status: 'new',
         };
         const csv = exportService.exportToBiblioshiny([testArt]);
         const cleanLines = csv.slice(1).split('\r\n');
         // Column index 0: Authors (abbreviated), 1: Author full names
-        const parts = cleanLines[1].split('","').map(s => s.replace(/"/g, ''));
+        const parts = cleanLines[1].split('","').map((s) => s.replace(/"/g, ''));
         return {
           abbreviated: parts[0],
-          full: parts[1]
+          full: parts[1],
         };
       };
 
@@ -277,7 +279,7 @@ describe('ExportService', () => {
           year: 2026,
           source_databases: 'Scopus',
           status: 'new',
-          pages
+          pages,
         };
         const csv = exportService.exportToBiblioshiny([testArt]);
         const cleanLines = csv.slice(1).split('\r\n');
@@ -310,7 +312,7 @@ describe('ExportService', () => {
           year: 2026,
           source_databases: 'Scopus',
           status: 'new',
-          doi
+          doi,
         };
         const csv = exportService.exportToBiblioshiny([testArt]);
         const cleanLines = csv.slice(1).split('\r\n');

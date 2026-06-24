@@ -1,9 +1,22 @@
+export type AISkill = 'metadata' | 'summary' | 'extraction' | 'embeddings';
+export type AIProvider = 'openai' | 'gemini' | 'anthropic' | 'ollama';
+
+export interface AIModelConfig {
+  id: number;
+  skill: AISkill;
+  provider: AIProvider;
+  model_name: string;
+  updated_at: string;
+}
+
 export interface Project {
   id: number;
   name: string;
   created_at: string;
   last_executed_at?: string;
+  stats?: ProjectStats;
 }
+
 
 export interface Article {
   id: number;
@@ -28,7 +41,7 @@ export interface Article {
   citation_count?: number;
   source_query?: string;
   source_databases?: string;
-  csl_json?: string | any;
+  csl_json?: unknown;
   local_file_path?: string;
   url?: string;
   accessed?: string;
@@ -63,10 +76,11 @@ export interface Annotation {
 }
 
 export interface Highlight {
+  content_text?: string;
   id: string; // The UI uses string id for highlight
   article_id: number;
   color: string;
-  position_data: any; // Coordinate data for the highlighter
+  position_data: unknown; // Coordinate data for the highlighter
   annotation_id?: number;
   comment?: string; // Content of the linked annotation
 }
@@ -131,6 +145,7 @@ export enum IpcChannel {
   EXPORT_BIBLIOSHINY = 'export:biblioshiny',
   EXPORT_XLSX = 'export:xlsx',
   DIALOG_OPEN_FILE = 'dialog:openFile',
+  DIALOG_SAVE_FILE = 'dialog:saveFile',
   DIALOG_OPEN_MULTIPLE_FILES = 'dialog:openMultipleFiles',
   ARTICLES_CREATE_FROM_PDFS = 'articles:createFromPdfs',
   ARTICLES_UPDATE_METADATA = 'articles:updateMetadata',
@@ -144,6 +159,9 @@ export enum IpcChannel {
   AI_GENERATE_SUMMARY = 'ai:generateSummary',
   AI_MASSIVE_EXTRACTION = 'ai:massiveExtraction',
   AI_EXTRACT_METADATA = 'ai:extractMetadata',
+  AI_MODEL_CONFIG_GET_ALL = 'aiModelConfig:getAll',
+  AI_MODEL_CONFIG_UPDATE = 'aiModelConfig:update',
+  AI_MODEL_CONFIG_RESTORE = 'aiModelConfig:restore',
   PENDING_HIGHLIGHTS_GET = 'pendingHighlights:get',
   PENDING_HIGHLIGHTS_DELETE = 'pendingHighlights:delete',
   PROJECT_DOCUMENTS_GET = 'projectDocuments:get',
@@ -172,6 +190,15 @@ export enum IpcChannel {
   BACKUP_RESTORE_MERGE = 'backup:restoreMerge',
   BACKUP_LIST_AUTO = 'backup:listAuto',
   BACKUP_RESTORE_AUTO = 'backup:restoreAuto',
+  QUESTION_SETS_LIST = 'questionSets:list',
+  QUESTION_SETS_GET = 'questionSets:get',
+  QUESTION_SETS_CREATE = 'questionSets:create',
+  QUESTION_SETS_UPDATE = 'questionSets:update',
+  QUESTION_SETS_DELETE = 'questionSets:delete',
+  QUESTION_SETS_DUPLICATE = 'questionSets:duplicate',
+  INVESTIGATION_RESULTS_SAVE = 'investigationResults:save',
+  INVESTIGATION_RESULTS_GET = 'investigationResults:get',
+  INVESTIGATION_RESULTS_GET_BY_ARTICLE = 'investigationResults:getByArticle',
 }
 
 export interface CategoryOption {
@@ -215,4 +242,57 @@ export interface MassiveInvestigation {
   created_at: string;
 }
 
+export interface QuestionSet {
+  id: number;
+  project_id: number | null;
+  name: string;
+  description: string | null;
+  questions: string; // JSON string array
+  created_at: string;
+  updated_at: string;
+}
 
+export interface InvestigationResult {
+  id: number;
+  investigation_id: number;
+  article_id: number;
+  question: string;
+  answer: string | null;
+  quote: string | null;
+  status: 'success' | 'error' | 'skipped';
+  error_message: string | null;
+  created_at: string;
+}
+
+export type TabId = 'overview' | 'articles' | 'ai' | 'history' | 'diaries';
+
+export interface TrashItem {
+  id: number;
+  title?: string;
+  content?: string;
+  name?: string;
+  type: 'project' | 'article' | 'annotation';
+  deleted_at: string;
+}
+
+export interface SearchHistoryRecord {
+  query: string;
+  count: number;
+  error?: string;
+  timestamp: string;
+}
+
+export interface AIExtractionResult {
+  article: Article;
+  result: Record<string, unknown>;
+}
+
+export interface ProjectStats {
+  active: number;
+  read: number;
+  archived: number;
+  total: number;
+  withPdf: number;
+  diaryDates: string[];
+}
+export interface RAGExtractionResult { question: string; synthesizedAnswer: string; confidenceScore: number; evidences: Array<{ text: string; page: number; bbox: { x: number; y: number; w: number; h: number } | null; reasoning: string; score?: number; }>; }

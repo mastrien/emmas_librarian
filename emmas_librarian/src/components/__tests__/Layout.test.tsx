@@ -3,19 +3,21 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Layout } from '../common/Layout';
+
+import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
 
+const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
-  projectService: {
-    getAppVersion: vi.fn(),
-  }
+  projectService: {}
 }));
 
 describe('Layout Component', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    Object.assign(projectService, fakeService);
+    fakeService.reset();
     localStorage.clear();
-    (projectService.getAppVersion as any).mockResolvedValue('1.1.10');
+    fakeService.getAppVersion.mockResolvedValue('1.1.10');
   });
 
   it('renders standard layout header, content, and sidebar buttons', async () => {
@@ -24,12 +26,12 @@ describe('Layout Component', () => {
         <Layout>
           <div>Test Children</div>
         </Layout>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Wait for version check
     await waitFor(() => {
-      expect(projectService.getAppVersion).toHaveBeenCalled();
+      expect(fakeService.getAppVersion).toHaveBeenCalled();
     });
 
     expect(screen.getAllByText("Emma's Librarian")[0]).toBeInTheDocument();
@@ -44,11 +46,11 @@ describe('Layout Component', () => {
         <Layout>
           <div>Reader Mode Children</div>
         </Layout>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     await waitFor(() => {
-      expect(projectService.getAppVersion).toHaveBeenCalled();
+      expect(fakeService.getAppVersion).toHaveBeenCalled();
     });
 
     // Reader layout shouldn't have header nav items like "Projetos"
@@ -63,7 +65,7 @@ describe('Layout Component', () => {
         <Layout>
           <div>Content</div>
         </Layout>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     await waitFor(() => {

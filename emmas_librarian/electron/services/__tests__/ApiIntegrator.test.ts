@@ -25,36 +25,36 @@ describe('ApiIntegrator', () => {
             authorships: [
               {
                 author: { display_name: 'John Doe' },
-                institutions: [{ display_name: 'University of Test' }]
-              }
+                institutions: [{ display_name: 'University of Test' }],
+              },
             ],
             abstract_inverted_index: {
-              'This': [0],
-              'is': [1],
-              'a': [2],
-              'test': [3]
+              This: [0],
+              is: [1],
+              a: [2],
+              test: [3],
             },
             keywords: [{ display_name: 'KeywordA' }],
             concepts: [{ display_name: 'ConceptA' }],
             primary_location: {
-              source: { display_name: 'Test Journal', issn_l: '1234-5678' }
+              source: { display_name: 'Test Journal', issn_l: '1234-5678' },
             },
             biblio: {
               volume: '10',
               issue: '2',
               first_page: '15',
-              last_page: '20'
+              last_page: '20',
             },
             referenced_works: ['ref1', 'ref2'],
             type: 'journal-article',
-            cited_by_count: 5
-          }
-        ]
+            cited_by_count: 5,
+          },
+        ],
       };
 
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: async () => mockResult
+        json: async () => mockResult,
       } as any);
 
       const articles = await api.searchOpenAlex('filter=title.search:test', 'citations', 10);
@@ -91,7 +91,7 @@ describe('ApiIntegrator', () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
         status: 500,
-        json: async () => ({ message: 'Internal Server Error' })
+        json: async () => ({ message: 'Internal Server Error' }),
       } as any);
 
       await expect(api.searchOpenAlex('test', 'relevance', 50)).rejects.toThrow('Internal Server Error');
@@ -111,8 +111,8 @@ describe('ApiIntegrator', () => {
                 {
                   given: 'Alice',
                   family: 'Smith',
-                  affiliation: [{ name: 'Test Lab' }]
-                }
+                  affiliation: [{ name: 'Test Lab' }],
+                },
               ],
               abstract: '<p>A beautiful abstract</p>',
               subject: ['SubjectA', 'SubjectB'],
@@ -123,15 +123,15 @@ describe('ApiIntegrator', () => {
               reference: [{ DOI: '10.1000/ref' }],
               type: 'journal-article',
               ISSN: ['9876-5432'],
-              'is-referenced-by-count': 12
-            }
-          ]
-        }
+              'is-referenced-by-count': 12,
+            },
+          ],
+        },
       };
 
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: async () => mockResult
+        json: async () => mockResult,
       } as any);
 
       const articles = await api.searchCrossref('query=test', 'date', 20);
@@ -167,7 +167,7 @@ describe('ApiIntegrator', () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
         status: 400,
-        json: async () => ({ message: 'Bad Request' })
+        json: async () => ({ message: 'Bad Request' }),
       } as any);
 
       await expect(api.searchCrossref('query=test', 'relevance', 50)).rejects.toThrow('Bad Request');
@@ -181,15 +181,15 @@ describe('ApiIntegrator', () => {
               DOI: '10.1000/crossref456',
               title: ['Empty Arrays Title'],
               subject: [],
-              reference: [{ unstructured: 'Some unstructured ref' }, {}]
-            }
-          ]
-        }
+              reference: [{ unstructured: 'Some unstructured ref' }, {}],
+            },
+          ],
+        },
       };
 
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: async () => mockResult
+        json: async () => mockResult,
       } as any);
 
       // Call without explicit limit, should default to 50
@@ -230,15 +230,15 @@ describe('ApiIntegrator', () => {
               'prism:pageRange': '200-205',
               subtypeDescription: 'Article',
               'citedby-count': '25',
-              'prism:issn': '2468-1357'
-            }
-          ]
-        }
+              'prism:issn': '2468-1357',
+            },
+          ],
+        },
       };
 
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: async () => mockResult
+        json: async () => mockResult,
       } as any);
 
       const articles = await api.searchScopus('TITLE("test")', 'scopus_key', 'citations', 50);
@@ -250,7 +250,7 @@ describe('ApiIntegrator', () => {
       expect(urlCall).toContain('count=50');
       expect(init.headers).toEqual({
         'X-ELS-APIKey': 'scopus_key',
-        'Accept': 'application/json'
+        Accept: 'application/json',
       });
 
       expect(articles).toHaveLength(1);
@@ -274,10 +274,12 @@ describe('ApiIntegrator', () => {
     it('throws key invalid error on 401 response', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
-        status: 401
+        status: 401,
       } as any);
 
-      await expect(api.searchScopus('query', 'bad_key', 'relevance', 50)).rejects.toThrow('Chave de API inválida ou expirada');
+      await expect(api.searchScopus('query', 'bad_key', 'relevance', 50)).rejects.toThrow(
+        'Chave de API inválida ou expirada',
+      );
     });
   });
 
@@ -296,28 +298,28 @@ describe('ApiIntegrator', () => {
             identifiers: { doi: '10.1000/wos123' },
             title: 'WoS Title',
             names: {
-              authors: [{ displayName: 'Smith, J.' }, { displayName: 'Jones, M.' }]
+              authors: [{ displayName: 'Smith, J.' }, { displayName: 'Jones, M.' }],
             },
             publication: { year: 2022 },
             abstract: 'WoS Abstract',
             keywords: {
-              authorKeywords: ['WosKey1', 'WosKey2']
+              authorKeywords: ['WosKey1', 'WosKey2'],
             },
             source: {
               sourceTitle: 'WoS Journal',
               volume: '5',
               issue: '1',
               pages: { range: '50-60' },
-              documentType: 'Article'
+              documentType: 'Article',
             },
-            citations: { length: 3 }
-          }
-        ]
+            citations: { length: 3 },
+          },
+        ],
       };
 
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: async () => mockResult
+        json: async () => mockResult,
       } as any);
 
       const articles = await api.searchWoS('TS=test', 'wos_key', 'date', 15);
@@ -330,7 +332,7 @@ describe('ApiIntegrator', () => {
       expect(urlCall).toContain('limit=15');
       expect(init.headers).toEqual({
         'X-ApiKey': 'wos_key',
-        'Accept': 'application/json'
+        Accept: 'application/json',
       });
 
       expect(articles).toHaveLength(1);
@@ -354,7 +356,7 @@ describe('ApiIntegrator', () => {
       const mockResult = { hits: [] };
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: async () => mockResult
+        json: async () => mockResult,
       } as any);
 
       // Relevance sort
@@ -376,10 +378,12 @@ describe('ApiIntegrator', () => {
     it('throws key invalid error on 401 response', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
-        status: 401
+        status: 401,
       } as any);
 
-      await expect(api.searchWoS('query', 'bad_key', 'relevance', 50)).rejects.toThrow('Chave de API inválida ou expirada');
+      await expect(api.searchWoS('query', 'bad_key', 'relevance', 50)).rejects.toThrow(
+        'Chave de API inválida ou expirada',
+      );
     });
 
     it('handles empty keywords and default limit', async () => {
@@ -389,15 +393,15 @@ describe('ApiIntegrator', () => {
             uid: 'WOS:000456',
             title: 'WoS Empty Keywords Title',
             keywords: {
-              authorKeywords: []
-            }
-          }
-        ]
+              authorKeywords: [],
+            },
+          },
+        ],
       };
 
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: async () => mockResult
+        json: async () => mockResult,
       } as any);
 
       // Call without explicit limit, should default to 50
@@ -417,45 +421,51 @@ describe('ApiIntegrator', () => {
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: false,
         status: 400,
-        text: async () => JSON.stringify({
-          error: {
-            message: 'Ocorreu um erro na consulta do WoS'
-          }
-        })
+        text: async () =>
+          JSON.stringify({
+            error: {
+              message: 'Ocorreu um erro na consulta do WoS',
+            },
+          }),
       } as any);
 
-      await expect(api.searchWoS('invalid_query', 'wos_key', 'relevance'))
-        .rejects.toThrow('Ocorreu um erro na consulta do WoS');
+      await expect(api.searchWoS('invalid_query', 'wos_key', 'relevance')).rejects.toThrow(
+        'Ocorreu um erro na consulta do WoS',
+      );
 
       // Test case 2: raw message is object without message property
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: false,
         status: 400,
-        text: async () => JSON.stringify({
-          error: {
-            code: 'INVALID_QUERY',
-            reason: 'Unknown field'
-          }
-        })
+        text: async () =>
+          JSON.stringify({
+            error: {
+              code: 'INVALID_QUERY',
+              reason: 'Unknown field',
+            },
+          }),
       } as any);
 
-      await expect(api.searchWoS('invalid_query', 'wos_key', 'relevance'))
-        .rejects.toThrow('{"code":"INVALID_QUERY","reason":"Unknown field"}');
+      await expect(api.searchWoS('invalid_query', 'wos_key', 'relevance')).rejects.toThrow(
+        '{"code":"INVALID_QUERY","reason":"Unknown field"}',
+      );
 
       // Test case 3: error details present
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: false,
         status: 400,
-        text: async () => JSON.stringify({
-          message: 'Bad Request',
-          details: {
-            invalidFields: ['q']
-          }
-        })
+        text: async () =>
+          JSON.stringify({
+            message: 'Bad Request',
+            details: {
+              invalidFields: ['q'],
+            },
+          }),
       } as any);
 
-      await expect(api.searchWoS('invalid_query', 'wos_key', 'relevance'))
-        .rejects.toThrow('Bad Request: {"invalidFields":["q"]}');
+      await expect(api.searchWoS('invalid_query', 'wos_key', 'relevance')).rejects.toThrow(
+        'Bad Request: {"invalidFields":["q"]}',
+      );
     });
   });
 
@@ -468,7 +478,7 @@ describe('ApiIntegrator', () => {
     it('covers searchOpenAlex sort and filter branches', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({ results: [] })
+        json: async () => ({ results: [] }),
       } as any);
 
       // No clean filter and date sort
@@ -486,7 +496,7 @@ describe('ApiIntegrator', () => {
     it('covers searchScopus date and relevance sort branches', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({ 'search-results': { entry: [] } })
+        json: async () => ({ 'search-results': { entry: [] } }),
       } as any);
 
       await api.searchScopus('q', 'key', 'date');
@@ -501,7 +511,7 @@ describe('ApiIntegrator', () => {
     it('covers searchWoS date and relevance sort branches', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: async () => ({ hits: [] })
+        json: async () => ({ hits: [] }),
       } as any);
 
       await api.searchWoS('q', 'key', 'date');
@@ -517,7 +527,7 @@ describe('ApiIntegrator', () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
         status: 502,
-        text: async () => 'Bad Gateway'
+        text: async () => 'Bad Gateway',
       } as any);
 
       await expect(api.searchWoS('q', 'key', 'relevance')).rejects.toThrow('Erro 502 no Web of Science - Bad Gateway');
@@ -527,7 +537,9 @@ describe('ApiIntegrator', () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
         status: 500,
-        json: async () => { throw new Error('Not JSON'); }
+        json: async () => {
+          throw new Error('Not JSON');
+        },
       } as any);
 
       await expect(api.searchOpenAlex('q', 'relevance')).rejects.toThrow('Erro 500 no OpenAlex');
@@ -537,11 +549,8 @@ describe('ApiIntegrator', () => {
       // 1. normalizeOpenAlex
       const rawOpenAlex = {
         doi: '10.1000/xyz',
-        authorships: [
-          { author: { display_name: 'SingleName' } },
-          { author: null }
-        ],
-        keywords: ['DirectKeywordString']
+        authorships: [{ author: { display_name: 'SingleName' } }, { author: null }],
+        keywords: ['DirectKeywordString'],
       };
       const normalizedAlex = (api as any).normalizeOpenAlex(rawOpenAlex);
       expect(normalizedAlex.doi).toBe('10.1000/xyz');
@@ -553,9 +562,9 @@ describe('ApiIntegrator', () => {
         issued: {}, // missing date-parts
         author: [
           { given: 'John', family: 'Doe' },
-          { given: 'Alice' } // missing family
+          { given: 'Alice' }, // missing family
         ],
-        abstract: 'Abstract with no HTML tags'
+        abstract: 'Abstract with no HTML tags',
       };
       const normalizedCrossref = (api as any).normalizeCrossref(rawCrossref);
       expect(normalizedCrossref.year).toBeUndefined();
@@ -565,7 +574,7 @@ describe('ApiIntegrator', () => {
       // 3. normalizeScopus creator fallback
       const rawScopus = {
         'dc:creator': 'Creator Name',
-        'prism:coverDate': '2026-06-03'
+        'prism:coverDate': '2026-06-03',
       };
       const normalizedScopus = (api as any).normalizeScopus(rawScopus);
       expect(normalizedScopus.authors).toBe('Creator Name');
@@ -573,4 +582,3 @@ describe('ApiIntegrator', () => {
     });
   });
 });
-

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import type { TrashItem, AIModelConfig, AISkill, AIProvider } from '../types';
 import { projectService } from '../services/api';
 import { Settings, Moon, Sun, Key, Save, CheckCircle, Brain, ShieldAlert, Trash2, RotateCcw, X, Download, Upload, Shuffle } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -22,6 +23,11 @@ export const SettingsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [appVersion, setAppVersion] = useState('');
+  const [aiConfigs, setAiConfigs] = useState<AIModelConfig[]>([]);
+
+  const [ragChunkSize, setRagChunkSize] = useState('1000');
+  const [ragChunkOverlap, setRagChunkOverlap] = useState('200');
+  const [ragTopK, setRagTopK] = useState('10');
 
   const [autoBackups, setAutoBackups] = useState(true);
   const [trashItems, setTrashItems] = useState<any[]>([]);
@@ -45,6 +51,9 @@ export const SettingsPage: React.FC = () => {
       const olUrl = await projectService.getSetting('api_key_ollama');
       const olMod = await projectService.getSetting('ollama_model');
       const backupsEnabledSetting = await projectService.getSetting('enable_auto_backups');
+      const rSize = await projectService.getSetting('rag_chunk_size');
+      const rOverlap = await projectService.getSetting('rag_chunk_overlap');
+      const rTopK = await projectService.getSetting('rag_top_k');
 
       if (sKey) setScopusKey(sKey);
       if (wKey) setWosKey(wKey);
@@ -53,6 +62,9 @@ export const SettingsPage: React.FC = () => {
       if (gKey) setGeminiKey(gKey);
       if (olUrl) setOllamaUrl(olUrl);
       if (olMod) setOllamaModel(olMod);
+      if (rSize) setRagChunkSize(rSize);
+      if (rOverlap) setRagChunkOverlap(rOverlap);
+      if (rTopK) setRagTopK(rTopK);
       setAutoBackups(backupsEnabledSetting !== 'false');
       
       try {
@@ -67,6 +79,13 @@ export const SettingsPage: React.FC = () => {
         setTrashItems(trash);
       } catch (err) {
         console.error('Failed to load trash items:', err);
+      }
+
+      try {
+        const configs = await projectService.getAiModelConfigs();
+        setAiConfigs(configs);
+      } catch (err) {
+        console.error('Failed to load AI configs:', err);
       }
     };
     loadSettings();
@@ -96,9 +115,31 @@ export const SettingsPage: React.FC = () => {
     await projectService.setSetting('api_key_gemini', geminiKey);
     await projectService.setSetting('api_key_ollama', ollamaUrl);
     await projectService.setSetting('ollama_model', ollamaModel);
+    await projectService.setSetting('rag_chunk_size', ragChunkSize);
+    await projectService.setSetting('rag_chunk_overlap', ragChunkOverlap);
+    await projectService.setSetting('rag_top_k', ragTopK);
+
+    for (const conf of aiConfigs) {
+      await projectService.updateAiModelConfig(conf.skill, conf.provider, conf.model_name);
+    }
+
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleRestoreAiDefaults = async () => {
+    if (confirm('Restaurar as configurações avançadas de IA para os padrões originais?')) {
+      await projectService.restoreAiModelConfigDefaults();
+      const configs = await projectService.getAiModelConfigs();
+      setAiConfigs(configs);
+    }
+  };
+
+  const handleUpdateAiConfig = (skill: AISkill, field: 'provider' | 'model_name', value: string) => {
+    setAiConfigs(prev => prev.map(c => 
+      c.skill === skill ? { ...c, [field]: value } : c
+    ));
   };
 
   const handleToggleAutoBackups = async (enabled: boolean) => {
@@ -391,26 +432,18 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Anthropic API Key <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>(Em breve)</span></label>
-              <div style={{ position: 'relative', opacity: 0.5 }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Anthropic API Key</label>
+              <div style={{ position: 'relative' }}>
                 <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Key size={18} /></div>
-                <input type="password" value={anthropicKey} disabled onChange={(e) => setAnthropicKey(e.target.value)} placeholder="sk-ant-..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none', cursor: 'not-allowed' }} />
+                <input type="password" value={anthropicKey} onChange={(e) => setAnthropicKey(e.target.value)} placeholder="sk-ant-..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none' }} title="Ex: claude-3-5-sonnet-20240620" />
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Ollama URL <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>(Ex: http://127.0.0.1:11434/v1)</span></label>
-                <div style={{ position: 'relative' }}>
-                  <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Key size={18} /></div>
-                  <input type="text" value={ollamaUrl} onChange={(e) => setOllamaUrl(e.target.value)} placeholder="http://127.0.0.1:11434/v1" style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none' }} />
-                </div>
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Modelo do Ollama</label>
-                <div style={{ position: 'relative' }}>
-                  <input type="text" value={ollamaModel} onChange={(e) => setOllamaModel(e.target.value)} placeholder="Ex: llama3.1" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none' }} />
-                </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Ollama URL <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>(Ex: http://127.0.0.1:11434/v1)</span></label>
+              <div style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Key size={18} /></div>
+                <input type="text" value={ollamaUrl} onChange={(e) => setOllamaUrl(e.target.value)} placeholder="http://127.0.0.1:11434/v1" style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none' }} />
               </div>
             </div>
 
@@ -420,8 +453,109 @@ export const SettingsPage: React.FC = () => {
                 {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar Chaves'}
               </button>
             </div>
+
+            {/* Advanced AI Settings Section (Moved Inside) */}
+            <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--border-color)' }}>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: 'var(--text-heading)' }}>
+                Configurações Avançadas por Funcionalidade
+              </h3>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                Personalize qual provedor e modelo devem ser utilizados para cada tipo de funcionalidade.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {aiConfigs.map(conf => (
+                  <div key={conf.skill} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1rem', background: 'var(--bg-main)' }}>
+                    <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-heading)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {conf.skill === 'metadata' && '📄 Extração de Metadados'}
+                      {conf.skill === 'summary' && '📝 Geração de Resumos'}
+                      {conf.skill === 'extraction' && '🔍 Investigação Massiva (RAG)'}
+                      {conf.skill === 'embeddings' && '🧮 Embeddings (Vetorização)'}
+                    </h4>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Provedor</label>
+                        <select 
+                          value={conf.provider}
+                          onChange={(e) => handleUpdateAiConfig(conf.skill, 'provider', e.target.value as AIProvider)}
+                          className="input-field"
+                          style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', outline: 'none' }}
+                        >
+                          <option value="gemini">Google Gemini</option>
+                          <option value="openai">OpenAI</option>
+                          <option value="anthropic">Anthropic</option>
+                          <option value="ollama">Ollama (Local)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Modelo</label>
+                        <input 
+                          type="text" 
+                          value={conf.model_name}
+                          onChange={(e) => handleUpdateAiConfig(conf.skill, 'model_name', e.target.value)}
+                          className="input-field"
+                          style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', outline: 'none' }}
+                          placeholder="Ex: gemini-2.5-flash"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+                  <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-heading)' }}>
+                    Parâmetros Avançados de RAG (Investigação Massiva)
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Tamanho do Chunk (caracteres)</label>
+                      <input 
+                        type="number" 
+                        value={ragChunkSize}
+                        onChange={(e) => setRagChunkSize(e.target.value)}
+                        className="input-field"
+                        style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', outline: 'none' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Overlap (caracteres)</label>
+                      <input 
+                        type="number" 
+                        value={ragChunkOverlap}
+                        onChange={(e) => setRagChunkOverlap(e.target.value)}
+                        className="input-field"
+                        style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', outline: 'none' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Chunks Recuperados (Top K)</label>
+                      <input 
+                        type="number" 
+                        value={ragTopK}
+                        onChange={(e) => setRagTopK(e.target.value)}
+                        className="input-field"
+                        style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', outline: 'none' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button onClick={handleRestoreAiDefaults} className="btn-secondary" style={{ color: 'var(--color-danger)', fontSize: '0.9rem', padding: '0.5rem 1rem' }}>
+                    <RotateCcw size={14} style={{ marginRight: '0.4rem' }} /> Restaurar Padrões
+                  </button>
+                  <button onClick={handleSaveKeys} className="btn-primary" disabled={saving} style={{ minWidth: '150px' }}>
+                    {saved ? <CheckCircle size={18} style={{ marginRight: '0.4rem' }} /> : <Save size={18} style={{ marginRight: '0.4rem' }} />}
+                    {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar Configuração'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
+
 
         {/* Backup Settings Section */}
         <div className="card" style={{ padding: '2rem' }}>

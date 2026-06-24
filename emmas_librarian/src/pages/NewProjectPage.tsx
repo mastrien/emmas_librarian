@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { projectService } from '../services/api';
+import { useProjectService } from '../contexts/ServicesContext';
 import { Plus, Loader2 } from 'lucide-react';
 
 export const NewProjectPage: React.FC = () => {
+  const projectService = useProjectService();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -12,22 +13,22 @@ export const NewProjectPage: React.FC = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    
+
     setLoading(true);
     setError(null);
     try {
       const project = await projectService.createProject(name);
       navigate(`/projects/${project.id}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       let errorMsg = 'Erro ao criar projeto';
       if (err) {
-        if (err.message) {
-          errorMsg = err.message;
+        if ((err as Error).message) {
+          errorMsg = (err as Error).message;
         } else if (typeof err === 'string') {
           errorMsg = err;
         } else if (typeof err === 'object') {
           try {
-            errorMsg = err.error || JSON.stringify(err);
+            errorMsg = (err as {error?: string}).error || JSON.stringify(err);
           } catch {
             errorMsg = String(err);
           }
@@ -47,49 +48,63 @@ export const NewProjectPage: React.FC = () => {
         <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>Novo Projeto</h1>
         <p style={{ margin: 0, color: 'var(--text-muted)' }}>Dê um nome para sua nova biblioteca de artigos.</p>
       </div>
-      
-      <form onSubmit={handleCreate} className="card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+
+      <form
+        onSubmit={handleCreate}
+        className="card"
+        style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}
+      >
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Nome do Projeto</label>
-          <input 
-            type="text" 
-            value={name} 
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>
+            Nome do Projeto
+          </label>
+          <input
+            type="text"
+            value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ex: Sistemas de Recomendação na Educação"
-            style={{ 
-              width: '100%', 
-              padding: '0.8rem 1rem', 
-              fontSize: '1rem', 
-              border: '1px solid var(--border-color)', 
+            style={{
+              width: '100%',
+              padding: '0.8rem 1rem',
+              fontSize: '1rem',
+              border: '1px solid var(--border-color)',
               borderRadius: 'var(--radius-md)',
               background: 'var(--bg-main)',
               color: 'var(--text-main)',
               outline: 'none',
-              transition: 'border-color var(--transition-fast)'
+              transition: 'border-color var(--transition-fast)',
             }}
-            onFocus={(e) => e.currentTarget.style.borderColor = 'var(--color-primary)'}
-            onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+            onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--color-primary)')}
+            onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border-color)')}
             required
             autoFocus
           />
         </div>
 
         {error && (
-          <div style={{ color: '#ef4444', background: '#fee2e2', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid #fca5a5' }}>
+          <div
+            style={{
+              color: '#ef4444',
+              background: '#fee2e2',
+              padding: '1rem',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid #fca5a5',
+            }}
+          >
             {error}
           </div>
         )}
 
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={loading || !name.trim()}
           className="btn-primary"
-          style={{ 
+          style={{
             width: '100%',
-            padding: '1rem', 
+            padding: '1rem',
             fontSize: '1.1rem',
             cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.7 : 1
+            opacity: loading ? 0.7 : 1,
           }}
         >
           {loading ? <Loader2 className="animate-spin" /> : <Plus size={20} />}

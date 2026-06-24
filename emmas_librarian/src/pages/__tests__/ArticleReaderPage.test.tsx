@@ -1,41 +1,50 @@
-import { describe, it, expect, vi } from 'vitest';
+global.URL.createObjectURL = vi.fn(() => "blob:mock");
+global.URL.revokeObjectURL = vi.fn();
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ArticleReaderPage } from '../ArticleReaderPage';
-import { projectService } from '../../services/api';
+import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
 
 vi.mock('react-pdf-highlighter', () => ({
-  PdfLoader: ({ children }: any) => <div data-testid="pdf-loader">{children({ numPages: 10, getPage: vi.fn() })}</div>,
-  PdfHighlighter: () => <div data-testid="pdf-highlighter" className="pdfViewer" />,
+  PdfLoader: ({ children }: { children: (pdf: unknown) => React.ReactNode }) => <div data-testid="pdf-loader">{children({ numPages: 10, getPage: vi.fn() })}</div>,
+  PdfHighlighter: (props: any) => {
+    // @ts-ignore
+    global.mockPdfHighlighterProps = props;
+    return <div data-testid="pdf-highlighter" className="pdfViewer" />;
+  },
   Highlight: () => <div data-testid="highlight" />,
   Popup: () => <div data-testid="popup" />,
   AreaHighlight: () => <div data-testid="area-highlight" />,
 }));
 
+import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
+import { projectService } from '../../services/api';
+
+const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
-  projectService: {
-    getProject: vi.fn().mockResolvedValue({ id: 1, name: 'Project 1' }),
-    getArticle: vi.fn().mockResolvedValue({ id: 1, title: 'Article', local_file_path: 'file.pdf', project_id: 1 }),
-    getAnnotations: vi.fn().mockResolvedValue([]),
-    getHighlights: vi.fn().mockResolvedValue([]),
-    getPendingHighlights: vi.fn().mockResolvedValue([]),
-    generateSummary: vi.fn().mockResolvedValue({}),
-    getSetting: vi.fn().mockResolvedValue(''),
-    getProjectWritingPad: vi.fn().mockResolvedValue(''),
-    getProjectCategories: vi.fn().mockResolvedValue([]),
-    getArticleCategories: vi.fn().mockResolvedValue([]),
-    getPdfBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(8)),
-  }
+  projectService: {}
 }));
 
 describe('ArticleReaderPage', () => {
+  beforeEach(() => {
+    Object.assign(projectService, fakeService);
+    fakeService.reset();
+    // Re-apply defaults that the component needs on every render
+    fakeService.getProject.mockResolvedValue({ id: 1, name: 'Project 1', created_at: '' });
+    fakeService.getArticle.mockResolvedValue({ id: 1, title: 'Article', local_file_path: 'file.pdf', project_id: 1, status: 'new' });
+    fakeService.getPdfBuffer.mockResolvedValue(new ArrayBuffer(8));
+  });
+
   it('renders correctly', async () => {
     const { container } = render(
       <MemoryRouter initialEntries={['/articles/1']}>
-        <Routes>
-          <Route path="/articles/:id" element={<ArticleReaderPage />} />
-        </Routes>
-      </MemoryRouter>
+        <GlobalErrorProvider>
+          <Routes>
+            <Route path="/articles/:id" element={<ArticleReaderPage />} />
+          </Routes>
+        </GlobalErrorProvider>
+      </MemoryRouter>,
     );
     expect(container).toBeInTheDocument();
   });
@@ -43,9 +52,9 @@ describe('ArticleReaderPage', () => {
   it('loads AI summary from cache if present', async () => {
     const mockSummary = {
       generalSummary: 'This is a general summary',
-      sectionSummary: 'This is a section summary'
+      sectionSummary: 'This is a section summary',
     };
-    vi.mocked(projectService.getArticle).mockResolvedValueOnce({
+    fakeService.getArticle.mockResolvedValueOnce({
       id: 1,
       project_id: 1,
       title: 'Article with AI Summary',
@@ -53,21 +62,23 @@ describe('ArticleReaderPage', () => {
       ai_summary: JSON.stringify(mockSummary),
       status: 'new',
       source_databases: '["OpenAlex"]',
-      source_query: ''
+      source_query: '',
     });
 
     const { container } = render(
       <MemoryRouter initialEntries={['/articles/1']}>
-        <Routes>
-          <Route path="/articles/:id" element={<ArticleReaderPage />} />
-        </Routes>
-      </MemoryRouter>
+        <GlobalErrorProvider>
+          <Routes>
+            <Route path="/articles/:id" element={<ArticleReaderPage />} />
+          </Routes>
+        </GlobalErrorProvider>
+      </MemoryRouter>,
     );
     expect(container).toBeInTheDocument();
   });
 
   it('displays the abstract preview and DOI search link when no PDF is attached', async () => {
-    vi.mocked(projectService.getArticle).mockResolvedValueOnce({
+    fakeService.getArticle.mockResolvedValueOnce({
       id: 1,
       project_id: 1,
       title: 'Article Without PDF File',
@@ -78,15 +89,17 @@ describe('ArticleReaderPage', () => {
       abstract: 'This is the expected abstract text loaded from search API.',
       status: 'new',
       source_databases: '["OpenAlex"]',
-      source_query: ''
+      source_query: '',
     });
 
     const { getByText, getAllByText } = render(
       <MemoryRouter initialEntries={['/articles/1']}>
-        <Routes>
-          <Route path="/articles/:id" element={<ArticleReaderPage />} />
-        </Routes>
-      </MemoryRouter>
+        <GlobalErrorProvider>
+          <Routes>
+            <Route path="/articles/:id" element={<ArticleReaderPage />} />
+          </Routes>
+        </GlobalErrorProvider>
+      </MemoryRouter>,
     );
 
     await vi.waitFor(() => {
@@ -95,5 +108,50 @@ describe('ArticleReaderPage', () => {
       expect(getAllByText('Vincular PDF Local').length).toBeGreaterThan(0);
     });
   });
+  it('maps highlight data structure correctly for react-pdf-highlighter to prevent crash', async () => {
+    const mockHighlights = [
+      {
+        id: '101',
+        article_id: 1,
+        position_data: { boundingRect: { x1: 0, y1: 0, x2: 10, y2: 10, width: 10, height: 10, pageNumber: 1 }, rects: [], pageNumber: 1 },
+        content_text: 'Highlight text',
+        comment: 'A note',
+        color: 'yellow',
+        annotation_id: 201
+      }
+    ];
+    fakeService.getHighlights.mockResolvedValueOnce(mockHighlights);
+    
+    render(
+      <MemoryRouter initialEntries={['/articles/1']}>
+        <GlobalErrorProvider>
+          <Routes>
+            <Route path="/articles/:id" element={<ArticleReaderPage />} />
+          </Routes>
+        </GlobalErrorProvider>
+      </MemoryRouter>,
+    );
 
+    await vi.waitFor(() => {
+      // @ts-ignore
+      expect(global.mockPdfHighlighterProps).toBeDefined();
+    });
+
+    // @ts-ignore
+    const passedHighlights = global.mockPdfHighlighterProps.highlights;
+    expect(passedHighlights).toHaveLength(1);
+    
+    // Check if it mapped to the react-pdf-highlighter structure
+    const hl = passedHighlights[0];
+    expect(hl.position).toBeDefined(); // Used to be undefined when reading position_data directly
+    expect(hl.position.pageNumber).toBe(1);
+    expect(hl.content).toBeDefined();
+    expect(hl.content.text).toBe('Highlight text');
+    expect(hl.comment).toBeDefined();
+    expect(hl.comment.text).toBe('A note');
+    
+    // Clean up
+    // @ts-ignore
+    delete global.mockPdfHighlighterProps;
+  });
 });

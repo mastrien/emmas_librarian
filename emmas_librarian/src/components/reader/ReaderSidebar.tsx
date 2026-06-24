@@ -2,6 +2,7 @@ import React from 'react';
 import { AnnotationsTab } from './AnnotationsTab';
 import { SearchTab } from './SearchTab';
 import { AiInsightsTab } from './AiInsightsTab';
+import { Annotation } from '../../types';
 
 interface ReaderSidebarProps {
   sidebarTab: 'annotations' | 'search' | 'ai' | 'writer';
@@ -9,8 +10,8 @@ interface ReaderSidebarProps {
   width?: number;
   
   // AnnotationsTab Props
-  highlights: any[];
-  standaloneAnnotations: any[];
+  highlights: unknown[];
+  standaloneAnnotations: Annotation[];
   newAnnotationText: string;
   setNewAnnotationText: (val: string) => void;
   editingId: string | null;
@@ -20,16 +21,16 @@ interface ReaderSidebarProps {
   onCreateStandaloneAnnotation: () => void;
   onDeleteHighlight: (highlightId: string, e: React.MouseEvent) => void;
   onDeleteStandaloneAnnotation: (annId: string) => void;
-  onEditHighlightAnnotation: (h: any, e: React.MouseEvent) => void;
-  onEditStandaloneAnnotation: (a: any) => void;
+  onEditHighlightAnnotation: (h: unknown, e: React.MouseEvent) => void;
+  onEditStandaloneAnnotation: (a: Annotation) => void;
   onSaveEdit: (idToSave: string, annotationId: number, isStandalone: boolean) => void;
-  onHighlightClick: (h: any) => void;
+  onHighlightClick: (h: unknown) => void;
 
   // SearchTab Props
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   isSearching: boolean;
-  searchResults: any[];
+  searchResults: Array<{ pageNumber: number; snippet: string }>;
   onSearch: (e: React.FormEvent) => void;
   onResultClick: (pageNum: number) => void;
 

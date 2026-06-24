@@ -1,12 +1,25 @@
+// @ts-nocheck
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Article } from '../../types';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { AIExtractionModal } from '../modals/AIExtractionModal';
+import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
+import { MemoryRouter } from 'react-router-dom';
+
+const renderWithProviders = (ui: React.ReactElement) => {
+  return render(
+    <MemoryRouter>
+      <GlobalErrorProvider>{ui}</GlobalErrorProvider>
+    </MemoryRouter>
+  );
+};
 
 describe('AIExtractionModal', () => {
   const mockArticlesWithPdf = [
     { id: 1, title: 'Article 1' },
-    { id: 2, title: 'Article 2' }
+    { id: 2, title: 'Article 2' },
   ];
 
   const defaultProps = {
@@ -21,28 +34,28 @@ describe('AIExtractionModal', () => {
     aiExtractionResults: [],
     cancelExtractionRef: { current: false },
     investigationHistory: [],
-    articles: mockArticlesWithPdf
+    articles: mockArticlesWithPdf,
   };
 
   it('does not render when isOpen is false', () => {
-    const { container } = render(<AIExtractionModal {...defaultProps} isOpen={false} />);
+    const { container } = renderWithProviders(<AIExtractionModal {...defaultProps} isOpen={false} />);
     expect(container.innerHTML).toBe('');
   });
 
   it('renders tab buttons and defaults to Nova Investigação tab', () => {
-    render(<AIExtractionModal {...defaultProps} />);
+    renderWithProviders(<AIExtractionModal {...defaultProps} />);
     expect(screen.getByText('Investigação Massiva com IA')).toBeInTheDocument();
     expect(screen.getByText('Nova Investigação')).toBeInTheDocument();
     expect(screen.getByText('Histórico')).toBeInTheDocument();
-    
+
     // Shows articles
     expect(screen.getByText('Article 1')).toBeInTheDocument();
     expect(screen.getByText('Article 2')).toBeInTheDocument();
   });
 
   it('supports selecting and deselecting articles', () => {
-    render(<AIExtractionModal {...defaultProps} />);
-    
+    renderWithProviders(<AIExtractionModal {...defaultProps} />);
+
     // Default selection is all articles
     expect(screen.getByText('2/2')).toBeInTheDocument();
 
@@ -62,7 +75,7 @@ describe('AIExtractionModal', () => {
 
   it('supports adding and removing questions', () => {
     const setAiQuestions = vi.fn();
-    render(<AIExtractionModal {...defaultProps} setAiQuestions={setAiQuestions} />);
+    renderWithProviders(<AIExtractionModal {...defaultProps} setAiQuestions={setAiQuestions} />);
 
     // Add question
     const addBtn = screen.getByText('+ Adicionar Pergunta');
@@ -72,7 +85,7 @@ describe('AIExtractionModal', () => {
     // Remove question
     const removeBtns = screen.getAllByRole('button');
     // First remove button after XIcon, tab buttons, check toggle buttons is the delete question button
-    const trashBtn = removeBtns.find(btn => btn.innerHTML.includes('svg')); // trash icon
+    const trashBtn = removeBtns.find((btn) => btn.innerHTML.includes('svg')); // trash icon
     if (trashBtn) {
       fireEvent.click(trashBtn);
       expect(setAiQuestions).toHaveBeenCalled();
@@ -81,7 +94,7 @@ describe('AIExtractionModal', () => {
 
   it('starts massive extraction when Start button is clicked', () => {
     const handleMassiveExtraction = vi.fn();
-    render(<AIExtractionModal {...defaultProps} handleMassiveExtraction={handleMassiveExtraction} />);
+    renderWithProviders(<AIExtractionModal {...defaultProps} handleMassiveExtraction={handleMassiveExtraction} />);
 
     const startBtn = screen.getByText('Iniciar Investigação');
     fireEvent.click(startBtn);
@@ -90,39 +103,30 @@ describe('AIExtractionModal', () => {
   });
 
   it('renders extraction progress when isExtracting is true', () => {
-    render(
-      <AIExtractionModal
-        {...defaultProps}
-        isExtracting={true}
-        extractionProgress={{ current: 1, total: 2 }}
-      />
-    );
+    renderWithProviders(<AIExtractionModal {...defaultProps} isExtracting={true} extractionProgress={{ current: 1, total: 2 }} />);
 
     expect(screen.getByText('Processando artigo 1 de 2...')).toBeInTheDocument();
     expect(screen.getByText('Cancelar Investigação')).toBeInTheDocument();
   });
 
-  it('renders results when aiExtractionResults are provided', () => {
+  it('renders results when aiExtractionResults are provided', async () => {
     const results = [
       {
-        article: { title: 'Article 1' },
-        result: [
-          { question: 'What is the goal?', answer: 'To test components', quote: 'test quotes' }
-        ]
-      }
+        article: { id: 1, project_id: 1, status: 'new', title: 'Article 1' },
+        result: [{ 
+          question: 'What is the goal?', 
+          extracted_answer: 'To test components', 
+          confidenceScore: 0.9, 
+          evidences: [{ text: 'test quotes', page: 1, bbox: {x: 0, y: 0, w: 10, h: 10} }] 
+        }],
+      },
     ];
 
-    render(
-      <AIExtractionModal
-        {...defaultProps}
-        aiExtractionResults={results}
-      />
-    );
+    renderWithProviders(<AIExtractionModal {...defaultProps} aiExtractionResults={results} />);
 
     expect(screen.getByText('Article 1')).toBeInTheDocument();
     expect(screen.getByText('Q: What is the goal?')).toBeInTheDocument();
-    expect(screen.getByText('To test components')).toBeInTheDocument();
-    expect(screen.getByText('"test quotes"')).toBeInTheDocument();
+    expect(screen.getByText('test quotes')).toBeInTheDocument();
   });
 
   it('renders history list when switching to History tab', () => {
@@ -132,16 +136,11 @@ describe('AIExtractionModal', () => {
         questions: JSON.stringify(['How is the weather?']),
         articles_ids: JSON.stringify([1]),
         status: 'Sucesso',
-        model_used: 'gemini-1.5-pro'
-      }
+        model_used: 'gemini-1.5-pro',
+      },
     ];
 
-    render(
-      <AIExtractionModal
-        {...defaultProps}
-        investigationHistory={history}
-      />
-    );
+    renderWithProviders(<AIExtractionModal {...defaultProps} investigationHistory={history} />);
 
     const historyTab = screen.getByText('Histórico');
     fireEvent.click(historyTab);

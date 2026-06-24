@@ -9,22 +9,18 @@ describe('SearchSummaryModal', () => {
     breakdown: {
       openalex: { count: 3 },
       wos: { count: 2 },
-      crossref: { count: 0, error: 'API Timeout' }
-    }
+      crossref: { count: 0, error: 'API Timeout' },
+    },
   };
 
   it('does not render when isOpen is false', () => {
-    const { container } = render(
-      <SearchSummaryModal isOpen={false} onClose={vi.fn()} summary={mockSummary} />
-    );
+    const { container } = render(<SearchSummaryModal isOpen={false} onClose={vi.fn()} summary={mockSummary} />);
     expect(container.innerHTML).toBe('');
   });
 
   it('renders summary counts and breakdown with errors', () => {
     const onClose = vi.fn();
-    render(
-      <SearchSummaryModal isOpen={true} onClose={onClose} summary={mockSummary} />
-    );
+    render(<SearchSummaryModal isOpen={true} onClose={onClose} summary={mockSummary} />);
 
     expect(screen.getByText('Busca Concluída!')).toBeInTheDocument();
     expect(screen.getByText('Total Encontrado')).toBeInTheDocument();

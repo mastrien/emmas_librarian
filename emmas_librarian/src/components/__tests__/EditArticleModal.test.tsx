@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { EditArticleModal } from '../modals/EditArticleModal';
+import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
 
 describe('EditArticleModal', () => {
   const mockArticle = {
@@ -20,16 +21,24 @@ describe('EditArticleModal', () => {
     source_databases: '["Manual"]',
     csl_json: '{}',
     status: 'new' as const,
-    local_file_path: undefined
+    local_file_path: undefined,
   };
 
   it('does not render when isOpen is false', () => {
-    render(<EditArticleModal isOpen={false} article={mockArticle} onClose={vi.fn()} onSubmit={vi.fn()} />);
+    render(
+      <GlobalErrorProvider>
+        <EditArticleModal isOpen={false} article={mockArticle} onClose={vi.fn()} onSubmit={vi.fn()} />
+      </GlobalErrorProvider>
+    );
     expect(screen.queryByText('Editar Artigo Manual')).toBeNull();
   });
 
   it('renders form populated with article data', () => {
-    render(<EditArticleModal isOpen={true} article={mockArticle} onClose={vi.fn()} onSubmit={vi.fn()} />);
+    render(
+      <GlobalErrorProvider>
+        <EditArticleModal isOpen={true} article={mockArticle} onClose={vi.fn()} onSubmit={vi.fn()} />
+      </GlobalErrorProvider>
+    );
     expect(screen.getByDisplayValue('Original Title')).toBeDefined();
     expect(screen.getByDisplayValue('Author A')).toBeDefined();
     expect(screen.getByDisplayValue('2020')).toBeDefined();
@@ -43,8 +52,12 @@ describe('EditArticleModal', () => {
 
   it('calls onSubmit with updated data when form is submitted', () => {
     const onSubmitMock = vi.fn();
-    render(<EditArticleModal isOpen={true} article={mockArticle} onClose={vi.fn()} onSubmit={onSubmitMock} />);
-    
+    render(
+      <GlobalErrorProvider>
+        <EditArticleModal isOpen={true} article={mockArticle} onClose={vi.fn()} onSubmit={onSubmitMock} />
+      </GlobalErrorProvider>
+    );
+
     // Using getByDisplayValue to find the input since getByLabelText failed due to DOM structure
     const titleInput = screen.getByDisplayValue('Original Title');
     fireEvent.change(titleInput, { target: { value: 'New Title' } });
@@ -55,20 +68,26 @@ describe('EditArticleModal', () => {
     const saveBtn = screen.getByText('Salvar Alterações');
     fireEvent.click(saveBtn);
 
-    expect(onSubmitMock).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'New Title',
-      authors: 'Author A',
-      year: 2020,
-      volume: '14',
-      issue: '3',
-      pages: '100-110'
-    }));
+    expect(onSubmitMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'New Title',
+        authors: 'Author A',
+        year: 2020,
+        volume: '14',
+        issue: '3',
+        pages: '100-110',
+      }),
+    );
   });
 
   it('calls onClose when Cancel button is clicked', () => {
     const onCloseMock = vi.fn();
-    render(<EditArticleModal isOpen={true} article={mockArticle} onClose={onCloseMock} onSubmit={vi.fn()} />);
-    
+    render(
+      <GlobalErrorProvider>
+        <EditArticleModal isOpen={true} article={mockArticle} onClose={onCloseMock} onSubmit={vi.fn()} />
+      </GlobalErrorProvider>
+    );
+
     const cancelBtn = screen.getByText('Cancelar');
     fireEvent.click(cancelBtn);
 

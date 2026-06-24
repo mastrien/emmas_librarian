@@ -1,6 +1,45 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AIService } from '../AIService';
-import { DatabaseManager } from '../../database/DatabaseManager';
+import { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import { AIModelConfigRepository } from '../../database/AIModelConfigRepository';
+import { extractTextWithCoordinates } from '../PdfExtractor';
+
+vi.mock('../PdfExtractor', () => ({
+  extractTextWithCoordinates: vi.fn().mockResolvedValue({
+    chunks: [{ text: 'Mocked PDF text content for testing purposes.', page: 1, bbox: { x: 0, y: 0, w: 100, h: 10 } }],
+    totalPages: 1,
+    totalCharacters: 45
+  }),
+  renderPagesAsImages: vi.fn().mockResolvedValue(new Map())
+}));
+
+const { mockGetConfig } = vi.hoisted(() => ({
+  mockGetConfig: vi.fn().mockReturnValue({ provider: 'openai', model_name: 'gpt-4o-mini' })
+}));
+
+vi.mock('../../database/AIModelConfigRepository', () => ({
+  AIModelConfigRepository: vi.fn().mockImplementation(() => ({
+    getConfig: mockGetConfig
+  }))
+}));
+
+vi.mock('../VectorStore', () => ({
+  VectorStore: vi.fn().mockImplementation(() => ({
+    indexArticleChunks: vi.fn(),
+    searchSimilar: vi.fn().mockReturnValue([
+      { text: 'Mocked context chunk 1', page: 1, bbox: { x: 0, y: 0, w: 100, h: 10 } },
+      { text: 'Mocked context chunk 2', page: 2, bbox: { x: 0, y: 0, w: 100, h: 10 } }
+    ]),
+    ensureDimensionAndClearIfMismatched: vi.fn(),
+  })),
+}));
+
+vi.mock('../EmbeddingService', () => ({
+  EmbeddingService: vi.fn().mockImplementation(() => ({
+    embedBatch: vi.fn().mockResolvedValue([[0.1, 0.2]]),
+    embed: vi.fn().mockResolvedValue([0.1, 0.2])
+  }))
+}));
 
 // Define mock variable before vi.mock
 const mockGetText = vi.fn().mockResolvedValue({ text: 'Mocked PDF text content for testing purposes.' });
@@ -45,7 +84,12 @@ describe('AIService', () => {
       getArticle: vi.fn().mockReturnValue({ local_file_path: 'fake/path.pdf' }),
       savePendingHighlight: vi.fn().mockReturnValue(123),
       updateArticleAiSummary: vi.fn(),
-    } as unknown as DatabaseManager;
+      getDB: vi.fn().mockReturnValue({
+        prepare: vi.fn().mockReturnValue({
+          get: vi.fn().mockReturnValue({ count: 1 })
+        })
+      }),
+    } as unknown as DatabaseAdapter;
 
     aiService = new AIService(dbMock);
 
@@ -71,7 +115,7 @@ describe('AIService', () => {
     expect(keys.gemini).toBeNull();
   });
 
-  it('should extract text from PDF using PDFParse class', async () => {
+  it('should extract text from PDF using extractTextWithCoordinates', async () => {
     const text = await aiService.extractTextFromPdf('fake/path.pdf');
     expect(text).toBe('Mocked PDF text content for testing purposes.');
   });
@@ -81,6 +125,29 @@ describe('AIService', () => {
     (fs.default.existsSync as any).mockReturnValueOnce(false);
     
     await expect(aiService.extractTextFromPdf('invalid/path.pdf')).rejects.toThrow('PDF file not found: invalid/path.pdf');
+  });
+
+  it('should throw ERR_API_CONNECTION when fetch fails with fetch failed message', async () => {
+    (global.fetch as any).mockRejectedValueOnce(new Error('fetch failed'));
+
+    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('Falha de conexão com o provedor de Inteligência Artificial');
+  });
+
+  it('should respect the AIModelConfigRepository when resolving providers', async () => {
+    mockGetConfig.mockReturnValueOnce({ provider: 'gemini', model_name: 'gemini-1.5-pro' } as any);
+    
+    dbMock.getSetting = vi.fn().mockReturnValue('test-gemini-key');
+
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: '{"title": "Gemini Title", "year": "2025"}' }] } }]
+      })
+    });
+
+    const metadata = await aiService.extractMetadataFromPdf(1, 'fake/path.pdf');
+    expect(global.fetch).toHaveBeenCalled();
+    expect((metadata as any).title).toBe('Gemini Title');
   });
 
   it('should generate summary by calling completion API', async () => {
@@ -98,7 +165,7 @@ describe('AIService', () => {
         choices: [
           {
             message: {
-              content: '[{"question": "Q1?", "answer": "A1", "quote": "quote"}]'
+              content: '{"question": "Q1?", "synthesizedAnswer": "A1", "confidenceScore": 0.9, "evidences": [{"text": "quote", "page": 1, "reasoning": "bla"}]}'
             }
           }
         ]
@@ -110,14 +177,14 @@ describe('AIService', () => {
     expect(global.fetch).toHaveBeenCalled();
     expect(results).toHaveLength(1);
     expect(results[0].question).toBe('Q1?');
-    expect(results[0].answer).toBe('A1');
-    expect(results[0].quote).toBe('quote');
+    expect(results[0].synthesizedAnswer).toBe('A1');
+    expect(results[0].evidences[0].text).toBe('quote');
   });
 
-  it('should throw error when no API key is configured', async () => {
+  it('should throw error when configured API key is missing', async () => {
     dbMock.getSetting = vi.fn().mockReturnValue(null);
-    
-    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('Nenhuma chave de IA configurada');
+    // The mocked config says provider = openai
+    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('Chave da OpenAI não configurada.');
   });
 
   it('should extract metadata by calling completion API', async () => {
@@ -136,15 +203,21 @@ describe('AIService', () => {
 
     const metadata = await aiService.extractMetadataFromPdf(1, 'fake/path.pdf');
     expect(global.fetch).toHaveBeenCalled();
-    expect(metadata.title).toBe('Test Title');
-    expect(metadata.year).toBe('2024');
+    expect((metadata as any).title).toBe('Test Title');
+    expect((metadata as any).year).toBe('2024');
   });
 
-  it('should prioritize Gemini if OpenAI key is not present but Gemini is', async () => {
+  it('should call Gemini if configured for summary skill', async () => {
     dbMock.getSetting = vi.fn((key: string) => {
       if (key === 'api_key_gemini') return 'test-gemini-key';
       return null;
     });
+
+    // Mock config to return Gemini for this test
+    mockGetConfig.mockReturnValueOnce({
+      provider: 'gemini',
+      model_name: 'gemini-1.5-flash'
+    } as any);
 
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -158,12 +231,18 @@ describe('AIService', () => {
     expect(summary.generalSummary).toBe('Gemini Summary');
   });
 
-  it('should call Ollama if only Ollama key is present', async () => {
+  it('should call Ollama if configured for summary skill', async () => {
     dbMock.getSetting = vi.fn((key: string) => {
       if (key === 'api_key_ollama') return 'http://localhost:11434';
       if (key === 'ollama_model') return 'my-model';
       return null;
     });
+
+    // Mock config to return Ollama for this test
+    mockGetConfig.mockReturnValueOnce({
+      provider: 'ollama',
+      model_name: 'llama3'
+    } as any);
 
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -230,8 +309,8 @@ describe('AIService', () => {
   });
 
   it('should throw error when PDF parsing fails', async () => {
-    mockGetText.mockRejectedValueOnce(new Error('Parse Error'));
+    vi.mocked(extractTextWithCoordinates).mockRejectedValueOnce(new Error('Parse Error'));
 
-    await expect(aiService.extractTextFromPdf('fake/path.pdf')).rejects.toThrow('Failed to parse PDF file');
+    await expect(aiService.extractTextFromPdf('fake/path.pdf')).rejects.toThrow('Falha ao ler o arquivo PDF');
   });
 });
