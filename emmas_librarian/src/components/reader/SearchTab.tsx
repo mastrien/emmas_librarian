@@ -39,7 +39,7 @@ export const SearchTab: React.FC<SearchTabProps> = ({
                 background: 'var(--bg-main)',
                 color: 'var(--text-main)',
                 fontSize: '0.85rem',
-                outline: 'none'
+                outline: 'none',
               }}
             />
           </div>
@@ -54,7 +54,16 @@ export const SearchTab: React.FC<SearchTabProps> = ({
         </form>
       </div>
 
-      <div style={{ flexGrow: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <div
+        style={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          padding: '1rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+        }}
+      >
         {isSearching ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
             <Loader2 size={24} className="animate-spin" style={{ margin: '0 auto 0.5rem auto' }} />
@@ -79,10 +88,19 @@ export const SearchTab: React.FC<SearchTabProps> = ({
                   border: '1px solid var(--border-color)',
                   background: 'var(--bg-main)',
                   fontSize: '0.85rem',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.4rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: 'var(--color-primary)',
+                  }}
+                >
                   <span>Página {res.pageNumber}</span>
                 </div>
                 <div style={{ color: 'var(--text-main)', lineHeight: '1.4' }}>
@@ -91,17 +109,25 @@ export const SearchTab: React.FC<SearchTabProps> = ({
                     const lowerSnippet = res.snippet.toLowerCase();
                     const lowerTerm = term.toLowerCase();
                     const termIdx = lowerSnippet.indexOf(lowerTerm);
-                    
+
                     if (termIdx === -1) return res.snippet;
-                    
+
                     const before = res.snippet.substring(0, termIdx);
                     const match = res.snippet.substring(termIdx, termIdx + term.length);
                     const after = res.snippet.substring(termIdx + term.length);
-                    
+
                     return (
                       <>
                         {before}
-                        <mark style={{ background: 'rgba(234, 179, 8, 0.3)', color: 'var(--text-heading)', fontWeight: 600, padding: '0 0.1rem', borderRadius: '2px' }}>
+                        <mark
+                          style={{
+                            background: 'rgba(234, 179, 8, 0.3)',
+                            color: 'var(--text-heading)',
+                            fontWeight: 600,
+                            padding: '0 0.1rem',
+                            borderRadius: '2px',
+                          }}
+                        >
                           {match}
                         </mark>
                         {after}

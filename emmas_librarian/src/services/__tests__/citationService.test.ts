@@ -74,6 +74,53 @@ describe('citationService', () => {
     expect(citeWithoutEtAl).toContain('SMITH, Robert');
     expect(citeWithoutEtAl).toContain('WILLIAMS, Mary');
   });
+
+  it('should merge data with csl_json correctly if present', () => {
+    const article = {
+      id: 6,
+      title: 'Explicit Title',
+      authors: 'John Doe',
+      year: 2023,
+      csl_json: JSON.stringify({
+        title: 'Original Title',
+        publisher: 'CSL Publisher',
+        volume: '12',
+      }),
+    } as unknown as import('../../types').Article;
+
+    const cite = generateCitation(article, 'apa');
+    expect(cite).toContain('Explicit Title');
+  });
+
+  it('should format using IEEE style', () => {
+    const article = {
+      id: 7,
+      title: 'IEEE Format Article',
+      authors: 'John Doe',
+      year: 2024,
+    } as unknown as import('../../types').Article;
+
+    const cite = generateCitation(article, 'ieee');
+    expect(cite).toContain('IEEE Format Article');
+  });
+
+  it('should handle invalid csl_json gracefully by ignoring it', () => {
+    const article = {
+      id: 8,
+      title: 'Broken CSL JSON',
+      authors: 'Jane Smith',
+      year: 2023,
+      csl_json: '{broken-json}',
+    } as unknown as import('../../types').Article;
+
+    const cite = generateCitation(article, 'apa');
+    expect(cite).toContain('Broken CSL JSON');
+  });
+
+  it('should return fallback string when citation formatting throws an error', () => {
+    const cite = generateCitation(null as any, 'apa');
+    expect(cite).toContain('[Erro ao gerar citação: artigo inválido]');
+  });
 });
 
 describe('parseAuthors', () => {

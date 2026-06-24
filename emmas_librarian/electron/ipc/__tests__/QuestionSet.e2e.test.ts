@@ -18,11 +18,11 @@ const mockIpcMain = {
 describe('QuestionSet E2E Integration', () => {
   let db: Database.Database;
   let dbAdapter: any; // We use any to bypass private fields for the test if needed
-  
+
   beforeEach(() => {
     // Create an in-memory database
     db = new Database(':memory:');
-    
+
     // Apply schema
     const schemaPath = path.join(__dirname, '../../database/schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf-8');
@@ -64,7 +64,7 @@ describe('QuestionSet E2E Integration', () => {
       project_id: null,
       name: 'E2E Test Set',
       description: 'A test set',
-      questions: JSON.stringify(['Q1', 'Q2'])
+      questions: JSON.stringify(['Q1', 'Q2']),
     };
     const newSet = await createHandler({}, payload);
     expect(typeof newSet).toBe('object');
@@ -78,7 +78,7 @@ describe('QuestionSet E2E Integration', () => {
 
     // 4. Update the set
     await updateHandler({}, setId, { name: 'Updated Set Name' });
-    
+
     // 5. Get the specific set
     const updatedSet = await getHandler({}, setId);
     expect(updatedSet.name).toBe('Updated Set Name');

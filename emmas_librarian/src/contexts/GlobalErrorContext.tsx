@@ -33,8 +33,6 @@ export const GlobalErrorProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, []);
 
   return (
-    <GlobalErrorContext.Provider value={{ showError, hideError, currentError }}>
-      {children}
-    </GlobalErrorContext.Provider>
+    <GlobalErrorContext.Provider value={{ showError, hideError, currentError }}>{children}</GlobalErrorContext.Provider>
   );
 };

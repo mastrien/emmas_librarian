@@ -18,12 +18,12 @@ export class AnthropicGateway implements LLMProviderGateway {
         messages: [{ role: 'user', content: prompt }],
       }),
     });
-    
+
     if (!response.ok) {
       const err = await response.text();
       throw new Error(`Anthropic API Error: ${err}`);
     }
-    
+
     const data = await response.json();
     return data.content[0].text;
   }

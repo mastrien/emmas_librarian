@@ -19,7 +19,9 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
   const [citationText, setCitationText] = useState('');
   const [copied, setCopied] = useState(false);
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
-  const [editableArticle, setEditableArticle] = useState<Partial<import("../../types").Article> & { accessed?: string }>({});
+  const [editableArticle, setEditableArticle] = useState<
+    Partial<import('../../types').Article> & { accessed?: string }
+  >({});
   const [saving, setSaving] = useState(false);
   const [useEtAl, setUseEtAl] = useState(true);
 

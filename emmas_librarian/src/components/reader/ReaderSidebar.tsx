@@ -8,7 +8,7 @@ interface ReaderSidebarProps {
   sidebarTab: 'annotations' | 'search' | 'ai' | 'writer';
   setSidebarTab: (tab: 'annotations' | 'search' | 'ai' | 'writer') => void;
   width?: number;
-  
+
   // AnnotationsTab Props
   highlights: unknown[];
   standaloneAnnotations: Annotation[];
@@ -44,7 +44,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
   sidebarTab,
   setSidebarTab,
   width = 320,
-  
+
   highlights,
   standaloneAnnotations,
   newAnnotationText,
@@ -73,15 +73,17 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
   onGenerateSummary,
 }) => {
   return (
-    <div style={{ 
-      width: `${width}px`, 
-      borderLeft: '1px solid var(--border-color)', 
-      background: 'var(--bg-surface)', 
-      display: 'flex', 
-      flexDirection: 'column',
-      height: '100%',
-      overflow: 'hidden'
-    }}>
+    <div
+      style={{
+        width: `${width}px`,
+        borderLeft: '1px solid var(--border-color)',
+        background: 'var(--bg-surface)',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        overflow: 'hidden',
+      }}
+    >
       {/* Tab Selector */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-main)' }}>
         <button
@@ -96,7 +98,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
             fontWeight: sidebarTab === 'annotations' ? 600 : 500,
             fontSize: '0.9rem',
             cursor: 'pointer',
-            transition: 'all var(--transition-fast)'
+            transition: 'all var(--transition-fast)',
           }}
         >
           Anotações
@@ -113,7 +115,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
             fontWeight: sidebarTab === 'search' ? 600 : 500,
             fontSize: '0.9rem',
             cursor: 'pointer',
-            transition: 'all var(--transition-fast)'
+            transition: 'all var(--transition-fast)',
           }}
         >
           Pesquisar
@@ -134,7 +136,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '0.3rem'
+            gap: '0.3rem',
           }}
         >
           Insights IA
@@ -161,7 +163,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
           onHighlightClick={onHighlightClick}
         />
       )}
-      
+
       {sidebarTab === 'search' && (
         <SearchTab
           searchQuery={searchQuery}
@@ -172,13 +174,9 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
           onResultClick={onResultClick}
         />
       )}
-      
+
       {sidebarTab === 'ai' && (
-        <AiInsightsTab
-          isGeneratingAi={isGeneratingAi}
-          aiSummary={aiSummary}
-          onGenerateSummary={onGenerateSummary}
-        />
+        <AiInsightsTab isGeneratingAi={isGeneratingAi} aiSummary={aiSummary} onGenerateSummary={onGenerateSummary} />
       )}
     </div>
   );

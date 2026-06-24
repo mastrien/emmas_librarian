@@ -8,7 +8,7 @@ export function useArticleData(
   id: string | undefined,
   setHighlights: (h: unknown[]) => void,
   setStandaloneAnnotations: (a: Annotation[]) => void,
-  setAnchoringStatus: (s: string) => void
+  setAnchoringStatus: (s: string) => void,
 ) {
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +25,7 @@ export function useArticleData(
     try {
       const [pCats, aCats] = await Promise.all([
         projectService.getProjectCategories(article.project_id),
-        projectService.getArticleCategories(parseInt(id))
+        projectService.getArticleCategories(parseInt(id)),
       ]);
       setProjectCategories(pCats);
       setArticleCategories(aCats);
@@ -38,7 +38,7 @@ export function useArticleData(
     if (!id) return;
     try {
       const artData = await projectService.getArticle(parseInt(id));
-      
+
       const [highData, annData, openai, gemini, anthropic, ollama, padContent, pCats, aCats] = await Promise.all([
         projectService.getHighlights(parseInt(id)),
         projectService.getAnnotations(parseInt(id)),
@@ -48,13 +48,13 @@ export function useArticleData(
         projectService.getSetting('api_key_ollama'),
         projectService.getProjectWritingPad(artData.project_id),
         projectService.getProjectCategories(artData.project_id),
-        projectService.getArticleCategories(parseInt(id))
+        projectService.getArticleCategories(parseInt(id)),
       ]);
       setArticle(artData);
       setHasAiKey(!!(openai || gemini || anthropic || ollama));
       setProjectCategories(pCats);
       setArticleCategories(aCats);
-      
+
       if (artData.ai_summary) {
         try {
           const parsed = JSON.parse(artData.ai_summary);
@@ -68,44 +68,59 @@ export function useArticleData(
       } else {
         setAiSummary(null);
       }
-      
+
       if (padContent !== null && padContent !== undefined) {
         setWritingPadContent(padContent);
       }
-      
+
       const attachedAnnIds = new Set(highData.map((h: Highlight) => h.annotation_id));
       setStandaloneAnnotations(annData.filter((a: Annotation) => !attachedAnnIds.has(a.id)));
 
-      setHighlights(highData.map((h: Highlight) => ({
-        id: h.id.toString(),
-        position: h.position_data,
-        content: { text: (h as unknown as Record<string, unknown>).content_text || h.comment || '' },
-        comment: { text: h.comment || '', emoji: '' },
-        color: h.color || 'yellow',
-        annotation_id: h.annotation_id,
-        article_id: h.article_id
-      })));
+      setHighlights(
+        highData.map((h: Highlight) => ({
+          id: h.id.toString(),
+          position: h.position_data,
+          content: { text: (h as unknown as Record<string, unknown>).content_text || h.comment || '' },
+          comment: { text: h.comment || '', emoji: '' },
+          color: h.color || 'yellow',
+          annotation_id: h.annotation_id,
+          article_id: h.article_id,
+        })),
+      );
 
       if (artData.local_file_path) {
-        const buffer = await projectService.getPdfBuffer(parseInt(id)) as { type?: string; data?: Iterable<number> } | ArrayBuffer;
+        const buffer = (await projectService.getPdfBuffer(parseInt(id))) as
+          | { type?: string; data?: Iterable<number> }
+          | ArrayBuffer;
         let uint8Array: Uint8Array;
-        
+
         // Handle Electron IPC buffer serialization
-        if (buffer && typeof buffer === 'object' && 'type' in buffer && buffer.type === 'Buffer' && 'data' in buffer && buffer.data) {
+        if (
+          buffer &&
+          typeof buffer === 'object' &&
+          'type' in buffer &&
+          buffer.type === 'Buffer' &&
+          'data' in buffer &&
+          buffer.data
+        ) {
           uint8Array = new Uint8Array(buffer.data);
         } else {
           uint8Array = new Uint8Array(buffer as ArrayBuffer);
         }
-        
+
         const blob = new Blob([uint8Array], { type: 'application/pdf' });
         const localUrl = URL.createObjectURL(blob);
         setPdfUrl(localUrl);
-        
+
         // Process pending highlights asynchronously
         const pendings = await projectService.getPendingHighlights(parseInt(id));
         if (pendings && pendings.length > 0) {
           try {
-            const { anchoredHighlights, unanchoredHighlights } = await anchorPendingHighlights(localUrl, pendings, setAnchoringStatus);
+            const { anchoredHighlights, unanchoredHighlights } = await anchorPendingHighlights(
+              localUrl,
+              pendings,
+              setAnchoringStatus,
+            );
             if (anchoredHighlights && anchoredHighlights.length > 0) {
               for (const anchor of anchoredHighlights) {
                 await projectService.createHighlight(
@@ -113,21 +128,23 @@ export function useArticleData(
                   anchor.color,
                   anchor.position,
                   anchor.content.text,
-                  anchor.comment.text
+                  anchor.comment.text,
                 );
                 await projectService.deletePendingHighlight(anchor.pendingId);
               }
               // Refresh highlights after saving
               const newHighData = await projectService.getHighlights(parseInt(id));
-              setHighlights(newHighData.map((h: Highlight) => ({
-                id: h.id.toString(),
-                position: h.position_data,
-                content: { text: (h as unknown as Record<string, unknown>).content_text || h.comment || '' },
-                comment: { text: h.comment || '', emoji: '' },
-                color: h.color || 'yellow',
-                annotation_id: h.annotation_id,
-                article_id: h.article_id
-              })));
+              setHighlights(
+                newHighData.map((h: Highlight) => ({
+                  id: h.id.toString(),
+                  position: h.position_data,
+                  content: { text: (h as unknown as Record<string, unknown>).content_text || h.comment || '' },
+                  comment: { text: h.comment || '', emoji: '' },
+                  color: h.color || 'yellow',
+                  annotation_id: h.annotation_id,
+                  article_id: h.article_id,
+                })),
+              );
             }
             // If some couldn't be anchored, create standalone annotations so they aren't lost
             if (unanchoredHighlights && unanchoredHighlights.length > 0) {
@@ -143,7 +160,7 @@ export function useArticleData(
               setStandaloneAnnotations(newAnnData.filter((a: Annotation) => !currentAttachedAnnIds.has(a.id)));
             }
           } catch (e) {
-            console.error("Failed to anchor highlights:", e);
+            console.error('Failed to anchor highlights:', e);
           } finally {
             setAnchoringStatus('');
           }
@@ -174,7 +191,11 @@ export function useArticleData(
 
   const handleUnlinkClick = async () => {
     if (!id || !article) return;
-    if (window.confirm("Deseja realmente desvincular o PDF deste artigo? O arquivo físico será removido do armazenamento local.")) {
+    if (
+      window.confirm(
+        'Deseja realmente desvincular o PDF deste artigo? O arquivo físico será removido do armazenamento local.',
+      )
+    ) {
       try {
         await projectService.unlinkPdf(parseInt(id));
         setPdfUrl('');
@@ -202,6 +223,6 @@ export function useArticleData(
     fetchData,
     fetchCategories,
     handleFileUpload,
-    handleUnlinkClick
+    handleUnlinkClick,
   };
 }

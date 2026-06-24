@@ -690,7 +690,9 @@ export class SyncService {
           )
           .all(projectId) as unknown[];
 
-        const diaryEntries = tempDb.prepare('SELECT * FROM project_diary WHERE project_id = ?').all(projectId) as unknown[];
+        const diaryEntries = tempDb
+          .prepare('SELECT * FROM project_diary WHERE project_id = ?')
+          .all(projectId) as unknown[];
 
         // Run insertion in activeDb transaction
         activeDb.transaction(() => {

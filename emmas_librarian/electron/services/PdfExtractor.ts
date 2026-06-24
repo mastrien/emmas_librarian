@@ -27,9 +27,9 @@ export async function extractTextWithCoordinates(
 
   // Parse using pdf.js for text and coordinates
   const uint8Array = new Uint8Array(dataBuffer);
-  const pdfDocument = await pdfjsLib.getDocument({ 
+  const pdfDocument = await pdfjsLib.getDocument({
     data: uint8Array,
-    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/standard_fonts/'
+    standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@4.10.38/standard_fonts/',
   }).promise;
   const totalPages = pdfDocument.numPages;
 
@@ -38,14 +38,14 @@ export async function extractTextWithCoordinates(
 
   let currentText = '';
   let currentBboxes: { x: number; y: number; w: number; h: number; page: number }[] = [];
-  
+
   const pushCurrentChunk = () => {
     if (currentText.trim().length > 0 && currentBboxes.length > 0) {
       // Create a bounding box that encapsulates the first few items or a general area
       // For simplicity in UI highlighting, we can take the bbox of the first item
       // or a union. Let's use the first item's bbox as the anchor point
       const anchorBbox = currentBboxes[0];
-      
+
       chunks.push({
         text: currentText.trim(),
         page: anchorBbox.page,
@@ -78,7 +78,7 @@ export async function extractTextWithCoordinates(
           y: transform[5],
           w: width,
           h: height,
-          page: pageNum
+          page: pageNum,
         };
 
         currentText += text + ' ';
@@ -87,12 +87,12 @@ export async function extractTextWithCoordinates(
 
         if (currentText.length >= chunkSize) {
           pushCurrentChunk();
-          
+
           // Slide window: keep the last 'chunkOverlap' characters
           // We need to find which bboxes correspond to the overlap
           let keepText = '';
           let keepBboxes: typeof currentBboxes = [];
-          
+
           // Work backwards to fill the overlap
           for (let i = currentBboxes.length - 1; i >= 0; i--) {
             // Estimate text length contribution (this is approximate since we added spaces)
@@ -100,21 +100,25 @@ export async function extractTextWithCoordinates(
             keepBboxes.unshift(currentBboxes[i]);
             // Re-build text from kept bboxes roughly
             keepText = textContent.items
-              .slice(Math.max(0, textContent.items.indexOf(item) - (currentBboxes.length - 1 - i)), textContent.items.indexOf(item) + 1)
-              .map(x => 'str' in x ? x.str : '').join(' ');
-              
+              .slice(
+                Math.max(0, textContent.items.indexOf(item) - (currentBboxes.length - 1 - i)),
+                textContent.items.indexOf(item) + 1,
+              )
+              .map((x) => ('str' in x ? x.str : ''))
+              .join(' ');
+
             if (keepText.length >= chunkOverlap) {
               break;
             }
           }
-          
+
           currentText = keepText + ' ';
           currentBboxes = keepBboxes;
         }
       }
     }
   }
-  
+
   // push remaining
   if (currentText.length > 0) {
     pushCurrentChunk();
@@ -128,10 +132,7 @@ export async function extractTextWithCoordinates(
 }
 
 /** Renderiza páginas específicas como imagens Base64 para VLM. (Placeholder) */
-export async function renderPagesAsImages(
-  pdfPath: string,
-  pages: number[]
-): Promise<Map<number, string>> {
+export async function renderPagesAsImages(pdfPath: string, pages: number[]): Promise<Map<number, string>> {
   // Not implemented yet
   return new Map<number, string>();
 }

@@ -47,13 +47,16 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
   }, [investigation.id, getInvestigationResults]);
 
   // Group results by article
-  const resultsByArticle = results.reduce((acc, result) => {
-    if (!acc[result.article_id]) {
-      acc[result.article_id] = [];
-    }
-    acc[result.article_id].push(result);
-    return acc;
-  }, {} as Record<number, InvestigationResult[]>);
+  const resultsByArticle = results.reduce(
+    (acc, result) => {
+      if (!acc[result.article_id]) {
+        acc[result.article_id] = [];
+      }
+      acc[result.article_id].push(result);
+      return acc;
+    },
+    {} as Record<number, InvestigationResult[]>,
+  );
 
   const articleIds = Object.keys(resultsByArticle).map(Number);
   const qStr = investigation.questions || '[]';
@@ -73,7 +76,10 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
 
   const handleExportJson = async () => {
     const jsonContent = formatResultsAsJson(investigation, results, articles);
-    const success = await projectService.saveExportedFile(jsonContent, `investigation_${investigation.id}_results.json`);
+    const success = await projectService.saveExportedFile(
+      jsonContent,
+      `investigation_${investigation.id}_results.json`,
+    );
     if (success) {
       console.log('JSON exported successfully');
     }
@@ -82,11 +88,7 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button
-          onClick={onBack}
-          className="btn-secondary"
-          style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
-        >
+        <button onClick={onBack} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
           &larr; Voltar ao Histórico
         </button>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -103,8 +105,10 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-
-        <div className="card" style={{ padding: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-surface)' }}>
+        <div
+          className="card"
+          style={{ padding: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-surface)' }}
+        >
           <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-heading)' }}>
             Investigação #{investigation.id} — {new Date(investigation.created_at).toLocaleString()}
           </h4>
@@ -113,9 +117,7 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
               Modelo: {investigation.model_used || 'Desconhecido'}
             </span>
             <span>·</span>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              {articleIds.length} artigos
-            </span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{articleIds.length} artigos</span>
             <span>·</span>
             <span
               style={{
@@ -133,7 +135,16 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingRight: '0.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+        }}
+      >
         {isLoading ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
             Carregando resultados...
@@ -144,13 +155,15 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
           </div>
         ) : (
           articleIds.map((articleId) => (
-            <ArticleResultAccordion 
+            <ArticleResultAccordion
               key={articleId}
               articleId={articleId}
               article={articles.find((a) => a.id === articleId)}
               articleResults={resultsByArticle[articleId]}
               defaultExpanded={articleIds.length === 1}
-              onViewDocument={(ev) => navigate(`/articles/${articleId}`, { state: { searchQuery: ev.text, page: ev.page } })}
+              onViewDocument={(ev) =>
+                navigate(`/articles/${articleId}`, { state: { searchQuery: ev.text, page: ev.page } })
+              }
             />
           ))
         )}
@@ -176,28 +189,26 @@ const ArticleResultAccordion: React.FC<{
         padding: '0',
         border: '1px solid var(--border-color)',
         background: 'var(--bg-surface)',
-        overflow: 'hidden'
+        overflow: 'hidden',
       }}
     >
-      <div 
+      <div
         onClick={() => setIsExpanded(!isExpanded)}
-        style={{ 
-          padding: '1rem', 
-          cursor: 'pointer', 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        style={{
+          padding: '1rem',
+          cursor: 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           background: isExpanded ? 'var(--bg-main)' : 'var(--bg-surface)',
           borderBottom: isExpanded ? '1px solid var(--border-color)' : 'none',
-          transition: 'background 0.2s'
+          transition: 'background 0.2s',
         }}
       >
         <h5 style={{ margin: '0', color: 'var(--color-primary)' }}>
           📄 Artigo: {article ? article.title : `Desconhecido (ID: ${articleId})`}
         </h5>
-        <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>
-          {isExpanded ? '▼' : '▶'}
-        </span>
+        <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>{isExpanded ? '▼' : '▶'}</span>
       </div>
 
       {isExpanded && (
@@ -218,9 +229,14 @@ const ArticleResultAccordion: React.FC<{
                 key={res.id}
                 style={{
                   background: 'var(--bg-main)',
-                  padding: ragResult ? '0' : '0.75rem', 
+                  padding: ragResult ? '0' : '0.75rem',
                   borderRadius: 'var(--radius-sm)',
-                  borderLeft: res.status === 'success' ? '3px solid var(--color-success)' : res.status === 'error' ? '3px solid var(--color-danger)' : '3px solid var(--color-warning)'
+                  borderLeft:
+                    res.status === 'success'
+                      ? '3px solid var(--color-success)'
+                      : res.status === 'error'
+                        ? '3px solid var(--color-danger)'
+                        : '3px solid var(--color-warning)',
                 }}
               >
                 {res.status === 'error' ? (
@@ -240,10 +256,7 @@ const ArticleResultAccordion: React.FC<{
                     </div>
                   </div>
                 ) : ragResult ? (
-                  <RAGResultCard 
-                    result={ragResult} 
-                    onViewDocument={onViewDocument}
-                  />
+                  <RAGResultCard result={ragResult} onViewDocument={onViewDocument} />
                 ) : (
                   <div style={{ padding: '0.75rem' }}>
                     <div
@@ -260,7 +273,9 @@ const ArticleResultAccordion: React.FC<{
                       className="markdown-body"
                       style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}
                     >
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{res.answer || '*Nenhuma resposta gerada*'}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {res.answer || '*Nenhuma resposta gerada*'}
+                      </ReactMarkdown>
                     </div>
                     {res.quote && (
                       <div

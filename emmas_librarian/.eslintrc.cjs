@@ -7,7 +7,7 @@ module.exports = {
     'plugin:react-hooks/recommended',
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
-    'plugin:prettier/recommended'
+    'plugin:prettier/recommended',
   ],
   ignorePatterns: ['dist', 'dist-electron', 'build', '.eslintrc.cjs', 'coverage'],
   parser: '@typescript-eslint/parser',
@@ -19,6 +19,6 @@ module.exports = {
   },
   rules: {
     '@typescript-eslint/no-explicit-any': 'warn',
-    'prettier/prettier': 'warn'
+    'prettier/prettier': 'warn',
   },
-}
+};

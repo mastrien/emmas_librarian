@@ -76,7 +76,7 @@ export const EditArticleModal = ({
           errorMsg = err;
         } else if (typeof err === 'object') {
           try {
-            errorMsg = (err as {error?: string}).error || JSON.stringify(err);
+            errorMsg = (err as { error?: string }).error || JSON.stringify(err);
           } catch {
             errorMsg = String(err);
           }
@@ -115,7 +115,7 @@ export const EditArticleModal = ({
           errorMsg = err;
         } else if (typeof err === 'object') {
           try {
-            errorMsg = (err as {error?: string}).error || JSON.stringify(err);
+            errorMsg = (err as { error?: string }).error || JSON.stringify(err);
           } catch {
             errorMsg = String(err);
           }
@@ -123,7 +123,7 @@ export const EditArticleModal = ({
           errorMsg = String(err);
         }
       }
-      
+
       if ((err as any)?.isAppError && (err as any)?.code !== 'ERR_INTERNAL') {
         showError(err);
       } else {

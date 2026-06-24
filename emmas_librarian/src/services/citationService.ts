@@ -13,7 +13,7 @@ export type CitationOutputFormat = 'text' | 'html' | 'bibtex';
 
 export function parseAuthors(authorsStr: string): any[] {
   if (!authorsStr) return [];
-  
+
   let rawAuthors: string[] = [];
   if (authorsStr.includes(';')) {
     rawAuthors = authorsStr.split(';');
@@ -25,7 +25,7 @@ export function parseAuthors(authorsStr: string): any[] {
       const part2 = parts[1].trim();
       const part1HasSpace = part1.includes(' ');
       const part2HasSpace = part2.includes(' ');
-      
+
       if (part1HasSpace && part2HasSpace) {
         rawAuthors = [part1, part2];
       } else {
@@ -39,10 +39,10 @@ export function parseAuthors(authorsStr: string): any[] {
   }
 
   return rawAuthors
-    .map(authorStr => {
+    .map((authorStr) => {
       authorStr = authorStr.trim();
       if (!authorStr) return null;
-      
+
       // If the individual author string has a comma, parse as "Family, Given"
       if (authorStr.includes(',')) {
         const parts = authorStr.split(',');
@@ -50,7 +50,7 @@ export function parseAuthors(authorsStr: string): any[] {
           return { family: parts[0].trim(), given: parts[1].trim() };
         }
       }
-      
+
       // Otherwise, parse as "Given Family"
       const parts = authorStr.split(/\s+/);
       if (parts.length > 1) {
@@ -63,7 +63,12 @@ export function parseAuthors(authorsStr: string): any[] {
     .filter(Boolean);
 }
 
-export function generateCitation(article: any, style: CitationStyle = 'abnt', format: CitationOutputFormat = 'text', useEtAl: boolean = true): string {
+export function generateCitation(
+  article: any,
+  style: CitationStyle = 'abnt',
+  format: CitationOutputFormat = 'text',
+  useEtAl: boolean = true,
+): string {
   try {
     let finalStyle = style;
     if (!useEtAl) {
@@ -71,7 +76,8 @@ export function generateCitation(article: any, style: CitationStyle = 'abnt', fo
       const config = Cite.plugins.config.get('@csl');
       if (config && config.templates) {
         const templates = config.templates;
-        const hasTemplate = typeof templates.has === 'function' ? templates.has(targetStyleName) : !!templates.get(targetStyleName);
+        const hasTemplate =
+          typeof templates.has === 'function' ? templates.has(targetStyleName) : !!templates.get(targetStyleName);
         if (!hasTemplate) {
           const baseXml = templates.get(style);
           if (baseXml) {
@@ -152,13 +158,15 @@ export function generateCitation(article: any, style: CitationStyle = 'abnt', fo
       return cite.format('bibtex');
     }
 
-    return cite.format('bibliography', {
-      format: format === 'html' ? 'html' : 'text',
-      template: finalStyle,
-      lang: style === 'abnt' ? 'pt-BR' : 'en-US'
-    }).trim();
+    return cite
+      .format('bibliography', {
+        format: format === 'html' ? 'html' : 'text',
+        template: finalStyle,
+        lang: style === 'abnt' ? 'pt-BR' : 'en-US',
+      })
+      .trim();
   } catch (error: unknown) {
     console.error('Error generating citation:', error);
-    return `[Erro ao gerar citação: ${article.title}]`;
+    return `[Erro ao gerar citação: ${article?.title || 'artigo inválido'}]`;
   }
 }

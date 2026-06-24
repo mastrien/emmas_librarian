@@ -132,7 +132,10 @@ export const AIExtractionModal = ({
           }}
         >
           <button
-            onClick={() => { setActiveTab('new'); setSelectedHistoryItem(null); }}
+            onClick={() => {
+              setActiveTab('new');
+              setSelectedHistoryItem(null);
+            }}
             style={{
               padding: '0.5rem 1rem',
               background: 'none',
@@ -320,7 +323,11 @@ export const AIExtractionModal = ({
                         className="btn-secondary"
                         onClick={() => setIsCreatingSet(true)}
                         disabled={aiQuestions.filter((q: string) => q.trim().length > 0).length === 0}
-                        title={aiQuestions.filter((q: string) => q.trim().length > 0).length === 0 ? "Adicione perguntas acima para salvar" : "Salvar perguntas atuais como novo conjunto"}
+                        title={
+                          aiQuestions.filter((q: string) => q.trim().length > 0).length === 0
+                            ? 'Adicione perguntas acima para salvar'
+                            : 'Salvar perguntas atuais como novo conjunto'
+                        }
                         style={{ fontSize: '0.85rem' }}
                       >
                         + Salvar Atual
@@ -329,9 +336,11 @@ export const AIExtractionModal = ({
                   )}
 
                   {!isExtracting && !isFinished && (
-                    <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                      <QuestionSetCatalog 
-                        projectId={articlesWithPdf[0]?.project_id || null} 
+                    <div
+                      style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}
+                    >
+                      <QuestionSetCatalog
+                        projectId={articlesWithPdf[0]?.project_id || null}
                         currentQuestions={aiQuestions}
                         onSelectSet={setAiQuestions}
                         isCreatingExternal={isCreatingSet}
@@ -418,11 +427,13 @@ export const AIExtractionModal = ({
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
                             {res.result?.map((r, rIdx) => (
-                              <RAGResultCard 
-                                key={rIdx} 
-                                result={r} 
+                              <RAGResultCard
+                                key={rIdx}
+                                result={r}
                                 onViewDocument={(ev) => {
-                                  navigate(`/reader/${res.article.id}`, { state: { searchQuery: ev.text, page: ev.page } });
+                                  navigate(`/reader/${res.article.id}`, {
+                                    state: { searchQuery: ev.text, page: ev.page },
+                                  });
                                   onClose();
                                 }}
                               />
@@ -437,7 +448,16 @@ export const AIExtractionModal = ({
             )}
           </>
         ) : (
-          <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              paddingRight: '0.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+            }}
+          >
             {selectedHistoryItem ? (
               <InvestigationDetailView
                 investigation={selectedHistoryItem}

@@ -1,10 +1,10 @@
 export type ErrorType = 'USER_ERROR' | 'SYSTEM_ERROR' | 'NETWORK_ERROR' | 'VALIDATION_ERROR';
-export type ErrorCode = 
-  | 'ERR_MISSING_API_KEY' 
-  | 'ERR_MODEL_NOT_DEFINED' 
-  | 'ERR_INVALID_PDF' 
-  | 'ERR_API_QUOTA_EXCEEDED' 
-  | 'ERR_API_UNAUTHORIZED' 
+export type ErrorCode =
+  | 'ERR_MISSING_API_KEY'
+  | 'ERR_MODEL_NOT_DEFINED'
+  | 'ERR_INVALID_PDF'
+  | 'ERR_API_QUOTA_EXCEEDED'
+  | 'ERR_API_UNAUTHORIZED'
   | 'ERR_API_CONNECTION'
   | 'ERR_INTERNAL'
   | 'ERR_NOT_FOUND'
@@ -33,7 +33,7 @@ export class AppError extends Error {
       code: this.code,
       type: this.type,
       message: this.message,
-      details: this.details
+      details: this.details,
     });
   }
 }
@@ -50,16 +50,13 @@ export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(ha
       if (error instanceof AppError) {
         throw new Error(error.toJSONString());
       }
-      
+
       // Attempt to map common raw errors or construct a generic internal error
       const message = error?.message || String(error);
-      const isQuota = message.includes('429') || message.includes('QUOTA_EXCEEDED') || message.includes('insufficient_quota');
-      
-      const appError = new AppError(
-        isQuota ? 'ERR_API_QUOTA_EXCEEDED' : 'ERR_INTERNAL',
-        'SYSTEM_ERROR',
-        message
-      );
+      const isQuota =
+        message.includes('429') || message.includes('QUOTA_EXCEEDED') || message.includes('insufficient_quota');
+
+      const appError = new AppError(isQuota ? 'ERR_API_QUOTA_EXCEEDED' : 'ERR_INTERNAL', 'SYSTEM_ERROR', message);
       throw new Error(appError.toJSONString());
     }
   }) as T;

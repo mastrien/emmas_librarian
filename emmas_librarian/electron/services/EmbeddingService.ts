@@ -1,13 +1,16 @@
 import { AIModelConfig } from '../../src/types';
 
 export class EmbeddingService {
-  constructor(private readonly config: AIModelConfig, private readonly keys?: any) {}
+  constructor(
+    private readonly config: AIModelConfig,
+    private readonly keys?: any,
+  ) {}
 
   async embed(text: string): Promise<number[]> {
     if (this.config.provider === 'ollama') {
       let url = (this.keys?.ollama || 'http://localhost:11434').trim();
       if (url.endsWith('/')) url = url.slice(0, -1);
-      
+
       let endpoint = `${url}/api/embeddings`;
       let body: any = {
         model: this.config.model_name || 'nomic-embed-text',
@@ -40,9 +43,9 @@ export class EmbeddingService {
       if (!this.keys?.openai) throw new Error('OpenAI API key missing for embeddings');
       const response = await fetch('https://api.openai.com/v1/embeddings', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.keys.openai}`
+          Authorization: `Bearer ${this.keys.openai}`,
         },
         body: JSON.stringify({
           model: this.config.model_name || 'text-embedding-3-small',
@@ -60,23 +63,26 @@ export class EmbeddingService {
     }
 
     if (this.config.provider === 'gemini') {
-        if (!this.keys?.gemini) throw new Error('Gemini API key missing for embeddings');
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${this.config.model_name || 'text-embedding-004'}:embedContent?key=${this.keys.gemini}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: `models/${this.config.model_name || 'text-embedding-004'}`,
-                content: { parts: [{ text: text }] }
-            }),
-        });
+      if (!this.keys?.gemini) throw new Error('Gemini API key missing for embeddings');
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${this.config.model_name || 'text-embedding-004'}:embedContent?key=${this.keys.gemini}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: `models/${this.config.model_name || 'text-embedding-004'}`,
+            content: { parts: [{ text: text }] },
+          }),
+        },
+      );
 
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(`Gemini embedding error: ${response.statusText} - ${errText}`);
-        }
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Gemini embedding error: ${response.statusText} - ${errText}`);
+      }
 
-        const data = await response.json();
-        return data.embedding.values as number[];
+      const data = await response.json();
+      return data.embedding.values as number[];
     }
 
     if (this.config.provider === 'anthropic') {

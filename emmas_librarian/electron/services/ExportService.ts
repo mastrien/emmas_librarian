@@ -7,7 +7,11 @@ export class ExportService {
   /**
    * Formats a list of articles as standard CSV content.
    */
-  public exportToCsv(articles: Article[], projectCategories: unknown[] = [], articleCategories: unknown[] = []): string {
+  public exportToCsv(
+    articles: Article[],
+    projectCategories: unknown[] = [],
+    articleCategories: unknown[] = [],
+  ): string {
     const header = [
       'id',
       'doi',
@@ -46,7 +50,11 @@ export class ExportService {
   /**
    * Generates a Buffer containing the XLSX file data.
    */
-  public exportToXlsx(articles: Article[], projectCategories: unknown[] = [], articleCategories: unknown[] = []): Buffer {
+  public exportToXlsx(
+    articles: Article[],
+    projectCategories: unknown[] = [],
+    articleCategories: unknown[] = [],
+  ): Buffer {
     const header = [
       'id',
       'doi',

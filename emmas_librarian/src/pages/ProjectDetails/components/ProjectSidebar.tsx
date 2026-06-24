@@ -28,39 +28,79 @@ export const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
   keywordFrequencies,
   selectedKeyword,
   setSelectedKeyword,
-  setCurrentPage
+  setCurrentPage,
 }) => {
   return (
-    <div className="card glass-panel fade-in" style={{
-      width: '280px',
-      flexShrink: 0,
-      padding: '1.5rem',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '1.5rem',
-      border: '1px solid var(--border-color)',
-      background: 'var(--bg-surface)',
-      borderRadius: 'var(--radius-lg)'
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-        <span style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--text-heading)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+    <div
+      className="card glass-panel fade-in"
+      style={{
+        width: '280px',
+        flexShrink: 0,
+        padding: '1.5rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1.5rem',
+        border: '1px solid var(--border-color)',
+        background: 'var(--bg-surface)',
+        borderRadius: 'var(--radius-lg)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: '1px solid var(--border-color)',
+          paddingBottom: '0.75rem',
+        }}
+      >
+        <span
+          style={{
+            fontWeight: 600,
+            fontSize: '1rem',
+            color: 'var(--text-heading)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+          }}
+        >
           <Filter size={16} /> Filtros Rápidos
         </span>
       </div>
 
       {/* Status Filter */}
       <div>
-        <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>STATUS</h4>
+        <h4
+          style={{
+            margin: '0 0 0.75rem 0',
+            fontSize: '0.85rem',
+            color: 'var(--text-muted)',
+            fontWeight: 600,
+            letterSpacing: '0.05em',
+          }}
+        >
+          STATUS
+        </h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {[
             { id: 'new', label: 'Não Lidos' },
             { id: 'read', label: 'Lidos' },
             { id: 'archived', label: 'Arquivados' },
-            { id: 'all', label: 'Todos' }
-          ].map(st => (
-            <label key={st.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', color: 'var(--text-main)' }}>
-              <input 
-                type="radio" 
+            { id: 'all', label: 'Todos' },
+          ].map((st) => (
+            <label
+              key={st.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                color: 'var(--text-main)',
+              }}
+            >
+              <input
+                type="radio"
                 name="statusFilter"
                 checked={statusFilter === st.id}
                 onChange={() => {
@@ -78,21 +118,41 @@ export const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
       {/* Databases Filter */}
       {uniqueDatabases.length > 0 && (
         <div>
-          <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>BASES DE DADOS</h4>
+          <h4
+            style={{
+              margin: '0 0 0.75rem 0',
+              fontSize: '0.85rem',
+              color: 'var(--text-muted)',
+              fontWeight: 600,
+              letterSpacing: '0.05em',
+            }}
+          >
+            BASES DE DADOS
+          </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {uniqueDatabases.map(db => {
+            {uniqueDatabases.map((db) => {
               const isChecked = selectedDatabases.includes(db);
               return (
-                <label key={db} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer', color: 'var(--text-main)' }}>
-                  <input 
-                    type="checkbox" 
+                <label
+                  key={db}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    color: 'var(--text-main)',
+                  }}
+                >
+                  <input
+                    type="checkbox"
                     aria-label={db}
                     checked={isChecked}
                     onChange={(e) => {
                       if (e.target.checked) {
                         setSelectedDatabases([...selectedDatabases, db]);
                       } else {
-                        setSelectedDatabases(selectedDatabases.filter(d => d !== db));
+                        setSelectedDatabases(selectedDatabases.filter((d) => d !== db));
                       }
                       setCurrentPage(1);
                     }}
@@ -109,7 +169,17 @@ export const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
       {/* Document Type Filter */}
       {uniqueDocTypes.length > 0 && (
         <div>
-          <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>TIPO DE DOCUMENTO</h4>
+          <h4
+            style={{
+              margin: '0 0 0.75rem 0',
+              fontSize: '0.85rem',
+              color: 'var(--text-muted)',
+              fontWeight: 600,
+              letterSpacing: '0.05em',
+            }}
+          >
+            TIPO DE DOCUMENTO
+          </h4>
           <select
             value={selectedDocType}
             onChange={(e) => {
@@ -123,12 +193,14 @@ export const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border-color)',
               background: 'var(--bg-main)',
-              color: 'var(--text-main)'
+              color: 'var(--text-main)',
             }}
           >
             <option value="">Todos os tipos</option>
-            {uniqueDocTypes.map(t => (
-              <option key={t} value={t}>{t}</option>
+            {uniqueDocTypes.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
             ))}
           </select>
         </div>
@@ -137,7 +209,17 @@ export const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
       {/* Tag Cloud Filter */}
       {keywordFrequencies.length > 0 && (
         <div>
-          <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em' }}>NUVEM DE PALAVRAS-CHAVE</h4>
+          <h4
+            style={{
+              margin: '0 0 0.75rem 0',
+              fontSize: '0.85rem',
+              color: 'var(--text-muted)',
+              fontWeight: 600,
+              letterSpacing: '0.05em',
+            }}
+          >
+            NUVEM DE PALAVRAS-CHAVE
+          </h4>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
             {keywordFrequencies.map(({ keyword, count }) => {
               const isActive = selectedKeyword.toLowerCase() === keyword.toLowerCase();
@@ -158,14 +240,16 @@ export const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid',
                     borderColor: isActive ? 'var(--color-primary)' : 'var(--border-color)',
-                    background: isActive ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)' : 'var(--bg-main)',
+                    background: isActive
+                      ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)'
+                      : 'var(--bg-main)',
                     color: isActive ? 'var(--color-primary)' : 'var(--text-main)',
                     cursor: 'pointer',
                     fontWeight: isActive ? 600 : 400,
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.25rem',
-                    transition: 'all var(--transition-fast)'
+                    transition: 'all var(--transition-fast)',
                   }}
                 >
                   <span>{keyword}</span>

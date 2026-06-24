@@ -9,24 +9,28 @@ export function useArticleFilters(articles: Article[], articleCategories: Record
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
   const filteredArticles = useMemo(() => {
-    return articles.filter(article => {
+    return articles.filter((article) => {
       if (selectedStatus && article.status !== selectedStatus) return false;
-      
+
       if (selectedDatabase) {
-        if (selectedDatabase === 'MANUAL' && !(!article.search_id)) return false;
-        if (selectedDatabase !== 'MANUAL' && (!article.source_databases || article.source_databases.toUpperCase() !== selectedDatabase)) return false;
+        if (selectedDatabase === 'MANUAL' && !!article.search_id) return false;
+        if (
+          selectedDatabase !== 'MANUAL' &&
+          (!article.source_databases || article.source_databases.toUpperCase() !== selectedDatabase)
+        )
+          return false;
       }
-      
+
       if (selectedDocType) {
-        if (selectedDocType === 'with_pdf' && !(!!article.local_file_path)) return false;
-        if (selectedDocType === 'without_pdf' && (!!article.local_file_path)) return false;
+        if (selectedDocType === 'with_pdf' && !!!article.local_file_path) return false;
+        if (selectedDocType === 'without_pdf' && !!article.local_file_path) return false;
       }
 
       if (selectedCategory !== null) {
         const cats = articleCategories[article.id] || [];
         if (!cats.includes(selectedCategory)) return false;
       }
-      
+
       if (selectedKeyword) {
         const k = selectedKeyword.toLowerCase();
         const t = (article.title || '').toLowerCase();
@@ -34,17 +38,30 @@ export function useArticleFilters(articles: Article[], articleCategories: Record
         const au = (article.authors || '').toLowerCase();
         if (!t.includes(k) && !a.includes(k) && !au.includes(k)) return false;
       }
-      
+
       return true;
     });
-  }, [articles, selectedStatus, selectedDatabase, selectedDocType, selectedKeyword, selectedCategory, articleCategories]);
+  }, [
+    articles,
+    selectedStatus,
+    selectedDatabase,
+    selectedDocType,
+    selectedKeyword,
+    selectedCategory,
+    articleCategories,
+  ]);
 
   return {
-    selectedStatus, setSelectedStatus,
-    selectedDatabase, setSelectedDatabase,
-    selectedDocType, setSelectedDocType,
-    selectedKeyword, setSelectedKeyword,
-    selectedCategory, setSelectedCategory,
-    filteredArticles
+    selectedStatus,
+    setSelectedStatus,
+    selectedDatabase,
+    setSelectedDatabase,
+    selectedDocType,
+    setSelectedDocType,
+    selectedKeyword,
+    setSelectedKeyword,
+    selectedCategory,
+    setSelectedCategory,
+    filteredArticles,
   };
 }

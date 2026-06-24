@@ -2,10 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
-import {
-  InvestigationResultRepository,
-  InvestigationResultInput,
-} from '../InvestigationResultRepository';
+import { InvestigationResultRepository, InvestigationResultInput } from '../InvestigationResultRepository';
 
 describe('InvestigationResultRepository', () => {
   let db: Database.Database;
@@ -15,20 +12,13 @@ describe('InvestigationResultRepository', () => {
     db = new Database(':memory:');
     db.pragma('foreign_keys = ON');
 
-    const schema = fs.readFileSync(
-      path.join(__dirname, '../schema.sql'),
-      'utf-8',
-    );
+    const schema = fs.readFileSync(path.join(__dirname, '../schema.sql'), 'utf-8');
     db.exec(schema);
 
     // Prerequisite rows for FK constraints
     db.exec(`INSERT INTO projects (name) VALUES ('Test Project')`);
-    db.exec(
-      `INSERT INTO articles (project_id, title, status) VALUES (1, 'Test Article', 'new')`,
-    );
-    db.exec(
-      `INSERT INTO articles (project_id, title, status) VALUES (1, 'Second Article', 'new')`,
-    );
+    db.exec(`INSERT INTO articles (project_id, title, status) VALUES (1, 'Test Article', 'new')`);
+    db.exec(`INSERT INTO articles (project_id, title, status) VALUES (1, 'Second Article', 'new')`);
     db.exec(
       `INSERT INTO massive_investigations (project_id, questions, articles_ids, model_used, status)
        VALUES (1, '["Q1","Q2"]', '[1,2]', 'GPT-4', 'success')`,
@@ -63,9 +53,10 @@ describe('InvestigationResultRepository', () => {
 
     repo.saveResultsBatch(1, 1, inputs);
 
-    const rows = db
-      .prepare('SELECT * FROM investigation_results WHERE investigation_id = 1')
-      .all() as { question: string; status: string }[];
+    const rows = db.prepare('SELECT * FROM investigation_results WHERE investigation_id = 1').all() as {
+      question: string;
+      status: string;
+    }[];
 
     expect(rows).toHaveLength(2);
     expect(rows[0].question).toBe('What is the main finding?');
@@ -75,9 +66,7 @@ describe('InvestigationResultRepository', () => {
   it('does not throw when given an empty array', () => {
     expect(() => repo.saveResultsBatch(1, 1, [])).not.toThrow();
 
-    const rows = db
-      .prepare('SELECT * FROM investigation_results')
-      .all();
+    const rows = db.prepare('SELECT * FROM investigation_results').all();
 
     expect(rows).toHaveLength(0);
   });
@@ -144,9 +133,7 @@ describe('InvestigationResultRepository', () => {
 
     repo.deleteByInvestigation(1);
 
-    const remaining = db
-      .prepare('SELECT * FROM investigation_results')
-      .all();
+    const remaining = db.prepare('SELECT * FROM investigation_results').all();
 
     expect(remaining).toHaveLength(0);
   });

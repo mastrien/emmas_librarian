@@ -16,7 +16,7 @@ import { projectService } from '../../services/api';
 
 const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
-  projectService: {}
+  projectService: {},
 }));
 
 vi.mock('react-pdf-highlighter', () => ({
@@ -30,7 +30,7 @@ vi.mock('react-pdf-highlighter', () => ({
 // Mock window.matchMedia for some components that might need it
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -46,12 +46,20 @@ describe('Page Rendering Coverage', () => {
   beforeEach(() => {
     Object.assign(projectService, fakeService);
     fakeService.reset();
-    
+
     // Default mocks to prevent infinite loading
     fakeService.getProject.mockResolvedValue({ id: 1, name: 'Test Project', created_at: '' });
     fakeService.getProjects.mockResolvedValue([]);
     fakeService.getArticles.mockResolvedValue([]);
-    fakeService.getArticle.mockResolvedValue({ id: 1, project_id: 1, title: 'Test', authors: '', year: 2024, source_databases: '[]', status: 'new' });
+    fakeService.getArticle.mockResolvedValue({
+      id: 1,
+      project_id: 1,
+      title: 'Test',
+      authors: '',
+      year: 2024,
+      source_databases: '[]',
+      status: 'new',
+    });
     fakeService.getSearchHistory.mockResolvedValue([]);
     fakeService.getSetting.mockResolvedValue('');
     fakeService.getProjectCategories.mockResolvedValue([]);
@@ -67,14 +75,17 @@ describe('Page Rendering Coverage', () => {
             <Route path={routePath} element={element} />
           </Routes>
         </MemoryRouter>
-      </GlobalErrorProvider>
+      </GlobalErrorProvider>,
     );
 
     // Wait for any "Carregando" text to disappear if it exists
-    await waitFor(() => {
-      const loadingElements = screen.queryAllByText(/Carregando/i);
-      expect(loadingElements.length).toBe(0);
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        const loadingElements = screen.queryAllByText(/Carregando/i);
+        expect(loadingElements.length).toBe(0);
+      },
+      { timeout: 3000 },
+    );
 
     return container;
   };
@@ -92,7 +103,7 @@ describe('Page Rendering Coverage', () => {
   it('renders ProjectDetailsPage without crashing', async () => {
     const container = await renderAndWait(<ProjectDetailsPage />, '/projects/1', '/projects/:id');
     expect(container).toBeInTheDocument();
-    
+
     // Explicitly check that we're past the loading state
     expect(screen.queryByText(/Projeto não encontrado/i)).not.toBeInTheDocument();
   });
@@ -113,7 +124,11 @@ describe('Page Rendering Coverage', () => {
   });
 
   it('renders ArticleReaderPage without crashing', async () => {
-    const container = await renderAndWait(<ArticleReaderPage />, '/projects/1/article/1', '/projects/:id/article/:articleId');
+    const container = await renderAndWait(
+      <ArticleReaderPage />,
+      '/projects/1/article/1',
+      '/projects/:id/article/:articleId',
+    );
     expect(container).toBeInTheDocument();
   });
 });

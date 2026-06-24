@@ -4,7 +4,12 @@ import { QuestionSet } from '../types';
 export class QuestionSetRepository {
   constructor(private db: Database.Database) {}
 
-  createQuestionSet(data: { project_id: number | null; name: string; description?: string; questions: string }): QuestionSet {
+  createQuestionSet(data: {
+    project_id: number | null;
+    name: string;
+    description?: string;
+    questions: string;
+  }): QuestionSet {
     const stmt = this.db.prepare(`
       INSERT INTO question_sets (project_id, name, description, questions)
       VALUES (?, ?, ?, ?)
@@ -72,7 +77,7 @@ export class QuestionSetRepository {
     `);
     const newName = existing.name.endsWith('(Cópia)') ? existing.name : `${existing.name} (Cópia)`;
     const info = stmt.run(projectId, newName, existing.description, existing.questions);
-    
+
     return info.lastInsertRowid as number;
   }
 }

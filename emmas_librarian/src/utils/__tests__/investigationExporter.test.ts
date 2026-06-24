@@ -56,7 +56,7 @@ describe('investigationExporter', () => {
   it('formatResultsAsJson formats results correctly', () => {
     const jsonStr = formatResultsAsJson(investigation, results, articles);
     const parsed = JSON.parse(jsonStr);
-    
+
     expect(parsed.investigation_id).toBe(1);
     expect(parsed.status).toBe('Sucesso');
     expect(parsed.results).toHaveLength(2);

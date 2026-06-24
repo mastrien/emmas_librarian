@@ -12,7 +12,7 @@ describe('AIModelConfigRepository', () => {
     db = new Database(':memory:');
     const schema = fs.readFileSync(path.join(__dirname, '../schema.sql'), 'utf-8');
     db.exec(schema);
-    
+
     repo = new AIModelConfigRepository(db);
   });
 
@@ -23,8 +23,8 @@ describe('AIModelConfigRepository', () => {
   it('should return default configs when getting all', () => {
     const configs = repo.getAllConfigs();
     expect(configs).toHaveLength(4);
-    
-    const extractionConfig = configs.find(c => c.skill === 'extraction');
+
+    const extractionConfig = configs.find((c) => c.skill === 'extraction');
     expect(extractionConfig).toBeDefined();
     expect(extractionConfig?.provider).toBe('gemini');
     expect(extractionConfig?.model_name).toBe('gemini-2.5-flash');
@@ -32,9 +32,9 @@ describe('AIModelConfigRepository', () => {
 
   it('should update a specific config', () => {
     repo.updateConfig('extraction', 'openai', 'gpt-4o');
-    
+
     const configs = repo.getAllConfigs();
-    const extractionConfig = configs.find(c => c.skill === 'extraction');
+    const extractionConfig = configs.find((c) => c.skill === 'extraction');
     expect(extractionConfig?.provider).toBe('openai');
     expect(extractionConfig?.model_name).toBe('gpt-4o');
   });
@@ -42,9 +42,9 @@ describe('AIModelConfigRepository', () => {
   it('should insert a config if it does not exist when updating', () => {
     // Delete all configs manually first
     db.exec('DELETE FROM ai_model_config');
-    
+
     repo.updateConfig('summary', 'anthropic', 'claude-3-haiku');
-    
+
     const configs = repo.getAllConfigs();
     expect(configs).toHaveLength(1);
     expect(configs[0].skill).toBe('summary');
@@ -54,11 +54,11 @@ describe('AIModelConfigRepository', () => {
   it('should restore default configs', () => {
     repo.updateConfig('extraction', 'openai', 'gpt-4o');
     repo.updateConfig('metadata', 'openai', 'gpt-4o-mini');
-    
+
     repo.restoreDefaults();
-    
+
     const configs = repo.getAllConfigs();
-    const extractionConfig = configs.find(c => c.skill === 'extraction');
+    const extractionConfig = configs.find((c) => c.skill === 'extraction');
     expect(extractionConfig?.provider).toBe('gemini');
     expect(extractionConfig?.model_name).toBe('gemini-2.5-flash');
   });

@@ -7,16 +7,14 @@ import { projectService } from '../../services/api';
 
 const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
-  projectService: {}
+  projectService: {},
 }));
 
 describe('ProjectCategoriesModal', () => {
   beforeEach(() => {
     Object.assign(projectService, fakeService);
     fakeService.reset();
-    fakeService.getProjectCategories.mockResolvedValue([
-      { id: 1, project_id: 1, name: 'Method', type: 'text' },
-    ]);
+    fakeService.getProjectCategories.mockResolvedValue([{ id: 1, project_id: 1, name: 'Method', type: 'text' }]);
   });
 
   it('renders categories and allows creating new ones', async () => {

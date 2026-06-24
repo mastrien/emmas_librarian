@@ -2,7 +2,12 @@
 import { useState } from 'react';
 import { projectService } from '../../../services/api';
 import type { Highlight, Annotation } from '../../../types';
-type IHighlight = { position: unknown; color?: string; content?: { text?: string }; comment: { text: string; emoji?: string } };
+type IHighlight = {
+  position: unknown;
+  color?: string;
+  content?: { text?: string };
+  comment: { text: string; emoji?: string };
+};
 
 export function usePdfAnnotations(id: string | undefined) {
   const [highlights, setHighlights] = useState<Highlight[]>([]);
@@ -20,17 +25,20 @@ export function usePdfAnnotations(id: string | undefined) {
         highlight.color || 'yellow',
         highlight.position,
         highlight.content?.text || null,
-        highlight.comment.text || undefined
+        highlight.comment.text || undefined,
       );
-      setHighlights([{
-        id: response.id.toString(),
-        article_id: parseInt(id),
-        color: highlight.color || 'yellow',
-        position_data: highlight.position,
-        annotation_id: response.annotation_id || undefined,
-        comment: highlight.comment.text || undefined,
-        content_text: highlight.content?.text || undefined
-      }, ...highlights]);
+      setHighlights([
+        {
+          id: response.id.toString(),
+          article_id: parseInt(id),
+          color: highlight.color || 'yellow',
+          position_data: highlight.position,
+          annotation_id: response.annotation_id || undefined,
+          comment: highlight.comment.text || undefined,
+          content_text: highlight.content?.text || undefined,
+        },
+        ...highlights,
+      ]);
     } catch (err) {
       console.error('Erro ao salvar destaque', err);
     }
@@ -40,7 +48,15 @@ export function usePdfAnnotations(id: string | undefined) {
     if (!newAnnotationText.trim() || !id) return;
     try {
       const { id: annId } = await projectService.createAnnotation(parseInt(id), newAnnotationText);
-      setStandaloneAnnotations([{ id: annId, content_markdown: newAnnotationText, created_at: new Date().toISOString(), article_id: parseInt(id || "0") }, ...standaloneAnnotations]);
+      setStandaloneAnnotations([
+        {
+          id: annId,
+          content_markdown: newAnnotationText,
+          created_at: new Date().toISOString(),
+          article_id: parseInt(id || '0'),
+        },
+        ...standaloneAnnotations,
+      ]);
       setNewAnnotationText('');
     } catch (err) {
       console.error('Erro ao criar anotação avulsa', err);
@@ -49,27 +65,27 @@ export function usePdfAnnotations(id: string | undefined) {
 
   const handleDeleteHighlight = async (highlightId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm("Deseja realmente excluir este destaque?")) {
+    if (confirm('Deseja realmente excluir este destaque?')) {
       await projectService.deleteHighlight(parseInt(highlightId));
-      setHighlights(highlights.filter(h => h.id !== highlightId));
+      setHighlights(highlights.filter((h) => h.id !== highlightId));
     }
   };
 
   const handleDeleteStandaloneAnnotation = async (annId: string) => {
-    if (confirm("Deseja realmente excluir esta anotação?")) {
+    if (confirm('Deseja realmente excluir esta anotação?')) {
       await projectService.deleteAnnotation(parseInt(annId));
-      setStandaloneAnnotations(standaloneAnnotations.filter(a => a.id.toString() !== annId.toString()));
+      setStandaloneAnnotations(standaloneAnnotations.filter((a) => a.id.toString() !== annId.toString()));
     }
   };
 
   const handleEditHighlightAnnotation = async (h: Highlight, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!h.annotation_id) {
-      alert("Este destaque não possui uma anotação vinculada inicial. Crie um novo destaque com texto.");
+      alert('Este destaque não possui uma anotação vinculada inicial. Crie um novo destaque com texto.');
       return;
     }
     setEditingId(h.id);
-    setEditContent(h.comment || "");
+    setEditContent(h.comment || '');
   };
 
   const handleEditStandaloneAnnotation = async (a: Annotation) => {
@@ -81,15 +97,19 @@ export function usePdfAnnotations(id: string | undefined) {
     try {
       await projectService.updateAnnotation(annotationId, editContent);
       if (isStandalone) {
-        setStandaloneAnnotations(standaloneAnnotations.map(x => x.id.toString() === idToSave ? { ...x, content_markdown: editContent } : x));
+        setStandaloneAnnotations(
+          standaloneAnnotations.map((x) =>
+            x.id.toString() === idToSave ? { ...x, content_markdown: editContent } : x,
+          ),
+        );
       } else {
-        setHighlights(highlights.map(x => x.id === idToSave ? { ...x, comment: editContent } : x));
+        setHighlights(highlights.map((x) => (x.id === idToSave ? { ...x, comment: editContent } : x)));
       }
       setEditingId(null);
       setEditContent('');
     } catch (e) {
       console.error('Erro ao salvar edição', e);
-      alert("Erro ao salvar edição.");
+      alert('Erro ao salvar edição.');
     }
   };
 
@@ -112,6 +132,6 @@ export function usePdfAnnotations(id: string | undefined) {
     handleDeleteStandaloneAnnotation,
     handleEditHighlightAnnotation,
     handleEditStandaloneAnnotation,
-    saveEdit
+    saveEdit,
   };
 }

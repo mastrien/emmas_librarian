@@ -12,7 +12,7 @@ const renderWithProviders = (ui: React.ReactElement) => {
   return render(
     <MemoryRouter>
       <GlobalErrorProvider>{ui}</GlobalErrorProvider>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 };
 
@@ -103,7 +103,9 @@ describe('AIExtractionModal', () => {
   });
 
   it('renders extraction progress when isExtracting is true', () => {
-    renderWithProviders(<AIExtractionModal {...defaultProps} isExtracting={true} extractionProgress={{ current: 1, total: 2 }} />);
+    renderWithProviders(
+      <AIExtractionModal {...defaultProps} isExtracting={true} extractionProgress={{ current: 1, total: 2 }} />,
+    );
 
     expect(screen.getByText('Processando artigo 1 de 2...')).toBeInTheDocument();
     expect(screen.getByText('Cancelar Investigação')).toBeInTheDocument();
@@ -113,12 +115,14 @@ describe('AIExtractionModal', () => {
     const results = [
       {
         article: { id: 1, project_id: 1, status: 'new', title: 'Article 1' },
-        result: [{ 
-          question: 'What is the goal?', 
-          extracted_answer: 'To test components', 
-          confidenceScore: 0.9, 
-          evidences: [{ text: 'test quotes', page: 1, bbox: {x: 0, y: 0, w: 10, h: 10} }] 
-        }],
+        result: [
+          {
+            question: 'What is the goal?',
+            extracted_answer: 'To test components',
+            confidenceScore: 0.9,
+            evidences: [{ text: 'test quotes', page: 1, bbox: { x: 0, y: 0, w: 10, h: 10 } }],
+          },
+        ],
       },
     ];
 

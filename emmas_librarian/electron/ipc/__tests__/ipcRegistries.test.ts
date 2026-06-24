@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-// import removed
+import { setupIpcRegistries } from '../ipcRegistries';
 import { ipcMain, app, dialog, shell, BrowserWindow } from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -46,50 +46,72 @@ vi.mock('fs', () => {
 
 vi.mock('../../database/DatabaseAdapter', () => {
   return {
-    DatabaseAdapter: vi.fn().mockImplementation(() => ({
-      getAllProjects: vi.fn().mockReturnValue([{ id: 1, name: 'Project 1' }]),
-      createProject: vi.fn().mockReturnValue(1),
-      getProject: vi.fn().mockReturnValue({ id: 1, name: 'Project 1' }),
-      getSearchHistory: vi.fn().mockReturnValue([]),
-      updateProject: vi.fn(),
-      deleteProject: vi.fn(),
-      getArticlesByProject: vi.fn().mockReturnValue([]),
-      getArticle: vi.fn().mockReturnValue({ id: 1, local_file_path: '/mocked/path/file.pdf' }),
-      updateArticleStatus: vi.fn(),
-      updateArticleMetadata: vi.fn(),
-      getSetting: vi.fn(),
-      setSetting: vi.fn(),
-      getAnnotations: vi.fn().mockReturnValue([]),
-      saveAnnotation: vi.fn().mockReturnValue(1),
-      updateAnnotation: vi.fn(),
-      deleteAnnotation: vi.fn(),
-      getHighlights: vi.fn().mockReturnValue([]),
-      saveHighlight: vi.fn().mockReturnValue(1),
-      deleteHighlight: vi.fn(),
-      updateArticleFilePath: vi.fn(),
-      saveArticle: vi.fn().mockReturnValue(1),
-      saveSearchHistory: vi.fn(),
-      getDiaryEntries: vi.fn().mockReturnValue([]),
-      getDiaryEntry: vi.fn().mockReturnValue(null),
-      saveDiaryEntry: vi.fn(),
-      deleteDiaryEntry: vi.fn(),
-      getPendingHighlights: vi.fn().mockReturnValue([]),
-      deletePendingHighlight: vi.fn(),
-      getProjectDocuments: vi.fn().mockReturnValue([]),
-      saveProjectDocument: vi.fn().mockReturnValue(1),
-      deleteProjectDocument: vi.fn(),
-      getMassiveInvestigations: vi.fn().mockReturnValue([]),
-      saveMassiveInvestigation: vi.fn(),
-      getProjectCategories: vi.fn().mockReturnValue([]),
-      getAllProjectArticleCategories: vi.fn().mockReturnValue([]),
-      checkIntegrity: vi.fn().mockReturnValue(true),
-      getTrashItems: vi.fn().mockReturnValue([]),
-      restoreTrashItem: vi.fn(),
-      deleteTrashItemPermanent: vi.fn(),
-      emptyTrash: vi.fn(),
-      getDiaryEntryHistory: vi.fn().mockReturnValue([]),
-      restoreDiaryEntryVersion: vi.fn(),
-    })),
+    DatabaseAdapter: vi.fn().mockImplementation(() => {
+      const Database = require('better-sqlite3');
+      const fsLib = require('fs');
+      const pathLib = require('path');
+      const db = new Database(':memory:');
+
+      try {
+        const schemaPath = pathLib.resolve(__dirname, 'electron/database/schema.sql');
+        const schema = fsLib.readFileSync(schemaPath, 'utf-8');
+        db.exec(schema);
+      } catch (err) {
+        try {
+          const schemaPath = pathLib.resolve(__dirname, '../../database/schema.sql');
+          const schema = fsLib.readFileSync(schemaPath, 'utf-8');
+          db.exec(schema);
+        } catch (e) {
+          console.error('Failed to load schema', e);
+        }
+      }
+
+      return {
+        getDB: vi.fn().mockReturnValue(db),
+        getAllProjects: vi.fn().mockReturnValue([{ id: 1, name: 'Project 1' }]),
+        createProject: vi.fn().mockReturnValue(1),
+        getProject: vi.fn().mockReturnValue({ id: 1, name: 'Project 1' }),
+        getSearchHistory: vi.fn().mockReturnValue([]),
+        updateProject: vi.fn(),
+        deleteProject: vi.fn(),
+        getArticlesByProject: vi.fn().mockReturnValue([]),
+        getArticle: vi.fn().mockReturnValue({ id: 1, local_file_path: '/mocked/path/file.pdf' }),
+        updateArticleStatus: vi.fn(),
+        updateArticleMetadata: vi.fn(),
+        getSetting: vi.fn(),
+        setSetting: vi.fn(),
+        getAnnotations: vi.fn().mockReturnValue([]),
+        saveAnnotation: vi.fn().mockReturnValue(1),
+        updateAnnotation: vi.fn(),
+        deleteAnnotation: vi.fn(),
+        getHighlights: vi.fn().mockReturnValue([]),
+        saveHighlight: vi.fn().mockReturnValue(1),
+        deleteHighlight: vi.fn(),
+        updateArticleFilePath: vi.fn(),
+        saveArticle: vi.fn().mockReturnValue(1),
+        saveSearchHistory: vi.fn(),
+        getDiaryEntries: vi.fn().mockReturnValue([]),
+        getDiaryEntry: vi.fn().mockReturnValue(null),
+        saveDiaryEntry: vi.fn(),
+        deleteDiaryEntry: vi.fn(),
+        getPendingHighlights: vi.fn().mockReturnValue([]),
+        deletePendingHighlight: vi.fn(),
+        getProjectDocuments: vi.fn().mockReturnValue([]),
+        saveProjectDocument: vi.fn().mockReturnValue(1),
+        deleteProjectDocument: vi.fn(),
+        getMassiveInvestigations: vi.fn().mockReturnValue([]),
+        saveMassiveInvestigation: vi.fn(),
+        getProjectCategories: vi.fn().mockReturnValue([]),
+        getAllProjectArticleCategories: vi.fn().mockReturnValue([]),
+        checkIntegrity: vi.fn().mockReturnValue(true),
+        getTrashItems: vi.fn().mockReturnValue([]),
+        restoreTrashItem: vi.fn(),
+        deleteTrashItemPermanent: vi.fn(),
+        emptyTrash: vi.fn(),
+        getDiaryEntryHistory: vi.fn().mockReturnValue([]),
+        restoreDiaryEntryVersion: vi.fn(),
+      };
+    }),
   };
 });
 
@@ -123,7 +145,7 @@ vi.mock('../../services/AIService', () => ({
   })),
 }));
 
-describe.skip("IPC Handlers", () => {
+describe('IPC Handlers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -140,7 +162,9 @@ describe.skip("IPC Handlers", () => {
 
   it('handles PROJECTS_GET_ALL', async () => {
     setupIpcRegistries();
-    const handleCall = (ipcMain.handle as unknown).mock.calls.find((c: unknown) => c[0] === IpcChannel.PROJECTS_GET_ALL);
+    const handleCall = (ipcMain.handle as unknown).mock.calls.find(
+      (c: unknown) => c[0] === IpcChannel.PROJECTS_GET_ALL,
+    );
     expect(handleCall).toBeDefined();
     const handlerFn = handleCall[1];
 
@@ -153,7 +177,7 @@ describe.skip("IPC Handlers", () => {
     const handleCall = (ipcMain.handle as unknown).mock.calls.find((c: unknown) => c[0] === IpcChannel.PDF_UPLOAD);
     const handlerFn = handleCall[1];
 
-    (fs.existsSync as unknown).mockReturnValue(false); // mock dir doesn't exist
+    fs.existsSync.mockReturnValue(false); // mock dir doesn't exist
 
     const result = await handlerFn({} as unknown, 1, '/source.pdf');
     expect(fs.mkdirSync).toHaveBeenCalledWith(path.join('/mocked/path', 'storage', 'pdfs'), { recursive: true });
@@ -166,7 +190,7 @@ describe.skip("IPC Handlers", () => {
     const handleCall = (ipcMain.handle as unknown).mock.calls.find((c: unknown) => c[0] === IpcChannel.EXPORT_CSV);
     const handlerFn = handleCall[1];
 
-    (dialog.showSaveDialog as unknown).mockResolvedValue({ canceled: false, filePath: '/saved/file.csv' });
+    dialog.showSaveDialog.mockResolvedValue({ canceled: false, filePath: '/saved/file.csv' });
 
     const result = await handlerFn({} as unknown, 1);
     expect(dialog.showSaveDialog).toHaveBeenCalled();
@@ -217,8 +241,8 @@ describe.skip("IPC Handlers", () => {
     expect(await callHandler(IpcChannel.HIGHLIGHTS_CREATE, 1, 'red', '{}', 'quote', 'comment')).toBe(1);
 
     // PDF
-    (fs.existsSync as unknown).mockReturnValue(true);
-    (fs.readFileSync as unknown).mockReturnValue(Buffer.from('test'));
+    fs.existsSync.mockReturnValue(true);
+    fs.readFileSync.mockReturnValue(Buffer.from('test'));
     const buf = await callHandler(IpcChannel.PDF_GET, 1);
     expect(buf).toBeDefined(); // mock fs returns undefined or mock value, actually fs.readFileSync is mocked
 

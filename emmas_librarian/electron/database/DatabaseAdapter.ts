@@ -298,7 +298,7 @@ export class DatabaseAdapter {
       const checkVecMigration = this.db
         .prepare("SELECT value FROM settings WHERE key = 'migrated_vec_dimensions_v3'")
         .get() as { value: string } | undefined;
-      
+
       if (!checkVecMigration || checkVecMigration.value !== 'true') {
         const transaction = this.db.transaction(() => {
           this.db.exec(`
@@ -321,7 +321,9 @@ export class DatabaseAdapter {
           `);
         });
         transaction();
-        this.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('migrated_vec_dimensions_v3', 'true')").run();
+        this.db
+          .prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('migrated_vec_dimensions_v3', 'true')")
+          .run();
       }
     } catch (e) {
       console.error('Migration sqlite-vec dimensions error', e);
@@ -685,7 +687,9 @@ export class DatabaseAdapter {
       else if (key === 'api_key_wos') fallbackKey = 'wos_api_key';
 
       if (fallbackKey) {
-        row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(fallbackKey) as { value: string } | undefined;
+        row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(fallbackKey) as
+          | { value: string }
+          | undefined;
         if (row) {
           key = fallbackKey;
         }

@@ -73,9 +73,9 @@ describe('QuestionSetRepository', () => {
 
     const sets = repo.listQuestionSets(1);
     expect(sets.length).toBe(2);
-    expect(sets.find(s => s.name === 'Global Set')).toBeDefined();
-    expect(sets.find(s => s.name === 'Project Set')).toBeDefined();
-    expect(sets.find(s => s.name === 'Another Project Set')).toBeUndefined();
+    expect(sets.find((s) => s.name === 'Global Set')).toBeDefined();
+    expect(sets.find((s) => s.name === 'Project Set')).toBeDefined();
+    expect(sets.find((s) => s.name === 'Another Project Set')).toBeUndefined();
   });
 
   it('updates a question set', () => {

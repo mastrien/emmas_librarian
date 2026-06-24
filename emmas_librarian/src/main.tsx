@@ -91,27 +91,33 @@ document.documentElement.setAttribute('data-theme', savedTheme);
 document.documentElement.setAttribute('data-accent', savedAccent);
 
 if ((window as unknown as { electronAPI?: { invoke: (action: string, arg: string) => void } }).electronAPI) {
-  (window as unknown as { electronAPI?: { invoke: (action: string, arg: string) => void } }).electronAPI.invoke('UPDATE_TITLE_BAR', savedTheme);
+  (window as unknown as { electronAPI?: { invoke: (action: string, arg: string) => void } }).electronAPI.invoke(
+    'UPDATE_TITLE_BAR',
+    savedTheme,
+  );
 }
 
 const rootEl = document.getElementById('root');
-if (rootEl) ReactDOMClient.createRoot(rootEl).render(
-  <GlobalErrorProvider>
-    <HashRouter>
-      <Layout>
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8 text-gray-500">Loading...</div>}>
-          <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/new-project" element={<NewProjectPage />} />
-            <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-            <Route path="/projects/:id/search" element={<SearchPage />} />
-            <Route path="/articles/:id" element={<ArticleReaderPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/terms" element={<TermsOfUsePage />} />
-          </Routes>
-        </Suspense>
-      </Layout>
-    </HashRouter>
-    <ErrorModal />
-  </GlobalErrorProvider>
-);
+if (rootEl)
+  ReactDOMClient.createRoot(rootEl).render(
+    <GlobalErrorProvider>
+      <HashRouter>
+        <Layout>
+          <Suspense
+            fallback={<div className="flex-1 flex items-center justify-center p-8 text-gray-500">Loading...</div>}
+          >
+            <Routes>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/new-project" element={<NewProjectPage />} />
+              <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+              <Route path="/projects/:id/search" element={<SearchPage />} />
+              <Route path="/articles/:id" element={<ArticleReaderPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/terms" element={<TermsOfUsePage />} />
+            </Routes>
+          </Suspense>
+        </Layout>
+      </HashRouter>
+      <ErrorModal />
+    </GlobalErrorProvider>,
+  );
