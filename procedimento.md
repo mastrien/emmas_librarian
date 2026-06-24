@@ -34,3 +34,10 @@ O arquivo `log.md` na raiz do projeto serve como a memória viva da evolução d
 -   **Aplicação (Electron/Node):** Processo Main em TypeScript usando `better-sqlite3`. Seguir tipagem forte e separar a lógica em serviços.
 -   **Frontend (React):** Processo Renderer usando React 19, Hooks e Vite. TypeScript obrigatório. Comunicação exclusiva via IPC (`window.electronAPI.invoke`).
 -   **Commits:** Mensagens claras e em inglês, descrevendo o *quê* e o *porquê* da mudança.
+
+---
+
+## 4. Validação e Qualidade (Obrigatório)
+
+-   **Validação TypeScript:** Nunca considere uma modificação como concluída sem antes executar a validação do TypeScript (ex: rodar `tsc --noEmit` ou certificar-se que a build compila sem erros TS). Nenhuma task deve ser dada como entregue com erros de sintaxe ou de tipagem.
+-   **Cobertura de Testes:** Caso a tarefa consista em uma mudança grande (como um novo módulo ou refatoração profunda) ou imediatamente antes de um commit importante, o código deve passar pela execução de toda a suíte de testes (`npm run test`) para garantir a integridade do sistema.
