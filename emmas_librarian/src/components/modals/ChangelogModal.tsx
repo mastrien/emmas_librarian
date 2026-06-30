@@ -82,6 +82,58 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                   paddingBottom: '0.25rem',
                 }}
               >
+                Versão 1.1.13
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Categorias de Seleção Múltipla:</strong> As categorias do tipo enum e
+                  multiselect agora usam um modelo relacional, permitindo renomear e reordenar opções
+                  sem perder dados históricos dos artigos.
+                </li>
+                <li>
+                  <strong>Sets de Perguntas:</strong> Crie, reutilize e duplique conjuntos de
+                  perguntas para investigações em IA, com suporte a escopo global e por projeto.
+                </li>
+                <li>
+                  <strong>Resultados de Investigação Granulares:</strong> Cada resposta gerada pela
+                  IA em investigações massivas agora é armazenada individualmente, permitindo
+                  visualização e exportação por artigo e pergunta.
+                </li>
+                <li>
+                  <strong>Configuração de Modelos de IA:</strong> Novo painel para selecionar
+                  provider e modelo por habilidade (metadados, resumo, extração, embeddings) com
+                  suporte a OpenAI, Gemini, Anthropic e Ollama.
+                </li>
+                <li>
+                  <strong>Export/Import Completo (.emmapcarc):</strong> A transferência de projetos
+                  entre computadores agora inclui seleções de categorias, sets de perguntas e
+                  resultados de investigação, sem perda de dados.
+                </li>
+                <li>
+                  <strong>RAG e Busca Semântica:</strong> Infraestrutura de chunks de PDF e
+                  embeddings vetoriais para respostas contextualizadas com citação de trecho e página.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
                 Versão 1.1.12
               </h3>
               <ul

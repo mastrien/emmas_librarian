@@ -16,8 +16,8 @@ describe('ChangelogModal', () => {
     // Check if version is rendered
     expect(screen.getByText('Novidades da Versão 2.0.0')).toBeDefined();
 
-    // Check if new features text is present
-    expect(screen.getByText('Categorias de Seleção Múltipla:')).toBeDefined();
+    // Check if new features text is present (may appear in multiple version sections)
+    expect(screen.getAllByText('Categorias de Seleção Múltipla:').length).toBeGreaterThan(0);
 
     // Click to close
     const btn = screen.getByText('Entendido, vamos lá!');
