@@ -15,7 +15,9 @@ export class VectorStore {
 
   /** Garante que a tabela vec0 exista com a dimensão correta. Retorna true se teve que apagar o cache. */
   ensureDimensionAndClearIfMismatched(dim: number): boolean {
-    const tableInfo = this.db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='pdf_chunk_embeddings'").get() as {sql: string} | undefined;
+    const tableInfo = this.db
+      .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='pdf_chunk_embeddings'")
+      .get() as { sql: string } | undefined;
     if (!tableInfo) {
       this.db.exec(`CREATE VIRTUAL TABLE pdf_chunk_embeddings USING vec0(embedding float[${dim}])`);
       return false;
@@ -63,7 +65,7 @@ export class VectorStore {
           chunk.bbox.y,
           chunk.bbox.w,
           chunk.bbox.h,
-          null // token_count
+          null, // token_count
         );
 
         const chunkId = info.lastInsertRowid;
@@ -121,12 +123,16 @@ export class VectorStore {
   removeArticleChunks(articleId: number): void {
     const transaction = this.db.transaction(() => {
       // Find chunk IDs
-      const chunks = this.db.prepare('SELECT id FROM pdf_chunks WHERE article_id = ?').all(articleId) as { id: number }[];
+      const chunks = this.db.prepare('SELECT id FROM pdf_chunks WHERE article_id = ?').all(articleId) as {
+        id: number;
+      }[];
       const chunkIds = chunks.map((c) => c.id);
 
       if (chunkIds.length > 0) {
         // Delete embeddings
-        const deleteEmbeddingsStmt = this.db.prepare(`DELETE FROM pdf_chunk_embeddings WHERE rowid IN (${chunkIds.join(',')})`);
+        const deleteEmbeddingsStmt = this.db.prepare(
+          `DELETE FROM pdf_chunk_embeddings WHERE rowid IN (${chunkIds.join(',')})`,
+        );
         deleteEmbeddingsStmt.run();
 
         // Delete chunks

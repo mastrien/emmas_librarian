@@ -580,5 +580,94 @@ describe('ApiIntegrator', () => {
       expect(normalizedScopus.authors).toBe('Creator Name');
       expect(normalizedScopus.year).toBe(2026);
     });
+
+    it('handles maximum limits via Math.min correctly for all APIs', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({ results: [], message: { items: [] }, 'search-results': { entry: [] }, hits: [] }),
+      } as any);
+
+      // OpenAlex limit > 200
+      await api.searchOpenAlex('test', 'relevance', 300);
+      let urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
+      expect(urlCall).toContain('per_page=200');
+
+      // Crossref limit > 1000
+      await api.searchCrossref('query=test', 'relevance', 1500);
+      urlCall = vi.mocked(fetch).mock.calls[1][0] as string;
+      expect(urlCall).toContain('rows=1000');
+
+      // Scopus limit > 200
+      await api.searchScopus('q', 'key', 'relevance', 300);
+      urlCall = vi.mocked(fetch).mock.calls[2][0] as string;
+      expect(urlCall).toContain('count=200');
+
+      // WoS limit > 50
+      await api.searchWoS('q', 'key', 'relevance', 100);
+      urlCall = vi.mocked(fetch).mock.calls[3][0] as string;
+      expect(urlCall).toContain('limit=50');
+    });
+
+    it('covers specific normalizer edge cases', () => {
+      // OpenAlex name parsing
+      const rawAlex = {
+        doi: '10.1234/direct-doi',
+        authorships: [
+          { author: { display_name: 'John Middle Doe' } },
+          { author: { display_name: 'Single' } }
+        ],
+        open_access: { is_oa: false }
+      };
+      const normAlex = (api as any).normalizeOpenAlex(rawAlex);
+      expect(normAlex.doi).toBe('10.1234/direct-doi');
+      expect(normAlex.authors).toBe('John Middle Doe, Single');
+      expect(normAlex.is_oa).toBe(0);
+
+      // Crossref empty/invalid date and reference types
+      const rawCross = {
+        issued: { 'date-parts': [] },
+        author: [{ given: 'Bob' }],
+        reference: [
+          { DOI: '10.1000/ref' },
+          { unstructured: '' },
+          {}
+        ]
+      };
+      const normCross = (api as any).normalizeCrossref(rawCross);
+      expect(normCross.year).toBeUndefined();
+      expect(normCross.authors).toBe('Bob');
+      expect(normCross.references).toBe('10.1000/ref');
+
+      // Scopus openaccess formats and date fallbacks
+      const rawScopusOa1 = { openaccess: '1', 'prism:coverDate': 'invalid-date' };
+      const rawScopusOaTrue = { openaccess: true, 'prism:coverDate': '' };
+      expect((api as any).normalizeScopus(rawScopusOa1).is_oa).toBe(1);
+      expect((api as any).normalizeScopus(rawScopusOa1).year).toBeNaN();
+      expect((api as any).normalizeScopus(rawScopusOaTrue).is_oa).toBe(1);
+      expect((api as any).normalizeScopus(rawScopusOaTrue).year).toBeUndefined();
+
+      // WoS citation counts
+      const rawWos1 = { uid: 'WOS:1', citations: { length: 5 } };
+      const rawWos2 = { uid: 'WOS:2', citationCount: 10 };
+      expect((api as any).normalizeWoS(rawWos1).citationCount).toBe(5);
+      expect((api as any).normalizeWoS(rawWos2).citationCount).toBe(10);
+    });
+
+    it('covers searchWoS JSON structure variations and error formats', async () => {
+      // test 401 error
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      } as any);
+      await expect(api.searchWoS('q', 'key', 'relevance')).rejects.toThrow('Chave de API inválida ou expirada');
+
+      // invalid json parse fallback
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        text: async () => 'Not a JSON text',
+      } as any);
+      await expect(api.searchWoS('q', 'key', 'relevance')).rejects.toThrow('Erro 400 no Web of Science - Not a JSON text');
+    });
   });
 });

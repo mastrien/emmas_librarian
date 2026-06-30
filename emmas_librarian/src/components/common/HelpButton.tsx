@@ -43,7 +43,8 @@ const tutorials: Record<string, { title: string; content: React.ReactNode }> = {
             <strong>Leitura:</strong> Clique no título de um artigo para abrir o Leitor de PDF e fazer anotações.
           </li>
           <li>
-            <strong>Inteligência Artificial:</strong> Acesse a aba de IA para realizar extrações em lote e pesquisas semânticas (RAG) em múltiplos artigos simultaneamente, utilizando conjuntos de perguntas personalizados.
+            <strong>Inteligência Artificial:</strong> Acesse a aba de IA para realizar extrações em lote e pesquisas
+            semânticas (RAG) em múltiplos artigos simultaneamente, utilizando conjuntos de perguntas personalizados.
           </li>
           <li>
             <strong>Exportar:</strong> Você pode exportar as referências para o Biblioshiny usando o botão no topo da
@@ -154,26 +155,69 @@ const tutorials: Record<string, { title: string; content: React.ReactNode }> = {
         <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <li>
             <strong>Provedores e Chaves:</strong> Insira as chaves de API na seção de chaves:
-            <ul style={{ paddingLeft: '1.5rem', marginTop: '0.25rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <ul
+              style={{
+                paddingLeft: '1.5rem',
+                marginTop: '0.25rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.25rem',
+              }}
+            >
               <li>
-                <strong>OpenAI:</strong> Acesse <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>platform.openai.com</a>.
+                <strong>OpenAI:</strong> Acesse{' '}
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: 'var(--color-primary)' }}
+                >
+                  platform.openai.com
+                </a>
+                .
               </li>
               <li>
-                <strong>Google Gemini:</strong> Acesse o <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>Google AI Studio</a>.
+                <strong>Google Gemini:</strong> Acesse o{' '}
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: 'var(--color-primary)' }}
+                >
+                  Google AI Studio
+                </a>
+                .
               </li>
               <li>
-                <strong>Anthropic Claude:</strong> Acesse <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>console.anthropic.com</a>.
+                <strong>Anthropic Claude:</strong> Acesse{' '}
+                <a
+                  href="https://console.anthropic.com/settings/keys"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: 'var(--color-primary)' }}
+                >
+                  console.anthropic.com
+                </a>
+                .
               </li>
               <li>
-                <strong>Ollama Local:</strong> Instale em <a href="https://ollama.com" target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>ollama.com</a> e configure (padrão: <code>http://127.0.0.1:11434</code>).
+                <strong>Ollama Local:</strong> Instale em{' '}
+                <a href="https://ollama.com" target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>
+                  ollama.com
+                </a>{' '}
+                e configure (padrão: <code>http://127.0.0.1:11434</code>).
               </li>
             </ul>
           </li>
           <li>
-            <strong>Roteamento por Habilidade:</strong> A nova arquitetura permite escolher exatamente qual modelo atende qual funcionalidade. Você pode definir o GPT-4o-mini para Resumos (barato e rápido), enquanto direciona a Extração de Dados complexa (RAG) para o Claude 3.5 Sonnet.
+            <strong>Roteamento por Habilidade:</strong> A nova arquitetura permite escolher exatamente qual modelo
+            atende qual funcionalidade. Você pode definir o GPT-4o-mini para Resumos (barato e rápido), enquanto
+            direciona a Extração de Dados complexa (RAG) para o Claude 3.5 Sonnet.
           </li>
           <li>
-            <strong>Ajuste Fino RAG:</strong> Para a pesquisa semântica, você pode configurar o tamanho do bloco (Chunk Size), sobreposição (Overlap) e quantos resultados retornar (Top-K) para extrair evidências dos seus PDFs com precisão customizada. <em>(Recomendado: Chunk Size = 1000, Overlap = 200, Top-K = 10)</em>.
+            <strong>Ajuste Fino RAG:</strong> Para a pesquisa semântica, você pode configurar o tamanho do bloco (Chunk
+            Size), sobreposição (Overlap) e quantos resultados retornar (Top-K) para extrair evidências dos seus PDFs
+            com precisão customizada. <em>(Recomendado: Chunk Size = 1000, Overlap = 200, Top-K = 10)</em>.
           </li>
         </ul>
 
@@ -182,7 +226,8 @@ const tutorials: Record<string, { title: string; content: React.ReactNode }> = {
         </h4>
         <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <li>
-            As chaves para bases bibliográficas geralmente são obtidas pelos portais institucionais ou de desenvolvedores e permitem realizar a Busca Federada diretamente na aba de Nova Busca.
+            As chaves para bases bibliográficas geralmente são obtidas pelos portais institucionais ou de
+            desenvolvedores e permitem realizar a Busca Federada diretamente na aba de Nova Busca.
           </li>
         </ul>
 
@@ -191,10 +236,13 @@ const tutorials: Record<string, { title: string; content: React.ReactNode }> = {
         </h4>
         <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <li>
-            <strong>Lixeira Global:</strong> Itens e projetos apagados são retidos na Lixeira. Você pode restaurá-los ou esvaziar a lixeira para liberar espaço.
+            <strong>Lixeira Global:</strong> Itens e projetos apagados são retidos na Lixeira. Você pode restaurá-los ou
+            esvaziar a lixeira para liberar espaço.
           </li>
           <li>
-            <strong>Backup Automático:</strong> O app realiza o backup local rotativo da sua base de dados na inicialização, preservando até 7 diários, 4 semanais e 12 mensais. Você também pode engatilhar backups manuais a qualquer momento.
+            <strong>Backup Automático:</strong> O app realiza o backup local rotativo da sua base de dados na
+            inicialização, preservando até 7 diários, 4 semanais e 12 mensais. Você também pode engatilhar backups
+            manuais a qualquer momento.
           </li>
         </ul>
       </div>

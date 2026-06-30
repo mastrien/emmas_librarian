@@ -1,4 +1,4 @@
-global.URL.createObjectURL = vi.fn(() => "blob:mock");
+global.URL.createObjectURL = vi.fn(() => 'blob:mock');
 global.URL.revokeObjectURL = vi.fn();
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
@@ -7,7 +7,9 @@ import { ArticleReaderPage } from '../ArticleReaderPage';
 import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
 
 vi.mock('react-pdf-highlighter', () => ({
-  PdfLoader: ({ children }: { children: (pdf: unknown) => React.ReactNode }) => <div data-testid="pdf-loader">{children({ numPages: 10, getPage: vi.fn() })}</div>,
+  PdfLoader: ({ children }: { children: (pdf: unknown) => React.ReactNode }) => (
+    <div data-testid="pdf-loader">{children({ numPages: 10, getPage: vi.fn() })}</div>
+  ),
   PdfHighlighter: (props: any) => {
     // @ts-ignore
     global.mockPdfHighlighterProps = props;
@@ -23,7 +25,7 @@ import { projectService } from '../../services/api';
 
 const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
-  projectService: {}
+  projectService: {},
 }));
 
 describe('ArticleReaderPage', () => {
@@ -32,7 +34,13 @@ describe('ArticleReaderPage', () => {
     fakeService.reset();
     // Re-apply defaults that the component needs on every render
     fakeService.getProject.mockResolvedValue({ id: 1, name: 'Project 1', created_at: '' });
-    fakeService.getArticle.mockResolvedValue({ id: 1, title: 'Article', local_file_path: 'file.pdf', project_id: 1, status: 'new' });
+    fakeService.getArticle.mockResolvedValue({
+      id: 1,
+      title: 'Article',
+      local_file_path: 'file.pdf',
+      project_id: 1,
+      status: 'new',
+    });
     fakeService.getPdfBuffer.mockResolvedValue(new ArrayBuffer(8));
   });
 
@@ -113,15 +121,19 @@ describe('ArticleReaderPage', () => {
       {
         id: '101',
         article_id: 1,
-        position_data: { boundingRect: { x1: 0, y1: 0, x2: 10, y2: 10, width: 10, height: 10, pageNumber: 1 }, rects: [], pageNumber: 1 },
+        position_data: {
+          boundingRect: { x1: 0, y1: 0, x2: 10, y2: 10, width: 10, height: 10, pageNumber: 1 },
+          rects: [],
+          pageNumber: 1,
+        },
         content_text: 'Highlight text',
         comment: 'A note',
         color: 'yellow',
-        annotation_id: 201
-      }
+        annotation_id: 201,
+      },
     ];
     fakeService.getHighlights.mockResolvedValueOnce(mockHighlights);
-    
+
     render(
       <MemoryRouter initialEntries={['/articles/1']}>
         <GlobalErrorProvider>
@@ -140,7 +152,7 @@ describe('ArticleReaderPage', () => {
     // @ts-ignore
     const passedHighlights = global.mockPdfHighlighterProps.highlights;
     expect(passedHighlights).toHaveLength(1);
-    
+
     // Check if it mapped to the react-pdf-highlighter structure
     const hl = passedHighlights[0];
     expect(hl.position).toBeDefined(); // Used to be undefined when reading position_data directly
@@ -149,7 +161,7 @@ describe('ArticleReaderPage', () => {
     expect(hl.content.text).toBe('Highlight text');
     expect(hl.comment).toBeDefined();
     expect(hl.comment.text).toBe('A note');
-    
+
     // Clean up
     // @ts-ignore
     delete global.mockPdfHighlighterProps;

@@ -24,11 +24,12 @@ export const NewProjectPage: React.FC = () => {
       if (err) {
         if ((err as Error).message) {
           errorMsg = (err as Error).message;
+          errorMsg = errorMsg.replace(/^Error:\s*Error\s*invoking\s*remote\s*method\s*'.*?':\s*/i, '');
         } else if (typeof err === 'string') {
           errorMsg = err;
         } else if (typeof err === 'object') {
           try {
-            errorMsg = (err as {error?: string}).error || JSON.stringify(err);
+            errorMsg = (err as { error?: string }).error || JSON.stringify(err);
           } catch {
             errorMsg = String(err);
           }

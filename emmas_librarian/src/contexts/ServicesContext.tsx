@@ -41,15 +41,8 @@ interface ServicesProviderProps {
  *     <App />
  *   </ServicesProvider>
  */
-export function ServicesProvider({
-  apiService,
-  children,
-}: ServicesProviderProps): ReactNode {
-  return (
-    <ServicesContext.Provider value={apiService}>
-      {children}
-    </ServicesContext.Provider>
-  );
+export function ServicesProvider({ apiService, children }: ServicesProviderProps): ReactNode {
+  return <ServicesContext.Provider value={apiService}>{children}</ServicesContext.Provider>;
 }
 
 /**
@@ -65,8 +58,7 @@ export function useProjectService(): IProjectService {
   const ctx = useContext(ServicesContext);
   if (!ctx) {
     throw new Error(
-      'useProjectService must be used within a <ServicesProvider>. ' +
-        'Received context value: undefined',
+      'useProjectService must be used within a <ServicesProvider>. ' + 'Received context value: undefined',
     );
   }
   return ctx;

@@ -298,7 +298,7 @@ export class DatabaseAdapter {
       const checkVecMigration = this.db
         .prepare("SELECT value FROM settings WHERE key = 'migrated_vec_dimensions_v3'")
         .get() as { value: string } | undefined;
-      
+
       if (!checkVecMigration || checkVecMigration.value !== 'true') {
         const transaction = this.db.transaction(() => {
           this.db.exec(`
@@ -321,7 +321,9 @@ export class DatabaseAdapter {
           `);
         });
         transaction();
-        this.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('migrated_vec_dimensions_v3', 'true')").run();
+        this.db
+          .prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('migrated_vec_dimensions_v3', 'true')")
+          .run();
       }
     } catch (e) {
       console.error('Migration sqlite-vec dimensions error', e);
@@ -442,42 +444,69 @@ export class DatabaseAdapter {
     return stmt.all() as Project[];
   }
 
-  // Articles
-  saveArticle(projectId: number, data: ArticleInput): number {
+  findDuplicateArticle(projectId: number, doi: string | null | undefined, title: string): Article | undefined {
+    if (doi) {
+      const stmt = this.db.prepare('SELECT * FROM articles WHERE project_id = ? AND doi = ? AND deleted_at IS NULL');
+      return stmt.get(projectId, doi) as Article | undefined;
+    }
+    const normalizedTarget = this.normalizeTitleForDb(title);
+    const stmt = this.db.prepare('SELECT * FROM articles WHERE project_id = ? AND deleted_at IS NULL');
+    const articles = stmt.all(projectId) as Article[];
+    return articles.find(art => this.normalizeTitleForDb(art.title) === normalizedTarget);
+  }
+
+  private normalizeTitleForDb(title: string): string {
+    if (!title) return '';
+    return title
+      .replace(/<[^>]*>/g, '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private mergeDuplicateArticle(existing: Article, data: ArticleInput): number {
+    const existingSources = JSON.parse(existing.source_databases || '[]');
+    const newSources = JSON.parse(data.source_databases || '[]');
+    const merged = Array.from(new Set([...existingSources, ...newSources]));
+    
+    const stmt = this.db.prepare('UPDATE articles SET source_databases = ? WHERE id = ?');
+    stmt.run(JSON.stringify(merged), existing.id);
+    return existing.id;
+  }
+
+  private buildArticleParams(projectId: number, d: ArticleInput) {
+    return {
+      project_id: projectId, doi: d.doi || null, title: d.title, authors: d.authors || null, year: d.year || null,
+      source_query: d.source_query, source_databases: d.source_databases, csl_json: d.csl_json,
+      abstract: d.abstract || null, author_keywords: d.author_keywords || null, index_keywords: d.index_keywords || null,
+      journal: d.journal || null, volume: d.volume || null, issue: d.issue || null, pages: d.pages || null,
+      affiliations: d.affiliations || null, references_list: d.references_list || null, document_type: d.document_type || null,
+      issn: d.issn || null, citation_count: d.citation_count || null, search_id: d.search_id || null,
+      is_oa: d.is_oa !== undefined ? d.is_oa : null, publisher: d.publisher || null, url: d.url || null, accessed: d.accessed || null,
+    };
+  }
+
+  private insertNewArticle(projectId: number, data: ArticleInput): number {
     const stmt = this.db.prepare(`
       INSERT INTO articles (project_id, doi, title, authors, year, source_query, source_databases, csl_json,
         abstract, author_keywords, index_keywords, journal, volume, issue, pages, affiliations, references_list, document_type, issn, citation_count, search_id, is_oa, publisher, url, accessed)
       VALUES (@project_id, @doi, @title, @authors, @year, @source_query, @source_databases, @csl_json,
         @abstract, @author_keywords, @index_keywords, @journal, @volume, @issue, @pages, @affiliations, @references_list, @document_type, @issn, @citation_count, @search_id, @is_oa, @publisher, @url, @accessed)
     `);
-    const info = stmt.run({
-      project_id: projectId,
-      doi: data.doi || null,
-      title: data.title,
-      authors: data.authors || null,
-      year: data.year || null,
-      source_query: data.source_query,
-      source_databases: data.source_databases,
-      csl_json: data.csl_json,
-      abstract: data.abstract || null,
-      author_keywords: data.author_keywords || null,
-      index_keywords: data.index_keywords || null,
-      journal: data.journal || null,
-      volume: data.volume || null,
-      issue: data.issue || null,
-      pages: data.pages || null,
-      affiliations: data.affiliations || null,
-      references_list: data.references_list || null,
-      document_type: data.document_type || null,
-      issn: data.issn || null,
-      citation_count: data.citation_count || null,
-      search_id: data.search_id || null,
-      is_oa: data.is_oa !== undefined ? data.is_oa : null,
-      publisher: data.publisher || null,
-      url: data.url || null,
-      accessed: data.accessed || null,
-    });
+    const info = stmt.run(this.buildArticleParams(projectId, data));
     return info.lastInsertRowid as number;
+  }
+
+  // Articles
+  saveArticle(projectId: number, data: ArticleInput): number {
+    const existing = this.findDuplicateArticle(projectId, data.doi, data.title);
+    if (existing) {
+      return this.mergeDuplicateArticle(existing, data);
+    }
+    return this.insertNewArticle(projectId, data);
   }
 
   getArticle(id: number): Article | undefined {
@@ -498,7 +527,21 @@ export class DatabaseAdapter {
     return stmt.all(projectId) as Article[];
   }
 
+  private unlinkFileIfExists(filePath: string): void {
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (err) {
+      console.error('Failed to remove file:', err);
+    }
+  }
+
   updateArticleFilePath(articleId: number, path: string | null): void {
+    const existing = this.getArticle(articleId);
+    if (existing && existing.local_file_path && existing.local_file_path !== path) {
+      this.unlinkFileIfExists(existing.local_file_path);
+    }
     const stmt = this.db.prepare('UPDATE articles SET local_file_path = ? WHERE id = ?');
     stmt.run(path, articleId);
   }
@@ -685,7 +728,9 @@ export class DatabaseAdapter {
       else if (key === 'api_key_wos') fallbackKey = 'wos_api_key';
 
       if (fallbackKey) {
-        row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(fallbackKey) as { value: string } | undefined;
+        row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(fallbackKey) as
+          | { value: string }
+          | undefined;
         if (row) {
           key = fallbackKey;
         }

@@ -12,7 +12,7 @@ import { projectService } from '../../services/api';
 
 const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
-  projectService: {}
+  projectService: {},
 }));
 
 // Mock citationService — keep parseAuthors real so sort-by-last-name logic works

@@ -45,7 +45,7 @@ describe('QuestionSetCatalog', () => {
     });
 
     fireEvent.click(screen.getByText('Usar'));
-    expect(onSelectMock).toHaveBeenCalledWith(["A?", "B?"]);
+    expect(onSelectMock).toHaveBeenCalledWith(['A?', 'B?']);
   });
 
   it('renders an empty state if no sets exist', async () => {

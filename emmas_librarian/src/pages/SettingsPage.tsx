@@ -1,19 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import type { TrashItem, AIModelConfig, AISkill, AIProvider } from '../types';
 import { projectService } from '../services/api';
-import { Settings, Moon, Sun, Key, Save, CheckCircle, Brain, ShieldAlert, Trash2, RotateCcw, X, Download, Upload, Shuffle } from 'lucide-react';
+import {
+  Settings,
+  Moon,
+  Sun,
+  Key,
+  Save,
+  CheckCircle,
+  Brain,
+  ShieldAlert,
+  Trash2,
+  RotateCcw,
+  X,
+  Download,
+  Upload,
+  Shuffle,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const SettingsPage: React.FC = () => {
-  const [theme, setTheme] = useState<'light' | 'dark'>(
-    (localStorage.getItem('theme') as 'light' | 'dark') || 'light'
-  );
-  const [accent, setAccent] = useState<string>(
-    localStorage.getItem('accent') || 'blue'
-  );
+  const [theme, setTheme] = useState<'light' | 'dark'>((localStorage.getItem('theme') as 'light' | 'dark') || 'light');
+  const [accent, setAccent] = useState<string>(localStorage.getItem('accent') || 'blue');
   const [scopusKey, setScopusKey] = useState('');
   const [wosKey, setWosKey] = useState('');
-  
+
   const [openaiKey, setOpenaiKey] = useState('');
   const [anthropicKey, setAnthropicKey] = useState('');
   const [geminiKey, setGeminiKey] = useState('');
@@ -66,7 +77,7 @@ export const SettingsPage: React.FC = () => {
       if (rOverlap) setRagChunkOverlap(rOverlap);
       if (rTopK) setRagTopK(rTopK);
       setAutoBackups(backupsEnabledSetting !== 'false');
-      
+
       try {
         const v = await projectService.getAppVersion();
         setAppVersion(v);
@@ -137,9 +148,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleUpdateAiConfig = (skill: AISkill, field: 'provider' | 'model_name', value: string) => {
-    setAiConfigs(prev => prev.map(c => 
-      c.skill === skill ? { ...c, [field]: value } : c
-    ));
+    setAiConfigs((prev) => prev.map((c) => (c.skill === skill ? { ...c, [field]: value } : c)));
   };
 
   const handleToggleAutoBackups = async (enabled: boolean) => {
@@ -197,7 +206,11 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleRestoreAutoBackup = async (filename: string) => {
-    if (confirm(`ATENÇÃO: Isso irá SOBRESCREVER todos os dados atuais (projetos, artigos, PDFs, etc) com o conteúdo do backup automático "${filename}". Todos os dados atuais não salvos em backups serão PERDIDOS permanentemente. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?`)) {
+    if (
+      confirm(
+        `ATENÇÃO: Isso irá SOBRESCREVER todos os dados atuais (projetos, artigos, PDFs, etc) com o conteúdo do backup automático "${filename}". Todos os dados atuais não salvos em backups serão PERDIDOS permanentemente. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?`,
+      )
+    ) {
       try {
         const success = await projectService.restoreAutoBackup(filename);
         if (!success) {
@@ -223,7 +236,11 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleRestoreBackupOverride = async () => {
-    if (confirm('ATENÇÃO: Isso irá SOBRESCREVER todos os dados atuais (projetos, artigos, PDFs, etc) com as informações do backup. Todos os dados atuais não salvos em backups serão PERDIDOS permanentemente. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?')) {
+    if (
+      confirm(
+        'ATENÇÃO: Isso irá SOBRESCREVER todos os dados atuais (projetos, artigos, PDFs, etc) com as informações do backup. Todos os dados atuais não salvos em backups serão PERDIDOS permanentemente. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?',
+      )
+    ) {
       try {
         const success = await projectService.restoreBackupOverride();
         if (!success) {
@@ -242,7 +259,9 @@ export const SettingsPage: React.FC = () => {
       if (count > 0) {
         alert(`${count} projetos novos foram importados e mesclados com sucesso!`);
       } else if (count === 0) {
-        alert('Nenhum projeto novo encontrado no backup para importar (todos os projetos já existem no seu banco atual).');
+        alert(
+          'Nenhum projeto novo encontrado no backup para importar (todos os projetos já existem no seu banco atual).',
+        );
       }
     } catch (err) {
       console.error('Failed to merge backup:', err);
@@ -253,7 +272,15 @@ export const SettingsPage: React.FC = () => {
   return (
     <div className="fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-        <div style={{ background: 'var(--color-primary)', color: 'white', padding: '0.75rem', borderRadius: 'var(--radius-lg)', display: 'flex' }}>
+        <div
+          style={{
+            background: 'var(--color-primary)',
+            color: 'white',
+            padding: '0.75rem',
+            borderRadius: 'var(--radius-lg)',
+            display: 'flex',
+          }}
+        >
           <Settings size={28} />
         </div>
         <h1 style={{ margin: 0, fontSize: '2.5rem' }}>Configurações</h1>
@@ -262,7 +289,15 @@ export const SettingsPage: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         {/* Theme Section */}
         <div className="card" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <h2
+            style={{
+              fontSize: '1.5rem',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+            }}
+          >
             Aparência
           </h2>
           <div style={{ display: 'flex', gap: '1rem' }}>
@@ -279,11 +314,13 @@ export const SettingsPage: React.FC = () => {
                 alignItems: 'center',
                 gap: '0.75rem',
                 cursor: 'pointer',
-                transition: 'all var(--transition-fast)'
+                transition: 'all var(--transition-fast)',
               }}
             >
               <Sun size={32} color={theme === 'light' ? 'var(--color-primary)' : 'var(--text-muted)'} />
-              <span style={{ fontWeight: 600, color: theme === 'light' ? 'var(--color-primary)' : 'var(--text-main)' }}>Modo Claro</span>
+              <span style={{ fontWeight: 600, color: theme === 'light' ? 'var(--color-primary)' : 'var(--text-main)' }}>
+                Modo Claro
+              </span>
             </button>
             <button
               onClick={() => handleThemeChange('dark')}
@@ -298,11 +335,13 @@ export const SettingsPage: React.FC = () => {
                 alignItems: 'center',
                 gap: '0.75rem',
                 cursor: 'pointer',
-                transition: 'all var(--transition-fast)'
+                transition: 'all var(--transition-fast)',
               }}
             >
               <Moon size={32} color={theme === 'dark' ? 'var(--color-primary)' : 'var(--text-muted)'} />
-              <span style={{ fontWeight: 600, color: theme === 'dark' ? 'var(--color-primary)' : 'var(--text-main)' }}>Modo Escuro</span>
+              <span style={{ fontWeight: 600, color: theme === 'dark' ? 'var(--color-primary)' : 'var(--text-main)' }}>
+                Modo Escuro
+              </span>
             </button>
           </div>
 
@@ -317,7 +356,7 @@ export const SettingsPage: React.FC = () => {
                 { id: 'green', color: '#059669', label: 'Verde' },
                 { id: 'purple', color: '#7c3aed', label: 'Roxo' },
                 { id: 'orange', color: '#ea580c', label: 'Laranja' },
-                { id: 'red', color: '#dc2626', label: 'Vermelho' }
+                { id: 'red', color: '#dc2626', label: 'Vermelho' },
               ].map((colorObj) => (
                 <button
                   key={colorObj.id}
@@ -331,8 +370,9 @@ export const SettingsPage: React.FC = () => {
                     border: `3px solid ${accent === colorObj.id ? 'var(--text-heading)' : 'transparent'}`,
                     cursor: 'pointer',
                     transition: 'transform var(--transition-fast)',
-                    boxShadow: accent === colorObj.id ? '0 0 0 2px var(--bg-surface), 0 0 0 4px ' + colorObj.color : 'none',
-                    transform: accent === colorObj.id ? 'scale(1.1)' : 'scale(1)'
+                    boxShadow:
+                      accent === colorObj.id ? '0 0 0 2px var(--bg-surface), 0 0 0 4px ' + colorObj.color : 'none',
+                    transform: accent === colorObj.id ? 'scale(1.1)' : 'scale(1)',
                   }}
                 />
               ))}
@@ -342,18 +382,39 @@ export const SettingsPage: React.FC = () => {
 
         {/* API Keys Section */}
         <div className="card" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <h2
+            style={{
+              fontSize: '1.5rem',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+            }}
+          >
             Chaves de API
           </h2>
           <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-            Insira suas chaves de API para habilitar buscas no Scopus e Web of Science. As chaves são armazenadas localmente no seu banco de dados.
+            Insira suas chaves de API para habilitar buscas no Scopus e Web of Science. As chaves são armazenadas
+            localmente no seu banco de dados.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Scopus API Key</label>
+              <label
+                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}
+              >
+                Scopus API Key
+              </label>
               <div style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
                   <Key size={18} />
                 </div>
                 <input
@@ -368,16 +429,28 @@ export const SettingsPage: React.FC = () => {
                     border: '1px solid var(--border-color)',
                     background: 'var(--bg-main)',
                     color: 'var(--text-main)',
-                    outline: 'none'
+                    outline: 'none',
                   }}
                 />
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Web of Science API Key</label>
+              <label
+                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}
+              >
+                Web of Science API Key
+              </label>
               <div style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
                   <Key size={18} />
                 </div>
                 <input
@@ -392,7 +465,7 @@ export const SettingsPage: React.FC = () => {
                     border: '1px solid var(--border-color)',
                     background: 'var(--bg-main)',
                     color: 'var(--text-main)',
-                    outline: 'none'
+                    outline: 'none',
                   }}
                 />
               </div>
@@ -402,48 +475,185 @@ export const SettingsPage: React.FC = () => {
 
         {/* AI API Keys Section */}
         <div className="card" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <h2
+            style={{
+              fontSize: '1.5rem',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+            }}
+          >
             <Brain size={24} color="var(--color-primary)" /> Integrações de Inteligência Artificial
           </h2>
-          <div style={{ padding: '1rem', background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: 'var(--radius-md)', marginBottom: '2rem', display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+          <div
+            style={{
+              padding: '1rem',
+              background: 'rgba(234, 179, 8, 0.1)',
+              border: '1px solid rgba(234, 179, 8, 0.3)',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '2rem',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.75rem',
+            }}
+          >
             <ShieldAlert size={20} color="var(--color-warning)" style={{ flexShrink: 0, marginTop: '2px' }} />
             <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-              Ao usar funcionalidades de Inteligência Artificial, dados podem ser enviados para provedores externos. 
+              Ao usar funcionalidades de Inteligência Artificial, dados podem ser enviados para provedores externos.
               <br />
-              <Link to="/terms" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Leia os Termos de Uso e IA completos aqui.</Link>
+              <Link to="/terms" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+                Leia os Termos de Uso e IA completos aqui.
+              </Link>
             </p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>OpenAI API Key</label>
+              <label
+                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}
+              >
+                OpenAI API Key
+              </label>
               <div style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Key size={18} /></div>
-                <input type="password" value={openaiKey} onChange={(e) => setOpenaiKey(e.target.value)} placeholder="sk-..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none' }} />
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  <Key size={18} />
+                </div>
+                <input
+                  type="password"
+                  value={openaiKey}
+                  onChange={(e) => setOpenaiKey(e.target.value)}
+                  placeholder="sk-..."
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem 1rem 0.8rem 2.8rem',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-main)',
+                    color: 'var(--text-main)',
+                    outline: 'none',
+                  }}
+                />
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Google Gemini API Key</label>
+              <label
+                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}
+              >
+                Google Gemini API Key
+              </label>
               <div style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Key size={18} /></div>
-                <input type="password" value={geminiKey} onChange={(e) => setGeminiKey(e.target.value)} placeholder="AIza..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none' }} />
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  <Key size={18} />
+                </div>
+                <input
+                  type="password"
+                  value={geminiKey}
+                  onChange={(e) => setGeminiKey(e.target.value)}
+                  placeholder="AIza..."
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem 1rem 0.8rem 2.8rem',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-main)',
+                    color: 'var(--text-main)',
+                    outline: 'none',
+                  }}
+                />
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Anthropic API Key</label>
+              <label
+                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}
+              >
+                Anthropic API Key
+              </label>
               <div style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Key size={18} /></div>
-                <input type="password" value={anthropicKey} onChange={(e) => setAnthropicKey(e.target.value)} placeholder="sk-ant-..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none' }} title="Ex: claude-3-5-sonnet-20240620" />
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  <Key size={18} />
+                </div>
+                <input
+                  type="password"
+                  value={anthropicKey}
+                  onChange={(e) => setAnthropicKey(e.target.value)}
+                  placeholder="sk-ant-..."
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem 1rem 0.8rem 2.8rem',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-main)',
+                    color: 'var(--text-main)',
+                    outline: 'none',
+                  }}
+                  title="Ex: claude-3-5-sonnet-20240620"
+                />
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>Ollama URL <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>(Ex: http://127.0.0.1:11434/v1)</span></label>
+              <label
+                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}
+              >
+                Ollama URL{' '}
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>
+                  (Ex: http://127.0.0.1:11434/v1)
+                </span>
+              </label>
               <div style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Key size={18} /></div>
-                <input type="text" value={ollamaUrl} onChange={(e) => setOllamaUrl(e.target.value)} placeholder="http://127.0.0.1:11434/v1" style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)', outline: 'none' }} />
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  <Key size={18} />
+                </div>
+                <input
+                  type="text"
+                  value={ollamaUrl}
+                  onChange={(e) => setOllamaUrl(e.target.value)}
+                  placeholder="http://127.0.0.1:11434/v1"
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem 1rem 0.8rem 2.8rem',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-main)',
+                    color: 'var(--text-main)',
+                    outline: 'none',
+                  }}
+                />
               </div>
             </div>
 
@@ -464,23 +674,57 @@ export const SettingsPage: React.FC = () => {
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {aiConfigs.map(conf => (
-                  <div key={conf.skill} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1rem', background: 'var(--bg-main)' }}>
-                    <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-heading)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {aiConfigs.map((conf) => (
+                  <div
+                    key={conf.skill}
+                    style={{
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '1rem',
+                      background: 'var(--bg-main)',
+                    }}
+                  >
+                    <h4
+                      style={{
+                        margin: '0 0 1rem 0',
+                        color: 'var(--text-heading)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
                       {conf.skill === 'metadata' && '📄 Extração de Metadados'}
                       {conf.skill === 'summary' && '📝 Geração de Resumos'}
                       {conf.skill === 'extraction' && '🔍 Investigação Massiva (RAG)'}
                       {conf.skill === 'embeddings' && '🧮 Embeddings (Vetorização)'}
                     </h4>
-                    
+
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Provedor</label>
-                        <select 
+                        <label
+                          style={{
+                            display: 'block',
+                            marginBottom: '0.5rem',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            color: 'var(--text-muted)',
+                          }}
+                        >
+                          Provedor
+                        </label>
+                        <select
                           value={conf.provider}
                           onChange={(e) => handleUpdateAiConfig(conf.skill, 'provider', e.target.value as AIProvider)}
                           className="input-field"
-                          style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', outline: 'none' }}
+                          style={{
+                            width: '100%',
+                            padding: '0.6rem 0.8rem',
+                            borderRadius: 'var(--radius-md)',
+                            border: '1px solid var(--border-color)',
+                            background: 'var(--bg-surface)',
+                            color: 'var(--text-main)',
+                            outline: 'none',
+                          }}
                         >
                           <option value="gemini">Google Gemini</option>
                           <option value="openai">OpenAI</option>
@@ -489,13 +733,31 @@ export const SettingsPage: React.FC = () => {
                         </select>
                       </div>
                       <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Modelo</label>
-                        <input 
-                          type="text" 
+                        <label
+                          style={{
+                            display: 'block',
+                            marginBottom: '0.5rem',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            color: 'var(--text-muted)',
+                          }}
+                        >
+                          Modelo
+                        </label>
+                        <input
+                          type="text"
                           value={conf.model_name}
                           onChange={(e) => handleUpdateAiConfig(conf.skill, 'model_name', e.target.value)}
                           className="input-field"
-                          style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', outline: 'none' }}
+                          style={{
+                            width: '100%',
+                            padding: '0.6rem 0.8rem',
+                            borderRadius: 'var(--radius-md)',
+                            border: '1px solid var(--border-color)',
+                            background: 'var(--bg-surface)',
+                            color: 'var(--text-main)',
+                            outline: 'none',
+                          }}
                           placeholder="Ex: gemini-2.5-flash"
                         />
                       </div>
@@ -509,44 +771,113 @@ export const SettingsPage: React.FC = () => {
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Tamanho do Chunk (caracteres)</label>
-                      <input 
-                        type="number" 
+                      <label
+                        style={{
+                          display: 'block',
+                          marginBottom: '0.5rem',
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          color: 'var(--text-muted)',
+                        }}
+                      >
+                        Tamanho do Chunk (caracteres)
+                      </label>
+                      <input
+                        type="number"
                         value={ragChunkSize}
                         onChange={(e) => setRagChunkSize(e.target.value)}
                         className="input-field"
-                        style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', outline: 'none' }}
+                        style={{
+                          width: '100%',
+                          padding: '0.6rem 0.8rem',
+                          borderRadius: 'var(--radius-md)',
+                          border: '1px solid var(--border-color)',
+                          background: 'var(--bg-surface)',
+                          color: 'var(--text-main)',
+                          outline: 'none',
+                        }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Overlap (caracteres)</label>
-                      <input 
-                        type="number" 
+                      <label
+                        style={{
+                          display: 'block',
+                          marginBottom: '0.5rem',
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          color: 'var(--text-muted)',
+                        }}
+                      >
+                        Overlap (caracteres)
+                      </label>
+                      <input
+                        type="number"
                         value={ragChunkOverlap}
                         onChange={(e) => setRagChunkOverlap(e.target.value)}
                         className="input-field"
-                        style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', outline: 'none' }}
+                        style={{
+                          width: '100%',
+                          padding: '0.6rem 0.8rem',
+                          borderRadius: 'var(--radius-md)',
+                          border: '1px solid var(--border-color)',
+                          background: 'var(--bg-surface)',
+                          color: 'var(--text-main)',
+                          outline: 'none',
+                        }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Chunks Recuperados (Top K)</label>
-                      <input 
-                        type="number" 
+                      <label
+                        style={{
+                          display: 'block',
+                          marginBottom: '0.5rem',
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          color: 'var(--text-muted)',
+                        }}
+                      >
+                        Chunks Recuperados (Top K)
+                      </label>
+                      <input
+                        type="number"
                         value={ragTopK}
                         onChange={(e) => setRagTopK(e.target.value)}
                         className="input-field"
-                        style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-surface)', color: 'var(--text-main)', outline: 'none' }}
+                        style={{
+                          width: '100%',
+                          padding: '0.6rem 0.8rem',
+                          borderRadius: 'var(--radius-md)',
+                          border: '1px solid var(--border-color)',
+                          background: 'var(--bg-surface)',
+                          color: 'var(--text-main)',
+                          outline: 'none',
+                        }}
                       />
                     </div>
                   </div>
                 </div>
 
-                <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <button onClick={handleRestoreAiDefaults} className="btn-secondary" style={{ color: 'var(--color-danger)', fontSize: '0.9rem', padding: '0.5rem 1rem' }}>
+                <div
+                  style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <button
+                    onClick={handleRestoreAiDefaults}
+                    className="btn-secondary"
+                    style={{ color: 'var(--color-danger)', fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+                  >
                     <RotateCcw size={14} style={{ marginRight: '0.4rem' }} /> Restaurar Padrões
                   </button>
-                  <button onClick={handleSaveKeys} className="btn-primary" disabled={saving} style={{ minWidth: '150px' }}>
-                    {saved ? <CheckCircle size={18} style={{ marginRight: '0.4rem' }} /> : <Save size={18} style={{ marginRight: '0.4rem' }} />}
+                  <button
+                    onClick={handleSaveKeys}
+                    className="btn-primary"
+                    disabled={saving}
+                    style={{ minWidth: '150px' }}
+                  >
+                    {saved ? (
+                      <CheckCircle size={18} style={{ marginRight: '0.4rem' }} />
+                    ) : (
+                      <Save size={18} style={{ marginRight: '0.4rem' }} />
+                    )}
                     {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar Configuração'}
                   </button>
                 </div>
@@ -555,11 +886,11 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-
-
         {/* Backup Settings Section */}
         <div className="card" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <h2
+            style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+          >
             <Save size={24} color="var(--color-primary)" /> Backup & Segurança
           </h2>
           <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
@@ -567,7 +898,9 @@ export const SettingsPage: React.FC = () => {
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', userSelect: 'none' }}>
+            <label
+              style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', userSelect: 'none' }}
+            >
               <input
                 type="checkbox"
                 checked={autoBackups}
@@ -578,55 +911,112 @@ export const SettingsPage: React.FC = () => {
                 <span style={{ fontWeight: 600, color: 'var(--text-heading)' }}>
                   Habilitar backups automáticos locais (Recomendado)
                 </span>
-                <span style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                <span
+                  style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}
+                >
                   Cria um backup comprimido (gzip) do banco de dados na inicialização com retenção inteligente (GFS).
                 </span>
               </div>
             </label>
 
             <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: 'var(--text-heading)' }}>Backup Manual Completo</h3>
+              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: 'var(--text-heading)' }}>
+                Backup Manual Completo
+              </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-                Gere um arquivo contendo todas as informações do banco de dados (projetos, artigos, anotações, diário) e todos os arquivos PDF locais. Isso permite migrar seus dados para outro dispositivo.
+                Gere um arquivo contendo todas as informações do banco de dados (projetos, artigos, anotações, diário) e
+                todos os arquivos PDF locais. Isso permite migrar seus dados para outro dispositivo.
               </p>
-              
+
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <button onClick={handleExportBackup} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button
+                  onClick={handleExportBackup}
+                  className="btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
                   <Download size={16} /> Criar Backup Completo
                 </button>
-                <button onClick={handleRestoreBackupOverride} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-danger)' }}>
+                <button
+                  onClick={handleRestoreBackupOverride}
+                  className="btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-danger)' }}
+                >
                   <Upload size={16} /> Restaurar e Sobrescrever
                 </button>
-                <button onClick={handleRestoreBackupMerge} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button
+                  onClick={handleRestoreBackupMerge}
+                  className="btn-secondary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
                   <Shuffle size={16} /> Importar e Mesclar
                 </button>
               </div>
             </div>
 
             <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: 'var(--text-heading)' }}>Histórico de Backups Automáticos</h3>
+              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: 'var(--text-heading)' }}>
+                Histórico de Backups Automáticos
+              </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                Cópia(s) comprimida(s) (.gz) salvas localmente na inicialização com rotação GFS. Clique em restaurar para voltar o sistema ao estado correspondente (sobrescreve banco de dados e reinicia).
+                Cópia(s) comprimida(s) (.gz) salvas localmente na inicialização com rotação GFS. Clique em restaurar
+                para voltar o sistema ao estado correspondente (sobrescreve banco de dados e reinicia).
               </p>
-              
+
               {autoBackupsList.length === 0 ? (
-                <div style={{ padding: '1rem', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                <div
+                  style={{
+                    padding: '1rem',
+                    border: '1px dashed var(--border-color)',
+                    borderRadius: 'var(--radius-md)',
+                    textAlign: 'center',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.9rem',
+                  }}
+                >
                   Nenhum backup automático disponível ainda.
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '0.5rem' }}>
-                  {autoBackupsList.map(b => (
-                    <div key={b.filename} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    paddingRight: '0.5rem',
+                  }}
+                >
+                  {autoBackupsList.map((b) => (
+                    <div
+                      key={b.filename}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.75rem 1rem',
+                        background: 'var(--bg-main)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 'var(--radius-md)',
+                      }}
+                    >
                       <div>
-                        <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-heading)' }}>{b.date}</span>
+                        <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-heading)' }}>
+                          {b.date}
+                        </span>
                         <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           {(b.sizeBytes / 1024).toFixed(1)} KB (gzip)
                         </span>
                       </div>
-                      <button 
-                        onClick={() => handleRestoreAutoBackup(b.filename)} 
-                        className="btn-secondary" 
-                        style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                      <button
+                        onClick={() => handleRestoreAutoBackup(b.filename)}
+                        className="btn-secondary"
+                        style={{
+                          padding: '0.3rem 0.6rem',
+                          fontSize: '0.8rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                        }}
                       >
                         <RotateCcw size={12} /> Restaurar
                       </button>
@@ -640,31 +1030,88 @@ export const SettingsPage: React.FC = () => {
 
         {/* Lixeira Section */}
         <div className="card" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <h2
+            style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+          >
             <Trash2 size={24} color="var(--color-danger)" /> Lixeira (Trash Bin)
           </h2>
           <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-            Itens excluídos permanecem aqui e podem ser recuperados. Excluir permanentemente removerá os dados e os arquivos PDF do disco.
+            Itens excluídos permanecem aqui e podem ser recuperados. Excluir permanentemente removerá os dados e os
+            arquivos PDF do disco.
           </p>
 
           {trashItems.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2rem', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-muted)' }}>
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '2rem',
+                border: '1px dashed var(--border-color)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--text-muted)',
+              }}
+            >
               A lixeira está vazia.
             </div>
           ) : (
             <div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-                <button onClick={handleEmptyTrash} className="btn-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                <button
+                  onClick={handleEmptyTrash}
+                  className="btn-danger"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.9rem',
+                  }}
+                >
                   <Trash2 size={16} /> Esvaziar Lixeira
                 </button>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '300px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  paddingRight: '0.5rem',
+                }}
+              >
                 {trashItems.map((item) => (
-                  <div key={`${item.type}-${item.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-main)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                  <div
+                    key={`${item.type}-${item.id}`}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '1rem',
+                      background: 'var(--bg-main)',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border-color)',
+                    }}
+                  >
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 'bold', padding: '0.2rem 0.5rem', borderRadius: '4px', background: item.type === 'project' ? 'rgba(59, 130, 246, 0.1)' : item.type === 'article' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)', color: item.type === 'project' ? '#3b82f6' : item.type === 'article' ? '#10b981' : '#f59e0b' }}>
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            textTransform: 'uppercase',
+                            fontWeight: 'bold',
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '4px',
+                            background:
+                              item.type === 'project'
+                                ? 'rgba(59, 130, 246, 0.1)'
+                                : item.type === 'article'
+                                  ? 'rgba(16, 185, 129, 0.1)'
+                                  : 'rgba(245, 158, 11, 0.1)',
+                            color:
+                              item.type === 'project' ? '#3b82f6' : item.type === 'article' ? '#10b981' : '#f59e0b',
+                          }}
+                        >
                           {item.type === 'project' ? 'Projeto' : item.type === 'article' ? 'Artigo' : 'Anotação'}
                         </span>
                         <span style={{ fontWeight: 600, color: 'var(--text-heading)' }}>{item.title}</span>
@@ -675,10 +1122,30 @@ export const SettingsPage: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button onClick={() => handleRestore(item.type, item.id)} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <button
+                        onClick={() => handleRestore(item.type, item.id)}
+                        className="btn-secondary"
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                        }}
+                      >
                         <RotateCcw size={14} /> Restaurar
                       </button>
-                      <button onClick={() => handlePermanentDelete(item.type, item.id)} className="btn-danger" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <button
+                        onClick={() => handlePermanentDelete(item.type, item.id)}
+                        className="btn-danger"
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                        }}
+                      >
                         <X size={14} /> Excluir
                       </button>
                     </div>

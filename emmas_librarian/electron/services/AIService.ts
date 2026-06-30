@@ -20,7 +20,7 @@ export class AIService {
 
     try {
       const { chunks } = await extractTextWithCoordinates(pdfPath, 1000, 200);
-      return chunks.map(c => c.text).join('\n\n');
+      return chunks.map((c) => c.text).join('\n\n');
     } catch (err) {
       console.error('Error parsing PDF:', err);
       throw new AppError('ERR_INVALID_PDF', 'VALIDATION_ERROR', 'Falha ao ler o arquivo PDF');
@@ -44,7 +44,7 @@ export class AIService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: model || 'gpt-4o-mini',
@@ -67,13 +67,16 @@ export class AIService {
 
   private async callGemini(prompt: string, apiKey: string, model: string = 'gemini-2.5-flash'): Promise<string> {
     const modelName = model || 'gemini-2.5-flash';
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      },
+    );
 
     if (!response.ok) {
       if (response.status === 429) {
@@ -91,7 +94,7 @@ export class AIService {
     // Clean URL
     let url = baseUrl.trim();
     if (url.endsWith('/')) url = url.slice(0, -1);
-    
+
     // Expecting OpenAI compatible endpoint like http://localhost:11434/v1
     const response = await fetch(`${url}/chat/completions`, {
       method: 'POST',
@@ -112,7 +115,10 @@ export class AIService {
     return data.choices[0].message.content;
   }
 
-  private async generateCompletion(prompt: string, skill: 'metadata' | 'summary' | 'extraction' = 'metadata'): Promise<string> {
+  private async generateCompletion(
+    prompt: string,
+    skill: 'metadata' | 'summary' | 'extraction' = 'metadata',
+  ): Promise<string> {
     const keys = this.getKeys();
     const configRepo = new AIModelConfigRepository(this.db.getDB());
     let config = configRepo.getConfig(skill as any);
@@ -121,16 +127,18 @@ export class AIService {
       if (config) {
         // Use the configured provider
         if (config.provider === 'openai') {
-          if (!keys.openai) throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', "Chave da OpenAI não configurada.");
+          if (!keys.openai)
+            throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'Chave da OpenAI não configurada.');
           return await this.callOpenAI(prompt, keys.openai, config.model_name);
         } else if (config.provider === 'gemini') {
-          if (!keys.gemini) throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', "Chave do Gemini não configurada.");
+          if (!keys.gemini)
+            throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'Chave do Gemini não configurada.');
           return await this.callGemini(prompt, keys.gemini, config.model_name);
         } else if (config.provider === 'ollama') {
-          if (!keys.ollama) throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', "URL do Ollama não configurada.");
+          if (!keys.ollama) throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'URL do Ollama não configurada.');
           return await this.callOllama(prompt, keys.ollama, config.model_name || keys.ollamaModel || 'llama3');
         } else {
-          throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', "Provedor configurado é inválido.");
+          throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'Provedor configurado é inválido.');
         }
       }
 
@@ -142,13 +150,21 @@ export class AIService {
       } else if (keys.ollama) {
         return await this.callOllama(prompt, keys.ollama, keys.ollamaModel || 'llama3');
       } else {
-        throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', "Nenhuma chave de IA configurada. Por favor, adicione uma chave nas configurações.");
+        throw new AppError(
+          'ERR_MODEL_NOT_DEFINED',
+          'USER_ERROR',
+          'Nenhuma chave de IA configurada. Por favor, adicione uma chave nas configurações.',
+        );
       }
     } catch (err: any) {
       if (err instanceof AppError) throw err;
       if (err.message === 'QUOTA_EXCEEDED') throw err;
       if (err.message && err.message.includes('fetch failed')) {
-        throw new AppError('ERR_API_CONNECTION', 'SYSTEM_ERROR', "Falha de conexão com o provedor de Inteligência Artificial. Verifique sua conexão com a internet ou se o serviço local (ex: Ollama) está rodando na porta correta.");
+        throw new AppError(
+          'ERR_API_CONNECTION',
+          'SYSTEM_ERROR',
+          'Falha de conexão com o provedor de Inteligência Artificial. Verifique sua conexão com a internet ou se o serviço local (ex: Ollama) está rodando na porta correta.',
+        );
       }
       throw err;
     }
@@ -156,7 +172,10 @@ export class AIService {
 
   // --- Features ---
 
-  public async generateSummary(articleId: number, pdfPath: string): Promise<{ generalSummary: string; sectionSummary: string }> {
+  public async generateSummary(
+    articleId: number,
+    pdfPath: string,
+  ): Promise<{ generalSummary: string; sectionSummary: string }> {
     const article = this.db.getArticle(articleId);
     if (article?.ai_summary) {
       try {
@@ -184,18 +203,21 @@ A sua resposta deve ser EXATAMENTE um objeto JSON válido, sem markdown, contend
 ARTIGO:
 ${truncatedText}
 `;
-    
+
     let result = await this.generateCompletion(prompt, 'summary');
     // clean up potential markdown code blocks
-    result = result.replace(/```json/g, '').replace(/```/g, '').trim();
-    
+    result = result
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
     try {
       const parsed = JSON.parse(result);
       this.db.updateArticleAiSummary(articleId, JSON.stringify(parsed));
       return parsed;
     } catch (err) {
-      console.error("Failed to parse LLM JSON:", result);
-      throw new Error("A IA não retornou um formato JSON válido.");
+      console.error('Failed to parse LLM JSON:', result);
+      throw new Error('A IA não retornou um formato JSON válido.');
     }
   }
 
@@ -203,18 +225,25 @@ ${truncatedText}
     const extractionConfig = {
       chunkSize: parseInt(this.db.getSetting('rag_chunk_size') || '1000', 10),
       chunkOverlap: parseInt(this.db.getSetting('rag_chunk_overlap') || '200', 10),
-      topK: parseInt(this.db.getSetting('rag_top_k') || '10', 10)
+      topK: parseInt(this.db.getSetting('rag_top_k') || '10', 10),
     };
 
-    const extractionResult = await extractTextWithCoordinates(pdfPath, extractionConfig.chunkSize, extractionConfig.chunkOverlap);
+    const extractionResult = await extractTextWithCoordinates(
+      pdfPath,
+      extractionConfig.chunkSize,
+      extractionConfig.chunkOverlap,
+    );
     // Services imported at the top
 
     const configRepo = new AIModelConfigRepository(this.db.getDB());
     const embeddingsConfig = configRepo.getConfig('embeddings');
-    const embeddingService = new EmbeddingService({ 
-      provider: embeddingsConfig?.provider || 'openai', 
-      model_name: embeddingsConfig?.model_name || 'text-embedding-3-small' 
-    } as any, this.getKeys());
+    const embeddingService = new EmbeddingService(
+      {
+        provider: embeddingsConfig?.provider || 'openai',
+        model_name: embeddingsConfig?.model_name || 'text-embedding-3-small',
+      } as any,
+      this.getKeys(),
+    );
     const vectorStore = new VectorStore(this.db.getDB());
 
     if (questions.length === 0) return [];
@@ -222,7 +251,10 @@ ${truncatedText}
     const firstQueryEmbedding = await embeddingService.embed(questions[0]);
     vectorStore.ensureDimensionAndClearIfMismatched(firstQueryEmbedding.length);
 
-    const existingChunksCount = this.db.getDB().prepare('SELECT count(*) as count FROM pdf_chunks WHERE article_id = ?').get(articleId) as any;
+    const existingChunksCount = this.db
+      .getDB()
+      .prepare('SELECT count(*) as count FROM pdf_chunks WHERE article_id = ?')
+      .get(articleId) as any;
     if (existingChunksCount.count === 0) {
       const embeddings = await embeddingService.embedBatch(extractionResult.chunks.map((c: any) => c.text));
       vectorStore.indexArticleChunks(articleId, extractionResult.chunks, embeddings);
@@ -232,7 +264,12 @@ ${truncatedText}
     for (const question of questions) {
       const queryEmbedding = await embeddingService.embed(question);
       const relevantChunks = vectorStore.searchSimilar(queryEmbedding, extractionConfig.topK, articleId);
-      const contextPrompt = relevantChunks.map((c: any, i: number) => `[Trecho ${i + 1} - Página ${c.page} - Score: ${(1 / (1 + c.similarityScore)).toFixed(2)}]\n${c.text}`).join('\n\n');
+      const contextPrompt = relevantChunks
+        .map(
+          (c: any, i: number) =>
+            `[Trecho ${i + 1} - Página ${c.page} - Score: ${(1 / (1 + c.similarityScore)).toFixed(2)}]\n${c.text}`,
+        )
+        .join('\n\n');
 
       const prompt = `Você é um assistente acadêmico RAG. Baseado nos trechos do texto fornecidos, responda à pergunta.
 A sua resposta deve ser EXATAMENTE um objeto JSON válido (sem tags markdown de código), no seguinte formato:
@@ -258,13 +295,18 @@ TRECHOS:
 ${contextPrompt}
 `;
       let result = await this.generateCompletion(prompt, 'extraction');
-      result = result.replace(/```json/g, '').replace(/```/g, '').trim();
+      result = result
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .trim();
 
       try {
         const parsed = JSON.parse(result);
         if (parsed.evidences && parsed.evidences.length > 0) {
           for (const ev of parsed.evidences) {
-            const matchedChunk = relevantChunks.find((c: any) => c.page === ev.page && (c.text.includes(ev.text) || ev.text.includes(c.text)));
+            const matchedChunk = relevantChunks.find(
+              (c: any) => c.page === ev.page && (c.text.includes(ev.text) || ev.text.includes(c.text)),
+            );
             if (matchedChunk && matchedChunk.bbox && matchedChunk.bbox.w > 0) {
               ev.bbox = matchedChunk.bbox;
               if (!ev.score) ev.score = Number((1 / (1 + matchedChunk.similarityScore)).toFixed(2));
@@ -316,14 +358,17 @@ ${truncatedText}
 `;
 
     let result = await this.generateCompletion(prompt, 'metadata');
-    result = result.replace(/```json/g, '').replace(/```/g, '').trim();
-    
+    result = result
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
     try {
       const parsed = JSON.parse(result);
       return parsed;
     } catch (err) {
-      console.error("Failed to parse LLM JSON for metadata:", result);
-      throw new Error("A IA não retornou um formato JSON válido para os metadados.");
+      console.error('Failed to parse LLM JSON for metadata:', result);
+      throw new Error('A IA não retornou um formato JSON válido para os metadados.');
     }
   }
 }

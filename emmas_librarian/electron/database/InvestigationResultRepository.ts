@@ -41,28 +41,14 @@ export class InvestigationResultRepository {
   }
 
   /** Inserts all results for one article atomically via a transaction. */
-  saveResultsBatch(
-    investigationId: number,
-    articleId: number,
-    results: InvestigationResultInput[],
-  ): void {
+  saveResultsBatch(investigationId: number, articleId: number, results: InvestigationResultInput[]): void {
     if (results.length === 0) return;
 
-    const insertMany = this.db.transaction(
-      (rows: InvestigationResultInput[]) => {
-        for (const r of rows) {
-          this.insertStmt.run(
-            investigationId,
-            articleId,
-            r.question,
-            r.answer,
-            r.quote,
-            r.status,
-            r.error_message,
-          );
-        }
-      },
-    );
+    const insertMany = this.db.transaction((rows: InvestigationResultInput[]) => {
+      for (const r of rows) {
+        this.insertStmt.run(investigationId, articleId, r.question, r.answer, r.quote, r.status, r.error_message);
+      }
+    });
 
     insertMany(results);
   }
@@ -79,10 +65,7 @@ export class InvestigationResultRepository {
   }
 
   /** Returns result rows filtered by both investigation and article, ordered by id. */
-  getResultsByArticle(
-    investigationId: number,
-    articleId: number,
-  ): InvestigationResultRow[] {
+  getResultsByArticle(investigationId: number, articleId: number): InvestigationResultRow[] {
     return this.db
       .prepare(
         `SELECT * FROM investigation_results
@@ -94,8 +77,6 @@ export class InvestigationResultRepository {
 
   /** Deletes all result rows belonging to the given investigation. */
   deleteByInvestigation(investigationId: number): void {
-    this.db
-      .prepare('DELETE FROM investigation_results WHERE investigation_id = ?')
-      .run(investigationId);
+    this.db.prepare('DELETE FROM investigation_results WHERE investigation_id = ?').run(investigationId);
   }
 }

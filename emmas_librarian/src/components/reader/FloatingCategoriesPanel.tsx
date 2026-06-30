@@ -17,19 +17,30 @@ export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = (
   isCategoriesOpen,
   setIsCategoriesOpen,
   projectCategories,
-  articleCategories
+  articleCategories,
 }) => {
   return (
     <div style={{ position: 'fixed', bottom: '2rem', left: '2rem', zIndex: 100 }}>
       {isCategoriesOpen && (
-        <div className="card fade-in" style={{
-          position: 'absolute', bottom: '100%', left: 0, marginBottom: '1rem',
-          width: '300px', background: 'var(--bg-main)', padding: '1rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
-        }}>
+        <div
+          className="card fade-in"
+          style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: 0,
+            marginBottom: '1rem',
+            width: '300px',
+            background: 'var(--bg-main)',
+            padding: '1rem',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-heading)' }}>Categorias</h3>
-            <button onClick={() => setIsCategoriesOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+            <button
+              onClick={() => setIsCategoriesOpen(false)}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            >
               <XIcon size={16} />
             </button>
           </div>
@@ -38,12 +49,16 @@ export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = (
               Nenhuma categoria cadastrada.
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '300px', overflowY: 'auto' }}
+            >
               {projectCategories.map((cat) => {
                 const articleCat = articleCategories.find((ac: ArticleCategory) => ac.category_id === cat.id);
                 return (
                   <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>{cat.name}</label>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+                      {cat.name}
+                    </label>
                     <CategoryCell articleId={articleId} category={cat} initialValue={articleCat?.value || ''} />
                   </div>
                 );
@@ -52,17 +67,17 @@ export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = (
           )}
         </div>
       )}
-      <button 
+      <button
         onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
-        className="btn-primary" 
-        style={{ 
-          borderRadius: '2rem', 
-          padding: '0.8rem 1.5rem', 
+        className="btn-primary"
+        style={{
+          borderRadius: '2rem',
+          padding: '0.8rem 1.5rem',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           background: 'var(--color-primary)',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem'
+          gap: '0.5rem',
         }}
         title="Categorias do Artigo"
       >

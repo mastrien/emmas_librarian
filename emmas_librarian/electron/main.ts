@@ -10,8 +10,11 @@ log.info('App starting...');
 import { setupIpcRegistries } from './ipc/ipcRegistries';
 
 const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
+const isE2ETest = process.argv.some(
+  (arg) => arg.includes('--remote-debugging-port') || arg.includes('--user-data-dir')
+);
 
-if (isDev) {
+if (isDev && !isE2ETest) {
   // Use a local 'dev_data' directory in the project root during development to isolate data
   const devDataPath = path.join(process.cwd(), 'dev_data');
   app.setPath('userData', devDataPath);
@@ -20,8 +23,8 @@ if (isDev) {
 // Fix for GPU Cache creation errors in terminal
 app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
 
-function createWindow() {
-  const mainWindow = new BrowserWindow({
+function createBrowserWindow(): BrowserWindow {
+  return new BrowserWindow({
     width: 1200,
     height: 800,
     show: false,
@@ -37,29 +40,39 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+}
 
+function loadWindowContent(window: BrowserWindow): void {
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
-    mainWindow.webContents.on('did-finish-load', () => {
-      mainWindow.show();
-      mainWindow.webContents.openDevTools();
+    window.loadURL('http://localhost:5173');
+    window.webContents.on('did-finish-load', () => {
+      window.show();
+      if (!isE2ETest) {
+        window.webContents.openDevTools();
+      }
     });
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
-    mainWindow.webContents.on('did-finish-load', () => {
-      mainWindow.show();
+    window.loadFile(path.join(__dirname, '../dist/index.html'));
+    window.webContents.on('did-finish-load', () => {
+      window.show();
     });
   }
+}
 
-  // Log renderer errors
-  mainWindow.webContents.on('render-process-gone', (event, details) => {
+function setupWindowListeners(window: BrowserWindow): void {
+  window.webContents.on('render-process-gone', (event, details) => {
     console.error('Render process gone:', details);
   });
-
-  mainWindow.webContents.on('unresponsive', () => {
+  window.webContents.on('unresponsive', () => {
     console.warn('Window unresponsive');
   });
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
+}
 
+function setupSessionCSP(): void {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     const csp = isDev
       ? "default-src 'self' http://localhost:* ws://localhost:* blob: https://unpkg.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:*; img-src 'self' data: blob:; connect-src 'self' http://localhost:* ws://localhost:* blob:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; worker-src 'self' blob:;"
@@ -72,17 +85,30 @@ function createWindow() {
       },
     });
   });
+}
 
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
-    return { action: 'deny' };
-  });
+function createWindow() {
+  const mainWindow = createBrowserWindow();
+  loadWindowContent(mainWindow);
+  setupWindowListeners(mainWindow);
+  setupSessionCSP();
 }
 
 // Handle unhandled exceptions in the main process
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
-  dialog.showErrorBox('Main Process Error', error.message || String(error));
+  const isTestOrHeadless =
+    process.env.NODE_ENV === 'test' ||
+    process.env.CI === 'true' ||
+    process.env.HEADLESS_E2E === 'true' ||
+    !!process.env.ANTIGRAVITY_AGENT ||
+    process.argv.includes('--headless') ||
+    process.argv.includes('--headless=new');
+  if (isTestOrHeadless) {
+    process.exit(1);
+  } else {
+    dialog.showErrorBox('Main Process Error', error.message || String(error));
+  }
 });
 
 app

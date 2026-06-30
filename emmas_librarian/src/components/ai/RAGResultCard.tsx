@@ -11,7 +11,12 @@ export interface RAGResultCardProps {
 
 export const RAGResultCard: React.FC<RAGResultCardProps> = ({ result, onViewDocument }) => {
   // Determine color based on confidence score (0 to 1)
-  const confidenceColor = result.confidenceScore > 0.8 ? 'var(--color-success)' : result.confidenceScore > 0.5 ? '#f59e0b' : 'var(--color-danger)';
+  const confidenceColor =
+    result.confidenceScore > 0.8
+      ? 'var(--color-success)'
+      : result.confidenceScore > 0.5
+        ? '#f59e0b'
+        : 'var(--color-danger)';
   const confidencePercentage = Math.round(result.confidenceScore * 100);
 
   return (
@@ -22,7 +27,9 @@ export const RAGResultCard: React.FC<RAGResultCardProps> = ({ result, onViewDocu
         borderRadius: 'var(--radius-sm)',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+      <div
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}
+      >
         <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-heading)', flex: 1 }}>
           Q: {result.question}
         </div>
@@ -41,7 +48,7 @@ export const RAGResultCard: React.FC<RAGResultCardProps> = ({ result, onViewDocu
           {confidencePercentage}% Confiança
         </div>
       </div>
-      
+
       <div className="markdown-body" style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '1rem' }}>
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.synthesizedAnswer}</ReactMarkdown>
       </div>

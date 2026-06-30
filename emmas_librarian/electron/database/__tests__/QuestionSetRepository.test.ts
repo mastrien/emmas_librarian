@@ -73,9 +73,9 @@ describe('QuestionSetRepository', () => {
 
     const sets = repo.listQuestionSets(1);
     expect(sets.length).toBe(2);
-    expect(sets.find(s => s.name === 'Global Set')).toBeDefined();
-    expect(sets.find(s => s.name === 'Project Set')).toBeDefined();
-    expect(sets.find(s => s.name === 'Another Project Set')).toBeUndefined();
+    expect(sets.find((s) => s.name === 'Global Set')).toBeDefined();
+    expect(sets.find((s) => s.name === 'Project Set')).toBeDefined();
+    expect(sets.find((s) => s.name === 'Another Project Set')).toBeUndefined();
   });
 
   it('updates a question set', () => {
@@ -125,5 +125,69 @@ describe('QuestionSetRepository', () => {
     expect(duplicated?.name).toBe('Original (Cópia)');
     expect(duplicated?.project_id).toBe(1);
     expect(duplicated?.questions).toBe(qs.questions);
+  });
+
+  it('rejects insertion of duplicates (same name and project)', () => {
+    repo.createQuestionSet({
+      project_id: 1,
+      name: 'Duplicate Test',
+      description: 'First',
+      questions: '[]',
+    });
+
+    expect(() => {
+      repo.createQuestionSet({
+        project_id: 1,
+        name: 'Duplicate Test',
+        description: 'Second',
+        questions: '[]',
+      });
+    }).toThrow('Question set with name "Duplicate Test" already exists in this project');
+  });
+
+  it('allows insertion of questionnaire with identical name in different projects', () => {
+    const qs1 = repo.createQuestionSet({
+      project_id: 1,
+      name: 'Same Name Different Project',
+      description: 'First',
+      questions: '[]',
+    });
+
+    dbAdapter.createProject('Project 2');
+    const qs2 = repo.createQuestionSet({
+      project_id: 2,
+      name: 'Same Name Different Project',
+      description: 'Second',
+      questions: '[]',
+    });
+
+    expect(qs1.id).not.toBe(qs2.id);
+    expect(qs1.project_id).toBe(1);
+    expect(qs2.project_id).toBe(2);
+  });
+
+  it('paginates question sets returning exact sizes', () => {
+    for (let i = 1; i <= 5; i++) {
+      repo.createQuestionSet({
+        project_id: null,
+        name: `Set ${i}`,
+        description: '',
+        questions: '[]',
+      });
+    }
+
+    const firstPage = repo.listQuestionSets(null, 2, 0);
+    expect(firstPage.length).toBe(2);
+    expect(firstPage[0].name).toBe('Set 1');
+    expect(firstPage[1].name).toBe('Set 2');
+
+    const secondPage = repo.listQuestionSets(null, 2, 2);
+    expect(secondPage.length).toBe(2);
+    expect(secondPage[0].name).toBe('Set 3');
+    expect(secondPage[1].name).toBe('Set 4');
+
+    const thirdPage = repo.listQuestionSets(null, 2, 4);
+    expect(thirdPage.length).toBe(1);
+    expect(thirdPage[0].name).toBe('Set 5');
   });
 });

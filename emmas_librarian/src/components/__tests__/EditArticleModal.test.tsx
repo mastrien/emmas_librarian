@@ -28,7 +28,7 @@ describe('EditArticleModal', () => {
     render(
       <GlobalErrorProvider>
         <EditArticleModal isOpen={false} article={mockArticle} onClose={vi.fn()} onSubmit={vi.fn()} />
-      </GlobalErrorProvider>
+      </GlobalErrorProvider>,
     );
     expect(screen.queryByText('Editar Artigo Manual')).toBeNull();
   });
@@ -37,7 +37,7 @@ describe('EditArticleModal', () => {
     render(
       <GlobalErrorProvider>
         <EditArticleModal isOpen={true} article={mockArticle} onClose={vi.fn()} onSubmit={vi.fn()} />
-      </GlobalErrorProvider>
+      </GlobalErrorProvider>,
     );
     expect(screen.getByDisplayValue('Original Title')).toBeDefined();
     expect(screen.getByDisplayValue('Author A')).toBeDefined();
@@ -55,7 +55,7 @@ describe('EditArticleModal', () => {
     render(
       <GlobalErrorProvider>
         <EditArticleModal isOpen={true} article={mockArticle} onClose={vi.fn()} onSubmit={onSubmitMock} />
-      </GlobalErrorProvider>
+      </GlobalErrorProvider>,
     );
 
     // Using getByDisplayValue to find the input since getByLabelText failed due to DOM structure
@@ -85,7 +85,7 @@ describe('EditArticleModal', () => {
     render(
       <GlobalErrorProvider>
         <EditArticleModal isOpen={true} article={mockArticle} onClose={onCloseMock} onSubmit={vi.fn()} />
-      </GlobalErrorProvider>
+      </GlobalErrorProvider>,
     );
 
     const cancelBtn = screen.getByText('Cancelar');

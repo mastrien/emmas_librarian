@@ -13,7 +13,7 @@ describe('ProjectOverviewTab', () => {
       status: 'new',
       is_oa: 1,
       publisher: 'Elsevier',
-      source_databases: '["Scopus"]'
+      source_databases: '["Scopus"]',
     },
     {
       id: 2,
@@ -22,7 +22,7 @@ describe('ProjectOverviewTab', () => {
       status: 'read',
       is_oa: 0,
       publisher: 'Springer',
-      source_databases: '["Web of Science"]'
+      source_databases: '["Web of Science"]',
     },
     {
       id: 3,
@@ -31,22 +31,22 @@ describe('ProjectOverviewTab', () => {
       status: 'archived',
       is_oa: 1,
       publisher: 'Elsevier',
-      source_databases: '["Scopus"]'
-    }
+      source_databases: '["Scopus"]',
+    },
   ];
 
-  const activeArticles = mockArticles.filter(a => a.status === 'new');
-  const readArticles = mockArticles.filter(a => a.status === 'read');
-  const archivedArticles = mockArticles.filter(a => a.status === 'archived');
+  const activeArticles = mockArticles.filter((a) => a.status === 'new');
+  const readArticles = mockArticles.filter((a) => a.status === 'read');
+  const archivedArticles = mockArticles.filter((a) => a.status === 'archived');
 
   it('renders all 4 charts properly', () => {
     render(
-      <ProjectOverviewTab 
+      <ProjectOverviewTab
         activeArticles={activeArticles}
         readArticles={readArticles}
         archivedArticles={archivedArticles}
         filteredArticles={mockArticles}
-      />
+      />,
     );
 
     expect(screen.getByText('Status dos Artigos')).toBeInTheDocument();

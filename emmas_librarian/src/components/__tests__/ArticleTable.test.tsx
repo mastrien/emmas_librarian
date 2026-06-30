@@ -73,7 +73,7 @@ describe('ArticleTable', () => {
     return render(
       <BrowserRouter>
         {/* @ts-ignore */}
-<ArticleTable {...defaultProps} {...props} />
+        <ArticleTable {...defaultProps} {...props} />
       </BrowserRouter>,
     );
   };

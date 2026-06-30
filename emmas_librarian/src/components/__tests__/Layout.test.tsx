@@ -9,7 +9,7 @@ import { projectService } from '../../services/api';
 
 const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
-  projectService: {}
+  projectService: {},
 }));
 
 describe('Layout Component', () => {

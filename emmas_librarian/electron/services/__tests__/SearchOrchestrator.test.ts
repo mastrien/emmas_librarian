@@ -59,6 +59,43 @@ describe('SearchOrchestrator', () => {
     expect(articles[0].source_databases).toBe('["OpenAlex","Crossref"]');
   });
 
+  it('does not duplicate articles when running the exact same search twice', async () => {
+    const proj = db.createProject('Duplicate Search Project');
+
+    const item: NormalizedArticle = {
+      doi: '10.5555/dup-search',
+      title: 'Same Search Article',
+      source_databases: ['OpenAlex'],
+      csl_json: {},
+    };
+
+    vi.spyOn(api, 'searchOpenAlex').mockResolvedValue([item]);
+
+    // Run first search
+    const res1 = await orchestrator.searchAndPersist(
+      proj.id,
+      { openalex: 'filter=title.search:dup' },
+      100,
+      'relevance',
+      'title contains "dup"',
+    );
+    expect(res1.savedCount).toBe(1);
+
+    // Run second search (same query and result)
+    const res2 = await orchestrator.searchAndPersist(
+      proj.id,
+      { openalex: 'filter=title.search:dup' },
+      100,
+      'relevance',
+      'title contains "dup"',
+    );
+    expect(res2.savedCount).toBe(1);
+
+    // Assert that the database contains only one article for this project
+    const articles = db.getArticlesByProject(proj.id);
+    expect(articles).toHaveLength(1);
+  });
+
   it('decrypts and passes Scopus and WoS API keys correctly, supporting legacy naming fallback', async () => {
     const proj = db.createProject('Key Test');
 
@@ -81,5 +118,19 @@ describe('SearchOrchestrator', () => {
     // Verify both keys were decrypted and passed properly
     expect(scopusSpy).toHaveBeenCalledWith('title("test")', 'scopus-secret-key', 'relevance', 50);
     expect(wosSpy).toHaveBeenCalledWith('TS=test', 'wos-secret-key', 'relevance', 50);
+  });
+
+  it('covers complex title normalization (extra spaces, accents/diacritics, HTML tags, SQL special characters)', () => {
+    const title1 = '  Hello <i>World</i>!  ';
+    const title2 = 'hello world!';
+    expect(orchestrator.normalizeTitle(title1)).toBe(orchestrator.normalizeTitle(title2));
+
+    const titleAccents = 'Café e Ação';
+    const titleNoAccents = 'cafe e acao';
+    expect(orchestrator.normalizeTitle(titleAccents)).toBe(orchestrator.normalizeTitle(titleNoAccents));
+
+    const titleSql = "SELECT * FROM 'articles'; --";
+    // SQL special characters like ';-* are removed, lowercased, and trimmed
+    expect(orchestrator.normalizeTitle(titleSql)).toBe('select from articles');
   });
 });

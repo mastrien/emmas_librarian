@@ -27,7 +27,7 @@ import type {
   ArticleCategory,
   AIModelConfig,
   AISkill,
-  AIProvider
+  AIProvider,
 } from '../types';
 
 /** Return type for AI-powered metadata extraction. */
@@ -96,24 +96,10 @@ export interface IProjectService {
   // ── Articles ──────────────────────────────────────────────────────
   getArticles(projectId: number): Promise<Article[]>;
   getArticle(articleId: number): Promise<Article>;
-  updateArticleStatus(
-    articleId: number,
-    status: 'new' | 'read' | 'archived',
-    note?: string,
-  ): Promise<void>;
-  updateArticleMetadata(
-    articleId: number,
-    data: Partial<Article>,
-  ): Promise<void>;
-  createManualArticle(
-    projectId: number,
-    data: Partial<Article>,
-    sourceFilePath?: string,
-  ): Promise<number>;
-  createArticlesFromPdfs(
-    projectId: number,
-    filePaths: string[],
-  ): Promise<number>;
+  updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', note?: string): Promise<void>;
+  updateArticleMetadata(articleId: number, data: Partial<Article>): Promise<void>;
+  createManualArticle(projectId: number, data: Partial<Article>, sourceFilePath?: string): Promise<number>;
+  createArticlesFromPdfs(projectId: number, filePaths: string[]): Promise<number>;
 
   // ── Export ─────────────────────────────────────────────────────────
   exportCsv(projectId: number): Promise<string | null>;
@@ -131,10 +117,7 @@ export interface IProjectService {
   ): Promise<{ id: number; annotation_id: number | null }>;
   deleteHighlight(id: number): Promise<void>;
   getAnnotations(articleId: number): Promise<Annotation[]>;
-  createAnnotation(
-    articleId: number,
-    content: string,
-  ): Promise<{ id: number }>;
+  createAnnotation(articleId: number, content: string): Promise<{ id: number }>;
   updateAnnotation(id: number, content: string): Promise<void>;
   deleteAnnotation(id: number): Promise<void>;
 
@@ -156,54 +139,24 @@ export interface IProjectService {
   getPdfBuffer(articleId: number): Promise<ArrayBuffer>;
 
   // ── Project Documents ─────────────────────────────────────────────
-  openProjectDocument(
-    url: string,
-    localFilePath?: string,
-  ): Promise<void>;
+  openProjectDocument(url: string, localFilePath?: string): Promise<void>;
   getProjectDocuments(projectId: number): Promise<ProjectDocument[]>;
-  createProjectDocument(
-    projectId: number,
-    title: string,
-    url?: string,
-    sourceFilePath?: string,
-  ): Promise<number>;
+  createProjectDocument(projectId: number, title: string, url?: string, sourceFilePath?: string): Promise<number>;
   deleteProjectDocument(id: number): Promise<void>;
-  openProjectDocumentExternal(
-    url?: string,
-    filePath?: string,
-  ): Promise<void>;
+  openProjectDocumentExternal(url?: string, filePath?: string): Promise<void>;
 
   // ── Diary ─────────────────────────────────────────────────────────
   getDiaryEntries(projectId: number): Promise<unknown[]>;
-  getDiaryEntry(
-    projectId: number,
-    entryDate: string,
-  ): Promise<DiaryEntry | null>;
-  saveDiaryEntry(
-    projectId: number,
-    entryDate: string,
-    content: string,
-  ): Promise<void>;
-  deleteDiaryEntry(
-    projectId: number,
-    entryDate: string,
-  ): Promise<void>;
-  getDiaryEntryHistory(
-    projectId: number,
-    entryDate: string,
-  ): Promise<unknown[]>;
+  getDiaryEntry(projectId: number, entryDate: string): Promise<DiaryEntry | null>;
+  saveDiaryEntry(projectId: number, entryDate: string, content: string): Promise<void>;
+  deleteDiaryEntry(projectId: number, entryDate: string): Promise<void>;
+  getDiaryEntryHistory(projectId: number, entryDate: string): Promise<unknown[]>;
   restoreDiaryEntryVersion(versionId: number): Promise<void>;
 
   // ── Trash ─────────────────────────────────────────────────────────
   getTrashItems(): Promise<unknown[]>;
-  restoreTrashItem(
-    type: 'project' | 'article' | 'annotation',
-    id: number,
-  ): Promise<void>;
-  deleteTrashItemPermanent(
-    type: 'project' | 'article' | 'annotation',
-    id: number,
-  ): Promise<void>;
+  restoreTrashItem(type: 'project' | 'article' | 'annotation', id: number): Promise<void>;
+  deleteTrashItemPermanent(type: 'project' | 'article' | 'annotation', id: number): Promise<void>;
   emptyTrash(): Promise<void>;
 
   // ── Backups ───────────────────────────────────────────────────────
@@ -216,10 +169,7 @@ export interface IProjectService {
 
   // ── AI ────────────────────────────────────────────────────────────
   generateSummary(articleId: number): Promise<ArticleSummary>;
-  massiveExtraction(
-    articleId: number,
-    questions: string[],
-  ): Promise<ExtractionAnswer[]>;
+  massiveExtraction(articleId: number, questions: string[]): Promise<ExtractionAnswer[]>;
   extractMetadata(articleId: number): Promise<ExtractedMetadata>;
 
   // ── Pending Highlights ────────────────────────────────────────────
@@ -227,9 +177,7 @@ export interface IProjectService {
   deletePendingHighlight(id: number): Promise<void>;
 
   // ── Massive Investigations ────────────────────────────────────────
-  getMassiveInvestigations(
-    projectId: number,
-  ): Promise<MassiveInvestigation[]>;
+  getMassiveInvestigations(projectId: number): Promise<MassiveInvestigation[]>;
   saveMassiveInvestigation(
     projectId: number,
     questions: string[],
@@ -250,13 +198,8 @@ export interface IProjectService {
       error_message: string | null;
     }>,
   ): Promise<void>;
-  getInvestigationResults(
-    investigationId: number,
-  ): Promise<InvestigationResult[]>;
-  getInvestigationResultsByArticle(
-    investigationId: number,
-    articleId: number,
-  ): Promise<InvestigationResult[]>;
+  getInvestigationResults(investigationId: number): Promise<InvestigationResult[]>;
+  getInvestigationResultsByArticle(investigationId: number, articleId: number): Promise<InvestigationResult[]>;
 
   // ── Categories ────────────────────────────────────────────────────
   getProjectCategories(projectId: number): Promise<unknown[]>;
@@ -274,17 +217,18 @@ export interface IProjectService {
   ): Promise<void>;
   deleteProjectCategory(categoryId: number): Promise<void>;
   getArticleCategories(articleId: number): Promise<unknown[]>;
-  setArticleCategory(
-    articleId: number,
-    categoryId: number,
-    value: string | null,
-  ): Promise<void>;
+  setArticleCategory(articleId: number, categoryId: number, value: string | null): Promise<void>;
   getAllProjectArticleCategories(projectId: number): Promise<unknown[]>;
 
   // ── Question Sets ─────────────────────────────────────────────────
   getQuestionSets(projectId: number | null): Promise<QuestionSet[]>;
   getQuestionSet(id: number): Promise<QuestionSet>;
-  createQuestionSet(data: { project_id: number | null; name: string; description?: string; questions: string[] }): Promise<number>;
+  createQuestionSet(data: {
+    project_id: number | null;
+    name: string;
+    description?: string;
+    questions: string[];
+  }): Promise<number>;
   updateQuestionSet(id: number, data: { name?: string; description?: string; questions?: string[] }): Promise<void>;
   deleteQuestionSet(id: number): Promise<void>;
   duplicateQuestionSet(id: number, projectId: number | null): Promise<number>;

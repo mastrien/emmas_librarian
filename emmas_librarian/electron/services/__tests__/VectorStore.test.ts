@@ -48,7 +48,10 @@ describe('VectorStore', () => {
       { text: 'chunk1', page: 1, bbox: { x: 0, y: 0, w: 10, h: 10 } },
       { text: 'chunk2', page: 1, bbox: { x: 10, y: 10, w: 10, h: 10 } },
     ];
-    const embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]];
+    const embeddings = [
+      [0.1, 0.2, 0.3],
+      [0.4, 0.5, 0.6],
+    ];
 
     store.indexArticleChunks(1, chunks, embeddings);
 
@@ -65,7 +68,10 @@ describe('VectorStore', () => {
       { text: 'chunk1', page: 1, bbox: { x: 0, y: 0, w: 10, h: 10 } },
       { text: 'chunk2', page: 1, bbox: { x: 10, y: 10, w: 10, h: 10 } },
     ];
-    const embeddings = [[0.1, 0.2, 0.3], [0.9, 0.8, 0.7]];
+    const embeddings = [
+      [0.1, 0.2, 0.3],
+      [0.9, 0.8, 0.7],
+    ];
     store.indexArticleChunks(1, chunks, embeddings);
 
     const results = store.searchSimilar([0.1, 0.2, 0.3], 1, 1);
@@ -74,9 +80,7 @@ describe('VectorStore', () => {
   });
 
   it('should remove article chunks', () => {
-    const chunks: PdfTextChunk[] = [
-      { text: 'chunk1', page: 1, bbox: { x: 0, y: 0, w: 10, h: 10 } }
-    ];
+    const chunks: PdfTextChunk[] = [{ text: 'chunk1', page: 1, bbox: { x: 0, y: 0, w: 10, h: 10 } }];
     const embeddings = [[0.1, 0.2, 0.3]];
     store.indexArticleChunks(1, chunks, embeddings);
 

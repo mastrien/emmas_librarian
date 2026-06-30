@@ -46,13 +46,10 @@ function prismjsExternalPlugin(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    prismjsExternalPlugin(),
-    react(),
-  ],
+  plugins: [prismjsExternalPlugin(), react()],
   base: './',
   optimizeDeps: {
-    include: ['recharts', 'lodash']
+    include: ['lodash'],
   },
   build: {
     outDir: 'dist',
@@ -63,4 +60,3 @@ export default defineConfig({
     },
   },
 });
-

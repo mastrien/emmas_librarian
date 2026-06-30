@@ -138,7 +138,7 @@ export const SearchPage: React.FC = () => {
           errorMsg = err;
         } else if (typeof err === 'object') {
           try {
-            errorMsg = (err as {error?: string}).error || JSON.stringify(err);
+            errorMsg = (err as { error?: string }).error || JSON.stringify(err);
           } catch {
             errorMsg = String(err);
           }

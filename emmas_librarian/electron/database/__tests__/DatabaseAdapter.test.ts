@@ -174,7 +174,7 @@ describe('DatabaseAdapter', () => {
       accessed: '2026-06-04',
     } as unknown);
 
-    const updated = dbAdapter.getArticle(articleId) as unknown;
+    const updated = dbAdapter.getArticle(articleId);
     expect(updated).toBeDefined();
     expect(updated.title).toBe('Custom Title');
     expect(updated.authors).toBe('João Silva; Maria Oliveira');
@@ -242,5 +242,133 @@ describe('DatabaseAdapter', () => {
     expect(articleCats[0].value).toBe('Mista');
     const mistaId = categories[0].parsedOptions?.find((o: unknown) => o.name === 'Mista')?.id;
     expect(articleCats[0].option_ids).toContain(mistaId);
+  });
+
+  it('manages diary history version limits (BVA - 0, 1, 9, 10, 11 versions in history)', () => {
+    const proj = dbAdapter.createProject('ProjDiaryHistory');
+    const entryDate = '2026-06-24';
+
+    // 1st save (0 versions in history, current content is Version 1)
+    dbAdapter.saveDiaryEntry(proj.id, entryDate, 'Version 1');
+    expect(dbAdapter.getDiaryEntryHistory(proj.id, entryDate)).toHaveLength(0);
+
+    // 2nd save (1 version in history: Version 1, current is Version 2)
+    dbAdapter.saveDiaryEntry(proj.id, entryDate, 'Version 2');
+    const hist1 = dbAdapter.getDiaryEntryHistory(proj.id, entryDate);
+    expect(hist1).toHaveLength(1);
+    expect(hist1[0].content).toBe('Version 1');
+
+    // Save up to Version 11 (10 versions in history: Version 10 down to Version 1)
+    for (let i = 3; i <= 11; i++) {
+      dbAdapter.saveDiaryEntry(proj.id, entryDate, `Version ${i}`);
+    }
+    const hist10 = dbAdapter.getDiaryEntryHistory(proj.id, entryDate);
+    expect(hist10).toHaveLength(10);
+    expect(hist10[0].content).toBe('Version 10');
+    expect(hist10[9].content).toBe('Version 1');
+
+    // 12th save (should keep exactly 10 versions, deleting Version 1, so oldest in history is Version 2)
+    dbAdapter.saveDiaryEntry(proj.id, entryDate, 'Version 12');
+    const hist11 = dbAdapter.getDiaryEntryHistory(proj.id, entryDate);
+    expect(hist11).toHaveLength(10);
+    expect(hist11[0].content).toBe('Version 11');
+    expect(hist11[9].content).toBe('Version 2');
+  });
+
+  it('handles DOI collision and merges source databases', () => {
+    const proj = dbAdapter.createProject('Project DOI Collision');
+    const id1 = dbAdapter.saveArticle(proj.id, {
+      title: 'Article One',
+      doi: '10.1000/xyz123',
+      source_query: '',
+      source_databases: JSON.stringify(['OpenAlex']),
+      csl_json: '{}',
+    });
+
+    const id2 = dbAdapter.saveArticle(proj.id, {
+      title: 'Article One Different Title',
+      doi: '10.1000/xyz123',
+      source_query: '',
+      source_databases: JSON.stringify(['Scopus']),
+      csl_json: '{}',
+    });
+
+    expect(id1).toBe(id2);
+    const merged = dbAdapter.getArticle(id1);
+    expect(merged?.source_databases).toBe(JSON.stringify(['OpenAlex', 'Scopus']));
+  });
+
+  it('handles title collision without DOI using normalized title comparison', () => {
+    const proj = dbAdapter.createProject('Project Title Collision');
+    const id1 = dbAdapter.saveArticle(proj.id, {
+      title: '  Complex <i>Title</i>; with punctuation!!  ',
+      source_query: '',
+      source_databases: JSON.stringify(['OpenAlex']),
+      csl_json: '{}',
+    });
+
+    const id2 = dbAdapter.saveArticle(proj.id, {
+      title: 'complex title with punctuation',
+      source_query: '',
+      source_databases: JSON.stringify(['Crossref']),
+      csl_json: '{}',
+    });
+
+    expect(id1).toBe(id2);
+    const merged = dbAdapter.getArticle(id1);
+    expect(merged?.source_databases).toBe(JSON.stringify(['OpenAlex', 'Crossref']));
+  });
+
+  it('handles concurrent insertions gracefully and sequentially due to sync sqlite connection', () => {
+    const proj = dbAdapter.createProject('Project Concurrent');
+    
+    // Simulate concurrent calls by calling saveArticle immediately in sequence
+    const ids = [1, 2, 3].map(() => dbAdapter.saveArticle(proj.id, {
+      title: 'Concurrent Article',
+      doi: '10.1000/concurrent',
+      source_query: '',
+      source_databases: JSON.stringify(['OpenAlex']),
+      csl_json: '{}',
+    }));
+
+    expect(ids[0]).toBe(ids[1]);
+    expect(ids[1]).toBe(ids[2]);
+    expect(dbAdapter.getArticlesByProject(proj.id)).toHaveLength(1);
+  });
+
+  it('deletes the physical file when a duplicate PDF is uploaded (updated)', () => {
+    const proj = dbAdapter.createProject('Project PDF Duplicate');
+    const articleId = dbAdapter.saveArticle(proj.id, {
+      title: 'PDF Article',
+      source_query: '',
+      source_databases: '[]',
+      csl_json: '{}',
+    });
+
+    const fs = require('fs');
+    const path = require('path');
+    const os = require('os');
+
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emmas-lib-test-'));
+    const file1 = path.join(tempDir, 'file1.pdf');
+    const file2 = path.join(tempDir, 'file2.pdf');
+
+    fs.writeFileSync(file1, 'pdf content 1');
+    fs.writeFileSync(file2, 'pdf content 2');
+
+    dbAdapter.updateArticleFilePath(articleId, file1);
+    expect(fs.existsSync(file1)).toBe(true);
+
+    // Overwrite with file2 - should delete file1
+    dbAdapter.updateArticleFilePath(articleId, file2);
+
+    expect(fs.existsSync(file1)).toBe(false);
+    expect(fs.existsSync(file2)).toBe(true);
+
+    // Cleanup
+    try {
+      fs.unlinkSync(file2);
+      fs.rmdirSync(tempDir);
+    } catch {}
   });
 });

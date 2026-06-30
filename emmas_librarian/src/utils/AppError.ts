@@ -1,11 +1,11 @@
 // Mirrored ErrorTypes from backend
 export type ErrorType = 'USER_ERROR' | 'SYSTEM_ERROR' | 'NETWORK_ERROR' | 'VALIDATION_ERROR';
-export type ErrorCode = 
-  | 'ERR_MISSING_API_KEY' 
-  | 'ERR_MODEL_NOT_DEFINED' 
-  | 'ERR_INVALID_PDF' 
-  | 'ERR_API_QUOTA_EXCEEDED' 
-  | 'ERR_API_UNAUTHORIZED' 
+export type ErrorCode =
+  | 'ERR_MISSING_API_KEY'
+  | 'ERR_MODEL_NOT_DEFINED'
+  | 'ERR_INVALID_PDF'
+  | 'ERR_API_QUOTA_EXCEEDED'
+  | 'ERR_API_UNAUTHORIZED'
   | 'ERR_INTERNAL'
   | 'ERR_NOT_FOUND'
   | string;
@@ -29,9 +29,9 @@ export class FrontendAppError extends Error {
 
 export function parseIpcError(error: any): Error {
   if (!error) return new Error('Unknown error');
-  
+
   const message = error.message || String(error);
-  
+
   // Extract JSON payload from "Error: {...}"
   const jsonMatch = message.match(/({.*})/);
   if (jsonMatch) {
@@ -44,6 +44,6 @@ export function parseIpcError(error: any): Error {
       // Ignore parse errors, fallback to raw error
     }
   }
-  
+
   return error;
 }

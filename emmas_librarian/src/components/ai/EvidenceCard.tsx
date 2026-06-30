@@ -15,13 +15,22 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ evidence, onViewDocu
         border: '1px solid var(--border-color)',
         marginBottom: '0.5rem',
         background: 'var(--bg-surface)',
-        borderRadius: 'var(--radius-sm)'
+        borderRadius: 'var(--radius-sm)',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
         <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Página {evidence.page}</span>
         {evidence.score !== undefined && (
-          <span style={{ fontSize: '0.75rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-main)' }}>
+          <span
+            style={{
+              fontSize: '0.75rem',
+              padding: '0.1rem 0.4rem',
+              borderRadius: '4px',
+              background: 'var(--bg-main)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-main)',
+            }}
+          >
             Score: {Math.round(evidence.score * 100)}
           </span>
         )}
@@ -33,7 +42,7 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ evidence, onViewDocu
           borderLeft: '3px solid var(--color-primary)',
           paddingLeft: '0.75rem',
           margin: '0.5rem 0',
-          color: 'var(--text-main)'
+          color: 'var(--text-main)',
         }}
       >
         {evidence.text}

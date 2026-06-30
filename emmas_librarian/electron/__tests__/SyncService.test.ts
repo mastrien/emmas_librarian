@@ -335,6 +335,83 @@ describe('SyncService', () => {
     expect(artInsert).toContain('journal');
   });
 
+  it('exports categoryOptions, categorySelections, questionSets, investigationResults in project.json', async () => {
+    const mockAddFile = vi.fn();
+    (globalThis as unknown).mockAddFile = mockAddFile;
+
+    // Return distinct data for each new table
+    mockdbAdapter.db.prepare = vi.fn((sql) => {
+      if (sql.includes('FROM projects')) return { get: () => ({ id: 1, name: 'Test' }) };
+      if (sql.includes('project_category_options'))
+        return { all: () => [{ id: 10, category_id: 5, name: 'Opt A' }] };
+      if (sql.includes('article_category_selections'))
+        return { all: () => [{ article_id: 2, category_id: 5, option_id: 10 }] };
+      if (sql.includes('question_sets'))
+        return { all: () => [{ id: 3, project_id: 1, name: 'QS1', description: null, questions: '[]', created_at: '', updated_at: '' }] };
+      if (sql.includes('investigation_results'))
+        return { all: () => [{ id: 7, investigation_id: 1, article_id: 2, question: 'Q?', answer: 'A', quote: null, status: 'success', error_message: null, created_at: '' }] };
+      return { all: () => [] };
+    });
+
+    const service = new SyncService(mockdbAdapter);
+    await service.exportProject(1);
+
+    const [, contentBuffer] = mockAddFile.mock.calls[0];
+    const parsed = JSON.parse(contentBuffer.toString('utf-8'));
+
+    expect(parsed).toHaveProperty('categoryOptions');
+    expect(parsed.categoryOptions[0].name).toBe('Opt A');
+    expect(parsed).toHaveProperty('categorySelections');
+    expect(parsed.categorySelections[0].option_id).toBe(10);
+    expect(parsed).toHaveProperty('questionSets');
+    expect(parsed.questionSets[0].name).toBe('QS1');
+    expect(parsed).toHaveProperty('investigationResults');
+    expect(parsed.investigationResults[0].question).toBe('Q?');
+  });
+
+  it('imports categoryOptions, categorySelections, questionSets, and investigationResults with remapped IDs', async () => {
+    const runSpy = vi.fn().mockReturnValue({ lastInsertRowid: 100 });
+    mockdbAdapter.db.prepare = vi.fn().mockReturnValue({ run: runSpy, all: vi.fn().mockReturnValue([]) });
+
+    (globalThis as unknown).mockGetEntry.mockReturnValueOnce({
+      getData: () =>
+        Buffer.from(
+          JSON.stringify({
+            project: { name: 'Test' },
+            articles: [{ id: 1, title: 'Art', local_file_path: null }],
+            searchHistory: [],
+            projectDocs: [],
+            projCategories: [{ id: 5, name: 'Cat', type: 'enum', options: '' }],
+            categoryOptions: [{ id: 10, category_id: 5, name: 'Opt A' }],
+            articleCategories: [],
+            categorySelections: [{ article_id: 1, category_id: 5, option_id: 10 }],
+            massiveInvs: [{ id: 20, created_at: '', status: 'ok', model_used: '', questions: '[]', articles_ids: '[1]' }],
+            investigationResults: [
+              { id: 30, investigation_id: 20, article_id: 1, question: 'Q?', answer: 'A', quote: null, status: 'success', error_message: null, created_at: '' },
+            ],
+            questionSets: [
+              { id: 40, project_id: null, name: 'QS1', description: null, questions: '[]', created_at: '', updated_at: '' },
+            ],
+            annotations: [],
+            highlights: [],
+            pendingHighlights: [],
+            diaryEntries: [],
+            diaryHistory: [],
+          }),
+        ),
+    });
+
+    const service = new SyncService(mockdbAdapter);
+    const result = await service.importProject();
+    expect(result).toBe(100);
+
+    const sqls = mockdbAdapter.db.prepare.mock.calls.map((c: unknown) => c[0]);
+    expect(sqls.some((s: string) => s.includes('project_category_options'))).toBe(true);
+    expect(sqls.some((s: string) => s.includes('article_category_selections'))).toBe(true);
+    expect(sqls.some((s: string) => s.includes('investigation_results'))).toBe(true);
+    expect(sqls.some((s: string) => s.includes('question_sets'))).toBe(true);
+  });
+
   describe('Full Backup & Restore', () => {
     it('exports backup successfully and checkpoints WAL before reading DB', async () => {
       const mockAddFile = vi.fn();

@@ -1,4 +1,12 @@
-import type { SearchHistoryRecord, TrashItem, ProjectCategory, ArticleCategory, AIModelConfig, AISkill, AIProvider } from '../../../types';
+import type {
+  SearchHistoryRecord,
+  TrashItem,
+  ProjectCategory,
+  ArticleCategory,
+  AIModelConfig,
+  AISkill,
+  AIProvider,
+} from '../../../types';
 import { vi, type Mock } from 'vitest';
 import type {
   IProjectService,
@@ -52,30 +60,18 @@ export class FakeProjectService implements IProjectService {
     }),
   );
 
-  updateProject = vi.fn(
-    async (_id: number, _name: string): Promise<void> => undefined,
-  );
+  updateProject = vi.fn(async (_id: number, _name: string): Promise<void> => undefined);
 
-  getProjectWritingPad = vi.fn(
-    async (_id: number): Promise<string | null> => null,
-  );
+  getProjectWritingPad = vi.fn(async (_id: number): Promise<string | null> => null);
 
-  updateProjectWritingPad = vi.fn(
-    async (_id: number, _content: string): Promise<void> => undefined,
-  );
+  updateProjectWritingPad = vi.fn(async (_id: number, _content: string): Promise<void> => undefined);
 
-  deleteProject = vi.fn(
-    async (_id: number): Promise<void> => undefined,
-  );
+  deleteProject = vi.fn(async (_id: number): Promise<void> => undefined);
 
   // ── Search ──────────────────────────────────────────────────────────
-  getSearchHistory = vi.fn(
-    async (_projectId: number): Promise<unknown[]> => [],
-  );
+  getSearchHistory = vi.fn(async (_projectId: number): Promise<unknown[]> => []);
 
-  revertSearch = vi.fn(
-    async (_searchId: number): Promise<void> => undefined,
-  );
+  revertSearch = vi.fn(async (_searchId: number): Promise<void> => undefined);
 
   searchAndPersist = vi.fn(
     async (
@@ -87,14 +83,10 @@ export class FakeProjectService implements IProjectService {
     ): Promise<SearchPersistResult> => ({ savedCount: 0, breakdown: {} }),
   );
 
-  translateQuery = vi.fn(
-    async (_ast: QueryASTNode): Promise<DatabaseTranslationMap> => ({}),
-  );
+  translateQuery = vi.fn(async (_ast: QueryASTNode): Promise<DatabaseTranslationMap> => ({}));
 
   // ── Articles ────────────────────────────────────────────────────────
-  getArticles = vi.fn(
-    async (_projectId: number): Promise<Article[]> => [],
-  );
+  getArticles = vi.fn(async (_projectId: number): Promise<Article[]> => []);
 
   getArticle = vi.fn(
     async (_articleId: number): Promise<Article> => ({
@@ -106,52 +98,26 @@ export class FakeProjectService implements IProjectService {
   );
 
   updateArticleStatus = vi.fn(
-    async (
-      _articleId: number,
-      _status: 'new' | 'read' | 'archived',
-      _note?: string,
-    ): Promise<void> => undefined,
+    async (_articleId: number, _status: 'new' | 'read' | 'archived', _note?: string): Promise<void> => undefined,
   );
 
-  updateArticleMetadata = vi.fn(
-    async (
-      _articleId: number,
-      _data: Partial<Article>,
-    ): Promise<void> => undefined,
-  );
+  updateArticleMetadata = vi.fn(async (_articleId: number, _data: Partial<Article>): Promise<void> => undefined);
 
   createManualArticle = vi.fn(
-    async (
-      _projectId: number,
-      _data: Partial<Article>,
-      _sourceFilePath?: string,
-    ): Promise<number> => 0,
+    async (_projectId: number, _data: Partial<Article>, _sourceFilePath?: string): Promise<number> => 0,
   );
 
-  createArticlesFromPdfs = vi.fn(
-    async (
-      _projectId: number,
-      _filePaths: string[],
-    ): Promise<number> => 0,
-  );
+  createArticlesFromPdfs = vi.fn(async (_projectId: number, _filePaths: string[]): Promise<number> => 0);
 
   // ── Export ──────────────────────────────────────────────────────────
-  exportCsv = vi.fn(
-    async (_projectId: number): Promise<string | null> => null,
-  );
+  exportCsv = vi.fn(async (_projectId: number): Promise<string | null> => null);
 
-  exportXlsx = vi.fn(
-    async (_projectId: number): Promise<string | null> => null,
-  );
+  exportXlsx = vi.fn(async (_projectId: number): Promise<string | null> => null);
 
-  exportBiblioshiny = vi.fn(
-    async (_projectId: number): Promise<string | null> => null,
-  );
+  exportBiblioshiny = vi.fn(async (_projectId: number): Promise<string | null> => null);
 
   // ── Highlights ──────────────────────────────────────────────────────
-  getHighlights = vi.fn(
-    async (_articleId: number): Promise<Highlight[]> => [],
-  );
+  getHighlights = vi.fn(async (_articleId: number): Promise<Highlight[]> => []);
 
   createHighlight = vi.fn(
     async (
@@ -166,190 +132,95 @@ export class FakeProjectService implements IProjectService {
     }),
   );
 
-  deleteHighlight = vi.fn(
-    async (_id: number): Promise<void> => undefined,
-  );
+  deleteHighlight = vi.fn(async (_id: number): Promise<void> => undefined);
 
   // ── Annotations ─────────────────────────────────────────────────────
-  getAnnotations = vi.fn(
-    async (_articleId: number): Promise<Annotation[]> => [],
-  );
+  getAnnotations = vi.fn(async (_articleId: number): Promise<Annotation[]> => []);
 
-  createAnnotation = vi.fn(
-    async (
-      _articleId: number,
-      _content: string,
-    ): Promise<{ id: number }> => ({ id: 0 }),
-  );
+  createAnnotation = vi.fn(async (_articleId: number, _content: string): Promise<{ id: number }> => ({ id: 0 }));
 
-  updateAnnotation = vi.fn(
-    async (_id: number, _content: string): Promise<void> => undefined,
-  );
+  updateAnnotation = vi.fn(async (_id: number, _content: string): Promise<void> => undefined);
 
-  deleteAnnotation = vi.fn(
-    async (_id: number): Promise<void> => undefined,
-  );
+  deleteAnnotation = vi.fn(async (_id: number): Promise<void> => undefined);
 
   // ── Settings ────────────────────────────────────────────────────────
-  getSetting = vi.fn(
-    async (_key: string): Promise<string | null> => null,
-  );
+  getSetting = vi.fn(async (_key: string): Promise<string | null> => null);
 
-  setSetting = vi.fn(
-    async (_key: string, _value: string): Promise<void> => undefined,
-  );
+  setSetting = vi.fn(async (_key: string, _value: string): Promise<void> => undefined);
 
   // ── AI Model Config ─────────────────────────────────────────────────
-  getAiModelConfigs = vi.fn(
-    async (): Promise<AIModelConfig[]> => [],
-  );
+  getAiModelConfigs = vi.fn(async (): Promise<AIModelConfig[]> => []);
 
   updateAiModelConfig = vi.fn(
     async (_skill: AISkill, _provider: AIProvider, _modelName: string): Promise<void> => undefined,
   );
 
-  restoreAiModelConfigDefaults = vi.fn(
-    async (): Promise<void> => undefined,
-  );
+  restoreAiModelConfigDefaults = vi.fn(async (): Promise<void> => undefined);
 
   // ── Dialogs & PDF ───────────────────────────────────────────────────
-  openPdfDialog = vi.fn(
-    async (): Promise<string | null> => null,
-  );
+  openPdfDialog = vi.fn(async (): Promise<string | null> => null);
 
-  openMultiplePdfsDialog = vi.fn(
-    async (): Promise<string[]> => [],
-  );
+  openMultiplePdfsDialog = vi.fn(async (): Promise<string[]> => []);
 
-  uploadPdf = vi.fn(
-    async (_articleId: number, _filePath: string): Promise<string> => '',
-  );
+  uploadPdf = vi.fn(async (_articleId: number, _filePath: string): Promise<string> => '');
 
-  unlinkPdf = vi.fn(
-    async (_articleId: number): Promise<void> => undefined,
-  );
+  unlinkPdf = vi.fn(async (_articleId: number): Promise<void> => undefined);
 
-  getPdfBuffer = vi.fn(
-    async (_articleId: number): Promise<ArrayBuffer> => new ArrayBuffer(0),
-  );
+  getPdfBuffer = vi.fn(async (_articleId: number): Promise<ArrayBuffer> => new ArrayBuffer(0));
 
-  saveExportedFile = vi.fn(
-    async (_content: string, _defaultPath: string): Promise<boolean> => true,
-  );
+  saveExportedFile = vi.fn(async (_content: string, _defaultPath: string): Promise<boolean> => true);
 
   // ── Project Documents ───────────────────────────────────────────────
-  openProjectDocument = vi.fn(
-    async (
-      _url: string,
-      _localFilePath?: string,
-    ): Promise<void> => undefined,
-  );
+  openProjectDocument = vi.fn(async (_url: string, _localFilePath?: string): Promise<void> => undefined);
 
-  getProjectDocuments = vi.fn(
-    async (_projectId: number): Promise<ProjectDocument[]> => [],
-  );
+  getProjectDocuments = vi.fn(async (_projectId: number): Promise<ProjectDocument[]> => []);
 
   createProjectDocument = vi.fn(
-    async (
-      _projectId: number,
-      _title: string,
-      _url?: string,
-      _sourceFilePath?: string,
-    ): Promise<number> => 0,
+    async (_projectId: number, _title: string, _url?: string, _sourceFilePath?: string): Promise<number> => 0,
   );
 
-  deleteProjectDocument = vi.fn(
-    async (_id: number): Promise<void> => undefined,
-  );
+  deleteProjectDocument = vi.fn(async (_id: number): Promise<void> => undefined);
 
-  openProjectDocumentExternal = vi.fn(
-    async (
-      _url?: string,
-      _filePath?: string,
-    ): Promise<void> => undefined,
-  );
+  openProjectDocumentExternal = vi.fn(async (_url?: string, _filePath?: string): Promise<void> => undefined);
 
   // ── Diary ───────────────────────────────────────────────────────────
-  getDiaryEntries = vi.fn(
-    async (_projectId: number): Promise<unknown[]> => [],
-  );
+  getDiaryEntries = vi.fn(async (_projectId: number): Promise<unknown[]> => []);
 
-  getDiaryEntry = vi.fn(
-    async (
-      _projectId: number,
-      _entryDate: string,
-    ): Promise<DiaryEntry | null> => null,
-  );
+  getDiaryEntry = vi.fn(async (_projectId: number, _entryDate: string): Promise<DiaryEntry | null> => null);
 
-  saveDiaryEntry = vi.fn(
-    async (
-      _projectId: number,
-      _entryDate: string,
-      _content: string,
-    ): Promise<void> => undefined,
-  );
+  saveDiaryEntry = vi.fn(async (_projectId: number, _entryDate: string, _content: string): Promise<void> => undefined);
 
-  deleteDiaryEntry = vi.fn(
-    async (
-      _projectId: number,
-      _entryDate: string,
-    ): Promise<void> => undefined,
-  );
+  deleteDiaryEntry = vi.fn(async (_projectId: number, _entryDate: string): Promise<void> => undefined);
 
-  getDiaryEntryHistory = vi.fn(
-    async (
-      _projectId: number,
-      _entryDate: string,
-    ): Promise<unknown[]> => [],
-  );
+  getDiaryEntryHistory = vi.fn(async (_projectId: number, _entryDate: string): Promise<unknown[]> => []);
 
-  restoreDiaryEntryVersion = vi.fn(
-    async (_versionId: number): Promise<void> => undefined,
-  );
+  restoreDiaryEntryVersion = vi.fn(async (_versionId: number): Promise<void> => undefined);
 
   // ── Trash ───────────────────────────────────────────────────────────
   getTrashItems = vi.fn(async (): Promise<unknown[]> => []);
 
   restoreTrashItem = vi.fn(
-    async (
-      _type: 'project' | 'article' | 'annotation',
-      _id: number,
-    ): Promise<void> => undefined,
+    async (_type: 'project' | 'article' | 'annotation', _id: number): Promise<void> => undefined,
   );
 
   deleteTrashItemPermanent = vi.fn(
-    async (
-      _type: 'project' | 'article' | 'annotation',
-      _id: number,
-    ): Promise<void> => undefined,
+    async (_type: 'project' | 'article' | 'annotation', _id: number): Promise<void> => undefined,
   );
 
   emptyTrash = vi.fn(async (): Promise<void> => undefined);
 
   // ── Backups ─────────────────────────────────────────────────────────
-  exportBackup = vi.fn(
-    async (): Promise<string | null> => null,
-  );
+  exportBackup = vi.fn(async (): Promise<string | null> => null);
 
-  restoreBackupOverride = vi.fn(
-    async (): Promise<boolean> => false,
-  );
+  restoreBackupOverride = vi.fn(async (): Promise<boolean> => false);
 
-  restoreBackupMerge = vi.fn(
-    async (): Promise<number> => 0,
-  );
+  restoreBackupMerge = vi.fn(async (): Promise<number> => 0);
 
-  listAutoBackups = vi.fn(
-    async (): Promise<AutoBackupEntry[]> => [],
-  );
+  listAutoBackups = vi.fn(async (): Promise<AutoBackupEntry[]> => []);
 
-  restoreAutoBackup = vi.fn(
-    async (_filename: string): Promise<boolean> => false,
-  );
+  restoreAutoBackup = vi.fn(async (_filename: string): Promise<boolean> => false);
 
-  getAppVersion = vi.fn(
-    async (): Promise<string> => '0.0.0-fake',
-  );
+  getAppVersion = vi.fn(async (): Promise<string> => '0.0.0-fake');
 
   // ── AI ──────────────────────────────────────────────────────────────
   generateSummary = vi.fn(
@@ -359,30 +230,17 @@ export class FakeProjectService implements IProjectService {
     }),
   );
 
-  massiveExtraction = vi.fn(
-    async (
-      _articleId: number,
-      _questions: string[],
-    ): Promise<ExtractionAnswer[]> => [],
-  );
+  massiveExtraction = vi.fn(async (_articleId: number, _questions: string[]): Promise<ExtractionAnswer[]> => []);
 
-  extractMetadata = vi.fn(
-    async (_articleId: number): Promise<ExtractedMetadata> => ({}),
-  );
+  extractMetadata = vi.fn(async (_articleId: number): Promise<ExtractedMetadata> => ({}));
 
   // ── Pending Highlights ──────────────────────────────────────────────
-  getPendingHighlights = vi.fn(
-    async (_articleId: number): Promise<PendingHighlight[]> => [],
-  );
+  getPendingHighlights = vi.fn(async (_articleId: number): Promise<PendingHighlight[]> => []);
 
-  deletePendingHighlight = vi.fn(
-    async (_id: number): Promise<void> => undefined,
-  );
+  deletePendingHighlight = vi.fn(async (_id: number): Promise<void> => undefined);
 
   // ── Massive Investigations ──────────────────────────────────────────
-  getMassiveInvestigations = vi.fn(
-    async (_projectId: number): Promise<MassiveInvestigation[]> => [],
-  );
+  getMassiveInvestigations = vi.fn(async (_projectId: number): Promise<MassiveInvestigation[]> => []);
 
   saveMassiveInvestigation = vi.fn(
     async (
@@ -409,68 +267,37 @@ export class FakeProjectService implements IProjectService {
     ): Promise<void> => {},
   );
 
-  getInvestigationResults = vi.fn(
-    async (_investigationId: number): Promise<InvestigationResult[]> => [],
-  );
+  getInvestigationResults = vi.fn(async (_investigationId: number): Promise<InvestigationResult[]> => []);
 
   getInvestigationResultsByArticle = vi.fn(
-    async (
-      _investigationId: number,
-      _articleId: number,
-    ): Promise<InvestigationResult[]> => [],
+    async (_investigationId: number, _articleId: number): Promise<InvestigationResult[]> => [],
   );
 
   // ── Categories ──────────────────────────────────────────────────────
-  getProjectCategories = vi.fn(
-    async (_projectId: number): Promise<unknown[]> => [],
-  );
+  getProjectCategories = vi.fn(async (_projectId: number): Promise<unknown[]> => []);
 
   createProjectCategory = vi.fn(
-    async (
-      _projectId: number,
-      _name: string,
-      _type: string,
-      _options?: any,
-    ): Promise<number> => 0,
+    async (_projectId: number, _name: string, _type: string, _options?: any): Promise<number> => 0,
   );
 
   updateProjectCategory = vi.fn(
-    async (
-      _categoryId: number,
-      _name: string,
-      _type: string,
-      _options?: any,
-    ): Promise<void> => undefined,
+    async (_categoryId: number, _name: string, _type: string, _options?: any): Promise<void> => undefined,
   );
 
-  deleteProjectCategory = vi.fn(
-    async (_categoryId: number): Promise<void> => undefined,
-  );
+  deleteProjectCategory = vi.fn(async (_categoryId: number): Promise<void> => undefined);
 
-  getArticleCategories = vi.fn(
-    async (_articleId: number): Promise<unknown[]> => [],
-  );
+  getArticleCategories = vi.fn(async (_articleId: number): Promise<unknown[]> => []);
 
   setArticleCategory = vi.fn(
-    async (
-      _articleId: number,
-      _categoryId: number,
-      _value: string | null,
-    ): Promise<void> => undefined,
+    async (_articleId: number, _categoryId: number, _value: string | null): Promise<void> => undefined,
   );
 
-  getAllProjectArticleCategories = vi.fn(
-    async (_projectId: number): Promise<unknown[]> => [],
-  );
+  getAllProjectArticleCategories = vi.fn(async (_projectId: number): Promise<unknown[]> => []);
 
   // ── Sync ────────────────────────────────────────────────────────────
-  exportProject = vi.fn(
-    async (_projectId: number): Promise<string | null> => null,
-  );
+  exportProject = vi.fn(async (_projectId: number): Promise<string | null> => null);
 
-  importProject = vi.fn(
-    async (_filePath?: string): Promise<number | null> => null,
-  );
+  importProject = vi.fn(async (_filePath?: string): Promise<number | null> => null);
 
   // ── Question Sets ─────────────────────────────────────────────────
   getQuestionSets = vi.fn<any>().mockResolvedValue([]);

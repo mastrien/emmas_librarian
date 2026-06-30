@@ -1,6 +1,12 @@
 import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      electron: path.resolve(__dirname, 'node_modules/electron'),
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
@@ -10,7 +16,10 @@ export default defineConfig({
       '**/dist/**',
       '**/dist-electron/**',
       '**/release/**',
-      '**/.{idea,git,cache,output,temp}/**'
+      '**/.stryker-tmp/**',
+      '**/e2e-tests/**',
+      '**/performance-tests/**',
+      '**/.{idea,git,cache,output,temp}/**',
     ],
     coverage: {
       provider: 'v8',
@@ -22,7 +31,7 @@ export default defineConfig({
         'electron/main.ts',
         'electron/types.ts',
         'src/main.tsx',
-        'src/vite-env.d.ts'
+        'src/vite-env.d.ts',
       ],
       thresholds: {
         lines: 30,
@@ -33,9 +42,9 @@ export default defineConfig({
           lines: 80,
           branches: 80,
           functions: 80,
-          statements: 80
-        }
-      }
-    }
-  }
+          statements: 80,
+        },
+      },
+    },
+  },
 });

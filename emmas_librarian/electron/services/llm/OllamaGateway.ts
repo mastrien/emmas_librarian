@@ -5,7 +5,7 @@ export class OllamaGateway implements LLMProviderGateway {
 
   async complete(prompt: string, model: string): Promise<string> {
     if (!this.baseUrl) throw new Error('URL do Ollama não configurada.');
-    
+
     let url = this.baseUrl.trim();
     if (url.endsWith('/')) url = url.slice(0, -1);
 

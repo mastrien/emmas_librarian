@@ -21,23 +21,25 @@ export const DashboardPage: React.FC = () => {
     const fetchProjects = async () => {
       try {
         const data = await projectService.getProjects();
-        
-        const projectsWithStats = await Promise.all(data.map(async (project) => {
-          const articles = await projectService.getArticles(project.id);
-          const diaryEntries = await projectService.getDiaryEntries(project.id);
-          return {
-            ...project,
-            stats: {
-              total: articles.length,
-              read: articles.filter(a => a.status === 'read').length,
-              active: articles.filter(a => a.status === 'new').length,
-              archived: articles.filter(a => a.status === 'archived').length,
-              withPdf: articles.filter(a => !!a.local_file_path).length,
-              diaryDates: diaryEntries.map(d => d.entry_date),
-            }
-          };
-        }));
-        
+
+        const projectsWithStats = await Promise.all(
+          data.map(async (project) => {
+            const articles = await projectService.getArticles(project.id);
+            const diaryEntries = await projectService.getDiaryEntries(project.id);
+            return {
+              ...project,
+              stats: {
+                total: articles.length,
+                read: articles.filter((a) => a.status === 'read').length,
+                active: articles.filter((a) => a.status === 'new').length,
+                archived: articles.filter((a) => a.status === 'archived').length,
+                withPdf: articles.filter((a) => !!a.local_file_path).length,
+                diaryDates: diaryEntries.map((d) => d.entry_date),
+              },
+            };
+          }),
+        );
+
         setProjects(projectsWithStats as any);
       } catch (err) {
         console.error('Erro ao buscar projetos', err);
@@ -48,21 +50,24 @@ export const DashboardPage: React.FC = () => {
     fetchProjects();
   }, []);
 
-  const globalStats = projects.reduce((acc, p: any) => {
-    if (p.stats) {
-      acc.active += p.stats.active;
-      acc.read += p.stats.read;
-      acc.archived += p.stats.archived;
-      acc.total += p.stats.total;
-      acc.withPdf += p.stats.withPdf;
-      if (p.stats.diaryDates) {
-        p.stats.diaryDates.forEach((date: string) => {
-          acc.diarySet.add(date);
-        });
+  const globalStats = projects.reduce(
+    (acc, p: any) => {
+      if (p.stats) {
+        acc.active += p.stats.active;
+        acc.read += p.stats.read;
+        acc.archived += p.stats.archived;
+        acc.total += p.stats.total;
+        acc.withPdf += p.stats.withPdf;
+        if (p.stats.diaryDates) {
+          p.stats.diaryDates.forEach((date: string) => {
+            acc.diarySet.add(date);
+          });
+        }
       }
-    }
-    return acc;
-  }, { active: 0, read: 0, archived: 0, total: 0, withPdf: 0, diarySet: new Set<string>() });
+      return acc;
+    },
+    { active: 0, read: 0, archived: 0, total: 0, withPdf: 0, diarySet: new Set<string>() },
+  );
 
   // Generate heatmap data for last 30 days
   const last30Days = Array.from({ length: 30 }, (_, i) => {
@@ -71,7 +76,7 @@ export const DashboardPage: React.FC = () => {
     const dateStr = d.toISOString().split('T')[0];
     return {
       date: dateStr,
-      active: globalStats.diarySet.has(dateStr)
+      active: globalStats.diarySet.has(dateStr),
     };
   });
 
@@ -114,12 +119,15 @@ export const DashboardPage: React.FC = () => {
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
-    const emmapcarcFiles = files.filter(f => f.name.endsWith('.emmapcarc'));
-    
+    const emmapcarcFiles = files.filter((f) => f.name.endsWith('.emmapcarc'));
+
     if (emmapcarcFiles.length > 0) {
       try {
         // @ts-ignore
-        const filePath = window.electronAPI && window.electronAPI.getPathForFile ? window.electronAPI.getPathForFile(emmapcarcFiles[0]) : (emmapcarcFiles[0].path || emmapcarcFiles[0].name);
+        const filePath =
+          window.electronAPI && window.electronAPI.getPathForFile
+            ? window.electronAPI.getPathForFile(emmapcarcFiles[0])
+            : emmapcarcFiles[0].path || emmapcarcFiles[0].name;
         const newId = await projectService.importProject(filePath);
         if (newId) window.location.href = `#/projects/${newId}`;
       } catch (err: any) {
@@ -129,32 +137,38 @@ export const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div 
+    <div
       style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', minHeight: '100vh' }}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {isDragging && createPortal(
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          backdropFilter: 'blur(4px)',
-          zIndex: 99999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: '8px dashed var(--color-primary)'
-        }}>
-          <h2 style={{ color: 'white', fontSize: '3rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <Download size={60} /> Solte o arquivo .emmapcarc em qualquer lugar para importar
-          </h2>
-        </div>,
-        document.body
-      )}
-
+      {isDragging &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100vw',
+              height: '100vh',
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(4px)',
+              zIndex: 99999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '8px dashed var(--color-primary)',
+            }}
+          >
+            <h2 style={{ color: 'white', fontSize: '3rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <Download size={60} /> Solte o arquivo .emmapcarc em qualquer lugar para importar
+            </h2>
+          </div>,
+          document.body,
+        )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
         <div>
@@ -162,7 +176,7 @@ export const DashboardPage: React.FC = () => {
           <p style={{ margin: 0, color: 'var(--text-muted)' }}>Gerencie suas pesquisas e bibliotecas de artigos.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button 
+          <button
             onClick={async () => {
               try {
                 const newId = await projectService.importProject();
@@ -170,7 +184,7 @@ export const DashboardPage: React.FC = () => {
               } catch (err: any) {
                 alert('Erro ao importar projeto: ' + (err.message || err));
               }
-            }} 
+            }}
             className="btn-secondary"
             title="Importar projeto (.emmapcarc)"
           >
@@ -189,194 +203,281 @@ export const DashboardPage: React.FC = () => {
       ) : (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-            {projects.map(project => (
-            <Link 
-              key={project.id} 
-              to={`/projects/${project.id}`}
-              className="card hover-lift fade-in"
-              style={{ 
-                display: 'flex', 
-                flexDirection: 'column',
-                padding: '1.5rem', 
-                textDecoration: 'none',
-                color: 'inherit',
-                cursor: 'pointer'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <div style={{ 
-                  padding: '0.8rem', 
-                  background: 'var(--bg-main)', 
-                  color: 'var(--color-primary)', 
-                  borderRadius: 'var(--radius-md)' 
-                }}>
-                  <BookOpen size={24} />
+            {projects.map((project) => (
+              <Link
+                key={project.id}
+                to={`/projects/${project.id}`}
+                className="card hover-lift fade-in"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '1.5rem',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  cursor: 'pointer',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    marginBottom: '1rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '0.8rem',
+                      background: 'var(--bg-main)',
+                      color: 'var(--color-primary)',
+                      borderRadius: 'var(--radius-md)',
+                    }}
+                  >
+                    <BookOpen size={24} />
+                  </div>
+                  <ChevronRight size={20} color="var(--border-color)" style={{ marginTop: '0.5rem' }} />
                 </div>
-                <ChevronRight size={20} color="var(--border-color)" style={{ marginTop: '0.5rem' }} />
-              </div>
-              <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', color: 'var(--text-heading)' }}>
-                {project.name}
-              </h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                <Calendar size={14} /> 
-                Criado em {new Date(project.created_at).toLocaleDateString()}
-              </div>
-              
-              {/* @ts-ignore */}
-              {project.stats && (
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Ativos</span>
-                    {/* @ts-ignore */}
-                    <strong style={{ color: 'var(--color-primary)' }}>{project.stats.active}</strong>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Lidos</span>
-                    {/* @ts-ignore */}
-                    <strong style={{ color: 'var(--color-success, #10b981)' }}>{project.stats.read}</strong>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Arquivados</span>
-                    {/* @ts-ignore */}
-                    <strong style={{ color: 'var(--text-muted)' }}>{project.stats.archived}</strong>
-                  </div>
+                <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', color: 'var(--text-heading)' }}>
+                  {project.name}
+                </h3>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  <Calendar size={14} />
+                  Criado em {new Date(project.created_at).toLocaleDateString()}
                 </div>
-              )}
-            </Link>
-          ))}
 
-          {projects.length === 0 && (
-            <div className="fade-in" style={{ 
-              gridColumn: '1 / -1',
-              textAlign: 'center', 
-              padding: '5rem 2rem', 
-              background: 'var(--bg-surface)', 
-              borderRadius: 'var(--radius-xl)', 
-              border: '2px dashed var(--border-color)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '1rem'
-            }}>
-              <div style={{ padding: '1rem', background: 'var(--bg-main)', borderRadius: '50%', color: 'var(--text-muted)' }}>
-                <BookOpen size={48} />
-              </div>
-              <h2 style={{ margin: 0, color: 'var(--text-heading)' }}>Nenhum projeto encontrado</h2>
-              <p style={{ color: 'var(--text-muted)', margin: 0, maxWidth: '400px' }}>
-                Comece sua pesquisa criando um novo projeto. Você poderá buscar artigos do OpenAlex e Crossref diretamente nele.
-              </p>
-              <Link to="/new-project" className="btn-primary" style={{ marginTop: '1rem' }}>
-                Criar meu primeiro projeto
+                {/* @ts-ignore */}
+                {project.stats && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '0.75rem',
+                      marginTop: '1.25rem',
+                      paddingTop: '1rem',
+                      borderTop: '1px solid var(--border-color)',
+                      fontSize: '0.85rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Ativos</span>
+                      {/* @ts-ignore */}
+                      <strong style={{ color: 'var(--color-primary)' }}>{project.stats.active}</strong>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Lidos</span>
+                      {/* @ts-ignore */}
+                      <strong style={{ color: 'var(--color-success, #10b981)' }}>{project.stats.read}</strong>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Arquivados</span>
+                      {/* @ts-ignore */}
+                      <strong style={{ color: 'var(--text-muted)' }}>{project.stats.archived}</strong>
+                    </div>
+                  </div>
+                )}
               </Link>
+            ))}
+
+            {projects.length === 0 && (
+              <div
+                className="fade-in"
+                style={{
+                  gridColumn: '1 / -1',
+                  textAlign: 'center',
+                  padding: '5rem 2rem',
+                  background: 'var(--bg-surface)',
+                  borderRadius: 'var(--radius-xl)',
+                  border: '2px dashed var(--border-color)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '1rem',
+                }}
+              >
+                <div
+                  style={{
+                    padding: '1rem',
+                    background: 'var(--bg-main)',
+                    borderRadius: '50%',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  <BookOpen size={48} />
+                </div>
+                <h2 style={{ margin: 0, color: 'var(--text-heading)' }}>Nenhum projeto encontrado</h2>
+                <p style={{ color: 'var(--text-muted)', margin: 0, maxWidth: '400px' }}>
+                  Comece sua pesquisa criando um novo projeto. Você poderá buscar artigos do OpenAlex e Crossref
+                  diretamente nele.
+                </p>
+                <Link to="/new-project" className="btn-primary" style={{ marginTop: '1rem' }}>
+                  Criar meu primeiro projeto
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+            <Link
+              to="/terms"
+              style={{
+                color: 'var(--text-muted)',
+                textDecoration: 'none',
+                fontSize: '0.85rem',
+                padding: '0.5rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                transition: 'background-color var(--transition-fast)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-surface)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              Ao usar o sistema, você concorda com os Termos de Uso
+            </Link>
+          </div>
+
+          {!loading && projects.length > 0 && hasData && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', marginTop: '3rem' }}>
+              <div
+                className="fade-in"
+                style={{
+                  gridColumn: 'span 4',
+                  display: 'flex',
+                  background: 'transparent',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  flexDirection: 'row',
+                }}
+              >
+                <div style={{ width: '100px', height: '100px', position: 'relative', flexShrink: 0 }}>
+                  <Pie
+                    data={statusChartData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 },
+                      },
+                    }}
+                  />
+                </div>
+                <div>
+                  <h3
+                    style={{
+                      margin: '0 0 1rem 0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '1rem',
+                    }}
+                  >
+                    <PieChartIcon size={16} /> Progresso Geral
+                  </h3>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {statusChartData.datasets[0].data.map((val, index) => {
+                      if (val === 0) return null;
+                      return (
+                        <div key={index}>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}
+                          >
+                            <div
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                backgroundColor: statusChartData.datasets[0].backgroundColor[index],
+                              }}
+                            />
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                              {statusChartData.labels[index]}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-heading)' }}>{val}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="fade-in"
+                style={{
+                  gridColumn: 'span 4',
+                  display: 'flex',
+                  background: 'transparent',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  flexDirection: 'row',
+                }}
+              >
+                <div style={{ width: '100px', height: '100px', position: 'relative', flexShrink: 0 }}>
+                  <Pie
+                    data={chartData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 },
+                      },
+                    }}
+                  />
+                </div>
+                <div>
+                  <h3
+                    style={{
+                      margin: '0 0 1rem 0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '1rem',
+                    }}
+                  >
+                    <PieChartIcon size={16} /> Arquivos Físicos
+                  </h3>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {chartData.datasets[0].data.map((val, index) => {
+                      if (val === 0) return null;
+                      return (
+                        <div key={index}>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}
+                          >
+                            <div
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                backgroundColor: chartData.datasets[0].backgroundColor[index] as string,
+                              }}
+                            />
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                              {chartData.labels[index]}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-heading)' }}>{val}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ gridColumn: 'span 4' }}>
+                <DashboardCalendar diarySet={globalStats.diarySet} />
+              </div>
             </div>
           )}
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-          <Link to="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.85rem', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', transition: 'background-color var(--transition-fast)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-surface)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-            Ao usar o sistema, você concorda com os Termos de Uso
-          </Link>
-        </div>
-        
-        {!loading && projects.length > 0 && hasData && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', marginTop: '3rem' }}>
-            
-            <div className="fade-in" style={{
-              gridColumn: 'span 4',
-              display: 'flex',
-              background: 'transparent',
-              alignItems: 'center',
-              gap: '1rem',
-              flexDirection: 'row'
-            }}>
-              <div style={{ width: '100px', height: '100px', position: 'relative', flexShrink: 0 }}>
-                <Pie 
-                  data={statusChartData} 
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { display: false },
-                      tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 }
-                    }
-                  }} 
-                />
-              </div>
-              <div>
-                <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
-                  <PieChartIcon size={16} /> Progresso Geral
-                </h3>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                  {statusChartData.datasets[0].data.map((val, index) => {
-                    if (val === 0) return null;
-                    return (
-                      <div key={index}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: statusChartData.datasets[0].backgroundColor[index] }} />
-                          <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{statusChartData.labels[index]}</span>
-                        </div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-heading)' }}>
-                          {val}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="fade-in" style={{
-              gridColumn: 'span 4',
-              display: 'flex',
-              background: 'transparent',
-              alignItems: 'center',
-              gap: '1rem',
-              flexDirection: 'row'
-            }}>
-              <div style={{ width: '100px', height: '100px', position: 'relative', flexShrink: 0 }}>
-                <Pie 
-                  data={chartData} 
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { display: false },
-                      tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 }
-                    }
-                  }} 
-                />
-              </div>
-              <div>
-                <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
-                  <PieChartIcon size={16} /> Arquivos Físicos
-                </h3>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                  {chartData.datasets[0].data.map((val, index) => {
-                    if (val === 0) return null;
-                    return (
-                      <div key={index}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: chartData.datasets[0].backgroundColor[index] as string }} />
-                          <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{chartData.labels[index]}</span>
-                        </div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-heading)' }}>
-                          {val}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ gridColumn: 'span 4' }}>
-              <DashboardCalendar diarySet={globalStats.diarySet} />
-            </div>
-          </div>
-        )}
         </>
       )}
-      
     </div>
   );
 };

@@ -17,7 +17,6 @@ export interface Project {
   stats?: ProjectStats;
 }
 
-
 export interface Article {
   id: number;
   project_id: number;
@@ -295,4 +294,15 @@ export interface ProjectStats {
   withPdf: number;
   diaryDates: string[];
 }
-export interface RAGExtractionResult { question: string; synthesizedAnswer: string; confidenceScore: number; evidences: Array<{ text: string; page: number; bbox: { x: number; y: number; w: number; h: number } | null; reasoning: string; score?: number; }>; }
+export interface RAGExtractionResult {
+  question: string;
+  synthesizedAnswer: string;
+  confidenceScore: number;
+  evidences: Array<{
+    text: string;
+    page: number;
+    bbox: { x: number; y: number; w: number; h: number } | null;
+    reasoning: string;
+    score?: number;
+  }>;
+}

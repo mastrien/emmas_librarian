@@ -76,7 +76,7 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
           errorMsg = err;
         } else if (typeof err === 'object') {
           try {
-            errorMsg = (err as {error?: string}).error || JSON.stringify(err);
+            errorMsg = (err as { error?: string }).error || JSON.stringify(err);
           } catch {
             errorMsg = String(err);
           }
