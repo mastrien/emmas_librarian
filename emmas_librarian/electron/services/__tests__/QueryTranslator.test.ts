@@ -82,4 +82,49 @@ describe('QueryTranslator', () => {
     expect(res.openalex.query).toBe('');
     expect(res.crossref.query).toBe('');
   });
+
+  it('handles nested boolean operators (AND/OR/NOT) up to 3 levels', () => {
+    const ast: QueryASTNode = {
+      type: 'group',
+      logicalOperator: 'AND',
+      children: [
+        { type: 'rule', field: 'title', operator: 'contains', value: 'machine' },
+        {
+          type: 'group',
+          logicalOperator: 'OR',
+          children: [
+            { type: 'rule', field: 'abstract', operator: 'contains', value: 'learning' },
+            { type: 'rule', field: 'authors', operator: 'not_contains', value: 'Smith' },
+          ],
+        },
+      ],
+    };
+
+    const result = queryTranslator.translate(ast);
+    expect(result.scopus.query).toBe('(TITLE("machine")) AND ((ABS("learning")) OR (NOT AUTH("Smith")))');
+    expect(result.wos.query).toBe('(TI="machine") AND ((TS="learning") OR (NOT AU="Smith"))');
+  });
+
+  it('sanitizes or handles special characters safely', () => {
+    const ast: QueryASTNode = {
+      type: 'group',
+      logicalOperator: 'AND',
+      children: [{ type: 'rule', field: 'title', operator: 'contains', value: 'test,with|special"chars' }],
+    };
+
+    const result = queryTranslator.translate(ast);
+    expect(result.openalex.query).toBe('title.search:testwithspecial"chars');
+    expect(result.scopus.query).toContain('TITLE("test,with|special"chars")');
+  });
+
+  it('handles invalid fields or rule types gracefully', () => {
+    const invalidAst = {
+      type: 'invalid' as any,
+    };
+    const res = queryTranslator.translate(invalidAst as any);
+    expect(res.scopus.isValid).toBe(false);
+    expect(res.wos.isValid).toBe(false);
+    expect(res.openalex.isValid).toBe(false);
+    expect(res.crossref.isValid).toBe(false);
+  });
 });

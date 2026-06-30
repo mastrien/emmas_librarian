@@ -1,3 +1,5 @@
+> **Nota Histórica:** Relatório gerado em 24/06/2026.
+
 # Relatório Abrangente de Validação de Testes (Emma's Librarian)
 
 Este relatório descreve detalhadamente o desenho dos casos de teste de unidade e integração através de técnicas formais de testes, apresenta os metadados consolidados da execução e cobertura da suíte de testes de unidade e mutantes, detalha a abordagem metodológica de integração e compara os resultados empíricos das duas ferramentas de desempenho (k6 e JMeter).

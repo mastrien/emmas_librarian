@@ -29,6 +29,13 @@ export function setupAiIpcHandlers(db: DatabaseAdapter, aiService: AIService, ip
   ipcMainModule.handle(
     IpcChannel.AI_MASSIVE_EXTRACTION,
     withErrorHandling(async (event, articleId: number, questions: string[]) => {
+      if (process.env.E2E_MOCK_AI_EXTRACTION === 'true') {
+        return questions.map((q) => ({
+          question: q,
+          answer: 'This is the E2E mock answer.',
+          confidence: 0.95,
+        }));
+      }
       const article = db.getArticle(articleId);
       if (!article || !article.local_file_path || !fs.existsSync(article.local_file_path)) {
         throw new Error('PDF not found for this article.');

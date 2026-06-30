@@ -57,16 +57,15 @@ Testar a comunicação entre os módulos internos do Electron e a Interface.
 
 ---
 
-## 🚦 Fase 4: Testes de Desempenho (Comparativo Duplicado)
+## 🚦 Fase 4: Testes de Desempenho (Consolidação no k6)
 
-**Regra Estrita para o Agente:** Todo cenário de teste abaixo DEVE ser escrito duas vezes: uma vez em **k6** e uma vez em **Apache JMeter** (ou exportado como script `.jmx`).
+Os testes de desempenho devem ser estruturados e executados utilizando o k6 como ferramenta principal de automação de performance.
 
-### 4.1. Configuração do Comparativo
-* **Ferramenta A:** `k6` (Instalação via SO / script).
-* **Ferramenta B:** `Apache JMeter` (Geração do plano de teste `.jmx`).
-* *Nota arquitetural:* Como Emma's Librarian é desktop, os testes focarão nos gargalos de I/O em background e processamento (simulação de chamadas massivas às APIs internas do app, simulando múltiplos workers do Node/Electron).
+### 4.1. Configuração do Ambiente
+* **Ferramenta Única:** `k6` (Instalação via SO / script).
+* *Nota arquitetural:* Como Emma's Librarian é desktop, os testes focarão nos gargalos de I/O em background e processamento (simulação de chamadas massivas às APIs internas da aplicação simulando workers do Node/Electron).
 
-### 4.2. Cenários a serem implementados (em ambas as ferramentas):
+### 4.2. Cenários a serem implementados no k6:
 1.  **Teste de Carga:** Simular a importação assíncrona e leitura de metadados de 50 PDFs simultaneamente.
 2.  **Teste de Estresse:** Injetar requisições de parsing e inserções no SQLite até o limite de CPU/Memória do processo Node falhar ou degradar severamente.
 3.  **Teste de Capacidade:** Identificar qual o teto máximo de artigos que a engine de busca de texto rápido suporta mantendo a resposta abaixo de 200ms.
@@ -75,17 +74,16 @@ Testar a comunicação entre os módulos internos do Electron e a Interface.
 
 ---
 
-## 🎭 Fase 5: Testes de Aceitação / E2E (Comparativo Duplicado)
+## 🎭 Fase 5: Testes de Aceitação / E2E (Consolidação no Playwright)
 
 Verificar se o aplicativo empacotado atende aos requisitos do usuário final interagindo com o DOM real montado pelo Electron.
 
-**Regra Estrita para o Agente:** Os fluxos de usuário DEVEM ser automatizados em ambas as ferramentas abaixo para avaliação de DX (Developer Experience) e velocidade de execução.
+Os fluxos de usuário devem ser automatizados de forma robusta e modular utilizando o Playwright para fins de aceitação e testes regressivos E2E.
 
-### 5.1. Configuração do Comparativo
-* **Ferramenta A:** **Playwright** (Configurado com seu plugin nativo experimental para Electron).
-* **Ferramenta B:** **Selenium WebDriver** (Configurado utilizando o `chromedriver` compatível com a versão do Chromium embutida na versão do Electron definida no `package.json`).
+### 5.1. Configuração do Ambiente
+* **Ferramenta Única:** **Playwright** (Configurado com seu módulo nativo `_electron` para testes integrados ao Electron).
 
-### 5.2. Casos de Teste de Aceitação (A serem duplicados):
+### 5.2. Casos de Teste de Aceitação a Implementar:
 * **Fluxo 1 (Criação):** O usuário abre o app -> Clica em "Novo Projeto" -> Preenche detalhes -> Cria -> Verifica se foi redirecionado ao Dashboard.
 * **Fluxo 2 (Adição e Leitura):** O usuário abre um projeto -> Realiza upload manual de uma referência -> Adiciona categorias usando o componente `CategoryCell` -> Clica no artigo -> Verifica se o Modal de Detalhes ou o Leitor abre com as informações corretas.
 * **Fluxo 3 (Busca):** O usuário digita um termo complexo no `QueryBuilder` -> Aciona a busca -> Verifica se a tabela filtra e exibe os resultados esperados.
@@ -103,7 +101,7 @@ Após a implementação estrutural e a adição dos novos cenários de teste das
     3. **Geração de Artefato (Relatório):** Crie um arquivo chamado `test_impact_report.md` na raiz do projeto (ou na pasta `/docs/relatorios`, se existir). Este documento **DEVE** conter:
         * Uma tabela clara de **"Antes vs. Depois"** para a Cobertura de Código (Statements e Branches).
         * Uma tabela clara de **"Antes vs. Depois"** para o *Mutation Score* (indicando quantos mutantes sobreviviam antes e quantos sobrevivem agora).
-        * Uma breve análise de viabilidade e experiência do desenvolvedor (DX) baseada na implementação da Fase 4 (k6 vs. JMeter) e Fase 5 (Playwright vs. Selenium), indicando qual ferramenta performou melhor na realidade arquitetural do *Emma's Librarian*.
+        * Uma breve análise de viabilidade e experiência do desenvolvedor (DX) baseada na consolidação do k6 na Fase 4 e do Playwright na Fase 5.
 
 ---
 

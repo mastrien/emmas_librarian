@@ -111,6 +111,8 @@ export const AIExtractionModal = ({
             type="button"
             onClick={onClose}
             disabled={isExtracting}
+            title="Fechar"
+            aria-label="Fechar"
             style={{
               background: 'none',
               border: 'none',

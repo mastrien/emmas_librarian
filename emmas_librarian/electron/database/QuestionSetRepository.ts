@@ -4,12 +4,24 @@ import { QuestionSet } from '../types';
 export class QuestionSetRepository {
   constructor(private db: Database.Database) {}
 
+  hasDuplicate(name: string, projectId: number | null): boolean {
+    const query = projectId === null
+      ? 'SELECT 1 FROM question_sets WHERE name = ? AND project_id IS NULL'
+      : 'SELECT 1 FROM question_sets WHERE name = ? AND project_id = ?';
+    const stmt = this.db.prepare(query);
+    const result = projectId === null ? stmt.get(name) : stmt.get(name, projectId);
+    return result !== undefined;
+  }
+
   createQuestionSet(data: {
     project_id: number | null;
     name: string;
     description?: string;
     questions: string;
   }): QuestionSet {
+    if (this.hasDuplicate(data.name, data.project_id)) {
+      throw new Error(`Question set with name "${data.name}" already exists in this project`);
+    }
     const stmt = this.db.prepare(`
       INSERT INTO question_sets (project_id, name, description, questions)
       VALUES (?, ?, ?, ?)
@@ -23,23 +35,21 @@ export class QuestionSetRepository {
     return stmt.get(id) as QuestionSet | undefined;
   }
 
-  listQuestionSets(projectId: number | null): QuestionSet[] {
+  listQuestionSets(projectId: number | null, limit?: number, offset?: number): QuestionSet[] {
+    const hasLimit = typeof limit === 'number';
+    const sql = projectId === null
+      ? `SELECT * FROM question_sets WHERE project_id IS NULL ORDER BY name ASC${hasLimit ? ' LIMIT ? OFFSET ?' : ''}`
+      : `SELECT * FROM question_sets WHERE (project_id IS NULL OR project_id = ?) ORDER BY name ASC${hasLimit ? ' LIMIT ? OFFSET ?' : ''}`;
+    const stmt = this.db.prepare(sql);
     if (projectId === null) {
-      const stmt = this.db.prepare(`SELECT * FROM question_sets WHERE project_id IS NULL ORDER BY name ASC`);
-      return stmt.all() as QuestionSet[];
+      return (hasLimit ? stmt.all(limit, offset ?? 0) : stmt.all()) as QuestionSet[];
     }
-    const stmt = this.db.prepare(`
-      SELECT * FROM question_sets 
-      WHERE project_id IS NULL OR project_id = ?
-      ORDER BY name ASC
-    `);
-    return stmt.all(projectId) as QuestionSet[];
+    return (hasLimit ? stmt.all(projectId, limit, offset ?? 0) : stmt.all(projectId)) as QuestionSet[];
   }
 
-  updateQuestionSet(id: number, data: { name?: string; description?: string; questions?: string }): void {
+  private buildUpdateFields(data: { name?: string; description?: string; questions?: string }) {
     const fields: string[] = [];
     const values: unknown[] = [];
-
     if (data.name !== undefined) {
       fields.push('name = ?');
       values.push(data.name);
@@ -52,7 +62,11 @@ export class QuestionSetRepository {
       fields.push('questions = ?');
       values.push(data.questions);
     }
+    return { fields, values };
+  }
 
+  updateQuestionSet(id: number, data: { name?: string; description?: string; questions?: string }): void {
+    const { fields, values } = this.buildUpdateFields(data);
     if (fields.length === 0) return;
 
     fields.push('updated_at = CURRENT_TIMESTAMP');

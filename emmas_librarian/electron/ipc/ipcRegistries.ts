@@ -59,6 +59,10 @@ export function setupIpcRegistries() {
     return db.getAllProjects();
   });
   ipcMain.handle(IpcChannel.PROJECTS_CREATE, (event, name) => {
+    const existing = db.getAllProjects().find(p => p.name.trim().toLowerCase() === name.trim().toLowerCase());
+    if (existing) {
+      throw new Error('Já existe um projeto com este nome.');
+    }
     return db.createProject(name);
   });
   ipcMain.handle(IpcChannel.PROJECTS_GET_ONE, async (event, projectId) => {
@@ -81,6 +85,9 @@ export function setupIpcRegistries() {
   });
   // Search
   ipcMain.handle(IpcChannel.SEARCH_EXECUTE, async (event, projectId, queryMap, limit, sortBy, unifiedQuery) => {
+    if (process.env.E2E_MOCK_SEARCH === 'true') {
+      return handleE2eMockSearch(db, projectId, queryMap, unifiedQuery);
+    }
     return orchestrator.searchAndPersist(projectId, queryMap, limit, sortBy, unifiedQuery);
   });
   ipcMain.handle(IpcChannel.SEARCH_TRANSLATE_QUERY, (event, ast) => {
@@ -255,6 +262,10 @@ export function setupIpcRegistries() {
     const articleCategories = db.getAllProjectArticleCategories(projectId);
     if (!project) throw new Error('Project not found');
     const csvContent = exportService.exportToCsv(articles, projectCategories, articleCategories);
+    if (process.env.E2E_MOCK_SAVE_FILE_PATH) {
+      fs.writeFileSync(process.env.E2E_MOCK_SAVE_FILE_PATH, csvContent);
+      return process.env.E2E_MOCK_SAVE_FILE_PATH;
+    }
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: 'Export Articles CSV',
       defaultPath: `project_${projectId}_export.csv`,
@@ -274,6 +285,10 @@ export function setupIpcRegistries() {
     const articleCategories = db.getAllProjectArticleCategories(projectId);
     if (!project) throw new Error('Project not found');
     const xlsxBuffer = exportService.exportToXlsx(articles, projectCategories, articleCategories);
+    if (process.env.E2E_MOCK_SAVE_FILE_PATH) {
+      fs.writeFileSync(process.env.E2E_MOCK_SAVE_FILE_PATH, xlsxBuffer);
+      return process.env.E2E_MOCK_SAVE_FILE_PATH;
+    }
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: 'Export Articles XLSX',
       defaultPath: `project_${projectId}_export.xlsx`,
@@ -287,6 +302,9 @@ export function setupIpcRegistries() {
   });
   // Dialog for file open
   ipcMain.handle(IpcChannel.DIALOG_OPEN_FILE, async (event) => {
+    if (process.env.E2E_MOCK_OPEN_FILE) {
+      return process.env.E2E_MOCK_OPEN_FILE;
+    }
     const { canceled, filePaths } = await dialog.showOpenDialog({
       properties: ['openFile'],
       filters: [{ name: 'PDF Files', extensions: ['pdf'] }],
@@ -297,6 +315,9 @@ export function setupIpcRegistries() {
     return null;
   });
   ipcMain.handle(IpcChannel.DIALOG_OPEN_MULTIPLE_FILES, async (event) => {
+    if (process.env.E2E_MOCK_OPEN_MULTIPLE_FILES) {
+      return process.env.E2E_MOCK_OPEN_MULTIPLE_FILES.split(';');
+    }
     const { canceled, filePaths } = await dialog.showOpenDialog({
       properties: ['openFile', 'multiSelections'],
       filters: [{ name: 'PDF Files', extensions: ['pdf'] }],
@@ -308,6 +329,10 @@ export function setupIpcRegistries() {
   });
 
   ipcMain.handle(IpcChannel.DIALOG_SAVE_FILE, async (event, content, defaultPath) => {
+    if (process.env.E2E_MOCK_SAVE_FILE_PATH) {
+      fs.writeFileSync(process.env.E2E_MOCK_SAVE_FILE_PATH, content, 'utf8');
+      return true;
+    }
     const { canceled, filePath } = await dialog.showSaveDialog({
       defaultPath: defaultPath || 'export.csv',
     });
@@ -472,4 +497,23 @@ export function setupIpcRegistries() {
     }
     return success;
   });
+}
+
+function handleE2eMockSearch(db: DatabaseAdapter, projectId: number, queryMap: any, query: string) {
+  const searchId = db.saveSearchHistory(projectId, query || 'E2E mock query', queryMap, 1, { openalex: { count: 1 } });
+  db.saveArticle(projectId, {
+    doi: '10.1234/e2e-mock-doi',
+    title: 'Aprendizado de Maquina E2E',
+    authors: 'Author E2E',
+    year: 2026,
+    source_query: JSON.stringify(queryMap),
+    source_databases: JSON.stringify(['OpenAlex']),
+    csl_json: '{}',
+    search_id: searchId,
+  });
+  return {
+    savedCount: 1,
+    breakdown: { openalex: { count: 1 } },
+    articles: db.getArticlesByProject(projectId),
+  };
 }

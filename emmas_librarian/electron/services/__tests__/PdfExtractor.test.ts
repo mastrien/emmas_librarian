@@ -106,4 +106,82 @@ describe('PdfExtractor', () => {
     expect(result).toBeInstanceOf(Map);
     expect(result.size).toBe(0);
   });
+
+  it('should go through all bboxes and include the first item in the overlap if chunkOverlap requires it', async () => {
+    vi.mocked(fs.readFileSync).mockReturnValue(Buffer.from('dummy pdf data'));
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    mockGetDocument.mockReturnValueOnce({
+      promise: Promise.resolve({
+        numPages: 1,
+        getPage: mockGetPage,
+      }),
+    });
+
+    mockGetTextContent.mockResolvedValueOnce({
+      items: [
+        { str: 'ABC', transform: [1, 0, 0, 1, 10, 10], width: 10, height: 10 },
+        { str: 'DEF', transform: [1, 0, 0, 1, 20, 10], width: 10, height: 10 },
+        { str: 'GHI', transform: [1, 0, 0, 1, 30, 10], width: 10, height: 10 },
+      ],
+    });
+
+    const result = await extractTextWithCoordinates('fake.pdf', 5, 4);
+
+    expect(result.chunks).toHaveLength(3);
+    expect(result.chunks[0].text).toBe('ABC DEF');
+    expect(result.chunks[1].text).toBe('ABC DEF GHI');
+    expect(result.chunks[2].text).toBe('DEF GHI');
+    expect(result.totalCharacters).toBe(9);
+  });
+
+  it('should push remaining text even if it is very small (1 character)', async () => {
+    vi.mocked(fs.readFileSync).mockReturnValue(Buffer.from('dummy pdf data'));
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    mockGetDocument.mockReturnValueOnce({
+      promise: Promise.resolve({
+        numPages: 1,
+        getPage: mockGetPage,
+      }),
+    });
+
+    mockGetTextContent.mockResolvedValueOnce({
+      items: [
+        { str: 'Z', transform: [1, 0, 0, 1, 10, 10], width: 10, height: 10 },
+      ],
+    });
+
+    const result = await extractTextWithCoordinates('fake.pdf', 1000, 200);
+    expect(result.chunks).toHaveLength(1);
+    expect(result.chunks[0].text).toBe('Z');
+    expect(result.chunks[0].page).toBe(1);
+    expect(result.totalCharacters).toBe(1);
+  });
+
+  it('should skip only empty/whitespace items of length < 2', async () => {
+    vi.mocked(fs.readFileSync).mockReturnValue(Buffer.from('dummy pdf data'));
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+
+    mockGetDocument.mockReturnValueOnce({
+      promise: Promise.resolve({
+        numPages: 1,
+        getPage: mockGetPage,
+      }),
+    });
+
+    mockGetTextContent.mockResolvedValueOnce({
+      items: [
+        { str: 'A', transform: [1, 0, 0, 1, 10, 10], width: 10, height: 10 },
+        { str: ' ', transform: [1, 0, 0, 1, 20, 10], width: 0, height: 0 },
+        { str: '  ', transform: [1, 0, 0, 1, 30, 10], width: 0, height: 0 },
+        { str: 'B', transform: [1, 0, 0, 1, 40, 10], width: 10, height: 10 },
+      ],
+    });
+
+    const result = await extractTextWithCoordinates('fake.pdf', 1000, 200);
+    expect(result.chunks).toHaveLength(1);
+    expect(result.chunks[0].text).toBe('A    B');
+    expect(result.totalCharacters).toBe(4);
+  });
 });

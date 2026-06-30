@@ -1,3 +1,5 @@
+> **Nota Histórica:** Relatório gerado em 24/06/2026.
+
 # Relatório de Impacto de Testes e Ferramentas (Emma's Librarian)
 
 Este relatório apresenta os resultados obtidos após a reestruturação e ampliação da suíte de testes do projeto **Emma's Librarian**, comparando a linha de base inicial (Fase 1) com os resultados finais (Fase 6). Ele também avalia a experiência do desenvolvedor (DX) no comparativo das ferramentas duplicadas para testes de desempenho (k6 vs. JMeter) e aceitação (Playwright vs. Selenium).

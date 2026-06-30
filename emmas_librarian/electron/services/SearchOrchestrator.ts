@@ -98,35 +98,63 @@ export class SearchOrchestrator {
     return { savedCount, articles: projectArticles, breakdown };
   }
 
+  normalizeTitle(title: string): string {
+    if (!title) return '';
+    return title
+      .replace(/<[^>]*>/g, '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private findExistingIndex(
+    item: NormalizedArticle,
+    seenDoi: Map<string, number>,
+    seenTitle: Map<string, number>
+  ): number | undefined {
+    const doi = item.doi;
+    const title = this.normalizeTitle(item.title || '');
+    if (doi && seenDoi.has(doi)) {
+      return seenDoi.get(doi);
+    }
+    if (title && seenTitle.has(title)) {
+      return seenTitle.get(title);
+    }
+    return undefined;
+  }
+
+  private mergeOrAdd(
+    item: NormalizedArticle,
+    deduplicated: NormalizedArticle[],
+    seenDoi: Map<string, number>,
+    seenTitle: Map<string, number>
+  ): void {
+    const idx = this.findExistingIndex(item, seenDoi, seenTitle);
+    if (idx !== undefined) {
+      const existing = deduplicated[idx];
+      const newSource = item.source_databases[0];
+      if (!existing.source_databases.includes(newSource)) {
+        existing.source_databases.push(newSource);
+      }
+      return;
+    }
+    const newIdx = deduplicated.length;
+    deduplicated.push(item);
+    if (item.doi) seenDoi.set(item.doi, newIdx);
+    const title = this.normalizeTitle(item.title || '');
+    if (title) seenTitle.set(title, newIdx);
+  }
+
   private deduplicate(results: NormalizedArticle[]): NormalizedArticle[] {
     const seenDoi = new Map<string, number>();
     const seenTitle = new Map<string, number>();
     const deduplicated: NormalizedArticle[] = [];
 
     for (const item of results) {
-      const doi = item.doi;
-      const title = (item.title || '').toLowerCase().trim();
-
-      let existingIdx: number | undefined;
-
-      if (doi && seenDoi.has(doi)) {
-        existingIdx = seenDoi.get(doi);
-      } else if (title && seenTitle.has(title)) {
-        existingIdx = seenTitle.get(title);
-      }
-
-      if (existingIdx !== undefined) {
-        const existing = deduplicated[existingIdx];
-        const newSource = item.source_databases[0];
-        if (!existing.source_databases.includes(newSource)) {
-          existing.source_databases.push(newSource);
-        }
-      } else {
-        const idx = deduplicated.length;
-        deduplicated.push(item);
-        if (doi) seenDoi.set(doi, idx);
-        if (title) seenTitle.set(title, idx);
-      }
+      this.mergeOrAdd(item, deduplicated, seenDoi, seenTitle);
     }
 
     return deduplicated;
