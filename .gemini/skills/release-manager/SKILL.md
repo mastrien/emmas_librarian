@@ -25,7 +25,8 @@ Antes de modificar qualquer arquivo de versão, certifique-se de que a aplicaç�
   ```powershell
   npm run test
   ```
-- Se qualquer um dos comandos falhar, corrija os erros antes de prosseguir com o lançamento.
+- **Validação de caminhos em produção**: Certifique-se de que nenhum recurso estático (como `index.html`, ícones ou assets) seja carregado usando caminhos baseados em `__dirname` (como `path.join(__dirname, '../dist/...')`), pois a estrutura de pastas compilada muda em produção. Use sempre `app.getAppPath()` para caminhos relativos à raiz do pacote.
+- Se qualquer um dos comandos falhar ou se houver caminhos inadequados, corrija-os antes de prosseguir com o lançamento.
 
 ### 2. Atualização dos Arquivos de Metadados
 - Abra o arquivo `emmas_librarian/package.json` e atualize o campo `"version"` para a nova versão (ex: `"1.1.9"`).
@@ -66,3 +67,4 @@ Antes de modificar qualquer arquivo de versão, certifique-se de que a aplicaç�
 - **Esquecer o package-lock.json**: Alterar apenas o `package.json` quebra a consistência do gerenciador de pacotes npm. Sempre rode `npm install --package-lock-only`.
 - **Não rodar testes após alterar o Changelog**: Mudar a estrutura de textos no `ChangelogModal.tsx` pode fazer o teste unitário correspondente quebrar se ele buscar por termos antigos removidos.
 - **Criar tag antes de commitar**: Certifique-se de que o commit do release já foi feito localmente antes de executar o comando `git tag`.
+- **Caminhos relativos e `__dirname`**: Evite carregar arquivos do frontend (como `dist/index.html`) com caminhos baseados em `__dirname` e `..`. No build final, a hierarquia do backend compilado (`dist-electron/electron/main.js`) difere do código fonte, fazendo com que caminhos relativos ao arquivo quebrem. Utilize `app.getAppPath()` para apontar para caminhos a partir da raiz da aplicação de forma consistente.
