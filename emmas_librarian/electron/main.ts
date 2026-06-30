@@ -28,7 +28,7 @@ function createBrowserWindow(): BrowserWindow {
     width: 1200,
     height: 800,
     show: false,
-    icon: nativeImage.createFromPath(path.join(__dirname, isDev ? '../public/favicon.ico' : '../dist/favicon.ico')),
+    icon: nativeImage.createFromPath(path.join(app.getAppPath(), isDev ? 'public/favicon.ico' : 'dist/favicon.ico')),
     titleBarStyle: 'hidden',
     titleBarOverlay: {
       color: '#f8fafc',
@@ -52,7 +52,7 @@ function loadWindowContent(window: BrowserWindow): void {
       }
     });
   } else {
-    window.loadFile(path.join(__dirname, '../dist/index.html'));
+    window.loadFile(path.join(app.getAppPath(), 'dist/index.html'));
     window.webContents.on('did-finish-load', () => {
       window.show();
     });

@@ -82,6 +82,36 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                   paddingBottom: '0.25rem',
                 }}
               >
+                Versão 1.1.14
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Correção de Recurso Local em Produção:</strong> Correção do erro
+                  <code>Not allowed to load local resource</code> ao abrir o aplicativo empacotado.
+                  O carregamento do <code>index.html</code> e do ícone agora utilizam a API
+                  <code>app.getAppPath()</code> para localizar corretamente os arquivos na raiz.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
                 Versão 1.1.13
               </h3>
               <ul
