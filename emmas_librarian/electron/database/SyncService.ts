@@ -77,6 +77,38 @@ export class SyncService {
       // Export diary version history so rollback data is preserved across environments
       const diaryHistory = db.prepare('SELECT * FROM project_diary_history WHERE project_id = ?').all(projectId);
 
+      // Export relational category options (enum/multiselect choices per category)
+      const categoryOptions = db
+        .prepare(
+          `SELECT pco.* FROM project_category_options pco
+           JOIN project_categories pc ON pco.category_id = pc.id
+           WHERE pc.project_id = ?`,
+        )
+        .all(projectId);
+
+      // Export per-article enum/multiselect selections (references category option IDs)
+      const categorySelections = db
+        .prepare(
+          `SELECT acs.* FROM article_category_selections acs
+           JOIN project_categories pc ON acs.category_id = pc.id
+           WHERE pc.project_id = ?`,
+        )
+        .all(projectId);
+
+      // Export question sets scoped to this project (project_id = projectId) plus global ones (project_id IS NULL)
+      const questionSets = db
+        .prepare('SELECT * FROM question_sets WHERE project_id = ? OR project_id IS NULL')
+        .all(projectId);
+
+      // Export granular investigation results for all investigations in this project
+      const investigationResults = db
+        .prepare(
+          `SELECT ir.* FROM investigation_results ir
+           JOIN massive_investigations mi ON ir.investigation_id = mi.id
+           WHERE mi.project_id = ?`,
+        )
+        .all(projectId);
+
       const exportData = {
         project,
         articles,
@@ -84,12 +116,16 @@ export class SyncService {
         projectDocs,
         massiveInvs,
         projCategories,
+        categoryOptions,
         articleCategories,
+        categorySelections,
         annotations,
         highlights,
         pendingHighlights,
         diaryEntries,
         diaryHistory,
+        questionSets,
+        investigationResults,
       };
 
       const zip = new AdmZip();
@@ -256,45 +292,69 @@ export class SyncService {
         for (const cat of data.projCategories) {
           const res = db
             .prepare(
-              `
-            INSERT INTO project_categories (project_id, name, type, options)
-            VALUES (?, ?, ?, ?)
-          `,
+              `INSERT INTO project_categories (project_id, name, type, options)
+               VALUES (?, ?, ?, ?)`,
             )
             .run(pid, cat.name, cat.type, cat.options);
           categoryMap.set(cat.id, res.lastInsertRowid);
         }
 
-        // Insert Article Categories
+        // Insert Category Options (enum/multiselect choices), remapping category_id
+        // optionMap: oldOptionId -> newOptionId, needed to remap article_category_selections
+        const optionMap = new Map<number, number>();
+        for (const opt of data.categoryOptions || []) {
+          const newCatId = categoryMap.get(opt.category_id);
+          if (newCatId) {
+            const res = db
+              .prepare('INSERT INTO project_category_options (category_id, name) VALUES (?, ?)')
+              .run(newCatId, opt.name);
+            optionMap.set(opt.id, res.lastInsertRowid);
+          }
+        }
+
+        // Insert Article Categories (text/boolean types — value stored as plain string)
         for (const ac of data.articleCategories) {
           const newArtId = articleMap.get(ac.article_id);
           const newCatId = categoryMap.get(ac.category_id);
           if (newArtId && newCatId) {
             db.prepare(
-              `
-              INSERT INTO article_categories (article_id, category_id, value)
-              VALUES (?, ?, ?)
-            `,
+              `INSERT INTO article_categories (article_id, category_id, value)
+               VALUES (?, ?, ?)`,
             ).run(newArtId, newCatId, ac.value);
           }
         }
 
+        // Insert Article Category Selections (enum/multiselect — reference option IDs)
+        for (const sel of data.categorySelections || []) {
+          const newArtId = articleMap.get(sel.article_id);
+          const newCatId = categoryMap.get(sel.category_id);
+          const newOptId = optionMap.get(sel.option_id);
+          if (newArtId && newCatId && newOptId) {
+            try {
+              db.prepare(
+                `INSERT INTO article_category_selections (article_id, category_id, option_id)
+                 VALUES (?, ?, ?)`,
+              ).run(newArtId, newCatId, newOptId);
+            } catch (e) {
+              // ignore duplicate PK on retry
+            }
+          }
+        }
+
         // Massive Investigations
+        const investigationMap = new Map<number, number>();
         for (const mi of data.massiveInvs) {
           const res = db
             .prepare(
-              `
-            INSERT INTO massive_investigations (
-              project_id, created_at, status, model_used, questions, articles_ids
-            ) VALUES (?, ?, ?, ?, ?, ?)
-          `,
+              `INSERT INTO massive_investigations (
+                project_id, created_at, status, model_used, questions, articles_ids
+              ) VALUES (?, ?, ?, ?, ?, ?)`,
             )
             .run(pid, mi.created_at, mi.status, mi.model_used, mi.questions, mi.articles_ids);
           const miId = res.lastInsertRowid;
+          investigationMap.set(mi.id, miId);
 
-          // Replace article ids in questions/articles
-          // Wait, actually massive investigations just have json. It would be complex to remap article IDs inside articles_ids_json.
-          // Let's just remap them if possible.
+          // Remap article IDs embedded in the articles_ids JSON array
           try {
             const oldIds: number[] = JSON.parse(mi.articles_ids);
             const newIds = oldIds.map((id) => articleMap.get(id)).filter(Boolean);
@@ -303,8 +363,47 @@ export class SyncService {
               miId,
             );
           } catch (e) {
-            // ignore
+            // ignore malformed JSON
           }
+        }
+
+        // Insert Investigation Results, remapping investigation_id and article_id
+        for (const ir of data.investigationResults || []) {
+          const newInvId = investigationMap.get(ir.investigation_id);
+          const newArtId = articleMap.get(ir.article_id);
+          if (newInvId && newArtId) {
+            db.prepare(
+              `INSERT INTO investigation_results (
+                investigation_id, article_id, question, answer, quote, status, error_message, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            ).run(
+              newInvId,
+              newArtId,
+              ir.question,
+              ir.answer || null,
+              ir.quote || null,
+              ir.status || 'success',
+              ir.error_message || null,
+              ir.created_at,
+            );
+          }
+        }
+
+        // Insert Question Sets scoped to this project
+        // Global question sets (project_id IS NULL) are included in the export for completeness
+        // but are re-imported as project-scoped to avoid global namespace collision
+        for (const qs of data.questionSets || []) {
+          db.prepare(
+            `INSERT INTO question_sets (project_id, name, description, questions, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+          ).run(
+            pid,
+            qs.name,
+            qs.description || null,
+            qs.questions,
+            qs.created_at,
+            qs.updated_at,
+          );
         }
 
         // Insert Annotations
