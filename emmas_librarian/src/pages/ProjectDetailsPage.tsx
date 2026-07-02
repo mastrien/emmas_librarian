@@ -314,6 +314,9 @@ export const ProjectDetailsPage: React.FC = () => {
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
+    if (e.relatedTarget && e.currentTarget.contains(e.relatedTarget as Node)) {
+      return;
+    }
     setIsDragging(false);
   };
 
@@ -343,6 +346,65 @@ export const ProjectDetailsPage: React.FC = () => {
         setIsImportingPdfs(false);
       }
     }
+  };
+
+  const getModelUsedDescription = async (): Promise<string> => {
+    try {
+      const configs = await projectService.getAiModelConfigs();
+      const extractionConfig = configs.find((c) => c.skill === 'extraction');
+      if (!extractionConfig) return 'Desconhecido';
+      const providerMap: Record<string, string> = {
+        openai: 'OpenAI',
+        gemini: 'Gemini',
+        anthropic: 'Anthropic',
+        ollama: 'Ollama',
+      };
+      const providerName = providerMap[extractionConfig.provider] || extractionConfig.provider;
+      return extractionConfig.model_name
+        ? `${providerName} (${extractionConfig.model_name})`
+        : providerName;
+    } catch {
+      return 'Desconhecido';
+    }
+  };
+
+  const saveArticleResult = async (
+    invId: number,
+    articleId: number,
+    res: any,
+    questions: string[],
+  ): Promise<void> => {
+    const mapped = res.result
+      ? res.result.map((r: any) => ({
+          question: r.question,
+          answer: JSON.stringify(r),
+          quote: null,
+          status: 'success' as const,
+          error_message: null,
+        }))
+      : questions.map((q) => ({
+          question: q,
+          answer: null,
+          quote: null,
+          status: 'error' as const,
+          error_message: res.error || 'Falha desconhecida',
+        }));
+    await projectService.saveInvestigationResults(invId, articleId, mapped);
+  };
+
+  const saveSkippedArticleResults = async (
+    invId: number,
+    articleId: number,
+    questions: string[],
+  ): Promise<void> => {
+    const mapped = questions.map((q) => ({
+      question: q,
+      answer: null,
+      quote: null,
+      status: 'skipped' as const,
+      error_message: 'Cancelado ou não executado.',
+    }));
+    await projectService.saveInvestigationResults(invId, articleId, mapped);
   };
 
   const handleMassiveExtraction = async (selectedIds: number[]) => {
@@ -389,10 +451,7 @@ export const ProjectDetailsPage: React.FC = () => {
       }
 
       if (id && results.length > 0) {
-        const openai = await projectService.getSetting('api_key_openai');
-        const gemini = await projectService.getSetting('api_key_gemini');
-        const ollama = await projectService.getSetting('ollama_model');
-        const modelUsed = openai ? 'OpenAI' : gemini ? 'Gemini' : ollama ? `Ollama (${ollama})` : 'Desconhecido';
+        const modelUsed = await getModelUsedDescription();
 
         const invId = await projectService.saveMassiveInvestigation(
           parseInt(id),
@@ -402,27 +461,14 @@ export const ProjectDetailsPage: React.FC = () => {
           finalStatus,
         );
 
-        // Save per-article results
         for (const res of results) {
-          if (res.result) {
-            const mappedResults = res.result.map((r: any) => ({
-              question: r.question,
-              answer: JSON.stringify(r),
-              quote: null,
-              status: 'success' as const,
-              error_message: null,
-            }));
-            await projectService.saveInvestigationResults(invId, res.article.id, mappedResults);
-          } else if (res.error) {
-            const mappedResults = validQuestions.map((q: string) => ({
-              question: q,
-              answer: null,
-              quote: null,
-              status: 'error' as const,
-              error_message: res.error || 'Falha desconhecida',
-            }));
-            await projectService.saveInvestigationResults(invId, res.article.id, mappedResults);
-          }
+          await saveArticleResult(invId, res.article.id, res, validQuestions);
+        }
+
+        const processedIds = results.map((r) => r.article.id);
+        const skipped = articlesToExtract.filter((a) => !processedIds.includes(a.id));
+        for (const art of skipped) {
+          await saveSkippedArticleResults(invId, art.id, validQuestions);
         }
 
         // refetch history
@@ -583,6 +629,8 @@ export const ProjectDetailsPage: React.FC = () => {
 
   return (
     <div
+      id="project-details-container"
+      data-testid="project-details-container"
       className="fade-in"
       style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', minHeight: '80vh' }}
       onDragOver={handleDragOver}
@@ -605,6 +653,7 @@ export const ProjectDetailsPage: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'center',
               border: '4px dashed var(--color-primary)',
+              pointerEvents: 'none',
             }}
           >
             <h2 style={{ color: 'white', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>

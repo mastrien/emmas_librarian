@@ -239,7 +239,7 @@ const ArticleResultAccordion: React.FC<{
                         : '3px solid var(--color-warning)',
                 }}
               >
-                {res.status === 'error' ? (
+                {res.status === 'error' || res.status === 'skipped' ? (
                   <div style={{ padding: '0.75rem' }}>
                     <div
                       style={{
@@ -251,8 +251,15 @@ const ArticleResultAccordion: React.FC<{
                     >
                       Q: {res.question}
                     </div>
-                    <div style={{ color: 'var(--color-danger)', fontSize: '0.85rem' }}>
-                      Erro: {res.error_message || 'Falha ao extrair resposta.'}
+                    <div
+                      style={{
+                        color: res.status === 'error' ? 'var(--color-danger)' : 'var(--color-warning)',
+                        fontSize: '0.85rem',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {res.status === 'error' ? 'Erro: ' : 'Pulado: '}
+                      {res.error_message || 'Falha ao extrair resposta.'}
                     </div>
                   </div>
                 ) : ragResult ? (

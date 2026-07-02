@@ -154,4 +154,50 @@ describe('AIExtractionModal', () => {
     expect(screen.getByText('How is the weather?')).toBeInTheDocument();
     expect(screen.getByText('Article 1')).toBeInTheDocument();
   });
+
+  it('renders skipped results correctly in history details', async () => {
+    const history = [
+      {
+        id: 10,
+        created_at: '2026-06-03T12:00:00.000Z',
+        questions: JSON.stringify(['How is the weather?']),
+        articles_ids: JSON.stringify([1]),
+        status: 'Erro Parcial',
+        model_used: 'gemini-1.5-pro',
+      },
+    ];
+
+    const getInvestigationResults = vi.fn().mockResolvedValue([
+      {
+        id: 101,
+        investigation_id: 10,
+        article_id: 1,
+        question: 'How is the weather?',
+        answer: null,
+        quote: null,
+        status: 'skipped',
+        error_message: 'Cancelado ou não executado.',
+      },
+    ]);
+
+    renderWithProviders(
+      <AIExtractionModal
+        {...defaultProps}
+        investigationHistory={history}
+        getInvestigationResults={getInvestigationResults}
+      />,
+    );
+
+    const historyTab = screen.getByText('Histórico');
+    fireEvent.click(historyTab);
+
+    const viewDetailsBtn = screen.getByText('Ver Detalhes');
+    fireEvent.click(viewDetailsBtn);
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('📄 Artigo: Article 1')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Pulado: Cancelado ou não executado.')).toBeInTheDocument();
+  });
 });

@@ -40,14 +40,25 @@ export class DatabaseAdapter {
 
   constructor(dbPath: string) {
     this.db = new Database(dbPath);
-    try {
-      sqliteVec.load(this.db);
-    } catch (err) {
-      console.error('Failed to load sqlite-vec extension', err);
-    }
+    this.loadSqliteVec(this.db);
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
     this.initSchema();
+  }
+
+  private loadSqliteVec(db: Database.Database): void {
+    try {
+      let loadablePath = sqliteVec.getLoadablePath();
+      if (
+        loadablePath.toLowerCase().includes('app.asar') &&
+        !loadablePath.toLowerCase().includes('app.asar.unpacked')
+      ) {
+        loadablePath = loadablePath.replace(/app\.asar/i, 'app.asar.unpacked');
+      }
+      db.loadExtension(loadablePath);
+    } catch (err) {
+      console.error('Failed to load sqlite-vec extension', err);
+    }
   }
 
   public getDB(): Database.Database {

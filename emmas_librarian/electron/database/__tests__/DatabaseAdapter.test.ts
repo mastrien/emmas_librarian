@@ -1,6 +1,17 @@
 // @ts-nocheck
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DatabaseAdapter } from '../DatabaseAdapter';
+import * as sqliteVec from 'sqlite-vec';
+
+let mockLoadablePath: string | null = null;
+
+vi.mock('sqlite-vec', async (importOriginal) => {
+  const original = await importOriginal<typeof import('sqlite-vec')>();
+  return {
+    ...original,
+    getLoadablePath: () => mockLoadablePath || original.getLoadablePath(),
+  };
+});
 
 describe('DatabaseAdapter', () => {
   let dbAdapter: DatabaseAdapter;
@@ -370,5 +381,24 @@ describe('DatabaseAdapter', () => {
       fs.unlinkSync(file2);
       fs.rmdirSync(tempDir);
     } catch {}
+  });
+
+  it('correctly rewrites app.asar to app.asar.unpacked when loading sqlite-vec extension', () => {
+    const Database = require('better-sqlite3');
+    const loadExtensionSpy = vi.spyOn(Database.prototype, 'loadExtension').mockImplementation(() => {});
+
+    mockLoadablePath = 'C:\\Program Files\\Emma\\resources\\app.asar\\node_modules\\sqlite-vec-windows-x64\\vec0.dll';
+
+    try {
+      const adapter = new DatabaseAdapter(':memory:');
+      adapter.close();
+
+      expect(loadExtensionSpy).toHaveBeenCalledWith(
+        'C:\\Program Files\\Emma\\resources\\app.asar.unpacked\\node_modules\\sqlite-vec-windows-x64\\vec0.dll',
+      );
+    } finally {
+      mockLoadablePath = null;
+      loadExtensionSpy.mockRestore();
+    }
   });
 });

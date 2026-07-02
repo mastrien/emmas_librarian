@@ -82,6 +82,43 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                   paddingBottom: '0.25rem',
                 }}
               >
+                Versão 1.1.15
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Histórico Completo na Extração Massiva:</strong> Artigos cancelados, não
+                  executados ou com falhas no loop da extração massiva agora são devidamente registrados
+                  com o status correspondente (como <code>skipped</code> ou <code>error</code>) no banco
+                  de dados. Isso garante que todos os artigos selecionados apareçam na visualização
+                  de detalhes no histórico.
+                </li>
+                <li>
+                  <strong>Identificação Dinâmica do Modelo de IA:</strong> O modelo e provedor salvos
+                  no histórico de investigações massivas agora são resolvidos dinamicamente de acordo
+                  com o modelo ativo selecionado para a habilidade de extração (ex: <code>Gemini (gemini-1.5-pro)</code>),
+                  em vez de uma checagem estática de chaves de API.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
                 Versão 1.1.14
               </h3>
               <ul

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, createEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ProjectDetailsPage } from '../ProjectDetailsPage';
 import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
@@ -192,5 +192,134 @@ describe('ProjectDetailsPage', () => {
       expect(within(mainTable).queryByText('Article One')).not.toBeInTheDocument();
       expect(within(mainTable).getByText('Article Two')).toBeInTheDocument();
     });
+  });
+
+  it('manages drag and drop state without triggering leave on child element enter', async () => {
+    const { getByTestId, queryByText } = render(
+      <MemoryRouter initialEntries={['/projects/1']}>
+        <GlobalErrorProvider>
+          <Routes>
+            <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+          </Routes>
+        </GlobalErrorProvider>
+      </MemoryRouter>,
+    );
+
+    await vi.waitFor(() => {
+      expect(getByTestId('project-details-container')).toBeInTheDocument();
+    });
+
+    const container = getByTestId('project-details-container');
+
+    expect(queryByText('Solte seus PDFs aqui para importar')).not.toBeInTheDocument();
+
+    fireEvent.dragOver(container);
+    expect(screen.getByText('Solte seus PDFs aqui para importar')).toBeInTheDocument();
+
+    const childElement = document.createElement('div');
+    container.appendChild(childElement);
+
+    const leaveEvent = createEvent.dragLeave(container);
+    Object.defineProperty(leaveEvent, 'relatedTarget', {
+      value: childElement,
+      writable: false,
+    });
+    fireEvent(container, leaveEvent);
+
+    expect(screen.getByText('Solte seus PDFs aqui para importar')).toBeInTheDocument();
+
+    const outsideElement = document.createElement('div');
+    document.body.appendChild(outsideElement);
+
+    const leaveOutsideEvent = createEvent.dragLeave(container);
+    Object.defineProperty(leaveOutsideEvent, 'relatedTarget', {
+      value: outsideElement,
+      writable: false,
+    });
+    fireEvent(container, leaveOutsideEvent);
+
+    expect(queryByText('Solte seus PDFs aqui para importar')).not.toBeInTheDocument();
+
+    container.removeChild(childElement);
+    document.body.removeChild(outsideElement);
+  });
+
+  it('saves massive investigation metadata and results (including skipped articles) correctly', async () => {
+    const mockArticles = [
+      { id: 1, title: 'Article One', local_file_path: 'path1.pdf' },
+      { id: 2, title: 'Article Two', local_file_path: 'path2.pdf' },
+    ];
+    fakeService.getArticles.mockResolvedValue(mockArticles as any);
+    fakeService.getAiModelConfigs.mockResolvedValue([
+      { skill: 'extraction', provider: 'gemini', model_name: 'gemini-1.5-pro' },
+    ] as any);
+
+    fakeService.massiveExtraction
+      .mockResolvedValueOnce([{ question: 'Q1?', answer: '{"synthesizedAnswer":"Ans1"}', quote: null }])
+      .mockImplementationOnce(async () => {
+        throw new Error('QUOTA_EXCEEDED');
+      });
+
+    const { getByTestId, getByText } = render(
+      <MemoryRouter initialEntries={['/projects/1']}>
+        <GlobalErrorProvider>
+          <Routes>
+            <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+          </Routes>
+        </GlobalErrorProvider>
+      </MemoryRouter>,
+    );
+
+    await vi.waitFor(() => {
+      expect(getByTestId('project-details-container')).toBeInTheDocument();
+    });
+
+    const aiButton = screen.getByTitle('Extração Inteligente IA');
+    fireEvent.click(aiButton);
+
+    await vi.waitFor(() => {
+      expect(screen.getByText('Investigação Massiva com IA')).toBeInTheDocument();
+    });
+
+    const questionInput = screen.getByPlaceholderText('Pergunta 1');
+    fireEvent.change(questionInput, { target: { value: 'Q1?' } });
+
+    const extractBtn = screen.getByText('Iniciar Investigação');
+    fireEvent.click(extractBtn);
+
+    await vi.waitFor(() => {
+      expect(fakeService.saveMassiveInvestigation).toHaveBeenCalled();
+    });
+
+    expect(fakeService.saveMassiveInvestigation).toHaveBeenCalledWith(
+      1,
+      ['Q1?'],
+      [1, 2],
+      'Gemini (gemini-1.5-pro)',
+      'Erro: Quota Excedida',
+    );
+
+    expect(fakeService.saveInvestigationResults).toHaveBeenCalledWith(
+      0,
+      1,
+      expect.arrayContaining([
+        expect.objectContaining({
+          question: 'Q1?',
+          status: 'success',
+        }),
+      ]),
+    );
+
+    expect(fakeService.saveInvestigationResults).toHaveBeenCalledWith(
+      0,
+      2,
+      expect.arrayContaining([
+        expect.objectContaining({
+          question: 'Q1?',
+          status: 'skipped',
+          error_message: 'Cancelado ou não executado.',
+        }),
+      ]),
+    );
   });
 });
