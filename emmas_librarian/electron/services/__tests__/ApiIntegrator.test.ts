@@ -612,11 +612,8 @@ describe('ApiIntegrator', () => {
       // OpenAlex name parsing
       const rawAlex = {
         doi: '10.1234/direct-doi',
-        authorships: [
-          { author: { display_name: 'John Middle Doe' } },
-          { author: { display_name: 'Single' } }
-        ],
-        open_access: { is_oa: false }
+        authorships: [{ author: { display_name: 'John Middle Doe' } }, { author: { display_name: 'Single' } }],
+        open_access: { is_oa: false },
       };
       const normAlex = (api as any).normalizeOpenAlex(rawAlex);
       expect(normAlex.doi).toBe('10.1234/direct-doi');
@@ -627,11 +624,7 @@ describe('ApiIntegrator', () => {
       const rawCross = {
         issued: { 'date-parts': [] },
         author: [{ given: 'Bob' }],
-        reference: [
-          { DOI: '10.1000/ref' },
-          { unstructured: '' },
-          {}
-        ]
+        reference: [{ DOI: '10.1000/ref' }, { unstructured: '' }, {}],
       };
       const normCross = (api as any).normalizeCrossref(rawCross);
       expect(normCross.year).toBeUndefined();
@@ -667,7 +660,9 @@ describe('ApiIntegrator', () => {
         status: 400,
         text: async () => 'Not a JSON text',
       } as any);
-      await expect(api.searchWoS('q', 'key', 'relevance')).rejects.toThrow('Erro 400 no Web of Science - Not a JSON text');
+      await expect(api.searchWoS('q', 'key', 'relevance')).rejects.toThrow(
+        'Erro 400 no Web of Science - Not a JSON text',
+      );
     });
   });
 });

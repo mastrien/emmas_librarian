@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS search_history (
     translated_queries TEXT NOT NULL,
     total_results INTEGER DEFAULT 0,
     results_breakdown TEXT NOT NULL,
+    sort_by TEXT,
+    limit_val INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
@@ -162,6 +164,8 @@ CREATE TABLE IF NOT EXISTS search_history (
     translated_queries TEXT NOT NULL,
     total_results INTEGER DEFAULT 0,
     results_breakdown TEXT NOT NULL,
+    sort_by TEXT,
+    limit_val INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );

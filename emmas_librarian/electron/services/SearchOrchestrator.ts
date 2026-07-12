@@ -63,7 +63,15 @@ export class SearchOrchestrator {
     const deduplicated = this.deduplicate(combinedResults);
 
     // Save to history first to get searchId
-    const searchId = this.db.saveSearchHistory(projectId, unifiedQuery, queryMap, deduplicated.length, breakdown);
+    const searchId = this.db.saveSearchHistory(
+      projectId,
+      unifiedQuery,
+      queryMap,
+      deduplicated.length,
+      breakdown,
+      sortBy,
+      limit,
+    );
 
     let savedCount = 0;
     for (const article of deduplicated) {
@@ -113,7 +121,7 @@ export class SearchOrchestrator {
   private findExistingIndex(
     item: NormalizedArticle,
     seenDoi: Map<string, number>,
-    seenTitle: Map<string, number>
+    seenTitle: Map<string, number>,
   ): number | undefined {
     const doi = item.doi;
     const title = this.normalizeTitle(item.title || '');
@@ -130,7 +138,7 @@ export class SearchOrchestrator {
     item: NormalizedArticle,
     deduplicated: NormalizedArticle[],
     seenDoi: Map<string, number>,
-    seenTitle: Map<string, number>
+    seenTitle: Map<string, number>,
   ): void {
     const idx = this.findExistingIndex(item, seenDoi, seenTitle);
     if (idx !== undefined) {

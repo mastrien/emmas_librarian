@@ -159,7 +159,14 @@ describe('SyncService', () => {
             project: { name: 'Test' },
             articles: [{ id: 100, title: 'Art Title', local_file_path: '/old/art.pdf' }],
             searchHistory: [
-              { unified_query: 'test', translated_queries: '{}', total_results: 1, results_breakdown: '{}' },
+              {
+                unified_query: 'test',
+                translated_queries: '{}',
+                total_results: 1,
+                results_breakdown: '{}',
+                sort_by: 'relevance',
+                limit_val: 20,
+              },
             ],
             projectDocs: [{ title: 'Doc', local_file_path: '/old/doc.pdf' }],
             projCategories: [{ id: 50, name: 'Cat', type: 'text', options: '' }],
@@ -342,14 +349,31 @@ describe('SyncService', () => {
     // Return distinct data for each new table
     mockdbAdapter.db.prepare = vi.fn((sql) => {
       if (sql.includes('FROM projects')) return { get: () => ({ id: 1, name: 'Test' }) };
-      if (sql.includes('project_category_options'))
-        return { all: () => [{ id: 10, category_id: 5, name: 'Opt A' }] };
+      if (sql.includes('project_category_options')) return { all: () => [{ id: 10, category_id: 5, name: 'Opt A' }] };
       if (sql.includes('article_category_selections'))
         return { all: () => [{ article_id: 2, category_id: 5, option_id: 10 }] };
       if (sql.includes('question_sets'))
-        return { all: () => [{ id: 3, project_id: 1, name: 'QS1', description: null, questions: '[]', created_at: '', updated_at: '' }] };
+        return {
+          all: () => [
+            { id: 3, project_id: 1, name: 'QS1', description: null, questions: '[]', created_at: '', updated_at: '' },
+          ],
+        };
       if (sql.includes('investigation_results'))
-        return { all: () => [{ id: 7, investigation_id: 1, article_id: 2, question: 'Q?', answer: 'A', quote: null, status: 'success', error_message: null, created_at: '' }] };
+        return {
+          all: () => [
+            {
+              id: 7,
+              investigation_id: 1,
+              article_id: 2,
+              question: 'Q?',
+              answer: 'A',
+              quote: null,
+              status: 'success',
+              error_message: null,
+              created_at: '',
+            },
+          ],
+        };
       return { all: () => [] };
     });
 
@@ -385,12 +409,32 @@ describe('SyncService', () => {
             categoryOptions: [{ id: 10, category_id: 5, name: 'Opt A' }],
             articleCategories: [],
             categorySelections: [{ article_id: 1, category_id: 5, option_id: 10 }],
-            massiveInvs: [{ id: 20, created_at: '', status: 'ok', model_used: '', questions: '[]', articles_ids: '[1]' }],
+            massiveInvs: [
+              { id: 20, created_at: '', status: 'ok', model_used: '', questions: '[]', articles_ids: '[1]' },
+            ],
             investigationResults: [
-              { id: 30, investigation_id: 20, article_id: 1, question: 'Q?', answer: 'A', quote: null, status: 'success', error_message: null, created_at: '' },
+              {
+                id: 30,
+                investigation_id: 20,
+                article_id: 1,
+                question: 'Q?',
+                answer: 'A',
+                quote: null,
+                status: 'success',
+                error_message: null,
+                created_at: '',
+              },
             ],
             questionSets: [
-              { id: 40, project_id: null, name: 'QS1', description: null, questions: '[]', created_at: '', updated_at: '' },
+              {
+                id: 40,
+                project_id: null,
+                name: 'QS1',
+                description: null,
+                questions: '[]',
+                created_at: '',
+                updated_at: '',
+              },
             ],
             annotations: [],
             highlights: [],

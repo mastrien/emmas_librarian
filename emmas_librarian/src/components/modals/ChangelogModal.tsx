@@ -82,6 +82,39 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                   paddingBottom: '0.25rem',
                 }}
               >
+                Versão 1.1.16
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Histórico de Parâmetros de Busca:</strong> O critério de ordenação e o limite máximo de
+                  resultados selecionados para cada busca agora são persistidos no banco de dados e exibidos no
+                  histórico de buscas, garantindo total transparência e reprodutibilidade nos termos pesquisados.
+                </li>
+                <li>
+                  <strong>Sincronização Avançada:</strong> Os novos campos de ordenação e limite do histórico de buscas
+                  são totalmente preservados e reconstruídos nos processos de exportação e importação de projetos.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
                 Versão 1.1.15
               </h3>
               <ul
@@ -95,17 +128,16 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                 }}
               >
                 <li>
-                  <strong>Histórico Completo na Extração Massiva:</strong> Artigos cancelados, não
-                  executados ou com falhas no loop da extração massiva agora são devidamente registrados
-                  com o status correspondente (como <code>skipped</code> ou <code>error</code>) no banco
-                  de dados. Isso garante que todos os artigos selecionados apareçam na visualização
-                  de detalhes no histórico.
+                  <strong>Histórico Completo na Extração Massiva:</strong> Artigos cancelados, não executados ou com
+                  falhas no loop da extração massiva agora são devidamente registrados com o status correspondente (como{' '}
+                  <code>skipped</code> ou <code>error</code>) no banco de dados. Isso garante que todos os artigos
+                  selecionados apareçam na visualização de detalhes no histórico.
                 </li>
                 <li>
-                  <strong>Identificação Dinâmica do Modelo de IA:</strong> O modelo e provedor salvos
-                  no histórico de investigações massivas agora são resolvidos dinamicamente de acordo
-                  com o modelo ativo selecionado para a habilidade de extração (ex: <code>Gemini (gemini-1.5-pro)</code>),
-                  em vez de uma checagem estática de chaves de API.
+                  <strong>Identificação Dinâmica do Modelo de IA:</strong> O modelo e provedor salvos no histórico de
+                  investigações massivas agora são resolvidos dinamicamente de acordo com o modelo ativo selecionado
+                  para a habilidade de extração (ex: <code>Gemini (gemini-1.5-pro)</code>), em vez de uma checagem
+                  estática de chaves de API.
                 </li>
               </ul>
             </div>
@@ -133,8 +165,8 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
               >
                 <li>
                   <strong>Correção de Recurso Local em Produção:</strong> Correção do erro
-                  <code>Not allowed to load local resource</code> ao abrir o aplicativo empacotado.
-                  O carregamento do <code>index.html</code> e do ícone agora utilizam a API
+                  <code>Not allowed to load local resource</code> ao abrir o aplicativo empacotado. O carregamento do{' '}
+                  <code>index.html</code> e do ícone agora utilizam a API
                   <code>app.getAppPath()</code> para localizar corretamente os arquivos na raiz.
                 </li>
               </ul>
@@ -162,32 +194,30 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                 }}
               >
                 <li>
-                  <strong>Categorias de Seleção Múltipla:</strong> As categorias do tipo enum e
-                  multiselect agora usam um modelo relacional, permitindo renomear e reordenar opções
-                  sem perder dados históricos dos artigos.
+                  <strong>Categorias de Seleção Múltipla:</strong> As categorias do tipo enum e multiselect agora usam
+                  um modelo relacional, permitindo renomear e reordenar opções sem perder dados históricos dos artigos.
                 </li>
                 <li>
-                  <strong>Sets de Perguntas:</strong> Crie, reutilize e duplique conjuntos de
-                  perguntas para investigações em IA, com suporte a escopo global e por projeto.
+                  <strong>Sets de Perguntas:</strong> Crie, reutilize e duplique conjuntos de perguntas para
+                  investigações em IA, com suporte a escopo global e por projeto.
                 </li>
                 <li>
-                  <strong>Resultados de Investigação Granulares:</strong> Cada resposta gerada pela
-                  IA em investigações massivas agora é armazenada individualmente, permitindo
-                  visualização e exportação por artigo e pergunta.
+                  <strong>Resultados de Investigação Granulares:</strong> Cada resposta gerada pela IA em investigações
+                  massivas agora é armazenada individualmente, permitindo visualização e exportação por artigo e
+                  pergunta.
                 </li>
                 <li>
-                  <strong>Configuração de Modelos de IA:</strong> Novo painel para selecionar
-                  provider e modelo por habilidade (metadados, resumo, extração, embeddings) com
-                  suporte a OpenAI, Gemini, Anthropic e Ollama.
+                  <strong>Configuração de Modelos de IA:</strong> Novo painel para selecionar provider e modelo por
+                  habilidade (metadados, resumo, extração, embeddings) com suporte a OpenAI, Gemini, Anthropic e Ollama.
                 </li>
                 <li>
-                  <strong>Export/Import Completo (.emmapcarc):</strong> A transferência de projetos
-                  entre computadores agora inclui seleções de categorias, sets de perguntas e
-                  resultados de investigação, sem perda de dados.
+                  <strong>Export/Import Completo (.emmapcarc):</strong> A transferência de projetos entre computadores
+                  agora inclui seleções de categorias, sets de perguntas e resultados de investigação, sem perda de
+                  dados.
                 </li>
                 <li>
-                  <strong>RAG e Busca Semântica:</strong> Infraestrutura de chunks de PDF e
-                  embeddings vetoriais para respostas contextualizadas com citação de trecho e página.
+                  <strong>RAG e Busca Semântica:</strong> Infraestrutura de chunks de PDF e embeddings vetoriais para
+                  respostas contextualizadas com citação de trecho e página.
                 </li>
               </ul>
             </div>

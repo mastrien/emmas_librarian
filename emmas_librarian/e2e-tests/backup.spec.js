@@ -18,7 +18,7 @@ async function triggerBackup(window) {
     expect(dialog.message()).toContain('Backup completo criado com sucesso em');
     await dialog.accept();
   });
-  
+
   await window.click('text="Configurações"');
   await window.click('button:has-text("Criar Backup Completo")');
 }

@@ -15,6 +15,8 @@ describe('SearchHistoryModal', () => {
       total_results: 15,
       results_breakdown: JSON.stringify({ openalex: { count: 10 }, wos: { count: 5 } }),
       created_at: '2026-06-03T12:00:00.000Z',
+      sort_by: 'citations',
+      limit_val: 15,
     },
   ];
 
@@ -45,6 +47,8 @@ describe('SearchHistoryModal', () => {
     expect(screen.getByText('15 artigos salvos')).toBeInTheDocument();
     expect(screen.getByText('openalex')).toBeInTheDocument();
     expect(screen.getByText('Web of Science')).toBeInTheDocument();
+    expect(screen.getByText('Citações')).toBeInTheDocument();
+    expect(screen.getByText('15')).toBeInTheDocument();
 
     const revertBtn = screen.getByText('Desfazer Busca');
     fireEvent.click(revertBtn);

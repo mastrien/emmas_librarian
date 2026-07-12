@@ -10,6 +10,8 @@ interface HistoryItem {
   total_results: number;
   results_breakdown: string;
   created_at: string;
+  sort_by?: string;
+  limit_val?: number;
 }
 
 interface Props {
@@ -60,9 +62,35 @@ const HistoryContent: React.FC<{ history: HistoryItem[]; onRevertSearch?: (searc
                     gap: '0.5rem',
                     color: 'var(--text-muted)',
                     fontSize: '0.9rem',
+                    flexWrap: 'wrap',
                   }}
                 >
                   <Calendar size={14} /> {new Date(item.created_at).toLocaleString()}
+                  {item.sort_by && (
+                    <>
+                      <span style={{ margin: '0 0.5rem', color: 'var(--border-color)' }}>|</span>
+                      <span>
+                        Ordenação:{' '}
+                        <strong>
+                          {item.sort_by === 'relevance'
+                            ? 'Relevância'
+                            : item.sort_by === 'citations'
+                              ? 'Citações'
+                              : item.sort_by === 'date'
+                                ? 'Data'
+                                : item.sort_by}
+                        </strong>
+                      </span>
+                    </>
+                  )}
+                  {item.limit_val !== undefined && item.limit_val !== null && (
+                    <>
+                      <span style={{ margin: '0 0.5rem', color: 'var(--border-color)' }}>|</span>
+                      <span>
+                        Limite: <strong>{item.limit_val}</strong>
+                      </span>
+                    </>
+                  )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   {onRevertSearch && (

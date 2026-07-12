@@ -5,7 +5,7 @@ async function runSearchFlow(window, term) {
   await window.click('text="Nova busca"');
   await window.fill('input[placeholder="Termo de busca..."]', term);
   await window.click('button:has-text("Fazer Busca")');
-  
+
   const summaryBtn = window.locator('button:has-text("Ver Artigos do Projeto")');
   await summaryBtn.waitFor({ state: 'visible', timeout: 10000 });
   await summaryBtn.click();

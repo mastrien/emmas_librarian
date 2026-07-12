@@ -147,9 +147,7 @@ describe('PdfExtractor', () => {
     });
 
     mockGetTextContent.mockResolvedValueOnce({
-      items: [
-        { str: 'Z', transform: [1, 0, 0, 1, 10, 10], width: 10, height: 10 },
-      ],
+      items: [{ str: 'Z', transform: [1, 0, 0, 1, 10, 10], width: 10, height: 10 }],
     });
 
     const result = await extractTextWithCoordinates('fake.pdf', 1000, 200);

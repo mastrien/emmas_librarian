@@ -59,7 +59,7 @@ export function setupIpcRegistries() {
     return db.getAllProjects();
   });
   ipcMain.handle(IpcChannel.PROJECTS_CREATE, (event, name) => {
-    const existing = db.getAllProjects().find(p => p.name.trim().toLowerCase() === name.trim().toLowerCase());
+    const existing = db.getAllProjects().find((p) => p.name.trim().toLowerCase() === name.trim().toLowerCase());
     if (existing) {
       throw new Error('Já existe um projeto com este nome.');
     }

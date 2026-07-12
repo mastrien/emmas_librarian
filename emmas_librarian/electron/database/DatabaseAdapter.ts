@@ -120,6 +120,8 @@ export class DatabaseAdapter {
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
       )`,
+      'ALTER TABLE search_history ADD COLUMN sort_by TEXT',
+      'ALTER TABLE search_history ADD COLUMN limit_val INTEGER',
     ];
     for (const sql of migrations) {
       try {
@@ -463,7 +465,7 @@ export class DatabaseAdapter {
     const normalizedTarget = this.normalizeTitleForDb(title);
     const stmt = this.db.prepare('SELECT * FROM articles WHERE project_id = ? AND deleted_at IS NULL');
     const articles = stmt.all(projectId) as Article[];
-    return articles.find(art => this.normalizeTitleForDb(art.title) === normalizedTarget);
+    return articles.find((art) => this.normalizeTitleForDb(art.title) === normalizedTarget);
   }
 
   private normalizeTitleForDb(title: string): string {
@@ -482,7 +484,7 @@ export class DatabaseAdapter {
     const existingSources = JSON.parse(existing.source_databases || '[]');
     const newSources = JSON.parse(data.source_databases || '[]');
     const merged = Array.from(new Set([...existingSources, ...newSources]));
-    
+
     const stmt = this.db.prepare('UPDATE articles SET source_databases = ? WHERE id = ?');
     stmt.run(JSON.stringify(merged), existing.id);
     return existing.id;
@@ -490,13 +492,31 @@ export class DatabaseAdapter {
 
   private buildArticleParams(projectId: number, d: ArticleInput) {
     return {
-      project_id: projectId, doi: d.doi || null, title: d.title, authors: d.authors || null, year: d.year || null,
-      source_query: d.source_query, source_databases: d.source_databases, csl_json: d.csl_json,
-      abstract: d.abstract || null, author_keywords: d.author_keywords || null, index_keywords: d.index_keywords || null,
-      journal: d.journal || null, volume: d.volume || null, issue: d.issue || null, pages: d.pages || null,
-      affiliations: d.affiliations || null, references_list: d.references_list || null, document_type: d.document_type || null,
-      issn: d.issn || null, citation_count: d.citation_count || null, search_id: d.search_id || null,
-      is_oa: d.is_oa !== undefined ? d.is_oa : null, publisher: d.publisher || null, url: d.url || null, accessed: d.accessed || null,
+      project_id: projectId,
+      doi: d.doi || null,
+      title: d.title,
+      authors: d.authors || null,
+      year: d.year || null,
+      source_query: d.source_query,
+      source_databases: d.source_databases,
+      csl_json: d.csl_json,
+      abstract: d.abstract || null,
+      author_keywords: d.author_keywords || null,
+      index_keywords: d.index_keywords || null,
+      journal: d.journal || null,
+      volume: d.volume || null,
+      issue: d.issue || null,
+      pages: d.pages || null,
+      affiliations: d.affiliations || null,
+      references_list: d.references_list || null,
+      document_type: d.document_type || null,
+      issn: d.issn || null,
+      citation_count: d.citation_count || null,
+      search_id: d.search_id || null,
+      is_oa: d.is_oa !== undefined ? d.is_oa : null,
+      publisher: d.publisher || null,
+      url: d.url || null,
+      accessed: d.accessed || null,
     };
   }
 
@@ -783,10 +803,12 @@ export class DatabaseAdapter {
     translatedQueries: Record<string, string>,
     totalResults: number,
     breakdown: Record<string, unknown>,
+    sortBy?: string,
+    limitVal?: number,
   ): number {
     const stmt = this.db.prepare(`
-      INSERT INTO search_history (project_id, unified_query, translated_queries, total_results, results_breakdown, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO search_history (project_id, unified_query, translated_queries, total_results, results_breakdown, sort_by, limit_val, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const info = stmt.run(
       projectId,
@@ -794,6 +816,8 @@ export class DatabaseAdapter {
       JSON.stringify(translatedQueries),
       totalResults,
       JSON.stringify(breakdown),
+      sortBy || null,
+      limitVal ?? null,
       new Date().toISOString(),
     );
     return info.lastInsertRowid as number;

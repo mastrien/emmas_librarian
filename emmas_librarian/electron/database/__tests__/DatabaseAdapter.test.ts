@@ -90,8 +90,19 @@ describe('DatabaseAdapter', () => {
       { openalex: 'test translated query' },
       1,
       { openalex: { count: 1 } },
+      'citations',
+      15,
     );
     expect(searchId).toBeGreaterThan(0);
+
+    // Verify search history fields are saved correctly
+    const initialHistory = dbAdapter.getSearchHistory(proj.id) as {
+      sort_by: string | null;
+      limit_val: number | null;
+    }[];
+    expect(initialHistory).toHaveLength(1);
+    expect(initialHistory[0].sort_by).toBe('citations');
+    expect(initialHistory[0].limit_val).toBe(15);
 
     // Save article with that searchId
     const articleId = dbAdapter.saveArticle(proj.id, {
@@ -332,15 +343,17 @@ describe('DatabaseAdapter', () => {
 
   it('handles concurrent insertions gracefully and sequentially due to sync sqlite connection', () => {
     const proj = dbAdapter.createProject('Project Concurrent');
-    
+
     // Simulate concurrent calls by calling saveArticle immediately in sequence
-    const ids = [1, 2, 3].map(() => dbAdapter.saveArticle(proj.id, {
-      title: 'Concurrent Article',
-      doi: '10.1000/concurrent',
-      source_query: '',
-      source_databases: JSON.stringify(['OpenAlex']),
-      csl_json: '{}',
-    }));
+    const ids = [1, 2, 3].map(() =>
+      dbAdapter.saveArticle(proj.id, {
+        title: 'Concurrent Article',
+        doi: '10.1000/concurrent',
+        source_query: '',
+        source_databases: JSON.stringify(['OpenAlex']),
+        csl_json: '{}',
+      }),
+    );
 
     expect(ids[0]).toBe(ids[1]);
     expect(ids[1]).toBe(ids[2]);

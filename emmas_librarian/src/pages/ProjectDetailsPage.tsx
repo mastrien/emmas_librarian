@@ -360,20 +360,13 @@ export const ProjectDetailsPage: React.FC = () => {
         ollama: 'Ollama',
       };
       const providerName = providerMap[extractionConfig.provider] || extractionConfig.provider;
-      return extractionConfig.model_name
-        ? `${providerName} (${extractionConfig.model_name})`
-        : providerName;
+      return extractionConfig.model_name ? `${providerName} (${extractionConfig.model_name})` : providerName;
     } catch {
       return 'Desconhecido';
     }
   };
 
-  const saveArticleResult = async (
-    invId: number,
-    articleId: number,
-    res: any,
-    questions: string[],
-  ): Promise<void> => {
+  const saveArticleResult = async (invId: number, articleId: number, res: any, questions: string[]): Promise<void> => {
     const mapped = res.result
       ? res.result.map((r: any) => ({
           question: r.question,
@@ -392,11 +385,7 @@ export const ProjectDetailsPage: React.FC = () => {
     await projectService.saveInvestigationResults(invId, articleId, mapped);
   };
 
-  const saveSkippedArticleResults = async (
-    invId: number,
-    articleId: number,
-    questions: string[],
-  ): Promise<void> => {
+  const saveSkippedArticleResults = async (invId: number, articleId: number, questions: string[]): Promise<void> => {
     const mapped = questions.map((q) => ({
       question: q,
       answer: null,

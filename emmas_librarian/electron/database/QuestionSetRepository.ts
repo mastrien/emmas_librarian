@@ -5,9 +5,10 @@ export class QuestionSetRepository {
   constructor(private db: Database.Database) {}
 
   hasDuplicate(name: string, projectId: number | null): boolean {
-    const query = projectId === null
-      ? 'SELECT 1 FROM question_sets WHERE name = ? AND project_id IS NULL'
-      : 'SELECT 1 FROM question_sets WHERE name = ? AND project_id = ?';
+    const query =
+      projectId === null
+        ? 'SELECT 1 FROM question_sets WHERE name = ? AND project_id IS NULL'
+        : 'SELECT 1 FROM question_sets WHERE name = ? AND project_id = ?';
     const stmt = this.db.prepare(query);
     const result = projectId === null ? stmt.get(name) : stmt.get(name, projectId);
     return result !== undefined;
@@ -37,9 +38,10 @@ export class QuestionSetRepository {
 
   listQuestionSets(projectId: number | null, limit?: number, offset?: number): QuestionSet[] {
     const hasLimit = typeof limit === 'number';
-    const sql = projectId === null
-      ? `SELECT * FROM question_sets WHERE project_id IS NULL ORDER BY name ASC${hasLimit ? ' LIMIT ? OFFSET ?' : ''}`
-      : `SELECT * FROM question_sets WHERE (project_id IS NULL OR project_id = ?) ORDER BY name ASC${hasLimit ? ' LIMIT ? OFFSET ?' : ''}`;
+    const sql =
+      projectId === null
+        ? `SELECT * FROM question_sets WHERE project_id IS NULL ORDER BY name ASC${hasLimit ? ' LIMIT ? OFFSET ?' : ''}`
+        : `SELECT * FROM question_sets WHERE (project_id IS NULL OR project_id = ?) ORDER BY name ASC${hasLimit ? ' LIMIT ? OFFSET ?' : ''}`;
     const stmt = this.db.prepare(sql);
     if (projectId === null) {
       return (hasLimit ? stmt.all(limit, offset ?? 0) : stmt.all()) as QuestionSet[];

@@ -260,10 +260,18 @@ export class SyncService {
           db.prepare(
             `
             INSERT INTO search_history (
-              project_id, unified_query, translated_queries, total_results, results_breakdown
-            ) VALUES (?, ?, ?, ?, ?)
+              project_id, unified_query, translated_queries, total_results, results_breakdown, sort_by, limit_val
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
           `,
-          ).run(pid, sh.unified_query, sh.translated_queries, sh.total_results, sh.results_breakdown);
+          ).run(
+            pid,
+            sh.unified_query,
+            sh.translated_queries,
+            sh.total_results,
+            sh.results_breakdown,
+            sh.sort_by || null,
+            sh.limit_val ?? null,
+          );
         }
 
         // Insert Project Docs
@@ -396,14 +404,7 @@ export class SyncService {
           db.prepare(
             `INSERT INTO question_sets (project_id, name, description, questions, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?)`,
-          ).run(
-            pid,
-            qs.name,
-            qs.description || null,
-            qs.questions,
-            qs.created_at,
-            qs.updated_at,
-          );
+          ).run(pid, qs.name, qs.description || null, qs.questions, qs.created_at, qs.updated_at);
         }
 
         // Insert Annotations
@@ -665,6 +666,8 @@ export class SyncService {
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
         )`,
+        'ALTER TABLE search_history ADD COLUMN sort_by TEXT',
+        'ALTER TABLE search_history ADD COLUMN limit_val INTEGER',
       ];
       for (const sql of tempMigrations) {
         try {
@@ -847,11 +850,19 @@ export class SyncService {
               .prepare(
                 `
               INSERT INTO search_history (
-                project_id, unified_query, translated_queries, total_results, results_breakdown
-              ) VALUES (?, ?, ?, ?, ?)
+                project_id, unified_query, translated_queries, total_results, results_breakdown, sort_by, limit_val
+              ) VALUES (?, ?, ?, ?, ?, ?, ?)
             `,
               )
-              .run(pid, sh.unified_query, sh.translated_queries, sh.total_results, sh.results_breakdown);
+              .run(
+                pid,
+                sh.unified_query,
+                sh.translated_queries,
+                sh.total_results,
+                sh.results_breakdown,
+                sh.sort_by || null,
+                sh.limit_val ?? null,
+              );
           }
 
           // Insert Project Docs

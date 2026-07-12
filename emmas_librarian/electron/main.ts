@@ -11,7 +11,7 @@ import { setupIpcRegistries } from './ipc/ipcRegistries';
 
 const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
 const isE2ETest = process.argv.some(
-  (arg) => arg.includes('--remote-debugging-port') || arg.includes('--user-data-dir')
+  (arg) => arg.includes('--remote-debugging-port') || arg.includes('--user-data-dir'),
 );
 
 if (isDev && !isE2ETest) {

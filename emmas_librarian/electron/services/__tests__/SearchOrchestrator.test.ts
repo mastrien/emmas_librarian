@@ -57,6 +57,11 @@ describe('SearchOrchestrator', () => {
     const articles = db.getArticlesByProject(proj.id);
     expect(articles).toHaveLength(1);
     expect(articles[0].source_databases).toBe('["OpenAlex","Crossref"]');
+
+    const history = db.getSearchHistory(proj.id) as { sort_by: string | null; limit_val: number | null }[];
+    expect(history).toHaveLength(1);
+    expect(history[0].sort_by).toBe('relevance');
+    expect(history[0].limit_val).toBe(100);
   });
 
   it('does not duplicate articles when running the exact same search twice', async () => {
