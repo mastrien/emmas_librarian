@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Article } from '../types';
 import * as xlsx from 'xlsx';
@@ -9,8 +8,8 @@ export class ExportService {
    */
   public exportToCsv(
     articles: Article[],
-    projectCategories: unknown[] = [],
-    articleCategories: unknown[] = [],
+    projectCategories: any[] = [],
+    articleCategories: any[] = [],
   ): string {
     const header = [
       'id',
@@ -52,8 +51,8 @@ export class ExportService {
    */
   public exportToXlsx(
     articles: Article[],
-    projectCategories: unknown[] = [],
-    articleCategories: unknown[] = [],
+    projectCategories: any[] = [],
+    articleCategories: any[] = [],
   ): Buffer {
     const header = [
       'id',

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NormalizedArticle } from './types';
 
@@ -217,7 +216,7 @@ export class ApiIntegrator {
 
     // Author keywords
     const authorKeywords = raw.keywords?.length
-      ? raw.keywords.map((k: unknown) => k.display_name || k.keyword || k).join('; ')
+      ? raw.keywords.map((k: any) => k.display_name || k.keyword || k).join('; ')
       : undefined;
 
     // Index keywords from concepts

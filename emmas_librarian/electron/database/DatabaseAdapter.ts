@@ -1,11 +1,14 @@
-// @ts-nocheck
 import Database from 'better-sqlite3';
 import * as sqliteVec from 'sqlite-vec';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { safeStorage } from 'electron';
-import { Project, Article, Annotation, Highlight, DiaryEntry, ProjectDocument } from '../types';
+import { Project, Article, Annotation, Highlight, DiaryEntry, ProjectDocument, ProjectCategory, ArticleCategory, CategoryOption } from '../types';
+
+interface TableInfoRow {
+  name: string;
+}
 
 export interface ArticleInput {
   doi?: string;
@@ -123,6 +126,8 @@ export class DatabaseAdapter {
       )`,
       'ALTER TABLE search_history ADD COLUMN sort_by TEXT',
       'ALTER TABLE search_history ADD COLUMN limit_val INTEGER',
+      'ALTER TABLE project_documents ADD COLUMN position INTEGER DEFAULT 0',
+      'ALTER TABLE project_documents ADD COLUMN category TEXT DEFAULT NULL',
     ];
     for (const sql of migrations) {
       try {
@@ -253,7 +258,7 @@ export class DatabaseAdapter {
         const transaction = this.db.transaction(() => {
           const cats = this.db
             .prepare("SELECT id, type, options FROM project_categories WHERE type IN ('enum', 'multiselect')")
-            .all() as unknown[];
+            .all() as { id: number; type: string; options?: string }[];
           const insertOptionStmt = this.db.prepare(
             'INSERT INTO project_category_options (category_id, name) VALUES (?, ?)',
           );
@@ -276,7 +281,7 @@ export class DatabaseAdapter {
 
               const assignments = this.db
                 .prepare('SELECT article_id, value FROM article_categories WHERE category_id = ?')
-                .all(cat.id) as unknown[];
+                .all(cat.id) as { article_id: number; value?: string }[];
               for (const assign of assignments) {
                 if (assign.value) {
                   const selectedOpts = assign.value
@@ -721,7 +726,7 @@ export class DatabaseAdapter {
 
   getPendingHighlights(articleId: number): Highlight[] {
     const stmt = this.db.prepare('SELECT * FROM pending_highlights WHERE article_id = ?');
-    return stmt.all(articleId);
+    return stmt.all(articleId) as Highlight[];
   }
 
   deletePendingHighlight(id: number): void {
@@ -752,7 +757,7 @@ export class DatabaseAdapter {
 
   public checkIntegrity(): boolean {
     try {
-      const result = this.db.pragma('integrity_check') as unknown[];
+      const result = this.db.pragma('integrity_check') as Record<string, unknown>[];
       if (!result || result.length === 0) return false;
       const firstRow = result[0];
       const val = firstRow.integrity_check || firstRow['integrity_check'];
@@ -956,18 +961,67 @@ export class DatabaseAdapter {
   }
 
   // Project Documents
-  public saveProjectDocument(projectId: number, title: string, url?: string, localFilePath?: string): number {
+  private fetchNextDocumentPosition(projectId: number): number {
+    const row = this.db
+      .prepare('SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM project_documents WHERE project_id = ?')
+      .get(projectId) as { next_pos: number } | undefined;
+    return row?.next_pos ?? 0;
+  }
+
+  public saveProjectDocument(
+    projectId: number,
+    title: string,
+    url?: string | null,
+    localFilePath?: string | null,
+    category?: string | null,
+  ): number {
+    const nextPos = this.fetchNextDocumentPosition(projectId);
+    const cleanProjectId = typeof projectId === 'number' ? projectId : Number(projectId);
+    const cleanTitle = title && typeof title === 'string' ? title.trim() : '';
+    const cleanUrl = url && typeof url === 'string' && url.trim() ? url.trim() : null;
+    const cleanFilePath = localFilePath && typeof localFilePath === 'string' && localFilePath.trim() ? localFilePath.trim() : null;
+    const cleanCategory = category && typeof category === 'string' && category.trim() ? category.trim() : null;
+
     const stmt = this.db.prepare(`
-      INSERT INTO project_documents (project_id, title, url, local_file_path)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO project_documents (project_id, title, url, local_file_path, position, category)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
-    const info = stmt.run(projectId, title, url || null, localFilePath || null);
+    const info = stmt.run(cleanProjectId, cleanTitle, cleanUrl, cleanFilePath, nextPos, cleanCategory);
     return info.lastInsertRowid as number;
   }
 
   public getProjectDocuments(projectId: number): ProjectDocument[] {
-    const stmt = this.db.prepare('SELECT * FROM project_documents WHERE project_id = ? ORDER BY created_at DESC');
+    const stmt = this.db.prepare('SELECT * FROM project_documents WHERE project_id = ? ORDER BY position ASC, id ASC');
     return stmt.all(projectId) as ProjectDocument[];
+  }
+
+  public updateProjectDocument(
+    id: number,
+    title: string,
+    url: string | null,
+    localFilePath: string | null,
+    category: string | null,
+  ): void {
+    const stmt = this.db.prepare(`
+      UPDATE project_documents
+      SET title = ?, url = ?, local_file_path = ?, category = ?
+      WHERE id = ?
+    `);
+    stmt.run(title ?? '', url ?? null, localFilePath ?? null, category ?? null, id);
+  }
+
+  public reorderProjectDocuments(projectId: number, orderedIds: number[]): void {
+    const validIds = Array.isArray(orderedIds)
+      ? orderedIds.filter((i) => i !== undefined && i !== null && !isNaN(Number(i))).map(Number)
+      : [];
+    const cleanProjectId = typeof projectId === 'number' ? projectId : Number(projectId);
+    const stmt = this.db.prepare('UPDATE project_documents SET position = ? WHERE id = ? AND project_id = ?');
+    const transaction = this.db.transaction((ids: number[]) => {
+      ids.forEach((id, index) => {
+        stmt.run(index, id, cleanProjectId);
+      });
+    });
+    transaction(validIds);
   }
 
   public deleteProjectDocument(id: number): void {
@@ -990,12 +1044,12 @@ export class DatabaseAdapter {
 
   // Categories
   public getProjectCategories(projectId: number): ProjectCategory[] {
-    const cats = this.db.prepare('SELECT * FROM project_categories WHERE project_id = ?').all(projectId) as unknown[];
+    const cats = this.db.prepare('SELECT * FROM project_categories WHERE project_id = ?').all(projectId) as (ProjectCategory & { options?: string })[];
     for (const cat of cats) {
       if (cat.type === 'enum' || cat.type === 'multiselect') {
         cat.parsedOptions = this.db
-          .prepare('SELECT id, name FROM project_category_options WHERE category_id = ? ORDER BY id ASC')
-          .all(cat.id);
+          .prepare('SELECT id, category_id, name FROM project_category_options WHERE category_id = ? ORDER BY id ASC')
+          .all(cat.id) as CategoryOption[];
       }
     }
     return cats;
@@ -1069,7 +1123,7 @@ export class DatabaseAdapter {
       WHERE ac.article_id = ?
     `,
       )
-      .all(articleId);
+      .all(articleId) as ArticleCategory[];
 
     const selections = this.db
       .prepare(
@@ -1081,10 +1135,10 @@ export class DatabaseAdapter {
       WHERE acs.article_id = ?
     `,
       )
-      .all(articleId) as unknown[];
+      .all(articleId) as { category_id: number; option_id: number; option_name: string; name: string; type: ArticleCategory['type'] }[];
 
     // Group selections by category_id
-    const selMap = new Map<number, unknown>();
+    const selMap = new Map<number, ArticleCategory & { option_ids: number[]; option_names: string[] }>();
     for (const sel of selections) {
       if (!selMap.has(sel.category_id)) {
         selMap.set(sel.category_id, {
@@ -1095,7 +1149,7 @@ export class DatabaseAdapter {
           option_names: [],
         });
       }
-      const entry = selMap.get(sel.category_id);
+      const entry = selMap.get(sel.category_id)!;
       entry.option_ids.push(sel.option_id);
       entry.option_names.push(sel.option_name);
     }
@@ -1118,7 +1172,7 @@ export class DatabaseAdapter {
       WHERE pc.project_id = ?
     `,
       )
-      .all(projectId);
+      .all(projectId) as ArticleCategory[];
 
     const selections = this.db
       .prepare(
@@ -1130,9 +1184,9 @@ export class DatabaseAdapter {
       WHERE pc.project_id = ?
     `,
       )
-      .all(projectId) as unknown[];
+      .all(projectId) as { article_id: number; category_id: number; option_id: number; option_name: string; name: string; type: ArticleCategory['type'] }[];
 
-    const selMap = new Map<string, unknown>();
+    const selMap = new Map<string, ArticleCategory & { option_ids: number[]; option_names: string[] }>();
     for (const sel of selections) {
       const key = `${sel.article_id}-${sel.category_id}`;
       if (!selMap.has(key)) {
@@ -1145,7 +1199,7 @@ export class DatabaseAdapter {
           option_names: [],
         });
       }
-      const entry = selMap.get(key);
+      const entry = selMap.get(key)!;
       entry.option_ids.push(sel.option_id);
       entry.option_names.push(sel.option_name);
     }
@@ -1270,7 +1324,7 @@ export class DatabaseAdapter {
   }
 
   public emptyTrash(): void {
-    const items = this.getTrashItems();
+    const items = this.getTrashItems() as { id: number; type: 'project' | 'article' | 'annotation' }[];
     for (const item of items) {
       this.deleteTrashItemPermanent(item.type, item.id);
     }
@@ -1283,7 +1337,7 @@ export class DatabaseAdapter {
   }
 
   public restoreDiaryEntryVersion(versionId: number): void {
-    const hist = this.db.prepare('SELECT * FROM project_diary_history WHERE id = ?').get(versionId) as unknown;
+    const hist = this.db.prepare('SELECT * FROM project_diary_history WHERE id = ?').get(versionId) as { project_id: number; entry_date: string; content: string } | undefined;
     if (hist) {
       this.saveDiaryEntry(hist.project_id, hist.entry_date, hist.content);
     }

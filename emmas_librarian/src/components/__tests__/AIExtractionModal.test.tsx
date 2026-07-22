@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Article } from '../../types';
 import React from 'react';
@@ -25,7 +24,8 @@ describe('AIExtractionModal', () => {
   const defaultProps = {
     isOpen: true,
     onClose: vi.fn(),
-    articlesWithPdf: mockArticlesWithPdf,
+    articlesWithPdf: mockArticlesWithPdf as any[],
+    articles: mockArticlesWithPdf as any[],
     aiQuestions: ['What is the goal?'],
     setAiQuestions: vi.fn(),
     handleMassiveExtraction: vi.fn(),
@@ -34,8 +34,8 @@ describe('AIExtractionModal', () => {
     aiExtractionResults: [],
     cancelExtractionRef: { current: false },
     investigationHistory: [],
-    articles: mockArticlesWithPdf,
-  };
+    getInvestigationResults: vi.fn(),
+  } as any;
 
   it('does not render when isOpen is false', () => {
     const { container } = renderWithProviders(<AIExtractionModal {...defaultProps} isOpen={false} />);
@@ -126,7 +126,7 @@ describe('AIExtractionModal', () => {
       },
     ];
 
-    renderWithProviders(<AIExtractionModal {...defaultProps} aiExtractionResults={results} />);
+    renderWithProviders(<AIExtractionModal {...defaultProps} aiExtractionResults={results as any[]} />);
 
     expect(screen.getByText('Article 1')).toBeInTheDocument();
     expect(screen.getByText('Q: What is the goal?')).toBeInTheDocument();
@@ -136,6 +136,7 @@ describe('AIExtractionModal', () => {
   it('renders history list when switching to History tab', () => {
     const history = [
       {
+        id: 1,
         created_at: '2026-06-03T12:00:00.000Z',
         questions: JSON.stringify(['How is the weather?']),
         articles_ids: JSON.stringify([1]),
@@ -144,7 +145,7 @@ describe('AIExtractionModal', () => {
       },
     ];
 
-    renderWithProviders(<AIExtractionModal {...defaultProps} investigationHistory={history} />);
+    renderWithProviders(<AIExtractionModal {...defaultProps} investigationHistory={history as any[]} />);
 
     const historyTab = screen.getByText('Histórico');
     fireEvent.click(historyTab);
@@ -183,7 +184,7 @@ describe('AIExtractionModal', () => {
     renderWithProviders(
       <AIExtractionModal
         {...defaultProps}
-        investigationHistory={history}
+        investigationHistory={history as any[]}
         getInvestigationResults={getInvestigationResults}
       />,
     );

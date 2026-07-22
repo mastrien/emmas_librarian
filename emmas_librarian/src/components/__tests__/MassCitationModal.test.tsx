@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -20,7 +19,7 @@ vi.mock('../../services/citationService', async (importActual) => {
   const actual = await importActual<typeof import('../../services/citationService')>();
   return {
     ...actual,
-    generateCitation: vi.fn((art: unknown, style: string, format: string, useEtAl: boolean) => {
+    generateCitation: vi.fn((art: any, style: string, format: string, useEtAl: boolean) => {
       const etAlSuffix = useEtAl === false ? '-noetal' : '';
       return `[${style}-${format}${etAlSuffix}] ${art.authors} - ${art.title} (${art.year})`;
     }),

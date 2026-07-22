@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -9,13 +8,13 @@ import { Article } from '../../types';
 
 // Mock react-virtuoso so we don't have to deal with ResizeObservers and height constraints in jsdom
 vi.mock('react-virtuoso', () => ({
-  TableVirtuoso: ({ data, itemContent, fixedHeaderContent }: unknown) => {
+  TableVirtuoso: ({ data, itemContent, fixedHeaderContent }: any) => {
     return (
       <div data-testid="mock-virtuoso">
         <table>
           <thead>{fixedHeaderContent && fixedHeaderContent()}</thead>
           <tbody>
-            {data.map((item: unknown, index: number) => (
+            {data.map((item: any, index: number) => (
               <tr key={item.id || index} data-testid={`row-${item.id}`}>
                 {itemContent(index, item)}
               </tr>

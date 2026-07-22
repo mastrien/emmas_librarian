@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { Article, ProjectCategory } from '../../../types';
 import { FileText, Link2, Download, Archive, Edit, MessageSquare } from 'lucide-react';
@@ -123,9 +122,9 @@ export const ArticleTable: React.FC<ArticleTableProps> = ({
                               padding: '0.1rem 0.4rem',
                               borderRadius: 'var(--radius-sm)',
                               fontSize: '0.7rem',
-                              backgroundColor: ('#6c757d' || '#6c757d') + '20',
-                              color: '#6c757d' || '#6c757d',
-                              border: '1px solid ' + ('#6c757d' || '#6c757d') + '40',
+                              backgroundColor: '#6c757d20',
+                              color: '#6c757d',
+                              border: '1px solid #6c757d40',
                             }}
                             title={cat.name}
                           >

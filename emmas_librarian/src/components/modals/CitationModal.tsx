@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { generateCitation, CitationStyle, CitationOutputFormat } from '../../services/citationService';
@@ -19,9 +18,7 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
   const [citationText, setCitationText] = useState('');
   const [copied, setCopied] = useState(false);
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
-  const [editableArticle, setEditableArticle] = useState<
-    Partial<import('../../types').Article> & { accessed?: string }
-  >({});
+  const [editableArticle, setEditableArticle] = useState<any>({});
   const [saving, setSaving] = useState(false);
   const [useEtAl, setUseEtAl] = useState(true);
 
@@ -36,7 +33,7 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
         journal: article.journal || '',
         volume: article.volume || '',
         issue: article.issue || '',
-        page: article.pages || article.pages || '',
+        pages: article.pages || '',
         url: article.url || '',
         accessed: article.accessed || '', // Format expected: YYYY-MM-DD
       });
@@ -87,7 +84,7 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
         journal: editableArticle.journal,
         volume: editableArticle.volume,
         issue: editableArticle.issue,
-        pages: editableArticle.pages || editableArticle.pagess,
+        pages: editableArticle.pages,
         url: editableArticle.url,
         accessed: editableArticle.accessed,
       });

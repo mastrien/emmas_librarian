@@ -144,9 +144,11 @@ export interface IProjectService {
   importArticlesFromProject(sourceProjectId: number, destProjectId: number, articleIds: number[]): Promise<number>;
 
   // ── Project Documents ─────────────────────────────────────────────
-  openProjectDocument(url: string, localFilePath?: string): Promise<void>;
+  openProjectDocument(url?: string, localFilePath?: string): Promise<void>;
   getProjectDocuments(projectId: number): Promise<ProjectDocument[]>;
-  createProjectDocument(projectId: number, title: string, url?: string, sourceFilePath?: string): Promise<number>;
+  createProjectDocument(projectId: number, title: string, url?: string | null, sourceFilePath?: string | null, category?: string | null): Promise<number>;
+  updateProjectDocument(id: number, title: string, url?: string | null, sourceFilePath?: string | null, category?: string | null): Promise<void>;
+  reorderProjectDocuments(projectId: number, orderedIds: number[]): Promise<void>;
   deleteProjectDocument(id: number): Promise<void>;
   openProjectDocumentExternal(url?: string, filePath?: string): Promise<void>;
 

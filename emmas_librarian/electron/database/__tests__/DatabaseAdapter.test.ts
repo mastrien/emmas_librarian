@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 import * as sqliteVec from 'sqlite-vec';
@@ -128,17 +127,35 @@ describe('DatabaseAdapter', () => {
     expect(articleDeleted).toBeUndefined();
   });
 
-  it('manages project documents', () => {
+  it('manages project documents with edit, category and reorder', () => {
     const proj = dbAdapter.createProject('Doc Project');
-    const docId = dbAdapter.saveProjectDocument(proj.id, 'Test Doc', 'https://example.com', '/mock/path.pdf');
+    const docId1 = dbAdapter.saveProjectDocument(proj.id, 'Test Doc 1', 'https://example.com', '/mock/path.pdf', 'Reuniões');
+    const docId2 = dbAdapter.saveProjectDocument(proj.id, 'Test Doc 2', 'https://example2.com', undefined, 'Artigos');
 
-    expect(docId).toBeGreaterThan(0);
+    expect(docId1).toBeGreaterThan(0);
+    expect(docId2).toBeGreaterThan(0);
 
-    const docs = dbAdapter.getProjectDocuments(proj.id);
-    expect(docs).toHaveLength(1);
-    expect(docs[0].title).toBe('Test Doc');
+    let docs = dbAdapter.getProjectDocuments(proj.id);
+    expect(docs).toHaveLength(2);
+    expect(docs[0].title).toBe('Test Doc 1');
+    expect(docs[0].category).toBe('Reuniões');
+    expect(docs[1].title).toBe('Test Doc 2');
 
-    dbAdapter.deleteProjectDocument(docId);
+    // Test update
+    dbAdapter.updateProjectDocument(docId1, 'Updated Doc 1', 'https://updated.com', '/mock/updated.pdf', 'Geral');
+    docs = dbAdapter.getProjectDocuments(proj.id);
+    expect(docs[0].title).toBe('Updated Doc 1');
+    expect(docs[0].url).toBe('https://updated.com');
+    expect(docs[0].category).toBe('Geral');
+
+    // Test reorder (move doc2 before doc1)
+    dbAdapter.reorderProjectDocuments(proj.id, [docId2, docId1]);
+    docs = dbAdapter.getProjectDocuments(proj.id);
+    expect(docs[0].id).toBe(docId2);
+    expect(docs[1].id).toBe(docId1);
+
+    dbAdapter.deleteProjectDocument(docId1);
+    dbAdapter.deleteProjectDocument(docId2);
     const docsAfterDelete = dbAdapter.getProjectDocuments(proj.id);
     expect(docsAfterDelete).toHaveLength(0);
   });

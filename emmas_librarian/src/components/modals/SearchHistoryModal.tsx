@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { X, Calendar, Search, Database, ChevronRight, RotateCcw } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -202,7 +201,7 @@ const HistoryContent: React.FC<{ history: HistoryItem[]; onRevertSearch?: (searc
                     <Database size={14} /> Resultados por Base
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {Object.entries(breakdown).map(([db, data]: [string, unknown]) => (
+                    {Object.entries(breakdown).map(([db, data]: [string, any]) => (
                       <div
                         key={db}
                         style={{

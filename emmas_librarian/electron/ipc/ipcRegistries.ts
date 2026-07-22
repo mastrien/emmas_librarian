@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { ipcMain, app, dialog, shell, BrowserWindow } from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -15,7 +14,6 @@ import { IpcChannel, QueryASTNode, Article } from '../types';
 import { QueryBlock } from '../services/types';
 import { setupAiIpcHandlers } from './aiIpcHandlers';
 
-// @ts-nocheck
 export function setupIpcRegistries() {
   const dbPath = path.join(app.getPath('userData'), 'emma.db');
   const db = new DatabaseAdapter(dbPath);
@@ -462,7 +460,7 @@ export function setupIpcRegistries() {
   ipcMain.handle(IpcChannel.PROJECT_DOCUMENTS_GET, (event, projectId) => {
     return db.getProjectDocuments(projectId);
   });
-  ipcMain.handle(IpcChannel.PROJECT_DOCUMENTS_CREATE, async (event, projectId, title, url, sourceFilePath) => {
+  ipcMain.handle(IpcChannel.PROJECT_DOCUMENTS_CREATE, async (event, projectId, title, url, sourceFilePath, category) => {
     let destPath;
     if (sourceFilePath) {
       try {
@@ -476,7 +474,29 @@ export function setupIpcRegistries() {
         console.error('Failed to copy PDF file for project document:', err);
       }
     }
-    return db.saveProjectDocument(projectId, title, url, destPath);
+    return db.saveProjectDocument(projectId, title, url ?? null, destPath ?? null, category ?? null);
+  });
+  ipcMain.handle(
+    IpcChannel.PROJECT_DOCUMENTS_UPDATE,
+    async (event, id, title, url, sourceFilePath, category) => {
+      let destPath = sourceFilePath ?? null;
+      if (sourceFilePath && typeof sourceFilePath === 'string' && !sourceFilePath.includes(path.join('storage', 'project_documents'))) {
+        try {
+          const docsDir = path.join(app.getPath('userData'), 'storage', 'project_documents');
+          if (!fs.existsSync(docsDir)) {
+            fs.mkdirSync(docsDir, { recursive: true });
+          }
+          destPath = path.join(docsDir, `doc_${Date.now()}.pdf`);
+          fs.copyFileSync(sourceFilePath, destPath);
+        } catch (err) {
+          console.error('Failed to copy PDF file for updating project document:', err);
+        }
+      }
+      return db.updateProjectDocument(id, title, url ?? null, destPath ?? null, category ?? null);
+    },
+  );
+  ipcMain.handle(IpcChannel.PROJECT_DOCUMENTS_REORDER, async (event, projectId, orderedIds) => {
+    return db.reorderProjectDocuments(projectId, orderedIds || []);
   });
   ipcMain.handle(IpcChannel.PROJECT_DOCUMENTS_DELETE, (event, id) => {
     return db.deleteProjectDocument(id);

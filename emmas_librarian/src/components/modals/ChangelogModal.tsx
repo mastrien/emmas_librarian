@@ -76,6 +76,40 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
             <div>
               <h3
                 style={{
+                  marginTop: 0,
+                  marginBottom: '0.75rem',
+                  fontSize: '1.1rem',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
+                Versão 1.1.18
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                  marginBottom: '1.5rem',
+                }}
+              >
+                <li>
+                  <strong>Edição de Acesso Rápido:</strong> Edite atalhos já cadastrados (título, URL, arquivo PDF ou grupo) diretamente pelo modal de gerenciamento.
+                </li>
+                <li>
+                  <strong>Reordenação por Arraste com Indicador Guia:</strong> Reorganize a ordem dos seus atalhos segurando a alça de 6 pontos com indicador visual dinâmico no vão de inserção.
+                </li>
+                <li>
+                  <strong>Grupos Nomeados e Organização no Topo:</strong> Organize atalhos por grupos nomeados com exibição prioritária dos itens gerais no topo da seção.
+                </li>
+              </ul>
+
+              <h3
+                style={{
                   margin: '0 0 0.75rem 0',
                   color: 'var(--color-primary)',
                   borderBottom: '1px solid var(--border-color)',

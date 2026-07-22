@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { DiaryEntry } from '../../types';
@@ -48,7 +47,7 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
 
   const loadEntries = useCallback(async () => {
     const data = await projectService.getDiaryEntries(projectId);
-    setEntries(data);
+    setEntries(data as DiaryEntry[]);
   }, [projectId]);
 
   useEffect(() => {

@@ -183,15 +183,58 @@ export class FakeProjectService implements IProjectService {
   );
 
   // ── Project Documents ───────────────────────────────────────────────
+  documents: ProjectDocument[] = [];
+
   openProjectDocument = vi.fn(async (_url: string, _localFilePath?: string): Promise<void> => undefined);
 
-  getProjectDocuments = vi.fn(async (_projectId: number): Promise<ProjectDocument[]> => []);
+  getProjectDocuments = vi.fn(async (projectId: number): Promise<ProjectDocument[]> => {
+    return this.documents.filter((d) => d.project_id === projectId);
+  });
 
   createProjectDocument = vi.fn(
-    async (_projectId: number, _title: string, _url?: string, _sourceFilePath?: string): Promise<number> => 0,
+    async (projectId: number, title: string, url?: string, sourceFilePath?: string, category?: string): Promise<number> => {
+      const id = this.documents.length + 1;
+      const doc: ProjectDocument = {
+        id,
+        project_id: projectId,
+        title,
+        url,
+        local_file_path: sourceFilePath,
+        created_at: new Date().toISOString(),
+        position: this.documents.length,
+        category,
+      };
+      this.documents.push(doc);
+      return id;
+    },
   );
 
-  deleteProjectDocument = vi.fn(async (_id: number): Promise<void> => undefined);
+  updateProjectDocument = vi.fn(
+    async (id: number, title: string, url?: string | null, sourceFilePath?: string | null, category?: string | null): Promise<void> => {
+      const idx = this.documents.findIndex((d) => d.id === id);
+      if (idx !== -1) {
+        this.documents[idx] = {
+          ...this.documents[idx],
+          title,
+          url: url ?? undefined,
+          local_file_path: sourceFilePath ?? undefined,
+          category: category ?? undefined,
+        };
+      }
+    },
+  );
+
+  reorderProjectDocuments = vi.fn(async (_projectId: number, orderedIds: number[]): Promise<void> => {
+    orderedIds.forEach((id, newPos) => {
+      const doc = this.documents.find((d) => d.id === id);
+      if (doc) doc.position = newPos;
+    });
+    this.documents.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+  });
+
+  deleteProjectDocument = vi.fn(async (id: number): Promise<void> => {
+    this.documents = this.documents.filter((d) => d.id !== id);
+  });
 
   openProjectDocumentExternal = vi.fn(async (_url?: string, _filePath?: string): Promise<void> => undefined);
 

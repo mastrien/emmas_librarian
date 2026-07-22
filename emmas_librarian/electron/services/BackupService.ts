@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from 'fs';
 import path from 'path';
@@ -6,7 +5,7 @@ import { gzipSync, gunzipSync } from 'zlib';
 
 export class BackupService {
   constructor(
-    private dbAdapter: unknown,
+    private dbAdapter: any,
     private dbPath: string,
     private backupsDir: string,
   ) {}

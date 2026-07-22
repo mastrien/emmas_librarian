@@ -1,11 +1,13 @@
-// @ts-nocheck
 import Cite from 'citation-js';
 import abntCsl from '../assets/csl/abnt.csl?raw';
 import ptBrLocale from '../assets/csl/locales-pt-BR.xml?raw';
 
 // Register ABNT templates and pt-BR locale
-Cite.plugins.config.get('@csl').templates.add('abnt', abntCsl);
-Cite.plugins.config.get('@csl').locales.add('pt-BR', ptBrLocale);
+const cslPlugin = (Cite.plugins.config.get as any)('@csl');
+if (cslPlugin) {
+  cslPlugin.templates?.add?.('abnt', abntCsl);
+  cslPlugin.locales?.add?.('pt-BR', ptBrLocale);
+}
 
 export type CitationStyle = 'abnt' | 'apa' | 'vancouver' | 'harvard1' | 'ieee';
 
@@ -73,7 +75,7 @@ export function generateCitation(
     let finalStyle = style;
     if (!useEtAl) {
       const targetStyleName = `${style}-no-etal`;
-      const config = Cite.plugins.config.get('@csl');
+      const config = (Cite.plugins.config.get as any)('@csl');
       if (config && config.templates) {
         const templates = config.templates;
         const hasTemplate =

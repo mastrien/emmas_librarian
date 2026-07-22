@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
@@ -34,7 +33,7 @@ export const DashboardPage: React.FC = () => {
                 active: articles.filter((a) => a.status === 'new').length,
                 archived: articles.filter((a) => a.status === 'archived').length,
                 withPdf: articles.filter((a) => !!a.local_file_path).length,
-                diaryDates: diaryEntries.map((d) => d.entry_date),
+                diaryDates: (diaryEntries as any[]).map((d: any) => d.entry_date),
               },
             };
           }),
@@ -106,7 +105,10 @@ export const DashboardPage: React.FC = () => {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    const types = Array.from(e.dataTransfer?.types || []);
+    if (types.includes('Files')) {
+      setIsDragging(true);
+    }
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -116,6 +118,7 @@ export const DashboardPage: React.FC = () => {
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
@@ -123,11 +126,10 @@ export const DashboardPage: React.FC = () => {
 
     if (emmapcarcFiles.length > 0) {
       try {
-        // @ts-ignore
         const filePath =
-          window.electronAPI && window.electronAPI.getPathForFile
-            ? window.electronAPI.getPathForFile(emmapcarcFiles[0])
-            : emmapcarcFiles[0].path || emmapcarcFiles[0].name;
+          (window as any).electronAPI && (window as any).electronAPI.getPathForFile
+            ? (window as any).electronAPI.getPathForFile(emmapcarcFiles[0])
+            : (emmapcarcFiles[0] as any).path || emmapcarcFiles[0].name;
         const newId = await projectService.importProject(filePath);
         if (newId) window.location.href = `#/projects/${newId}`;
       } catch (err: any) {

@@ -85,6 +85,8 @@ export interface ProjectDocument {
   url?: string;
   local_file_path?: string;
   created_at: string;
+  position?: number;
+  category?: string;
 }
 
 export interface DiaryEntry {
@@ -158,6 +160,8 @@ export enum IpcChannel {
   PENDING_HIGHLIGHTS_DELETE = 'pendingHighlights:delete',
   PROJECT_DOCUMENTS_GET = 'projectDocuments:get',
   PROJECT_DOCUMENTS_CREATE = 'projectDocuments:create',
+  PROJECT_DOCUMENTS_UPDATE = 'projectDocuments:update',
+  PROJECT_DOCUMENTS_REORDER = 'projectDocuments:reorder',
   PROJECT_DOCUMENTS_DELETE = 'projectDocuments:delete',
   PROJECT_DOCUMENT_OPEN_EXTERNAL = 'projectDocument:openExternal',
   MASSIVE_INVESTIGATIONS_GET = 'massiveInvestigations:get',
@@ -238,4 +242,29 @@ export interface InvestigationResult {
   status: 'success' | 'error' | 'skipped';
   error_message: string | null;
   created_at: string;
+}
+
+export interface CategoryOption {
+  id: number;
+  category_id: number;
+  name: string;
+}
+
+export interface ProjectCategory {
+  id: number;
+  project_id: number;
+  name: string;
+  type: string;
+  options?: string;
+  parsedOptions?: CategoryOption[];
+}
+
+export interface ArticleCategory {
+  article_id?: number;
+  category_id: number;
+  name: string;
+  type: string;
+  value?: string;
+  option_ids?: number[];
+  option_names?: string[];
 }

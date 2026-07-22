@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { setupIpcRegistries } from '../ipcRegistries';
 import { ipcMain, app, dialog, shell, BrowserWindow } from 'electron';
@@ -99,6 +98,8 @@ vi.mock('../../database/DatabaseAdapter', () => {
         deletePendingHighlight: vi.fn(),
         getProjectDocuments: vi.fn().mockReturnValue([]),
         saveProjectDocument: vi.fn().mockReturnValue(1),
+        updateProjectDocument: vi.fn(),
+        reorderProjectDocuments: vi.fn(),
         deleteProjectDocument: vi.fn(),
         getMassiveInvestigations: vi.fn().mockReturnValue([]),
         saveMassiveInvestigation: vi.fn(),
@@ -269,7 +270,10 @@ describe('IPC Handlers', () => {
 
     // Documents
     expect(await callHandler(IpcChannel.PROJECT_DOCUMENTS_GET, 1)).toEqual([]);
-    expect(await callHandler(IpcChannel.PROJECT_DOCUMENTS_CREATE, 1, 'title')).toBe(1);
+    expect(await callHandler(IpcChannel.PROJECT_DOCUMENTS_CREATE, 1, 'title', undefined, undefined, 'Reuniões')).toBe(1);
+    await callHandler(IpcChannel.PROJECT_DOCUMENTS_UPDATE, 1, 'updated title', undefined, undefined, 'Geral');
+    await callHandler(IpcChannel.PROJECT_DOCUMENTS_REORDER, 1, [2, 1]);
+    await callHandler(IpcChannel.PROJECT_DOCUMENTS_DELETE, 1);
     // Investigations
     expect(await callHandler(IpcChannel.MASSIVE_INVESTIGATIONS_GET, 1)).toEqual([]);
 

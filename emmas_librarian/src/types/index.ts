@@ -58,6 +58,8 @@ export interface ProjectDocument {
   url?: string;
   local_file_path?: string;
   created_at: string;
+  position?: number;
+  category?: string;
 }
 
 export interface DiaryEntry {
@@ -165,6 +167,8 @@ export enum IpcChannel {
   PENDING_HIGHLIGHTS_DELETE = 'pendingHighlights:delete',
   PROJECT_DOCUMENTS_GET = 'projectDocuments:get',
   PROJECT_DOCUMENTS_CREATE = 'projectDocuments:create',
+  PROJECT_DOCUMENTS_UPDATE = 'projectDocuments:update',
+  PROJECT_DOCUMENTS_REORDER = 'projectDocuments:reorder',
   PROJECT_DOCUMENTS_DELETE = 'projectDocuments:delete',
   PROJECT_DOCUMENT_OPEN_EXTERNAL = 'projectDocument:openExternal',
   MASSIVE_INVESTIGATIONS_GET = 'massiveInvestigations:get',

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useCallback } from 'react';
 import { projectService } from '../../../services/api';
 import type { Article, Highlight, Annotation, ProjectCategory, ArticleCategory } from '../../../types';
@@ -108,7 +107,7 @@ export function useArticleData(
           uint8Array = new Uint8Array(buffer as ArrayBuffer);
         }
 
-        const blob = new Blob([uint8Array], { type: 'application/pdf' });
+        const blob = new Blob([uint8Array as any], { type: 'application/pdf' });
         const localUrl = URL.createObjectURL(blob);
         setPdfUrl(localUrl);
 

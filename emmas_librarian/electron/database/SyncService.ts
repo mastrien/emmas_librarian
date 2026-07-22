@@ -1,4 +1,3 @@
-// @ts-nocheck
 import AdmZip from 'adm-zip';
 import Database from 'better-sqlite3';
 import fs from 'fs';
@@ -21,7 +20,7 @@ export class SyncService {
     if (canceled || !filePath) return null;
 
     try {
-      const db = (this.dbAdapter as unknown).db; // Access inner better-sqlite3 db
+      const db = (this.dbAdapter as any).getDB ? (this.dbAdapter as any).getDB() : (this.dbAdapter as any).db;
 
       const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId);
       if (!project) throw new Error('Projeto não encontrado');
@@ -175,7 +174,7 @@ export class SyncService {
 
       const data = JSON.parse(jsonEntry.getData().toString('utf8'));
 
-      const db = (this.dbAdapter as unknown).db;
+      const db = (this.dbAdapter as any).getDB ? (this.dbAdapter as any).getDB() : (this.dbAdapter as any).db;
 
       const newProjectId = db.transaction(() => {
         // Insert Project (preserves writing_pad and last_executed_at)
@@ -504,7 +503,7 @@ export class SyncService {
       const zip = new AdmZip();
 
       // 1. Flush WAL to main db file before reading, to ensure backup is consistent
-      const db = (this.dbAdapter as unknown).db; // Access better-sqlite3
+      const db = (this.dbAdapter as any).getDB ? (this.dbAdapter as any).getDB() : (this.dbAdapter as any).db;
       db.pragma('wal_checkpoint(TRUNCATE)');
 
       // 2. Copy db file to zip
@@ -679,7 +678,7 @@ export class SyncService {
 
       // Add options column to project_categories if missing
       try {
-        const pcInfo = tempDb.pragma('table_info(project_categories)') as unknown[];
+        const pcInfo = tempDb.pragma('table_info(project_categories)') as any[];
         if (pcInfo && !pcInfo.some((col) => col.name === 'options')) {
           tempDb.exec(`ALTER TABLE project_categories ADD COLUMN options TEXT;`);
         }
@@ -687,7 +686,7 @@ export class SyncService {
 
       // Add other columns if missing
       try {
-        const miInfo = tempDb.pragma('table_info(massive_investigations)') as unknown[];
+        const miInfo = tempDb.pragma('table_info(massive_investigations)') as any[];
         if (miInfo && miInfo.length > 0) {
           if (!miInfo.some((col) => col.name === 'model_used')) {
             tempDb.prepare('ALTER TABLE massive_investigations ADD COLUMN model_used TEXT').run();
@@ -699,7 +698,7 @@ export class SyncService {
       } catch (e) {}
 
       try {
-        const hlInfo = tempDb.pragma('table_info(highlights)') as unknown[];
+        const hlInfo = tempDb.pragma('table_info(highlights)') as any[];
         if (hlInfo && hlInfo.length > 0) {
           if (!hlInfo.some((col) => col.name === 'content_text')) {
             tempDb.prepare('ALTER TABLE highlights ADD COLUMN content_text TEXT').run();
@@ -708,18 +707,18 @@ export class SyncService {
       } catch (e) {}
 
       // Active db
-      const activeDb = (this.dbAdapter as unknown).db;
+      const activeDb = (this.dbAdapter as any).getDB ? (this.dbAdapter as any).getDB() : (this.dbAdapter as any).db;
 
       // Get active projects
       const existingProjNames = new Set(
         activeDb
           .prepare('SELECT name FROM projects WHERE deleted_at IS NULL')
           .all()
-          .map((p: unknown) => p.name),
+          .map((p: any) => p.name),
       );
 
       // Get projects from temp db
-      const tempProjects = tempDb.prepare('SELECT * FROM projects WHERE deleted_at IS NULL').all() as unknown[];
+      const tempProjects = tempDb.prepare('SELECT * FROM projects WHERE deleted_at IS NULL').all() as any[];
 
       let importedCount = 0;
 
@@ -738,19 +737,19 @@ export class SyncService {
         const projectId = tempProj.id;
 
         // Query data from tempDb
-        const articles = tempDb.prepare('SELECT * FROM articles WHERE project_id = ?').all(projectId) as unknown[];
+        const articles = tempDb.prepare('SELECT * FROM articles WHERE project_id = ?').all(projectId) as any[];
         const searchHistory = tempDb
           .prepare('SELECT * FROM search_history WHERE project_id = ?')
-          .all(projectId) as unknown[];
+          .all(projectId) as any[];
         const projectDocs = tempDb
           .prepare('SELECT * FROM project_documents WHERE project_id = ?')
-          .all(projectId) as unknown[];
+          .all(projectId) as any[];
         const massiveInvs = tempDb
           .prepare('SELECT * FROM massive_investigations WHERE project_id = ?')
-          .all(projectId) as unknown[];
+          .all(projectId) as any[];
         const projCategories = tempDb
           .prepare('SELECT * FROM project_categories WHERE project_id = ?')
-          .all(projectId) as unknown[];
+          .all(projectId) as any[];
 
         const articleCategories = tempDb
           .prepare(
@@ -760,7 +759,7 @@ export class SyncService {
           WHERE pc.project_id = ?
         `,
           )
-          .all(projectId) as unknown[];
+          .all(projectId) as any[];
 
         const annotations = tempDb
           .prepare(
@@ -770,7 +769,7 @@ export class SyncService {
           WHERE art.project_id = ?
         `,
           )
-          .all(projectId) as unknown[];
+          .all(projectId) as any[];
 
         const highlights = tempDb
           .prepare(
@@ -780,7 +779,7 @@ export class SyncService {
           WHERE art.project_id = ?
         `,
           )
-          .all(projectId) as unknown[];
+          .all(projectId) as any[];
 
         const pendingHighlights = tempDb
           .prepare(
@@ -790,11 +789,11 @@ export class SyncService {
           WHERE art.project_id = ?
         `,
           )
-          .all(projectId) as unknown[];
+          .all(projectId) as any[];
 
         const diaryEntries = tempDb
           .prepare('SELECT * FROM project_diary WHERE project_id = ?')
-          .all(projectId) as unknown[];
+          .all(projectId) as any[];
 
         // Run insertion in activeDb transaction
         activeDb.transaction(() => {

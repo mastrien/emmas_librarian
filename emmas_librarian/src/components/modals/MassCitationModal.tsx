@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { generateCitation, parseAuthors, CitationStyle, CitationOutputFormat } from '../../services/citationService';
@@ -19,12 +18,10 @@ export function MassCitationModal({ isOpen, onClose, articles, onArticlesUpdated
   const [format, setFormat] = useState<CitationOutputFormat>('html');
   const [sortBy, setSortBy] = useState<'author' | 'year'>('author');
 
-  const [localArticles, setLocalArticles] = useState<import('../../types').Article[]>([]);
-  const [initialArticles, setInitialArticles] = useState<import('../../types').Article[]>([]);
-  const [editingArticle, setEditingArticle] = useState<import('../../types').Article | null>(null);
-  const [editableFields, setEditableFields] = useState<Partial<import('../../types').Article> & { accessed?: string }>(
-    {},
-  );
+  const [localArticles, setLocalArticles] = useState<any[]>([]);
+  const [initialArticles, setInitialArticles] = useState<any[]>([]);
+  const [editingArticle, setEditingArticle] = useState<any | null>(null);
+  const [editableFields, setEditableFields] = useState<any>({});
 
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);

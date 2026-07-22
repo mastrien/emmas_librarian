@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -365,14 +364,7 @@ export const ArticleReaderPage: React.FC = () => {
 
       setHighlights(
         highData.map(
-          (h: {
-            id: number;
-            position_data: unknown;
-            content_text?: string;
-            comment?: string;
-            color?: string;
-            annotation_id?: number;
-          }) =>
+          (h: any) =>
             ({
               id: h.id.toString(),
               article_id: parseInt(id),
@@ -399,7 +391,7 @@ export const ArticleReaderPage: React.FC = () => {
           uint8Array = new Uint8Array(buffer as ArrayBufferLike);
         }
 
-        const blob = new Blob([uint8Array.buffer], { type: 'application/pdf' });
+        const blob = new Blob([uint8Array as any], { type: 'application/pdf' });
         const localUrl = URL.createObjectURL(blob);
         setPdfUrl(localUrl);
 
@@ -427,14 +419,7 @@ export const ArticleReaderPage: React.FC = () => {
               const newHighData = await projectService.getHighlights(parseInt(id));
               setHighlights(
                 newHighData.map(
-                  (h: {
-                    id: number;
-                    position_data: unknown;
-                    content_text?: string;
-                    comment?: string;
-                    color?: string;
-                    annotation_id?: number;
-                  }) =>
+                  (h: any) =>
                     ({
                       id: h.id.toString(),
                       article_id: parseInt(id),
@@ -1229,9 +1214,7 @@ export const ArticleReaderPage: React.FC = () => {
                     onCreateStandaloneAnnotation={handleCreateStandaloneAnnotation}
                     onDeleteHighlight={handleDeleteHighlight}
                     onDeleteStandaloneAnnotation={handleDeleteStandaloneAnnotation}
-                    onEditHighlightAnnotation={
-                      handleEditHighlightAnnotation as unknown as (h: Highlight, e: React.MouseEvent) => void
-                    }
+                    onEditHighlightAnnotation={handleEditHighlightAnnotation as any}
                     onEditStandaloneAnnotation={handleEditStandaloneAnnotation as unknown as (a: Annotation) => void}
                     onSaveEdit={saveEdit}
                     onHighlightClick={(h: unknown) => {

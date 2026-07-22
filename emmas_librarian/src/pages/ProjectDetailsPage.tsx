@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useProjectService } from '../contexts/ServicesContext';
-import { Project, Article } from '../types';
+import { Project, Article, ProjectDocument } from '../types';
 import {
   ArrowLeft,
   ExternalLink,
@@ -170,7 +170,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const [hasAiKey, setHasAiKey] = useState(false);
   const [showKeyAlert, setShowKeyAlert] = useState(false);
 
-  const [projectDocuments, setProjectDocuments] = useState<any[]>([]);
+  const [projectDocuments, setProjectDocuments] = useState<ProjectDocument[]>([]);
   const [isQuickAccessModalOpen, setIsQuickAccessModalOpen] = useState(false);
   const [isMassCitationModalOpen, setIsMassCitationModalOpen] = useState(false);
   const [isReadArticlesOpen, setIsReadArticlesOpen] = useState(false);
@@ -352,7 +352,12 @@ export const ProjectDetailsPage: React.FC = () => {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    if (isQuickAccessModalOpen) return;
+    const types = Array.from(e.dataTransfer?.types || []);
+    const isFileDrag = types.length === 0 || types.includes('Files');
+    if (isFileDrag) {
+      setIsDragging(true);
+    }
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -967,36 +972,72 @@ export const ProjectDetailsPage: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {projectDocuments.length === 0 ? (
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
-                Nenhum link ou documento cadastrado. Clique na engrenagem para adicionar.
-              </div>
-            ) : (
-              projectDocuments.map((doc) => (
-                <button
-                  key={doc.id}
-                  onClick={() => projectService.openProjectDocument(doc.url, doc.local_file_path)}
-                  className="btn-secondary fade-in"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.4rem 0.8rem',
-                    fontSize: '0.85rem',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                  }}
-                  title={doc.url || doc.local_file_path}
-                >
-                  {doc.url ? (
-                    <LinkIcon size={14} color="var(--color-primary)" />
-                  ) : (
-                    <FileIcon size={14} color="var(--color-secondary)" />
+          {projectDocuments.length === 0 ? (
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
+              Nenhum link ou documento cadastrado. Clique na engrenagem para adicionar.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {Object.entries(
+                projectDocuments.reduce<Record<string, ProjectDocument[]>>((acc, doc) => {
+                  const key = doc.category?.trim() || '';
+                  if (!acc[key]) acc[key] = [];
+                  acc[key].push(doc);
+                  return acc;
+                }, {}),
+              )
+                .sort(([catA], [catB]) => {
+                  if (catA === '') return -1;
+                  if (catB === '') return 1;
+                  return 0;
+                })
+                .map(([catName, docs]) => (
+                <div key={catName || 'uncategorized'} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  {catName && (
+                    <div
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                      }}
+                    >
+                      <Tag size={12} color="var(--color-primary)" />
+                      {catName}
+                    </div>
                   )}
-                  {doc.title}
-                </button>
-              ))
-            )}
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {docs.map((doc) => (
+                      <button
+                        key={doc.id}
+                        onClick={() => projectService.openProjectDocument(doc.url, doc.local_file_path)}
+                        className="btn-secondary fade-in"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.4rem 0.8rem',
+                          fontSize: '0.85rem',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 'var(--radius-md)',
+                        }}
+                        title={doc.url || doc.local_file_path}
+                      >
+                        {doc.url ? (
+                          <LinkIcon size={14} color="var(--color-primary)" />
+                        ) : (
+                          <FileIcon size={14} color="var(--color-secondary)" />
+                        )}
+                        {doc.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           </div>
         </div>
       </div>

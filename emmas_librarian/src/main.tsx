@@ -1,4 +1,3 @@
-// @ts-nocheck
 // PrismJS is loaded externally via <script> tags in index.html
 // to ensure correct initialization order in production builds.
 // See public/vendor/prismjs/ and the error report in relatorio_erro_prism.md.
@@ -91,11 +90,9 @@ const savedAccent = localStorage.getItem('accent') || 'blue';
 document.documentElement.setAttribute('data-theme', savedTheme);
 document.documentElement.setAttribute('data-accent', savedAccent);
 
-if ((window as unknown as { electronAPI?: { invoke: (action: string, arg: string) => void } }).electronAPI) {
-  (window as unknown as { electronAPI?: { invoke: (action: string, arg: string) => void } }).electronAPI.invoke(
-    'UPDATE_TITLE_BAR',
-    savedTheme,
-  );
+const winApi = (window as any).electronAPI;
+if (winApi) {
+  winApi.invoke('UPDATE_TITLE_BAR', savedTheme);
 }
 
 const rootEl = document.getElementById('root');

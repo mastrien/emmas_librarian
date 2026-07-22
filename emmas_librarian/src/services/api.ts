@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   IpcChannel,
   type Project,
@@ -233,7 +232,7 @@ export const projectService = {
   },
 
   // Project Documents
-  async openProjectDocument(url: string, localFilePath?: string): Promise<void> {
+  async openProjectDocument(url?: string, localFilePath?: string): Promise<void> {
     await safeInvoke(IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, url, localFilePath);
   },
 
@@ -348,8 +347,31 @@ export const projectService = {
     title: string,
     url?: string,
     sourceFilePath?: string,
+    category?: string,
   ): Promise<number> {
-    return (await safeInvoke(IpcChannel.PROJECT_DOCUMENTS_CREATE, projectId, title, url, sourceFilePath)) as any;
+    return (await safeInvoke(
+      IpcChannel.PROJECT_DOCUMENTS_CREATE,
+      projectId,
+      title,
+      url ?? null,
+      sourceFilePath ?? null,
+      category ?? null,
+    )) as any;
+  },
+
+  async updateProjectDocument(
+    id: number,
+    title: string,
+    url?: string,
+    sourceFilePath?: string,
+    category?: string,
+  ): Promise<void> {
+    // Electron IPC drops trailing undefined args — use null to keep arg positions
+    await safeInvoke(IpcChannel.PROJECT_DOCUMENTS_UPDATE, id, title, url ?? null, sourceFilePath ?? null, category ?? null);
+  },
+
+  async reorderProjectDocuments(projectId: number, orderedIds: number[]): Promise<void> {
+    await safeInvoke(IpcChannel.PROJECT_DOCUMENTS_REORDER, projectId, orderedIds);
   },
 
   async deleteProjectDocument(id: number): Promise<void> {

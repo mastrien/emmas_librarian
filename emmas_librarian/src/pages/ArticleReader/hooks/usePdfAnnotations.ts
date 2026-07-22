@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { projectService } from '../../../services/api';
 import type { Highlight, Annotation } from '../../../types';
 type IHighlight = {

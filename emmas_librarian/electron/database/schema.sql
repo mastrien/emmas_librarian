@@ -96,6 +96,8 @@ CREATE TABLE IF NOT EXISTS project_documents (
     url TEXT,
     local_file_path TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    position INTEGER DEFAULT 0,
+    category TEXT,
     FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
@@ -208,6 +210,8 @@ CREATE TABLE IF NOT EXISTS project_documents (
     url TEXT,
     local_file_path TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    position INTEGER DEFAULT 0,
+    category TEXT,
     FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 

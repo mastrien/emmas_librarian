@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X as XIcon, Upload, Loader2, Plus } from 'lucide-react';
@@ -59,7 +58,7 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
         {
           title: title.trim(),
           authors: authors.trim(),
-          year: year.trim() || undefined,
+          year: year.trim() ? parseInt(year.trim(), 10) : undefined,
           doi: doi.trim() || undefined,
           journal: journal.trim() || undefined,
           abstract: abstract.trim() || undefined,

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SyncService } from '../database/SyncService';
 import { dialog, app } from 'electron';

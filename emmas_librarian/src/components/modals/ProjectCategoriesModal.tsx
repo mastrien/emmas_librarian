@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Trash2, Tag, Loader2 } from 'lucide-react';
@@ -35,7 +34,7 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
     setLoading(true);
     try {
       const data = await projectService.getProjectCategories(projectId);
-      setCategories(data);
+      setCategories(data as ProjectCategory[]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -53,7 +52,7 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
         .map((s) => s.trim())
         .filter(Boolean)
         .map((name) => ({ name }));
-      await projectService.createProjectCategory(projectId, newCatName.trim(), newCatType, parsedOpts);
+      await projectService.createProjectCategory(projectId, newCatName.trim(), newCatType, parsedOpts as any);
       setNewCatName('');
       setNewCatOptions('');
       setNewCatType('text');
@@ -101,7 +100,7 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
     setSavingEdit(true);
     try {
       const cleanOpts = editCatOptions.map((o) => ({ ...o, name: o.name.trim() })).filter((o) => o.name);
-      await projectService.updateProjectCategory(editingCatId, editCatName.trim(), editCatType, cleanOpts);
+      await projectService.updateProjectCategory(editingCatId, editCatName.trim(), editCatType, cleanOpts as any);
       setEditingCatId(null);
       await loadCategories();
     } catch (err) {
