@@ -212,6 +212,26 @@ export const projectService = {
     return (await safeInvoke(IpcChannel.PDF_GET, articleId)) as any;
   },
 
+  async getStoredPdfs(): Promise<any[]> {
+    return (await safeInvoke(IpcChannel.PDF_LIBRARY_LIST)) as any;
+  },
+
+  async deletePdfLibraryRecord(filePath: string): Promise<number[]> {
+    return (await safeInvoke(IpcChannel.PDF_LIBRARY_DELETE, filePath)) as any;
+  },
+
+  async linkPdfToArticle(articleId: number, filePath: string): Promise<void> {
+    await safeInvoke(IpcChannel.PDF_LIBRARY_LINK, articleId, filePath);
+  },
+
+  async uploadPdfToLibrary(filePath: string): Promise<string> {
+    return (await safeInvoke(IpcChannel.PDF_LIBRARY_UPLOAD, filePath)) as any;
+  },
+
+  async importArticlesFromProject(sourceProjectId: number, destProjectId: number, articleIds: number[]): Promise<number> {
+    return (await safeInvoke(IpcChannel.ARTICLES_IMPORT_FROM_PROJECT, sourceProjectId, destProjectId, articleIds)) as any;
+  },
+
   // Project Documents
   async openProjectDocument(url: string, localFilePath?: string): Promise<void> {
     await safeInvoke(IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, url, localFilePath);

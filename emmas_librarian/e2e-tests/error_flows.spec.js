@@ -1,8 +1,8 @@
 const { test, expect } = require('@playwright/test');
-const { launchApp, getFirstWindow, createProject } = require('./helpers');
+const { launchApp, getFirstWindow, createProject, navigateTo } = require('./helpers');
 
 async function tryCreateDuplicate(window, name) {
-  await window.click('text="Projetos"');
+  await navigateTo(window, 'Projetos');
   await window.click('text="Novo Projeto"');
   await window.fill('input[placeholder="Ex: Sistemas de Recomendação na Educação"]', name);
   await window.click('button:has-text("Criar Projeto")');

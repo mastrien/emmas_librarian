@@ -40,6 +40,7 @@ vi.mock('fs', () => {
       unlinkSync: vi.fn(),
       writeFileSync: vi.fn(),
       readdirSync: vi.fn().mockReturnValue([]),
+      statSync: vi.fn().mockReturnValue({ size: 1024 }),
     },
   };
 });
@@ -110,6 +111,15 @@ vi.mock('../../database/DatabaseAdapter', () => {
         emptyTrash: vi.fn(),
         getDiaryEntryHistory: vi.fn().mockReturnValue([]),
         restoreDiaryEntryVersion: vi.fn(),
+        registerPdfInLibrary: vi.fn(),
+        linkPdfToArticle: vi.fn(),
+        getPdfByHash: vi.fn().mockReturnValue(null),
+        getArticlesForPdf: vi.fn().mockReturnValue([]),
+        unlinkPdfFromArticle: vi.fn(),
+        getStoredPdfs: vi.fn().mockReturnValue([]),
+        deletePdfLibraryRecord: vi.fn().mockReturnValue([]),
+        deletePdfRecord: vi.fn(),
+        importArticlesFromProject: vi.fn(),
       };
     }),
   };

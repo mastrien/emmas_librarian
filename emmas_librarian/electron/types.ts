@@ -193,6 +193,11 @@ export enum IpcChannel {
   INVESTIGATION_RESULTS_SAVE = 'investigationResults:save',
   INVESTIGATION_RESULTS_GET = 'investigationResults:get',
   INVESTIGATION_RESULTS_GET_BY_ARTICLE = 'investigationResults:getByArticle',
+  PDF_LIBRARY_LIST = 'pdfLibrary:list',
+  PDF_LIBRARY_DELETE = 'pdfLibrary:delete',
+  PDF_LIBRARY_LINK = 'pdfLibrary:link',
+  PDF_LIBRARY_UPLOAD = 'pdfLibrary:upload',
+  ARTICLES_IMPORT_FROM_PROJECT = 'articles:importFromProject',
 }
 
 export interface PendingHighlight {

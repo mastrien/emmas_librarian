@@ -74,7 +74,7 @@ export const PdfPlaceholderView: React.FC<PdfPlaceholderViewProps> = ({ article,
           }}
         >
           {uploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
-          Vincular PDF Local
+          Anexar PDF
         </button>
 
         {article.doi && (

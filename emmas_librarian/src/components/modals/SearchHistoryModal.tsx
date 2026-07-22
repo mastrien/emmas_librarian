@@ -65,6 +65,19 @@ const HistoryContent: React.FC<{ history: HistoryItem[]; onRevertSearch?: (searc
                     flexWrap: 'wrap',
                   }}
                 >
+                  <span
+                    style={{
+                      background: 'rgba(79, 70, 229, 0.1)',
+                      color: 'var(--color-primary)',
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      border: '1px solid rgba(79, 70, 229, 0.2)',
+                    }}
+                  >
+                    ID: #{item.id}
+                  </span>
                   <Calendar size={14} /> {new Date(item.created_at).toLocaleString()}
                   {item.sort_by && (
                     <>

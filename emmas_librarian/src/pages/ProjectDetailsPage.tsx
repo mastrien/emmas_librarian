@@ -35,6 +35,7 @@ import {
   Brain,
   SlidersHorizontal,
   Filter,
+  Share2,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
@@ -55,6 +56,8 @@ import { CategoryCell } from '../components/common/CategoryCell';
 import { CitationModal } from '../components/modals/CitationModal';
 import { ArticleDetailsModal } from '../components/modals/ArticleDetailsModal';
 import { MassCitationModal } from '../components/modals/MassCitationModal';
+import { AttachPdfModal } from '../components/modals/AttachPdfModal';
+import { ImportArticlesModal } from '../components/modals/ImportArticlesModal';
 import { ProjectOverviewTab } from './ProjectDetails/components/ProjectOverviewTab';
 import { ProjectSidebar } from './ProjectDetails/components/ProjectSidebar';
 import { useGlobalError } from '../contexts/GlobalErrorContext';
@@ -108,6 +111,50 @@ export const ProjectDetailsPage: React.FC = () => {
   const [extractionProgress, setExtractionProgress] = useState({ current: 0, total: 0 });
   const [citationArticle, setCitationArticle] = useState<Article | null>(null);
   const [selectedArticleForDetails, setSelectedArticleForDetails] = useState<Article | null>(null);
+  const [isImportArticlesModalOpen, setIsImportArticlesModalOpen] = useState(false);
+  const [attachPdfArticle, setAttachPdfArticle] = useState<{ id: number; title: string } | null>(null);
+
+  const [isAddArticlesMenuOpen, setIsAddArticlesMenuOpen] = useState(false);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const addArticlesMenuRef = useRef<HTMLDivElement>(null);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+  const addMenuLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const exportMenuLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleAddMenuMouseEnter = () => {
+    if (addMenuLeaveTimeoutRef.current) clearTimeout(addMenuLeaveTimeoutRef.current);
+    setIsAddArticlesMenuOpen(true);
+  };
+
+  const handleAddMenuMouseLeave = () => {
+    addMenuLeaveTimeoutRef.current = setTimeout(() => {
+      setIsAddArticlesMenuOpen(false);
+    }, 200);
+  };
+
+  const handleExportMenuMouseEnter = () => {
+    if (exportMenuLeaveTimeoutRef.current) clearTimeout(exportMenuLeaveTimeoutRef.current);
+    setIsExportMenuOpen(true);
+  };
+
+  const handleExportMenuMouseLeave = () => {
+    exportMenuLeaveTimeoutRef.current = setTimeout(() => {
+      setIsExportMenuOpen(false);
+    }, 200);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (addArticlesMenuRef.current && !addArticlesMenuRef.current.contains(event.target as Node)) {
+        setIsAddArticlesMenuOpen(false);
+      }
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setIsExportMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const [sortOrder, setSortOrder] = useState(() => {
     return localStorage.getItem('emmas_librarian_sort_order') || 'added-desc';
@@ -161,6 +208,10 @@ export const ProjectDetailsPage: React.FC = () => {
       ]);
       setProject(projData);
       setArticles(artData);
+      setSelectedArticleForDetails((prev) => {
+        if (!prev) return null;
+        return artData.find((a: Article) => a.id === prev.id) || prev;
+      });
       setHistory(histData);
       setHasAiKey(!!(openai || gemini || anthropic || ollama));
       setNewName(projData.name);
@@ -188,21 +239,13 @@ export const ProjectDetailsPage: React.FC = () => {
   };
 
   const handleUploadClick = useCallback(
-    async (articleId: number) => {
-      setUploadingId(articleId);
-      try {
-        const filePath = await projectService.openPdfDialog();
-        if (filePath) {
-          await projectService.uploadPdf(articleId, filePath);
-          await fetchData();
-        }
-      } catch (err) {
-        alert('Erro ao fazer upload do PDF');
-      } finally {
-        setUploadingId(null);
+    (articleId: number) => {
+      const art = articles.find((a) => a.id === articleId);
+      if (art) {
+        setAttachPdfArticle({ id: art.id, title: art.title });
       }
     },
-    [fetchData],
+    [articles],
   );
 
   const handleUnlinkClick = useCallback(
@@ -735,49 +778,149 @@ export const ProjectDetailsPage: React.FC = () => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <button
-            onClick={() => projectService.exportBiblioshiny(project.id)}
-            className="btn-secondary"
-            title="Exportar no formato compatível com Biblioshiny"
-          >
-            <Download size={18} /> Biblioshiny
-          </button>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button
-              onClick={() => setIsAIExtractionModalOpen(true)}
-              className="btn-primary"
-              title="Extração Inteligente IA"
-            >
-              <Brain size={18} /> Extração IA
-            </button>
-            <button onClick={handleBatchPdfImport} className="btn-secondary" title="Importar PDFs em Lote">
-              <Upload size={18} /> Importar PDFs
-            </button>
-            <button
-              onClick={() => setIsManualModalOpen(true)}
-              className="btn-secondary"
-              title="Adicionar artigo manualmente"
-            >
-              <Plus size={18} /> Manual
-            </button>
-          </div>
-          <button
-            onClick={async () => {
-              await projectService.exportProject(project.id);
-            }}
-            className="btn-secondary"
-            title="Exportar projeto completo com PDFs (.emmapcarc)"
-          >
-            <Download size={18} /> .emmapcarc
-          </button>
-          <Link to={`/projects/${project.id}/search`} className="btn-primary">
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <Link to={`/projects/${project.id}/search`} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Search size={18} /> Nova busca
           </Link>
+
+          <button
+            onClick={() => setIsAIExtractionModalOpen(true)}
+            className="btn-secondary"
+            title="Extração Inteligente IA"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <Brain size={18} /> Extração IA
+          </button>
+
+          {/* Group 1: Dropdown "Adicionar Artigos" */}
+          <div
+            ref={addArticlesMenuRef}
+            onMouseEnter={handleAddMenuMouseEnter}
+            onMouseLeave={handleAddMenuMouseLeave}
+            style={{ position: 'relative' }}
+          >
+            <button
+              onClick={() => setIsAddArticlesMenuOpen(!isAddArticlesMenuOpen)}
+              className="btn-primary"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <Plus size={18} /> Adicionar Artigos <ChevronDown size={14} />
+            </button>
+
+            {isAddArticlesMenuOpen && (
+              <div
+                className="glass-panel"
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: '100%',
+                  minWidth: '220px',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                  zIndex: 100,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '0.5rem',
+                  gap: '0.25rem',
+                  backgroundColor: 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                <button
+                  className="menu-dropdown-item"
+                  onClick={() => {
+                    setIsAddArticlesMenuOpen(false);
+                    handleBatchPdfImport();
+                  }}
+                >
+                  <Upload size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Importar PDFs em Lote
+                </button>
+
+                <button
+                  className="menu-dropdown-item"
+                  onClick={() => {
+                    setIsAddArticlesMenuOpen(false);
+                    setIsImportArticlesModalOpen(true);
+                  }}
+                >
+                  <Share2 size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Importar de outro projeto
+                </button>
+
+                <button
+                  className="menu-dropdown-item"
+                  onClick={() => {
+                    setIsAddArticlesMenuOpen(false);
+                    setIsManualModalOpen(true);
+                  }}
+                >
+                  <Plus size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Artigo Manual
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Group 2: Dropdown "Exportar" */}
+          <div
+            ref={exportMenuRef}
+            onMouseEnter={handleExportMenuMouseEnter}
+            onMouseLeave={handleExportMenuMouseLeave}
+            style={{ position: 'relative' }}
+          >
+            <button
+              onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+              className="btn-secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <Download size={18} /> Exportar <ChevronDown size={14} />
+            </button>
+
+            {isExportMenuOpen && (
+              <div
+                className="glass-panel"
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: '100%',
+                  minWidth: '220px',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                  zIndex: 100,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '0.5rem',
+                  gap: '0.25rem',
+                  backgroundColor: 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                <button
+                  className="menu-dropdown-item"
+                  onClick={() => {
+                    setIsExportMenuOpen(false);
+                    projectService.exportBiblioshiny(project.id);
+                  }}
+                >
+                  <Download size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Biblioshiny
+                </button>
+
+                <button
+                  className="menu-dropdown-item"
+                  onClick={async () => {
+                    setIsExportMenuOpen(false);
+                    await projectService.exportProject(project.id);
+                  }}
+                >
+                  <Download size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Pacote .emmapcarc (com PDFs)
+                </button>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => setIsCategoriesModalOpen(true)}
             className="btn-secondary"
             title="Gerenciar categorias de artigos"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
             <Tag size={18} /> Criar categorias
           </button>
@@ -870,6 +1013,7 @@ export const ProjectDetailsPage: React.FC = () => {
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            data-testid={`tab-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
             style={{
               display: 'flex',
@@ -1907,8 +2051,40 @@ export const ProjectDetailsPage: React.FC = () => {
       <ArticleDetailsModal
         isOpen={!!selectedArticleForDetails}
         onClose={() => setSelectedArticleForDetails(null)}
-        article={selectedArticleForDetails}
+        article={
+          selectedArticleForDetails
+            ? articles.find((a) => a.id === selectedArticleForDetails.id) || selectedArticleForDetails
+            : null
+        }
+        history={history}
+        onNavigateToSearch={(searchId) => {
+          setSelectedArticleForDetails(null);
+          setActiveTab('history');
+        }}
+        onArticleUpdated={fetchData}
+        onAttachPdf={(art) => {
+          setAttachPdfArticle(art);
+        }}
       />
+
+      {isImportArticlesModalOpen && id && (
+        <ImportArticlesModal
+          isOpen={isImportArticlesModalOpen}
+          destProjectId={parseInt(id)}
+          onClose={() => setIsImportArticlesModalOpen(false)}
+          onImportComplete={fetchData}
+        />
+      )}
+
+      {attachPdfArticle && (
+        <AttachPdfModal
+          isOpen={!!attachPdfArticle}
+          articleId={attachPdfArticle.id}
+          articleTitle={attachPdfArticle.title}
+          onClose={() => setAttachPdfArticle(null)}
+          onAttached={fetchData}
+        />
+      )}
     </div>
   );
 };

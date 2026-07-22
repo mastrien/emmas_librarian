@@ -137,6 +137,11 @@ export interface IProjectService {
   uploadPdf(articleId: number, filePath: string): Promise<string>;
   unlinkPdf(articleId: number): Promise<void>;
   getPdfBuffer(articleId: number): Promise<ArrayBuffer>;
+  getStoredPdfs(): Promise<any[]>;
+  deletePdfLibraryRecord(filePath: string): Promise<number[]>;
+  linkPdfToArticle(articleId: number, filePath: string): Promise<void>;
+  uploadPdfToLibrary(filePath: string): Promise<string>;
+  importArticlesFromProject(sourceProjectId: number, destProjectId: number, articleIds: number[]): Promise<number>;
 
   // ── Project Documents ─────────────────────────────────────────────
   openProjectDocument(url: string, localFilePath?: string): Promise<void>;

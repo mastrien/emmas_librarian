@@ -3,6 +3,7 @@ import Database from 'better-sqlite3';
 import * as sqliteVec from 'sqlite-vec';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { safeStorage } from 'electron';
 import { Project, Article, Annotation, Highlight, DiaryEntry, ProjectDocument } from '../types';
 
@@ -371,6 +372,21 @@ export class DatabaseAdapter {
         CREATE UNIQUE INDEX IF NOT EXISTS idx_project_diary_unique 
         ON project_diary(project_id, entry_date);
       `);
+
+      // PDF Library table migration
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS pdf_files (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            file_path TEXT UNIQUE NOT NULL,
+            file_hash TEXT UNIQUE NOT NULL,
+            filename TEXT NOT NULL,
+            file_size INTEGER NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      // Run PDF backfill
+      this.backfillExistingPdfs();
     } catch (e) {
       console.error('Schema migrations error', e);
     }
@@ -1284,5 +1300,216 @@ export class DatabaseAdapter {
 
   public close(): void {
     this.db.close();
+  }
+
+  // --- PDF Library & Article Sharing ---
+  private backfillExistingPdfs(): void {
+    try {
+      const checkBackfill = this.db
+        .prepare("SELECT value FROM settings WHERE key = 'backfilled_pdf_files'")
+        .get() as { value: string } | undefined;
+      if (checkBackfill?.value === 'true') return;
+      
+      const articles = this.db
+        .prepare('SELECT id, local_file_path FROM articles WHERE local_file_path IS NOT NULL')
+        .all() as { id: number; local_file_path: string }[];
+      for (const art of articles) {
+        this.processExistingPdf(art.id, art.local_file_path);
+      }
+      this.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('backfilled_pdf_files', 'true')").run();
+    } catch (e) {
+      console.error('Failed to backfill pdf_files:', e);
+    }
+  }
+
+  private processExistingPdf(articleId: number, filePath: string): void {
+    if (!fs.existsSync(filePath)) return;
+    try {
+      const hash = this.getFileHash(filePath);
+      const size = fs.statSync(filePath).size;
+      const filename = path.basename(filePath);
+      this.insertPdfRecord(filePath, hash, filename, size);
+    } catch (e) {
+      console.error(`Error processing PDF for article ${articleId}:`, e);
+    }
+  }
+
+  private getFileHash(filePath: string): string {
+    const fileBuffer = fs.readFileSync(filePath);
+    return crypto.createHash('sha256').update(fileBuffer).digest('hex');
+  }
+
+  private insertPdfRecord(filePath: string, hash: string, filename: string, size: number): void {
+    this.db.prepare(`
+      INSERT OR IGNORE INTO pdf_files (file_path, file_hash, filename, file_size)
+      VALUES (?, ?, ?, ?)
+    `).run(filePath, hash, filename, size);
+  }
+
+  public getStoredPdfs(): unknown[] {
+    try {
+      const unindexed = this.db.prepare(`
+        SELECT id, local_file_path FROM articles
+        WHERE local_file_path IS NOT NULL AND local_file_path != '' AND deleted_at IS NULL
+          AND LOWER(REPLACE(local_file_path, '/', '\\')) NOT IN (
+            SELECT LOWER(REPLACE(file_path, '/', '\\')) FROM pdf_files
+          )
+      `).all() as { id: number; local_file_path: string }[];
+
+      for (const art of unindexed) {
+        this.processExistingPdf(art.id, art.local_file_path);
+      }
+    } catch (e) {
+      console.error('Error auto-syncing unindexed PDFs:', e);
+    }
+
+    const query = `
+      SELECT p.id, p.file_path, p.file_hash, p.filename, p.file_size, p.created_at,
+             (SELECT json_group_array(json_object('article_id', a.id, 'article_title', a.title, 'project_id', a.project_id, 'project_name', pr.name))
+              FROM articles a
+              JOIN projects pr ON a.project_id = pr.id
+              WHERE LOWER(REPLACE(a.local_file_path, '/', '\\')) = LOWER(REPLACE(p.file_path, '/', '\\')) AND a.deleted_at IS NULL AND pr.deleted_at IS NULL
+             ) as articles_json
+      FROM pdf_files p
+      ORDER BY p.created_at DESC
+    `;
+    const rows = this.db.prepare(query).all();
+    return rows.map((r: any) => {
+      const parsed = r.articles_json ? JSON.parse(r.articles_json) : [];
+      const articles = Array.isArray(parsed) ? parsed.filter((art: any) => art && art.article_id != null) : [];
+      return {
+        ...r,
+        articles,
+      };
+    });
+  }
+
+  public getArticlesForPdf(filePath: string): { id: number; title: string; project_id: number }[] {
+    const query = 'SELECT id, title, project_id FROM articles WHERE local_file_path = ? AND deleted_at IS NULL';
+    return this.db.prepare(query).all(filePath) as any;
+  }
+
+  public deletePdfRecord(filePath: string): void {
+    this.db.prepare('DELETE FROM pdf_files WHERE file_path = ?').run(filePath);
+  }
+
+  public deletePdfLibraryRecord(filePath: string): number[] {
+    const articles = this.getArticlesForPdf(filePath);
+    const articleIds = articles.map((a) => a.id);
+    
+    const transaction = this.db.transaction(() => {
+      for (const id of articleIds) {
+        this.unlinkPdfFromArticle(id);
+      }
+      this.db.prepare('DELETE FROM pdf_files WHERE file_path = ?').run(filePath);
+    });
+    transaction();
+    return articleIds;
+  }
+
+  public unlinkPdfFromArticle(articleId: number): void {
+    const article = this.getArticle(articleId);
+    if (!article || !article.local_file_path) return;
+    
+    const chunks = this.db.prepare('SELECT id FROM pdf_chunks WHERE article_id = ?').all(articleId) as { id: number }[];
+    const chunkIds = chunks.map((c) => c.id);
+    if (chunkIds.length > 0) {
+      try {
+        this.db.prepare(`DELETE FROM pdf_chunk_embeddings WHERE rowid IN (${chunkIds.join(',')})`).run();
+      } catch (e) {}
+      this.db.prepare('DELETE FROM pdf_chunks WHERE article_id = ?').run(articleId);
+    }
+
+    this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(articleId);
+    this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(articleId);
+    this.db.prepare('UPDATE articles SET local_file_path = NULL WHERE id = ?').run(articleId);
+  }
+
+  public linkPdfToArticle(articleId: number, filePath: string): void {
+    const normalized = path.normalize(filePath);
+    let pdf = this.db.prepare('SELECT * FROM pdf_files WHERE file_path = ?').get(normalized) as any;
+    if (!pdf) {
+      pdf = this.db.prepare('SELECT * FROM pdf_files WHERE LOWER(REPLACE(file_path, "/", "\\")) = LOWER(REPLACE(?, "/", "\\"))').get(normalized) as any;
+    }
+    if (!pdf) {
+      const filename = path.basename(filePath);
+      pdf = this.db.prepare('SELECT * FROM pdf_files WHERE filename = ?').get(filename) as any;
+    }
+    if (!pdf) {
+      throw new Error(`PDF file not found in library: "${filePath}"`);
+    }
+    this.db.prepare('UPDATE articles SET local_file_path = ? WHERE id = ?').run(pdf.file_path, articleId);
+  }
+
+  public registerPdfInLibrary(filePath: string, hash: string, filename: string, size: number): void {
+    const normalized = path.normalize(filePath);
+    this.db.prepare(`
+      INSERT OR REPLACE INTO pdf_files (file_path, file_hash, filename, file_size)
+      VALUES (?, ?, ?, ?)
+    `).run(normalized, hash, filename, size);
+  }
+
+  public importArticlesFromProject(
+    sourceProjectId: number,
+    destProjectId: number,
+    articleIds: number[],
+    searchHistoryId: number
+  ): void {
+    const transaction = this.db.transaction(() => {
+      for (const articleId of articleIds) {
+        this.cloneArticleToProject(articleId, destProjectId, searchHistoryId);
+      }
+    });
+    transaction();
+  }
+
+  private cloneArticleToProject(articleId: number, destProjectId: number, searchHistoryId: number): void {
+    const article = this.db.prepare('SELECT * FROM articles WHERE id = ?').get(articleId) as any;
+    if (!article) return;
+    const info = this.insertClonedArticle(destProjectId, searchHistoryId, article);
+    this.clonePdfChunksAndEmbeddings(articleId, info.lastInsertRowid as number);
+  }
+
+  private insertClonedArticle(destProjectId: number, searchHistoryId: number, article: any): any {
+    const stmt = this.db.prepare(`
+      INSERT INTO articles (
+        project_id, doi, title, authors, year, abstract, author_keywords, index_keywords,
+        journal, volume, issue, pages, affiliations, references_list, document_type,
+        publisher, is_oa, url, accessed, csl_json, local_file_path, status, search_id, ai_summary,
+        source_query, source_databases, issn, citation_count
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, ?)
+    `);
+    return stmt.run(
+      destProjectId, article.doi || null, article.title, article.authors || null, article.year || null,
+      article.abstract || null, article.author_keywords || null, article.index_keywords || null,
+      article.journal || null, article.volume || null, article.issue || null, article.pages || null,
+      article.affiliations || null, article.references_list || null, article.document_type || null,
+      article.publisher || null, article.is_oa ?? null, article.url || null, article.accessed || null,
+      article.csl_json || null, article.local_file_path || null, searchHistoryId, article.ai_summary || null,
+      article.source_query || null, article.source_databases || '[]', article.issn || null, article.citation_count || null
+    );
+  }
+
+  public getPdfByHash(hash: string): any {
+    return this.db.prepare('SELECT * FROM pdf_files WHERE file_hash = ?').get(hash);
+  }
+
+  private clonePdfChunksAndEmbeddings(oldArticleId: number, newArticleId: number): void {
+    const chunks = this.db.prepare('SELECT * FROM pdf_chunks WHERE article_id = ?').all(oldArticleId) as any[];
+    for (const chunk of chunks) {
+      const info = this.db.prepare(`
+        INSERT INTO pdf_chunks (article_id, chunk_index, text_content, page_number, bbox_x, bbox_y, bbox_w, bbox_h, token_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        newArticleId, chunk.chunk_index, chunk.text_content, chunk.page_number,
+        chunk.bbox_x, chunk.bbox_y, chunk.bbox_w, chunk.bbox_h, chunk.token_count
+      );
+      const newChunkId = BigInt(info.lastInsertRowid);
+      const oldChunkId = BigInt(chunk.id);
+      const embedding = this.db.prepare('SELECT embedding FROM pdf_chunk_embeddings WHERE rowid = ?').get(oldChunkId) as any;
+      if (embedding && embedding.embedding) {
+        this.db.prepare('INSERT INTO pdf_chunk_embeddings (rowid, embedding) VALUES (?, ?)').run(newChunkId, embedding.embedding);
+      }
+    }
   }
 }

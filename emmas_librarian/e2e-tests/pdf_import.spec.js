@@ -2,13 +2,13 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { launchApp, getFirstWindow, createProject } = require('./helpers');
+const { launchApp, getFirstWindow, createProject, clickAddArticlesOption } = require('./helpers');
 
 async function triggerImport(window) {
   window.on('dialog', async (dialog) => {
-    await dialog.accept();
+    await dialog.accept().catch(() => {});
   });
-  await window.click('button[title="Importar PDFs em Lote"]');
+  await clickAddArticlesOption(window, 'Importar PDFs em Lote');
 }
 
 test('F-04 Import article via PDF', async () => {

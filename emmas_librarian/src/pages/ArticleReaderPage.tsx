@@ -24,6 +24,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { CitationModal } from '../components/modals/CitationModal';
+import { AttachPdfModal } from '../components/modals/AttachPdfModal';
 import { useGlobalError } from '../contexts/GlobalErrorContext';
 import { TipContent } from '../components/reader/TipContent';
 import { PdfPlaceholderView } from '../components/reader/PdfPlaceholderView';
@@ -79,6 +80,7 @@ export const ArticleReaderPage: React.FC = () => {
   const [newAnnotationText, setNewAnnotationText] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string>('');
 
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
@@ -694,20 +696,8 @@ export const ArticleReaderPage: React.FC = () => {
     }
   };
 
-  const handleFileUpload = async () => {
-    if (!id) return;
-    setUploading(true);
-    try {
-      const filePath = await projectService.openPdfDialog();
-      if (filePath) {
-        await projectService.uploadPdf(parseInt(id), filePath);
-        await fetchData();
-      }
-    } catch (err) {
-      alert('Erro ao vincular PDF');
-    } finally {
-      setUploading(false);
-    }
+  const handleFileUpload = () => {
+    setIsAttachModalOpen(true);
   };
 
   const addHighlight = async (highlight: any) => {
@@ -1378,6 +1368,15 @@ export const ArticleReaderPage: React.FC = () => {
           setIsCategoriesOpen={setIsCategoriesOpen}
           projectCategories={projectCategories}
           articleCategories={articleCategories}
+        />
+      )}
+      {isAttachModalOpen && id && article && (
+        <AttachPdfModal
+          isOpen={isAttachModalOpen}
+          articleId={parseInt(id)}
+          articleTitle={article.title}
+          onClose={() => setIsAttachModalOpen(false)}
+          onAttached={fetchData}
         />
       )}
     </div>

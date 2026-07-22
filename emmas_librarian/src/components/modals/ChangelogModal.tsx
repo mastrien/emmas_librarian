@@ -82,6 +82,42 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                   paddingBottom: '0.25rem',
                 }}
               >
+                Versão 1.1.17
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <li>
+                  <strong>Interface Limpa & Agrupamento de Ações:</strong> Menu de navegação principal e botões de ação do projeto organizados em dropdowns expansíveis por movimento do mouse (hover) com transições suaves.
+                </li>
+                <li>
+                  <strong>Correção de Importação de PDFs entre Projetos:</strong> Solucionado o erro no banco de dados SQLite ao clonar artigos com PDFs anexados e embeddings vetoriais entre projetos.
+                </li>
+                <li>
+                  <strong>Organização da Biblioteca Global de PDFs:</strong> Arquivos salvos com marca d'água de data e nome original (`YYYYMMDD_HHMMSS_nome.pdf`), com layout da tabela aprimorado para telas menores.
+                </li>
+                <li>
+                  <strong>Estabilidade na Suíte E2E:</strong> Testes End-to-End no Playwright 100% parametrizados e homologados.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  margin: '0 0 0.75rem 0',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
                 Versão 1.1.16
               </h3>
               <ul

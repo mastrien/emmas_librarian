@@ -2,10 +2,10 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { launchApp, getFirstWindow, createProject } = require('./helpers');
+const { launchApp, getFirstWindow, createProject, clickAddArticlesOption } = require('./helpers');
 
 async function addManualArticle(window, title) {
-  await window.click('button:has-text("Manual")');
+  await clickAddArticlesOption(window, 'Artigo Manual');
   await window.fill('input[placeholder="Ex: A New Approach to Bibliometrics"]', title);
   await window.fill('input[placeholder="Ex: John Doe, Jane Smith"]', 'Emma Watson');
   await window.click('button[type="submit"]');
@@ -25,8 +25,13 @@ test('F-06 Export bibliographic references to CSV', async () => {
     await createProject(window, projectName);
     await addManualArticle(window, 'Export E2E Test Article');
 
+    // Auto-accept alert dialog on export completion
+    window.on('dialog', async (dialog) => {
+      await dialog.accept().catch(() => {});
+    });
+
     // Select Categorias tab to reveal the Exportar CSV button
-    await window.click('text="Categorias"');
+    await window.click('button[data-testid="tab-categories"]');
 
     // Click Export CSV button
     await window.click('button:has-text("Exportar CSV")');

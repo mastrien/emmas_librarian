@@ -2,6 +2,7 @@
 import { ipcMain, app, dialog, shell, BrowserWindow } from 'electron';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { DatabaseAdapter } from '../database/DatabaseAdapter';
 import { SearchOrchestrator } from '../services/SearchOrchestrator';
 import { QueryTranslator, queryTranslator } from '../services/QueryTranslator';
@@ -143,15 +144,51 @@ export function setupIpcRegistries() {
   ipcMain.handle(IpcChannel.HIGHLIGHTS_DELETE, (event, id) => {
     return db.deleteHighlight(id);
   });
-  // PDF
-  ipcMain.handle(IpcChannel.PDF_UPLOAD, async (event, articleId, sourceFilePath) => {
+  // Helper to hash files
+  function getFileHash(filePath: string): string {
+    const fileBuffer = fs.readFileSync(filePath);
+    return crypto.createHash('sha256').update(fileBuffer).digest('hex');
+  }
+
+  // Helper to generate stored PDF filename: Date stamp + original filename
+  function generateStoredFilename(sourceFilePath: string): string {
+    const originalName = path.basename(sourceFilePath).replace(/[^a-zA-Z0-9._-]/g, '_');
+    const now = new Date();
+    const dateStamp = now.toISOString().slice(0, 10);
+    const timeStamp = now.toTimeString().slice(0, 8).replace(/:/g, '');
+    return `${dateStamp}_${timeStamp}_${originalName}`;
+  }
+
+  // Helper to store PDF file in library storage
+  function savePdfToStorage(sourceFilePath: string): { destPath: string; hash: string; filename: string; size: number } {
+    const hash = getFileHash(sourceFilePath);
     const pdfsDir = path.join(app.getPath('userData'), 'storage', 'pdfs');
     if (!fs.existsSync(pdfsDir)) {
       fs.mkdirSync(pdfsDir, { recursive: true });
     }
-    const destPath = path.join(pdfsDir, `${articleId}_${Date.now()}.pdf`);
-    fs.copyFileSync(sourceFilePath, destPath);
-    db.updateArticleFilePath(articleId, destPath);
+    const existing = db.getPdfByHash(hash);
+    let destPath: string;
+    let storedName: string;
+
+    if (existing && existing.file_path && fs.existsSync(existing.file_path)) {
+      destPath = existing.file_path;
+      storedName = existing.filename || path.basename(destPath);
+    } else {
+      storedName = generateStoredFilename(sourceFilePath);
+      destPath = path.join(pdfsDir, storedName);
+      if (!fs.existsSync(destPath)) {
+        fs.copyFileSync(sourceFilePath, destPath);
+      }
+    }
+    const size = fs.statSync(destPath).size;
+    db.registerPdfInLibrary(destPath, hash, storedName, size);
+    return { destPath, hash, filename: storedName, size };
+  }
+
+  // PDF
+  ipcMain.handle(IpcChannel.PDF_UPLOAD, async (event, articleId, sourceFilePath) => {
+    const { destPath } = savePdfToStorage(sourceFilePath);
+    db.linkPdfToArticle(articleId, destPath);
     return destPath;
   });
   ipcMain.handle(IpcChannel.PDF_GET, async (event, articleId) => {
@@ -164,16 +201,53 @@ export function setupIpcRegistries() {
   });
   ipcMain.handle(IpcChannel.PDF_UNLINK, async (event, articleId) => {
     const article = db.getArticle(articleId);
-    if (article && article.local_file_path) {
+    if (!article || !article.local_file_path) return;
+    const filePath = article.local_file_path;
+    db.unlinkPdfFromArticle(articleId);
+    const refCount = db.getArticlesForPdf(filePath).length;
+    if (refCount === 0 && fs.existsSync(filePath)) {
       try {
-        if (fs.existsSync(article.local_file_path)) {
-          fs.unlinkSync(article.local_file_path);
-        }
+        fs.unlinkSync(filePath);
+        db.deletePdfRecord(filePath);
       } catch (err) {
         console.error('Failed to delete physical PDF file:', err);
       }
-      db.updateArticleFilePath(articleId, null);
     }
+  });
+
+  // Global PDF Library channels
+  ipcMain.handle(IpcChannel.PDF_LIBRARY_LIST, async () => {
+    return db.getStoredPdfs();
+  });
+  ipcMain.handle(IpcChannel.PDF_LIBRARY_DELETE, async (event, filePath) => {
+    const articleIds = db.deletePdfLibraryRecord(filePath);
+    if (fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+      } catch (err) {
+        console.error('Failed to delete physical PDF file:', err);
+      }
+    }
+    return articleIds;
+  });
+  ipcMain.handle(IpcChannel.PDF_LIBRARY_LINK, async (event, articleId, filePath) => {
+    db.linkPdfToArticle(articleId, filePath);
+  });
+  ipcMain.handle(IpcChannel.PDF_LIBRARY_UPLOAD, async (event, sourceFilePath) => {
+    const { destPath } = savePdfToStorage(sourceFilePath);
+    return destPath;
+  });
+
+  // Cross-project Article Sharing
+  ipcMain.handle(IpcChannel.ARTICLES_IMPORT_FROM_PROJECT, async (event, sourceProjectId, destProjectId, articleIds) => {
+    const sourceProj = db.getProject(sourceProjectId);
+    const sourceName = sourceProj ? sourceProj.name : `Projeto ID ${sourceProjectId}`;
+    const unifiedQuery = `Importação de artigos do projeto '${sourceName}'`;
+    const translated = { import: `Origem: Projeto ID ${sourceProjectId}` };
+    const breakdown = { import: { count: articleIds.length } };
+    const searchId = db.saveSearchHistory(destProjectId, unifiedQuery, translated, articleIds.length, breakdown);
+    db.importArticlesFromProject(sourceProjectId, destProjectId, articleIds, searchId);
+    return searchId;
   });
   ipcMain.handle(IpcChannel.ARTICLES_CREATE_MANUAL, async (event, projectId, data, sourceFilePath) => {
     let searchId = undefined;
@@ -243,10 +317,9 @@ export function setupIpcRegistries() {
           csl_json: JSON.stringify({}),
           search_id: searchId,
         });
-        // Copy the PDF
-        const destPath = path.join(pdfsDir, `${articleId}_${Date.now()}.pdf`);
-        fs.copyFileSync(sourceFilePath, destPath);
-        db.updateArticleFilePath(articleId, destPath);
+        // Copy the PDF and register in Global PDF Library
+        const { destPath } = savePdfToStorage(sourceFilePath);
+        db.linkPdfToArticle(articleId, destPath);
         addedCount++;
       } catch (err) {
         console.error('Failed to copy PDF file for batch import:', err);

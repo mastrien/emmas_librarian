@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import {
   X,
   Calendar,
@@ -14,19 +15,52 @@ import {
   Layers,
   Hash,
   Bookmark,
+  Upload,
+  Eye,
+  Trash2,
 } from 'lucide-react';
 import { Article } from '../../types';
+import { useProjectService } from '../../contexts/ServicesContext';
 
 interface ArticleDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   article: Article | null;
+  history?: any[];
+  onNavigateToSearch?: (searchId: number) => void;
+  onArticleUpdated?: () => void;
+  onAttachPdf?: (article: Article) => void;
 }
 
-export const ArticleDetailsModal: React.FC<ArticleDetailsModalProps> = ({ isOpen, onClose, article }) => {
+export const ArticleDetailsModal: React.FC<ArticleDetailsModalProps> = ({
+  isOpen,
+  onClose,
+  article,
+  history = [],
+  onNavigateToSearch,
+  onArticleUpdated,
+  onAttachPdf,
+}) => {
   if (!isOpen || !article) return null;
 
   const isOa = article.is_oa === 1;
+
+  const originSearch = article.search_id && history
+    ? history.find((h) => h.id === article.search_id)
+    : null;
+
+  const projectService = useProjectService();
+
+  const handleUnlinkPdf = async () => {
+    if (window.confirm('Deseja realmente desvincular o PDF deste artigo? O arquivo físico será removido do armazenamento local.')) {
+      try {
+        await projectService.unlinkPdf(article.id);
+        if (onArticleUpdated) onArticleUpdated();
+      } catch (err) {
+        alert('Erro ao desvincular o PDF: ' + err);
+      }
+    }
+  };
 
   // Helper to parse keywords
   const parseKeywords = (keywordsStr?: string): string[] => {
@@ -278,6 +312,141 @@ export const ArticleDetailsModal: React.FC<ArticleDetailsModalProps> = ({ isOpen
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>ISSN</div>
                     <div style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{article.issn}</div>
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* Origin */}
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+              <div
+                style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.4rem' }}
+              >
+                ORIGEM NO PROJETO
+              </div>
+              {article.search_id ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {originSearch ? (
+                    <button
+                      onClick={() => onNavigateToSearch && onNavigateToSearch(article.search_id!)}
+                      style={{
+                        background: 'rgba(79, 70, 229, 0.1)',
+                        border: '1px solid var(--color-primary)',
+                        color: 'var(--color-primary)',
+                        padding: '0.3rem 0.75rem',
+                        borderRadius: 'var(--radius-md)',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        transition: 'all var(--transition-fast)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--color-primary)';
+                        e.currentTarget.style.color = 'white';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(79, 70, 229, 0.1)';
+                        e.currentTarget.style.color = 'var(--color-primary)';
+                      }}
+                    >
+                      {originSearch.unified_query.startsWith('Importação') ? (
+                        <>📦 Importação #{article.search_id}</>
+                      ) : (
+                        <>🔍 Busca #{article.search_id}</>
+                      )}
+                      {" - "}
+                      {originSearch.unified_query}
+                    </button>
+                  ) : (
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                      Busca #{article.search_id} (Histórico carregando...)
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <span
+                  style={{
+                    padding: '0.2rem 0.6rem',
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    border: '1px solid #f59e0b',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    color: '#f59e0b',
+                    display: 'inline-block',
+                  }}
+                >
+                  Cadastro Manual ⚠️
+                </span>
+              )}
+            </div>
+
+            {/* Arquivo PDF */}
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+              <div
+                style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '0.4rem' }}
+              >
+                ARQUIVO PDF
+              </div>
+              {article.local_file_path ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <Link
+                    to={`/articles/${article.id}`}
+                    onClick={onClose}
+                    className="btn-primary"
+                    style={{
+                      padding: '0.3rem 0.75rem',
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                    }}
+                  >
+                    <Eye size={14} /> Visualizar PDF
+                  </Link>
+                  <button
+                    onClick={handleUnlinkPdf}
+                    className="btn-secondary"
+                    style={{
+                      padding: '0.3rem 0.75rem',
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      color: 'var(--color-danger)',
+                      border: '1px solid rgba(239, 68, 68, 0.2)',
+                      background: 'rgba(239, 68, 68, 0.05)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Trash2 size={14} /> Desvincular PDF
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <button
+                    onClick={() => onAttachPdf && onAttachPdf(article)}
+                    className="btn-secondary"
+                    style={{
+                      padding: '0.3rem 0.75rem',
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Upload size={14} /> Anexar PDF
+                  </button>
                 </div>
               )}
             </div>

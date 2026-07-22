@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { launchApp, getFirstWindow } = require('./helpers');
+const { launchApp, getFirstWindow, navigateTo } = require('./helpers');
 
 async function mockBackupExport(window, mockPath) {
   await window.evaluate((path) => {
@@ -19,7 +19,7 @@ async function triggerBackup(window) {
     await dialog.accept();
   });
 
-  await window.click('text="Configurações"');
+  await navigateTo(window, 'Configurações');
   await window.click('button:has-text("Criar Backup Completo")');
 }
 

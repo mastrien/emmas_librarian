@@ -35,6 +35,10 @@ describe('Layout Component', () => {
     });
 
     expect(screen.getAllByText("Emma's Librarian")[0]).toBeInTheDocument();
+    
+    // Open 3-dots dropdown menu
+    fireEvent.mouseEnter(screen.getByTitle('Mais opções'));
+    
     expect(screen.getByText('Projetos')).toBeInTheDocument();
     expect(screen.getByText('Configurações')).toBeInTheDocument();
     expect(screen.getByText('Test Children')).toBeInTheDocument();

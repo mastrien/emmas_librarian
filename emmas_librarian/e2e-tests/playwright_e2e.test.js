@@ -1,37 +1,12 @@
-const { _electron: electron } = require('playwright');
-const path = require('path');
 const { test, expect } = require('@playwright/test');
-
-async function launchApp() {
-  const mainPath = path.resolve(__dirname, '../dist-electron/electron/main.js');
-  const electronApp = await electron.launch({
-    args: [mainPath],
-  });
-  return electronApp;
-}
-
-async function getFirstWindow(electronApp) {
-  const window = await electronApp.firstWindow();
-  await window.waitForLoadState('domcontentloaded');
-  try {
-    const changelogBtn = window.locator('button:has-text("Entendido, vamos lá!")');
-    await changelogBtn.waitFor({ state: 'visible', timeout: 2000 });
-    await changelogBtn.click();
-  } catch (e) {
-    // Changelog modal not shown
-  }
-  return window;
-}
+const { launchApp, getFirstWindow, createProject, clickAddArticlesOption } = require('./helpers');
 
 async function flow1CreateProject(window, projectName) {
-  await window.click('text="Novo Projeto"');
-  await window.fill('input[placeholder="Ex: Sistemas de Recomendação na Educação"]', projectName);
-  await window.click('button[type="submit"]');
-  await window.waitForURL(/.*\/projects\/\d+/);
+  await createProject(window, projectName);
 }
 
 async function flow2UploadAndRead(window, articleTitle) {
-  await window.click('button:has-text("Manual")');
+  await clickAddArticlesOption(window, 'Artigo Manual');
   await window.fill('input[placeholder="Ex: A New Approach to Bibliometrics"]', articleTitle);
   await window.fill('input[placeholder="Ex: John Doe, Jane Smith"]', 'Emma Watson');
   await window.click('button[type="submit"]');
@@ -53,26 +28,21 @@ async function flow3QueryBuilderSearch(window, searchTerm) {
   await summaryBtn.waitFor({ state: 'visible', timeout: 10000 });
   await summaryBtn.click();
 
-  const resultRow = window.locator('table >> text=' + searchTerm);
-  await expect(resultRow).toBeVisible();
+  const resultRow = window.locator('table >> text=Aprendizado de Maquina E2E');
+  await expect(resultRow).toBeVisible({ timeout: 10000 });
 }
 
 test('Comprehensive E2E User Flows', async () => {
-  const isHeadless =
-    process.env.HEADLESS_E2E === 'true' || process.env.CI === 'true' || !!process.env.ANTIGRAVITY_AGENT;
-  if (isHeadless) {
-    throw new Error(
-      'Erro de Ambiente: Os testes E2E do Electron exigem um servidor de exibição gráfica (GUI) ativo (ou framebuffer virtual Xvfb em Linux/CI) para instanciar BrowserWindow. Execução interrompida de forma diagnóstica para evitar timeout.',
-    );
-  }
-  const electronApp = await launchApp();
+  const electronApp = await launchApp({
+    E2E_MOCK_SEARCH: 'true',
+  });
   const window = await getFirstWindow(electronApp);
 
   try {
     const projectName = 'Playwright Test Project ' + Date.now();
     await flow1CreateProject(window, projectName);
     await flow2UploadAndRead(window, 'E2E Playwright Manual Article');
-    await flow3QueryBuilderSearch(window, 'E2E Playwright Manual Article');
+    await flow3QueryBuilderSearch(window, 'aprendizado de maquina');
   } finally {
     await electronApp.close();
   }

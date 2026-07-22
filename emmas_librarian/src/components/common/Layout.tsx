@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Settings, Gift } from 'lucide-react';
+import { Settings, Sparkles, FileText, MoreVertical, Folder } from 'lucide-react';
 import { HelpButton } from './HelpButton';
 import { Logo } from './Logo';
 import { ChangelogModal } from '../modals/ChangelogModal';
@@ -38,6 +38,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const isReader = location.pathname.startsWith('/articles/');
   const [showChangelog, setShowChangelog] = useState(false);
   const [currentVersion, setCurrentVersion] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = () => {
+    if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
+    setIsMenuOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    leaveTimeoutRef.current = setTimeout(() => {
+      setIsMenuOpen(false);
+    }, 200);
+  };
 
   useEffect(() => {
     const checkVersion = async () => {
@@ -56,10 +70,21 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     checkVersion();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleCloseChangelog = () => {
     localStorage.setItem('last_seen_version', currentVersion);
     setShowChangelog(false);
   };
+
   if (isReader) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
@@ -99,25 +124,89 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Emma's Librarian</h1>
         </Link>
 
-        <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <nav style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <HelpButton />
-          <button
-            onClick={() => setShowChangelog(true)}
-            className="btn-secondary"
-            style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+
+          <div
+            ref={menuRef}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            style={{ position: 'relative' }}
           >
-            <Gift size={18} /> Novidades
-          </button>
-          <Link to="/" className="btn-secondary" style={{ padding: '0.5rem 1rem' }}>
-            Projetos
-          </Link>
-          <Link
-            to="/settings"
-            className="btn-secondary"
-            style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            <Settings size={18} /> Configurações
-          </Link>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              title="Mais opções"
+              style={{
+                background: isMenuOpen ? 'var(--bg-surface-hover)' : 'transparent',
+                border: 'none',
+                padding: '0.5rem',
+                cursor: 'pointer',
+                color: 'var(--text-heading)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 'var(--radius-md)',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <MoreVertical size={22} />
+            </button>
+
+            {isMenuOpen && (
+              <div
+                className="glass-panel"
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: '100%',
+                  minWidth: '200px',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                  zIndex: 100,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '0.5rem',
+                  gap: '0.25rem',
+                  backgroundColor: 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                <Link
+                  to="/"
+                  className="menu-dropdown-item"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Folder size={18} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Projetos
+                </Link>
+
+                <Link
+                  to="/pdfs"
+                  className="menu-dropdown-item"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <FileText size={18} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Biblioteca de PDFs
+                </Link>
+
+                <Link
+                  to="/settings"
+                  className="menu-dropdown-item"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Settings size={18} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Configurações
+                </Link>
+
+                <button
+                  className="menu-dropdown-item"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setShowChangelog(true);
+                  }}
+                >
+                  <Sparkles size={18} style={{ color: '#f59e0b', flexShrink: 0 }} /> Novidades
+                </button>
+              </div>
+            )}
+          </div>
         </nav>
       </header>
 

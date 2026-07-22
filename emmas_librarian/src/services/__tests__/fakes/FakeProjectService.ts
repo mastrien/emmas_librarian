@@ -170,6 +170,18 @@ export class FakeProjectService implements IProjectService {
 
   saveExportedFile = vi.fn(async (_content: string, _defaultPath: string): Promise<boolean> => true);
 
+  getStoredPdfs = vi.fn(async (): Promise<any[]> => []);
+
+  deletePdfLibraryRecord = vi.fn(async (_filePath: string): Promise<number[]> => []);
+
+  linkPdfToArticle = vi.fn(async (_articleId: number, _filePath: string): Promise<void> => undefined);
+
+  uploadPdfToLibrary = vi.fn(async (_filePath: string): Promise<string> => '');
+
+  importArticlesFromProject = vi.fn(
+    async (_sourceProjectId: number, _destProjectId: number, _articleIds: number[]): Promise<number> => 0,
+  );
+
   // ── Project Documents ───────────────────────────────────────────────
   openProjectDocument = vi.fn(async (_url: string, _localFilePath?: string): Promise<void> => undefined);
 

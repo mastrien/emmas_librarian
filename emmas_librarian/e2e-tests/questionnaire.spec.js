@@ -2,13 +2,13 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { launchApp, getFirstWindow, createProject } = require('./helpers');
+const { launchApp, getFirstWindow, createProject, clickAddArticlesOption } = require('./helpers');
 
 async function importPdf(window) {
   window.on('dialog', async (dialog) => {
-    await dialog.accept();
+    await dialog.accept().catch(() => {});
   });
-  await window.click('button[title="Importar PDFs em Lote"]');
+  await clickAddArticlesOption(window, 'Importar PDFs em Lote');
   await window.waitForSelector('table >> text=E2E_Import_Test_Article', { timeout: 10000 });
 }
 
