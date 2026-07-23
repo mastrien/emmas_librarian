@@ -6,6 +6,8 @@ import type {
   AIModelConfig,
   AISkill,
   AIProvider,
+  ScientificVenue,
+  MilestoneStatus,
 } from '../../../types';
 import { vi, type Mock } from 'vitest';
 import type {
@@ -361,6 +363,27 @@ export class FakeProjectService implements IProjectService {
   updateQuestionSet = vi.fn<any>().mockResolvedValue(undefined);
   deleteQuestionSet = vi.fn<any>().mockResolvedValue(undefined);
   duplicateQuestionSet = vi.fn<any>().mockResolvedValue(2);
+
+  // ── Agenda / Scientific Venues ─────────────────────────────────────
+  getScientificVenues = vi.fn(async (): Promise<ScientificVenue[]> => []);
+  createScientificVenue = vi.fn(
+    async (venueData: Omit<ScientificVenue, 'id' | 'created_at'>): Promise<ScientificVenue> => ({
+      id: 1,
+      ...venueData,
+      created_at: new Date().toISOString(),
+      milestones: (venueData.milestones || []).map((m, idx) => ({ id: idx + 1, venue_id: 1, ...m })),
+    }),
+  );
+  updateScientificVenue = vi.fn(
+    async (id: number, venueData: Omit<ScientificVenue, 'id' | 'created_at'>): Promise<ScientificVenue> => ({
+      id,
+      ...venueData,
+      created_at: new Date().toISOString(),
+      milestones: (venueData.milestones || []).map((m, idx) => ({ id: idx + 1, venue_id: id, ...m })),
+    }),
+  );
+  deleteScientificVenue = vi.fn(async (_id: number): Promise<boolean> => true);
+  toggleMilestoneStatus = vi.fn(async (_milestoneId: number, _status: MilestoneStatus): Promise<boolean> => true);
 
   // ── Factory & Utilities ─────────────────────────────────────────────
 

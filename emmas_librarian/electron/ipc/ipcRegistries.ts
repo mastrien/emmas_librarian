@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { DatabaseAdapter } from '../database/DatabaseAdapter';
+import { ScientificVenueRepository } from '../database/ScientificVenueRepository';
 import { SearchOrchestrator } from '../services/SearchOrchestrator';
 import { QueryTranslator, queryTranslator } from '../services/QueryTranslator';
 import { ApiIntegrator } from '../services/ApiIntegrator';
@@ -582,13 +583,22 @@ export function setupIpcRegistries() {
   ipcMain.handle(IpcChannel.BACKUP_LIST_AUTO, () => {
     return backupService.listAutoBackups();
   });
-  ipcMain.handle(IpcChannel.BACKUP_RESTORE_AUTO, (event, filename) => {
-    const success = backupService.restoreAutoBackup(filename);
-    if (success) {
-      app.relaunch();
-      app.exit(0);
-    }
-    return success;
+  const venueRepo = new ScientificVenueRepository(db.getDB());
+
+  ipcMain.handle(IpcChannel.SCIENTIFIC_VENUES_GET_ALL, () => {
+    return venueRepo.getAllVenues();
+  });
+  ipcMain.handle(IpcChannel.SCIENTIFIC_VENUE_CREATE, (event, venueData) => {
+    return venueRepo.createVenue(venueData);
+  });
+  ipcMain.handle(IpcChannel.SCIENTIFIC_VENUE_UPDATE, (event, { id, venueData }) => {
+    return venueRepo.updateVenue(id, venueData);
+  });
+  ipcMain.handle(IpcChannel.SCIENTIFIC_VENUE_DELETE, (event, id) => {
+    return venueRepo.deleteVenue(id);
+  });
+  ipcMain.handle(IpcChannel.SCIENTIFIC_MILESTONE_TOGGLE_STATUS, (event, { milestoneId, status }) => {
+    return venueRepo.toggleMilestoneStatus(milestoneId, status);
   });
 }
 

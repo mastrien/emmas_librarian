@@ -332,3 +332,27 @@ CREATE TABLE IF NOT EXISTS pdf_chunks (
 
 -- Vetores (sqlite-vec)
 -- A tabela pdf_chunk_embeddings é criada dinamicamente no VectorStore.ts para suportar dimensões variadas.
+
+CREATE TABLE IF NOT EXISTS scientific_venues (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    acronym TEXT,
+    category TEXT DEFAULT 'other',
+    url TEXT,
+    color TEXT DEFAULT '#3b82f6',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS scientific_milestones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    venue_id INTEGER NOT NULL,
+    label TEXT NOT NULL,
+    field_type TEXT DEFAULT 'single',
+    target_date TEXT NOT NULL,
+    end_date TEXT,
+    has_time INTEGER DEFAULT 0,
+    target_time TEXT,
+    status TEXT DEFAULT 'pending',
+    FOREIGN KEY (venue_id) REFERENCES scientific_venues(id) ON DELETE CASCADE
+);
+

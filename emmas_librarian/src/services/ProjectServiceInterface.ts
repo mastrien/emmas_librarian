@@ -28,6 +28,9 @@ import type {
   AIModelConfig,
   AISkill,
   AIProvider,
+  ScientificVenue,
+  ScientificMilestone,
+  MilestoneStatus,
 } from '../types';
 
 /** Return type for AI-powered metadata extraction. */
@@ -243,4 +246,11 @@ export interface IProjectService {
   // ── Sync ──────────────────────────────────────────────────────────
   exportProject(projectId: number): Promise<string | null>;
   importProject(filePath?: string): Promise<number | null>;
+
+  // ── Agenda / Scientific Venues ─────────────────────────────────────
+  getScientificVenues(): Promise<ScientificVenue[]>;
+  createScientificVenue(venueData: Omit<ScientificVenue, 'id' | 'created_at'>): Promise<ScientificVenue>;
+  updateScientificVenue(id: number, venueData: Omit<ScientificVenue, 'id' | 'created_at'>): Promise<ScientificVenue>;
+  deleteScientificVenue(id: number): Promise<boolean>;
+  toggleMilestoneStatus(milestoneId: number, status: MilestoneStatus): Promise<boolean>;
 }

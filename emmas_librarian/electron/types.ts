@@ -9,6 +9,33 @@ export interface AIModelConfig {
   updated_at: string;
 }
 
+export type VenueCategory = 'conference' | 'journal' | 'workshop' | 'symposium' | 'other';
+export type MilestoneFieldType = 'single' | 'range';
+export type MilestoneStatus = 'pending' | 'completed';
+
+export interface ScientificMilestone {
+  id?: number;
+  venue_id?: number;
+  label: string;
+  field_type: MilestoneFieldType;
+  target_date: string;
+  end_date?: string;
+  has_time: boolean;
+  target_time?: string;
+  status: MilestoneStatus;
+}
+
+export interface ScientificVenue {
+  id: number;
+  title: string;
+  acronym?: string;
+  category: VenueCategory;
+  url?: string;
+  color?: string;
+  created_at?: string;
+  milestones: ScientificMilestone[];
+}
+
 export interface Project {
   id: number;
   name: string;
@@ -193,6 +220,11 @@ export enum IpcChannel {
   QUESTION_SETS_CREATE = 'questionSets:create',
   QUESTION_SETS_UPDATE = 'questionSets:update',
   QUESTION_SETS_DELETE = 'questionSets:delete',
+  SCIENTIFIC_VENUES_GET_ALL = 'scientificVenues:getAll',
+  SCIENTIFIC_VENUE_CREATE = 'scientificVenue:create',
+  SCIENTIFIC_VENUE_UPDATE = 'scientificVenue:update',
+  SCIENTIFIC_VENUE_DELETE = 'scientificVenue:delete',
+  SCIENTIFIC_MILESTONE_TOGGLE_STATUS = 'scientificMilestone:toggleStatus',
   QUESTION_SETS_DUPLICATE = 'questionSets:duplicate',
   INVESTIGATION_RESULTS_SAVE = 'investigationResults:save',
   INVESTIGATION_RESULTS_GET = 'investigationResults:get',

@@ -490,4 +490,21 @@ export const projectService = {
   async importProject(filePath?: string): Promise<number | null> {
     return (await safeInvoke(IpcChannel.SYNC_IMPORT_PROJECT, filePath)) as any;
   },
+
+  // Agenda / Scientific Venues
+  async getScientificVenues(): Promise<any[]> {
+    return (await safeInvoke(IpcChannel.SCIENTIFIC_VENUES_GET_ALL)) as any[];
+  },
+  async createScientificVenue(venueData: any): Promise<any> {
+    return (await safeInvoke(IpcChannel.SCIENTIFIC_VENUE_CREATE, venueData)) as any;
+  },
+  async updateScientificVenue(id: number, venueData: any): Promise<any> {
+    return (await safeInvoke(IpcChannel.SCIENTIFIC_VENUE_UPDATE, { id, venueData })) as any;
+  },
+  async deleteScientificVenue(id: number): Promise<boolean> {
+    return (await safeInvoke(IpcChannel.SCIENTIFIC_VENUE_DELETE, id)) as boolean;
+  },
+  async toggleMilestoneStatus(milestoneId: number, status: any): Promise<boolean> {
+    return (await safeInvoke(IpcChannel.SCIENTIFIC_MILESTONE_TOGGLE_STATUS, { milestoneId, status })) as boolean;
+  },
 };
