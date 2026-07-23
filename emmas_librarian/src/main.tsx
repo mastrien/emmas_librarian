@@ -82,6 +82,7 @@ const TermsOfUsePage = lazy(() =>
   import('./pages/TermsOfUsePage').then((module) => ({ default: module.TermsOfUsePage })),
 );
 const PdfLibraryPage = lazy(() => import('./pages/PdfLibraryPage').then((module) => ({ default: module.PdfLibraryPage })));
+const AgendaPage = lazy(() => import('./pages/AgendaPage').then((module) => ({ default: module.AgendaPage })));
 import './style.css';
 
 // Initialize theme and accent
@@ -113,6 +114,7 @@ if (rootEl)
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/terms" element={<TermsOfUsePage />} />
               <Route path="/pdfs" element={<PdfLibraryPage />} />
+              <Route path="/agenda" element={<AgendaPage />} />
             </Routes>
           </Suspense>
         </Layout>
