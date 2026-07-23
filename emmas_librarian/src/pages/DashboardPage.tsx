@@ -33,7 +33,11 @@ export const DashboardPage: React.FC = () => {
   }, []);
 
   const currentTimeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const currentDateStr = now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  const day = now.getDate();
+  const monthShort = now.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+  const year = now.getFullYear();
+  const weekday = now.toLocaleDateString('pt-BR', { weekday: 'long' });
+  const currentDateStr = `${weekday}, ${day} ${monthShort} ${year}`;
 
   const loadData = async () => {
     try {
@@ -301,7 +305,7 @@ export const DashboardPage: React.FC = () => {
             Seus Projetos
           </h1>
           <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-            Gerencie e acompanhe suas revisões systematicas da literatura.
+            Gerencie e acompanhe suas revisões sistemáticas da literatura.
           </p>
         </div>
 

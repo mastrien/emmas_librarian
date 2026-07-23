@@ -70,7 +70,7 @@ export const AgendaPage: React.FC = () => {
   };
 
   return (
-    <div className="fade-in">
+    <div className="fade-in" style={{ maxWidth: '1200px', margin: '0 auto' }}>
       <ScientificAgendaView
         venues={venues}
         diarySet={new Set()}
