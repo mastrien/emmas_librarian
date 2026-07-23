@@ -35,7 +35,7 @@ describe('VenueFormModal (TDD)', () => {
       target: { value: 'Conferência de IA' },
     });
 
-    const addCustomBtn = screen.getByText('+ Criar Novo Campo');
+    const addCustomBtn = screen.getByText(/Criar Novo Campo/i);
     fireEvent.click(addCustomBtn);
 
     const labelInput = screen.getByPlaceholderText(/Ex: Avaliação de Pares/i);
@@ -72,7 +72,7 @@ describe('VenueFormModal (TDD)', () => {
       />,
     );
 
-    fireEvent.click(screen.getByText('+ Criar Novo Campo'));
+    fireEvent.click(screen.getByText(/Criar Novo Campo/i));
 
     const labelInput = screen.getByPlaceholderText(/Ex: Avaliação de Pares/i);
     fireEvent.change(labelInput, { target: { value: 'Revisão Final' } });

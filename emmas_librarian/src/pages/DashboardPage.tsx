@@ -102,10 +102,10 @@ export const DashboardPage: React.FC = () => {
   const globalStats = projects.reduce(
     (acc, p: any) => {
       if (p.stats) {
-        acc.total += p.stats.total;
-        acc.read += p.stats.read;
         acc.active += p.stats.active;
+        acc.read += p.stats.read;
         acc.archived += p.stats.archived;
+        acc.total += p.stats.total;
         acc.withPdf += p.stats.withPdf;
         if (p.stats.diaryDates) {
           p.stats.diaryDates.forEach((d: string) => acc.diarySet.add(d));
@@ -113,8 +113,32 @@ export const DashboardPage: React.FC = () => {
       }
       return acc;
     },
-    { total: 0, read: 0, active: 0, archived: 0, withPdf: 0, diarySet: new Set<string>() },
+    { active: 0, read: 0, archived: 0, total: 0, withPdf: 0, diarySet: new Set<string>() },
   );
+
+  const chartData = {
+    labels: ['Com PDF Vinculado', 'Sem PDF'],
+    datasets: [
+      {
+        data: [globalStats.withPdf, globalStats.total - globalStats.withPdf],
+        backgroundColor: ['#10b981', '#6b7280'],
+        borderWidth: 0,
+      },
+    ],
+  };
+
+  const statusChartData = {
+    labels: ['Ativos', 'Lidos', 'Arquivados'],
+    datasets: [
+      {
+        data: [globalStats.active, globalStats.read, globalStats.archived],
+        backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],
+        borderWidth: 0,
+      },
+    ],
+  };
+
+  const hasData = globalStats.total > 0;
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -158,7 +182,7 @@ export const DashboardPage: React.FC = () => {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      style={{ minHeight: '80vh', position: 'relative' }}
+      style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', minHeight: '100vh' }}
     >
       {/* Overlay do Drag and Drop */}
       {isDragging &&
@@ -277,7 +301,7 @@ export const DashboardPage: React.FC = () => {
             Seus Projetos
           </h1>
           <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-            Gerencie e acompanhe suas revisões sistemáticas da literatura.
+            Gerencie e acompanhe suas revisões systematicas da literatura.
           </p>
         </div>
 
@@ -416,126 +440,153 @@ export const DashboardPage: React.FC = () => {
             )}
           </div>
 
-          {/* Seção dos Gráficos Globais (Metade da Largura Cada Um) */}
-          {projects.length > 0 && (
-            <div
+          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+            <Link
+              to="/terms"
               style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '1.5rem',
-                marginTop: '3rem',
+                color: 'var(--text-muted)',
+                textDecoration: 'none',
+                fontSize: '0.85rem',
+                padding: '0.5rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                transition: 'background-color var(--transition-fast)',
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-surface)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
             >
-              {/* Gráfico 1: Status dos Artigos */}
+              Ao usar o sistema, você concorda com os Termos de Uso
+            </Link>
+          </div>
+
+          {/* Seção dos Gráficos Globais (Restaurada para o Design Original) */}
+          {!loading && projects.length > 0 && hasData && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', marginTop: '3rem' }}>
               <div
-                className="glass-panel"
+                className="fade-in"
                 style={{
-                  padding: '1.5rem',
-                  borderRadius: 'var(--radius-lg)',
-                  backgroundColor: 'var(--bg-surface)',
-                  border: '1px solid var(--border-color)',
+                  gridColumn: 'span 6',
                   display: 'flex',
-                  flexDirection: 'column',
+                  background: 'transparent',
+                  alignItems: 'center',
                   gap: '1rem',
+                  flexDirection: 'row',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <PieChartIcon size={20} color="var(--color-primary)" />
-                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-heading)' }}>
-                    Distribuição dos Artigos (Global)
-                  </h3>
+                <div style={{ width: '100px', height: '100px', position: 'relative', flexShrink: 0 }}>
+                  <Pie
+                    data={statusChartData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 },
+                      },
+                    }}
+                  />
                 </div>
-
-                {globalStats.total === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                    Nenhum artigo importado ainda.
+                <div>
+                  <h3
+                    style={{
+                      margin: '0 0 1rem 0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '1rem',
+                    }}
+                  >
+                    <PieChartIcon size={16} /> Progresso Geral
+                  </h3>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {statusChartData.datasets[0].data.map((val, index) => {
+                      if (val === 0) return null;
+                      return (
+                        <div key={index}>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}
+                          >
+                            <div
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                backgroundColor: statusChartData.datasets[0].backgroundColor[index],
+                              }}
+                            />
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                              {statusChartData.labels[index]}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-heading)' }}>{val}</div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ) : (
-                  <div style={{ height: '220px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Pie
-                      data={{
-                        labels: ['Novos / Ativos', 'Lidos', 'Arquivados'],
-                        datasets: [
-                          {
-                            data: [globalStats.active, globalStats.read, globalStats.archived],
-                            backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],
-                            borderWidth: 1,
-                            borderColor: 'var(--bg-surface)',
-                          },
-                        ],
-                      }}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                          legend: {
-                            position: 'bottom',
-                            labels: {
-                              color: 'var(--text-main)',
-                              font: { family: 'sans-serif', size: 12 },
-                            },
-                          },
-                        },
-                      }}
-                    />
-                  </div>
-                )}
+                </div>
               </div>
 
-              {/* Gráfico 2: Disponibilidade de PDFs */}
               <div
-                className="glass-panel"
+                className="fade-in"
                 style={{
-                  padding: '1.5rem',
-                  borderRadius: 'var(--radius-lg)',
-                  backgroundColor: 'var(--bg-surface)',
-                  border: '1px solid var(--border-color)',
+                  gridColumn: 'span 6',
                   display: 'flex',
-                  flexDirection: 'column',
+                  background: 'transparent',
+                  alignItems: 'center',
                   gap: '1rem',
+                  flexDirection: 'row',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <PieChartIcon size={20} color="var(--color-primary)" />
-                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-heading)' }}>
-                    Disponibilidade de Texto Completo (PDF)
-                  </h3>
+                <div style={{ width: '100px', height: '100px', position: 'relative', flexShrink: 0 }}>
+                  <Pie
+                    data={chartData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 },
+                      },
+                    }}
+                  />
                 </div>
-
-                {globalStats.total === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                    Nenhum artigo importado ainda.
+                <div>
+                  <h3
+                    style={{
+                      margin: '0 0 1rem 0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '1rem',
+                    }}
+                  >
+                    <PieChartIcon size={16} /> Arquivos Físicos
+                  </h3>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    {chartData.datasets[0].data.map((val, index) => {
+                      if (val === 0) return null;
+                      return (
+                        <div key={index}>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}
+                          >
+                            <div
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                backgroundColor: chartData.datasets[0].backgroundColor[index] as string,
+                              }}
+                            />
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                              {chartData.labels[index]}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-heading)' }}>{val}</div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ) : (
-                  <div style={{ height: '220px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Pie
-                      data={{
-                        labels: ['Com PDF Anexado', 'Apenas Metadados'],
-                        datasets: [
-                          {
-                            data: [globalStats.withPdf, Math.max(0, globalStats.total - globalStats.withPdf)],
-                            backgroundColor: ['#8b5cf6', '#f59e0b'],
-                            borderWidth: 1,
-                            borderColor: 'var(--bg-surface)',
-                          },
-                        ],
-                      }}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                          legend: {
-                            position: 'bottom',
-                            labels: {
-                              color: 'var(--text-main)',
-                              font: { family: 'sans-serif', size: 12 },
-                            },
-                          },
-                        },
-                      }}
-                    />
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           )}

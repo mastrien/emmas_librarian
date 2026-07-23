@@ -75,15 +75,13 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
           borderRadius: '4px',
           backgroundColor: isToday
             ? 'var(--color-primary)'
-            : deadlineCount > 0
-              ? 'rgba(59, 130, 246, 0.2)'
-              : activeDiary
-                ? 'var(--bg-hover)'
-                : 'transparent',
-          color: isToday ? '#ffffff' : activeDiary || deadlineCount > 0 ? 'var(--text-heading)' : 'var(--text-muted)',
+            : activeDiary
+              ? 'var(--bg-hover)'
+              : 'transparent',
+          color: isToday ? '#ffffff' : activeDiary ? 'var(--text-heading)' : 'var(--text-main)',
           fontSize: '0.8rem',
-          fontWeight: isToday || activeDiary || deadlineCount > 0 ? 'bold' : 'normal',
-          border: isToday ? 'none' : deadlineCount > 0 ? '1px solid var(--color-primary)' : activeDiary ? '1px solid var(--border-color)' : '1px solid transparent',
+          fontWeight: isToday ? 'bold' : 'normal',
+          border: '1px solid transparent',
           cursor: onSelectDate ? 'pointer' : 'default',
           position: 'relative',
         }}
@@ -93,10 +91,11 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
           <span
             style={{
               position: 'absolute',
-              top: '2px',
-              right: '2px',
-              width: '5px',
-              height: '5px',
+              bottom: '3px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '4px',
+              height: '4px',
               borderRadius: '50%',
               backgroundColor: 'var(--color-primary)',
             }}

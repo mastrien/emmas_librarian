@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Settings, Sparkles, FileText, MoreVertical, Folder } from 'lucide-react';
+import { Settings, Sparkles, FileText, MoreVertical, Folder, Calendar } from 'lucide-react';
 import { HelpButton } from './HelpButton';
 import { Logo } from './Logo';
 import { ChangelogModal } from '../modals/ChangelogModal';
@@ -177,6 +177,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Folder size={18} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Projetos
+                </Link>
+
+                <Link
+                  to="/agenda"
+                  className="menu-dropdown-item"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Calendar size={18} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Agenda
                 </Link>
 
                 <Link

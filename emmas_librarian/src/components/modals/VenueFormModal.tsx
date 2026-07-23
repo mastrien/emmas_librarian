@@ -382,7 +382,7 @@ export const VenueFormModal: React.FC<VenueFormModalProps> = ({
                   className="btn-secondary"
                   style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
                 >
-                  <Plus size={14} /> + Criar Novo Campo
+                  <Plus size={14} /> Criar Novo Campo
                 </button>
               </div>
 
