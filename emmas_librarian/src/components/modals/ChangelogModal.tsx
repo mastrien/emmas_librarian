@@ -84,6 +84,45 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                   paddingBottom: '0.25rem',
                 }}
               >
+                Versão 1.1.19 — Agenda & Prazos
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                  fontSize: '0.95rem',
+                }}
+              >
+                <li>
+                  <strong>Agenda & Prazos Globais:</strong> Novo módulo de gerenciamento de eventos, conferências e periódicos com suporte a múltiplos prazos customizáveis.
+                </li>
+                <li>
+                  <strong>Intervalos & Prazos Pontuais:</strong> Suporte a prazos com datas únicas ou intervalos com validação de vencimento baseada na data final.
+                </li>
+                <li>
+                  <strong>Visualizações Flexíveis:</strong> Modos de pílula unificada para alternar entre "Por Evento/Revista" e "Lista de Prazos", além de calendário integrado.
+                </li>
+                <li>
+                  <strong>Dashboard Minimalista:</strong> Seção superior com relógio grande em cores neutras e banner de próximos prazos com atualização local otimizada.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  marginTop: 0,
+                  marginBottom: '0.75rem',
+                  fontSize: '1.1rem',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
                 Versão 1.1.18
               </h3>
               <ul
