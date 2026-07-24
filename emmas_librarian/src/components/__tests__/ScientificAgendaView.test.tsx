@@ -67,7 +67,7 @@ describe('ScientificAgendaView (TDD)', () => {
     expect(screen.getByText(/RES — Revista/i)).toBeInTheDocument();
 
     // Filter text
-    const searchInput = screen.getByPlaceholderText(/Buscar por evento, sigla ou prazo.../i);
+    const searchInput = screen.getByPlaceholderText(/Buscar por evento ou sigla.../i);
     fireEvent.change(searchInput, { target: { value: 'Engenharia' } });
 
     expect(screen.queryByText(/SBBD 2026/i)).not.toBeInTheDocument();

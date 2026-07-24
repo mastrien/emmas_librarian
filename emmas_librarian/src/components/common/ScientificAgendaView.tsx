@@ -188,7 +188,7 @@ export const ScientificAgendaView: React.FC<ScientificAgendaViewProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por evento, sigla ou prazo..."
+                placeholder="Buscar por evento ou sigla..."
                 style={{
                   width: '100%',
                   background: 'none',
