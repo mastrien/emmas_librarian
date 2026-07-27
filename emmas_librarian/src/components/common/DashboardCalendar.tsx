@@ -31,15 +31,20 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
-  // Map of date string -> milestones
-  const milestoneMap = new Map<string, number>();
+  // Map of date string -> venue colors
+  const milestoneColorsMap = new Map<string, string[]>();
   for (const v of venues) {
+    const venueColor = v.color || 'var(--color-primary)';
     for (const m of v.milestones || []) {
       if (m.target_date) {
-        milestoneMap.set(m.target_date, (milestoneMap.get(m.target_date) || 0) + 1);
+        const existing = milestoneColorsMap.get(m.target_date) || [];
+        if (!existing.includes(venueColor)) existing.push(venueColor);
+        milestoneColorsMap.set(m.target_date, existing);
       }
       if (m.field_type === 'range' && m.end_date) {
-        milestoneMap.set(m.end_date, (milestoneMap.get(m.end_date) || 0) + 1);
+        const existing = milestoneColorsMap.get(m.end_date) || [];
+        if (!existing.includes(venueColor)) existing.push(venueColor);
+        milestoneColorsMap.set(m.end_date, existing);
       }
     }
   }
@@ -52,7 +57,8 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
   for (let i = 1; i <= daysInMonth; i++) {
     const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
     const activeDiary = diarySet.has(dStr);
-    const deadlineCount = milestoneMap.get(dStr) || 0;
+    const dayColors = milestoneColorsMap.get(dStr) || [];
+    const deadlineCount = dayColors.length;
 
     const todayDate = new Date();
     const isToday = todayDate.getFullYear() === year && todayDate.getMonth() === month && todayDate.getDate() === i;
@@ -87,19 +93,30 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
         }}
       >
         {i}
-        {deadlineCount > 0 && !isToday && (
-          <span
+        {dayColors.length > 0 && !isToday && (
+          <div
             style={{
               position: 'absolute',
               bottom: '3px',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '4px',
-              height: '4px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--color-primary)',
+              display: 'flex',
+              gap: '2px',
+              alignItems: 'center',
             }}
-          />
+          >
+            {dayColors.slice(0, 3).map((c, idx) => (
+              <span
+                key={idx}
+                style={{
+                  width: '4px',
+                  height: '4px',
+                  borderRadius: '50%',
+                  backgroundColor: c,
+                }}
+              />
+            ))}
+          </div>
         )}
       </div>,
     );

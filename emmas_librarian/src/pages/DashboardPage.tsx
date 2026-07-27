@@ -32,7 +32,7 @@ export const DashboardPage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const currentTimeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const currentTimeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const day = now.getDate();
   const monthShort = now.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
   const year = now.getFullYear();
@@ -247,10 +247,11 @@ export const DashboardPage: React.FC = () => {
             <div
               style={{
                 fontSize: '3.75rem',
-                fontWeight: 800,
+                fontWeight: 700,
                 color: 'var(--text-heading)',
-                fontFamily: 'monospace',
-                letterSpacing: '-1px',
+                fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                fontVariantNumeric: 'tabular-nums',
+                letterSpacing: '-0.03em',
                 lineHeight: 1,
               }}
             >

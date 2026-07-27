@@ -23,11 +23,13 @@ async function launchApp(env = {}) {
 async function dismissChangelog(window) {
   try {
     await window.evaluate(() => {
-      localStorage.setItem('last_seen_version', '1.1.16');
+      localStorage.setItem('last_seen_version', '1.1.19');
     }).catch(() => {});
-    const changelogBtn = window.locator('button:has-text("Entendido, vamos lá!")');
-    if (await changelogBtn.isVisible().catch(() => false)) {
+
+    const changelogBtn = window.locator('button:has-text("Entendido, vamos lá!")').first();
+    if (await changelogBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await changelogBtn.click().catch(() => {});
+      await window.waitForTimeout(300);
     }
   } catch (e) {
     // Changelog modal not shown
@@ -45,6 +47,7 @@ async function getFirstWindow(electronApp) {
 }
 
 async function createProject(window, projectName) {
+  await dismissChangelog(window);
   const isNewProjBtnVisible = await window.locator('text="Novo Projeto"').first().isVisible().catch(() => false);
   if (!isNewProjBtnVisible) {
     await navigateTo(window, 'Projetos');
@@ -56,6 +59,7 @@ async function createProject(window, projectName) {
 }
 
 async function navigateTo(window, target) {
+  await dismissChangelog(window);
   const directLink = window.locator('a, button').filter({ hasText: target }).first();
   if (await directLink.isVisible().catch(() => false)) {
     await directLink.click();
@@ -69,6 +73,7 @@ async function navigateTo(window, target) {
 }
 
 async function clickAddArticlesOption(window, optionText) {
+  await dismissChangelog(window);
   const directBtn = window.locator('button').filter({ hasText: optionText }).first();
   if (await directBtn.isVisible().catch(() => false)) {
     await directBtn.click();
@@ -81,24 +86,11 @@ async function clickAddArticlesOption(window, optionText) {
   await menuItem.click();
 }
 
-async function clickExportOption(window, optionText) {
-  const directBtn = window.locator('button').filter({ hasText: optionText }).first();
-  if (await directBtn.isVisible().catch(() => false)) {
-    await directBtn.click();
-    return;
-  }
-  const exportBtn = window.locator('button:has-text("Exportar")').first();
-  await exportBtn.hover();
-  await window.waitForTimeout(100);
-  const menuItem = window.locator('.menu-dropdown-item, button').filter({ hasText: optionText }).first();
-  await menuItem.click();
-}
-
 module.exports = {
   launchApp,
   getFirstWindow,
   createProject,
   navigateTo,
   clickAddArticlesOption,
-  clickExportOption,
+  dismissChangelog,
 };
