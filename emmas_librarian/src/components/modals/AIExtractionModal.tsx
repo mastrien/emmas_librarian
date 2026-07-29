@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { X as XIcon, Trash2, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { type Article, type RAGExtractionResult as RAGExtractionResultType } from '../../types';
+import { type Article, type RAGExtractionResult as RAGExtractionResultType, type SearchHistoryItem } from '../../types';
 import QuestionSetCatalog from '../ai/QuestionSetCatalog';
 import { InvestigationDetailView } from '../ai/InvestigationDetailView';
 import { RAGResultCard } from '../ai/RAGResultCard';
+import { ArticleSelector } from '../ai/ArticleSelector';
 
 export interface AIExtractionResult {
   article: Article;
@@ -36,6 +37,7 @@ export interface AIExtractionModalProps {
   aiExtractionResults: AIExtractionResult[];
   cancelExtractionRef: React.MutableRefObject<boolean>;
   investigationHistory?: InvestigationHistoryRecord[];
+  searchHistory?: SearchHistoryItem[];
   articles?: Article[];
   getInvestigationResults: (investigationId: number) => Promise<import('../../types').InvestigationResult[]>;
 }
@@ -51,6 +53,7 @@ export const AIExtractionModal = ({
   aiExtractionResults,
   cancelExtractionRef,
   investigationHistory = [],
+  searchHistory = [],
   articles = [],
   getInvestigationResults,
 }: AIExtractionModalProps) => {
@@ -182,92 +185,15 @@ export const AIExtractionModal = ({
                     border: '1px solid var(--border-color)',
                   }}
                 >
-                  <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: 'var(--text-main)' }}>
-                    Selecione os artigos (
-                    <strong>
-                      {selectedIds.length}/{articlesWithPdf.length}
-                    </strong>
-                    ) e faça perguntas. A IA buscará respostas.
-                  </p>
-
-                  {!isExtracting && !isFinished && (
-                    <>
-                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
-                          onClick={() => setSelectedIds(articlesWithPdf.map((a: Article) => a.id))}
-                        >
-                          Selecionar Todos
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
-                          onClick={() => setSelectedIds([])}
-                        >
-                          Desmarcar Todos
-                        </button>
-                      </div>
-                      <div
-                        style={{
-                          maxHeight: '150px',
-                          overflowY: 'auto',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: 'var(--radius-sm)',
-                          padding: '0.5rem',
-                          marginBottom: '1rem',
-                          background: 'var(--bg-main)',
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                          gap: '0.5rem',
-                        }}
-                      >
-                        {articlesWithPdf.map((a: Article) => (
-                          <label
-                            key={a.id}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'flex-start',
-                              gap: '0.5rem',
-                              cursor: 'pointer',
-                              fontSize: '0.85rem',
-                              padding: '0.5rem',
-                              borderRadius: 'var(--radius-sm)',
-                              background: selectedIds.includes(a.id)
-                                ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)'
-                                : 'var(--bg-surface)',
-                              border: selectedIds.includes(a.id)
-                                ? '1px solid var(--color-primary)'
-                                : '1px solid var(--border-color)',
-                            }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.includes(a.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) setSelectedIds([...selectedIds, a.id]);
-                                else setSelectedIds(selectedIds.filter((id) => id !== a.id));
-                              }}
-                              style={{ marginTop: '0.2rem' }}
-                            />
-                            <span
-                              style={{
-                                lineHeight: '1.2',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                              }}
-                            >
-                              {a.title}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    </>
-                  )}
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <ArticleSelector
+                      articles={articlesWithPdf}
+                      selectedIds={selectedIds}
+                      setSelectedIds={setSelectedIds}
+                      searchHistory={searchHistory}
+                      disabled={isExtracting || isFinished}
+                    />
+                  </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
                     {isExtracting || isFinished ? (

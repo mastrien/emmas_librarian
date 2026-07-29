@@ -1970,6 +1970,7 @@ export const ProjectDetailsPage: React.FC = () => {
         aiExtractionResults={aiExtractionResults}
         cancelExtractionRef={cancelExtractionRef}
         investigationHistory={investigationHistory}
+        searchHistory={history}
         getInvestigationResults={projectService.getInvestigationResults}
       />
 

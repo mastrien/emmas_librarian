@@ -53,24 +53,24 @@ describe('AIExtractionModal', () => {
     expect(screen.getByText('Article 2')).toBeInTheDocument();
   });
 
-  it('supports selecting and deselecting articles', () => {
+  it('supports selecting and deselecting articles via ArticleSelector', () => {
     renderWithProviders(<AIExtractionModal {...defaultProps} />);
 
     // Default selection is all articles
-    expect(screen.getByText('2/2')).toBeInTheDocument();
+    expect(screen.getByText(/2.*de.*2.*selecionados/i)).toBeInTheDocument();
 
     const deselectBtn = screen.getByText('Desmarcar Todos');
     fireEvent.click(deselectBtn);
-    expect(screen.getByText('0/2')).toBeInTheDocument();
+    expect(screen.getByText(/0.*de.*2.*selecionados/i)).toBeInTheDocument();
 
     const selectAllBtn = screen.getByText('Selecionar Todos');
     fireEvent.click(selectAllBtn);
-    expect(screen.getByText('2/2')).toBeInTheDocument();
+    expect(screen.getByText(/2.*de.*2.*selecionados/i)).toBeInTheDocument();
 
     // Toggle individual checkbox
     const checkboxes = screen.getAllByRole('checkbox');
     fireEvent.click(checkboxes[0]); // deselect first article
-    expect(screen.getByText('1/2')).toBeInTheDocument();
+    expect(screen.getByText(/1.*de.*2.*selecionados/i)).toBeInTheDocument();
   });
 
   it('supports adding and removing questions', () => {

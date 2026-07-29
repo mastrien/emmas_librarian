@@ -315,6 +315,17 @@ export interface TrashItem {
   deleted_at: string;
 }
 
+export interface SearchHistoryItem {
+  id: number;
+  unified_query: string;
+  translated_queries: string;
+  total_results: number;
+  results_breakdown: string;
+  created_at: string;
+  sort_by?: string;
+  limit_val?: number;
+}
+
 export interface SearchHistoryRecord {
   query: string;
   count: number;
