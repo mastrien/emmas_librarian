@@ -29,8 +29,9 @@ function filterArticleByTerm(article: Article, term: string): boolean {
 /**
  * Filter article by selected search history ID.
  */
-function filterArticleBySearchId(article: Article, targetSearchId: number | 'all'): boolean {
+function filterArticleBySearchId(article: Article, targetSearchId: number | 'all' | 'none'): boolean {
   if (targetSearchId === 'all') return true;
+  if (targetSearchId === 'none') return !article.search_id;
   return article.search_id === targetSearchId;
 }
 
@@ -69,17 +70,51 @@ export const ArticleSelector: React.FC<ArticleSelectorProps> = ({
   disabled = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSearchFilter, setSelectedSearchFilter] = useState<number | 'all'>('all');
+  const [selectedSearchFilter, setSelectedSearchFilter] = useState<number | 'all' | 'none'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('title-asc');
 
-  // Extract unique search_ids present in the articles list for the filter dropdown
-  const uniqueSearchIds = useMemo(() => {
-    const ids = new Set<number>();
-    articles.forEach((a) => {
-      if (a.search_id) ids.add(a.search_id);
+  // Build complete list of search history filter options (all project searches + manual/imported)
+  const searchFilterOptions = useMemo(() => {
+    const options: Array<{ id: number | 'none'; label: string; count: number }> = [];
+    const knownIds = new Set<number>();
+
+    // Add all project search history items
+    searchHistory.forEach((h) => {
+      knownIds.add(h.id);
+      const count = articles.filter((a) => a.search_id === h.id).length;
+      const queryPreview = h.unified_query.length > 25 ? `${h.unified_query.substring(0, 25)}...` : h.unified_query;
+      options.push({
+        id: h.id,
+        label: `#${h.id}: ${queryPreview}`,
+        count,
+      });
     });
-    return Array.from(ids);
-  }, [articles]);
+
+    // Add any search_id present in articles that wasn't in searchHistory
+    articles.forEach((a) => {
+      if (a.search_id && !knownIds.has(a.search_id)) {
+        knownIds.add(a.search_id);
+        const count = articles.filter((art) => art.search_id === a.search_id).length;
+        options.push({
+          id: a.search_id,
+          label: `Busca #${a.search_id}`,
+          count,
+        });
+      }
+    });
+
+    // Add option for articles without a search_id
+    const manualCount = articles.filter((a) => !a.search_id).length;
+    if (manualCount > 0) {
+      options.push({
+        id: 'none',
+        label: 'Manual / Sem busca no histórico',
+        count: manualCount,
+      });
+    }
+
+    return options;
+  }, [articles, searchHistory]);
 
   // Filtered and sorted article list
   const filteredArticles = useMemo(() => {
@@ -156,7 +191,9 @@ export const ArticleSelector: React.FC<ArticleSelectorProps> = ({
             value={selectedSearchFilter}
             onChange={(e) => {
               const val = e.target.value;
-              setSelectedSearchFilter(val === 'all' ? 'all' : Number(val));
+              if (val === 'all') setSelectedSearchFilter('all');
+              else if (val === 'none') setSelectedSearchFilter('none');
+              else setSelectedSearchFilter(Number(val));
             }}
             disabled={disabled}
             style={{
@@ -168,10 +205,10 @@ export const ArticleSelector: React.FC<ArticleSelectorProps> = ({
               lineHeight: '1.2',
             }}
           >
-            <option value="all">Todas as buscas ({uniqueSearchIds.length})</option>
-            {uniqueSearchIds.map((sId) => (
-              <option key={sId} value={sId}>
-                {getSearchBadgeLabel(sId, searchHistory)}
+            <option value="all">Todas as buscas do histórico ({searchFilterOptions.length})</option>
+            {searchFilterOptions.map((opt) => (
+              <option key={String(opt.id)} value={opt.id}>
+                {opt.label} ({opt.count} com PDF)
               </option>
             ))}
           </select>
