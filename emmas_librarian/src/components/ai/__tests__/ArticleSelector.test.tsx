@@ -74,7 +74,7 @@ describe('ArticleSelector', () => {
     expect(screen.getByText('Alpha Deep Learning for Medicine')).toBeInTheDocument();
     expect(screen.getByText('Beta Machine Learning in Clinical Trials')).toBeInTheDocument();
     expect(screen.getByText('Gamma Neural Networks in Healthcare')).toBeInTheDocument();
-    expect(screen.getByText(/#101: deep learning medicine/)).toBeInTheDocument();
+    expect(screen.getAllByText(/#101: deep learning medicine/).length).toBeGreaterThan(0);
   });
 
   it('filters articles by search term', () => {

@@ -48,3 +48,8 @@
 
 - Structured JSON when logging for debugging / observability.
 - Plain text only for user-facing CLI output.
+
+## Git & Commits
+
+- Create Git commits for every significant change or feature in the project.
+- Ensure clear and semantic commit messages (e.g. `feat:`, `fix:`, `refactor:`) to allow safe, granular rollbacks without losing stable progress.

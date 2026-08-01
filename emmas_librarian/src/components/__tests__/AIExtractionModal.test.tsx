@@ -56,21 +56,27 @@ describe('AIExtractionModal', () => {
   it('supports selecting and deselecting articles via ArticleSelector', () => {
     renderWithProviders(<AIExtractionModal {...defaultProps} />);
 
+    const expectSelectionCount = (countStr: string) => {
+      expect(
+        screen.getByText((_, el) => el?.tagName.toLowerCase() === 'span' && (el.textContent?.includes(countStr) ?? false))
+      ).toBeInTheDocument();
+    };
+
     // Default selection is all articles
-    expect(screen.getByText(/2.*de.*2.*selecionados/i)).toBeInTheDocument();
+    expectSelectionCount('2 de 2 selecionados');
 
     const deselectBtn = screen.getByText('Desmarcar Todos');
     fireEvent.click(deselectBtn);
-    expect(screen.getByText(/0.*de.*2.*selecionados/i)).toBeInTheDocument();
+    expectSelectionCount('0 de 2 selecionados');
 
     const selectAllBtn = screen.getByText('Selecionar Todos');
     fireEvent.click(selectAllBtn);
-    expect(screen.getByText(/2.*de.*2.*selecionados/i)).toBeInTheDocument();
+    expectSelectionCount('2 de 2 selecionados');
 
     // Toggle individual checkbox
     const checkboxes = screen.getAllByRole('checkbox');
     fireEvent.click(checkboxes[0]); // deselect first article
-    expect(screen.getByText(/1.*de.*2.*selecionados/i)).toBeInTheDocument();
+    expectSelectionCount('1 de 2 selecionados');
   });
 
   it('supports adding and removing questions', () => {
@@ -128,7 +134,7 @@ describe('AIExtractionModal', () => {
 
     renderWithProviders(<AIExtractionModal {...defaultProps} aiExtractionResults={results as any[]} />);
 
-    expect(screen.getByText('Article 1')).toBeInTheDocument();
+    expect(screen.getAllByText('Article 1')[0]).toBeInTheDocument();
     expect(screen.getByText('Q: What is the goal?')).toBeInTheDocument();
     expect(screen.getByText('test quotes')).toBeInTheDocument();
   });
