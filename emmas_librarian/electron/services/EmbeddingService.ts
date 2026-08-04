@@ -39,6 +39,35 @@ export class EmbeddingService {
       return (data.embedding || data.data?.[0]?.embedding) as number[];
     }
 
+    if (this.config.provider === 'ollama_cloud') {
+      if (!this.keys?.ollamaCloudUrl || !this.keys?.ollamaCloud) {
+        throw new Error('Ollama Cloud URL or API key missing for embeddings');
+      }
+      let url = this.keys.ollamaCloudUrl.trim();
+      if (url.endsWith('/')) url = url.slice(0, -1);
+
+      let endpoint = url.endsWith('/embeddings') ? url : `${url}/embeddings`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.keys.ollamaCloud}`,
+        },
+        body: JSON.stringify({
+          model: this.config.model_name || 'nomic-embed-text',
+          input: text,
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Ollama Cloud embedding error: ${response.statusText} - ${errText}`);
+      }
+
+      const data = await response.json();
+      return (data.embedding || data.data?.[0]?.embedding) as number[];
+    }
+
     if (this.config.provider === 'openai') {
       if (!this.keys?.openai) throw new Error('OpenAI API key missing for embeddings');
       const response = await fetch('https://api.openai.com/v1/embeddings', {

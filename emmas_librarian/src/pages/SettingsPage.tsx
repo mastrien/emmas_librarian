@@ -30,6 +30,9 @@ export const SettingsPage: React.FC = () => {
   const [geminiKey, setGeminiKey] = useState('');
   const [ollamaUrl, setOllamaUrl] = useState('');
   const [ollamaModel, setOllamaModel] = useState('');
+  const [ollamaCloudKey, setOllamaCloudKey] = useState('');
+  const [ollamaCloudUrl, setOllamaCloudUrl] = useState('');
+  const [ollamaCloudModel, setOllamaCloudModel] = useState('');
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -61,6 +64,9 @@ export const SettingsPage: React.FC = () => {
       const gKey = await projectService.getSetting('api_key_gemini');
       const olUrl = await projectService.getSetting('api_key_ollama');
       const olMod = await projectService.getSetting('ollama_model');
+      const olCloudKey = await projectService.getSetting('api_key_ollama_cloud');
+      const olCloudUrl = await projectService.getSetting('ollama_cloud_base_url');
+      const olCloudMod = await projectService.getSetting('ollama_cloud_model');
       const backupsEnabledSetting = await projectService.getSetting('enable_auto_backups');
       const rSize = await projectService.getSetting('rag_chunk_size');
       const rOverlap = await projectService.getSetting('rag_chunk_overlap');
@@ -73,6 +79,9 @@ export const SettingsPage: React.FC = () => {
       if (gKey) setGeminiKey(gKey);
       if (olUrl) setOllamaUrl(olUrl);
       if (olMod) setOllamaModel(olMod);
+      if (olCloudKey) setOllamaCloudKey(olCloudKey);
+      if (olCloudUrl) setOllamaCloudUrl(olCloudUrl);
+      if (olCloudMod) setOllamaCloudModel(olCloudMod);
       if (rSize) setRagChunkSize(rSize);
       if (rOverlap) setRagChunkOverlap(rOverlap);
       if (rTopK) setRagTopK(rTopK);
@@ -126,6 +135,9 @@ export const SettingsPage: React.FC = () => {
     await projectService.setSetting('api_key_gemini', geminiKey);
     await projectService.setSetting('api_key_ollama', ollamaUrl);
     await projectService.setSetting('ollama_model', ollamaModel);
+    await projectService.setSetting('api_key_ollama_cloud', ollamaCloudKey);
+    await projectService.setSetting('ollama_cloud_base_url', ollamaCloudUrl);
+    await projectService.setSetting('ollama_cloud_model', ollamaCloudModel);
     await projectService.setSetting('rag_chunk_size', ragChunkSize);
     await projectService.setSetting('rag_chunk_overlap', ragChunkOverlap);
     await projectService.setSetting('rag_top_k', ragTopK);
@@ -622,7 +634,7 @@ export const SettingsPage: React.FC = () => {
               <label
                 style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}
               >
-                Ollama URL{' '}
+                Ollama URL (Local){' '}
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>
                   (Ex: http://127.0.0.1:11434/v1)
                 </span>
@@ -644,6 +656,81 @@ export const SettingsPage: React.FC = () => {
                   value={ollamaUrl}
                   onChange={(e) => setOllamaUrl(e.target.value)}
                   placeholder="http://127.0.0.1:11434/v1"
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem 1rem 0.8rem 2.8rem',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-main)',
+                    color: 'var(--text-main)',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}
+              >
+                Ollama Cloud API Key (Nuvem)
+              </label>
+              <div style={{ position: 'relative' }}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  <Key size={18} />
+                </div>
+                <input
+                  type="password"
+                  value={ollamaCloudKey}
+                  onChange={(e) => setOllamaCloudKey(e.target.value)}
+                  placeholder="Insira sua chave de API Ollama Cloud..."
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem 1rem 0.8rem 2.8rem',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-main)',
+                    color: 'var(--text-main)',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}
+              >
+                Ollama Cloud URL (Nuvem){' '}
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>
+                  (Ex: https://api.ollama.cloud/v1)
+                </span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  <Key size={18} />
+                </div>
+                <input
+                  type="text"
+                  value={ollamaCloudUrl}
+                  onChange={(e) => setOllamaCloudUrl(e.target.value)}
+                  placeholder="https://api.ollama.cloud/v1"
                   style={{
                     width: '100%',
                     padding: '0.8rem 1rem 0.8rem 2.8rem',
@@ -730,6 +817,7 @@ export const SettingsPage: React.FC = () => {
                           <option value="openai">OpenAI</option>
                           <option value="anthropic">Anthropic</option>
                           <option value="ollama">Ollama (Local)</option>
+                          <option value="ollama_cloud">Ollama Cloud (Nuvem)</option>
                         </select>
                       </div>
                       <div>

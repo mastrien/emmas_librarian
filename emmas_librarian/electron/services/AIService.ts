@@ -6,6 +6,8 @@ import { VectorStore } from './VectorStore';
 import { extractTextWithCoordinates } from './PdfExtractor';
 import { AppError } from '../ipc/errorHandler';
 import { parseAndRepairJson } from './llm/jsonRepair';
+import { OllamaCloudGateway } from './llm/OllamaCloudGateway';
+
 export class AIService {
   private db: DatabaseAdapter;
 
@@ -30,12 +32,23 @@ export class AIService {
 
   // --- API Clients ---
 
-  public getKeys(): { openai: string | null; gemini: string | null; ollama: string | null; ollamaModel?: string | null } {
+  public getKeys(): {
+    openai: string | null;
+    gemini: string | null;
+    ollama: string | null;
+    ollamaModel?: string | null;
+    ollamaCloud: string | null;
+    ollamaCloudUrl: string | null;
+    ollamaCloudModel?: string | null;
+  } {
     return {
       openai: this.db.getSetting('api_key_openai') || this.db.getSetting('openai_api_key') || null,
       gemini: this.db.getSetting('api_key_gemini') || this.db.getSetting('gemini_api_key') || null,
       ollama: this.db.getSetting('api_key_ollama') || this.db.getSetting('ollama_base_url') || null,
       ollamaModel: this.db.getSetting('ollama_model') || null,
+      ollamaCloud: this.db.getSetting('api_key_ollama_cloud') || this.db.getSetting('ollama_cloud_api_key') || null,
+      ollamaCloudUrl: this.db.getSetting('ollama_cloud_base_url') || null,
+      ollamaCloudModel: this.db.getSetting('ollama_cloud_model') || null,
     };
   }
 
@@ -140,18 +153,30 @@ export class AIService {
         } else if (config.provider === 'ollama') {
           if (!keys.ollama) throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'URL do Ollama não configurada.');
           return await this.callOllama(prompt, keys.ollama, config.model_name || keys.ollamaModel || 'llama3');
+        } else if (config.provider === 'ollama_cloud') {
+          if (!keys.ollamaCloudUrl) {
+            throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'URL do Ollama Cloud não configurada.');
+          }
+          if (!keys.ollamaCloud) {
+            throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'Chave do Ollama Cloud não configurada.');
+          }
+          const gateway = new OllamaCloudGateway(keys.ollamaCloudUrl, keys.ollamaCloud);
+          return await gateway.complete(prompt, config.model_name || keys.ollamaCloudModel || 'llama3.1:70b');
         } else {
           throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'Provedor configurado é inválido.');
         }
       }
 
-      // Fallback: Prioritize OpenAI -> Gemini -> Ollama
+      // Fallback: Prioritize OpenAI -> Gemini -> Ollama -> Ollama Cloud
       if (keys.openai) {
         return await this.callOpenAI(prompt, keys.openai);
       } else if (keys.gemini) {
         return await this.callGemini(prompt, keys.gemini);
       } else if (keys.ollama) {
         return await this.callOllama(prompt, keys.ollama, keys.ollamaModel || 'llama3');
+      } else if (keys.ollamaCloudUrl && keys.ollamaCloud) {
+        const gateway = new OllamaCloudGateway(keys.ollamaCloudUrl, keys.ollamaCloud);
+        return await gateway.complete(prompt, keys.ollamaCloudModel || 'llama3.1:70b');
       } else {
         throw new AppError(
           'ERR_MODEL_NOT_DEFINED',

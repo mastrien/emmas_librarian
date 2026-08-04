@@ -72,6 +72,38 @@ describe('EmbeddingService', () => {
     await expect(service.embed('fail')).rejects.toThrow('Ollama embedding error');
   });
 
+  it('should generate embedding using Ollama Cloud with Authorization header', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ embedding: [0.3, 0.4, 0.5] }),
+    });
+    global.fetch = fetchMock;
+
+    const config = { ...mockConfig, provider: 'ollama_cloud' as const, model_name: 'nomic-embed-text' };
+    const service = new EmbeddingService(config, {
+      ollamaCloudUrl: 'https://api.ollama.cloud/v1',
+      ollamaCloud: 'cloud-secret-key',
+    });
+    const result = await service.embed('hello ollama cloud');
+
+    expect(result).toEqual([0.3, 0.4, 0.5]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.ollama.cloud/v1/embeddings',
+      expect.objectContaining({
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer cloud-secret-key',
+        },
+      }),
+    );
+  });
+
+  it('should throw if Ollama Cloud URL or API key is missing', async () => {
+    const config = { ...mockConfig, provider: 'ollama_cloud' as const };
+    const service = new EmbeddingService(config, {});
+    await expect(service.embed('test')).rejects.toThrow('Ollama Cloud URL or API key missing');
+  });
+
   it('should generate embedding using OpenAI', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
