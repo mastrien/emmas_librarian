@@ -705,45 +705,6 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <label
-                style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}
-              >
-                Ollama Cloud URL (Nuvem){' '}
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>
-                  (Ex: https://api.ollama.cloud/v1)
-                </span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '1rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  <Key size={18} />
-                </div>
-                <input
-                  type="text"
-                  value={ollamaCloudUrl}
-                  onChange={(e) => setOllamaCloudUrl(e.target.value)}
-                  placeholder="https://api.ollama.cloud/v1"
-                  style={{
-                    width: '100%',
-                    padding: '0.8rem 1rem 0.8rem 2.8rem',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-main)',
-                    color: 'var(--text-main)',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-            </div>
-
             <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
               <button onClick={handleSaveKeys} className="btn-primary" disabled={saving} style={{ minWidth: '150px' }}>
                 {saved ? <CheckCircle size={20} /> : <Save size={20} />}

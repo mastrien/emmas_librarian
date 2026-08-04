@@ -1,4 +1,5 @@
 import { AIModelConfig } from '../../src/types';
+import { AppError } from '../ipc/errorHandler';
 
 export class EmbeddingService {
   constructor(
@@ -40,10 +41,10 @@ export class EmbeddingService {
     }
 
     if (this.config.provider === 'ollama_cloud') {
-      if (!this.keys?.ollamaCloudUrl || !this.keys?.ollamaCloud) {
-        throw new Error('Ollama Cloud URL or API key missing for embeddings');
+      if (!this.keys?.ollamaCloud) {
+        throw new AppError('ERR_MISSING_API_KEY', 'USER_ERROR', 'Chave de API do Ollama Cloud não configurada para embeddings.');
       }
-      let url = this.keys.ollamaCloudUrl.trim();
+      let url = (this.keys?.ollamaCloudUrl || 'https://ollama.com/v1').trim();
       if (url.endsWith('/')) url = url.slice(0, -1);
 
       let endpoint = url.endsWith('/embeddings') ? url : `${url}/embeddings`;
@@ -60,12 +61,25 @@ export class EmbeddingService {
       });
 
       if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Ollama Cloud embedding error: ${response.statusText} - ${errText}`);
+        const rawText = await response.text();
+        const cleanText = rawText.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() || 'Serviço indisponível no provedor remoto.';
+        throw new AppError(
+          'ERR_API_CONNECTION',
+          'SYSTEM_ERROR',
+          `[ERR_API_CONNECTION] Erro ao obter embeddings no Ollama Cloud (HTTP ${response.status}): ${cleanText}`,
+        );
       }
 
       const data = await response.json();
-      return (data.embedding || data.data?.[0]?.embedding) as number[];
+      const embedding = data.embedding || data.data?.[0]?.embedding;
+      if (!embedding) {
+        throw new AppError(
+          'ERR_INVALID_AI_RESPONSE',
+          'SYSTEM_ERROR',
+          `[ERR_INVALID_AI_RESPONSE] A API do Ollama Cloud não retornou um vetor de embedding válido. Resposta: "${JSON.stringify(data).slice(0, 100)}..."`,
+        );
+      }
+      return embedding as number[];
     }
 
     if (this.config.provider === 'openai') {

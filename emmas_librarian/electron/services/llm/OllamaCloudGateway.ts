@@ -1,4 +1,5 @@
 import type { LLMProviderGateway } from './LLMProviderGateway';
+import { AppError } from '../../ipc/errorHandler';
 
 /**
  * Handles communication with hosted/cloud Ollama instances.
@@ -15,11 +16,8 @@ export class OllamaCloudGateway implements LLMProviderGateway {
   ) {}
 
   async complete(prompt: string, model: string): Promise<string> {
-    if (!this.baseUrl) {
-      throw new Error('URL do Ollama Cloud não configurada.');
-    }
     if (!this.apiKey) {
-      throw new Error('Chave de API do Ollama Cloud não configurada.');
+      throw new AppError('ERR_MISSING_API_KEY', 'USER_ERROR', 'Chave de API do Ollama Cloud não configurada.');
     }
 
     const endpoint = this.buildEndpointUrl();
@@ -30,7 +28,7 @@ export class OllamaCloudGateway implements LLMProviderGateway {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
-        model: model || 'llama3.1:70b',
+        model: model || 'gpt-oss:120b-cloud',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
       }),
@@ -39,18 +37,30 @@ export class OllamaCloudGateway implements LLMProviderGateway {
 
     if (!response.ok) {
       if (response.status === 429) {
-        throw new Error('QUOTA_EXCEEDED');
+        throw new AppError('ERR_API_QUOTA_EXCEEDED', 'SYSTEM_ERROR', 'QUOTA_EXCEEDED');
       }
-      const errText = await response.text();
-      throw new Error(
-        `Ollama Cloud API Error (HTTP ${response.status}): ${errText || 'No error details provided by provider'}`,
+      const rawText = await response.text();
+      const cleanText = this.sanitizeHtml(rawText);
+      if (response.status === 401 || response.status === 403) {
+        throw new AppError(
+          'ERR_API_UNAUTHORIZED',
+          'USER_ERROR',
+          `[ERR_API_UNAUTHORIZED] Credenciais do Ollama Cloud inválidas (HTTP ${response.status}): ${cleanText}`,
+        );
+      }
+      throw new AppError(
+        'ERR_API_CONNECTION',
+        'SYSTEM_ERROR',
+        `[ERR_API_CONNECTION] Erro no serviço Ollama Cloud (HTTP ${response.status}): ${cleanText}`,
       );
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content ?? data.content;
     if (!content) {
-      throw new Error(
+      throw new AppError(
+        'ERR_INVALID_AI_RESPONSE',
+        'SYSTEM_ERROR',
         `[ERR_INVALID_AI_RESPONSE] A resposta da API do Ollama Cloud não contém mensagem válida. Offending value: "${JSON.stringify(
           data,
         ).slice(0, 100)}...". Expected shape: Objeto com choices[0].message.content.`,
@@ -61,8 +71,14 @@ export class OllamaCloudGateway implements LLMProviderGateway {
   }
 
   private buildEndpointUrl(): string {
-    let url = this.baseUrl.trim();
+    let url = (this.baseUrl || 'https://ollama.com/v1').trim();
     if (url.endsWith('/')) url = url.slice(0, -1);
     return url.endsWith('/chat/completions') ? url : `${url}/chat/completions`;
+  }
+
+  private sanitizeHtml(text: string): string {
+    if (!text) return 'Nenhum detalhe retornado pelo servidor.';
+    const clean = text.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+    return clean || 'Serviço indisponível no provedor remoto.';
   }
 }

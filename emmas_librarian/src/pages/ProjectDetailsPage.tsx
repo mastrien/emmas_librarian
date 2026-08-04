@@ -471,19 +471,17 @@ export const ProjectDetailsPage: React.FC = () => {
         } catch (err: any) {
           console.error(`Erro ao extrair de ${article.title}:`, err);
 
-          if (err.isAppError && err.code !== 'ERR_INTERNAL') {
-            // Abort the extraction and show the global error modal immediately
-            throw err;
-          }
           if (err.message && (err.message.includes('429') || err.message.includes('QUOTA_EXCEEDED'))) {
             setShowQuotaModal(true);
             cancelExtractionRef.current = true;
             finalStatus = 'Erro: Quota Excedida';
             break;
           }
-          results.push({ article, error: 'Falha ao processar.' });
-          setAiExtractionResults([...results]);
-          finalStatus = 'Erro Parcial';
+
+          cancelExtractionRef.current = true;
+          setIsExtracting(false);
+          showError(err);
+          return;
         }
       }
 
