@@ -93,6 +93,31 @@ export class EmbeddingService {
   }
 
   async embedBatch(texts: string[]): Promise<number[][]> {
+    if (texts.length === 0) return [];
+
+    if (this.config.provider === 'openai') {
+      if (!this.keys?.openai) throw new Error('OpenAI API key missing for embeddings');
+      const response = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.keys.openai}`,
+        },
+        body: JSON.stringify({
+          model: this.config.model_name || 'text-embedding-3-small',
+          input: texts,
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`OpenAI embedding error: ${response.statusText} - ${errText}`);
+      }
+
+      const data = await response.json();
+      return data.data.map((item: any) => item.embedding as number[]);
+    }
+
     const results: number[][] = [];
     for (const text of texts) {
       results.push(await this.embed(text));

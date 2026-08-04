@@ -479,11 +479,21 @@ export class DatabaseAdapter {
   }
 
   findDuplicateArticle(projectId: number, doi: string | null | undefined, title: string): Article | undefined {
-    if (doi) {
-      const stmt = this.db.prepare('SELECT * FROM articles WHERE project_id = ? AND doi = ? AND deleted_at IS NULL');
-      return stmt.get(projectId, doi) as Article | undefined;
+    if (doi && doi.trim() !== '') {
+      const stmtDoi = this.db.prepare(
+        'SELECT * FROM articles WHERE project_id = ? AND doi = ? AND deleted_at IS NULL LIMIT 1'
+      );
+      const existingByDoi = stmtDoi.get(projectId, doi.trim()) as Article | undefined;
+      if (existingByDoi) return existingByDoi;
     }
+
     const normalizedTarget = this.normalizeTitleForDb(title);
+    const stmtTitle = this.db.prepare(
+      'SELECT * FROM articles WHERE project_id = ? AND LOWER(title) = LOWER(?) AND deleted_at IS NULL LIMIT 1'
+    );
+    const directMatch = stmtTitle.get(projectId, normalizedTarget) as Article | undefined;
+    if (directMatch) return directMatch;
+
     const stmt = this.db.prepare('SELECT * FROM articles WHERE project_id = ? AND deleted_at IS NULL');
     const articles = stmt.all(projectId) as Article[];
     return articles.find((art) => this.normalizeTitleForDb(art.title) === normalizedTarget);
@@ -1386,6 +1396,16 @@ export class DatabaseAdapter {
     } catch (e) {
       console.error(`Error processing PDF for article ${articleId}:`, e);
     }
+  }
+
+  private async getFileHashAsync(filePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const hash = crypto.createHash('sha256');
+      const stream = fs.createReadStream(filePath);
+      stream.on('data', (data) => hash.update(data));
+      stream.on('end', () => resolve(hash.digest('hex')));
+      stream.on('error', (err) => reject(err));
+    });
   }
 
   private getFileHash(filePath: string): string {

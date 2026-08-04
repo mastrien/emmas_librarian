@@ -41,9 +41,6 @@ export async function extractTextWithCoordinates(
 
   const pushCurrentChunk = () => {
     if (currentText.trim().length > 0 && currentBboxes.length > 0) {
-      // Create a bounding box that encapsulates the first few items or a general area
-      // For simplicity in UI highlighting, we can take the bbox of the first item
-      // or a union. Let's use the first item's bbox as the anchor point
       const anchorBbox = currentBboxes[0];
 
       chunks.push({
@@ -59,69 +56,68 @@ export async function extractTextWithCoordinates(
     }
   };
 
-  for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-    const page = await pdfDocument.getPage(pageNum);
-    const textContent = await page.getTextContent();
+  try {
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+      const page = await pdfDocument.getPage(pageNum);
+      const textContent = await page.getTextContent();
 
-    for (const item of textContent.items) {
-      if ('str' in item && 'transform' in item) {
-        const text = item.str;
-        const transform = item.transform;
-        const width = item.width || 0;
-        const height = item.height || 0;
+      for (let itemIdx = 0; itemIdx < textContent.items.length; itemIdx++) {
+        const item = textContent.items[itemIdx];
+        if ('str' in item && 'transform' in item) {
+          const text = item.str;
+          const transform = item.transform;
+          const width = item.width || 0;
+          const height = item.height || 0;
 
-        // Skip completely empty items that just provide spacing
-        if (!text.trim() && text.length < 2) continue;
+          if (!text.trim() && text.length < 2) continue;
 
-        const itemBbox = {
-          x: transform[4],
-          y: transform[5],
-          w: width,
-          h: height,
-          page: pageNum,
-        };
+          const itemBbox = {
+            x: transform[4],
+            y: transform[5],
+            w: width,
+            h: height,
+            page: pageNum,
+          };
 
-        currentText += text + ' ';
-        currentBboxes.push(itemBbox);
-        totalCharacters += text.length;
+          currentText += text + ' ';
+          currentBboxes.push(itemBbox);
+          totalCharacters += text.length;
 
-        if (currentText.length >= chunkSize) {
-          pushCurrentChunk();
+          if (currentText.length >= chunkSize) {
+            pushCurrentChunk();
 
-          // Slide window: keep the last 'chunkOverlap' characters
-          // We need to find which bboxes correspond to the overlap
-          let keepText = '';
-          let keepBboxes: typeof currentBboxes = [];
+            let keepText = '';
+            let keepBboxes: typeof currentBboxes = [];
 
-          // Work backwards to fill the overlap
-          for (let i = currentBboxes.length - 1; i >= 0; i--) {
-            // Estimate text length contribution (this is approximate since we added spaces)
-            // A more precise way is to keep track of strings, but this is efficient enough
-            keepBboxes.unshift(currentBboxes[i]);
-            // Re-build text from kept bboxes roughly
-            keepText = textContent.items
-              .slice(
-                Math.max(0, textContent.items.indexOf(item) - (currentBboxes.length - 1 - i)),
-                textContent.items.indexOf(item) + 1,
-              )
-              .map((x) => ('str' in x ? x.str : ''))
-              .join(' ');
+            for (let i = currentBboxes.length - 1; i >= 0; i--) {
+              keepBboxes.unshift(currentBboxes[i]);
+              const startIndex = Math.max(0, itemIdx - (currentBboxes.length - 1 - i));
+              const sliceItems = textContent.items.slice(startIndex, itemIdx + 1);
+              keepText = sliceItems.map((x) => ('str' in x ? x.str : '')).join(' ');
 
-            if (keepText.length >= chunkOverlap) {
-              break;
+              if (keepText.length >= chunkOverlap) {
+                break;
+              }
             }
-          }
 
-          currentText = keepText + ' ';
-          currentBboxes = keepBboxes;
+            currentText = keepText + ' ';
+            currentBboxes = keepBboxes;
+          }
         }
       }
     }
-  }
 
-  // push remaining
-  if (currentText.length > 0) {
-    pushCurrentChunk();
+    if (currentText.length > 0) {
+      pushCurrentChunk();
+    }
+  } finally {
+    if (pdfDocument && typeof (pdfDocument as any).destroy === 'function') {
+      try {
+        await pdfDocument.destroy();
+      } catch (destroyErr) {
+        console.warn('Failed to destroy pdfDocument instance:', destroyErr);
+      }
+    }
   }
 
   return {

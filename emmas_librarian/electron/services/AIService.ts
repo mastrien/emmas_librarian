@@ -5,6 +5,7 @@ import { EmbeddingService } from './EmbeddingService';
 import { VectorStore } from './VectorStore';
 import { extractTextWithCoordinates } from './PdfExtractor';
 import { AppError } from '../ipc/errorHandler';
+import { parseAndRepairJson } from './llm/jsonRepair';
 export class AIService {
   private db: DatabaseAdapter;
 
@@ -29,13 +30,12 @@ export class AIService {
 
   // --- API Clients ---
 
-  public getKeys() {
+  public getKeys(): { openai: string | null; gemini: string | null; ollama: string | null; ollamaModel?: string | null } {
     return {
-      openai: this.db.getSetting('api_key_openai'),
-      gemini: this.db.getSetting('api_key_gemini'),
-      anthropic: this.db.getSetting('api_key_anthropic'),
-      ollama: this.db.getSetting('api_key_ollama'),
-      ollamaModel: this.db.getSetting('ollama_model'),
+      openai: this.db.getSetting('api_key_openai') || this.db.getSetting('openai_api_key') || null,
+      gemini: this.db.getSetting('api_key_gemini') || this.db.getSetting('gemini_api_key') || null,
+      ollama: this.db.getSetting('api_key_ollama') || this.db.getSetting('ollama_base_url') || null,
+      ollamaModel: this.db.getSetting('ollama_model') || null,
     };
   }
 
@@ -51,6 +51,7 @@ export class AIService {
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
       }),
+      signal: AbortSignal.timeout(30000),
     });
 
     if (!response.ok) {
@@ -62,7 +63,7 @@ export class AIService {
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    return data.choices?.[0]?.message?.content ?? data.content ?? (typeof data === 'string' ? data : JSON.stringify(data));
   }
 
   private async callGemini(prompt: string, apiKey: string, model: string = 'gemini-2.5-flash'): Promise<string> {
@@ -75,6 +76,7 @@ export class AIService {
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
         }),
+        signal: AbortSignal.timeout(30000),
       },
     );
 
@@ -87,7 +89,7 @@ export class AIService {
     }
 
     const data = await response.json();
-    return data.candidates[0].content.parts[0].text;
+    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? data.choices?.[0]?.message?.content ?? (typeof data === 'string' ? data : JSON.stringify(data));
   }
 
   private async callOllama(prompt: string, baseUrl: string, model: string): Promise<string> {
@@ -104,6 +106,7 @@ export class AIService {
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
       }),
+      signal: AbortSignal.timeout(30000),
     });
 
     if (!response.ok) {
@@ -112,7 +115,7 @@ export class AIService {
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    return data.choices?.[0]?.message?.content ?? data.response ?? data.content ?? (typeof data === 'string' ? data : JSON.stringify(data));
   }
 
   private async generateCompletion(
@@ -211,14 +214,28 @@ ${truncatedText}
       .replace(/```/g, '')
       .trim();
 
-    try {
-      const parsed = JSON.parse(result);
-      this.db.updateArticleAiSummary(articleId, JSON.stringify(parsed));
-      return parsed;
-    } catch (err) {
-      console.error('Failed to parse LLM JSON:', result);
-      throw new Error('A IA não retornou um formato JSON válido.');
+    let parsed: any;
+    if (typeof result === 'object' && result !== null) {
+      parsed = result;
+    } else {
+      try {
+        parsed = parseAndRepairJson(result);
+      } catch (err) {
+        console.error('Failed to parse LLM JSON:', err, 'Raw result:', result);
+        throw new Error(
+          `[ERR_INVALID_AI_RESPONSE] A IA não retornou um formato JSON válido. Offending value: "${String(result).slice(0, 100)}...". Expected shape: Objeto JSON válido com resumo do artigo.`
+        );
+      }
     }
+
+    if (this.db && typeof this.db.updateArticleAiSummary === 'function') {
+      try {
+        this.db.updateArticleAiSummary(articleId, JSON.stringify(parsed));
+      } catch (err) {
+        console.error('Failed to update article AI summary in db:', err);
+      }
+    }
+    return parsed;
   }
 
   public async massiveExtraction(articleId: number, pdfPath: string, questions: string[]): Promise<any[]> {

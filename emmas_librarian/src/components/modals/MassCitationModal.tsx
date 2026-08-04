@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { generateCitation, parseAuthors, CitationStyle, CitationOutputFormat } from '../../services/citationService';
 import { X, Copy, Check, FileText, Code, Braces, Save, RotateCcw, Edit3 } from 'lucide-react';
@@ -210,6 +210,14 @@ export function MassCitationModal({ isOpen, onClose, articles, onArticlesUpdated
       setEditableFields({ ...original });
     }
   };
+
+  const formattedCitationsMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const art of sortedArticles) {
+      map.set(art.id, generateCitation(art, style, format, useEtAl));
+    }
+    return map;
+  }, [sortedArticles, style, format, useEtAl]);
 
   return createPortal(
     <div
@@ -761,7 +769,7 @@ export function MassCitationModal({ isOpen, onClose, articles, onArticlesUpdated
                     </div>
                   ) : (
                     sortedArticles.map((art, index) => {
-                      const citText = generateCitation(art, style, format, useEtAl);
+                      const citText = formattedCitationsMap.get(art.id) || '';
                       return (
                         <div
                           key={art.id}

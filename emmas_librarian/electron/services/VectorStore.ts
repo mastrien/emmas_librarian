@@ -82,8 +82,37 @@ export class VectorStore {
 
   /** Busca os K chunks mais similares à query em um artigo específico. */
   searchSimilar(queryEmbedding: number[], topK: number, articleId: number): SimilarChunk[] {
-    // vec_distance_L2 is commonly used in sqlite-vec
     const floatArray = new Float32Array(queryEmbedding);
+
+    try {
+      const stmtMatch = this.db.prepare(`
+        SELECT 
+          c.id as chunkId,
+          c.text_content as text,
+          c.page_number as page,
+          c.bbox_x as bbox_x,
+          c.bbox_y as bbox_y,
+          c.bbox_w as bbox_w,
+          c.bbox_h as bbox_h,
+          e.distance as similarityScore
+        FROM pdf_chunk_embeddings e
+        JOIN pdf_chunks c ON c.id = e.rowid
+        WHERE e.embedding MATCH ? AND k = ? AND c.article_id = ?
+        ORDER BY e.distance ASC
+      `);
+      const rows = stmtMatch.all(floatArray, topK, articleId) as any[];
+      if (rows && rows.length > 0) {
+        return rows.map((row) => ({
+          chunkId: row.chunkId,
+          text: row.text,
+          page: row.page,
+          bbox: { x: row.bbox_x, y: row.bbox_y, w: row.bbox_w, h: row.bbox_h },
+          similarityScore: row.similarityScore,
+        }));
+      }
+    } catch (e) {
+      // Fallback query if MATCH clause isn't supported by the loaded virtual table format
+    }
 
     const stmt = this.db.prepare(`
       SELECT 
@@ -114,7 +143,6 @@ export class VectorStore {
         w: row.bbox_w,
         h: row.bbox_h,
       },
-      // Lower L2 distance means higher similarity. You might map this to a score (e.g. 1 / (1 + distance)).
       similarityScore: row.similarityScore,
     }));
   }

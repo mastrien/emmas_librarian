@@ -1,5 +1,6 @@
-import { app, BrowserWindow, session, shell, dialog, nativeImage } from 'electron';
+import { app, BrowserWindow, session, shell, dialog, nativeImage, protocol, net } from 'electron';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 
@@ -111,10 +112,20 @@ process.on('uncaughtException', (error) => {
   }
 });
 
+process.on('unhandledRejection', (reason: unknown) => {
+  log.error('Unhandled Promise Rejection in Main Process:', reason);
+  console.error('Unhandled Promise Rejection in Main Process:', reason);
+});
+
 app
   .whenReady()
   .then(() => {
     try {
+      protocol.handle('emma-pdf', (request) => {
+        const url = request.url.replace('emma-pdf://', '');
+        const decodedPath = decodeURIComponent(url);
+        return net.fetch(pathToFileURL(decodedPath).toString());
+      });
       setupIpcRegistries();
       createWindow();
 

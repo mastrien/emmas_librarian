@@ -53,10 +53,45 @@ export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(ha
 
       // Attempt to map common raw errors or construct a generic internal error
       const message = error?.message || String(error);
+      const errCode = error?.code;
       const isQuota =
         message.includes('429') || message.includes('QUOTA_EXCEEDED') || message.includes('insufficient_quota');
 
-      const appError = new AppError(isQuota ? 'ERR_API_QUOTA_EXCEEDED' : 'ERR_INTERNAL', 'SYSTEM_ERROR', message);
+      if (isQuota) {
+        throw new Error(new AppError('ERR_API_QUOTA_EXCEEDED', 'SYSTEM_ERROR', message).toJSONString());
+      }
+
+      if (errCode === 'SQLITE_CONSTRAINT_UNIQUE' || message.includes('UNIQUE constraint failed')) {
+        throw new Error(
+          new AppError(
+            'ERR_DUPLICATE',
+            'USER_ERROR',
+            `[ERR_DUPLICATE] Violação de unicidade no banco de dados. Valor conflitante detectado. Detalhes: ${message}`
+          ).toJSONString()
+        );
+      }
+
+      if (errCode === 'SQLITE_BUSY' || message.includes('database is locked')) {
+        throw new Error(
+          new AppError(
+            'ERR_DATABASE_LOCKED',
+            'SYSTEM_ERROR',
+            `[ERR_DATABASE_LOCKED] O banco de dados está temporariamente bloqueado. Tente novamente em instantes.`
+          ).toJSONString()
+        );
+      }
+
+      if (errCode?.startsWith?.('SQLITE_') || message.includes('SqliteError')) {
+        throw new Error(
+          new AppError(
+            'ERR_DATABASE',
+            'SYSTEM_ERROR',
+            `[ERR_DATABASE] Erro na operação de banco de dados. Causa: ${message}`
+          ).toJSONString()
+        );
+      }
+
+      const appError = new AppError('ERR_INTERNAL', 'SYSTEM_ERROR', message);
       throw new Error(appError.toJSONString());
     }
   }) as T;

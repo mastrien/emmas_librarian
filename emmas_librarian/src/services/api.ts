@@ -19,9 +19,9 @@ import {
 } from '../types';
 import { parseIpcError } from '../utils/AppError';
 
-async function safeInvoke(channel: IpcChannel, ...args: any[]): Promise<any> {
+async function safeInvoke<TResponse = unknown>(channel: IpcChannel, ...args: unknown[]): Promise<TResponse> {
   try {
-    return await window.electronAPI.invoke(channel, ...args);
+    return (await window.electronAPI.invoke(channel, ...args)) as TResponse;
   } catch (error) {
     throw parseIpcError(error);
   }
@@ -29,15 +29,15 @@ async function safeInvoke(channel: IpcChannel, ...args: any[]): Promise<any> {
 
 export const projectService = {
   async getProjects(): Promise<Project[]> {
-    return (await safeInvoke(IpcChannel.PROJECTS_GET_ALL)) as any;
+    return safeInvoke<Project[]>(IpcChannel.PROJECTS_GET_ALL);
   },
 
   async createProject(name: string): Promise<Project> {
-    return (await safeInvoke(IpcChannel.PROJECTS_CREATE, name)) as any;
+    return safeInvoke<Project>(IpcChannel.PROJECTS_CREATE, name);
   },
 
   async getProject(projectId: number): Promise<Project> {
-    return (await safeInvoke(IpcChannel.PROJECTS_GET_ONE, projectId)) as any;
+    return safeInvoke<Project>(IpcChannel.PROJECTS_GET_ONE, projectId);
   },
 
   async updateProject(id: number, name: string): Promise<void> {
@@ -127,7 +127,7 @@ export const projectService = {
     annotationContent?: string,
   ): Promise<{ id: number; annotation_id: number | null }> {
     const positionDataStr = JSON.stringify(positionData);
-    const id = await safeInvoke(
+    const id = await safeInvoke<number>(
       IpcChannel.HIGHLIGHTS_CREATE,
       articleId,
       color,
@@ -139,11 +139,11 @@ export const projectService = {
   },
 
   async getAnnotations(articleId: number): Promise<Annotation[]> {
-    return (await safeInvoke(IpcChannel.ANNOTATIONS_GET, articleId)) as any;
+    return safeInvoke<Annotation[]>(IpcChannel.ANNOTATIONS_GET, articleId);
   },
 
   async createAnnotation(articleId: number, content: string): Promise<{ id: number }> {
-    const id = await safeInvoke(IpcChannel.ANNOTATIONS_CREATE, articleId, content);
+    const id = await safeInvoke<number>(IpcChannel.ANNOTATIONS_CREATE, articleId, content);
     return { id };
   },
 

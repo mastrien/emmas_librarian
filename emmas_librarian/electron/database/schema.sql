@@ -356,3 +356,20 @@ CREATE TABLE IF NOT EXISTS scientific_milestones (
     FOREIGN KEY (venue_id) REFERENCES scientific_venues(id) ON DELETE CASCADE
 );
 
+-- Índices para otimização de consultas da tabela de artigos
+CREATE INDEX IF NOT EXISTS idx_articles_project_id ON articles(project_id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_doi ON articles(doi) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_articles_local_file_path ON articles(local_file_path);
+CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(project_id, status) WHERE deleted_at IS NULL;
+
+-- Índices para tabelas relacionais e anexos
+CREATE INDEX IF NOT EXISTS idx_annotations_article_id ON annotations(article_id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_highlights_article_id ON highlights(article_id);
+CREATE INDEX IF NOT EXISTS idx_pdf_chunks_article_id ON pdf_chunks(article_id);
+CREATE INDEX IF NOT EXISTS idx_pdf_chunks_composite ON pdf_chunks(article_id, chunk_index);
+CREATE INDEX IF NOT EXISTS idx_project_documents_project_id ON project_documents(project_id);
+CREATE INDEX IF NOT EXISTS idx_search_history_project_id ON search_history(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_categories_project_id ON project_categories(project_id);
+CREATE INDEX IF NOT EXISTS idx_massive_investigations_project_id ON massive_investigations(project_id);
+
+

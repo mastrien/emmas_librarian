@@ -96,29 +96,33 @@ if (winApi) {
   winApi.invoke('UPDATE_TITLE_BAR', savedTheme);
 }
 
+import { ReactErrorBoundary } from './components/common/ErrorBoundary';
+
 const rootEl = document.getElementById('root');
 if (rootEl)
   ReactDOMClient.createRoot(rootEl).render(
-    <GlobalErrorProvider>
-      <HashRouter>
-        <Layout>
-          <Suspense
-            fallback={<div className="flex-1 flex items-center justify-center p-8 text-gray-500">Loading...</div>}
-          >
-            <Routes>
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/new-project" element={<NewProjectPage />} />
-              <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-              <Route path="/projects/:id/search" element={<SearchPage />} />
-              <Route path="/articles/:id" element={<ArticleReaderPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/terms" element={<TermsOfUsePage />} />
-              <Route path="/pdfs" element={<PdfLibraryPage />} />
-              <Route path="/agenda" element={<AgendaPage />} />
-            </Routes>
-          </Suspense>
-        </Layout>
-      </HashRouter>
-      <ErrorModal />
-    </GlobalErrorProvider>,
+    <ReactErrorBoundary>
+      <GlobalErrorProvider>
+        <HashRouter>
+          <Layout>
+            <Suspense
+              fallback={<div className="flex-1 flex items-center justify-center p-8 text-gray-500">Loading...</div>}
+            >
+              <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/new-project" element={<NewProjectPage />} />
+                <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+                <Route path="/projects/:id/search" element={<SearchPage />} />
+                <Route path="/articles/:id" element={<ArticleReaderPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/terms" element={<TermsOfUsePage />} />
+                <Route path="/pdfs" element={<PdfLibraryPage />} />
+                <Route path="/agenda" element={<AgendaPage />} />
+              </Routes>
+            </Suspense>
+          </Layout>
+        </HashRouter>
+        <ErrorModal />
+      </GlobalErrorProvider>
+    </ReactErrorBoundary>,
   );

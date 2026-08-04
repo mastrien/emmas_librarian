@@ -20,7 +20,9 @@ export function setupAiIpcHandlers(db: DatabaseAdapter, aiService: AIService, ip
     withErrorHandling(async (event, articleId: number) => {
       const article = db.getArticle(articleId);
       if (!article || !article.local_file_path || !fs.existsSync(article.local_file_path)) {
-        throw new Error('PDF not found for this article.');
+        throw new Error(
+          `[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=${articleId}. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.`
+        );
       }
       return aiService.generateSummary(articleId, article.local_file_path);
     }),
@@ -38,7 +40,9 @@ export function setupAiIpcHandlers(db: DatabaseAdapter, aiService: AIService, ip
       }
       const article = db.getArticle(articleId);
       if (!article || !article.local_file_path || !fs.existsSync(article.local_file_path)) {
-        throw new Error('PDF not found for this article.');
+        throw new Error(
+          `[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=${articleId}. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.`
+        );
       }
       return aiService.massiveExtraction(articleId, article.local_file_path, questions);
     }),
@@ -49,69 +53,98 @@ export function setupAiIpcHandlers(db: DatabaseAdapter, aiService: AIService, ip
     withErrorHandling(async (event, articleId: number) => {
       const article = db.getArticle(articleId);
       if (!article || !article.local_file_path || !fs.existsSync(article.local_file_path)) {
-        throw new Error('PDF not found for this article.');
+        throw new Error(
+          `[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=${articleId}. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.`
+        );
       }
       return aiService.extractMetadataFromPdf(articleId, article.local_file_path);
     }),
   );
 
   // AI Model Config handlers
-  ipcMainModule.handle(IpcChannel.AI_MODEL_CONFIG_GET_ALL, async () => {
-    return amcRepo.getAllConfigs();
-  });
+  ipcMainModule.handle(
+    IpcChannel.AI_MODEL_CONFIG_GET_ALL,
+    withErrorHandling(async () => {
+      return amcRepo.getAllConfigs();
+    }),
+  );
 
   ipcMainModule.handle(
     IpcChannel.AI_MODEL_CONFIG_UPDATE,
-    async (_, skill: AISkill, provider: AIProvider, modelName: string) => {
+    withErrorHandling(async (_, skill: AISkill, provider: AIProvider, modelName: string) => {
       amcRepo.updateConfig(skill, provider, modelName);
-    },
+    }),
   );
 
-  ipcMainModule.handle(IpcChannel.AI_MODEL_CONFIG_RESTORE, async () => {
-    amcRepo.restoreDefaults();
-  });
+  ipcMainModule.handle(
+    IpcChannel.AI_MODEL_CONFIG_RESTORE,
+    withErrorHandling(async () => {
+      amcRepo.restoreDefaults();
+    }),
+  );
 
   // Question Sets handlers
-  ipcMainModule.handle(IpcChannel.QUESTION_SETS_LIST, async (_, projectId: number | null) => {
-    return qsRepo.listQuestionSets(projectId);
-  });
+  ipcMainModule.handle(
+    IpcChannel.QUESTION_SETS_LIST,
+    withErrorHandling(async (_, projectId: number | null) => {
+      return qsRepo.listQuestionSets(projectId);
+    }),
+  );
 
-  ipcMainModule.handle(IpcChannel.QUESTION_SETS_GET, async (_, id: number) => {
-    return qsRepo.getQuestionSet(id);
-  });
+  ipcMainModule.handle(
+    IpcChannel.QUESTION_SETS_GET,
+    withErrorHandling(async (_, id: number) => {
+      return qsRepo.getQuestionSet(id);
+    }),
+  );
 
-  ipcMainModule.handle(IpcChannel.QUESTION_SETS_CREATE, async (_, data: any) => {
-    return qsRepo.createQuestionSet(data);
-  });
+  ipcMainModule.handle(
+    IpcChannel.QUESTION_SETS_CREATE,
+    withErrorHandling(async (_, data: any) => {
+      return qsRepo.createQuestionSet(data);
+    }),
+  );
 
-  ipcMainModule.handle(IpcChannel.QUESTION_SETS_UPDATE, async (_, id: number, data: any) => {
-    qsRepo.updateQuestionSet(id, data);
-  });
+  ipcMainModule.handle(
+    IpcChannel.QUESTION_SETS_UPDATE,
+    withErrorHandling(async (_, id: number, data: any) => {
+      qsRepo.updateQuestionSet(id, data);
+    }),
+  );
 
-  ipcMainModule.handle(IpcChannel.QUESTION_SETS_DELETE, async (_, id: number) => {
-    qsRepo.deleteQuestionSet(id);
-  });
+  ipcMainModule.handle(
+    IpcChannel.QUESTION_SETS_DELETE,
+    withErrorHandling(async (_, id: number) => {
+      qsRepo.deleteQuestionSet(id);
+    }),
+  );
 
-  ipcMainModule.handle(IpcChannel.QUESTION_SETS_DUPLICATE, async (_, id: number, projectId: number | null) => {
-    return qsRepo.duplicateQuestionSet(id, projectId);
-  });
+  ipcMainModule.handle(
+    IpcChannel.QUESTION_SETS_DUPLICATE,
+    withErrorHandling(async (_, id: number, projectId: number | null) => {
+      return qsRepo.duplicateQuestionSet(id, projectId);
+    }),
+  );
 
   // Investigation Results handlers
   ipcMainModule.handle(
     IpcChannel.INVESTIGATION_RESULTS_SAVE,
-    async (_, investigationId: number, articleId: number, results: InvestigationResultInput[]) => {
+    withErrorHandling(async (_, investigationId: number, articleId: number, results: InvestigationResultInput[]) => {
       irRepo.saveResultsBatch(investigationId, articleId, results);
-    },
+    }),
   );
 
-  ipcMainModule.handle(IpcChannel.INVESTIGATION_RESULTS_GET, async (_, investigationId: number) => {
-    return irRepo.getResultsByInvestigation(investigationId);
-  });
+  ipcMainModule.handle(
+    IpcChannel.INVESTIGATION_RESULTS_GET,
+    withErrorHandling(async (_, investigationId: number) => {
+      return irRepo.getResultsByInvestigation(investigationId);
+    }),
+  );
 
   ipcMainModule.handle(
     IpcChannel.INVESTIGATION_RESULTS_GET_BY_ARTICLE,
-    async (_, investigationId: number, articleId: number) => {
+    withErrorHandling(async (_, investigationId: number, articleId: number) => {
       return irRepo.getResultsByArticle(investigationId, articleId);
-    },
+    }),
   );
 }
