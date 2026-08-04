@@ -159,8 +159,45 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
+  const getModelSuggestions = (skill: AISkill, provider: AIProvider): string[] => {
+    if (skill === 'embeddings') {
+      if (provider === 'gemini') return ['text-embedding-004'];
+      if (provider === 'openai') return ['text-embedding-3-small', 'text-embedding-3-large'];
+      if (provider === 'ollama') return ['nomic-embed-text', 'all-minilm'];
+      return [];
+    }
+    if (provider === 'gemini') return ['gemini-2.5-flash', 'gemini-1.5-pro'];
+    if (provider === 'openai') return ['gpt-4o-mini', 'gpt-4o'];
+    if (provider === 'ollama_cloud') return ['gpt-oss:120b-cloud', 'gpt-oss:120b', 'deepseek-v4-pro', 'qwen3.5:397b'];
+    if (provider === 'ollama') return ['llama3', 'llama3.1:70b', 'mistral'];
+    if (provider === 'anthropic') return ['claude-3-5-sonnet-20240620', 'claude-3-haiku-20240307'];
+    return [];
+  };
+
   const handleUpdateAiConfig = (skill: AISkill, field: 'provider' | 'model_name', value: string) => {
-    setAiConfigs((prev) => prev.map((c) => (c.skill === skill ? { ...c, [field]: value } : c)));
+    setAiConfigs((prev) =>
+      prev.map((c) => {
+        if (c.skill !== skill) return c;
+        if (field === 'provider') {
+          const newProvider = value as AIProvider;
+          let suggestedModel = c.model_name;
+
+          if (skill === 'embeddings') {
+            if (newProvider === 'gemini') suggestedModel = 'text-embedding-004';
+            else if (newProvider === 'openai') suggestedModel = 'text-embedding-3-small';
+            else if (newProvider === 'ollama') suggestedModel = 'nomic-embed-text';
+          } else {
+            if (newProvider === 'gemini') suggestedModel = 'gemini-2.5-flash';
+            else if (newProvider === 'openai') suggestedModel = 'gpt-4o-mini';
+            else if (newProvider === 'ollama_cloud') suggestedModel = 'gpt-oss:120b-cloud';
+            else if (newProvider === 'ollama') suggestedModel = 'llama3';
+            else if (newProvider === 'anthropic') suggestedModel = 'claude-3-5-sonnet-20240620';
+          }
+          return { ...c, provider: newProvider, model_name: suggestedModel };
+        }
+        return { ...c, [field]: value };
+      }),
+    );
   };
 
   const handleToggleAutoBackups = async (enabled: boolean) => {
@@ -809,8 +846,49 @@ export const SettingsPage: React.FC = () => {
                           }}
                           placeholder="Ex: gemini-2.5-flash"
                         />
+                        {getModelSuggestions(conf.skill, conf.provider).length > 0 && (
+                          <div
+                            style={{
+                              marginTop: '0.4rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              flexWrap: 'wrap',
+                            }}
+                          >
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sugestões:</span>
+                            {getModelSuggestions(conf.skill, conf.provider).map((sug) => (
+                              <button
+                                key={sug}
+                                type="button"
+                                onClick={() => handleUpdateAiConfig(conf.skill, 'model_name', sug)}
+                                style={{
+                                  fontSize: '0.72rem',
+                                  padding: '0.15rem 0.45rem',
+                                  borderRadius: '12px',
+                                  border:
+                                    conf.model_name === sug
+                                      ? '1px solid var(--primary-color)'
+                                      : '1px solid var(--border-color)',
+                                  background:
+                                    conf.model_name === sug ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-card)',
+                                  color: conf.model_name === sug ? 'var(--primary-color)' : 'var(--text-muted)',
+                                  cursor: 'pointer',
+                                  fontWeight: conf.model_name === sug ? 600 : 400,
+                                }}
+                              >
+                                {sug}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
+                    {conf.skill === 'embeddings' && (
+                      <p style={{ margin: '0.6rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        💡 <strong>Dica:</strong> Se você já usa a chave do <strong>Gemini</strong> ou <strong>OpenAI</strong>, os modelos <code>text-embedding-004</code> (Gemini - Grátis) e <code>text-embedding-3-small</code> (OpenAI) funcionam 100% em nuvem sem precisar do Ollama Local!
+                      </p>
+                    )}
                   </div>
                 ))}
 
