@@ -270,7 +270,6 @@ describe('AIService', () => {
   it('should call Ollama Cloud if configured for summary skill', async () => {
     dbMock.getSetting = vi.fn((key: string) => {
       if (key === 'api_key_ollama_cloud') return 'cloud-secret-key';
-      if (key === 'ollama_cloud_base_url') return 'https://api.ollama.cloud/v1';
       return null;
     });
 
@@ -288,7 +287,7 @@ describe('AIService', () => {
 
     const summary = await aiService.generateSummary(1, 'fake/path.pdf');
     expect(global.fetch).toHaveBeenCalledWith(
-      'https://api.ollama.cloud/v1/chat/completions',
+      'https://ollama.com/v1/chat/completions',
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer cloud-secret-key',
@@ -298,14 +297,14 @@ describe('AIService', () => {
     expect(summary.generalSummary).toBe('Ollama Cloud Summary');
   });
 
-  it('should throw AppError if ollama_cloud key or url is missing', async () => {
+  it('should throw AppError if ollama_cloud key is missing', async () => {
     dbMock.getSetting = vi.fn(() => null);
     mockGetConfig.mockReturnValueOnce({
       provider: 'ollama_cloud',
       model_name: 'llama3.1:70b',
     } as any);
 
-    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('URL do Ollama Cloud não configurada');
+    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('Chave do Ollama Cloud não configurada');
   });
 
   it('should throw QUOTA_EXCEEDED when API returns 429', async () => {

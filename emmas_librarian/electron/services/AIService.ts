@@ -41,13 +41,18 @@ export class AIService {
     ollamaCloudUrl: string | null;
     ollamaCloudModel?: string | null;
   } {
+    let cloudUrl = this.db.getSetting('ollama_cloud_base_url') || 'https://ollama.com/v1';
+    if (cloudUrl.includes('api.ollama.cloud')) {
+      cloudUrl = 'https://ollama.com/v1';
+    }
+
     return {
       openai: this.db.getSetting('api_key_openai') || this.db.getSetting('openai_api_key') || null,
       gemini: this.db.getSetting('api_key_gemini') || this.db.getSetting('gemini_api_key') || null,
       ollama: this.db.getSetting('api_key_ollama') || this.db.getSetting('ollama_base_url') || null,
       ollamaModel: this.db.getSetting('ollama_model') || null,
       ollamaCloud: this.db.getSetting('api_key_ollama_cloud') || this.db.getSetting('ollama_cloud_api_key') || null,
-      ollamaCloudUrl: this.db.getSetting('ollama_cloud_base_url') || null,
+      ollamaCloudUrl: cloudUrl,
       ollamaCloudModel: this.db.getSetting('ollama_cloud_model') || null,
     };
   }

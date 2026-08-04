@@ -61,6 +61,13 @@ export class EmbeddingService {
       });
 
       if (!response.ok) {
+        if (response.status === 404 || response.status === 503) {
+          throw new AppError(
+            'ERR_MODEL_NOT_DEFINED',
+            'USER_ERROR',
+            `[ERR_MODEL_NOT_DEFINED] O provedor Ollama Cloud (https://ollama.com/v1) é destinado a geração de texto e metadados (LLMs). Para a funcionalidade de Embeddings (Vetorização), selecione "Ollama (Local)", "OpenAI" ou "Gemini" nas Configurações Avançadas.`,
+          );
+        }
         const rawText = await response.text();
         const cleanText = rawText.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() || 'Serviço indisponível no provedor remoto.';
         throw new AppError(
