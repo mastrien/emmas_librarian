@@ -1,5 +1,6 @@
 import { AIModelConfig } from '../../src/types';
 import { AppError } from '../ipc/errorHandler';
+import { LlamaServerManager } from './llm/LlamaServerManager';
 
 export class EmbeddingService {
   constructor(
@@ -193,33 +194,48 @@ export class EmbeddingService {
     }
 
     if (this.config.provider === 'llama_cpp') {
+      try {
+        await LlamaServerManager.getInstance().ensureStarted();
+      } catch (err: any) {
+        if (err instanceof AppError) throw err;
+      }
+
       let baseUrl = (this.keys?.llamaCppUrl || 'http://127.0.0.1:11435/v1').trim();
       if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
       const endpoint = baseUrl.endsWith('/embeddings') ? baseUrl : `${baseUrl}/embeddings`;
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: this.config.model_name || 'all-MiniLM-L6-v2.gguf',
-          input: text,
-        }),
-      });
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: this.config.model_name || 'all-MiniLM-L6-v2.gguf',
+            input: text,
+          }),
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          throw new AppError(
+            'ERR_API_CONNECTION',
+            'SYSTEM_ERROR',
+            `[ERR_API_CONNECTION] Erro no serviço local llama.cpp (HTTP ${response.status}): ${response.statusText}`,
+          );
+        }
+
+        const data = await response.json();
+        const embedding = data.data?.[0]?.embedding || data.embedding;
+        if (!embedding) {
+          throw new AppError('ERR_INVALID_AI_RESPONSE', 'SYSTEM_ERROR', `A API local do llama.cpp não retornou um vetor de embedding válido.`);
+        }
+        return embedding as number[];
+      } catch (err: any) {
+        if (err instanceof AppError) throw err;
         throw new AppError(
           'ERR_API_CONNECTION',
           'SYSTEM_ERROR',
-          `[ERR_API_CONNECTION] Erro no serviço local llama.cpp (HTTP ${response.status}): ${response.statusText}`,
+          `[ERR_API_CONNECTION] Falha ao conectar com o serviço local llama.cpp (127.0.0.1:11435): ${err.message || 'Servidor inacessível'}`,
         );
       }
-
-      const data = await response.json();
-      const embedding = data.data?.[0]?.embedding || data.embedding;
-      if (!embedding) {
-        throw new AppError('ERR_INVALID_AI_RESPONSE', 'SYSTEM_ERROR', `A API local do llama.cpp não retornou um vetor de embedding válido.`);
-      }
-      return embedding as number[];
     }
 
     if (this.config.provider === 'anthropic') {

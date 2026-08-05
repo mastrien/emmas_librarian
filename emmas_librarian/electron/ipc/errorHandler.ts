@@ -91,6 +91,22 @@ export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(ha
         );
       }
 
+      const isFetchFailed =
+        message === 'fetch failed' ||
+        message.includes('fetch failed') ||
+        errCode === 'ECONNREFUSED' ||
+        errCode === 'ENOTFOUND';
+
+      if (isFetchFailed) {
+        throw new Error(
+          new AppError(
+            'ERR_API_CONNECTION',
+            'SYSTEM_ERROR',
+            `[ERR_API_CONNECTION] Não foi possível conectar ao provedor de IA. Verifique sua conexão com a internet ou se o serviço local de IA está em execução. (${message})`
+          ).toJSONString()
+        );
+      }
+
       const appError = new AppError('ERR_INTERNAL', 'SYSTEM_ERROR', message);
       throw new Error(appError.toJSONString());
     }
