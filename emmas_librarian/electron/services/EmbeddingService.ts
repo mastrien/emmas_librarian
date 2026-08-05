@@ -192,6 +192,36 @@ export class EmbeddingService {
       });
     }
 
+    if (this.config.provider === 'llama_cpp') {
+      let baseUrl = (this.keys?.llamaCppUrl || 'http://127.0.0.1:11435/v1').trim();
+      if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+      const endpoint = baseUrl.endsWith('/embeddings') ? baseUrl : `${baseUrl}/embeddings`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: this.config.model_name || 'all-MiniLM-L6-v2.gguf',
+          input: text,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new AppError(
+          'ERR_API_CONNECTION',
+          'SYSTEM_ERROR',
+          `[ERR_API_CONNECTION] Erro no serviço local llama.cpp (HTTP ${response.status}): ${response.statusText}`,
+        );
+      }
+
+      const data = await response.json();
+      const embedding = data.data?.[0]?.embedding || data.embedding;
+      if (!embedding) {
+        throw new AppError('ERR_INVALID_AI_RESPONSE', 'SYSTEM_ERROR', `A API local do llama.cpp não retornou um vetor de embedding válido.`);
+      }
+      return embedding as number[];
+    }
+
     if (this.config.provider === 'anthropic') {
       throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', `O provedor Anthropic não possui API nativa de embeddings.`);
     }
@@ -290,6 +320,35 @@ export class EmbeddingService {
       }
 
       return allEmbeddings;
+    }
+
+    if (this.config.provider === 'llama_cpp') {
+      let baseUrl = (this.keys?.llamaCppUrl || 'http://127.0.0.1:11435/v1').trim();
+      if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+      const endpoint = baseUrl.endsWith('/embeddings') ? baseUrl : `${baseUrl}/embeddings`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: this.config.model_name || 'all-MiniLM-L6-v2.gguf',
+          input: texts,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new AppError(
+          'ERR_API_CONNECTION',
+          'SYSTEM_ERROR',
+          `[ERR_API_CONNECTION] Erro no serviço local llama.cpp em lote (HTTP ${response.status}): ${response.statusText}`,
+        );
+      }
+
+      const data = await response.json();
+      if (!data.data || !Array.isArray(data.data)) {
+        throw new AppError('ERR_INVALID_AI_RESPONSE', 'SYSTEM_ERROR', `A API local do llama.cpp não retornou vetores em lote válidos.`);
+      }
+      return data.data.map((item: any) => item.embedding as number[]);
     }
 
     const results: number[][] = [];

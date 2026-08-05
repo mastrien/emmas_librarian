@@ -98,6 +98,28 @@ describe('EmbeddingService', () => {
     );
   });
 
+  it('should generate embedding using llama_cpp provider', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [{ embedding: [0.11, 0.22] }] }),
+    });
+    global.fetch = fetchMock;
+
+    const config = { ...mockConfig, provider: 'llama_cpp' as const, model_name: 'all-MiniLM-L6-v2.gguf' };
+    const service = new EmbeddingService(config, { llamaCppUrl: 'http://127.0.0.1:11435/v1' });
+    const result = await service.embed('hello llama_cpp');
+
+    expect(result).toEqual([0.11, 0.22]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:11435/v1/embeddings',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'all-MiniLM-L6-v2.gguf', input: 'hello llama_cpp' }),
+      }),
+    );
+  });
+
   it('should throw if Ollama Cloud API key is missing', async () => {
     const config = { ...mockConfig, provider: 'ollama_cloud' as const };
     const service = new EmbeddingService(config, {});
