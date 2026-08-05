@@ -69,7 +69,7 @@ describe('EmbeddingService', () => {
       statusText: 'Internal Error',
     });
     const service = new EmbeddingService(mockConfig);
-    await expect(service.embed('fail')).rejects.toThrow('Ollama embedding error');
+    await expect(service.embed('fail')).rejects.toThrow('Erro no serviço Ollama local');
   });
 
   it('should generate embedding using Ollama Cloud with Authorization header', async () => {
@@ -118,7 +118,7 @@ describe('EmbeddingService', () => {
   it('should throw if OpenAI key is missing', async () => {
     const config = { ...mockConfig, provider: 'openai' as const };
     const service = new EmbeddingService(config, {});
-    await expect(service.embed('test')).rejects.toThrow('OpenAI API key missing');
+    await expect(service.embed('test')).rejects.toThrow('Chave de API da OpenAI não configurada para embeddings.');
   });
 
   it('should handle OpenAI API errors', async () => {
@@ -146,7 +146,7 @@ describe('EmbeddingService', () => {
   it('should throw if Gemini key is missing', async () => {
     const config = { ...mockConfig, provider: 'gemini' as const };
     const service = new EmbeddingService(config, {});
-    await expect(service.embed('test')).rejects.toThrow('Gemini API key missing');
+    await expect(service.embed('test')).rejects.toThrow('Chave de API do Gemini não configurada para embeddings.');
   });
 
   it('should handle Gemini API errors', async () => {
@@ -157,18 +157,18 @@ describe('EmbeddingService', () => {
     });
     const config = { ...mockConfig, provider: 'gemini' as const };
     const service = new EmbeddingService(config, { gemini: 'gemini-key' });
-    await expect(service.embed('test')).rejects.toThrow('Gemini embedding error');
+    await expect(service.embed('test')).rejects.toThrow('Erro no Gemini embedding');
   });
 
   it('should throw for Anthropic provider', async () => {
     const config = { ...mockConfig, provider: 'anthropic' as const };
     const service = new EmbeddingService(config, {});
-    await expect(service.embed('test')).rejects.toThrow('Anthropic currently does not provide');
+    await expect(service.embed('test')).rejects.toThrow('O provedor Anthropic não possui API nativa de embeddings.');
   });
 
   it('should throw for unknown provider', async () => {
     const config = { ...mockConfig, provider: 'unknown' as any };
     const service = new EmbeddingService(config, {});
-    await expect(service.embed('test')).rejects.toThrow('Embedding for provider unknown not implemented');
+    await expect(service.embed('test')).rejects.toThrow('Provedor de embedding unknown não suportado.');
   });
 });
