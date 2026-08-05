@@ -1,5 +1,5 @@
 export type AISkill = 'metadata' | 'summary' | 'extraction' | 'embeddings';
-export type AIProvider = 'openai' | 'gemini' | 'anthropic' | 'ollama' | 'ollama_cloud' | 'llama_cpp';
+export type AIProvider = 'openai' | 'gemini' | 'anthropic' | 'ollama' | 'ollama_cloud' | 'llama_cpp' | 'local';
 
 export interface AIModelConfig {
   id: number;

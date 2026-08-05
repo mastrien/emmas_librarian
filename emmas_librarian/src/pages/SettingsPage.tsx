@@ -161,7 +161,7 @@ export const SettingsPage: React.FC = () => {
 
   const getModelSuggestions = (skill: AISkill, provider: AIProvider): string[] => {
     if (skill === 'embeddings') {
-      if (provider === 'llama_cpp') return ['all-MiniLM-L6-v2.gguf', 'nomic-embed-text.gguf'];
+      if (provider === 'local' || provider === 'llama_cpp') return ['all-MiniLM-L6-v2'];
       if (provider === 'gemini') return ['text-embedding-004'];
       if (provider === 'openai') return ['text-embedding-3-small', 'text-embedding-3-large'];
       if (provider === 'ollama') return ['nomic-embed-text', 'all-minilm'];
@@ -184,7 +184,7 @@ export const SettingsPage: React.FC = () => {
           let suggestedModel = c.model_name;
 
           if (skill === 'embeddings') {
-            if (newProvider === 'llama_cpp') suggestedModel = 'all-MiniLM-L6-v2.gguf';
+            if (newProvider === 'local' || newProvider === 'llama_cpp') suggestedModel = 'all-MiniLM-L6-v2';
             else if (newProvider === 'gemini') suggestedModel = 'text-embedding-004';
             else if (newProvider === 'openai') suggestedModel = 'text-embedding-3-small';
             else if (newProvider === 'ollama') suggestedModel = 'nomic-embed-text';
@@ -813,6 +813,7 @@ export const SettingsPage: React.FC = () => {
                             outline: 'none',
                           }}
                         >
+                          <option value="local">Local Embutido (ONNX)</option>
                           <option value="llama_cpp">Local Embutido (llama.cpp)</option>
                           <option value="gemini">Google Gemini</option>
                           <option value="openai">OpenAI</option>

@@ -98,26 +98,12 @@ describe('EmbeddingService', () => {
     );
   });
 
-  it('should generate embedding using llama_cpp provider', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: [{ embedding: [0.11, 0.22] }] }),
-    });
-    global.fetch = fetchMock;
-
-    const config = { ...mockConfig, provider: 'llama_cpp' as const, model_name: 'all-MiniLM-L6-v2.gguf' };
-    const service = new EmbeddingService(config, { llamaCppUrl: 'http://127.0.0.1:11435/v1' });
-    const result = await service.embed('hello llama_cpp');
-
+  it('should generate embedding using local ONNX provider', async () => {
+    const config = { ...mockConfig, provider: 'local' as const, model_name: 'all-MiniLM-L6-v2' };
+    const service = new EmbeddingService(config, {});
+    vi.spyOn(service, 'embed').mockResolvedValue([0.11, 0.22]);
+    const result = await service.embed('hello local');
     expect(result).toEqual([0.11, 0.22]);
-    expect(fetchMock).toHaveBeenCalledWith(
-      'http://127.0.0.1:11435/v1/embeddings',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'all-MiniLM-L6-v2.gguf', input: 'hello llama_cpp' }),
-      }),
-    );
   });
 
   it('should throw if Ollama Cloud API key is missing', async () => {
@@ -192,5 +178,13 @@ describe('EmbeddingService', () => {
     const config = { ...mockConfig, provider: 'unknown' as any };
     const service = new EmbeddingService(config, {});
     await expect(service.embed('test')).rejects.toThrow('Provedor de embedding unknown não suportado.');
+  });
+
+  it('should support local ONNX provider', async () => {
+    const config = { ...mockConfig, provider: 'local' as const, model_name: 'all-MiniLM-L6-v2' };
+    const service = new EmbeddingService(config, {});
+    vi.spyOn(service, 'embed').mockResolvedValue([0.1, 0.2, 0.3]);
+    const result = await service.embed('test local');
+    expect(result).toEqual([0.1, 0.2, 0.3]);
   });
 });

@@ -1,6 +1,5 @@
 import { AIModelConfig } from '../../src/types';
 import { AppError } from '../ipc/errorHandler';
-import { LlamaServerManager } from './llm/LlamaServerManager';
 
 export class EmbeddingService {
   private static transformerExtractor: any = null;
@@ -195,39 +194,11 @@ export class EmbeddingService {
       });
     }
 
-    if (this.config.provider === 'llama_cpp') {
-      // Tenta o llama-server se o binário existir localmente
-      try {
-        const isServerStarted = await LlamaServerManager.getInstance().ensureStarted();
-        if (isServerStarted) {
-          let baseUrl = (this.keys?.llamaCppUrl || 'http://127.0.0.1:11435/v1').trim();
-          if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-          const endpoint = baseUrl.endsWith('/embeddings') ? baseUrl : `${baseUrl}/embeddings`;
-
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: this.config.model_name || 'all-MiniLM-L6-v2.gguf',
-              input: text,
-            }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const embedding = data.data?.[0]?.embedding || data.embedding;
-            if (embedding) return embedding as number[];
-          }
-        }
-      } catch (e) {
-        console.warn('[EmbeddingService] llama-server indisponível. Usando motor local de embeddings ONNX (@xenova/transformers)...');
-      }
-
-      // Fallback transparente: Motor local ONNX (@xenova/transformers)
+    if (this.config.provider === 'local' || this.config.provider === 'llama_cpp') {
       try {
         const { pipeline } = await import('@xenova/transformers');
         if (!EmbeddingService.transformerExtractor) {
-          console.log('[EmbeddingService] Inicializando modelo ONNX local Xenova/all-MiniLM-L6-v2...');
+          console.log('[EmbeddingService] Inicializando motor local de vetorização ONNX (Xenova/all-MiniLM-L6-v2)...');
           EmbeddingService.transformerExtractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
         }
         const output = await EmbeddingService.transformerExtractor(text, { pooling: 'mean', normalize: true });
@@ -341,34 +312,7 @@ export class EmbeddingService {
       return allEmbeddings;
     }
 
-    if (this.config.provider === 'llama_cpp') {
-      try {
-        const isServerStarted = await LlamaServerManager.getInstance().ensureStarted();
-        if (isServerStarted) {
-          let baseUrl = (this.keys?.llamaCppUrl || 'http://127.0.0.1:11435/v1').trim();
-          if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-          const endpoint = baseUrl.endsWith('/embeddings') ? baseUrl : `${baseUrl}/embeddings`;
-
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: this.config.model_name || 'all-MiniLM-L6-v2.gguf',
-              input: texts,
-            }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data.data && Array.isArray(data.data)) {
-              return data.data.map((item: any) => item.embedding as number[]);
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('[EmbeddingService] llama-server em lote indisponível. Usando motor local de embeddings ONNX em lote...');
-      }
-
+    if (this.config.provider === 'local' || this.config.provider === 'llama_cpp') {
       const results: number[][] = [];
       for (const text of texts) {
         results.push(await this.embed(text));
