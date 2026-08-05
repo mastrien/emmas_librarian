@@ -81,18 +81,32 @@ export class LlamaServerManager {
 
   private resolveBinaryPath(): string {
     const exeName = process.platform === 'win32' ? 'llama-server.exe' : 'llama-server';
-    const devPath = path.join(process.cwd(), 'bin', exeName);
-    if (fs.existsSync(devPath)) return devPath;
+    const candidatePaths = [
+      path.join(process.cwd(), 'bin', exeName),
+      path.join(process.cwd(), 'dev_data', 'bin', exeName),
+      path.join(process.resourcesPath || process.cwd(), 'bin', exeName),
+    ];
 
-    return path.join(process.resourcesPath || process.cwd(), 'bin', exeName);
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) return p;
+    }
+
+    return candidatePaths[0];
   }
 
   private resolveDefaultModelPath(): string {
     const modelName = 'all-MiniLM-L6-v2-Q4_K_M.gguf';
-    const devModel = path.join(process.cwd(), 'models', modelName);
-    if (fs.existsSync(devModel)) return devModel;
+    const candidatePaths = [
+      path.join(process.cwd(), 'models', modelName),
+      path.join(process.cwd(), 'dev_data', 'models', modelName),
+      path.join(process.resourcesPath || process.cwd(), 'models', modelName),
+    ];
 
-    return path.join(process.resourcesPath || process.cwd(), 'models', modelName);
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) return p;
+    }
+
+    return candidatePaths[0];
   }
 
   private async waitForHealth(retries: number, delayMs: number): Promise<boolean> {
