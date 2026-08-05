@@ -3,6 +3,8 @@ import { AppError } from '../ipc/errorHandler';
 import { LlamaServerManager } from './llm/LlamaServerManager';
 
 export class EmbeddingService {
+  private static transformerExtractor: any = null;
+
   constructor(
     private readonly config: AIModelConfig,
     private readonly keys?: any,
@@ -194,46 +196,47 @@ export class EmbeddingService {
     }
 
     if (this.config.provider === 'llama_cpp') {
+      // Tenta o llama-server se o binário existir localmente
       try {
-        await LlamaServerManager.getInstance().ensureStarted();
-      } catch (err: any) {
-        if (err instanceof AppError) throw err;
+        const isServerStarted = await LlamaServerManager.getInstance().ensureStarted();
+        if (isServerStarted) {
+          let baseUrl = (this.keys?.llamaCppUrl || 'http://127.0.0.1:11435/v1').trim();
+          if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+          const endpoint = baseUrl.endsWith('/embeddings') ? baseUrl : `${baseUrl}/embeddings`;
+
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: this.config.model_name || 'all-MiniLM-L6-v2.gguf',
+              input: text,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const embedding = data.data?.[0]?.embedding || data.embedding;
+            if (embedding) return embedding as number[];
+          }
+        }
+      } catch (e) {
+        console.warn('[EmbeddingService] llama-server indisponível. Usando motor local de embeddings ONNX (@xenova/transformers)...');
       }
 
-      let baseUrl = (this.keys?.llamaCppUrl || 'http://127.0.0.1:11435/v1').trim();
-      if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-      const endpoint = baseUrl.endsWith('/embeddings') ? baseUrl : `${baseUrl}/embeddings`;
-
+      // Fallback transparente: Motor local ONNX (@xenova/transformers)
       try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: this.config.model_name || 'all-MiniLM-L6-v2.gguf',
-            input: text,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new AppError(
-            'ERR_API_CONNECTION',
-            'SYSTEM_ERROR',
-            `[ERR_API_CONNECTION] Erro no serviço local llama.cpp (HTTP ${response.status}): ${response.statusText}`,
-          );
+        const { pipeline } = await import('@xenova/transformers');
+        if (!EmbeddingService.transformerExtractor) {
+          console.log('[EmbeddingService] Inicializando modelo ONNX local Xenova/all-MiniLM-L6-v2...');
+          EmbeddingService.transformerExtractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
         }
-
-        const data = await response.json();
-        const embedding = data.data?.[0]?.embedding || data.embedding;
-        if (!embedding) {
-          throw new AppError('ERR_INVALID_AI_RESPONSE', 'SYSTEM_ERROR', `A API local do llama.cpp não retornou um vetor de embedding válido.`);
-        }
-        return embedding as number[];
+        const output = await EmbeddingService.transformerExtractor(text, { pooling: 'mean', normalize: true });
+        return Array.from(output.data) as number[];
       } catch (err: any) {
-        if (err instanceof AppError) throw err;
         throw new AppError(
           'ERR_API_CONNECTION',
           'SYSTEM_ERROR',
-          `[ERR_API_CONNECTION] Falha ao conectar com o serviço local llama.cpp (127.0.0.1:11435): ${err.message || 'Servidor inacessível'}`,
+          `[ERR_API_CONNECTION] Erro no motor local de vetorização ONNX (@xenova/transformers): ${err.message || String(err)}`,
         );
       }
     }
@@ -339,32 +342,38 @@ export class EmbeddingService {
     }
 
     if (this.config.provider === 'llama_cpp') {
-      let baseUrl = (this.keys?.llamaCppUrl || 'http://127.0.0.1:11435/v1').trim();
-      if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-      const endpoint = baseUrl.endsWith('/embeddings') ? baseUrl : `${baseUrl}/embeddings`;
+      try {
+        const isServerStarted = await LlamaServerManager.getInstance().ensureStarted();
+        if (isServerStarted) {
+          let baseUrl = (this.keys?.llamaCppUrl || 'http://127.0.0.1:11435/v1').trim();
+          if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+          const endpoint = baseUrl.endsWith('/embeddings') ? baseUrl : `${baseUrl}/embeddings`;
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: this.config.model_name || 'all-MiniLM-L6-v2.gguf',
-          input: texts,
-        }),
-      });
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: this.config.model_name || 'all-MiniLM-L6-v2.gguf',
+              input: texts,
+            }),
+          });
 
-      if (!response.ok) {
-        throw new AppError(
-          'ERR_API_CONNECTION',
-          'SYSTEM_ERROR',
-          `[ERR_API_CONNECTION] Erro no serviço local llama.cpp em lote (HTTP ${response.status}): ${response.statusText}`,
-        );
+          if (response.ok) {
+            const data = await response.json();
+            if (data.data && Array.isArray(data.data)) {
+              return data.data.map((item: any) => item.embedding as number[]);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[EmbeddingService] llama-server em lote indisponível. Usando motor local de embeddings ONNX em lote...');
       }
 
-      const data = await response.json();
-      if (!data.data || !Array.isArray(data.data)) {
-        throw new AppError('ERR_INVALID_AI_RESPONSE', 'SYSTEM_ERROR', `A API local do llama.cpp não retornou vetores em lote válidos.`);
+      const results: number[][] = [];
+      for (const text of texts) {
+        results.push(await this.embed(text));
       }
-      return data.data.map((item: any) => item.embedding as number[]);
+      return results;
     }
 
     const results: number[][] = [];
