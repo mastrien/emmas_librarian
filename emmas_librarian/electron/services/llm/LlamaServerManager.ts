@@ -2,6 +2,7 @@ import { ChildProcess, spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { AppError } from '../../ipc/errorHandler';
+import { LlamaDownloader } from './LlamaDownloader';
 
 export class LlamaServerManager {
   private static instance: LlamaServerManager;
@@ -38,20 +39,16 @@ export class LlamaServerManager {
     const binaryPath = this.resolveBinaryPath();
     const modelPath = customModelPath || this.resolveDefaultModelPath();
 
-    if (!fs.existsSync(modelPath)) {
-      throw new AppError(
-        'ERR_MODEL_NOT_DEFINED',
-        'USER_ERROR',
-        `[ERR_MODEL_NOT_DEFINED] Modelo de embedding local GGUF não encontrado em: "${modelPath}".`,
-      );
-    }
+    const downloader = new LlamaDownloader();
 
     if (!fs.existsSync(binaryPath)) {
-      throw new AppError(
-        'ERR_MODEL_NOT_DEFINED',
-        'USER_ERROR',
-        `[ERR_MODEL_NOT_DEFINED] Executável do llama-server não encontrado em: "${binaryPath}".`,
-      );
+      console.log(`[LlamaServerManager] Baixando executável local llama-server em: "${binaryPath}"...`);
+      await downloader.downloadFile(LlamaDownloader.BINARY_URL_WIN, binaryPath);
+    }
+
+    if (!fs.existsSync(modelPath)) {
+      console.log(`[LlamaServerManager] Baixando modelo de embedding local GGUF em: "${modelPath}"...`);
+      await downloader.downloadFile(LlamaDownloader.MODEL_URL, modelPath);
     }
 
     this.process = spawn(binaryPath, [
