@@ -814,7 +814,6 @@ export const SettingsPage: React.FC = () => {
                           }}
                         >
                           <option value="local">Local Embutido (ONNX)</option>
-                          <option value="llama_cpp">Local Embutido (llama.cpp)</option>
                           <option value="gemini">Google Gemini</option>
                           <option value="openai">OpenAI</option>
                           <option value="anthropic">Anthropic</option>
