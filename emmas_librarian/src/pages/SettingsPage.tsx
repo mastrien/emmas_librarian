@@ -885,9 +885,20 @@ export const SettingsPage: React.FC = () => {
                       </div>
                     </div>
                     {conf.skill === 'embeddings' && (
-                      <p style={{ margin: '0.6rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        💡 <strong>Dica:</strong> Se você já usa a chave do <strong>Gemini</strong> ou <strong>OpenAI</strong>, os modelos <code>text-embedding-004</code> (Gemini - Grátis) e <code>text-embedding-3-small</code> (OpenAI) funcionam 100% em nuvem sem precisar do Ollama Local!
-                      </p>
+                      <div
+                        style={{
+                          marginTop: '0.6rem',
+                          padding: '0.66rem 0.9rem',
+                          borderRadius: 'var(--radius-md)',
+                          background: 'rgba(234, 179, 8, 0.1)',
+                          border: '1px solid rgba(234, 179, 8, 0.35)',
+                          color: 'var(--text-main)',
+                          fontSize: '0.82rem',
+                          lineHeight: '1.4',
+                        }}
+                      >
+                        ⚠️ <strong>Aviso de Recomendação:</strong> Atualmente, a funcionalidade de vetorização (Embeddings) funciona melhor e com maior estabilidade utilizando o <strong>Ollama (Local)</strong> ouvindo na porta 11434 com modelos como <code>nomic-embed-text</code>.
+                      </div>
                     )}
                   </div>
                 ))}
