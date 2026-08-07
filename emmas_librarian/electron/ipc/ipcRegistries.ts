@@ -819,6 +819,12 @@ export function setupIpcRegistries() {
       return backupService.listAutoBackups();
     }),
   );
+  ipcMain.handle(
+    IpcChannel.BACKUP_RESTORE_AUTO,
+    withErrorHandling(async (event, filename: string) => {
+      return backupService.restoreAutoBackup(filename);
+    }),
+  );
   const venueRepo = new ScientificVenueRepository(db.getDB());
 
   ipcMain.handle(
