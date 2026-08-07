@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Article } from '../types';
+import { Article } from '../../src/types';
 import * as xlsx from 'xlsx';
 
 export class ExportService {

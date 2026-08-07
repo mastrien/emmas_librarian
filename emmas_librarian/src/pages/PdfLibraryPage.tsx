@@ -51,6 +51,7 @@ export const PdfLibraryPage: React.FC = () => {
     try {
       setLoading(true);
       const data = await projectService.getStoredPdfs();
+      console.log('GET_STORED_PDFS_RETURNED', data);
       setPdfs(data);
     } catch (err) {
       console.error('Erro ao carregar biblioteca de PDFs:', err);

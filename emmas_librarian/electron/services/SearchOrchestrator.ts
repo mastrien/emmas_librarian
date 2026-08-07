@@ -2,7 +2,7 @@ import { DatabaseAdapter } from '../database/DatabaseAdapter';
 import { QueryTranslator } from './QueryTranslator';
 import { ApiIntegrator } from './ApiIntegrator';
 import { QueryBlock, NormalizedArticle } from './types';
-import { Article } from '../types';
+import { Article } from '../../src/types';
 
 export class SearchOrchestrator {
   constructor(

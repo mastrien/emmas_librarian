@@ -26,9 +26,9 @@ export const getArticleStatusLabel = (status?: string): string => {
 
 export const formatDate = (dateString?: string): string => {
   if (!dateString) return '-';
-  try {
-    return new Date(dateString).toLocaleDateString('pt-BR');
-  } catch (e) {
+  const d = new Date(dateString);
+  if (isNaN(d.getTime())) {
     return dateString;
   }
+  return d.toLocaleDateString('pt-BR');
 };

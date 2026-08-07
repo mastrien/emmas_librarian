@@ -426,9 +426,46 @@ describe('DatabaseAdapter', () => {
       expect(loadExtensionSpy).toHaveBeenCalledWith(
         'C:\\Program Files\\Emma\\resources\\app.asar.unpacked\\node_modules\\sqlite-vec-windows-x64\\vec0.dll',
       );
+
+      // Test that it does NOT rewrite if it already has app.asar.unpacked
+      mockLoadablePath = 'C:\\app.asar.unpacked\\vec0.dll';
+      const adapter2 = new DatabaseAdapter(':memory:');
+      adapter2.close();
+      expect(loadExtensionSpy).toHaveBeenCalledWith('C:\\app.asar.unpacked\\vec0.dll');
+
+      // Test that it does NOT rewrite if it does not have app.asar
+      mockLoadablePath = 'C:\\some_other_path\\vec0.dll';
+      const adapter3 = new DatabaseAdapter(':memory:');
+      adapter3.close();
+      expect(loadExtensionSpy).toHaveBeenCalledWith('C:\\some_other_path\\vec0.dll');
+
     } finally {
       mockLoadablePath = null;
       loadExtensionSpy.mockRestore();
     }
   });
+
+  it('executes wal_checkpoint on checkpoint()', () => {
+    const pragmaSpy = vi.spyOn(dbAdapter.getDB(), 'pragma');
+    dbAdapter.checkpoint();
+    expect(pragmaSpy).toHaveBeenCalledWith('wal_checkpoint(TRUNCATE)');
+    pragmaSpy.mockRestore();
+  });
+
+  it('checks database integrity correctly', () => {
+    expect(dbAdapter.checkIntegrity()).toBe(true);
+    
+    // Mock to return empty to test false
+    const pragmaSpy = vi.spyOn(dbAdapter.getDB(), 'pragma').mockReturnValue([]);
+    expect(dbAdapter.checkIntegrity()).toBe(false);
+
+    pragmaSpy.mockReturnValue([{ integrity_check: 'not ok' }]);
+    expect(dbAdapter.checkIntegrity()).toBe(false);
+
+    pragmaSpy.mockImplementation(() => { throw new Error('DB Error'); });
+    expect(dbAdapter.checkIntegrity()).toBe(false);
+    
+    pragmaSpy.mockRestore();
+  });
 });
+

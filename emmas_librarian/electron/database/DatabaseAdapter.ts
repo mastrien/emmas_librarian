@@ -3,8 +3,17 @@ import * as sqliteVec from 'sqlite-vec';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { ProjectRepository } from './ProjectRepository';
+import { SettingsRepository } from './SettingsRepository';
+import { ArticleRepository } from './ArticleRepository';
+import { HistoryRepository } from './HistoryRepository';
+import { DocumentRepository } from './DocumentRepository';
+import { AnnotationRepository } from './AnnotationRepository';
+import { TrashRepository } from './TrashRepository';
+import { MassiveInvestigationRepository } from './MassiveInvestigationRepository';
+
 import { safeStorage } from 'electron';
-import { Project, Article, Annotation, Highlight, DiaryEntry, ProjectDocument, ProjectCategory, ArticleCategory, CategoryOption } from '../types';
+import { Project, Article, Annotation, Highlight, DiaryEntry, ProjectDocument, ProjectCategory, ArticleCategory, CategoryOption } from '../../src/types';
 
 interface TableInfoRow {
   name: string;
@@ -42,11 +51,30 @@ export type HighlightWithComment = Highlight & { comment?: string };
 export class DatabaseAdapter {
   private db: Database.Database;
 
+  public projectRepo: ProjectRepository;
+  public settingsRepo: SettingsRepository;
+  public articleRepo: ArticleRepository;
+  public historyRepo: HistoryRepository;
+  public documentRepo: DocumentRepository;
+  public annotationRepo: AnnotationRepository;
+  public trashRepo: TrashRepository;
+  public investigationRepo: MassiveInvestigationRepository;
+
   constructor(dbPath: string) {
     this.db = new Database(dbPath);
     this.loadSqliteVec(this.db);
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
+
+    this.projectRepo = new ProjectRepository(this.db);
+    this.settingsRepo = new SettingsRepository(this.db);
+    this.articleRepo = new ArticleRepository(this.db);
+    this.historyRepo = new HistoryRepository(this.db);
+    this.documentRepo = new DocumentRepository(this.db);
+    this.annotationRepo = new AnnotationRepository(this.db);
+    this.trashRepo = new TrashRepository(this.db, this.projectRepo);
+    this.investigationRepo = new MassiveInvestigationRepository(this.db);
+
     this.initSchema();
   }
 
@@ -391,380 +419,100 @@ export class DatabaseAdapter {
       `);
 
       // Run PDF backfill
-      this.backfillExistingPdfs();
+      // Run PDF backfill
+      this.articleRepo.backfillExistingPdfs();
     } catch (e) {
       console.error('Schema migrations error', e);
     }
   }
 
-  // Projects
-  createProject(name: string): Project {
-    const stmt = this.db.prepare('INSERT INTO projects (name, created_at) VALUES (?, ?)');
-    const info = stmt.run(name, new Date().toISOString());
-    return this.getProject(Number(info.lastInsertRowid)) as Project;
-  }
+  // --- Project ---
+  createProject(name: string): Project { return this.projectRepo.createProject(name); }
+  getProject(id: number): Project | undefined { return this.projectRepo.getProject(id); }
+  updateProjectWritingPad(id: number, content: string) { return this.projectRepo.updateProjectWritingPad(id, content); }
+  getProjectWritingPad(id: number): string | null { return this.projectRepo.getProjectWritingPad(id); }
+  updateProject(id: number, name: string): void { return this.projectRepo.updateProject(id, name); }
+  deleteProject(id: number): void { return this.projectRepo.deleteProject(id); }
+  deleteProjectPermanent(id: number): void { return this.projectRepo.deleteProjectPermanent(id); }
+  getAllProjects(): Project[] { return this.projectRepo.getAllProjects(); }
 
-  getProject(id: number): Project | undefined {
-    return this.db.prepare('SELECT * FROM projects WHERE id = ? AND deleted_at IS NULL').get(id) as Project | undefined;
-  }
+  // --- Article ---
+  findDuplicateArticle(projectId: number, doi: string | null | undefined, title: string): Article | undefined { return this.articleRepo.findDuplicateArticle(projectId, doi, title); }
+  saveArticle(projectId: number, data: ArticleInput): number { return this.articleRepo.saveArticle(projectId, data); }
+  getArticle(id: number): Article | undefined { return this.articleRepo.getArticle(id); }
+  getArticlesByProject(projectId: number): Article[] { return this.articleRepo.getArticlesByProject(projectId); }
+  updateArticleFilePath(articleId: number, path: string | null): void { return this.articleRepo.updateArticleFilePath(articleId, path); }
+  updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', archiveNote?: string): void { return this.articleRepo.updateArticleStatus(articleId, status, archiveNote); }
+  updateArticleMetadata(articleId: number, data: Partial<ArticleInput>): void { return this.articleRepo.updateArticleMetadata(articleId, data); }
+  updateArticleAiSummary(articleId: number, summary: string): void { return this.articleRepo.updateArticleAiSummary(articleId, summary); }
+  deleteArticle(id: number): void { return this.articleRepo.deleteArticle(id); }
 
-  updateProjectWritingPad(id: number, content: string) {
-    const stmt = this.db.prepare('UPDATE projects SET writing_pad = ? WHERE id = ?');
-    stmt.run(content, id);
-  }
+  // --- Annotation & Highlight ---
+  saveAnnotation(articleId: number, content: string): number { return this.annotationRepo.saveAnnotation(articleId, content); }
+  getAnnotations(articleId: number): Annotation[] { return this.annotationRepo.getAnnotations(articleId); }
+  updateAnnotation(id: number, content: string): void { return this.annotationRepo.updateAnnotation(id, content); }
+  deleteAnnotation(id: number): void { return this.annotationRepo.deleteAnnotation(id); }
+  saveHighlight(articleId: number, color: string, positionData: string, contentText: string | null, annotationId?: number): number { return this.annotationRepo.saveHighlight(articleId, color, positionData, contentText, annotationId); }
+  getHighlights(articleId: number): HighlightWithComment[] { return this.annotationRepo.getHighlights(articleId); }
+  deleteHighlight(id: number): void { return this.annotationRepo.deleteHighlight(id); }
+  savePendingHighlight(articleId: number, quote: string, contextBefore: string, contextAfter: string, comment: string): number { return this.annotationRepo.savePendingHighlight(articleId, quote, contextBefore, contextAfter, comment); }
+  getPendingHighlights(articleId: number): Highlight[] { return this.annotationRepo.getPendingHighlights(articleId); }
+  deletePendingHighlight(id: number): void { return this.annotationRepo.deletePendingHighlight(id); }
 
-  getProjectWritingPad(id: number): string | null {
-    const row = this.db.prepare('SELECT writing_pad FROM projects WHERE id = ?').get(id) as { writing_pad?: string };
-    return row?.writing_pad || null;
-  }
+  // --- Massive Investigation ---
+  saveMassiveInvestigation(projectId: number, questions: string[], articlesIds: number[], modelUsed: string, status: string): number { return this.investigationRepo.saveMassiveInvestigation(projectId, questions, articlesIds, modelUsed, status); }
+  getMassiveInvestigations(projectId: number): unknown[] { return this.investigationRepo.getMassiveInvestigations(projectId); }
 
-  updateProject(id: number, name: string): void {
-    this.db.prepare('UPDATE projects SET name = ? WHERE id = ?').run(name, id);
-  }
+  // --- Settings ---
+  public getSetting(key: string): string | null { return this.settingsRepo.getSetting(key); }
+  public setSetting(key: string, value: string): void { return this.settingsRepo.setSetting(key, value); }
 
-  deleteProject(id: number): void {
-    this.db.prepare("UPDATE projects SET deleted_at = datetime('now') WHERE id = ?").run(id);
-  }
+  // --- History ---
+  public saveSearchHistory(projectId: number, unifiedQuery: string, translatedQueries: Record<string, string>, totalResults: number, breakdown: Record<string, unknown>, sortBy?: string, limitVal?: number): number { return this.historyRepo.saveSearchHistory(projectId, unifiedQuery, translatedQueries, totalResults, breakdown, sortBy, limitVal); }
+  public getSearchHistory(projectId: number): unknown[] { return this.historyRepo.getSearchHistory(projectId); }
+  public revertSearch(searchId: number): void { return this.historyRepo.revertSearch(searchId); }
+  public saveDiaryEntry(projectId: number, entryDate: string, content: string): void { return this.historyRepo.saveDiaryEntry(projectId, entryDate, content); }
+  public getDiaryEntries(projectId: number): DiaryEntry[] { return this.historyRepo.getDiaryEntries(projectId); }
+  public getDiaryEntry(projectId: number, entryDate: string): DiaryEntry | undefined { return this.historyRepo.getDiaryEntry(projectId, entryDate); }
+  public deleteDiaryEntry(projectId: number, entryDate: string): void { return this.historyRepo.deleteDiaryEntry(projectId, entryDate); }
+  public getDiaryEntryHistory(projectId: number, entryDate: string): unknown[] { return this.historyRepo.getDiaryEntryHistory(projectId, entryDate); }
+  public restoreDiaryEntryVersion(versionId: number): void { return this.historyRepo.restoreDiaryEntryVersion(versionId); }
 
-  deleteProjectPermanent(id: number): void {
-    const transaction = this.db.transaction(() => {
-      // 1. Delete articles and their files
-      const articles = this.db.prepare('SELECT id, local_file_path FROM articles WHERE project_id = ?').all(id) as {
-        id: number;
-        local_file_path?: string;
-      }[];
-      for (const article of articles) {
-        this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(article.id);
-        this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(article.id);
-        if (article.local_file_path) {
-          try {
-            if (fs.existsSync(article.local_file_path)) fs.unlinkSync(article.local_file_path);
-          } catch (err) {
-            console.error(`Failed to delete physical PDF for article ${article.id}:`, err);
-          }
-        }
-        this.db.prepare('DELETE FROM articles WHERE id = ?').run(article.id);
-      }
+  // --- Documents ---
+  public saveProjectDocument(projectId: number, title: string, url?: string | null, localFilePath?: string | null, category?: string | null): number { return this.documentRepo.saveProjectDocument(projectId, title, url, localFilePath, category); }
+  public getProjectDocuments(projectId: number): ProjectDocument[] { return this.documentRepo.getProjectDocuments(projectId); }
+  public updateProjectDocument(id: number, title: string, url: string | null, localFilePath: string | null, category: string | null): void { return this.documentRepo.updateProjectDocument(id, title, url, localFilePath, category); }
+  public reorderProjectDocuments(projectId: number, orderedIds: number[]): void { return this.documentRepo.reorderProjectDocuments(projectId, orderedIds); }
+  public deleteProjectDocument(id: number): void { return this.documentRepo.deleteProjectDocument(id); }
 
-      // 2. Delete project documents and their files
-      const docs = this.db
-        .prepare('SELECT id, local_file_path FROM project_documents WHERE project_id = ?')
-        .all(id) as { id: number; local_file_path: string }[];
-      for (const doc of docs) {
-        if (doc.local_file_path) {
-          try {
-            if (fs.existsSync(doc.local_file_path)) fs.unlinkSync(doc.local_file_path);
-          } catch (err) {
-            console.error(`Failed to delete document file ${doc.id}:`, err);
-          }
-        }
-        this.db.prepare('DELETE FROM project_documents WHERE id = ?').run(doc.id);
-      }
+  // --- Categories ---
+  public getProjectCategories(projectId: number): ProjectCategory[] { return this.projectRepo.getProjectCategories(projectId); }
+  public createProjectCategory(projectId: number, name: string, type: string, options?: any): number { return this.projectRepo.createProjectCategory(projectId, name, type as any, options); }
+  public updateProjectCategory(categoryId: number, name: string, type: string, options?: any): void { return this.projectRepo.updateProjectCategory(categoryId, name, type as any, options); }
+  public syncProjectCategoryOptions(categoryId: number, options: { id?: number; name: string }[]): void { return this.projectRepo.syncProjectCategoryOptions(categoryId, options); }
+  public deleteProjectCategory(categoryId: number): void { return this.projectRepo.deleteProjectCategory(categoryId); }
+  public getArticleCategories(articleId: number): ArticleCategory[] { return this.articleRepo.getArticleCategories(articleId); }
+  public getAllProjectArticleCategories(projectId: number): ArticleCategory[] { return this.articleRepo.getAllProjectArticleCategories(projectId); }
+  public setArticleCategory(articleId: number, categoryId: number, value: string | null): void { return this.articleRepo.setArticleCategory(articleId, categoryId, value); }
 
-      // 3. Delete other related records
-      this.db.prepare('DELETE FROM search_history WHERE project_id = ?').run(id);
-      this.db.prepare('DELETE FROM project_diary WHERE project_id = ?').run(id);
-      this.db.prepare('DELETE FROM project_diary_history WHERE project_id = ?').run(id);
+  // --- Trash ---
+  public getTrashItems(): unknown[] { return this.trashRepo.getTrashItems(); }
+  public restoreTrashItem(type: 'project' | 'article' | 'annotation', id: number): void { return this.trashRepo.restoreTrashItem(type, id); }
+  public deleteTrashItemPermanent(type: 'project' | 'article' | 'annotation', id: number): void { return this.trashRepo.deleteTrashItemPermanent(type, id); }
+  public emptyTrash(): void { return this.trashRepo.emptyTrash(); }
 
-      // 4. Finally delete the project
-      this.db.prepare('DELETE FROM projects WHERE id = ?').run(id);
-    });
+  // --- PDF Library & Sync ---
+  public getStoredPdfs(): unknown[] { return this.articleRepo.getStoredPdfs(); }
+  public getArticlesForPdf(filePath: string): { id: number; title: string; project_id: number }[] { return this.articleRepo.getArticlesForPdf(filePath); }
+  public deletePdfRecord(filePath: string): void { return this.articleRepo.deletePdfRecord(filePath); }
+  public deletePdfLibraryRecord(filePath: string): number[] { return this.articleRepo.deletePdfLibraryRecord(filePath); }
+  public unlinkPdfFromArticle(articleId: number): void { return this.articleRepo.unlinkPdfFromArticle(articleId); }
+  public linkPdfToArticle(articleId: number, filePath: string): void { return this.articleRepo.linkPdfToArticle(articleId, filePath); }
+  public registerPdfInLibrary(filePath: string, hash: string, filename: string, size: number): void { return this.articleRepo.registerPdfInLibrary(filePath, hash, filename, size); }
+  public importArticlesFromProject(sourceProjectId: number, destProjectId: number, articleIds: number[], searchHistoryId: number): void { return this.articleRepo.importArticlesFromProject(sourceProjectId, destProjectId, articleIds, searchHistoryId); }
+  public getPdfByHash(hash: string): any { return this.articleRepo.getPdfByHash(hash); }
 
-    transaction();
-  }
-
-  getAllProjects(): Project[] {
-    const stmt = this.db.prepare('SELECT * FROM projects WHERE deleted_at IS NULL ORDER BY created_at DESC');
-    return stmt.all() as Project[];
-  }
-
-  findDuplicateArticle(projectId: number, doi: string | null | undefined, title: string): Article | undefined {
-    if (doi && doi.trim() !== '') {
-      const stmtDoi = this.db.prepare(
-        'SELECT * FROM articles WHERE project_id = ? AND doi = ? AND deleted_at IS NULL LIMIT 1'
-      );
-      const existingByDoi = stmtDoi.get(projectId, doi.trim()) as Article | undefined;
-      if (existingByDoi) return existingByDoi;
-    }
-
-    const normalizedTarget = this.normalizeTitleForDb(title);
-    const stmtTitle = this.db.prepare(
-      'SELECT * FROM articles WHERE project_id = ? AND LOWER(title) = LOWER(?) AND deleted_at IS NULL LIMIT 1'
-    );
-    const directMatch = stmtTitle.get(projectId, normalizedTarget) as Article | undefined;
-    if (directMatch) return directMatch;
-
-    const stmt = this.db.prepare('SELECT * FROM articles WHERE project_id = ? AND deleted_at IS NULL');
-    const articles = stmt.all(projectId) as Article[];
-    return articles.find((art) => this.normalizeTitleForDb(art.title) === normalizedTarget);
-  }
-
-  private normalizeTitleForDb(title: string): string {
-    if (!title) return '';
-    return title
-      .replace(/<[^>]*>/g, '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9\s]/g, '')
-      .toLowerCase()
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  private mergeDuplicateArticle(existing: Article, data: ArticleInput): number {
-    const existingSources = JSON.parse(existing.source_databases || '[]');
-    const newSources = JSON.parse(data.source_databases || '[]');
-    const merged = Array.from(new Set([...existingSources, ...newSources]));
-
-    const stmt = this.db.prepare('UPDATE articles SET source_databases = ? WHERE id = ?');
-    stmt.run(JSON.stringify(merged), existing.id);
-    return existing.id;
-  }
-
-  private buildArticleParams(projectId: number, d: ArticleInput) {
-    return {
-      project_id: projectId,
-      doi: d.doi || null,
-      title: d.title,
-      authors: d.authors || null,
-      year: d.year || null,
-      source_query: d.source_query,
-      source_databases: d.source_databases,
-      csl_json: d.csl_json,
-      abstract: d.abstract || null,
-      author_keywords: d.author_keywords || null,
-      index_keywords: d.index_keywords || null,
-      journal: d.journal || null,
-      volume: d.volume || null,
-      issue: d.issue || null,
-      pages: d.pages || null,
-      affiliations: d.affiliations || null,
-      references_list: d.references_list || null,
-      document_type: d.document_type || null,
-      issn: d.issn || null,
-      citation_count: d.citation_count || null,
-      search_id: d.search_id || null,
-      is_oa: d.is_oa !== undefined ? d.is_oa : null,
-      publisher: d.publisher || null,
-      url: d.url || null,
-      accessed: d.accessed || null,
-    };
-  }
-
-  private insertNewArticle(projectId: number, data: ArticleInput): number {
-    const stmt = this.db.prepare(`
-      INSERT INTO articles (project_id, doi, title, authors, year, source_query, source_databases, csl_json,
-        abstract, author_keywords, index_keywords, journal, volume, issue, pages, affiliations, references_list, document_type, issn, citation_count, search_id, is_oa, publisher, url, accessed)
-      VALUES (@project_id, @doi, @title, @authors, @year, @source_query, @source_databases, @csl_json,
-        @abstract, @author_keywords, @index_keywords, @journal, @volume, @issue, @pages, @affiliations, @references_list, @document_type, @issn, @citation_count, @search_id, @is_oa, @publisher, @url, @accessed)
-    `);
-    const info = stmt.run(this.buildArticleParams(projectId, data));
-    return info.lastInsertRowid as number;
-  }
-
-  // Articles
-  saveArticle(projectId: number, data: ArticleInput): number {
-    const existing = this.findDuplicateArticle(projectId, data.doi, data.title);
-    if (existing) {
-      return this.mergeDuplicateArticle(existing, data);
-    }
-    return this.insertNewArticle(projectId, data);
-  }
-
-  getArticle(id: number): Article | undefined {
-    const stmt = this.db.prepare(`
-      SELECT a.* FROM articles a
-      JOIN projects p ON a.project_id = p.id
-      WHERE a.id = ? AND a.deleted_at IS NULL AND p.deleted_at IS NULL
-    `);
-    return stmt.get(id) as Article | undefined;
-  }
-
-  getArticlesByProject(projectId: number): Article[] {
-    const stmt = this.db.prepare(`
-      SELECT a.* FROM articles a
-      JOIN projects p ON a.project_id = p.id
-      WHERE a.project_id = ? AND a.deleted_at IS NULL AND p.deleted_at IS NULL
-    `);
-    return stmt.all(projectId) as Article[];
-  }
-
-  private unlinkFileIfExists(filePath: string): void {
-    try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    } catch (err) {
-      console.error('Failed to remove file:', err);
-    }
-  }
-
-  updateArticleFilePath(articleId: number, path: string | null): void {
-    const existing = this.getArticle(articleId);
-    if (existing && existing.local_file_path && existing.local_file_path !== path) {
-      this.unlinkFileIfExists(existing.local_file_path);
-    }
-    const stmt = this.db.prepare('UPDATE articles SET local_file_path = ? WHERE id = ?');
-    stmt.run(path, articleId);
-  }
-
-  updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', archiveNote?: string): void {
-    const stmt = this.db.prepare('UPDATE articles SET status = ?, archive_note = ? WHERE id = ?');
-    stmt.run(status, archiveNote || null, articleId);
-  }
-
-  updateArticleMetadata(articleId: number, data: Partial<ArticleInput>): void {
-    const fields: string[] = [];
-    const values: unknown[] = [];
-
-    const allowedFields = [
-      'title',
-      'authors',
-      'year',
-      'doi',
-      'journal',
-      'abstract',
-      'volume',
-      'issue',
-      'pages',
-      'url',
-      'accessed',
-    ];
-    for (const field of allowedFields) {
-      if (data[field as keyof ArticleInput] !== undefined) {
-        fields.push(`${field} = ?`);
-        values.push(data[field as keyof ArticleInput] || null);
-      }
-    }
-
-    if (fields.length === 0) return;
-
-    values.push(articleId);
-    const stmt = this.db.prepare(`UPDATE articles SET ${fields.join(', ')} WHERE id = ?`);
-    stmt.run(...values);
-  }
-
-  updateArticleAiSummary(articleId: number, summary: string): void {
-    const stmt = this.db.prepare('UPDATE articles SET ai_summary = ? WHERE id = ?');
-    stmt.run(summary, articleId);
-  }
-
-  // Annotations
-  saveAnnotation(articleId: number, content: string): number {
-    const stmt = this.db.prepare('INSERT INTO annotations (article_id, content_markdown) VALUES (?, ?)');
-    const info = stmt.run(articleId, content);
-    return info.lastInsertRowid as number;
-  }
-
-  getAnnotations(articleId: number): Annotation[] {
-    const stmt = this.db.prepare(`
-      SELECT an.* FROM annotations an
-      JOIN articles a ON an.article_id = a.id
-      JOIN projects p ON a.project_id = p.id
-      WHERE an.article_id = ? AND an.deleted_at IS NULL AND a.deleted_at IS NULL AND p.deleted_at IS NULL
-      ORDER BY an.created_at DESC
-    `);
-    return stmt.all(articleId) as Annotation[];
-  }
-
-  updateAnnotation(id: number, content: string): void {
-    const stmt = this.db.prepare('UPDATE annotations SET content_markdown = ? WHERE id = ?');
-    stmt.run(content, id);
-  }
-
-  deleteAnnotation(id: number): void {
-    const stmt = this.db.prepare("UPDATE annotations SET deleted_at = datetime('now') WHERE id = ?");
-    stmt.run(id);
-  }
-
-  // Highlights
-  saveHighlight(
-    articleId: number,
-    color: string,
-    positionData: string,
-    contentText: string | null,
-    annotationId?: number,
-  ): number {
-    const stmt = this.db.prepare(`
-      INSERT INTO highlights (article_id, color, position_data, content_text, annotation_id)
-      VALUES (?, ?, ?, ?, ?)
-    `);
-    const info = stmt.run(articleId, color, positionData, contentText, annotationId || null);
-    return info.lastInsertRowid as number;
-  }
-
-  getHighlights(articleId: number): HighlightWithComment[] {
-    const stmt = this.db.prepare(`
-      SELECT h.*, a.content_markdown as comment
-      FROM highlights h
-      JOIN articles art ON h.article_id = art.id
-      JOIN projects p ON art.project_id = p.id
-      LEFT JOIN annotations a ON h.annotation_id = a.id AND a.deleted_at IS NULL
-      WHERE h.article_id = ? AND art.deleted_at IS NULL AND p.deleted_at IS NULL
-    `);
-    return stmt.all(articleId) as HighlightWithComment[];
-  }
-
-  deleteHighlight(id: number): void {
-    // If we want to delete a highlight, we should also delete its associated annotation
-    const getStmt = this.db.prepare('SELECT annotation_id FROM highlights WHERE id = ?');
-    const highlight = getStmt.get(id) as { annotation_id?: number } | undefined;
-
-    const stmt = this.db.prepare('DELETE FROM highlights WHERE id = ?');
-    stmt.run(id);
-
-    if (highlight?.annotation_id) {
-      this.deleteAnnotation(highlight.annotation_id);
-    }
-  }
-
-  // Pending Highlights
-  savePendingHighlight(
-    articleId: number,
-    quote: string,
-    contextBefore: string,
-    contextAfter: string,
-    comment: string,
-  ): number {
-    const stmt = this.db.prepare(`
-      INSERT INTO pending_highlights (article_id, quote, context_before, context_after, comment)
-      VALUES (?, ?, ?, ?, ?)
-    `);
-    const info = stmt.run(articleId, quote, contextBefore, contextAfter, comment);
-    return info.lastInsertRowid as number;
-  }
-
-  getPendingHighlights(articleId: number): Highlight[] {
-    const stmt = this.db.prepare('SELECT * FROM pending_highlights WHERE article_id = ?');
-    return stmt.all(articleId) as Highlight[];
-  }
-
-  deletePendingHighlight(id: number): void {
-    const stmt = this.db.prepare('DELETE FROM pending_highlights WHERE id = ?');
-    stmt.run(id);
-  }
-
-  // Massive Investigations
-  saveMassiveInvestigation(
-    projectId: number,
-    questions: string[],
-    articlesIds: number[],
-    modelUsed: string,
-    status: string,
-  ): number {
-    const stmt = this.db.prepare(`
-      INSERT INTO massive_investigations (project_id, questions, articles_ids, model_used, status)
-      VALUES (?, ?, ?, ?, ?)
-    `);
-    const info = stmt.run(projectId, JSON.stringify(questions), JSON.stringify(articlesIds), modelUsed, status);
-    return info.lastInsertRowid as number;
-  }
-
-  getMassiveInvestigations(projectId: number): unknown[] {
-    const stmt = this.db.prepare('SELECT * FROM massive_investigations WHERE project_id = ? ORDER BY created_at DESC');
-    return stmt.all(projectId);
-  }
-
+  // --- Maintenance ---
   public checkIntegrity(): boolean {
     try {
       const result = this.db.pragma('integrity_check') as Record<string, unknown>[];
@@ -778,812 +526,11 @@ export class DatabaseAdapter {
     }
   }
 
-  // Settings
-  public getSetting(key: string): string | null {
-    let row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string } | undefined;
-    if (!row) {
-      // Fallbacks for scopus and wos keys due to naming inconsistency in settings vs search
-      let fallbackKey: string | null = null;
-      if (key === 'scopus_api_key') fallbackKey = 'api_key_scopus';
-      else if (key === 'api_key_scopus') fallbackKey = 'scopus_api_key';
-      else if (key === 'wos_api_key') fallbackKey = 'api_key_wos';
-      else if (key === 'api_key_wos') fallbackKey = 'wos_api_key';
-
-      if (fallbackKey) {
-        row = this.db.prepare('SELECT value FROM settings WHERE key = ?').get(fallbackKey) as
-          | { value: string }
-          | undefined;
-        if (row) {
-          key = fallbackKey;
-        }
-      }
-    }
-    if (!row) return null;
-
-    if (key.startsWith('api_key_') || key.endsWith('_api_key')) {
-      try {
-        if (safeStorage.isEncryptionAvailable()) {
-          const buffer = Buffer.from(row.value, 'base64');
-          return safeStorage.decryptString(buffer);
-        }
-      } catch (err) {
-        console.error(`Failed to decrypt setting ${key}:`, err);
-        // Fallback or just return the raw string if it wasn't actually encrypted
-        // This handles cases where keys were saved before safeStorage was implemented
-        return row.value;
-      }
-    }
-    return row.value;
-  }
-
-  public setSetting(key: string, value: string): void {
-    let finalValue = value;
-    if ((key.startsWith('api_key_') || key.endsWith('_api_key')) && value) {
-      if (safeStorage.isEncryptionAvailable()) {
-        const encrypted = safeStorage.encryptString(value);
-        finalValue = encrypted.toString('base64');
-      }
-    }
-    this.db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, finalValue);
-  }
-
-  // Search History
-  public saveSearchHistory(
-    projectId: number,
-    unifiedQuery: string,
-    translatedQueries: Record<string, string>,
-    totalResults: number,
-    breakdown: Record<string, unknown>,
-    sortBy?: string,
-    limitVal?: number,
-  ): number {
-    const stmt = this.db.prepare(`
-      INSERT INTO search_history (project_id, unified_query, translated_queries, total_results, results_breakdown, sort_by, limit_val, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    const info = stmt.run(
-      projectId,
-      unifiedQuery,
-      JSON.stringify(translatedQueries),
-      totalResults,
-      JSON.stringify(breakdown),
-      sortBy || null,
-      limitVal ?? null,
-      new Date().toISOString(),
-    );
-    return info.lastInsertRowid as number;
-  }
-
-  public getSearchHistory(projectId: number): unknown[] {
-    const stmt = this.db.prepare('SELECT * FROM search_history WHERE project_id = ? ORDER BY created_at DESC');
-    return stmt.all(projectId);
-  }
-
-  public revertSearch(searchId: number): void {
-    // 1. Get all articles associated with this search
-    const stmtArticles = this.db.prepare('SELECT id, local_file_path FROM articles WHERE search_id = ?');
-    const articles = stmtArticles.all(searchId) as { id: number; local_file_path?: string }[];
-
-    // 2. Delete all annotations, highlights, physical files and the articles themselves
-    for (const article of articles) {
-      // Delete highlights first to satisfy potential constraints, then annotations
-      this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(article.id);
-      this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(article.id);
-
-      // Delete physical PDF file
-      if (article.local_file_path) {
-        try {
-          if (fs.existsSync(article.local_file_path)) {
-            fs.unlinkSync(article.local_file_path);
-          }
-        } catch (err) {
-          console.error(`Failed to delete physical PDF for article ${article.id}:`, err);
-        }
-      }
-
-      // Delete the article
-      this.db.prepare('DELETE FROM articles WHERE id = ?').run(article.id);
-    }
-
-    // 3. Delete the search history entry
-    this.db.prepare('DELETE FROM search_history WHERE id = ?').run(searchId);
-  }
-
-  // Diary
-  public saveDiaryEntry(projectId: number, entryDate: string, content: string): void {
-    const existing = this.getDiaryEntry(projectId, entryDate);
-    if (existing) {
-      this.db
-        .prepare(
-          `
-        INSERT INTO project_diary_history (project_id, entry_date, content)
-        VALUES (?, ?, ?)
-      `,
-        )
-        .run(projectId, entryDate, existing.content);
-    }
-
-    this.db
-      .prepare(
-        `
-      INSERT OR REPLACE INTO project_diary (project_id, entry_date, content)
-      VALUES (?, ?, ?)
-    `,
-      )
-      .run(projectId, entryDate, content);
-
-    // Keep only latest 10 versions in history
-    this.db
-      .prepare(
-        `
-      DELETE FROM project_diary_history
-      WHERE project_id = ? AND entry_date = ?
-        AND id NOT IN (
-          SELECT id FROM project_diary_history
-          WHERE project_id = ? AND entry_date = ?
-          ORDER BY id DESC LIMIT 10
-        )
-    `,
-      )
-      .run(projectId, entryDate, projectId, entryDate);
-  }
-
-  public getDiaryEntries(projectId: number): DiaryEntry[] {
-    return this.db
-      .prepare('SELECT * FROM project_diary WHERE project_id = ? ORDER BY entry_date DESC')
-      .all(projectId) as DiaryEntry[];
-  }
-
-  public getDiaryEntry(projectId: number, entryDate: string): DiaryEntry | undefined {
-    return this.db
-      .prepare('SELECT * FROM project_diary WHERE project_id = ? AND entry_date = ?')
-      .get(projectId, entryDate) as DiaryEntry | undefined;
-  }
-
-  public deleteDiaryEntry(projectId: number, entryDate: string): void {
-    const existing = this.getDiaryEntry(projectId, entryDate);
-    if (existing) {
-      this.db
-        .prepare(
-          `
-        INSERT INTO project_diary_history (project_id, entry_date, content)
-        VALUES (?, ?, ?)
-      `,
-        )
-        .run(projectId, entryDate, existing.content);
-
-      // Keep only latest 10 versions in history
-      this.db
-        .prepare(
-          `
-        DELETE FROM project_diary_history
-        WHERE project_id = ? AND entry_date = ?
-          AND id NOT IN (
-            SELECT id FROM project_diary_history
-            WHERE project_id = ? AND entry_date = ?
-            ORDER BY id DESC LIMIT 10
-          )
-      `,
-        )
-        .run(projectId, entryDate, projectId, entryDate);
-    }
-    this.db.prepare('DELETE FROM project_diary WHERE project_id = ? AND entry_date = ?').run(projectId, entryDate);
-  }
-
-  // Project Documents
-  private fetchNextDocumentPosition(projectId: number): number {
-    const row = this.db
-      .prepare('SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM project_documents WHERE project_id = ?')
-      .get(projectId) as { next_pos: number } | undefined;
-    return row?.next_pos ?? 0;
-  }
-
-  public saveProjectDocument(
-    projectId: number,
-    title: string,
-    url?: string | null,
-    localFilePath?: string | null,
-    category?: string | null,
-  ): number {
-    const nextPos = this.fetchNextDocumentPosition(projectId);
-    const cleanProjectId = typeof projectId === 'number' ? projectId : Number(projectId);
-    const cleanTitle = title && typeof title === 'string' ? title.trim() : '';
-    const cleanUrl = url && typeof url === 'string' && url.trim() ? url.trim() : null;
-    const cleanFilePath = localFilePath && typeof localFilePath === 'string' && localFilePath.trim() ? localFilePath.trim() : null;
-    const cleanCategory = category && typeof category === 'string' && category.trim() ? category.trim() : null;
-
-    const stmt = this.db.prepare(`
-      INSERT INTO project_documents (project_id, title, url, local_file_path, position, category)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    const info = stmt.run(cleanProjectId, cleanTitle, cleanUrl, cleanFilePath, nextPos, cleanCategory);
-    return info.lastInsertRowid as number;
-  }
-
-  public getProjectDocuments(projectId: number): ProjectDocument[] {
-    const stmt = this.db.prepare('SELECT * FROM project_documents WHERE project_id = ? ORDER BY position ASC, id ASC');
-    return stmt.all(projectId) as ProjectDocument[];
-  }
-
-  public updateProjectDocument(
-    id: number,
-    title: string,
-    url: string | null,
-    localFilePath: string | null,
-    category: string | null,
-  ): void {
-    const stmt = this.db.prepare(`
-      UPDATE project_documents
-      SET title = ?, url = ?, local_file_path = ?, category = ?
-      WHERE id = ?
-    `);
-    stmt.run(title ?? '', url ?? null, localFilePath ?? null, category ?? null, id);
-  }
-
-  public reorderProjectDocuments(projectId: number, orderedIds: number[]): void {
-    const validIds = Array.isArray(orderedIds)
-      ? orderedIds.filter((i) => i !== undefined && i !== null && !isNaN(Number(i))).map(Number)
-      : [];
-    const cleanProjectId = typeof projectId === 'number' ? projectId : Number(projectId);
-    const stmt = this.db.prepare('UPDATE project_documents SET position = ? WHERE id = ? AND project_id = ?');
-    const transaction = this.db.transaction((ids: number[]) => {
-      ids.forEach((id, index) => {
-        stmt.run(index, id, cleanProjectId);
-      });
-    });
-    transaction(validIds);
-  }
-
-  public deleteProjectDocument(id: number): void {
-    const stmtGet = this.db.prepare('SELECT local_file_path FROM project_documents WHERE id = ?');
-    const doc = stmtGet.get(id) as { local_file_path?: string } | undefined;
-
-    if (doc?.local_file_path) {
-      try {
-        if (fs.existsSync(doc.local_file_path)) {
-          fs.unlinkSync(doc.local_file_path);
-        }
-      } catch (err) {
-        console.error(`Failed to delete physical file for project document ${id}:`, err);
-      }
-    }
-
-    const stmt = this.db.prepare('DELETE FROM project_documents WHERE id = ?');
-    stmt.run(id);
-  }
-
-  // Categories
-  public getProjectCategories(projectId: number): ProjectCategory[] {
-    const cats = this.db.prepare('SELECT * FROM project_categories WHERE project_id = ?').all(projectId) as (ProjectCategory & { options?: string })[];
-    for (const cat of cats) {
-      if (cat.type === 'enum' || cat.type === 'multiselect') {
-        cat.parsedOptions = this.db
-          .prepare('SELECT id, category_id, name FROM project_category_options WHERE category_id = ? ORDER BY id ASC')
-          .all(cat.id) as CategoryOption[];
-      }
-    }
-    return cats;
-  }
-
-  public createProjectCategory(projectId: number, name: string, type: string, options?: string | null): number {
-    const info = this.db
-      .prepare('INSERT INTO project_categories (project_id, name, type) VALUES (?, ?, ?)')
-      .run(projectId, name, type);
-    const catId = info.lastInsertRowid as number;
-    if ((type === 'enum' || type === 'multiselect') && Array.isArray(options)) {
-      this.syncProjectCategoryOptions(catId, options);
-    } else if (typeof options === 'string') {
-      // Legacy support during transition
-      this.db.prepare('UPDATE project_categories SET options = ? WHERE id = ?').run(options, catId);
-    }
-    return catId;
-  }
-
-  public updateProjectCategory(categoryId: number, name: string, type: string, options?: string | null): void {
-    this.db.prepare('UPDATE project_categories SET name = ?, type = ? WHERE id = ?').run(name, type, categoryId);
-    if ((type === 'enum' || type === 'multiselect') && Array.isArray(options)) {
-      this.syncProjectCategoryOptions(categoryId, options);
-    } else if (typeof options === 'string') {
-      this.db.prepare('UPDATE project_categories SET options = ? WHERE id = ?').run(options, categoryId);
-    }
-  }
-
-  public syncProjectCategoryOptions(categoryId: number, options: { id?: number; name: string }[]): void {
-    const existing = this.db
-      .prepare('SELECT id FROM project_category_options WHERE category_id = ?')
-      .all(categoryId) as { id: number }[];
-    const existingIds = new Set(existing.map((e) => e.id));
-    const toKeep = new Set<number>();
-
-    const updateStmt = this.db.prepare('UPDATE project_category_options SET name = ? WHERE id = ? AND category_id = ?');
-    const insertStmt = this.db.prepare('INSERT INTO project_category_options (category_id, name) VALUES (?, ?)');
-    const deleteStmt = this.db.prepare('DELETE FROM project_category_options WHERE id = ? AND category_id = ?');
-
-    const transaction = this.db.transaction(() => {
-      for (const opt of options) {
-        if (opt.id) {
-          updateStmt.run(opt.name, opt.id, categoryId);
-          toKeep.add(opt.id);
-        } else {
-          const res = insertStmt.run(categoryId, opt.name);
-          toKeep.add(res.lastInsertRowid as number);
-        }
-      }
-
-      for (const id of existingIds) {
-        if (!toKeep.has(id)) {
-          deleteStmt.run(id, categoryId);
-        }
-      }
-    });
-    transaction();
-  }
-
-  public deleteProjectCategory(categoryId: number): void {
-    this.db.prepare('DELETE FROM project_categories WHERE id = ?').run(categoryId);
-  }
-
-  public getArticleCategories(articleId: number): ArticleCategory[] {
-    const textAndBool = this.db
-      .prepare(
-        `
-      SELECT ac.category_id, ac.value, pc.name, pc.type
-      FROM article_categories ac
-      JOIN project_categories pc ON ac.category_id = pc.id
-      WHERE ac.article_id = ?
-    `,
-      )
-      .all(articleId) as ArticleCategory[];
-
-    const selections = this.db
-      .prepare(
-        `
-      SELECT acs.category_id, acs.option_id, pco.name as option_name, pc.name, pc.type
-      FROM article_category_selections acs
-      JOIN project_categories pc ON acs.category_id = pc.id
-      JOIN project_category_options pco ON acs.option_id = pco.id
-      WHERE acs.article_id = ?
-    `,
-      )
-      .all(articleId) as { category_id: number; option_id: number; option_name: string; name: string; type: ArticleCategory['type'] }[];
-
-    // Group selections by category_id
-    const selMap = new Map<number, ArticleCategory & { option_ids: number[]; option_names: string[] }>();
-    for (const sel of selections) {
-      if (!selMap.has(sel.category_id)) {
-        selMap.set(sel.category_id, {
-          category_id: sel.category_id,
-          name: sel.name,
-          type: sel.type,
-          option_ids: [],
-          option_names: [],
-        });
-      }
-      const entry = selMap.get(sel.category_id)!;
-      entry.option_ids.push(sel.option_id);
-      entry.option_names.push(sel.option_name);
-    }
-
-    // Compatibility for frontend `value` string
-    for (const entry of selMap.values()) {
-      entry.value = entry.option_names.join(', ');
-    }
-
-    return [...textAndBool, ...Array.from(selMap.values())];
-  }
-
-  public getAllProjectArticleCategories(projectId: number): ArticleCategory[] {
-    const textAndBool = this.db
-      .prepare(
-        `
-      SELECT ac.article_id, ac.category_id, ac.value, pc.name, pc.type
-      FROM article_categories ac
-      JOIN project_categories pc ON ac.category_id = pc.id
-      WHERE pc.project_id = ?
-    `,
-      )
-      .all(projectId) as ArticleCategory[];
-
-    const selections = this.db
-      .prepare(
-        `
-      SELECT acs.article_id, acs.category_id, acs.option_id, pco.name as option_name, pc.name, pc.type
-      FROM article_category_selections acs
-      JOIN project_categories pc ON acs.category_id = pc.id
-      JOIN project_category_options pco ON acs.option_id = pco.id
-      WHERE pc.project_id = ?
-    `,
-      )
-      .all(projectId) as { article_id: number; category_id: number; option_id: number; option_name: string; name: string; type: ArticleCategory['type'] }[];
-
-    const selMap = new Map<string, ArticleCategory & { option_ids: number[]; option_names: string[] }>();
-    for (const sel of selections) {
-      const key = `${sel.article_id}-${sel.category_id}`;
-      if (!selMap.has(key)) {
-        selMap.set(key, {
-          article_id: sel.article_id,
-          category_id: sel.category_id,
-          name: sel.name,
-          type: sel.type,
-          option_ids: [],
-          option_names: [],
-        });
-      }
-      const entry = selMap.get(key)!;
-      entry.option_ids.push(sel.option_id);
-      entry.option_names.push(sel.option_name);
-    }
-
-    // Compatibility for frontend `value` string
-    for (const entry of selMap.values()) {
-      entry.value = entry.option_names.join(', ');
-    }
-
-    return [...textAndBool, ...Array.from(selMap.values())];
-  }
-
-  public setArticleCategory(articleId: number, categoryId: number, value: string | null): void {
-    const pc = this.db.prepare('SELECT type FROM project_categories WHERE id = ?').get(categoryId) as
-      | { type: string }
-      | undefined;
-    if (!pc) return;
-
-    if (pc.type === 'enum' || pc.type === 'multiselect') {
-      // value should be an array of option IDs, or a comma-separated string of option IDs/names if legacy
-      this.db
-        .prepare('DELETE FROM article_category_selections WHERE article_id = ? AND category_id = ?')
-        .run(articleId, categoryId);
-
-      let idsToInsert: number[] = [];
-      if (Array.isArray(value)) {
-        idsToInsert = value.map(Number).filter((n) => !isNaN(n));
-      } else if (typeof value === 'string' && value.trim() !== '') {
-        // legacy support: try to match by name or id
-        const parts = value
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
-        const options = this.db
-          .prepare('SELECT id, name FROM project_category_options WHERE category_id = ?')
-          .all(categoryId) as { id: number; name: string }[];
-        for (const p of parts) {
-          const exact = options.find((o) => o.name === p || String(o.id) === p);
-          if (exact) idsToInsert.push(exact.id);
-        }
-      }
-
-      const insertStmt = this.db.prepare(
-        'INSERT INTO article_category_selections (article_id, category_id, option_id) VALUES (?, ?, ?)',
-      );
-      for (const optId of idsToInsert) {
-        try {
-          insertStmt.run(articleId, categoryId, optId);
-        } catch (e) {}
-      }
-    } else {
-      if (value === null || value === '') {
-        this.db
-          .prepare('DELETE FROM article_categories WHERE article_id = ? AND category_id = ?')
-          .run(articleId, categoryId);
-      } else {
-        this.db
-          .prepare(
-            `
-          INSERT INTO article_categories (article_id, category_id, value)
-          VALUES (?, ?, ?)
-          ON CONFLICT(article_id, category_id) DO UPDATE SET value = excluded.value
-        `,
-          )
-          .run(articleId, categoryId, String(value));
-      }
-    }
-  }
-
-  public deleteArticle(id: number): void {
-    const stmt = this.db.prepare("UPDATE articles SET deleted_at = datetime('now') WHERE id = ?");
-    stmt.run(id);
-  }
-
-  public getTrashItems(): unknown[] {
-    const projects = this.db
-      .prepare("SELECT id, 'project' as type, name as title, deleted_at FROM projects WHERE deleted_at IS NOT NULL")
-      .all();
-    const articles = this.db
-      .prepare("SELECT id, 'article' as type, title, deleted_at FROM articles WHERE deleted_at IS NOT NULL")
-      .all();
-    const annotations = this.db
-      .prepare(
-        "SELECT id, 'annotation' as type, content_markdown as title, deleted_at FROM annotations WHERE deleted_at IS NOT NULL",
-      )
-      .all();
-    return [...projects, ...articles, ...annotations];
-  }
-
-  public restoreTrashItem(type: 'project' | 'article' | 'annotation', id: number): void {
-    if (type === 'project') {
-      this.db.prepare('UPDATE projects SET deleted_at = NULL WHERE id = ?').run(id);
-    } else if (type === 'article') {
-      this.db.prepare('UPDATE articles SET deleted_at = NULL WHERE id = ?').run(id);
-    } else if (type === 'annotation') {
-      this.db.prepare('UPDATE annotations SET deleted_at = NULL WHERE id = ?').run(id);
-    }
-  }
-
-  public deleteTrashItemPermanent(type: 'project' | 'article' | 'annotation', id: number): void {
-    if (type === 'project') {
-      this.deleteProjectPermanent(id);
-    } else if (type === 'article') {
-      const article = this.db.prepare('SELECT local_file_path FROM articles WHERE id = ?').get(id) as
-        | { local_file_path?: string }
-        | undefined;
-      if (article) {
-        this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(id);
-        this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(id);
-        if (article.local_file_path) {
-          try {
-            if (fs.existsSync(article.local_file_path)) fs.unlinkSync(article.local_file_path);
-          } catch (err) {
-            console.error(`Failed to delete physical PDF for article ${id}:`, err);
-          }
-        }
-        this.db.prepare('DELETE FROM articles WHERE id = ?').run(id);
-      }
-    } else if (type === 'annotation') {
-      this.db.prepare('DELETE FROM annotations WHERE id = ?').run(id);
-    }
-  }
-
-  public emptyTrash(): void {
-    const items = this.getTrashItems() as { id: number; type: 'project' | 'article' | 'annotation' }[];
-    for (const item of items) {
-      this.deleteTrashItemPermanent(item.type, item.id);
-    }
-  }
-
-  public getDiaryEntryHistory(projectId: number, entryDate: string): unknown[] {
-    return this.db
-      .prepare('SELECT * FROM project_diary_history WHERE project_id = ? AND entry_date = ? ORDER BY id DESC')
-      .all(projectId, entryDate);
-  }
-
-  public restoreDiaryEntryVersion(versionId: number): void {
-    const hist = this.db.prepare('SELECT * FROM project_diary_history WHERE id = ?').get(versionId) as { project_id: number; entry_date: string; content: string } | undefined;
-    if (hist) {
-      this.saveDiaryEntry(hist.project_id, hist.entry_date, hist.content);
-    }
-  }
-
-  /**
-   * Runs a WAL checkpoint to flush all pending writes from the WAL file into the
-   * main database file. Call this before any file-level backup/copy operation to
-   * ensure data consistency.
-   */
   public checkpoint(): void {
     this.db.pragma('wal_checkpoint(TRUNCATE)');
   }
 
   public close(): void {
     this.db.close();
-  }
-
-  // --- PDF Library & Article Sharing ---
-  private backfillExistingPdfs(): void {
-    try {
-      const checkBackfill = this.db
-        .prepare("SELECT value FROM settings WHERE key = 'backfilled_pdf_files'")
-        .get() as { value: string } | undefined;
-      if (checkBackfill?.value === 'true') return;
-      
-      const articles = this.db
-        .prepare('SELECT id, local_file_path FROM articles WHERE local_file_path IS NOT NULL')
-        .all() as { id: number; local_file_path: string }[];
-      for (const art of articles) {
-        this.processExistingPdf(art.id, art.local_file_path);
-      }
-      this.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('backfilled_pdf_files', 'true')").run();
-    } catch (e) {
-      console.error('Failed to backfill pdf_files:', e);
-    }
-  }
-
-  private processExistingPdf(articleId: number, filePath: string): void {
-    if (!fs.existsSync(filePath)) return;
-    try {
-      const hash = this.getFileHash(filePath);
-      const size = fs.statSync(filePath).size;
-      const filename = path.basename(filePath);
-      this.insertPdfRecord(filePath, hash, filename, size);
-    } catch (e) {
-      console.error(`Error processing PDF for article ${articleId}:`, e);
-    }
-  }
-
-  private async getFileHashAsync(filePath: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const hash = crypto.createHash('sha256');
-      const stream = fs.createReadStream(filePath);
-      stream.on('data', (data) => hash.update(data));
-      stream.on('end', () => resolve(hash.digest('hex')));
-      stream.on('error', (err) => reject(err));
-    });
-  }
-
-  private getFileHash(filePath: string): string {
-    const fileBuffer = fs.readFileSync(filePath);
-    return crypto.createHash('sha256').update(fileBuffer).digest('hex');
-  }
-
-  private insertPdfRecord(filePath: string, hash: string, filename: string, size: number): void {
-    this.db.prepare(`
-      INSERT OR IGNORE INTO pdf_files (file_path, file_hash, filename, file_size)
-      VALUES (?, ?, ?, ?)
-    `).run(filePath, hash, filename, size);
-  }
-
-  public getStoredPdfs(): unknown[] {
-    try {
-      const unindexed = this.db.prepare(`
-        SELECT id, local_file_path FROM articles
-        WHERE local_file_path IS NOT NULL AND local_file_path != '' AND deleted_at IS NULL
-          AND LOWER(REPLACE(local_file_path, '/', '\\')) NOT IN (
-            SELECT LOWER(REPLACE(file_path, '/', '\\')) FROM pdf_files
-          )
-      `).all() as { id: number; local_file_path: string }[];
-
-      for (const art of unindexed) {
-        this.processExistingPdf(art.id, art.local_file_path);
-      }
-    } catch (e) {
-      console.error('Error auto-syncing unindexed PDFs:', e);
-    }
-
-    const query = `
-      SELECT p.id, p.file_path, p.file_hash, p.filename, p.file_size, p.created_at,
-             (SELECT json_group_array(json_object('article_id', a.id, 'article_title', a.title, 'project_id', a.project_id, 'project_name', pr.name))
-              FROM articles a
-              JOIN projects pr ON a.project_id = pr.id
-              WHERE LOWER(REPLACE(a.local_file_path, '/', '\\')) = LOWER(REPLACE(p.file_path, '/', '\\')) AND a.deleted_at IS NULL AND pr.deleted_at IS NULL
-             ) as articles_json
-      FROM pdf_files p
-      ORDER BY p.created_at DESC
-    `;
-    const rows = this.db.prepare(query).all();
-    return rows.map((r: any) => {
-      const parsed = r.articles_json ? JSON.parse(r.articles_json) : [];
-      const articles = Array.isArray(parsed) ? parsed.filter((art: any) => art && art.article_id != null) : [];
-      return {
-        ...r,
-        articles,
-      };
-    });
-  }
-
-  public getArticlesForPdf(filePath: string): { id: number; title: string; project_id: number }[] {
-    const query = 'SELECT id, title, project_id FROM articles WHERE local_file_path = ? AND deleted_at IS NULL';
-    return this.db.prepare(query).all(filePath) as any;
-  }
-
-  public deletePdfRecord(filePath: string): void {
-    this.db.prepare('DELETE FROM pdf_files WHERE file_path = ?').run(filePath);
-  }
-
-  public deletePdfLibraryRecord(filePath: string): number[] {
-    const articles = this.getArticlesForPdf(filePath);
-    const articleIds = articles.map((a) => a.id);
-    
-    const transaction = this.db.transaction(() => {
-      for (const id of articleIds) {
-        this.unlinkPdfFromArticle(id);
-      }
-      this.db.prepare('DELETE FROM pdf_files WHERE file_path = ?').run(filePath);
-    });
-    transaction();
-    return articleIds;
-  }
-
-  public unlinkPdfFromArticle(articleId: number): void {
-    const article = this.getArticle(articleId);
-    if (!article || !article.local_file_path) return;
-    
-    const chunks = this.db.prepare('SELECT id FROM pdf_chunks WHERE article_id = ?').all(articleId) as { id: number }[];
-    const chunkIds = chunks.map((c) => c.id);
-    if (chunkIds.length > 0) {
-      try {
-        this.db.prepare(`DELETE FROM pdf_chunk_embeddings WHERE rowid IN (${chunkIds.join(',')})`).run();
-      } catch (e) {}
-      this.db.prepare('DELETE FROM pdf_chunks WHERE article_id = ?').run(articleId);
-    }
-
-    this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(articleId);
-    this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(articleId);
-    this.db.prepare('UPDATE articles SET local_file_path = NULL WHERE id = ?').run(articleId);
-  }
-
-  public linkPdfToArticle(articleId: number, filePath: string): void {
-    const normalized = path.normalize(filePath);
-    let pdf = this.db.prepare('SELECT * FROM pdf_files WHERE file_path = ?').get(normalized) as any;
-    if (!pdf) {
-      pdf = this.db.prepare('SELECT * FROM pdf_files WHERE LOWER(REPLACE(file_path, "/", "\\")) = LOWER(REPLACE(?, "/", "\\"))').get(normalized) as any;
-    }
-    if (!pdf) {
-      const filename = path.basename(filePath);
-      pdf = this.db.prepare('SELECT * FROM pdf_files WHERE filename = ?').get(filename) as any;
-    }
-    if (!pdf) {
-      throw new Error(`PDF file not found in library: "${filePath}"`);
-    }
-    this.db.prepare('UPDATE articles SET local_file_path = ? WHERE id = ?').run(pdf.file_path, articleId);
-  }
-
-  public registerPdfInLibrary(filePath: string, hash: string, filename: string, size: number): void {
-    const normalized = path.normalize(filePath);
-    this.db.prepare(`
-      INSERT OR REPLACE INTO pdf_files (file_path, file_hash, filename, file_size)
-      VALUES (?, ?, ?, ?)
-    `).run(normalized, hash, filename, size);
-  }
-
-  public importArticlesFromProject(
-    sourceProjectId: number,
-    destProjectId: number,
-    articleIds: number[],
-    searchHistoryId: number
-  ): void {
-    const transaction = this.db.transaction(() => {
-      for (const articleId of articleIds) {
-        this.cloneArticleToProject(articleId, destProjectId, searchHistoryId);
-      }
-    });
-    transaction();
-  }
-
-  private cloneArticleToProject(articleId: number, destProjectId: number, searchHistoryId: number): void {
-    const article = this.db.prepare('SELECT * FROM articles WHERE id = ?').get(articleId) as any;
-    if (!article) return;
-    const info = this.insertClonedArticle(destProjectId, searchHistoryId, article);
-    this.clonePdfChunksAndEmbeddings(articleId, info.lastInsertRowid as number);
-  }
-
-  private insertClonedArticle(destProjectId: number, searchHistoryId: number, article: any): any {
-    const stmt = this.db.prepare(`
-      INSERT INTO articles (
-        project_id, doi, title, authors, year, abstract, author_keywords, index_keywords,
-        journal, volume, issue, pages, affiliations, references_list, document_type,
-        publisher, is_oa, url, accessed, csl_json, local_file_path, status, search_id, ai_summary,
-        source_query, source_databases, issn, citation_count
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?, ?, ?, ?, ?)
-    `);
-    return stmt.run(
-      destProjectId, article.doi || null, article.title, article.authors || null, article.year || null,
-      article.abstract || null, article.author_keywords || null, article.index_keywords || null,
-      article.journal || null, article.volume || null, article.issue || null, article.pages || null,
-      article.affiliations || null, article.references_list || null, article.document_type || null,
-      article.publisher || null, article.is_oa ?? null, article.url || null, article.accessed || null,
-      article.csl_json || null, article.local_file_path || null, searchHistoryId, article.ai_summary || null,
-      article.source_query || null, article.source_databases || '[]', article.issn || null, article.citation_count || null
-    );
-  }
-
-  public getPdfByHash(hash: string): any {
-    return this.db.prepare('SELECT * FROM pdf_files WHERE file_hash = ?').get(hash);
-  }
-
-  private clonePdfChunksAndEmbeddings(oldArticleId: number, newArticleId: number): void {
-    const chunks = this.db.prepare('SELECT * FROM pdf_chunks WHERE article_id = ?').all(oldArticleId) as any[];
-    for (const chunk of chunks) {
-      const info = this.db.prepare(`
-        INSERT INTO pdf_chunks (article_id, chunk_index, text_content, page_number, bbox_x, bbox_y, bbox_w, bbox_h, token_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        newArticleId, chunk.chunk_index, chunk.text_content, chunk.page_number,
-        chunk.bbox_x, chunk.bbox_y, chunk.bbox_w, chunk.bbox_h, chunk.token_count
-      );
-      const newChunkId = BigInt(info.lastInsertRowid);
-      const oldChunkId = BigInt(chunk.id);
-      const embedding = this.db.prepare('SELECT embedding FROM pdf_chunk_embeddings WHERE rowid = ?').get(oldChunkId) as any;
-      if (embedding && embedding.embedding) {
-        this.db.prepare('INSERT INTO pdf_chunk_embeddings (rowid, embedding) VALUES (?, ?)').run(newChunkId, embedding.embedding);
-      }
-    }
   }
 }

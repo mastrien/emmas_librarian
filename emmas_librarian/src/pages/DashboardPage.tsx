@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProjectService } from '../contexts/ServicesContext';
 import { Project, ScientificVenue, MilestoneStatus } from '../types';
-import { Plus, BookOpen, Calendar, ChevronRight, PieChart as PieChartIcon, Download } from 'lucide-react';
+import { Plus, Download } from 'lucide-react';
 import { DashboardCalendar } from '../components/common/DashboardCalendar';
 import { DeadlineBanner } from '../components/common/DeadlineBanner';
 import { VenueFormModal } from '../components/modals/VenueFormModal';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { Pie } from 'react-chartjs-2';
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+import { DashboardClock } from './Dashboard/components/DashboardClock';
+import { DashboardDragDropOverlay } from './Dashboard/components/DashboardDragDropOverlay';
+import { DashboardProjectsList } from './Dashboard/components/DashboardProjectsList';
+import { DashboardGlobalStats } from './Dashboard/components/DashboardGlobalStats';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,21 +23,6 @@ export const DashboardPage: React.FC = () => {
   // Modal State
   const [isAddVenueModalOpen, setIsAddVenueModalOpen] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null);
-
-  // Real-time Clock State
-  const [now, setNow] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const currentTimeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const day = now.getDate();
-  const monthShort = now.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
-  const year = now.getFullYear();
-  const weekday = now.toLocaleDateString('pt-BR', { weekday: 'long' });
-  const currentDateStr = `${weekday}, ${day} ${monthShort} ${year}`;
 
   const loadData = async () => {
     try {
@@ -188,40 +173,9 @@ export const DashboardPage: React.FC = () => {
       onDrop={handleDrop}
       style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', minHeight: '100vh' }}
     >
-      {/* Overlay do Drag and Drop */}
-      {isDragging &&
-        createPortal(
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.75)',
-              backdropFilter: 'blur(4px)',
-              zIndex: 99999,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              border: '3px dashed var(--color-primary)',
-              pointerEvents: 'none',
-            }}
-          >
-            <Download size={64} color="var(--color-primary)" className="bounce-subtle" />
-            <h2 style={{ marginTop: '1.5rem', fontSize: '1.8rem', fontWeight: 700 }}>
-              Solte o arquivo do projeto (.emmapcarc) aqui
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginTop: '0.5rem' }}>
-              O projeto será importado automaticamente para a sua biblioteca.
-            </p>
-          </div>,
-          document.body,
-        )}
+      {isDragging && <DashboardDragDropOverlay />}
 
-      {/* Seção da Agenda no Topo (Minimalista & Coluna Esquerda Maior com Cores Neutras) */}
+      {/* Seção da Agenda no Topo */}
       <div
         className="fade-in"
         style={{
@@ -231,46 +185,8 @@ export const DashboardPage: React.FC = () => {
           gap: '1.25rem',
         }}
       >
-        {/* Grid: Esquerda Maior (1.4fr 320px) */}
         <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 320px', gap: '1.5rem', alignItems: 'center' }}>
-          {/* Esquerda: Relógio e Data Centralizados com Cores Neutras (Sem var(--color-primary)) */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              padding: '1rem',
-            }}
-          >
-            <div
-              style={{
-                fontSize: '3.75rem',
-                fontWeight: 700,
-                color: 'var(--text-heading)',
-                fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-                fontVariantNumeric: 'tabular-nums',
-                letterSpacing: '-0.03em',
-                lineHeight: 1,
-              }}
-            >
-              {currentTimeStr}
-            </div>
-            <div
-              style={{
-                fontSize: '0.95rem',
-                color: 'var(--text-muted)',
-                fontWeight: 500,
-                textTransform: 'capitalize',
-                marginTop: '0.6rem',
-              }}
-            >
-              {currentDateStr}
-            </div>
-          </div>
-
-          {/* Direita: Calendário Mensal */}
+          <DashboardClock />
           <div>
             <DashboardCalendar
               diarySet={globalStats.diarySet}
@@ -282,7 +198,6 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Linha Inferior: Banner de Prazos Próximos */}
         <div>
           <DeadlineBanner
             venues={venues}
@@ -338,112 +253,7 @@ export const DashboardPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-            {projects.map((project) => (
-              <Link
-                key={project.id}
-                to={`/projects/${project.id}`}
-                className="card hover-lift fade-in"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  padding: '1.5rem',
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  cursor: 'pointer',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                    marginBottom: '1rem',
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: '0.8rem',
-                      background: 'var(--bg-main)',
-                      color: 'var(--color-primary)',
-                      borderRadius: 'var(--radius-md)',
-                    }}
-                  >
-                    <BookOpen size={24} />
-                  </div>
-                  <ChevronRight size={20} color="var(--border-color)" style={{ marginTop: '0.5rem' }} />
-                </div>
-                <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', color: 'var(--text-heading)' }}>
-                  {project.name}
-                </h3>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                    color: 'var(--text-muted)',
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  <Calendar size={14} />
-                  Criado em {new Date(project.created_at).toLocaleDateString()}
-                </div>
-
-                {/* @ts-ignore */}
-                {project.stats && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: '0.75rem',
-                      marginTop: '1.25rem',
-                      paddingTop: '1rem',
-                      borderTop: '1px solid var(--border-color)',
-                      fontSize: '0.85rem',
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Ativos</span>
-                      {/* @ts-ignore */}
-                      <strong style={{ color: 'var(--color-primary)' }}>{project.stats.active}</strong>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Lidos</span>
-                      {/* @ts-ignore */}
-                      <strong style={{ color: 'var(--color-success, #10b981)' }}>{project.stats.read}</strong>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Arquivados</span>
-                      {/* @ts-ignore */}
-                      <strong style={{ color: 'var(--text-muted)' }}>{project.stats.archived}</strong>
-                    </div>
-                  </div>
-                )}
-              </Link>
-            ))}
-
-            {projects.length === 0 && (
-              <div
-                className="glass-panel"
-                style={{
-                  gridColumn: '1 / -1',
-                  textAlign: 'center',
-                  padding: '4rem 2rem',
-                  borderRadius: 'var(--radius-lg)',
-                }}
-              >
-                <BookOpen size={48} color="var(--color-primary)" style={{ opacity: 0.8, marginBottom: '1rem' }} />
-                <h3 style={{ fontSize: '1.25rem', color: 'var(--text-heading)', margin: '0 0 0.5rem 0' }}>
-                  Nenhum projeto encontrado
-                </h3>
-                <p style={{ color: 'var(--text-muted)', margin: '0 0 1.5rem 0' }}>
-                  Crie seu primeiro projeto para começar a importar e analisar artigos científicos.
-                </p>
-                <Link to="/new-project" className="btn-primary">
-                  <Plus size={20} /> Criar Primeiro Projeto
-                </Link>
-              </div>
-            )}
-          </div>
+          <DashboardProjectsList projects={projects} />
 
           <div style={{ textAlign: 'center', marginTop: '3rem' }}>
             <Link
@@ -463,137 +273,8 @@ export const DashboardPage: React.FC = () => {
             </Link>
           </div>
 
-          {/* Seção dos Gráficos Globais (Restaurada para o Design Original) */}
           {!loading && projects.length > 0 && hasData && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem', marginTop: '3rem' }}>
-              <div
-                className="fade-in"
-                style={{
-                  gridColumn: 'span 6',
-                  display: 'flex',
-                  background: 'transparent',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  flexDirection: 'row',
-                }}
-              >
-                <div style={{ width: '100px', height: '100px', position: 'relative', flexShrink: 0 }}>
-                  <Pie
-                    data={statusChartData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: { display: false },
-                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 },
-                      },
-                    }}
-                  />
-                </div>
-                <div>
-                  <h3
-                    style={{
-                      margin: '0 0 1rem 0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      fontSize: '1rem',
-                    }}
-                  >
-                    <PieChartIcon size={16} /> Progresso Geral
-                  </h3>
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    {statusChartData.datasets[0].data.map((val, index) => {
-                      if (val === 0) return null;
-                      return (
-                        <div key={index}>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}
-                          >
-                            <div
-                              style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                backgroundColor: statusChartData.datasets[0].backgroundColor[index],
-                              }}
-                            />
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                              {statusChartData.labels[index]}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-heading)' }}>{val}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className="fade-in"
-                style={{
-                  gridColumn: 'span 6',
-                  display: 'flex',
-                  background: 'transparent',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  flexDirection: 'row',
-                }}
-              >
-                <div style={{ width: '100px', height: '100px', position: 'relative', flexShrink: 0 }}>
-                  <Pie
-                    data={chartData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: { display: false },
-                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 },
-                      },
-                    }}
-                  />
-                </div>
-                <div>
-                  <h3
-                    style={{
-                      margin: '0 0 1rem 0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      fontSize: '1rem',
-                    }}
-                  >
-                    <PieChartIcon size={16} /> Arquivos Físicos
-                  </h3>
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    {chartData.datasets[0].data.map((val, index) => {
-                      if (val === 0) return null;
-                      return (
-                        <div key={index}>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}
-                          >
-                            <div
-                              style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                backgroundColor: chartData.datasets[0].backgroundColor[index] as string,
-                              }}
-                            />
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                              {chartData.labels[index]}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-heading)' }}>{val}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <DashboardGlobalStats statusChartData={statusChartData} chartData={chartData} />
           )}
         </>
       )}

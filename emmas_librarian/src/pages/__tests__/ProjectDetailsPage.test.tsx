@@ -322,4 +322,30 @@ describe('ProjectDetailsPage', () => {
       ]),
     );
   });
+
+  it('renders history tab correctly when clicked', async () => {
+    fakeService.getSearchHistory.mockResolvedValue([
+      { id: 1, unified_query: 'test query', translated_queries: '{}', results_breakdown: '{}', total_results: 10, created_at: new Date().toISOString() }
+    ]);
+    const { getByTestId, queryByTestId, getByText } = render(
+      <MemoryRouter initialEntries={['/projects/1']}>
+        <GlobalErrorProvider>
+          <Routes>
+            <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+          </Routes>
+        </GlobalErrorProvider>
+      </MemoryRouter>,
+    );
+
+    await vi.waitFor(() => {
+      expect(getByTestId('project-details-container')).toBeInTheDocument();
+    });
+
+    const historyTab = getByTestId('tab-history');
+    fireEvent.click(historyTab);
+
+    await vi.waitFor(() => {
+      expect(getByTestId('search-history-modal')).toBeInTheDocument();
+    });
+  });
 });

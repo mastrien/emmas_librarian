@@ -1,0 +1,399 @@
+﻿import Database from 'better-sqlite3';
+import * as sqliteVec from 'sqlite-vec';
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import { safeStorage } from 'electron';
+import { Project, Article, Annotation, Highlight, DiaryEntry, ProjectDocument, ProjectCategory, ArticleCategory, CategoryOption } from '../types';
+
+interface TableInfoRow {
+  name: string;
+}
+
+export interface ArticleInput {
+  doi?: string;
+  title: string;
+  authors?: string;
+  year?: number;
+  abstract?: string;
+  author_keywords?: string;
+  index_keywords?: string;
+  journal?: string;
+  volume?: string;
+  issue?: string;
+  pages?: string;
+  affiliations?: string;
+  references_list?: string;
+  document_type?: string;
+  issn?: string;
+  citation_count?: number;
+  source_query: string;
+  source_databases: string;
+  csl_json: string;
+  search_id?: number;
+  is_oa?: number;
+  publisher?: string;
+  url?: string;
+  accessed?: string;
+}
+
+export type HighlightWithComment = Highlight & { comment?: string };
+
+export class DatabaseAdapter {
+  private db: Database.Database;
+
+  constructor(dbPath: string) {
+    this.db = new Database(dbPath);
+    this.loadSqliteVec(this.db);
+    this.db.pragma('journal_mode = WAL');
+    this.db.pragma('foreign_keys = ON');
+    this.initSchema();
+  }
+
+  private loadSqliteVec(db: Database.Database): void {
+    try {
+      let loadablePath = sqliteVec.getLoadablePath();
+      if (
+        loadablePath.toLowerCase().includes('app.asar') &&
+        !loadablePath.toLowerCase().includes('app.asar.unpacked')
+      ) {
+        loadablePath = loadablePath.replace(/app\.asar/i, 'app.asar.unpacked');
+      }
+      db.loadExtension(loadablePath);
+    } catch (err) {
+      console.error('Failed to load sqlite-vec extension', err);
+    }
+  }
+
+  public getDB(): Database.Database {
+    return this.db;
+  }
+
+  private initSchema() {
+    // Determine the right path for schema.sql whether running compiled, in dev, or in tests
+    const possiblePaths = [
+      path.join(__dirname, 'schema.sql'), // compiled dist-electron/database/schema.sql or test from __dirname
+      path.join(__dirname, '..', '..', 'electron', 'database', 'schema.sql'), // from dist-electron (if __dirname is dist-electron)
+      path.join(__dirname, '..', '..', '..', 'electron', 'database', 'schema.sql'), // from nested dist-electron/electron/database
+      path.join(process.cwd(), 'electron', 'database', 'schema.sql'), // test from frontend root
+    ];
+
+    let schemaStr = '';
+    let found = false;
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        schemaStr = fs.readFileSync(p, 'utf-8');
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) throw new Error('Could not find schema.sql. Checked: ' + possiblePaths.join(', '));
+
+    this.db.exec(schemaStr);
+
+    const migrations = [
+      'ALTER TABLE articles ADD COLUMN archive_note TEXT',
+      'ALTER TABLE articles ADD COLUMN abstract TEXT',
+      'ALTER TABLE articles ADD COLUMN author_keywords TEXT',
+      'ALTER TABLE articles ADD COLUMN index_keywords TEXT',
+      'ALTER TABLE articles ADD COLUMN journal TEXT',
+      'ALTER TABLE articles ADD COLUMN volume TEXT',
+      'ALTER TABLE articles ADD COLUMN issue TEXT',
+      'ALTER TABLE articles ADD COLUMN pages TEXT',
+      'ALTER TABLE articles ADD COLUMN affiliations TEXT',
+      'ALTER TABLE articles ADD COLUMN references_list TEXT',
+      'ALTER TABLE articles ADD COLUMN document_type TEXT',
+      'ALTER TABLE articles ADD COLUMN issn TEXT',
+      'ALTER TABLE articles ADD COLUMN citation_count INTEGER',
+      'ALTER TABLE articles ADD COLUMN search_id INTEGER REFERENCES search_history(id) ON DELETE SET NULL',
+      'ALTER TABLE articles ADD COLUMN ai_summary TEXT',
+      'ALTER TABLE projects ADD COLUMN writing_pad TEXT',
+      'ALTER TABLE articles ADD COLUMN is_oa INTEGER',
+      'ALTER TABLE articles ADD COLUMN publisher TEXT',
+      'ALTER TABLE articles ADD COLUMN url TEXT',
+      'ALTER TABLE articles ADD COLUMN accessed TEXT',
+      'ALTER TABLE projects ADD COLUMN deleted_at DATETIME DEFAULT NULL',
+      'ALTER TABLE articles ADD COLUMN deleted_at DATETIME DEFAULT NULL',
+      'ALTER TABLE annotations ADD COLUMN deleted_at DATETIME DEFAULT NULL',
+      `CREATE TABLE IF NOT EXISTS project_diary_history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          project_id INTEGER NOT NULL,
+          entry_date TEXT NOT NULL,
+          content TEXT NOT NULL,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+      )`,
+      'ALTER TABLE search_history ADD COLUMN sort_by TEXT',
+      'ALTER TABLE search_history ADD COLUMN limit_val INTEGER',
+      'ALTER TABLE project_documents ADD COLUMN position INTEGER DEFAULT 0',
+      'ALTER TABLE project_documents ADD COLUMN category TEXT DEFAULT NULL',
+    ];
+    for (const sql of migrations) {
+      try {
+        this.db.exec(sql);
+      } catch (e) {
+        /* column already exists */
+      }
+    }
+
+    // One-time backfill of is_oa and publisher columns from csl_json for existing articles
+    try {
+      const checkBackfill = this.db
+        .prepare("SELECT value FROM settings WHERE key = 'backfilled_is_oa_publisher'")
+        .get() as { value: string } | undefined;
+      if (!checkBackfill || checkBackfill.value !== 'true') {
+        const articlesToBackfill = this.db
+          .prepare(
+            `
+          SELECT id, csl_json FROM articles WHERE csl_json IS NOT NULL
+        `,
+          )
+          .all() as { id: number; csl_json: string }[];
+
+        if (articlesToBackfill.length > 0) {
+          const updateStmt = this.db.prepare(`
+            UPDATE articles SET is_oa = ?, publisher = ? WHERE id = ?
+          `);
+
+          const transaction = this.db.transaction((items) => {
+            for (const art of items) {
+              try {
+                const csl = JSON.parse(art.csl_json);
+                let isOa = csl.is_oa !== undefined ? (csl.is_oa ? 1 : 0) : null;
+                let publisher = csl.publisher || null;
+                updateStmt.run(isOa, publisher, art.id);
+              } catch (e) {}
+            }
+          });
+          transaction(articlesToBackfill);
+        }
+
+        this.db
+          .prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('backfilled_is_oa_publisher', 'true')")
+          .run();
+      }
+    } catch (err) {
+      console.error('Failed to backfill articles is_oa/publisher:', err);
+    }
+
+    try {
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS pending_highlights (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            article_id INTEGER NOT NULL,
+            quote TEXT NOT NULL,
+            context_before TEXT,
+            context_after TEXT,
+            comment TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE
+        );
+      `);
+    } catch (e) {
+      console.error('Migration pending_highlights error', e);
+    }
+    try {
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS massive_investigations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            questions TEXT NOT NULL,
+            articles_ids TEXT NOT NULL,
+            model_used TEXT,
+            status TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+      `);
+    } catch (e) {
+      console.error('Migration massive_investigations error', e);
+    }
+
+    try {
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS project_categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            type TEXT NOT NULL DEFAULT 'text',
+            options TEXT,
+            FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS project_category_options (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS article_categories (
+            article_id INTEGER NOT NULL,
+            category_id INTEGER NOT NULL,
+            value TEXT,
+            PRIMARY KEY(article_id, category_id),
+            FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
+            FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS article_category_selections (
+            article_id INTEGER NOT NULL,
+            category_id INTEGER NOT NULL,
+            option_id INTEGER NOT NULL,
+            PRIMARY KEY(article_id, category_id, option_id),
+            FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
+            FOREIGN KEY(category_id) REFERENCES project_categories(id) ON DELETE CASCADE,
+            FOREIGN KEY(option_id) REFERENCES project_category_options(id) ON DELETE CASCADE
+        );
+      `);
+
+      const pcInfo = this.db.pragma('table_info(project_categories)') as TableInfoRow[];
+      if (!pcInfo.some((col) => col.name === 'options')) {
+        this.db.exec(`ALTER TABLE project_categories ADD COLUMN options TEXT;`);
+      }
+
+      // MigraÃ§Ã£o de dados de options para IDs relacionais
+      const checkBackfill = this.db
+        .prepare("SELECT value FROM settings WHERE key = 'backfilled_category_options'")
+        .get() as { value: string } | undefined;
+      if (!checkBackfill || checkBackfill.value !== 'true') {
+        const transaction = this.db.transaction(() => {
+          const cats = this.db
+            .prepare("SELECT id, type, options FROM project_categories WHERE type IN ('enum', 'multiselect')")
+            .all() as { id: number; type: string; options?: string }[];
+          const insertOptionStmt = this.db.prepare(
+            'INSERT INTO project_category_options (category_id, name) VALUES (?, ?)',
+          );
+          const insertSelectionStmt = this.db.prepare(
+            'INSERT INTO article_category_selections (article_id, category_id, option_id) VALUES (?, ?, ?)',
+          );
+
+          for (const cat of cats) {
+            if (cat.options) {
+              const opts = cat.options
+                .split(',')
+                .map((o: string) => o.trim())
+                .filter(Boolean);
+              const optionMap = new Map<string, number>();
+
+              for (const opt of opts) {
+                const res = insertOptionStmt.run(cat.id, opt);
+                optionMap.set(opt, res.lastInsertRowid as number);
+              }
+
+              const assignments = this.db
+                .prepare('SELECT article_id, value FROM article_categories WHERE category_id = ?')
+                .all(cat.id) as { article_id: number; value?: string }[];
+              for (const assign of assignments) {
+                if (assign.value) {
+                  const selectedOpts = assign.value
+                    .split(',')
+                    .map((o: string) => o.trim())
+                    .filter(Boolean);
+                  for (const selected of selectedOpts) {
+                    let optId = optionMap.get(selected);
+                    if (!optId) {
+                      const res = insertOptionStmt.run(cat.id, selected);
+                      optId = res.lastInsertRowid as number;
+                      optionMap.set(selected, optId);
+                    }
+                    try {
+                      insertSelectionStmt.run(assign.article_id, cat.id, optId);
+                    } catch (e) {} // duplicate ignore
+                  }
+                }
+              }
+            }
+          }
+        });
+        transaction();
+        this.db
+          .prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('backfilled_category_options', 'true')")
+          .run();
+      }
+    } catch (e) {
+      console.error('Migration categories error', e);
+    }
+
+    try {
+      const checkVecMigration = this.db
+        .prepare("SELECT value FROM settings WHERE key = 'migrated_vec_dimensions_v3'")
+        .get() as { value: string } | undefined;
+
+      if (!checkVecMigration || checkVecMigration.value !== 'true') {
+        const transaction = this.db.transaction(() => {
+          this.db.exec(`
+            DROP TABLE IF EXISTS pdf_chunk_embeddings;
+            DROP TABLE IF EXISTS pdf_chunks;
+            CREATE TABLE IF NOT EXISTS pdf_chunks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                article_id INTEGER NOT NULL,
+                chunk_index INTEGER NOT NULL,
+                text_content TEXT NOT NULL,
+                page_number INTEGER NOT NULL,
+                bbox_x REAL,
+                bbox_y REAL,
+                bbox_w REAL,
+                bbox_h REAL,
+                token_count INTEGER,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE
+            );
+          `);
+        });
+        transaction();
+        this.db
+          .prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('migrated_vec_dimensions_v3', 'true')")
+          .run();
+      }
+    } catch (e) {
+      console.error('Migration sqlite-vec dimensions error', e);
+    }
+
+    try {
+      const miInfo = this.db.pragma('table_info(massive_investigations)') as TableInfoRow[];
+      if (!miInfo.some((col) => col.name === 'model_used')) {
+        this.db.prepare('ALTER TABLE massive_investigations ADD COLUMN model_used TEXT').run();
+      }
+      if (!miInfo.some((col) => col.name === 'status')) {
+        this.db.prepare('ALTER TABLE massive_investigations ADD COLUMN status TEXT').run();
+      }
+
+      const hlInfo = this.db.pragma('table_info(highlights)') as TableInfoRow[];
+      if (!hlInfo.some((col) => col.name === 'content_text')) {
+        this.db.prepare('ALTER TABLE highlights ADD COLUMN content_text TEXT').run();
+      }
+
+      // Deduplicate project_diary entries (keep the latest one)
+      this.db.exec(`
+        DELETE FROM project_diary 
+        WHERE id NOT IN (
+          SELECT MAX(id) 
+          FROM project_diary 
+          GROUP BY project_id, entry_date
+        );
+      `);
+
+      // Enforce unique project_diary entries by index, in case the constraint was missing in older schemas
+      this.db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_project_diary_unique 
+        ON project_diary(project_id, entry_date);
+      `);
+
+      // PDF Library table migration
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS pdf_files (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            file_path TEXT UNIQUE NOT NULL,
+            file_hash TEXT UNIQUE NOT NULL,
+            filename TEXT NOT NULL,
+            file_size INTEGER NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      // Run PDF backfill
+      this.backfillExistingPdfs();
+    } catch (e) {
+      console.error('Schema migrations error', e);
+    }
+  }
+

@@ -40,7 +40,7 @@ export function parseIpcError(error: any): Error {
       if (parsed.isAppError) {
         return new FrontendAppError(parsed.code, parsed.type, parsed.message, parsed.details);
       }
-    } catch (e) {
+    } catch {
       // Ignore parse errors, fallback to raw error
     }
   }

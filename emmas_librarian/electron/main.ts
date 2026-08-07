@@ -7,7 +7,7 @@ import { autoUpdater } from 'electron-updater';
 // Configure logging for auto-updater
 autoUpdater.logger = log;
 log.info('App starting...');
-
+const appStartTime = performance.now();
 import { setupIpcRegistries } from './ipc/ipcRegistries';
 
 const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
@@ -47,6 +47,10 @@ function loadWindowContent(window: BrowserWindow): void {
   if (isDev) {
     window.loadURL('http://localhost:5173');
     window.webContents.on('did-finish-load', () => {
+      const startupTime = performance.now() - appStartTime;
+      log.info(`[Performance] App initialized in ${startupTime.toFixed(2)}ms (Dev)`);
+      console.log(`[Performance] App initialized in ${startupTime.toFixed(2)}ms (Dev)`);
+      
       window.show();
       if (!isE2ETest) {
         window.webContents.openDevTools();
@@ -55,6 +59,10 @@ function loadWindowContent(window: BrowserWindow): void {
   } else {
     window.loadFile(path.join(app.getAppPath(), 'dist/index.html'));
     window.webContents.on('did-finish-load', () => {
+      const startupTime = performance.now() - appStartTime;
+      log.info(`[Performance] App initialized in ${startupTime.toFixed(2)}ms (Prod)`);
+      console.log(`[Performance] App initialized in ${startupTime.toFixed(2)}ms (Prod)`);
+
       window.show();
     });
   }

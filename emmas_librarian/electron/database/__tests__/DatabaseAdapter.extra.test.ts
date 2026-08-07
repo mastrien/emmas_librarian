@@ -4,6 +4,15 @@ import fs from 'fs';
 import path from 'path';
 import { safeStorage } from 'electron';
 
+let mockLoadablePath: string | null = null;
+vi.mock('sqlite-vec', async (importOriginal) => {
+  const original = await importOriginal<typeof import('sqlite-vec')>();
+  return {
+    ...original,
+    getLoadablePath: () => mockLoadablePath || original.getLoadablePath(),
+  };
+});
+
 // Mock electron's safeStorage before importing it
 vi.mock('electron', () => ({
   safeStorage: {

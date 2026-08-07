@@ -1,0 +1,40 @@
+﻿  public updateProjectCategory(categoryId: number, name: string, type: string, options?: string | null): void {
+    this.db.prepare('UPDATE project_categories SET name = ?, type = ? WHERE id = ?').run(name, type, categoryId);
+    if ((type === 'enum' || type === 'multiselect') && Array.isArray(options)) {
+      this.syncProjectCategoryOptions(categoryId, options);
+    } else if (typeof options === 'string') {
+      this.db.prepare('UPDATE project_categories SET options = ? WHERE id = ?').run(options, categoryId);
+    }
+  }
+
+  public syncProjectCategoryOptions(categoryId: number, options: { id?: number; name: string }[]): void {
+    const existing = this.db
+      .prepare('SELECT id FROM project_category_options WHERE category_id = ?')
+      .all(categoryId) as { id: number }[];
+    const existingIds = new Set(existing.map((e) => e.id));
+    const toKeep = new Set<number>();
+
+    const updateStmt = this.db.prepare('UPDATE project_category_options SET name = ? WHERE id = ? AND category_id = ?');
+    const insertStmt = this.db.prepare('INSERT INTO project_category_options (category_id, name) VALUES (?, ?)');
+    const deleteStmt = this.db.prepare('DELETE FROM project_category_options WHERE id = ? AND category_id = ?');
+
+    const transaction = this.db.transaction(() => {
+      for (const opt of options) {
+        if (opt.id) {
+          updateStmt.run(opt.name, opt.id, categoryId);
+          toKeep.add(opt.id);
+        } else {
+          const res = insertStmt.run(categoryId, opt.name);
+          toKeep.add(res.lastInsertRowid as number);
+        }
+      }
+
+      for (const id of existingIds) {
+        if (!toKeep.has(id)) {
+          deleteStmt.run(id, categoryId);
+        }
+      }
+    });
+    transaction();
+  }
+}

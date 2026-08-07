@@ -9,6 +9,7 @@ import { Layout } from './components/common/Layout';
 import { GlobalErrorProvider } from './contexts/GlobalErrorContext';
 import { ErrorModal } from './components/modals/ErrorModal';
 
+
 // Suppress React 19 warnings originating from third-party libraries (e.g. react-pdf-highlighter)
 const originalConsoleError = console.error;
 console.error = (...args: unknown[]) => {
@@ -108,17 +109,17 @@ if (rootEl)
             <Suspense
               fallback={<div className="flex-1 flex items-center justify-center p-8 text-gray-500">Loading...</div>}
             >
-              <Routes>
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/new-project" element={<NewProjectPage />} />
-                <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-                <Route path="/projects/:id/search" element={<SearchPage />} />
-                <Route path="/articles/:id" element={<ArticleReaderPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/terms" element={<TermsOfUsePage />} />
-                <Route path="/pdfs" element={<PdfLibraryPage />} />
-                <Route path="/agenda" element={<AgendaPage />} />
-              </Routes>
+                <Routes>
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/new-project" element={<NewProjectPage />} />
+                  <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+                  <Route path="/projects/:id/search" element={<SearchPage />} />
+                  <Route path="/articles/:id" element={<ArticleReaderPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/terms" element={<TermsOfUsePage />} />
+                  <Route path="/pdfs" element={<PdfLibraryPage />} />
+                  <Route path="/agenda" element={<AgendaPage />} />
+                </Routes>
             </Suspense>
           </Layout>
         </HashRouter>

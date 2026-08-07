@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ExportService } from '../ExportService';
-import { Article } from '../../types';
+import { Article } from '../../../src/types';
 
 describe('ExportService', () => {
   const exportService = new ExportService();

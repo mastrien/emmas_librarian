@@ -25,6 +25,7 @@ function normalizePdfText(str: string): string {
       .replace(/[\u2018\u2019]/g, "'")
       .replace(/[\u201C\u201D]/g, '"')
       // Non-breaking space, zero-width chars, BOM → regular space / empty
+      // eslint-disable-next-line no-misleading-character-class
       .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, ' ')
       // Soft hyphen (invisible in rendered text but present in PDF byte stream)
       .replace(/\u00AD/g, '')
@@ -96,15 +97,18 @@ export async function anchorPendingHighlights(
           if (!/\s/.test(char)) {
             // Normalize each character before adding to strippedText so that
             // ligatures, dashes, and smart quotes in the PDF match what the AI quoted.
-            strippedText += normalizePdfText(char).toLowerCase();
-            strippedToOriginal.push(fullText.length + i);
+            const normalized = normalizePdfText(char).toLowerCase();
+            strippedText += normalized;
+            for (let j = 0; j < normalized.length; j++) {
+              strippedToOriginal.push(fullText.length + i);
+            }
           }
         }
         fullText += str;
       }
 
       // Normalize the AI-provided quote the same way before comparing
-      let strippedQuery = normalizePdfText(pending.quote).toLowerCase().replace(/\s+/g, '');
+      const strippedQuery = normalizePdfText(pending.quote).toLowerCase().replace(/\s+/g, '');
 
       if (!strippedQuery) continue;
 
@@ -121,7 +125,7 @@ export async function anchorPendingHighlights(
         const strippedContextBefore = normalizePdfText(pending.context_before).toLowerCase().replace(/\s+/g, '');
         const strippedContextAfter = normalizePdfText(pending.context_after).toLowerCase().replace(/\s+/g, '');
         const expandedQuery = strippedContextBefore + strippedQuery + strippedContextAfter;
-        let expandedIndex = strippedText.indexOf(expandedQuery);
+        const expandedIndex = strippedText.indexOf(expandedQuery);
         if (expandedIndex !== -1) {
           const quoteStartIndex = expandedIndex + strippedContextBefore.length;
           matches = [quoteStartIndex];
