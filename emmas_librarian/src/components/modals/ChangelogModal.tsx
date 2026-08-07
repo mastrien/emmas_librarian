@@ -84,6 +84,42 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                   paddingBottom: '0.25rem',
                 }}
               >
+                Versão 1.1.20 — UI & UX
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                  fontSize: '0.95rem',
+                }}
+              >
+                <li>
+                  <strong>UI/UX Skeletons:</strong> Substituição dos avisos textuais de carregamento por animações Skeleton, mitigando saltos no layout e melhorando a sensação de performance.
+                </li>
+                <li>
+                  <strong>Padronização Visual:</strong> Adoção global de cores flat sólidas na interface, removendo botões em gradiente para garantir maior contraste e legibilidade.
+                </li>
+                <li>
+                  <strong>Correção em Backups:</strong> Correção no processo de restauração automática do banco de dados para incluir o restart da aplicação e reconectar corretamente a IPC bridge.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  marginTop: 0,
+                  marginBottom: '0.75rem',
+                  fontSize: '1.1rem',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
                 Versão 1.1.19 — Agenda & Prazos
               </h3>
               <ul

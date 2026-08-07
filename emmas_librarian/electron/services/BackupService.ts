@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import { gzipSync, gunzipSync } from 'zlib';
+import { app } from 'electron';
 
 export class BackupService {
   constructor(
@@ -184,7 +185,6 @@ export class BackupService {
     fs.writeFileSync(this.dbPath, decompressed);
     
     // Relaunch app to reconnect to new database
-    const { app } = require('electron');
     app.relaunch();
     app.exit(0);
 

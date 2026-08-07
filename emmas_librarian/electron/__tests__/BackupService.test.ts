@@ -6,6 +6,8 @@ import path from 'path';
 vi.mock('electron', () => ({
   app: {
     getPath: vi.fn().mockReturnValue('/mock/userData'),
+    relaunch: vi.fn(),
+    exit: vi.fn(),
   },
 }));
 
