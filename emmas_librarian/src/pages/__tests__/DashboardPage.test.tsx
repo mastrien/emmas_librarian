@@ -47,10 +47,10 @@ describe('DashboardPage', () => {
     
     renderDashboard();
     
-    expect(screen.getByText('Carregando projetos...')).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-loading-skeleton')).toBeInTheDocument();
     
     await waitFor(() => {
-      expect(screen.queryByText('Carregando projetos...')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dashboard-loading-skeleton')).not.toBeInTheDocument();
     });
     
     expect(screen.getByText('Nenhum projeto encontrado')).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe('DashboardPage', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.queryByText('Carregando projetos...')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dashboard-loading-skeleton')).not.toBeInTheDocument();
     });
 
     expect(screen.getByText('Project 1')).toBeInTheDocument();
@@ -108,7 +108,7 @@ describe('DashboardPage', () => {
     renderDashboard();
     
     await waitFor(() => {
-      expect(screen.queryByText('Carregando projetos...')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dashboard-loading-skeleton')).not.toBeInTheDocument();
     });
     
     expect(consoleSpy).toHaveBeenCalledWith('Erro ao carregar dados do dashboard', expect.any(Error));
@@ -123,7 +123,7 @@ describe('DashboardPage', () => {
     renderDashboard();
     
     await waitFor(() => {
-      expect(screen.queryByText('Carregando projetos...')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dashboard-loading-skeleton')).not.toBeInTheDocument();
     });
     
     // The DashboardCalendar should render a button to add a venue
@@ -162,7 +162,7 @@ describe('DashboardPage', () => {
     renderDashboard();
     
     await waitFor(() => {
-      expect(screen.queryByText('Carregando projetos...')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dashboard-loading-skeleton')).not.toBeInTheDocument();
     });
 
     // Checkboxes in DeadlineBanner
@@ -183,7 +183,7 @@ describe('DashboardPage', () => {
     renderDashboard();
     
     await waitFor(() => {
-      expect(screen.queryByText('Carregando projetos...')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dashboard-loading-skeleton')).not.toBeInTheDocument();
     });
 
     const importButton = screen.getByText('Importar');
@@ -209,7 +209,7 @@ describe('DashboardPage', () => {
     renderDashboard();
     
     await waitFor(() => {
-      expect(screen.queryByText('Carregando projetos...')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dashboard-loading-skeleton')).not.toBeInTheDocument();
     });
 
     const importButton = screen.getByText('Importar');
@@ -233,7 +233,7 @@ describe('DashboardPage', () => {
     const { container } = renderDashboard();
     
     await waitFor(() => {
-      expect(screen.queryByText('Carregando projetos...')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dashboard-loading-skeleton')).not.toBeInTheDocument();
     });
 
     const dropZone = container.firstChild as Element;
@@ -276,7 +276,7 @@ describe('DashboardPage', () => {
     const { container } = renderDashboard();
     
     await waitFor(() => {
-      expect(screen.queryByText('Carregando projetos...')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dashboard-loading-skeleton')).not.toBeInTheDocument();
     });
 
     const dropZone = container.firstChild as Element;
@@ -300,7 +300,7 @@ describe('DashboardPage', () => {
     const { container } = renderDashboard();
     
     await waitFor(() => {
-      expect(screen.queryByText('Carregando projetos...')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dashboard-loading-skeleton')).not.toBeInTheDocument();
     });
 
     const dropZone = container.firstChild as Element;

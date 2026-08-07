@@ -489,7 +489,41 @@ export const ProjectDetailsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
+  if (loading) {
+    return (
+      <div className="fade-in" style={{ maxWidth: '1200px', margin: '0 auto', minHeight: '80vh' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
+          <ArrowLeft size={18} /> Voltar para Projetos
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
+          {/* Header Skeleton */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+             <div style={{ height: '38px', width: '40%', backgroundColor: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+             <div style={{ height: '24px', width: '150px', backgroundColor: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+          </div>
+          
+          {/* Toolbar Skeleton */}
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+             {[1, 2, 3, 4].map(i => (
+               <div key={i} style={{ height: '40px', width: '130px', backgroundColor: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+             ))}
+          </div>
+        </div>
+
+        {/* Tabs Skeleton */}
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} style={{ height: '30px', width: '90px', backgroundColor: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+          ))}
+        </div>
+
+        {/* Content Skeleton */}
+        <div style={{ height: '400px', backgroundColor: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+      </div>
+    );
+  }
+
   if (!project) return <div style={{ padding: '2rem', textAlign: 'center' }}>Projeto não encontrado.</div>;
 
   const tabs: { id: string; label: string; icon: React.ReactNode }[] = [
