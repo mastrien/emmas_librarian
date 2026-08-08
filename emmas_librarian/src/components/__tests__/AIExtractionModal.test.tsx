@@ -145,7 +145,7 @@ describe('AIExtractionModal', () => {
     );
 
     expect(screen.getByText('Processando artigo 1 de 2...')).toBeInTheDocument();
-    expect(screen.getByText('Cancelar Investigação')).toBeInTheDocument();
+    expect(screen.getByText('Cancelar')).toBeInTheDocument();
   });
 
   it('renders results when aiExtractionResults are provided', async () => {

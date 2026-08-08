@@ -1,7 +1,6 @@
 import React from 'react';
 import { Tags, Download } from 'lucide-react';
 import { Project, Article } from '../../../types';
-import { CategoryCell } from '../../../components/common/CategoryCell';
 import { projectService } from '../../../services/api';
 
 interface ProjectCategoriesTabProps {
@@ -9,13 +8,15 @@ interface ProjectCategoriesTabProps {
   projectCategories: any[];
   articleCategories: any[];
   nonArchivedArticles: Article[];
+  onCategorySaved?: () => void;
 }
 
 export const ProjectCategoriesTab: React.FC<ProjectCategoriesTabProps> = ({
   project,
   projectCategories,
   articleCategories,
-  nonArchivedArticles
+  nonArchivedArticles,
+  onCategorySaved
 }) => {
   return (
     <div className="card fade-in" style={{ padding: '2rem' }}>
@@ -124,12 +125,8 @@ export const ProjectCategoriesTab: React.FC<ProjectCategoriesTabProps> = ({
                       (ac) => ac.article_id === article.id && ac.category_id === cat.id,
                     );
                     return (
-                      <td key={cat.id} style={{ padding: '0', minWidth: '150px' }}>
-                        <CategoryCell
-                          articleId={article.id}
-                          category={cat}
-                          initialValue={articleCat?.value || ''}
-                        />
+                      <td key={cat.id} style={{ padding: '1rem 1.5rem', minWidth: '150px', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                        {articleCat?.value === 'true' ? 'Sim' : articleCat?.value === 'false' ? 'Não' : articleCat?.value || '-'}
                       </td>
                     );
                   })}

@@ -316,8 +316,8 @@ describe('ProjectDetailsPage', () => {
       expect.arrayContaining([
         expect.objectContaining({
           question: 'Q1?',
-          status: 'skipped',
-          error_message: 'Cancelado ou não executado.',
+          status: 'error',
+          error_message: 'QUOTA_EXCEEDED',
         }),
       ]),
     );

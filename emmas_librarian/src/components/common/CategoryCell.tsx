@@ -6,16 +6,24 @@ interface CategoryCellProps {
   articleId: number;
   category: ProjectCategory;
   initialValue: string;
+  onCategorySaved?: () => void;
 }
 
-export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category, initialValue }) => {
+export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category, initialValue, onCategorySaved }) => {
   const projectService = useProjectService();
   const [value, setValue] = useState(initialValue);
   const [isEditing, setIsEditing] = useState(false);
 
+  const prevInitialValueRef = React.useRef(initialValue);
+
   React.useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
+    if (prevInitialValueRef.current !== initialValue) {
+      prevInitialValueRef.current = initialValue;
+      if (!isEditing) {
+        setValue(initialValue);
+      }
+    }
+  }, [initialValue, isEditing]);
 
   const initialOptions =
     category.type === 'enum' || category.type === 'multiselect'
@@ -34,6 +42,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
     setIsEditing(false);
     try {
       await projectService.setArticleCategory(articleId, category.id, newValue);
+      if (onCategorySaved) onCategorySaved();
     } catch (err) {
       console.error(err);
     }
@@ -166,6 +175,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
       setValue(newValue);
       try {
         await projectService.setArticleCategory(articleId, category.id, newValue);
+        if (onCategorySaved) onCategorySaved();
       } catch (err) {
         console.error(err);
       }

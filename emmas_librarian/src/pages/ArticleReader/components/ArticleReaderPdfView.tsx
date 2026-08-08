@@ -49,6 +49,7 @@ interface ArticleReaderPdfViewProps {
   setEditContent: (val: string) => void;
   saveEdit: (idToSave: string, annotationId: number, isStandalone: boolean) => Promise<void>;
   setEditingId: (id: string | null) => void;
+  onCategorySaved?: () => void;
 }
 
 export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
@@ -235,7 +236,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
                   bottom: '1rem',
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  background: 'var(--bg-panel)',
+                  background: 'var(--bg-surface)',
                   padding: '0.5rem 1rem',
                   borderRadius: 'var(--radius-full)',
                   boxShadow: 'var(--shadow-md)',

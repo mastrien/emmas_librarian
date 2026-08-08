@@ -88,27 +88,7 @@ export function useArticleData(
       );
 
       if (artData.local_file_path) {
-        const buffer = (await projectService.getPdfBuffer(parseInt(id))) as
-          | { type?: string; data?: Iterable<number> }
-          | ArrayBuffer;
-        let uint8Array: Uint8Array;
-
-        // Handle Electron IPC buffer serialization
-        if (
-          buffer &&
-          typeof buffer === 'object' &&
-          'type' in buffer &&
-          buffer.type === 'Buffer' &&
-          'data' in buffer &&
-          buffer.data
-        ) {
-          uint8Array = new Uint8Array(buffer.data);
-        } else {
-          uint8Array = new Uint8Array(buffer as ArrayBuffer);
-        }
-
-        const blob = new Blob([uint8Array as any], { type: 'application/pdf' });
-        const localUrl = URL.createObjectURL(blob);
+        const localUrl = `emma-pdf://${encodeURIComponent(artData.local_file_path)}`;
         setPdfUrl(localUrl);
 
         // Process pending highlights asynchronously

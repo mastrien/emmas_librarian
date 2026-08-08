@@ -167,6 +167,7 @@ export const ArticleReaderModals: React.FC<ArticleReaderModalsProps> = ({
           setIsCategoriesOpen={setIsCategoriesOpen}
           projectCategories={projectCategories}
           articleCategories={articleCategories}
+          onCategorySaved={fetchData}
         />
       )}
 

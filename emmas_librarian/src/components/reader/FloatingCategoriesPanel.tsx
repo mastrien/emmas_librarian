@@ -10,6 +10,7 @@ interface FloatingCategoriesPanelProps {
   setIsCategoriesOpen: (open: boolean) => void;
   projectCategories: ProjectCategory[];
   articleCategories: ArticleCategory[];
+  onCategorySaved?: () => void;
 }
 
 export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = ({
@@ -18,6 +19,7 @@ export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = (
   setIsCategoriesOpen,
   projectCategories,
   articleCategories,
+  onCategorySaved,
 }) => {
   return (
     <div style={{ position: 'fixed', bottom: '2rem', left: '2rem', zIndex: 100 }}>
@@ -59,7 +61,12 @@ export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = (
                     <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>
                       {cat.name}
                     </label>
-                    <CategoryCell articleId={articleId} category={cat} initialValue={articleCat?.value || ''} />
+                    <CategoryCell
+                      articleId={articleId}
+                      category={cat}
+                      initialValue={articleCat?.value || ''}
+                      onCategorySaved={onCategorySaved}
+                    />
                   </div>
                 );
               })}

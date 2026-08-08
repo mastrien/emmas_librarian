@@ -301,7 +301,7 @@ export const AIExtractionModal = ({
                         borderColor: 'var(--color-danger)',
                       }}
                     >
-                      Cancelar Investigação
+                      Cancelar
                     </button>
                   ) : isFinished ? (
                     <button
@@ -309,7 +309,7 @@ export const AIExtractionModal = ({
                       className="btn-primary"
                       style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', justifyContent: 'center' }}
                     >
-                      Concluir Investigação
+                      Fechar
                     </button>
                   ) : (
                     <button

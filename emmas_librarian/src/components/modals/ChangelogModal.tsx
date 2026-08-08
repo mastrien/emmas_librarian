@@ -84,6 +84,45 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                   paddingBottom: '0.25rem',
                 }}
               >
+                Versão 1.1.22 — Otimização Extrema de Performance
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                  fontSize: '0.95rem',
+                }}
+              >
+                <li>
+                  <strong>Leitor PDF Instantâneo:</strong> Criado o protocolo customizado <code>emma-pdf://</code> nativo que bypassa a lentidão massiva do Electron IPC Buffer na abertura de PDFs grandes, garantindo instaneidade ao carregar artigos!
+                </li>
+                <li>
+                  <strong>Categorias Otimizadas:</strong> Painel de visualização de Categorias do projeto refeito sem inputs editáveis invisíveis para prevenir que a renderização pesada afete a página.
+                </li>
+                <li>
+                  <strong>Painel de Acesso Rápido Consertado:</strong> Resolvido um loop silencioso na dependência do Modal de Acesso Rápido, restaurando a digitação fluída sem atualizações espúrias.
+                </li>
+                <li>
+                  <strong>Lógica de Preenchimento de IA Consertada:</strong> Previne perdas caso mais de 1 campo seja salvo através de um uso de cache de erro estrito com limitação correta na UI.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  marginTop: 0,
+                  marginBottom: '0.75rem',
+                  fontSize: '1.1rem',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
                 Versão 1.1.21 — Estabilidade de Testes & Navegação
               </h3>
               <ul

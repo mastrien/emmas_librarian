@@ -163,7 +163,7 @@ export const ProjectDetailsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, modals]);
+  }, [id, modals.setSelectedArticleForDetails]);
 
   useEffect(() => {
     fetchData();
@@ -442,7 +442,9 @@ export const ProjectDetailsPage: React.FC = () => {
           setAiExtractionResults([...results]);
         } catch (err: any) {
           console.error(`Erro ao extrair de ${article.title}:`, err);
-
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          results.push({ article, result: undefined, error: errorMessage });
+          
           if (err.message && (err.message.includes('429') || err.message.includes('QUOTA_EXCEEDED'))) {
             modals.setShowQuotaModal(true);
             cancelExtractionRef.current = true;
@@ -450,10 +452,8 @@ export const ProjectDetailsPage: React.FC = () => {
             break;
           }
 
-          cancelExtractionRef.current = true;
-          setIsExtracting(false);
-          showError(err);
-          return;
+          // Para outros erros, continua a investigação
+          continue;
         }
       }
 
@@ -1076,6 +1076,7 @@ export const ProjectDetailsPage: React.FC = () => {
             projectCategories={projectCategories}
             articleCategories={articleCategories}
             nonArchivedArticles={activeArticles}
+            onCategorySaved={fetchData}
           />
         )}
 
