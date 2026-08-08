@@ -126,7 +126,7 @@ describe('useArticleData', () => {
       await result.current.fetchData();
     });
 
-    expect(result.current.pdfUrl).toBe('emma-pdf://local/%2Fpath.pdf');
+    expect(result.current.pdfUrl).toBe('blob:url');
     expect(projectService.createHighlight).toHaveBeenCalled();
     expect(projectService.deletePendingHighlight).toHaveBeenCalledWith(999);
     expect(projectService.createAnnotation).toHaveBeenCalled();
@@ -191,7 +191,7 @@ describe('useArticleData', () => {
       await result.current.fetchData();
     });
 
-    expect(result.current.pdfUrl).toBe('emma-pdf://local/%2Fpath.pdf'); // It was set
+    expect(result.current.pdfUrl).toBe('blob:url'); // It was set
 
     (projectService.getArticle as Mock).mockResolvedValue({ id: 1, project_id: 10, local_file_path: null });
 
@@ -225,14 +225,14 @@ describe('useArticleData', () => {
       await result.current.fetchData();
     });
 
-    expect(result.current.pdfUrl).toBe('emma-pdf://local/%2Fpath.pdf');
+    expect(result.current.pdfUrl).toBe('blob:url');
 
     await act(async () => {
       await result.current.handleUnlinkClick();
     });
 
     expect(projectService.unlinkPdf).not.toHaveBeenCalled();
-    expect(result.current.pdfUrl).toBe('emma-pdf://local/%2Fpath.pdf');
+    expect(result.current.pdfUrl).toBe('blob:url');
   });
 
   it('handles error in fetchData', async () => {

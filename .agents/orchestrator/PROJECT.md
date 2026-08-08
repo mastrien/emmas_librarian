@@ -1,24 +1,30 @@
-# Project: emmas_librarian Audit
+# Project: emmas_librarian Development Diary
 
-## Architecture
-- Target Project: `emmas_librarian` (`c:\root_lab\antigravity\emmas_librarian`)
-- Audit Pillars:
-  1. Performance & Efficiency (R1 -> `docs/auditoria/2026-07-29_desempenho.md`)
-  2. Testing & Resilience (R2 -> `docs/auditoria/2026-07-29_testes.md`)
-  3. Code Quality / Clean Code (R3 -> `docs/auditoria/2026-07-29_qualidade_codigo.md`)
-  4. Error Management & Exception UX (R4 -> `docs/auditoria/2026-07-29_gestao_erros.md`)
+## Architecture & Overview
+`emmas_librarian` is an academic research, PDF management, vector indexing, and publication preparation desktop application for scholars. It evolved from an early Python/FastAPI web prototype into a standalone Electron + React + SQLite desktop environment featuring local ONNX vector embeddings, cloud AI integrations (Gemini, Ollama), citation generation (ABNT/BibTeX), automated GFS backups, relational taxonomy management, scientific deadline tracking, and full E2E/Mutation testing.
 
-## Milestones
-| # | Name | Scope | Output File | Status |
-|---|------|-------|-------------|--------|
-| 1 | Performance Audit | Frontend React/Vite, Backend Node/IPC/SQLite, IO/AI/PDF/RAG | `docs/auditoria/2026-07-29_desempenho.md` | DONE |
-| 2 | Testing Audit | Test suite (Vitest/Jest/Playwright), coverage, unhappy paths | `docs/auditoria/2026-07-29_testes.md` | DONE |
-| 3 | Code Quality Audit | SRP, file/func size, dead code, duplication, strict typing | `docs/auditoria/2026-07-29_qualidade_codigo.md` | DONE |
-| 4 | Error Management Audit | IPC handlers error handling, AI/DB error handling, UI exception UX | `docs/auditoria/2026-07-29_gestao_erros.md` | DONE |
+## Feature Inventory & Phase Decomposition
+| # | Phase Position | Phase Title | Commit Range | Target Subagent | Status |
+|---|----------------|-------------|--------------|-----------------|--------|
+| 1 | Fase 0 | Concepção, Fundação Python/FastAPI e Protótipo MVP Web | Commits 1–19 | worker_phase_0 | PLANNED |
+| 2 | Fase 1 | Arquitetura Desktop Standalone Electron & Reestruturação do Repositório | Commits 20–33 | worker_phase_1 | PLANNED |
+| 3 | Fase 2 | Integração com IA, Polimento Nativo Desktop & Automação de Releases | Commits 34–50 | worker_phase_2 | PLANNED |
+| 4 | Fase 3 | Módulos Avançados de Análise, Pacotes de Sincronização (.emmapcarc) & Caderno de Escrita | Commits 51–60 | worker_phase_3 | PLANNED |
+| 5 | Fase 4 | Auditorias Arquiteturais, Infraestrutura de Testes e Estabilização do Core | Commits 61–71 | worker_phase_4 | PLANNED |
+| 6 | Fase 5 | Expansão da Produtividade Acadêmica, Portabilidade e Motor de Citações (ABNT/BibTeX) | Commits 72–91 | worker_phase_5 | PLANNED |
+| 7 | Fase 6 | Matriz Taxonômica Interativa, Ergonomia UI/UX e Estabilização de Concorrência | Commits 92–120 | worker_phase_6 | PLANNED |
+| 8 | Fase 7 | Arquitetura Enterprise de Backup, Rotação GFS e Lixeira com Historização | Commits 121–129 | worker_phase_7 | PLANNED |
+| 9 | Fase 8 | Refatoração da Taxonomia Relacional, Suíte Integrada de Testes (E2E/k6/Stryker) | Commits 130–155 | worker_phase_8 | PLANNED |
+| 10 | Fase 9 | Módulo de Agenda Científica e Gestão de Prazos, Padronização ISO & Resolução de Auditoria | Commits 156–169 | worker_phase_9 | PLANNED |
+| 11 | Fase 10 | Provedores IA Cloud & Transição do Motor de Vetorização Local para ONNX/WASM | Commits 170–182 | worker_phase_10 | PLANNED |
 
-## Requirements Checklist
-- [x] 4 independent, detailed reports in `docs/auditoria/` with `2026-07-29_` prefix.
-- [x] Each report contains: "Estado Atual", "Pontos Críticos", and "Mudanças Propostas".
-- [x] Adherence to `AGENTS.md` rules (functions 4-20 lines, files < 500 lines, SRP, typing, tests FIRST, etc.).
-- [x] Reviewer verdict: PASS.
-- [x] Forensic Auditor verdict: CLEAN.
+## Requirements for Each Phase Draft (Mandatory Elements)
+Every phase draft MUST include:
+1. **Título da Fase**
+2. **Posição** (ex: Fase 0, Fase 1...)
+3. **Resumo Executivo**
+4. **Detalhamento Profundo**:
+   - Engineering decisions & architecture evolution rationale
+   - Mermaid architecture/flow diagrams
+   - Folder structure tables (showing file/module layout at that phase)
+   - Key code snippets extracted directly from commit diffs

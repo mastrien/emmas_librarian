@@ -81,9 +81,14 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setLocalDocs(documents);
-      resetForm();
     }
   }, [isOpen, documents]);
+
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen]);
 
   const uniqueCategories = useMemo(() => {
     const categories = documents

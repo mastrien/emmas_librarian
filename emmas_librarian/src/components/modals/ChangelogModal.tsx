@@ -84,6 +84,42 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                   paddingBottom: '0.25rem',
                 }}
               >
+                Versão 1.1.23 — Leitura de PDF & Categorias
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                  fontSize: '0.95rem',
+                }}
+              >
+                <li>
+                  <strong>Correções no Leitor PDF:</strong> Tratamento aprimorado no leitor de PDF e carregamento seguro de buffers de artigos.
+                </li>
+                <li>
+                  <strong>Categorias & Artigos Lidos:</strong> Correção no salvamento de textos de categorias e exibição consistente de artigos não arquivados.
+                </li>
+                <li>
+                  <strong>Modal de Investigação de IA:</strong> Atualização dos botões de ação e fluxo de conclusão do modal de extração.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  marginTop: 0,
+                  marginBottom: '0.75rem',
+                  fontSize: '1.1rem',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
                 Versão 1.1.22 — Otimização Extrema de Performance
               </h3>
               <ul

@@ -1075,7 +1075,7 @@ export const ProjectDetailsPage: React.FC = () => {
             project={project}
             projectCategories={projectCategories}
             articleCategories={articleCategories}
-            nonArchivedArticles={activeArticles}
+            nonArchivedArticles={articles.filter((a) => a.status !== 'archived')}
             onCategorySaved={fetchData}
           />
         )}
