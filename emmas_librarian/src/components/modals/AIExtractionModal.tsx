@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { X as XIcon, Trash2, Loader2 } from 'lucide-react';
@@ -62,6 +62,7 @@ export const AIExtractionModal = ({
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<InvestigationHistoryRecord | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isCreatingSet, setIsCreatingSet] = useState(false);
+  const hasInitializedRef = useRef(false);
 
   const handleViewDocument = (articleId: number) => {
     navigate(`/app/articles/${articleId}`);
@@ -69,8 +70,13 @@ export const AIExtractionModal = ({
   };
 
   useEffect(() => {
-    if (isOpen && !isExtracting && aiExtractionResults.length === 0) {
-      setSelectedIds(articlesWithPdf.map((a: Article) => a.id));
+    if (isOpen) {
+      if (!hasInitializedRef.current && !isExtracting && aiExtractionResults.length === 0) {
+        setSelectedIds(articlesWithPdf.map((a: Article) => a.id));
+        hasInitializedRef.current = true;
+      }
+    } else {
+      hasInitializedRef.current = false;
     }
   }, [isOpen, isExtracting, aiExtractionResults, articlesWithPdf]);
 
@@ -80,6 +86,7 @@ export const AIExtractionModal = ({
 
   return createPortal(
     <div
+      data-testid="ai-extraction-modal"
       style={{
         position: 'fixed',
         top: 0,
