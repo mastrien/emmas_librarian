@@ -26,7 +26,7 @@ async function dismissChangelog(window) {
       localStorage.setItem('last_seen_version', '1.1.19');
     }).catch(() => {});
 
-    const changelogBtn = window.locator('button:has-text("Entendido, vamos lá!")').first();
+    const changelogBtn = window.locator('button').filter({ hasText: /^Entendido/ }).first();
     if (await changelogBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await changelogBtn.click().catch(() => {});
       await window.waitForTimeout(300);
@@ -38,6 +38,8 @@ async function dismissChangelog(window) {
 
 async function getFirstWindow(electronApp) {
   const window = await electronApp.firstWindow();
+  window.on('console', msg => console.log(`BROWSER CONSOLE: ${msg.type()} - ${msg.text()}`));
+  window.on('pageerror', exception => console.log(`BROWSER ERROR: ${exception}`));
   await window.waitForLoadState('domcontentloaded');
   window.on('dialog', async (dialog) => {
     await dialog.accept().catch(() => {});
@@ -48,26 +50,45 @@ async function getFirstWindow(electronApp) {
 
 async function createProject(window, projectName) {
   await dismissChangelog(window);
-  const isNewProjBtnVisible = await window.locator('text="Novo Projeto"').first().isVisible().catch(() => false);
+  const newProjBtn = window.locator('a, button').filter({ hasText: 'Novo Projeto' }).first();
+  await newProjBtn.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
+  const isNewProjBtnVisible = await newProjBtn.isVisible().catch(() => false);
   if (!isNewProjBtnVisible) {
     await navigateTo(window, 'Projetos');
   }
-  await window.click('text="Novo Projeto"');
-  await window.fill('input[placeholder="Ex: Sistemas de Recomendação na Educação"]', projectName);
+  await newProjBtn.click();
+  await window.fill('input[placeholder^="Ex: Sistemas"]', projectName);
   await window.click('button[type="submit"]');
   await window.waitForURL(/.*\/projects\/\d+/);
 }
 
 async function navigateTo(window, target) {
   await dismissChangelog(window);
-  const directLink = window.locator('a, button').filter({ hasText: target }).first();
-  if (await directLink.isVisible().catch(() => false)) {
-    await directLink.click();
-    return;
+
+  // Retry loop to handle DOM detachment from React re-renders during
+  // async data loading (e.g. Dashboard's DeadlineBanner "Ver Agenda"
+  // button gets detached when venue data finishes loading).
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const directLink = window.locator('a, button').filter({ hasText: target }).first();
+      await directLink.waitFor({ state: 'visible', timeout: 3000 }).catch(() => null);
+      if (await directLink.isVisible().catch(() => false)) {
+        await directLink.click({ timeout: 5000 });
+        return;
+      }
+    } catch (err) {
+      // Element was likely detached during a re-render; retry
+      if (attempt < 2) {
+        await window.waitForTimeout(500);
+        continue;
+      }
+    }
   }
-  const moreBtn = window.locator('button[title="Mais opções"]').first();
+
+  // Fallback: open "Mais opções" dropdown and click the menu item
+  const moreBtn = window.locator('button[title^="Mais op"]').first();
   await moreBtn.hover();
-  await window.waitForTimeout(100);
+  await window.waitForTimeout(300);
   const menuLink = window.locator('.menu-dropdown-item, a, button').filter({ hasText: target }).first();
   await menuLink.click();
 }
