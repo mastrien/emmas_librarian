@@ -84,6 +84,39 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
                   paddingBottom: '0.25rem',
                 }}
               >
+                Versão 1.1.21 — Estabilidade de Testes & Navegação
+              </h3>
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: '1.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  color: 'var(--text-main)',
+                  fontSize: '0.95rem',
+                }}
+              >
+                <li>
+                  <strong>Correção de Navegação UI:</strong> Corrigida instabilidade de testes E2E causada por interações rápidas no botão de menu "Mais opções" durante carregamentos assíncronos.
+                </li>
+                <li>
+                  <strong>Correção na Extração de IA:</strong> Seletores dos modais agora estão corretamente restritos, resolvendo problemas de seleção indevida de artigos durante a etapa de investigação massiva.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  marginTop: 0,
+                  marginBottom: '0.75rem',
+                  fontSize: '1.1rem',
+                  color: 'var(--color-primary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.25rem',
+                }}
+              >
                 Versão 1.1.20 — UI & UX
               </h3>
               <ul

@@ -79,6 +79,37 @@ describe('AIExtractionModal', () => {
     expectSelectionCount('1 de 2 selecionados');
   });
 
+  it('maintains selected articles even if articlesWithPdf reference changes', () => {
+    const { rerender } = renderWithProviders(<AIExtractionModal {...defaultProps} />);
+
+    const expectSelectionCount = (countStr: string) => {
+      expect(
+        screen.getByText((_, el) => el?.tagName.toLowerCase() === 'span' && (el.textContent?.includes(countStr) ?? false))
+      ).toBeInTheDocument();
+    };
+
+    // Default is all 2 selected
+    expectSelectionCount('2 de 2 selecionados');
+
+    // Deselect one
+    const checkboxes = screen.getAllByRole('checkbox');
+    fireEvent.click(checkboxes[0]);
+    expectSelectionCount('1 de 2 selecionados');
+
+    // Re-render with new array reference
+    const newArticlesRef = [...mockArticlesWithPdf];
+    rerender(
+      <MemoryRouter>
+        <GlobalErrorProvider>
+          <AIExtractionModal {...defaultProps} articlesWithPdf={newArticlesRef as any[]} />
+        </GlobalErrorProvider>
+      </MemoryRouter>
+    );
+
+    // Should still be 1 out of 2 selected (it shouldn't have reset)
+    expectSelectionCount('1 de 2 selecionados');
+  });
+
   it('supports adding and removing questions', () => {
     const setAiQuestions = vi.fn();
     renderWithProviders(<AIExtractionModal {...defaultProps} setAiQuestions={setAiQuestions} />);
