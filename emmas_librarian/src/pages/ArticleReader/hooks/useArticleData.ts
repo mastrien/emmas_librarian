@@ -88,7 +88,7 @@ export function useArticleData(
       );
 
       if (artData.local_file_path) {
-        const localUrl = `emma-pdf://${encodeURIComponent(artData.local_file_path)}`;
+        const localUrl = `emma-pdf://local/${encodeURIComponent(artData.local_file_path)}`;
         setPdfUrl(localUrl);
 
         // Process pending highlights asynchronously

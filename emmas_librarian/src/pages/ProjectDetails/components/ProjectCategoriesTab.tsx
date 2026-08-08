@@ -122,7 +122,7 @@ export const ProjectCategoriesTab: React.FC<ProjectCategoriesTabProps> = ({
                   </td>
                   {projectCategories.map((cat) => {
                     const articleCat = articleCategories.find(
-                      (ac) => ac.article_id === article.id && ac.category_id === cat.id,
+                      (ac) => Number(ac.article_id) === Number(article.id) && Number(ac.category_id) === Number(cat.id),
                     );
                     return (
                       <td key={cat.id} style={{ padding: '1rem 1.5rem', minWidth: '150px', color: 'var(--text-main)', fontSize: '0.85rem' }}>

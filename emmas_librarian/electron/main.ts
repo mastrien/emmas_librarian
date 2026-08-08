@@ -134,8 +134,10 @@ app
   .then(() => {
     try {
       protocol.handle('emma-pdf', (request) => {
-        const url = request.url.replace('emma-pdf://', '');
-        const decodedPath = decodeURIComponent(url);
+        // The request.url will look like "emma-pdf://local/C%3A%5C..."
+        const urlStr = request.url;
+        const pathPart = urlStr.replace(/^emma-pdf:\/\/local\//i, '');
+        const decodedPath = decodeURIComponent(pathPart);
         return net.fetch(pathToFileURL(decodedPath).toString());
       });
       setupIpcRegistries();

@@ -341,9 +341,9 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
         autoFocus
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        onBlur={() => handleSave(value)}
+        onBlur={(e) => handleSave(e.currentTarget.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') handleSave(value);
+          if (e.key === 'Enter') handleSave(e.currentTarget.value);
           if (e.key === 'Escape') {
             setValue(initialValue);
             setIsEditing(false);
