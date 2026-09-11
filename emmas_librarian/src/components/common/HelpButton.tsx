@@ -248,7 +248,7 @@ const tutorials: Record<string, { title: string; content: React.ReactNode }> = {
       </div>
     ),
   },
-  '/new': {
+  '/new-project': {
     title: 'Novo Projeto',
     content: (
       <>
@@ -262,6 +262,48 @@ const tutorials: Record<string, { title: string; content: React.ReactNode }> = {
           <li>
             <strong>Descrição:</strong> Adicione os objetivos, critérios de inclusão e exclusão da sua revisão para
             referência futura.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  '/pdfs': {
+    title: 'Biblioteca de PDFs',
+    content: (
+      <>
+        <p>Gerencie todos os arquivos de PDF baixados localmente pela aplicação.</p>
+        <ul
+          style={{ paddingLeft: '1.5rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
+        >
+          <li>
+            <strong>Armazenamento Local:</strong> Todos os PDFs aqui listados ficam guardados com segurança no seu dispositivo, de forma offline.
+          </li>
+          <li>
+            <strong>Pesquisa:</strong> Busque por nome do arquivo ou artigo correspondente.
+          </li>
+          <li>
+            <strong>Gerenciamento:</strong> Exclua os PDFs não utilizados para liberar espaço, ou desvincule-os temporariamente dos artigos.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  '/agenda': {
+    title: 'Agenda de Pesquisa',
+    content: (
+      <>
+        <p>Acompanhe e organize seus compromissos, tarefas e etapas da sua pesquisa.</p>
+        <ul
+          style={{ paddingLeft: '1.5rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
+        >
+          <li>
+            <strong>Prazos:</strong> Registre datas importantes, como prazo para submissão de artigos.
+          </li>
+          <li>
+            <strong>Tarefas:</strong> Crie check-lists das etapas pendentes de suas revisões bibliográficas.
+          </li>
+          <li>
+            <strong>Produtividade:</strong> A agenda te ajuda a manter o foco no objetivo central da pesquisa sem perder os prazos críticos.
           </li>
         </ul>
       </>
