@@ -131,17 +131,62 @@ body {
     border: 1px solid #e2e8f0;
 }
 
+/* Chapter mutual exclusion (Tabbed / Single Chapter View) */
 .wiki-section {
-    scroll-margin-top: 2rem;
-    margin-bottom: 2.5rem;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 2rem;
+    display: none;
+    padding-bottom: 1rem;
 }
 
-.wiki-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
+.wiki-section.active {
+    display: block;
+    animation: fadeInChapter 0.25s ease-out;
+}
+
+@keyframes fadeInChapter {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chapter-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.chapter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.chapter-btn:hover {
+    background: #fdf2f8;
+    color: #db2777;
+    border-color: #fbcfe8;
+}
+
+.chapter-btn.next {
+    margin-left: auto;
 }
 
 .wiki-section h2 {
