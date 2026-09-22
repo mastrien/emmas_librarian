@@ -239,12 +239,14 @@ describe('ARTICLES_CREATE_FROM_PDFS', () => {
     expect(db.saveArticle).not.toHaveBeenCalled();
   });
 
-  it('counts only the files that were imported', async () => {
+  it('skips a file whose PDF cannot be stored, without creating an article for it', async () => {
     const consoleError = silenceConsoleError();
 
     expect(await invoke(IpcChannel.ARTICLES_CREATE_FROM_PDFS, 1, [path.join(path.sep, 'gone.pdf'), second])).toBe(1);
     expect(consoleError).toHaveBeenCalledWith('Failed to copy PDF file for batch import:', expect.any(Error));
-    expect(db.linkPdfToArticle).toHaveBeenCalledTimes(1);
+    expect(db.saveArticle).toHaveBeenCalledTimes(1);
+    expect(db.saveArticle.mock.calls[0][1]).toMatchObject({ title: 'survey' });
+    expect(db.linkPdfToArticle).toHaveBeenCalledWith(31, expect.any(String));
   });
 
   it('imports without a history link when logging fails', async () => {

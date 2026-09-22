@@ -416,18 +416,16 @@ export function setupIpcRegistries() {
       }
       for (const sourceFilePath of filePaths) {
         try {
-          const filename = path.basename(sourceFilePath, '.pdf');
-          // Save the article with title = filename
+          // Store the PDF first so a failed copy never leaves an article without its file.
+          const { destPath } = savePdfToStorage(sourceFilePath);
           const articleId = db.saveArticle(projectId, {
-            title: filename,
+            title: path.basename(sourceFilePath, '.pdf'),
             authors: '',
             source_query: 'Importação em Lote',
             source_databases: JSON.stringify(['Manual']),
             csl_json: JSON.stringify({}),
             search_id: searchId,
           });
-          // Copy the PDF and register in Global PDF Library
-          const { destPath } = savePdfToStorage(sourceFilePath);
           db.linkPdfToArticle(articleId, destPath);
           addedCount++;
         } catch (err) {
