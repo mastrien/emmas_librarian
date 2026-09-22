@@ -1,140 +1,234 @@
-# Emma's Librarian 📚
+# Emma's Librarian 📚 — Guia para Desenvolvedores
 
-**Emma's Librarian** é uma aplicação desktop de alta performance desenvolvida para pesquisadores e acadêmicos. O sistema automatiza a realização de buscas bibliográficas estruturadas e simultâneas em múltiplas bases científicas, centralizando a gestão de projetos, desduplicação de resultados, leitura ativa de PDFs e exportação de metadados compatíveis com ferramentas analíticas avançadas como o **Biblioshiny** (Bibliometrix no RStudio).
+**Emma's Librarian** é uma aplicação desktop para pesquisadores e acadêmicos que automatiza buscas bibliográficas estruturadas em múltiplas bases científicas e centraliza o restante do fluxo de uma revisão sistemática: gestão de projetos, desduplicação, leitura ativa de PDFs, categorização, extração de dados com IA, citações e exportação compatível com o **Biblioshiny** (Bibliometrix, no RStudio).
 
-Tudo isso é executado localmente, garantindo total privacidade de dados, segurança de chaves de API e controle absoluto sobre sua biblioteca de pesquisa.
+Tudo é executado localmente (Electron + SQLite), preservando a privacidade dos dados, das chaves de API e da biblioteca de pesquisa do usuário.
+
+> Versão atual: veja o campo `version` em [`emmas_librarian/package.json`](emmas_librarian/package.json). O histórico de versões está nos *patch notes* do [README.md](README.md) e no `ChangelogModal.tsx` (exibido ao usuário após cada atualização).
 
 ---
 
 ## 💡 Ideia Principal e Filosofia
 
-O desenvolvimento de revisões sistemáticas e revisões de escopo frequentemente esbarra em processos manuais exaustivos: formatar queries para dezenas de mecanismos de busca diferentes, baixar metadados fragmentados, lidar com centenas de arquivos duplicados e gerenciar PDFs e anotações de forma desconexa.
+Revisões sistemáticas e de escopo esbarram em processos manuais exaustivos: formatar queries para dezenas de mecanismos de busca, baixar metadados fragmentados, lidar com duplicatas e gerenciar PDFs e anotações de forma desconexa.
 
-A filosofia do **Emma's Librarian** baseia-se em três pilares:
-1. **Transparência e Rastreabilidade:** O pesquisador deve ter controle absoluto sobre suas buscas. O sistema traduz automaticamente a query visual construída para a sintaxe nativa de cada base de dados externa (OpenAlex, Crossref, Scopus, Web of Science) e documenta esse histórico detalhadamente.
-2. **Privacidade Absoluta (Local-First):** Seus projetos, termos de pesquisa, anotações de leitura e arquivos PDF nunca saem do seu computador. O armazenamento é feito em um banco SQLite embutido de alta performance.
-3. **Estética Premium e Ergonomia Visual:** A interface adota um design moderno com efeito *Glassmorphism*, transições fluidas e um tema visual focado em reduzir a fadiga cognitiva durante longas sessões de leitura científica.
-O projeto está estruturado em uma arquitetura limpa de aplicação Desktop utilizando **Electron** no processo principal (backend local) e **React + TypeScript + Vite** no processo de renderização (emmas_librarian).
+A filosofia do projeto se apoia em três pilares:
+1. **Transparência e Rastreabilidade:** o pesquisador controla suas buscas. A query visual é traduzida para a sintaxe nativa de cada base (OpenAlex, Crossref, Scopus, Web of Science) e cada execução fica registrada no histórico, com a query exata, a ordenação, o limite e a contagem por base.
+2. **Privacidade (Local-First):** projetos, termos, anotações e PDFs nunca saem do computador. O armazenamento é um SQLite embutido. A única saída de dados é para os provedores de IA que o próprio usuário configurar, e existe um motor local de embeddings (ONNX) que dispensa qualquer serviço externo.
+3. **Ergonomia Visual:** interface com design system próprio, tema claro/escuro, *skeletons* de carregamento e cores sólidas para reduzir a fadiga durante longas sessões de leitura.
 
-## Estrutura de Diretórios
+---
+
+## 🧱 Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Shell desktop | Electron 41 (processo principal em TypeScript) |
+| Interface | React 19 + TypeScript + Vite + `react-router-dom` (`HashRouter`) |
+| Banco de dados | SQLite via `better-sqlite3` (modo WAL) |
+| Leitor de PDF | `pdfjs-dist` + `react-pdf-highlighter` |
+| Citações | `citation-js` com estilo ABNT (CSL em `src/assets/csl/`) e BibTeX |
+| Gráficos | `chart.js` + `react-chartjs-2` |
+| Embeddings locais | `@xenova/transformers` (ONNX/WASM, modelo `all-MiniLM-L6-v2`) |
+| Empacotamento e updates | `electron-builder` + `electron-updater` |
+| Testes | Vitest, Testing Library, Playwright, k6, Stryker |
+
+---
+
+## 🗂️ Estrutura de Diretórios
+
+O código da aplicação fica em `emmas_librarian/` (subpasta do repositório). O que segue é um mapa dos diretórios relevantes, não uma lista exaustiva de arquivos.
 
 ```
-emmas_librarian/
-│   ├── dist-electron/              # Transpilação de TypeScript para Electron Main Process
-│   ├── public/                     # Arquivos públicos estáticos (ex: workers do PDFJS)
-│   ├── electron/                   # Camada de Processo Principal do Electron
-│   │   ├── database/               # Gerenciador do Banco SQLite
-│   │   │   └── DatabaseManager.ts  # Gerencia as conexões, tabelas e transações via better-sqlite3
-│   │   ├── services/               # Serviços de negócio integrados
-│   │   │   ├── ApiIntegrator.ts    # Conexão, busca e normalização (OpenAlex, Crossref, Scopus, WoS)
-│   │   │   ├── QueryTranslator.ts  # Tradutor da Query Visual para a sintaxe nativa de cada API
-│   │   │   ├── SearchOrchestrator.ts # Coordenação assíncrona da busca multi-base
-│   │   │   └── types.ts            # Interfaces e definições de dados de API e normalização
-│   │   ├── handlers.ts             # Registra as rotas de IPC (Comunicação Inter-Processo) do Electron
-│   │   ├── main.ts                 # Arquivo de inicialização, janelas, CSP e ciclo de vida do Electron
-│   │   └── tsconfig.json           # Configuração TypeScript do processo main
-│   ├── src/                        # Camada de Renderização do Frontend (React + TS)
-│   │   ├── components/             # Componentes reutilizáveis (Layout, Modais, Cards)
-│   │   ├── pages/                  # Telas completas da aplicação
-│   │   │   ├── Dashboard.tsx       # Visão geral de projetos com "Empty States" e estatísticas
-│   │   │   ├── NewProjectPage.tsx  # Criação de projetos e parametrização
-│   │   │   ├── ProjectDetailsPage.tsx # Listagem de artigos, histórico, filtros e inserção manual
-│   │   │   └── ArticleReaderPage.tsx # Leitor premium de PDF com anotações, zoom e busca integrada
-│   │   ├── services/               # Camada de comunicação com o Electron
-│   │   │   └── api.ts              # Abstração de chamadas IPC encapsuladas em Promises simples
-│   │   ├── types/                  # Tipagem compartilhada do frontend
-│   │   ├── index.css               # Folha de estilos global (Design System, Tokens, Variáveis CSS)
-│   │   ├── main.tsx                # Ponto de entrada do React
-│   │   └── App.tsx                 # Rotas e envelopamento da aplicação
-│   ├── tsconfig.json               # Configurações de tipos do frontend
-│   ├── tsconfig.electron.json      # Configurações de tipos do processo principal
-│   └── vite.config.ts              # Parametrização do empacotador Vite
-├── plans/                          # Roteiros de implementação e registros de decisões de arquitetura
-├── emma.db                         # Banco de dados SQLite local
-└── README.md                       # Documentação principal
+/                                   # Raiz do repositório
+├── emmas_librarian/                # Aplicação Electron + React
+│   ├── electron/                   # Processo principal (Node/Electron)
+│   │   ├── main.ts                 # Janela, CSP, protocolo emma-pdf://, auto-update, ciclo de vida
+│   │   ├── preload.ts              # Ponte segura (contextBridge) entre renderer e main
+│   │   ├── database/               # Persistência
+│   │   │   ├── schema.sql          # Schema completo do SQLite
+│   │   │   ├── DatabaseAdapter.ts  # Conexão, migrações e fachada sobre os repositórios
+│   │   │   ├── *Repository.ts      # Um repositório por agregado (Article, Project, Annotation,
+│   │   │   │                       #   Document, History, QuestionSet, InvestigationResult,
+│   │   │   │                       #   MassiveInvestigation, AIModelConfig, ScientificVenue,
+│   │   │   │                       #   Settings, Trash)
+│   │   │   ├── BackupService.ts    # Exportação/restauração de backups (.emmabak)
+│   │   │   ├── SyncService.ts      # Serialização de projetos (.emmapcarc)
+│   │   │   ├── ProjectSyncService.ts
+│   │   │   └── __tests__/
+│   │   ├── services/               # Regras de negócio
+│   │   │   ├── ApiIntegrator.ts    # OpenAlex, Crossref, Scopus e Web of Science
+│   │   │   ├── QueryTranslator.ts  # Query visual → sintaxe nativa de cada base
+│   │   │   ├── SearchOrchestrator.ts # Busca multi-base, desduplicação e persistência
+│   │   │   ├── AIService.ts        # Resumo, metadados e extração (habilidades de IA)
+│   │   │   ├── EmbeddingService.ts # Embeddings (ONNX local, Ollama, OpenAI, Gemini…)
+│   │   │   ├── VectorStore.ts      # Busca por similaridade sobre chunks de PDF (RAG)
+│   │   │   ├── PdfExtractor.ts     # Extração de texto e chunking de PDFs
+│   │   │   ├── ExportService.ts    # CSV Scopus/Biblioshiny e exportações do projeto
+│   │   │   ├── BackupService.ts    # Backups automáticos com rotação GFS
+│   │   │   └── llm/                # Gateways de LLM
+│   │   │       ├── LLMProviderGateway.ts   # Interface comum
+│   │   │       └── OpenAI/Anthropic/Gemini/Ollama/OllamaCloud Gateway + jsonRepair.ts
+│   │   ├── ipc/                    # Registro dos canais IPC
+│   │   │   ├── ipcRegistries.ts    # Canais de projetos, artigos, backup, agenda etc.
+│   │   │   ├── aiIpcHandlers.ts    # Canais de IA
+│   │   │   └── errorHandler.ts     # Padronização de erros (AppError)
+│   │   └── utils/logger.ts
+│   ├── src/                        # Renderer (React)
+│   │   ├── main.tsx                # Rotas e providers
+│   │   ├── pages/                  # Dashboard, NewProject, ProjectDetails, Search,
+│   │   │                           #   ArticleReader, PdfLibrary, Agenda, Settings, TermsOfUse
+│   │   │                           #   (as páginas maiores têm subpastas components/ e hooks/)
+│   │   ├── components/             # common/, modals/, reader/, ai/
+│   │   ├── contexts/               # Serviços injetados e contexto global de erros
+│   │   ├── hooks/, utils/, types/
+│   │   ├── services/               # api.ts, citationService.ts e interface de serviços
+│   │   └── assets/csl/             # Estilo ABNT e locale pt-BR
+│   ├── e2e-tests/                  # Playwright (Electron real)
+│   ├── performance-tests/          # k6 + harness HTTP
+│   ├── build/                      # Ícones e recursos do instalador
+│   └── public/                     # Estáticos (worker do PDF.js, PrismJS)
+├── landing_page/                   # Site estático (GitHub Pages)
+├── docs/                           # Auditorias, planos, relatórios e visões arquiteturais
+├── plans/                          # Roteiros de implementação e decisões de arquitetura
+├── agent/, .gemini/, .agents/      # Skills e artefatos de agentes de IA
+├── .github/workflows/              # release.yml e deploy-pages.yml
+├── development_diary.md            # Diário de desenvolvimento gerado a partir do git
+└── AGENTS.md                       # Convenções de código do projeto
 ```
 
----
-
-## ✨ Funcionalidades Principais
-
-### 1. Orquestração Multibases & Tradução de Queries
-* **Busca Simultânea:** Insira uma query uma única vez e o sistema faz a requisição em background de forma assíncrona nas bases **OpenAlex**, **Crossref**, **Scopus** e **Web of Science**.
-* **Query Builder Visual Avançado:** Esqueça a memorização de operadores booleanos complexos e chaves de filtro. Construa sua árvore de pesquisa (`AND`/`OR`/`NOT`) usando blocos visuais intuitivos aplicados a campos específicos (Título, Resumo, Autores, Ano).
-* **Tradução Nativa:** O motor traduz o modelo visual para as sintaxes específicas e complexas de cada API (ex: queries formatadas com parênteses aninhados, aspas e códigos de campo como `TITLE-ABS-KEY` para Scopus ou `title_and_abstract.search` no OpenAlex).
-
-### 2. Gestão de Projetos e Desduplicação Inteligente
-* **Histórico com Auditoria:** Todas as pesquisas executadas são eternizadas no histórico do projeto, guardando o timestamp, a contagem de resultados por base, o limite de artigos estipulado e a query exata traduzida.
-* **Deduplicação Automática:** O sistema mescla de forma inteligente registros duplicados retornados por bases diferentes com base no **DOI** (higienizado) e no **Título** (normalizado sem caracteres especiais e caixa baixa), mantendo a rastreabilidade de quais bases originais retornaram o registro (`source_databases`).
-* **Filtros Dinâmicos:** A tela de detalhes do projeto permite pesquisar termos nos metadados locais e filtrar a tabela ativamente com o seletor **"Apenas com PDF vinculado"**, ajudando a focar na leitura dos artigos salvos.
-
-### 3. Cadastro de Artigos Avulsos (Manuais)
-* **Cadastro Independente:** Permite incluir produções relevantes que não constam nas buscas automatizadas (teses, livros físicos, artigos de anais).
-* **Alerta Visual Estrito (`⚠️ Manual`):** Artigos criados manualmente são destacados com um badge chamativo no grid e na tabela, alertando sobre a autodeclaração dos metadados.
-* **Upload Integrado & Registro:** Você pode anexar o PDF correspondente no próprio modal de criação, registrando a operação de forma clara no histórico/logs de atividades do projeto.
-
-### 4. Leitor Premium de PDF Integrado
-* **Destaques e Notas Visuais:** Selecione textos diretamente no PDF, escolha notas associadas em Markdown e crie marcadores persistentes de forma simples.
-* **Anotações Avulsas:** Crie anotações gerais associadas ao artigo que não dependam de marcações no texto, perfeitas para resumos e fichamentos.
-* **Busca Avançada de Termos:** Um painel lateral integrado escaneia assincronamente as páginas do PDF sob demanda. Apresenta snippets contextuais inteligentes em tempo real com realce em tag `<mark>` e fornece navegação por rolagem suave (`scrollIntoView`) ao clicar no resultado.
-* **Controle de Zoom Preciso:** Painel de escala integrado que permite Zoom In (`+`), Zoom Out (`-`) de **50%** a **250%** e botão **Reset** para 100%.
-* **Desvinculação Segura de PDF:** Permite desvincular um arquivo PDF associado incorretamente por engano. O sistema apaga fisicamente o arquivo local e limpa a coluna `local_file_path` no SQLite, mas **preserva intactas** todas as anotações e históricos criados para aquele artigo.
-
-### 5. Exportação Fidedigna para o Biblioshiny (Scopus CSV)
-* **Identificadores Únicos Garantidos:** Gera identificadores de registro estáveis e exclusivos (`EID` no formato `2-s2.0-${id}`) evitando que o algoritmo de importação do RStudio/Bibliometrix descarte registros legítimos como duplicados (corrigindo o colapso clássico da biblioteca).
-* **Formatador de Autoria Avançado:** Converte strings fragmentadas de autores no banco de dados para o formato estrito exigido pelo Scopus:
-  * **Authors:** Nomes abreviados separados por ponto e vírgula (`Singh Thakur A.; Verma A.`).
-  * **Author Full Names:** Nomes completos separados por ponto e vírgula (`Singh Thakur, Agrimaa; Verma, Amit`).
-* **Afiliações e Vínculos (AU_UN):** Une autores com seus respectivos metadados de afiliação (`a.affiliations`), preenchendo a coluna `Authors with affiliations` perfeitamente para extração de indicadores geo-acadêmicos no Bibliometrix.
+Para diagramas de camadas, modelo ER, sequências e mapa de canais IPC, consulte [`docs/visoes_arquiteturais/`](docs/visoes_arquiteturais/). Esses documentos foram escritos em junho/2026 e podem não refletir módulos posteriores, como a agenda e os provedores de IA mais recentes.
 
 ---
 
-## 🛠️ Problemas Superados & Soluções Aplicadas
+## ✨ Funcionalidades
 
-Durante o desenvolvimento da aplicação, superamos desafios técnicos complexos de integração:
+### 1. Busca multibase e tradução de queries
+* Construtor visual de queries (`AND`/`OR`/`NOT`) sobre campos como título, resumo, autores e ano.
+* O `QueryTranslator` gera a sintaxe de cada base (por exemplo, `TITLE-ABS-KEY` no Scopus e `title_and_abstract.search` no OpenAlex). O `SearchOrchestrator` consulta as bases em paralelo, aplicando o limite **por base**.
+* Scopus e Web of Science usam as chaves de API do próprio usuário, guardadas criptografadas nas configurações.
+* Cada busca gera uma entrada no histórico (query traduzida, ordenação, limite e contagem por base).
 
-* **CSP & Renderização de PDF via Streams de Dados:** O Electron, por questões estritas de segurança (Content Security Policy), bloqueia requisições a URLs de objetos dinâmicos `blob:`. Ajustamos a tag CSP em `index.html` permitindo conexões seguras de blobs de mídia e workers. Criamos uma rotina no leitor para reconstituir os buffers serializados vindos do IPC do Electron de volta para arrays binários puros estruturados.
-* **Deduplicação Crítica no RStudio (Biblioshiny):** Descobrimos que o Biblioshiny colapsava a coleção exportada por falta da coluna `EID` (tratada por ele como chave primária de banco). O desenvolvimento de geradores de ID exclusivos e normalizados resolveu o problema completamente.
-* **Bloqueio de CORS do PDFJS Worker:** A dependência padrão do PDF.js tentava carregar o script de worker remotamente via CDN unpkg, gerando falhas intermitentes de CORS. Resolvemos isso salvando o worker localmente na pasta pública (`/pdf.worker.min.mjs`) e apontando a biblioteca para servir o arquivo estático diretamente do próprio executável local.
-* **Reatividade Estática de Zoom no Leitor:** O leitor de PDFs não reagia de forma fluida à alteração da propriedade `pdfScaleValue`. Solucionamos injetando a propriedade dinâmica `key={scale}` no `<PdfHighlighter>`. Isso força a remontagem cirúrgica do componente React no DOM sempre que a escala de visualização é atualizada, forçando o PDF.js a redesenhar os canvases nas novas dimensões perfeitamente.
+### 2. Projetos, artigos e desduplicação
+* Desduplicação por **DOI** higienizado e **título** normalizado, mantendo em `source_databases` quais bases retornaram o registro.
+* Artigos avulsos (manuais) com badge `⚠️ Manual` e upload de PDF no cadastro.
+* Diário do projeto com **histórico de versões** e restauração.
+* Documentos de **acesso rápido** (link, URL ou PDF), com grupos nomeados, edição e reordenação por arraste.
+* Status de leitura (Ativos, Lidos, Arquivados), ordenação personalizada, dashboard com gráficos e heatmap de atividade do diário.
+
+### 3. Categorização
+* Matriz de categorias do projeto com tipos texto, seleção única (enum) e **seleção múltipla**.
+* As opções são um modelo relacional (`project_category_options`, `article_category_selections`), o que permite renomear e reordenar sem perder dados.
+* Exportação dedicada da matriz.
+
+### 4. Leitor de PDF
+* Destaques persistentes com notas em Markdown, anotações avulsas e bloco de escrita.
+* Busca de termos no PDF, zoom de 50% a 250% e atalhos de teclado.
+* PDFs são servidos ao renderer por um **protocolo customizado `emma-pdf://`**, que evita a serialização de buffers grandes pelo IPC.
+* A desvinculação de um PDF remove o arquivo físico, mas preserva as anotações do artigo.
+* **Biblioteca Global de PDFs** (`/pdfs`), independente de projetos, com importação para projetos (clonando artigo, PDF e embeddings).
+
+### 5. IA e RAG
+* **Provedores de LLM:** OpenAI, Anthropic, Gemini, Ollama e Ollama Cloud, atrás da interface `LLMProviderGateway`. O provedor/modelo é configurado **por habilidade** (`metadata`, `summary`, `extraction`, `embeddings`) em `ai_model_config`.
+* **Embeddings:** motor local embutido (ONNX, sem configuração) ou provedores externos. O `EmbeddingService` faz retentativas em erros 429 do Gemini.
+* **RAG:** o `PdfExtractor` divide os PDFs em chunks, armazenados em `pdf_chunks`, e o `VectorStore` recupera trechos por similaridade, com citação de trecho e página. A estratégia está descrita em `docs/planos/2026-06-23_07_estrategia_chunking_rag.md`.
+* **Extração massiva:** investigações com **sets de perguntas** (globais ou por projeto), resultados armazenados por artigo e pergunta, e histórico completo, incluindo artigos ignorados ou com erro.
+* Respostas de LLM passam por `jsonRepair.ts` antes de serem interpretadas.
+
+### 6. Agenda científica
+* Cadastro de eventos, conferências e periódicos com múltiplos prazos (pontuais ou em intervalo) em `scientific_venues` e `scientific_milestones`.
+* Página `/agenda` com visualização por evento ou lista de prazos, calendário integrado e banner de próximos prazos no dashboard.
+
+### 7. Citações e exportação
+* Gerador de citações individual e em massa (ABNT e BibTeX), com opção de "et al." e ordenação pelo sobrenome do primeiro autor.
+* Exportação em CSV padrão Scopus para o Biblioshiny. É gerado um `EID` único e estável (`2-s2.0-${id}`), sem o qual o Bibliometrix colapsa registros como duplicados. Autores, nomes completos e afiliações são convertidos para o formato Scopus.
+
+### 8. Portabilidade, backup e lixeira
+* **Projetos (`.emmapcarc`):** exportação/importação de projetos entre computadores, incluindo categorias, sets de perguntas, resultados de investigação, diário e histórico de buscas.
+* **Backup completo (`.emmabak`):** exportação manual do banco e dos arquivos, com *checkpoint* do WAL antes da cópia.
+* **Backups automáticos** com rotação GFS (Grandfather-Father-Son) e restauração pela interface, que reinicia o app ao concluir.
+* **Lixeira** para projetos e artigos excluídos.
 
 ---
 
-## 💻 Como Executar a Aplicação
+## 🛠️ Decisões Técnicas Relevantes
+
+* **CSP e PDFs:** o Electron bloqueia `blob:` por padrão. A CSP em `main.ts` libera `blob:`, `emma-pdf:` e workers. O worker do PDF.js é servido localmente (`public/pdf.worker.min.mjs`) para evitar falhas de CORS com CDN.
+* **Zoom do leitor:** `key={scale}` no `<PdfHighlighter>` força a remontagem quando a escala muda, para o PDF.js redesenhar os canvases.
+* **Concorrência no SQLite:** modo WAL com *checkpoint* antes de backup e exportação, e ambiente de dados isolado durante o desenvolvimento e os testes E2E.
+* **Injeção de dependências:** repositórios e serviços recebem suas dependências por construtor. No renderer, os serviços chegam via `ServicesContext`.
+* **Erros padronizados:** o processo principal lança `AppError` com código (`ERR_*`) e tipo (`USER_ERROR`, `SYSTEM_ERROR`, `NETWORK_ERROR` ou `VALIDATION_ERROR`). O `errorHandler` do IPC os repassa para o renderer, que os exibe em modal global.
+* **Embeddings locais:** o sidecar `llama.cpp` foi substituído pelo motor ONNX, para eliminar downloads pesados e a configuração manual.
+* **Biblioshiny:** sem `EID` único o Bibliometrix descarta registros legítimos, por isso ele é sempre gerado na exportação.
+
+O histórico completo das decisões, fase a fase, está em [`development_diary.md`](development_diary.md).
+
+---
+
+## 💻 Como Executar
 
 ### Pré-requisitos
-* **Node.js** (versão 18 ou superior)
-* **npm** (gerenciador de pacotes)
+* **Node.js** 18 ou superior (o CI usa a versão 22)
+* **npm**
 
-### Passo 1: Instalação de Dependências
-Navegue até a pasta `emmas_librarian` e instale todas as dependências requeridas do ecossistema Electron e React:
+### Instalação e desenvolvimento
 ```bash
 cd emmas_librarian
 npm install
-```
-
-### Passo 2: Execução em Desenvolvimento
-Para rodar a aplicação em tempo real com hot-reload ativo na interface React e logs completos no terminal do Electron:
-```bash
 npm run electron:dev
 ```
-A janela nativa do **Emma's Librarian** abrirá imediatamente.
+O `electron:dev` recompila os módulos nativos para o Electron (`better-sqlite3`), compila o processo principal e sobe o Vite junto com o Electron. Em desenvolvimento os dados ficam em `emmas_librarian/dev_data/`, isolados da instalação real. Em produção ficam em `userData` (`emma.db` mais a pasta `storage/`).
 
-### Passo 3: Empacotamento para Produção (Build)
-Para gerar um instalador portátil autônomo (`.exe` no Windows) otimizado e compilado:
+### Build de produção
 ```bash
 npm run electron:build
 ```
-Os arquivos gerados para distribuição serão salvos na pasta `/emmas_librarian/release/`.
+O instalador (`.exe`, NSIS) é gerado em `emmas_librarian/release/`.
 
 ---
 
-## 🔮 Próximos Passos e Melhorias Futuras
+## ✅ Testes e Qualidade
 
-* **Extração Automática de Metadados via PDF (OCR local):** Integrar um parser local de metadados capaz de extrair o DOI, autores e título diretamente de PDFs arrastados pelo usuário para acelerar o processo manual.
-* **Busca e Download Automatizado de PDFs (Web Scraper integrado):** Implementar um buscador em background que varra bases abertas (como Unpaywall) para tentar baixar o PDF do artigo de forma 100% automatizada a partir do DOI retornado na busca científica.
-* **Exportação para Múltiplos Formatos:** Inserir suporte de exportação para arquivos BibTeX (`.bib`), RIS (`.ris`) e EndNote, ampliando a compatibilidade nativa com gerenciadores de referências como Mendeley, Zotero e JabRef.
-* **Filtros Bibliométricos Avançados no Frontend:** Exibição de gráficos locais de frequência de publicações por ano, bases mais produtivas e nuvem de palavras-chave antes mesmo de exportar os dados.
+Todos os comandos rodam dentro de `emmas_librarian/`:
+
+| Comando | Finalidade |
+|---|---|
+| `npm test` | Testes unitários e de integração (Vitest). Recompila `better-sqlite3` para o Node antes de rodar. |
+| `npm run coverage` | Cobertura (v8) |
+| `npm run typecheck` | Checagem de tipos do renderer e do processo principal |
+| `npm run lint` / `npm run format` | ESLint / Prettier |
+| `npm run test:e2e` | Playwright contra o Electron real (janela visível, 1 worker) |
+| `npm run test:performance` | Testes de carga com k6 (`:smoke`, `:load`, `:stress`, `:soak`) |
+| `npm run test:mutate` | Testes de mutação com Stryker |
+
+Um hook do Husky executa `npm test` no pre-commit.
+
+> ⚠️ `better-sqlite3` é compilado para um único runtime por vez. Os scripts de teste e de desenvolvimento já cuidam do `rebuild`, mas se alternar entre `npm test` e `electron:dev` manualmente, use `npm run rebuild:node` ou `npm run rebuild:electron`.
+
+### Convenções
+As regras de código, testes, commits e logs estão em [`AGENTS.md`](AGENTS.md). Em resumo: funções curtas, arquivos com menos de 500 linhas, sem `any`, dependências injetadas, teste para toda função nova (e regressão para todo bug corrigido) e commits semânticos (`feat:`, `fix:`, `refactor:`…).
 
 ---
-*Desenvolvido com carinho para tornar a ciência mais acessível, rastreável e focada na leitura ativa. Bons estudos e ótimas pesquisas!* 🚀
+
+## 🚀 Release e CI/CD
+
+1. Com typecheck e testes passando, atualize `version` em `emmas_librarian/package.json` e o `package-lock.json` (`npm install --package-lock-only`).
+2. Adicione a nova versão ao `src/components/modals/ChangelogModal.tsx` e ao *patch notes* do `README.md`.
+3. Commit `chore: release vX.Y.Z`, crie a tag `vX.Y.Z` e envie o commit e a tag.
+
+O fluxo detalhado está na skill [`agent/release-manager/SKILL.md`](agent/release-manager/SKILL.md).
+
+* **`release.yml`:** a tag `v*` dispara o build no Windows e publica o instalador nas Releases do GitHub. O app instalado baixa as atualizações automaticamente via `electron-updater`.
+* **`deploy-pages.yml`:** alterações em `landing_page/` publicam o site no GitHub Pages.
+
+---
+
+## 🔮 Próximos Passos
+
+* Extração automática de metadados (DOI, autores, título) a partir de PDFs importados.
+* Busca e download automático de PDFs em bases abertas (por exemplo, Unpaywall) a partir do DOI.
+* Exportação em RIS e EndNote, além do BibTeX já existente.
+* Assinatura de código (*code signing*) do instalador, para remover o aviso do SmartScreen.
+
+---
+*Desenvolvido para tornar a ciência mais acessível, rastreável e focada na leitura ativa.* 🚀
