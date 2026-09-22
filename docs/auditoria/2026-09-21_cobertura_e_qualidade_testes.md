@@ -140,3 +140,32 @@ A suíte de testes é **ampla e estável** (91 arquivos, 770 testes, 0 falhas, b
 1. **Nenhum gate automatizado em CI** — o threshold de 100% configurado é ficção, e um release pode sair com testes quebrados.
 2. **Um ponto único de falha crítico sem teste direto** — `src/services/api.ts`, a única porta de entrada IPC do frontend, mascarado por mocks em todo lugar.
 3. **Evidência concreta (via mutação) de que cobertura de linha superestima a qualidade real dos testes**, combinada com blocos de UI inteiros (abas do leitor, tabela de artigos do projeto, editor de citação em massa) sem nenhuma cobertura.
+
+---
+
+## Adendo (2026-09-22): correções de diagnóstico e andamento
+
+### Correções ao diagnóstico original
+1. **Pre-commit**: o relatório afirmava que o hook roda `npm test`. Na verdade o `.husky/pre-commit` está **inativo** (husky não está instalado nem configurado em `core.hooksPath`). O único hook ativo é um `.git/hooks/pre-commit` local e não versionado que roda apenas `npm run typecheck`. Ou seja, antes da P1 nenhum teste rodava automaticamente em lugar nenhum.
+2. **Causa da baixa cobertura de `api.ts`**: não eram os 17 `vi.mock('.../services/api')`. Onze deles mockam `projectService: {}` e injetam `FakeProjectService` via `ServicesProvider`, que é o design de DI correto. A causa era simplesmente não existir teste direto do módulo. Os outros seis usam stubs inline porque **9 arquivos de produção importam `projectService` diretamente** em vez de usar `useProjectService()`; isso fica para a refatoração.
+3. **Arquivos com 0% eram código morto**: `src/pages/ProjectDetails/components/ArticleTable.tsx` e `src/components/modals/MassCitation/MassCitationEditor.tsx` não são importados por nenhum arquivo. O `ArticleTable` realmente usado é o de `src/components/common/` (já coberto). A ação correta é remover, não testar.
+
+### Andamento
+
+| Fase | Commit(s) | Resultado |
+|---|---|---|
+| P1: CI + thresholds | `7c79612` | Workflow `test.yml` (typecheck + coverage no Windows); `release.yml` bloqueado por typecheck + testes; thresholds de 100% trocados por uma catraca no piso medido |
+| P2: `api.ts` | `33ac787` | `FakeElectronApi`; teste de roteamento dos 89 métodos; `api.ts` e `AppError.ts` em 100% |
+| P3: UI sem cobertura | `2df3a06` | `DiarySection` 1,6% → 97%; `SearchTab`, `TipContent`, `AiInsightsTab` e `ErrorBoundary` em 100% de linhas |
+| P4: erros do Electron | `68f8e78`, `63eb26f` | `electron/ipc` inteiro em 100%; contrato de que todo `IpcChannel` tem exatamente um handler e de que os dois enums são idênticos; **bug corrigido**: documentos de projeto gravavam caminho de arquivo cuja cópia tinha falhado |
+
+Cobertura global: 79,55 → **85,0%** statements, 80,5 → **83,0%** branches, 61,0 → **71,4%** functions. Electron: 87,3 → **93,5%** statements. Testes: 770 → 1.200+.
+
+### Achados novos para a fase de refatoração
+- Enum `IpcChannel` duplicado em `electron/types.ts` e `src/types/index.ts` (já protegido por teste de contrato).
+- `ipcRegistries.ts` (884 linhas): lógica repetida de exportar + diálogo de salvar, criação de diretório e mensagens de "não encontrado".
+- `jsonRepair.ts`: bloco de "desfazer dupla codificação" duplicado; a segunda cópia é inalcançável (linhas 38-43 ficam descobertas).
+- `PROJECTS_CREATE` lança um `Error` comum com `[ERR_DUPLICATE_NAME]` e acaba classificado como `ERR_INTERNAL`/`SYSTEM_ERROR`, quando deveria ser um erro de usuário.
+- **Comportamento ambíguo**: na importação de PDFs em lote, se a cópia de um arquivo falha, o artigo já foi criado, fica sem PDF e não entra na contagem retornada.
+- 17 arquivos passam do limite de 500 linhas do AGENTS.md; os de menor cobertura (`ProjectDetailsPage` 62%, `CitationModal` 7% de branches, `AiSettings` 14% de branches, `EditArticleModal` 37% de branches, `DatabaseAdapter` 80%) são os mais arriscados de quebrar.
+- Lint: cerca de 500 erros reais em `src/` e `electron/`, mais ruído de vendor em `public/`, que não está no `ignorePatterns`.
