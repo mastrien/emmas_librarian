@@ -17,7 +17,7 @@
     "test": "npm run rebuild:node && vitest run",
     "test:watch": "npm run rebuild:node && vitest",
     "coverage": "npm run rebuild:node && vitest run --coverage",
-    "test:mutate": "stryker run",
+    "test:mutate": "npm run rebuild:node && stryker run",
     "test:k6": "npm run rebuild:node && concurrently --kill-others --success first \"node performance-tests/performance-harness.js\" \"wait-on http://localhost:3001 && k6 run performance-tests/load_tests.js\"",
     "test:performance:smoke": "npm run rebuild:node && concurrently --kill-others --success first \"node performance-tests/performance-harness.js\" \"wait-on http://localhost:3001 && k6 run -e TEST_TYPE=smoke performance-tests/load_tests.js\"",
     "test:performance:load": "npm run rebuild:node && concurrently --kill-others --success first \"node performance-tests/performance-harness.js\" \"wait-on http://localhost:3001 && k6 run -e TEST_TYPE=load performance-tests/load_tests.js\"",
