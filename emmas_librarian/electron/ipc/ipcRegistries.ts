@@ -635,8 +635,10 @@ export function setupIpcRegistries() {
           if (!fs.existsSync(docsDir)) {
             fs.mkdirSync(docsDir, { recursive: true });
           }
-          destPath = path.join(docsDir, `doc_${projectId}_${Date.now()}.pdf`);
-          fs.copyFileSync(sourceFilePath, destPath);
+          // Only record the stored path once the copy succeeded, or the document points at a missing file.
+          const storedPath = path.join(docsDir, `doc_${projectId}_${Date.now()}.pdf`);
+          fs.copyFileSync(sourceFilePath, storedPath);
+          destPath = storedPath;
         } catch (err) {
           console.error('Failed to copy PDF file for project document:', err);
         }
@@ -654,8 +656,10 @@ export function setupIpcRegistries() {
           if (!fs.existsSync(docsDir)) {
             fs.mkdirSync(docsDir, { recursive: true });
           }
-          destPath = path.join(docsDir, `doc_${Date.now()}.pdf`);
-          fs.copyFileSync(sourceFilePath, destPath);
+          // On a failed copy keep the original path instead of one that was never written.
+          const storedPath = path.join(docsDir, `doc_${Date.now()}.pdf`);
+          fs.copyFileSync(sourceFilePath, storedPath);
+          destPath = storedPath;
         } catch (err) {
           console.error('Failed to copy PDF file for updating project document:', err);
         }
