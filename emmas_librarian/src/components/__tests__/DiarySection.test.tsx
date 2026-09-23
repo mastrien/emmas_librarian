@@ -130,18 +130,20 @@ describe('DiarySection saving', () => {
   });
 
   it('auto-saves after 2 seconds of inactivity', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
     givenEntries(entry(PAST, 'a'));
     renderDiary();
     const editor = await openEntry(PAST, 'a');
+    // Pure fake timers (no shouldAdvanceTime): wall-clock time under load must not reach the 2s boundary.
+    vi.useFakeTimers();
 
     typeInto(editor, 'abc');
     await act(() => vi.advanceTimersByTimeAsync(1999));
     expect(service.saveDiaryEntry).not.toHaveBeenCalled();
     await act(() => vi.advanceTimersByTimeAsync(1));
 
-    await screen.findByText('✓ Salvo');
     expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, PAST, 'abc');
+    vi.useRealTimers();
+    await screen.findByText('✓ Salvo');
   });
 
   it('does not auto-save whitespace-only content', async () => {
