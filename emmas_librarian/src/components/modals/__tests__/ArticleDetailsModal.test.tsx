@@ -5,6 +5,7 @@ import { ArticleDetailsModal } from '../ArticleDetailsModal';
 import { MemoryRouter } from 'react-router-dom';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
+import type { SearchHistoryItem } from '../../../types';
 
 const mockArticle: any = {
   id: 1,
@@ -31,10 +32,16 @@ const mockArticle: any = {
   references_list: 'Ref 1; Ref 2',
 };
 
-const mockHistory = [
-  { id: 100, unified_query: 'Busca de Teste' },
-  { id: 101, unified_query: 'Importação de Teste' },
-];
+const historyItem = (id: number, unified_query: string): SearchHistoryItem => ({
+  id,
+  unified_query,
+  translated_queries: '{}',
+  total_results: 0,
+  results_breakdown: '{}',
+  created_at: '2026-01-01',
+});
+
+const mockHistory = [historyItem(100, 'Busca de Teste'), historyItem(101, 'Importação de Teste')];
 
 describe('ArticleDetailsModal', () => {
   let fakeService: FakeProjectService;
@@ -206,7 +213,7 @@ describe('ArticleDetailsModal', () => {
       fireEvent.click(unlinkButton);
     });
 
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Erro ao desvincular o PDF: Error: Network error'));
+    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Erro ao desvincular o PDF: Network error'));
   });
 
   it('calls onAttachPdf when click attach pdf button', async () => {
