@@ -44,6 +44,7 @@ describe('PROJECTS_CREATE', () => {
 
     const payload = await rejectionPayload(invoke(IpcChannel.PROJECTS_CREATE, 'tese  '));
 
+    expect(payload).toMatchObject({ code: 'ERR_DUPLICATE_NAME', type: 'USER_ERROR' });
     expect(payload.message).toBe(
       '[ERR_DUPLICATE_NAME] Já existe um projeto com este nome. Offending value: "tese  ". Expected shape: String de nome único entre os projetos cadastrados.',
     );

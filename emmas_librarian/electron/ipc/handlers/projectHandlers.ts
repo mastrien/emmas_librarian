@@ -2,6 +2,7 @@ import { IpcChannel, type QueryASTNode, type QuerySort } from '../../types';
 import { queryTranslator } from '../../services/QueryTranslator';
 import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import type { SearchOrchestrator } from '../../services/SearchOrchestrator';
+import { AppError } from '../errorHandler';
 import { handle, type IpcRegistrar } from './handle';
 
 /**
@@ -45,7 +46,9 @@ export function registerSearchHandlers(ipc: IpcRegistrar, db: DatabaseAdapter, o
 function createUniquelyNamedProject(db: DatabaseAdapter, name: string) {
   const normalized = name.trim().toLowerCase();
   if (db.getAllProjects().some((p) => p.name.trim().toLowerCase() === normalized)) {
-    throw new Error(
+    throw new AppError(
+      'ERR_DUPLICATE_NAME',
+      'USER_ERROR',
       `[ERR_DUPLICATE_NAME] Já existe um projeto com este nome. Offending value: "${name}". Expected shape: String de nome único entre os projetos cadastrados.`,
     );
   }
