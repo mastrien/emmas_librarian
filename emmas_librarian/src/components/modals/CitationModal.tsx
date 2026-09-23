@@ -132,7 +132,7 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
           journal: csl['container-title'] || '',
           volume: csl.volume || '',
           issue: csl.issue || '',
-          page: csl.pages || '',
+          pages: csl.pages || '',
           url: csl.URL || '',
           accessed: '',
         });
@@ -152,7 +152,7 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
       journal: article.journal || '',
       volume: article.volume || '',
       issue: article.issue || '',
-      page: article.pages || article.pages || '',
+      pages: article.pages || '',
       url: article.url || '',
       accessed: article.accessed || '',
     });
@@ -492,7 +492,7 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
                       Páginas
                     </label>
                     <input
-                      name="page"
+                      name="pages"
                       value={editableArticle.pages || ''}
                       onChange={handleChange}
                       style={{
