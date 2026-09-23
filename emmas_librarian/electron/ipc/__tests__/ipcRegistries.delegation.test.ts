@@ -152,10 +152,8 @@ describe('IPC channel contract', () => {
     expect([...registered].sort()).toEqual([...Object.values(IpcChannel), 'UPDATE_TITLE_BAR'].sort());
   });
 
-  it('keeps the main-process and renderer IpcChannel enums identical', () => {
-    const entries = (e: object) => Object.entries(e).sort(([a], [b]) => a.localeCompare(b));
-
-    expect(entries(IpcChannel)).toEqual(entries(RendererIpcChannel));
+  it('shares a single IpcChannel definition with the renderer', () => {
+    expect(IpcChannel).toBe(RendererIpcChannel);
   });
 
   it('reports the app version', async () => {
