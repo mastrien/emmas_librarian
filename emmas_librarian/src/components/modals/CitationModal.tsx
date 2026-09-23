@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { generateCitation, CitationStyle, CitationOutputFormat } from '../../services/citationService';
 import { X, Copy, Check, FileText, Code, Braces, ChevronDown, ChevronUp, Save, RotateCcw } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
+import { LabeledField } from '../common/LabeledField';
+import { FULL_NAMES_HINT } from '../common/articleFieldHints';
 
 interface CitationModalProps {
   isOpen: boolean;
@@ -158,11 +160,8 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
     });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditableArticle({
-      ...editableArticle,
-      [e.target.name]: e.target.value,
-    });
+  const setField = (field: string) => (value: string) => {
+    setEditableArticle({ ...editableArticle, [field]: value });
   };
 
   return createPortal(
@@ -287,277 +286,28 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
                   borderTop: '1px solid var(--border-color)',
                 }}
               >
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '0.85rem',
-                        marginBottom: '0.3rem',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      Título
-                    </label>
-                    <input
-                      name="title"
-                      value={editableArticle.title || ''}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)',
-                        background: 'var(--bg-surface)',
-                        color: 'var(--text-main)',
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '0.85rem',
-                        marginBottom: '0.3rem',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      Autores (separados por ; ou ,)
-                    </label>
-                    <input
-                      name="authors"
-                      value={editableArticle.authors || ''}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)',
-                        background: 'var(--bg-surface)',
-                        color: 'var(--text-main)',
-                      }}
-                    />
-                    <span
-                      style={{
-                        display: 'block',
-                        fontSize: '0.72rem',
-                        color: 'var(--text-muted)',
-                        marginTop: '0.25rem',
-                        lineHeight: '1.2',
-                      }}
-                    >
-                      Se usar vírgula, use nomes completos (ex: 'João Silva, Maria Souza') para evitar que nomes simples
-                      sejam lidos como um único autor.
-                    </span>
-                  </div>
-                </div>
+                <LabeledField compact label="Título" name="title" value={editableArticle.title || ''} onChange={setField('title')} />
+                <LabeledField
+                  compact
+                  label="Autores (separados por ; ou ,)"
+                  name="authors"
+                  value={editableArticle.authors || ''}
+                  onChange={setField('authors')}
+                  hint={FULL_NAMES_HINT}
+                />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '0.85rem',
-                        marginBottom: '0.3rem',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      Ano
-                    </label>
-                    <input
-                      name="year"
-                      type="number"
-                      value={editableArticle.year || ''}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)',
-                        background: 'var(--bg-surface)',
-                        color: 'var(--text-main)',
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '0.85rem',
-                        marginBottom: '0.3rem',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      DOI
-                    </label>
-                    <input
-                      name="doi"
-                      value={editableArticle.doi || ''}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)',
-                        background: 'var(--bg-surface)',
-                        color: 'var(--text-main)',
-                      }}
-                    />
-                  </div>
+                  <LabeledField compact label="Ano" name="year" type="number" value={editableArticle.year || ''} onChange={setField('year')} />
+                  <LabeledField compact label="DOI" name="doi" value={editableArticle.doi || ''} onChange={setField('doi')} />
                 </div>
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: '0.85rem',
-                      marginBottom: '0.3rem',
-                      color: 'var(--text-muted)',
-                    }}
-                  >
-                    Revista / Periódico
-                  </label>
-                  <input
-                    name="journal"
-                    value={editableArticle.journal || ''}
-                    onChange={handleChange}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg-surface)',
-                      color: 'var(--text-main)',
-                    }}
-                  />
-                </div>
+                <LabeledField compact label="Revista / Periódico" name="journal" value={editableArticle.journal || ''} onChange={setField('journal')} />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '0.85rem',
-                        marginBottom: '0.3rem',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      Volume
-                    </label>
-                    <input
-                      name="volume"
-                      value={editableArticle.volume || ''}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)',
-                        background: 'var(--bg-surface)',
-                        color: 'var(--text-main)',
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '0.85rem',
-                        marginBottom: '0.3rem',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      Edição (Issue)
-                    </label>
-                    <input
-                      name="issue"
-                      value={editableArticle.issue || ''}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)',
-                        background: 'var(--bg-surface)',
-                        color: 'var(--text-main)',
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '0.85rem',
-                        marginBottom: '0.3rem',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      Páginas
-                    </label>
-                    <input
-                      name="pages"
-                      value={editableArticle.pages || ''}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)',
-                        background: 'var(--bg-surface)',
-                        color: 'var(--text-main)',
-                      }}
-                    />
-                  </div>
+                  <LabeledField compact label="Volume" name="volume" value={editableArticle.volume || ''} onChange={setField('volume')} />
+                  <LabeledField compact label="Edição (Issue)" name="issue" value={editableArticle.issue || ''} onChange={setField('issue')} />
+                  <LabeledField compact label="Páginas" name="pages" value={editableArticle.pages || ''} onChange={setField('pages')} />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '0.85rem',
-                        marginBottom: '0.3rem',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      Disponível em (URL)
-                    </label>
-                    <input
-                      name="url"
-                      value={editableArticle.url || ''}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)',
-                        background: 'var(--bg-surface)',
-                        color: 'var(--text-main)',
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '0.85rem',
-                        marginBottom: '0.3rem',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      Acesso em
-                    </label>
-                    <input
-                      name="accessed"
-                      type="date"
-                      value={editableArticle.accessed || ''}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)',
-                        background: 'var(--bg-surface)',
-                        color: 'var(--text-main)',
-                      }}
-                    />
-                  </div>
+                  <LabeledField compact label="Disponível em (URL)" name="url" value={editableArticle.url || ''} onChange={setField('url')} />
+                  <LabeledField compact label="Acesso em" name="accessed" type="date" value={editableArticle.accessed || ''} onChange={setField('accessed')} />
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                   <button
