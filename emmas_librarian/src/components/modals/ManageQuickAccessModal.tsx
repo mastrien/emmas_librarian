@@ -75,8 +75,11 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({
   const [filePath, setFilePath] = useState<string | undefined>(undefined);
   const [category, setCategory] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-
+  // Declared before the early return below: hooks must run on every render (was: after it, crashing on reopen).
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const draggedIndexRef = useRef<number | null>(null);
+  const dropIndexRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -178,11 +181,6 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({
       }
     }
   };
-
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dropIndex, setDropIndex] = useState<number | null>(null);
-  const draggedIndexRef = useRef<number | null>(null);
-  const dropIndexRef = useRef<number | null>(null);
 
   const clearDragState = () => {
     draggedIndexRef.current = null;
@@ -338,6 +336,7 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({
                   <React.Fragment key={doc.id}>
                     {showGapBefore && (
                       <div
+                        data-testid="quick-access-drop-gap"
                         onDragOver={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -477,6 +476,7 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({
 
                     {showGapAfter && (
                       <div
+                        data-testid="quick-access-drop-gap"
                         onDragOver={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
