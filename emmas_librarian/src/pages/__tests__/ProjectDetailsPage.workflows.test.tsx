@@ -81,6 +81,27 @@ describe('ProjectDetailsPage drag and drop', () => {
     expect(screen.getByText('Solte seus PDFs aqui para importar')).toBeInTheDocument();
   });
 
+  it('keeps the overlay while dragging over children and hides it when leaving the page', async () => {
+    await renderProjectPage(givenProject());
+    const child = container().appendChild(document.createElement('div'));
+    const leaveTowards = (relatedTarget: Node | null) => {
+      const leave = createEvent.dragLeave(container());
+      Object.defineProperty(leave, 'relatedTarget', { value: relatedTarget });
+      fireEvent(container(), leave);
+    };
+    dragOverWith(['Files']);
+
+    leaveTowards(child);
+    expect(screen.getByText('Solte seus PDFs aqui para importar')).toBeInTheDocument();
+
+    leaveTowards(document.body);
+    expect(screen.queryByText('Solte seus PDFs aqui para importar')).not.toBeInTheDocument();
+
+    dragOverWith([]);
+    leaveTowards(null);
+    expect(screen.queryByText('Solte seus PDFs aqui para importar')).not.toBeInTheDocument();
+  });
+
   it('imports dropped PDFs by their filesystem path and ignores other files', async () => {
     vi.spyOn(window.electronAPI, 'getPathForFile').mockImplementation((file) => `/dropped/${file.name}`);
     const service = givenProject();

@@ -55,6 +55,32 @@ describe('ProjectDetailsPage filters', () => {
     expect(rowTitles()[0]).toContain('Paper about proteins');
   });
 
+  it('applies the sidebar status, database and keyword filters', async () => {
+    await renderProjectPage(
+      givenProject([
+        article({ id: 1, title: 'Paper One', source_databases: '["OpenAlex"]', author_keywords: 'React; Testing' }),
+        article({ id: 2, title: 'Paper Two', source_databases: '["Scopus"]', status: 'read', author_keywords: 'Database; SQL' }),
+      ]),
+    );
+    const listed = (title: string) => within(mainTable()).queryByText(title);
+    expect(listed('Paper One')).toBeInTheDocument();
+    expect(listed('Paper Two')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Lidos'));
+    expect(listed('Paper One')).not.toBeInTheDocument();
+    expect(listed('Paper Two')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Todos'));
+    fireEvent.click(screen.getByLabelText(/OpenAlex/));
+    expect(listed('Paper One')).toBeInTheDocument();
+    expect(listed('Paper Two')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText(/OpenAlex/));
+    fireEvent.click(screen.getByText('SQL'));
+    expect(listed('Paper One')).not.toBeInTheDocument();
+    expect(listed('Paper Two')).toBeInTheDocument();
+  });
+
   it('hides and shows the filter sidebar', async () => {
     await renderProjectPage(givenProject(articles));
     expect(screen.getByLabelText('Todos')).toBeInTheDocument();
