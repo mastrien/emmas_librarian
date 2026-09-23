@@ -169,3 +169,25 @@ Cobertura global: 79,55 → **85,0%** statements, 80,5 → **83,0%** branches, 6
 - **Comportamento ambíguo**: na importação de PDFs em lote, se a cópia de um arquivo falha, o artigo já foi criado, fica sem PDF e não entra na contagem retornada.
 - 17 arquivos passam do limite de 500 linhas do AGENTS.md; os de menor cobertura (`ProjectDetailsPage` 62%, `CitationModal` 7% de branches, `AiSettings` 14% de branches, `EditArticleModal` 37% de branches, `DatabaseAdapter` 80%) são os mais arriscados de quebrar.
 - Lint: cerca de 500 erros reais em `src/` e `electron/`, mais ruído de vendor em `public/`, que não está no `ignorePatterns`.
+
+---
+
+## Checkpoint (2026-09-22): refatoração em andamento
+
+### Concluído desde o adendo
+- **Testes de caracterização** dos 5 arquivos de baixa cobertura antes de refatorá-los: `DatabaseAdapter` (migrações sobre bancos SQLite legados reais), `CitationModal`, `AiSettings`, `EditArticleModal` e `ProjectDetailsPage` (4 suítes pela UI real). A suíte não tem mais nenhum teste pulado.
+- **Bugs corrigidos**, cada um com teste de regressão: o campo "Páginas" do `CitationModal` não era editável; a importação em lote criava artigo sem PDF quando a cópia falhava; nome de projeto duplicado chegava como erro interno; uma linha com `source_databases` fora do formato JSON derrubava a página do projeto.
+- **Código morto removido**: 2 componentes sem uso, testes substituídos, `.husky` inativo, arquivos soltos da raiz (aprovados), estado morto da página (incluindo 4 leituras de chave de API por carregamento que não serviam para nada).
+- **Refatorações**:
+  - `ipcRegistries.ts` (884 linhas) virou uma raiz de composição de 59 linhas mais 16 módulos, todos com 100% de cobertura.
+  - `ProjectDetailsPage.tsx` (1.124 linhas) virou uma composição de 180 linhas, com hooks e componentes próprios.
+  - Um enum/arquivo de tipos único entre Electron e renderer.
+  - Injeção de dependência (`useProjectService`) em todos os componentes, e `IProjectService` corrigido para refletir o contrato real.
+  - Utilitários `describeError`, `parseSourceDatabases`/`SourceDatabaseBadges`, `LabeledField` e `jsonRepair` enxuto.
+- Cobertura atual: **90,5% statements / 86,7% branches / 78,1% functions**, com 1.413 testes. A catraca de thresholds foi subindo a cada fase.
+
+### Próximos passos (retomar daqui)
+1. **Refatoração, continuação**: aplicar o `LabeledField` (variante `compact`) no `CitationModal` e avaliar o `VenueFormModal`. Depois, dividir os arquivos que ainda passam de 500 linhas: `MassCitationModal` (851), `ChangelogModal` (781; provavelmente mover o conteúdo para um arquivo de dados), `ManageQuickAccessModal` (716), `SearchPage` (624), `ArticleDetailsModal` (621), `AiSettings` (550; extrair campo de chave, card de skill e campo de RAG), `DiarySection` (537), `AIExtractionModal` (518), `api.ts` (511); e no Electron: `BackupService` (559), `ArticleRepository` (548), `DatabaseAdapter` (536; mover as migrações para um módulo próprio) e `ProjectSyncService` (504). Também deduplicar as tabelas repetidas do `schema.sql`.
+2. **Lint**: incluir `public/` e vendor no `ignorePatterns`, corrigir os ~500 erros reais e adicionar o lint ao workflow de CI.
+3. **P5**: corrigir os avisos de `act(...)` restantes nos testes antigos, aumentar a densidade de asserções dos specs E2E e revisar o `stryker.config.json`. **Não executar a mutação sem ordem explícita.**
+4. Atualizar este relatório com o resultado final.
