@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X as XIcon, Upload, Loader2, Plus } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { describeError } from '../../utils/describeError';
+import { fileNameFromPath } from '../../utils/formatters';
 import { LabeledField } from '../common/LabeledField';
 import { AUTHORS_SEPARATOR_HINT } from '../common/articleFieldHints';
 
@@ -148,7 +149,13 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <LabeledField label="Título *" value={title} onChange={setTitle} placeholder="Ex: A New Approach to Bibliometrics" required />
+            <LabeledField
+              label="Título *"
+              value={title}
+              onChange={setTitle}
+              placeholder="Ex: A New Approach to Bibliometrics"
+              required
+            />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <LabeledField
                 label="Autores"
@@ -161,7 +168,12 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <LabeledField label="DOI" value={doi} onChange={setDoi} placeholder="Ex: 10.1000/xyz123" />
-              <LabeledField label="Revista / Periódico" value={journal} onChange={setJournal} placeholder="Ex: Nature" />
+              <LabeledField
+                label="Revista / Periódico"
+                value={journal}
+                onChange={setJournal}
+                placeholder="Ex: Nature"
+              />
             </div>
             <LabeledField
               label="Resumo"
@@ -205,7 +217,7 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
                     }}
                     title={filePath}
                   >
-                    {filePath.split('\\').pop()?.split('/').pop()}
+                    {fileNameFromPath(filePath)}
                   </div>
                 )}
                 {filePath && (

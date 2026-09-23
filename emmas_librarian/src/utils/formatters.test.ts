@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getArticleStatusColor, getArticleStatusLabel, formatDate } from './formatters';
+import { getArticleStatusColor, getArticleStatusLabel, formatDate, fileNameFromPath } from './formatters';
 
 describe('formatters', () => {
   describe('getArticleStatusColor', () => {
@@ -64,5 +64,16 @@ describe('formatters', () => {
     it('returns original string if date is invalid', () => {
       expect(formatDate('invalid-date')).toBe('invalid-date');
     });
+  });
+});
+
+describe('fileNameFromPath', () => {
+  it.each([
+    ['C:\\docs\\edital.pdf', 'edital.pdf'],
+    ['/home/u/modelo.pdf', 'modelo.pdf'],
+    ['C:\\mixed/dir\\a.pdf', 'a.pdf'],
+    ['solo.pdf', 'solo.pdf'],
+  ])('%s -> %s', (path, name) => {
+    expect(fileNameFromPath(path)).toBe(name);
   });
 });

@@ -32,3 +32,11 @@ export const formatDate = (dateString?: string): string => {
   }
   return d.toLocaleDateString('pt-BR');
 };
+
+/**
+ * Last segment of a Windows or POSIX path, for showing attached files by name.
+ *
+ * Usage:
+ *   fileNameFromPath('C:\\docs\\edital.pdf'); // 'edital.pdf'
+ */
+export const fileNameFromPath = (path: string): string => path.split(/[\\/]/).pop() ?? path;
