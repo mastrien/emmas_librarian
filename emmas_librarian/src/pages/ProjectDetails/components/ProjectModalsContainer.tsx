@@ -15,7 +15,7 @@ import { MassCitationModal } from '../../../components/modals/MassCitationModal'
 import { AttachPdfModal } from '../../../components/modals/AttachPdfModal';
 import { ImportArticlesModal } from '../../../components/modals/ImportArticlesModal';
 import { Project, Article, ProjectDocument } from '../../../types';
-import { projectService } from '../../../services/api';
+import { useProjectService } from '../../../contexts/ServicesContext';
 
 interface ProjectModalsContainerProps {
   projectId: number;
@@ -70,6 +70,7 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
   setShowKeyAlert,
   setActiveTab
 }) => {
+  const projectService = useProjectService();
   const navigate = useNavigate();
   
   return (

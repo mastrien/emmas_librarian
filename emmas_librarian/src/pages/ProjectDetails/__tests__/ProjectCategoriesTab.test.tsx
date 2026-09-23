@@ -4,12 +4,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectCategoriesTab } from '../components/ProjectCategoriesTab';
 import { projectService } from '../../../services/api';
 
-vi.mock('../../../services/api', () => ({
-  projectService: {
-    exportCsv: vi.fn(),
-    exportXlsx: vi.fn()
-  }
-}));
+vi.mock('../../../services/api', async () => {
+  const { FakeProjectService } = await import('../../../services/__tests__/fakes/FakeProjectService');
+  return { projectService: FakeProjectService.create() };
+});
 
 // Mock CategoryCell to avoid dealing with its complex internals
 vi.mock('../../../components/common/CategoryCell', () => ({

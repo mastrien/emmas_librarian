@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { projectService } from '../../../services/api';
+import { useProjectService } from '../../../contexts/ServicesContext';
 import type { Article, Highlight, Annotation, ProjectCategory, ArticleCategory } from '../../../types';
 import { anchorPendingHighlights } from '../../../utils/pdfTextSearch';
 
@@ -9,6 +9,7 @@ export function useArticleData(
   setStandaloneAnnotations: (a: Annotation[]) => void,
   setAnchoringStatus: (s: string) => void,
 ) {
+  const projectService = useProjectService();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tags, Download } from 'lucide-react';
 import { Project, Article } from '../../../types';
-import { projectService } from '../../../services/api';
+import { useProjectService } from '../../../contexts/ServicesContext';
 
 interface ProjectCategoriesTabProps {
   project: Project;
@@ -18,6 +18,7 @@ export const ProjectCategoriesTab: React.FC<ProjectCategoriesTabProps> = ({
   nonArchivedArticles,
   onCategorySaved
 }) => {
+  const projectService = useProjectService();
   return (
     <div className="card fade-in" style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>

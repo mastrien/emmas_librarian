@@ -12,6 +12,7 @@ import type {
 import { vi, type Mock } from 'vitest';
 import type {
   IProjectService,
+  QuestionSetInput,
   ExtractedMetadata,
   AutoBackupEntry,
   SearchPersistResult,
@@ -331,7 +332,7 @@ export class FakeProjectService implements IProjectService {
   );
 
   // ── Categories ──────────────────────────────────────────────────────
-  getProjectCategories = vi.fn(async (_projectId: number): Promise<unknown[]> => []);
+  getProjectCategories = vi.fn(async (_projectId: number): Promise<ProjectCategory[]> => []);
 
   createProjectCategory = vi.fn(
     async (_projectId: number, _name: string, _type: string, _options?: any): Promise<number> => 0,
@@ -343,13 +344,13 @@ export class FakeProjectService implements IProjectService {
 
   deleteProjectCategory = vi.fn(async (_categoryId: number): Promise<void> => undefined);
 
-  getArticleCategories = vi.fn(async (_articleId: number): Promise<unknown[]> => []);
+  getArticleCategories = vi.fn(async (_articleId: number): Promise<ArticleCategory[]> => []);
 
   setArticleCategory = vi.fn(
     async (_articleId: number, _categoryId: number, _value: string | null): Promise<void> => undefined,
   );
 
-  getAllProjectArticleCategories = vi.fn(async (_projectId: number): Promise<unknown[]> => []);
+  getAllProjectArticleCategories = vi.fn(async (_projectId: number): Promise<ArticleCategory[]> => []);
 
   // ── Sync ────────────────────────────────────────────────────────────
   exportProject = vi.fn(async (_projectId: number): Promise<string | null> => null);
@@ -357,12 +358,19 @@ export class FakeProjectService implements IProjectService {
   importProject = vi.fn(async (_filePath?: string): Promise<number | null> => null);
 
   // ── Question Sets ─────────────────────────────────────────────────
-  getQuestionSets = vi.fn<any>().mockResolvedValue([]);
-  getQuestionSet = vi.fn<any>().mockResolvedValue({} as any);
-  createQuestionSet = vi.fn<any>().mockResolvedValue(1);
-  updateQuestionSet = vi.fn<any>().mockResolvedValue(undefined);
-  deleteQuestionSet = vi.fn<any>().mockResolvedValue(undefined);
-  duplicateQuestionSet = vi.fn<any>().mockResolvedValue(2);
+  getQuestionSets = vi.fn(async (_projectId: number | null): Promise<QuestionSet[]> => []);
+
+  getQuestionSet = vi.fn(async (id: number): Promise<QuestionSet> => storedQuestionSet({ id }));
+
+  createQuestionSet = vi.fn(async (data: QuestionSetInput): Promise<QuestionSet> => storedQuestionSet({ id: 1, ...data }));
+
+  updateQuestionSet = vi.fn(
+    async (_id: number, _data: Partial<Omit<QuestionSetInput, 'project_id'>>): Promise<void> => undefined,
+  );
+
+  deleteQuestionSet = vi.fn(async (_id: number): Promise<void> => undefined);
+
+  duplicateQuestionSet = vi.fn(async (_id: number, _projectId: number | null): Promise<number> => 2);
 
   // ── Agenda / Scientific Venues ─────────────────────────────────────
   getScientificVenues = vi.fn(async (): Promise<ScientificVenue[]> => []);
@@ -408,4 +416,16 @@ export class FakeProjectService implements IProjectService {
       }
     }
   }
+}
+
+function storedQuestionSet(fields: Partial<QuestionSetInput> & { id: number }): QuestionSet {
+  return {
+    project_id: null,
+    name: '',
+    questions: '[]',
+    created_at: '',
+    updated_at: '',
+    ...fields,
+    description: fields.description ?? null,
+  };
 }

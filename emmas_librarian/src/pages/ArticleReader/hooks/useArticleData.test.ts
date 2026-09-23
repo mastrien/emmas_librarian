@@ -4,25 +4,10 @@ import { useArticleData } from './useArticleData';
 import { projectService } from '../../../services/api';
 import * as pdfTextSearch from '../../../utils/pdfTextSearch';
 
-vi.mock('../../../services/api', () => ({
-  projectService: {
-    getArticle: vi.fn(),
-    getProjectCategories: vi.fn(),
-    getArticleCategories: vi.fn(),
-    getHighlights: vi.fn(),
-    getAnnotations: vi.fn(),
-    getSetting: vi.fn(),
-    getProjectWritingPad: vi.fn(),
-    getPdfBuffer: vi.fn(),
-    getPendingHighlights: vi.fn(),
-    createHighlight: vi.fn(),
-    deletePendingHighlight: vi.fn(),
-    createAnnotation: vi.fn(),
-    openPdfDialog: vi.fn(),
-    uploadPdf: vi.fn(),
-    unlinkPdf: vi.fn(),
-  },
-}));
+vi.mock('../../../services/api', async () => {
+  const { FakeProjectService } = await import('../../../services/__tests__/fakes/FakeProjectService');
+  return { projectService: FakeProjectService.create() };
+});
 
 vi.mock('../../../utils/pdfTextSearch', () => ({
   anchorPendingHighlights: vi.fn(),

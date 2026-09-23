@@ -5,13 +5,10 @@ import { ProjectToolbar } from '../components/ProjectToolbar';
 import { MemoryRouter } from 'react-router-dom';
 import { projectService } from '../../../services/api';
 
-vi.mock('../../../services/api', () => ({
-  projectService: {
-    exportBiblioshiny: vi.fn(),
-    exportProject: vi.fn(),
-    openProjectDocumentExternal: vi.fn(),
-  }
-}));
+vi.mock('../../../services/api', async () => {
+  const { FakeProjectService } = await import('../../../services/__tests__/fakes/FakeProjectService');
+  return { projectService: FakeProjectService.create() };
+});
 
 describe('ProjectToolbar', () => {
   const defaultProps = {

@@ -4,15 +4,10 @@ import { usePdfAnnotations } from './usePdfAnnotations';
 import { projectService } from '../../../services/api';
 import { Highlight, Annotation } from '../../../types';
 
-vi.mock('../../../services/api', () => ({
-  projectService: {
-    createHighlight: vi.fn(),
-    createAnnotation: vi.fn(),
-    deleteHighlight: vi.fn(),
-    deleteAnnotation: vi.fn(),
-    updateAnnotation: vi.fn(),
-  },
-}));
+vi.mock('../../../services/api', async () => {
+  const { FakeProjectService } = await import('../../../services/__tests__/fakes/FakeProjectService');
+  return { projectService: FakeProjectService.create() };
+});
 
 describe('usePdfAnnotations', () => {
   beforeEach(() => {

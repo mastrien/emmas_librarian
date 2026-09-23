@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Brain, Plus, ChevronDown, Upload, Share2, Download, Tag, Link as LinkIcon, Settings, FileIcon, ExternalLink } from 'lucide-react';
 import { Project, ProjectDocument } from '../../../types';
-import { projectService } from '../../../services/api';
+import { useProjectService } from '../../../contexts/ServicesContext';
 
 interface ProjectToolbarProps {
   project: Project;
@@ -45,6 +45,7 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
   handleExportMenuMouseEnter,
   handleExportMenuMouseLeave
 }) => {
+  const projectService = useProjectService();
   return (
     <>
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>

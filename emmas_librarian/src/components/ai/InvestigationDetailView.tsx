@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { type Article, type InvestigationResult } from '../../types';
 import { type InvestigationHistoryRecord } from '../modals/AIExtractionModal';
-import { projectService } from '../../services/api';
+import { useProjectService } from '../../contexts/ServicesContext';
 import { formatResultsAsCsv, formatResultsAsJson } from '../../utils/investigationExporter';
 import { RAGResultCard } from './RAGResultCard';
 
@@ -23,6 +23,7 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
   onBack,
   onReExecute,
 }) => {
+  const projectService = useProjectService();
   const navigate = useNavigate();
   const [results, setResults] = useState<InvestigationResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);

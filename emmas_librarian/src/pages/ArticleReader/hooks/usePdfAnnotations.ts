@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { projectService } from '../../../services/api';
+import { useProjectService } from '../../../contexts/ServicesContext';
 import type { Highlight, Annotation } from '../../../types';
 type IHighlight = {
   position: unknown;
@@ -9,6 +9,7 @@ type IHighlight = {
 };
 
 export function usePdfAnnotations(id: string | undefined) {
+  const projectService = useProjectService();
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [standaloneAnnotations, setStandaloneAnnotations] = useState<Annotation[]>([]);
   const [newAnnotationText, setNewAnnotationText] = useState('');

@@ -74,6 +74,13 @@ export interface ArticleSummary {
   sectionSummary: string;
 }
 
+export interface QuestionSetInput {
+  project_id: number | null;
+  name: string;
+  description?: string | null;
+  questions: string;
+}
+
 export interface IProjectService {
   // ── Projects ──────────────────────────────────────────────────────
   getProjects(): Promise<Project[]>;
@@ -212,7 +219,7 @@ export interface IProjectService {
   getInvestigationResultsByArticle(investigationId: number, articleId: number): Promise<InvestigationResult[]>;
 
   // ── Categories ────────────────────────────────────────────────────
-  getProjectCategories(projectId: number): Promise<unknown[]>;
+  getProjectCategories(projectId: number): Promise<ProjectCategory[]>;
   createProjectCategory(
     projectId: number,
     name: string,
@@ -226,20 +233,16 @@ export interface IProjectService {
     options?: Record<string, unknown> | null,
   ): Promise<void>;
   deleteProjectCategory(categoryId: number): Promise<void>;
-  getArticleCategories(articleId: number): Promise<unknown[]>;
+  getArticleCategories(articleId: number): Promise<ArticleCategory[]>;
   setArticleCategory(articleId: number, categoryId: number, value: string | null): Promise<void>;
-  getAllProjectArticleCategories(projectId: number): Promise<unknown[]>;
+  getAllProjectArticleCategories(projectId: number): Promise<ArticleCategory[]>;
 
   // ── Question Sets ─────────────────────────────────────────────────
   getQuestionSets(projectId: number | null): Promise<QuestionSet[]>;
   getQuestionSet(id: number): Promise<QuestionSet>;
-  createQuestionSet(data: {
-    project_id: number | null;
-    name: string;
-    description?: string;
-    questions: string[];
-  }): Promise<number>;
-  updateQuestionSet(id: number, data: { name?: string; description?: string; questions?: string[] }): Promise<void>;
+  /** `questions` is the JSON-encoded list, as stored by QuestionSetRepository. */
+  createQuestionSet(data: QuestionSetInput): Promise<QuestionSet>;
+  updateQuestionSet(id: number, data: Partial<Omit<QuestionSetInput, 'project_id'>>): Promise<void>;
   deleteQuestionSet(id: number): Promise<void>;
   duplicateQuestionSet(id: number, projectId: number | null): Promise<number>;
 

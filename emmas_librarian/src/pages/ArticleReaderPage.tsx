@@ -16,7 +16,7 @@ import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 pdfjs.GlobalWorkerOptions.standardFontDataUrl = 'https://unpkg.com/pdfjs-dist@4.10.38/standard_fonts/';
 
-import { projectService } from '../services/api';
+import { useProjectService } from '../contexts/ServicesContext';
 import { PdfPlaceholderView } from '../components/reader/PdfPlaceholderView';
 
 import { useArticleData } from './ArticleReader/hooks/useArticleData';
@@ -29,6 +29,7 @@ import { ArticleReaderModals } from './ArticleReader/components/ArticleReaderMod
 import { ArticleReaderPdfView } from './ArticleReader/components/ArticleReaderPdfView';
 
 export const ArticleReaderPage: React.FC = () => {
+  const projectService = useProjectService();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
