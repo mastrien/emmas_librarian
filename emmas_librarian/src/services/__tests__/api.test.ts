@@ -130,20 +130,22 @@ describe('question sets normalize a missing project id to null', () => {
 });
 
 describe('agenda handlers take a single payload object', () => {
+  const venue = { title: 'X', category: 'journal' as const, milestones: [] };
+
   it('updateScientificVenue', async () => {
     bridge.respondWith(IpcChannel.SCIENTIFIC_VENUE_UPDATE, { id: 3 });
 
-    expect(await api.updateScientificVenue(3, { name: 'X' })).toEqual({ id: 3 });
-    expect(bridge.lastInvocation()?.args).toEqual([{ id: 3, venueData: { name: 'X' } }]);
+    expect(await api.updateScientificVenue(3, venue)).toEqual({ id: 3 });
+    expect(bridge.lastInvocation()?.args).toEqual([{ id: 3, venueData: venue }]);
   });
 
   it('toggleMilestoneStatus', async () => {
     bridge.respondWith(IpcChannel.SCIENTIFIC_MILESTONE_TOGGLE_STATUS, true);
 
-    expect(await api.toggleMilestoneStatus(9, 'done')).toBe(true);
+    expect(await api.toggleMilestoneStatus(9, 'completed')).toBe(true);
     expect(bridge.lastInvocation()).toEqual({
       channel: IpcChannel.SCIENTIFIC_MILESTONE_TOGGLE_STATUS,
-      args: [{ milestoneId: 9, status: 'done' }],
+      args: [{ milestoneId: 9, status: 'completed' }],
     });
   });
 });

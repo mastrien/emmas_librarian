@@ -104,12 +104,12 @@ export interface Annotation {
 }
 
 export interface Highlight {
-  content_text?: string;
+  content_text?: string | null; // NULL in the database when the highlight has no extracted text
   id: string; // The UI uses string id for highlight
   article_id: number;
   color: string;
   position_data: unknown; // Coordinate data for the highlighter
-  annotation_id?: number;
+  annotation_id?: number | null;
   comment?: string; // Content of the linked annotation
 }
 

@@ -11,8 +11,9 @@ interface RouteCase {
 }
 
 const ast = { type: 'term', value: 'x' } as unknown as QueryASTNode;
+const questionSet = { project_id: 1, name: 'S', questions: '["q"]' };
 const results = [{ question: 'q', answer: 'a', quote: null, status: 'success' as const, error_message: null }];
-const venue = { name: 'Conf' };
+const venue = { title: 'Conf', category: 'conference' as const, milestones: [] };
 
 const VOID_METHODS = new Set([
   'updateProject',
@@ -229,7 +230,7 @@ const routes: RouteCase[] = [
   },
   { method: 'getQuestionSets', call: () => api.getQuestionSets(1), channel: IpcChannel.QUESTION_SETS_LIST, args: [1] },
   { method: 'getQuestionSet', call: () => api.getQuestionSet(6), channel: IpcChannel.QUESTION_SETS_GET, args: [6] },
-  { method: 'createQuestionSet', call: () => api.createQuestionSet({ name: 'S' }), channel: IpcChannel.QUESTION_SETS_CREATE, args: [{ name: 'S' }] },
+  { method: 'createQuestionSet', call: () => api.createQuestionSet(questionSet), channel: IpcChannel.QUESTION_SETS_CREATE, args: [questionSet] },
   {
     method: 'updateQuestionSet',
     call: () => api.updateQuestionSet(6, { name: 'S2' }),
