@@ -4,6 +4,8 @@ import { X as XIcon, Loader2, Save, Sparkles } from 'lucide-react';
 import { Article } from '../../types';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { useGlobalError } from '../../contexts/GlobalErrorContext';
+import { describeError } from '../../utils/describeError';
+import type { FrontendAppError } from '../../utils/AppError';
 
 export const EditArticleModal = ({
   isOpen,
@@ -68,23 +70,7 @@ export const EditArticleModal = ({
       });
       onClose();
     } catch (err: unknown) {
-      let errorMsg = 'Erro desconhecido';
-      if (err) {
-        if ((err as Error).message) {
-          errorMsg = (err as Error).message;
-        } else if (typeof err === 'string') {
-          errorMsg = err;
-        } else if (typeof err === 'object') {
-          try {
-            errorMsg = (err as { error?: string }).error || JSON.stringify(err);
-          } catch {
-            errorMsg = String(err);
-          }
-        } else {
-          errorMsg = String(err);
-        }
-      }
-      alert(`Erro ao editar artigo: ${errorMsg}`);
+      alert(`Erro ao editar artigo: ${describeError(err)}`);
     } finally {
       setSubmitting(false);
     }
@@ -107,27 +93,12 @@ export const EditArticleModal = ({
         setAbstract((prev) => (prev.trim() ? prev : data.abstract || prev));
       }
     } catch (err: unknown) {
-      let errorMsg = 'Erro desconhecido';
-      if (err) {
-        if ((err as Error).message) {
-          errorMsg = (err as Error).message;
-        } else if (typeof err === 'string') {
-          errorMsg = err;
-        } else if (typeof err === 'object') {
-          try {
-            errorMsg = (err as { error?: string }).error || JSON.stringify(err);
-          } catch {
-            errorMsg = String(err);
-          }
-        } else {
-          errorMsg = String(err);
-        }
-      }
-
-      if ((err as any)?.isAppError && (err as any)?.code !== 'ERR_INTERNAL') {
+      // Typed, user-actionable errors (e.g. missing API key) get the global error modal.
+      const appError = err as Partial<FrontendAppError> | null;
+      if (appError?.isAppError && appError.code !== 'ERR_INTERNAL') {
         showError(err);
       } else {
-        alert(`Erro ao extrair metadados: ${errorMsg}`);
+        alert(`Erro ao extrair metadados: ${describeError(err)}`);
       }
     } finally {
       setIsExtracting(false);

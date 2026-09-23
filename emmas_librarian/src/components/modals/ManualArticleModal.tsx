@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X as XIcon, Upload, Loader2, Plus } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
+import { describeError } from '../../utils/describeError';
 
 interface ManualArticleModalProps {
   isOpen: boolean;
@@ -66,24 +67,8 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
         filePath,
       );
       onClose();
-    } catch (err: Error | unknown) {
-      let errorMsg = 'Erro desconhecido';
-      if (err) {
-        if ((err as Error).message) {
-          errorMsg = (err as Error).message;
-        } else if (typeof err === 'string') {
-          errorMsg = err;
-        } else if (typeof err === 'object') {
-          try {
-            errorMsg = (err as { error?: string }).error || JSON.stringify(err);
-          } catch {
-            errorMsg = String(err);
-          }
-        } else {
-          errorMsg = String(err);
-        }
-      }
-      alert(`Erro ao adicionar artigo: ${errorMsg}`);
+    } catch (err: unknown) {
+      alert(`Erro ao adicionar artigo: ${describeError(err)}`);
     } finally {
       setSubmitting(false);
     }
