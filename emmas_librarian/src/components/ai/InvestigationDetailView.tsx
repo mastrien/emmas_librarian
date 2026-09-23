@@ -7,6 +7,7 @@ import { type InvestigationHistoryRecord } from '../modals/AIExtractionModal';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { formatResultsAsCsv, formatResultsAsJson } from '../../utils/investigationExporter';
 import { RAGResultCard } from './RAGResultCard';
+import { parseJsonList } from '../../utils/parseJsonList';
 
 export interface InvestigationDetailViewProps {
   investigation: InvestigationHistoryRecord;
@@ -60,8 +61,7 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
   );
 
   const articleIds = Object.keys(resultsByArticle).map(Number);
-  const qStr = investigation.questions || '[]';
-  const questionsList = JSON.parse(qStr);
+  const questionsList = parseJsonList<string>(investigation.questions);
 
   const handleReExecute = () => {
     onReExecute(questionsList, articleIds);

@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { X as XIcon, Trash2, Loader2 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { type Article, type RAGExtractionResult as RAGExtractionResultType, type SearchHistoryItem } from '../../types';
-import QuestionSetCatalog from '../ai/QuestionSetCatalog';
+import { X as XIcon } from 'lucide-react';
+import {
+  type Article,
+  type InvestigationResult,
+  type RAGExtractionResult as RAGExtractionResultType,
+  type SearchHistoryItem,
+} from '../../types';
 import { InvestigationDetailView } from '../ai/InvestigationDetailView';
-import { RAGResultCard } from '../ai/RAGResultCard';
-import { ArticleSelector } from '../ai/ArticleSelector';
+import { NewInvestigationPanel } from './aiExtraction/NewInvestigationPanel';
+import { InvestigationHistoryList } from './aiExtraction/InvestigationHistoryList';
 
 export interface AIExtractionResult {
   article: Article;
@@ -39,50 +41,68 @@ export interface AIExtractionModalProps {
   investigationHistory?: InvestigationHistoryRecord[];
   searchHistory?: SearchHistoryItem[];
   articles?: Article[];
-  getInvestigationResults: (investigationId: number) => Promise<import('../../types').InvestigationResult[]>;
+  getInvestigationResults: (investigationId: number) => Promise<InvestigationResult[]>;
 }
-export const AIExtractionModal = ({
-  isOpen,
-  onClose,
-  articlesWithPdf,
-  aiQuestions,
-  setAiQuestions,
-  handleMassiveExtraction,
-  isExtracting,
-  extractionProgress,
-  aiExtractionResults,
-  cancelExtractionRef,
-  investigationHistory = [],
-  searchHistory = [],
-  articles = [],
-  getInvestigationResults,
-}: AIExtractionModalProps) => {
+
+type ExtractionTab = 'new' | 'history';
+
+const TABS: ReadonlyArray<{ id: ExtractionTab; label: string }> = [
+  { id: 'new', label: 'Nova Investigação' },
+  { id: 'history', label: 'Histórico' },
+];
+
+const tabStyle = (active: boolean): React.CSSProperties => ({
+  padding: '0.5rem 1rem',
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  borderBottom: active ? '2px solid var(--color-primary)' : '2px solid transparent',
+  color: active ? 'var(--color-primary)' : 'var(--text-muted)',
+  fontWeight: active ? 600 : 400,
+});
+
+/**
+ * Runs the same questions over many PDFs with the AI and browses past investigations.
+ *
+ * Usage:
+ *   <AIExtractionModal isOpen={open} onClose={close} articlesWithPdf={withPdf} aiQuestions={qs} ... />
+ */
+export const AIExtractionModal = (props: AIExtractionModalProps) => {
+  const { isOpen, onClose, articlesWithPdf, isExtracting, aiExtractionResults } = props;
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
+  const [activeTab, setActiveTab] = useState<ExtractionTab>('new');
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<InvestigationHistoryRecord | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [isCreatingSet, setIsCreatingSet] = useState(false);
   const hasInitializedRef = useRef(false);
 
-  const handleViewDocument = (articleId: number) => {
-    navigate(`/app/articles/${articleId}`);
-    onClose();
-  };
-
+  // Preselect every article with a PDF once per opening, unless a run is already shown.
   useEffect(() => {
-    if (isOpen) {
-      if (!hasInitializedRef.current && !isExtracting && aiExtractionResults.length === 0) {
-        setSelectedIds(articlesWithPdf.map((a: Article) => a.id));
-        hasInitializedRef.current = true;
-      }
-    } else {
+    if (!isOpen) {
       hasInitializedRef.current = false;
+      return;
     }
+    if (hasInitializedRef.current || isExtracting || aiExtractionResults.length > 0) return;
+    setSelectedIds(articlesWithPdf.map((a) => a.id));
+    hasInitializedRef.current = true;
   }, [isOpen, isExtracting, aiExtractionResults, articlesWithPdf]);
 
   if (!isOpen) return null;
 
-  const isFinished = !isExtracting && aiExtractionResults.length > 0;
+  const switchTab = (tab: ExtractionTab) => {
+    setActiveTab(tab);
+    if (tab === 'new') setSelectedHistoryItem(null);
+  };
+
+  const reExecute = (questions: string[], articleIds: number[]) => {
+    props.setAiQuestions(questions);
+    setSelectedIds(articleIds);
+    switchTab('new');
+  };
+
+  const viewEvidence = (articleId: number, evidence: RAGExtractionResultType['evidences'][0]) => {
+    navigate(`/reader/${articleId}`, { state: { searchQuery: evidence.text, page: evidence.page } });
+    onClose();
+  };
 
   return createPortal(
     <div
@@ -111,30 +131,7 @@ export const AIExtractionModal = ({
           background: 'var(--bg-main)',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3
-            style={{ margin: 0, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            Investigação Massiva com IA
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isExtracting}
-            title="Fechar"
-            aria-label="Fechar"
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-muted)',
-              cursor: isExtracting ? 'not-allowed' : 'pointer',
-              opacity: isExtracting ? 0.5 : 1,
-            }}
-          >
-            <XIcon size={20} />
-          </button>
-        </div>
-
+        <ExtractionModalHeader isExtracting={isExtracting} onClose={onClose} />
         <div
           style={{
             display: 'flex',
@@ -143,245 +140,28 @@ export const AIExtractionModal = ({
             borderBottom: '1px solid var(--border-color)',
           }}
         >
-          <button
-            onClick={() => {
-              setActiveTab('new');
-              setSelectedHistoryItem(null);
-            }}
-            style={{
-              padding: '0.5rem 1rem',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              borderBottom: activeTab === 'new' ? '2px solid var(--color-primary)' : '2px solid transparent',
-              color: activeTab === 'new' ? 'var(--color-primary)' : 'var(--text-muted)',
-              fontWeight: activeTab === 'new' ? 600 : 400,
-            }}
-          >
-            Nova Investigação
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            style={{
-              padding: '0.5rem 1rem',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              borderBottom: activeTab === 'history' ? '2px solid var(--color-primary)' : '2px solid transparent',
-              color: activeTab === 'history' ? 'var(--color-primary)' : 'var(--text-muted)',
-              fontWeight: activeTab === 'history' ? 600 : 400,
-            }}
-          >
-            Histórico
-          </button>
+          {TABS.map((tab) => (
+            <button key={tab.id} onClick={() => switchTab(tab.id)} style={tabStyle(activeTab === tab.id)}>
+              {tab.label}
+            </button>
+          ))}
         </div>
-
         {activeTab === 'new' ? (
-          <>
-            {articlesWithPdf.length === 0 ? (
-              <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
-                Nenhum artigo com PDF vinculado encontrado neste projeto.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div
-                  style={{
-                    padding: '1rem',
-                    background: 'var(--bg-surface)',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-color)',
-                  }}
-                >
-                  <div style={{ marginBottom: '1.25rem' }}>
-                    <ArticleSelector
-                      articles={articlesWithPdf}
-                      selectedIds={selectedIds}
-                      setSelectedIds={setSelectedIds}
-                      searchHistory={searchHistory}
-                      disabled={isExtracting || isFinished}
-                    />
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-                    {isExtracting || isFinished ? (
-                      <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-main)', fontSize: '0.9rem' }}>
-                        {aiQuestions
-                          .filter((q: string) => q.trim().length > 0)
-                          .map((q: string, idx: number) => (
-                            <li key={idx} style={{ marginBottom: '0.3rem' }}>
-                              {q}
-                            </li>
-                          ))}
-                      </ul>
-                    ) : (
-                      <>
-                        {aiQuestions.map((q: string, idx: number) => (
-                          <div key={idx} style={{ display: 'flex', gap: '0.5rem' }}>
-                            <input
-                              type="text"
-                              value={q}
-                              onChange={(e) => {
-                                const newQ = [...aiQuestions];
-                                newQ[idx] = e.target.value;
-                                setAiQuestions(newQ);
-                              }}
-                              className="input-field"
-                              placeholder={`Pergunta ${idx + 1}`}
-                              style={{ flex: 1 }}
-                            />
-                            <button
-                              onClick={() => {
-                                const newQ = aiQuestions.filter((_, i: number) => i !== idx);
-                                setAiQuestions(newQ.length ? newQ : ['']);
-                              }}
-                              className="btn-secondary"
-                              style={{ color: 'var(--color-danger)', padding: '0.5rem' }}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        ))}
-                      </>
-                    )}
-                  </div>
-
-                  {!isExtracting && !isFinished && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <button
-                        onClick={() => setAiQuestions([...aiQuestions, ''])}
-                        className="btn-secondary"
-                        style={{ fontSize: '0.85rem' }}
-                      >
-                        + Adicionar Pergunta
-                      </button>
-                      <button
-                        className="btn-secondary"
-                        onClick={() => setIsCreatingSet(true)}
-                        disabled={aiQuestions.filter((q: string) => q.trim().length > 0).length === 0}
-                        title={
-                          aiQuestions.filter((q: string) => q.trim().length > 0).length === 0
-                            ? 'Adicione perguntas acima para salvar'
-                            : 'Salvar perguntas atuais como novo conjunto'
-                        }
-                        style={{ fontSize: '0.85rem' }}
-                      >
-                        + Salvar Atual
-                      </button>
-                    </div>
-                  )}
-
-                  {!isExtracting && !isFinished && (
-                    <div
-                      style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}
-                    >
-                      <QuestionSetCatalog
-                        projectId={articlesWithPdf[0]?.project_id || null}
-                        currentQuestions={aiQuestions}
-                        onSelectSet={setAiQuestions}
-                        isCreatingExternal={isCreatingSet}
-                        onCancelCreateExternal={() => setIsCreatingSet(false)}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                  {isExtracting ? (
-                    <button
-                      onClick={() => {
-                        cancelExtractionRef.current = true;
-                      }}
-                      className="btn-secondary"
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        fontSize: '1rem',
-                        justifyContent: 'center',
-                        color: 'var(--color-danger)',
-                        borderColor: 'var(--color-danger)',
-                      }}
-                    >
-                      Cancelar
-                    </button>
-                  ) : isFinished ? (
-                    <button
-                      onClick={onClose}
-                      className="btn-primary"
-                      style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', justifyContent: 'center' }}
-                    >
-                      Concluir Investigação
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleMassiveExtraction(selectedIds)}
-                      disabled={selectedIds.length === 0 || aiQuestions.every((q: string) => !q.trim())}
-                      className="btn-primary"
-                      style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', justifyContent: 'center' }}
-                    >
-                      Iniciar Investigação
-                    </button>
-                  )}
-                </div>
-
-                {isExtracting && (
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>
-                    <Loader2
-                      size={16}
-                      className="animate-spin"
-                      style={{ marginRight: '0.5rem', display: 'inline-block', verticalAlign: 'middle' }}
-                    />
-                    Processando artigo {extractionProgress.current} de {extractionProgress.total}...
-                  </div>
-                )}
-
-                {aiExtractionResults.length > 0 && (
-                  <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <h4 style={{ margin: 0, color: 'var(--text-heading)' }}>Resultados</h4>
-                    {aiExtractionResults.map((res, idx) => (
-                      <div
-                        key={idx}
-                        className="card"
-                        style={{
-                          padding: '1rem',
-                          border: '1px solid var(--border-color)',
-                          background: 'var(--bg-surface)',
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            marginBottom: '0.5rem',
-                          }}
-                        >
-                          <h5 style={{ margin: 0, color: 'var(--color-primary)', flex: 1 }}>{res.article.title}</h5>
-                        </div>
-                        {res.error ? (
-                          <div style={{ color: 'var(--color-danger)', fontSize: '0.85rem' }}>{res.error}</div>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
-                            {res.result?.map((r, rIdx) => (
-                              <RAGResultCard
-                                key={rIdx}
-                                result={r}
-                                onViewDocument={(ev) => {
-                                  navigate(`/reader/${res.article.id}`, {
-                                    state: { searchQuery: ev.text, page: ev.page },
-                                  });
-                                  onClose();
-                                }}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </>
+          <NewInvestigationPanel
+            articlesWithPdf={articlesWithPdf}
+            searchHistory={props.searchHistory ?? []}
+            selectedIds={selectedIds}
+            setSelectedIds={setSelectedIds}
+            questions={props.aiQuestions}
+            setQuestions={props.setAiQuestions}
+            isExtracting={isExtracting}
+            progress={props.extractionProgress}
+            results={aiExtractionResults}
+            onStart={props.handleMassiveExtraction}
+            onCancel={() => (props.cancelExtractionRef.current = true)}
+            onFinish={onClose}
+            onViewEvidence={viewEvidence}
+          />
         ) : (
           <div
             style={{
@@ -396,118 +176,17 @@ export const AIExtractionModal = ({
             {selectedHistoryItem ? (
               <InvestigationDetailView
                 investigation={selectedHistoryItem}
-                articles={articles}
-                getInvestigationResults={getInvestigationResults}
+                articles={props.articles ?? []}
+                getInvestigationResults={props.getInvestigationResults}
                 onBack={() => setSelectedHistoryItem(null)}
-                onReExecute={(questions, artIds) => {
-                  setAiQuestions(questions);
-                  setSelectedIds(artIds);
-                  setSelectedHistoryItem(null);
-                  setActiveTab('new');
-                }}
+                onReExecute={reExecute}
               />
-            ) : investigationHistory.length === 0 ? (
-              <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
-                Nenhum histórico encontrado.
-              </div>
             ) : (
-              investigationHistory.map((hist, idx) => {
-                const qs = JSON.parse(hist.questions || '[]');
-                const artIds = JSON.parse(hist.articles_ids || '[]');
-                return (
-                  <div
-                    key={hist.id || idx}
-                    className="card"
-                    style={{
-                      padding: '1rem',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg-surface)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span style={{ fontWeight: 600, color: 'var(--text-heading)' }}>
-                        {new Date(hist.created_at).toLocaleString()}
-                      </span>
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        {hist.status && (
-                          <span
-                            style={{
-                              fontSize: '0.75rem',
-                              padding: '0.15rem 0.4rem',
-                              borderRadius: '4px',
-                              background: hist.status === 'Sucesso' ? 'var(--color-success)' : 'var(--color-danger)',
-                              color: 'white',
-                              fontWeight: 600,
-                            }}
-                          >
-                            {hist.status}
-                          </span>
-                        )}
-                        {hist.model_used && (
-                          <span
-                            style={{
-                              fontSize: '0.75rem',
-                              color: 'var(--text-muted)',
-                              background: 'var(--bg-main)',
-                              padding: '0.2rem 0.5rem',
-                              borderRadius: 'var(--radius-sm)',
-                            }}
-                          >
-                            {hist.model_used}
-                          </span>
-                        )}
-                        <span
-                          style={{
-                            fontSize: '0.85rem',
-                            color: 'var(--text-muted)',
-                            background: 'var(--bg-main)',
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: 'var(--radius-sm)',
-                          }}
-                        >
-                          {artIds.length} Artigos
-                        </span>
-                      </div>
-                    </div>
-
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      <strong style={{ fontSize: '0.85rem', color: 'var(--text-heading)' }}>Artigos Incluídos:</strong>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                        {artIds
-                          .map((id: number) => {
-                            const article = articles.find((a: Article) => a.id === id);
-                            return article ? article.title : `Artigo #${id}`;
-                          })
-                          .join(' • ')}
-                      </div>
-                    </div>
-
-                    <strong style={{ fontSize: '0.85rem', color: 'var(--text-heading)' }}>Perguntas:</strong>
-                    <ul
-                      style={{
-                        margin: 0,
-                        paddingLeft: '1.2rem',
-                        color: 'var(--text-main)',
-                        fontSize: '0.85rem',
-                        marginTop: '0.2rem',
-                      }}
-                    >
-                      {qs.map((q: string, i: number) => (
-                        <li key={i}>{q}</li>
-                      ))}
-                    </ul>
-                    <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
-                      <button
-                        onClick={() => setSelectedHistoryItem(hist)}
-                        className="btn-primary"
-                        style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
-                      >
-                        Ver Detalhes
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
+              <InvestigationHistoryList
+                history={props.investigationHistory ?? []}
+                articles={props.articles ?? []}
+                onOpen={setSelectedHistoryItem}
+              />
             )}
           </div>
         )}
@@ -516,3 +195,27 @@ export const AIExtractionModal = ({
     document.body,
   );
 };
+
+const ExtractionModalHeader: React.FC<{ isExtracting: boolean; onClose: () => void }> = ({ isExtracting, onClose }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+    <h3 style={{ margin: 0, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      Investigação Massiva com IA
+    </h3>
+    <button
+      type="button"
+      onClick={onClose}
+      disabled={isExtracting}
+      title="Fechar"
+      aria-label="Fechar"
+      style={{
+        background: 'none',
+        border: 'none',
+        color: 'var(--text-muted)',
+        cursor: isExtracting ? 'not-allowed' : 'pointer',
+        opacity: isExtracting ? 0.5 : 1,
+      }}
+    >
+      <XIcon size={20} />
+    </button>
+  </div>
+);
