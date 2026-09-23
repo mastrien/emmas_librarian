@@ -41,7 +41,13 @@ function renderModal(props: Partial<React.ComponentProps<typeof CitationModal>> 
   const onArticleUpdated = vi.fn();
   const utils = render(
     <ServicesProvider apiService={service}>
-      <CitationModal isOpen={true} onClose={onClose} article={baseArticle} onArticleUpdated={onArticleUpdated} {...props} />
+      <CitationModal
+        isOpen={true}
+        onClose={onClose}
+        article={baseArticle}
+        onArticleUpdated={onArticleUpdated}
+        {...props}
+      />
     </ServicesProvider>,
   );
   return { ...utils, onClose, onArticleUpdated };
@@ -163,18 +169,11 @@ describe('CitationModal metadata accordion', () => {
   it('prefills every field from the article', () => {
     renderModal();
 
-    expect(['title', 'authors', 'year', 'doi', 'journal', 'volume', 'issue', 'pages', 'url', 'accessed'].map((n) => field(n)?.value)).toEqual([
-      'Deep Nets',
-      'Ana Lima',
-      '2020',
-      '10.1/x',
-      'J',
-      '3',
-      '2',
-      '10-20',
-      'http://x',
-      '2026-01-01',
-    ]);
+    expect(
+      ['title', 'authors', 'year', 'doi', 'journal', 'volume', 'issue', 'pages', 'url', 'accessed'].map(
+        (n) => field(n)?.value,
+      ),
+    ).toEqual(['Deep Nets', 'Ana Lima', '2020', '10.1/x', 'J', '3', '2', '10-20', 'http://x', '2026-01-01']);
   });
 
   it('lets the user edit the pages field', () => {
@@ -256,7 +255,7 @@ describe('CitationModal reset', () => {
     'container-title': 'CSL Journal',
     volume: '9',
     issue: '1',
-    pages: '5-6',
+    page: '5-6',
     URL: 'http://csl',
   };
 
@@ -271,7 +270,11 @@ describe('CitationModal reset', () => {
 
     fireEvent.click(resetButton());
 
-    expect(['title', 'authors', 'year', 'doi', 'journal', 'volume', 'issue', 'pages', 'url', 'accessed'].map((n) => field(n).value)).toEqual([
+    expect(
+      ['title', 'authors', 'year', 'doi', 'journal', 'volume', 'issue', 'pages', 'url', 'accessed'].map(
+        (n) => field(n).value,
+      ),
+    ).toEqual([
       'CSL Title',
       'Ana Lima; OMS; Souza; Rui',
       '2019',
@@ -338,7 +341,10 @@ describe('CitationModal copy', () => {
 
     await screen.findByRole('button', { name: /Copiado!/ });
     expect(clipboard.writeText).toHaveBeenCalledWith('Deep Nets [abnt|etal|p10-20]');
-    expect(consoleError).toHaveBeenCalledWith('Failed to copy rich text, falling back to plain text:', expect.any(Error));
+    expect(consoleError).toHaveBeenCalledWith(
+      'Failed to copy rich text, falling back to plain text:',
+      expect.any(Error),
+    );
   });
 
   it('copies non-HTML formats verbatim and resets the label after 2 seconds', async () => {

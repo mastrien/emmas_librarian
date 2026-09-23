@@ -3,8 +3,15 @@ import { createPortal } from 'react-dom';
 import { generateCitation, CitationStyle, CitationOutputFormat } from '../../services/citationService';
 import { X, Copy, Check, FileText, Code, Braces, ChevronDown, ChevronUp, Save, RotateCcw } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
-import { LabeledField } from '../common/LabeledField';
-import { FULL_NAMES_HINT } from '../common/articleFieldHints';
+import {
+  citationFieldsFromArticle,
+  citationFieldsToMetadata,
+  tryCitationFieldsFromCsl,
+  type CitationFields,
+} from '../../utils/cslMetadata';
+import { CitationMetadataFields } from '../common/citation/CitationMetadataFields';
+import { CITATION_STYLE_OPTIONS } from '../common/citation/citationStyles';
+import { useCitationCopy } from '../common/citation/useCitationCopy';
 
 interface CitationModalProps {
   isOpen: boolean;
@@ -13,86 +20,42 @@ interface CitationModalProps {
   onArticleUpdated?: () => void;
 }
 
+/**
+ * Formatted citation for one article, with inline editing of the metadata it is built from.
+ *
+ * Usage:
+ *   <CitationModal isOpen={open} onClose={close} article={article} onArticleUpdated={reload} />
+ */
 export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: CitationModalProps) {
   const projectService = useProjectService();
   const [style, setStyle] = useState<CitationStyle>('abnt');
   const [format, setFormat] = useState<CitationOutputFormat>('html');
   const [citationText, setCitationText] = useState('');
-  const [copied, setCopied] = useState(false);
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
-  const [editableArticle, setEditableArticle] = useState<any>({});
+  const [fields, setFields] = useState<CitationFields | null>(null);
   const [saving, setSaving] = useState(false);
   const [useEtAl, setUseEtAl] = useState(true);
+  const { copied, copy } = useCitationCopy();
 
   useEffect(() => {
-    if (isOpen && article) {
-      setEditableArticle({
-        ...article,
-        title: article.title || '',
-        authors: article.authors || '',
-        year: article.year?.toString() || '',
-        doi: article.doi || '',
-        journal: article.journal || '',
-        volume: article.volume || '',
-        issue: article.issue || '',
-        pages: article.pages || '',
-        url: article.url || '',
-        accessed: article.accessed || '', // Format expected: YYYY-MM-DD
-      });
-      setIsAccordionOpen(false);
-      setUseEtAl(true);
-    }
+    if (!isOpen || !article) return;
+    setFields(citationFieldsFromArticle(article));
+    setIsAccordionOpen(false);
+    setUseEtAl(true);
   }, [isOpen, article]);
 
   useEffect(() => {
-    if (isOpen && editableArticle.title !== undefined) {
-      setCitationText(generateCitation(editableArticle, style, format, useEtAl));
-    }
-  }, [isOpen, editableArticle, style, format, useEtAl]);
+    if (!isOpen || !article || !fields) return;
+    setCitationText(generateCitation({ ...article, ...fields }, style, format, useEtAl));
+  }, [isOpen, article, fields, style, format, useEtAl]);
 
-  if (!isOpen || !article) return null;
-
-  const handleCopy = async () => {
-    const plainText = format === 'html' ? citationText.replace(/<[^>]+>/g, '') : citationText;
-    if (format === 'html') {
-      try {
-        const htmlBlob = new Blob([citationText], { type: 'text/html' });
-        const textBlob = new Blob([plainText], { type: 'text/plain' });
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            'text/html': htmlBlob,
-            'text/plain': textBlob,
-          }),
-        ]);
-      } catch (err) {
-        console.error('Failed to copy rich text, falling back to plain text:', err);
-        await navigator.clipboard.writeText(plainText);
-      }
-    } else {
-      await navigator.clipboard.writeText(plainText);
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  if (!isOpen || !article || !fields) return null;
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await projectService.updateArticleMetadata(article.id, {
-        title: editableArticle.title,
-        authors: editableArticle.authors,
-        year: editableArticle.year ? parseInt(editableArticle.year) : undefined,
-        doi: editableArticle.doi,
-        journal: editableArticle.journal,
-        volume: editableArticle.volume,
-        issue: editableArticle.issue,
-        pages: editableArticle.pages,
-        url: editableArticle.url,
-        accessed: editableArticle.accessed,
-      });
-      if (onArticleUpdated) {
-        onArticleUpdated();
-      }
+      await projectService.updateArticleMetadata(article.id, citationFieldsToMetadata(fields));
+      onArticleUpdated?.();
       alert('Metadados salvos com sucesso!');
     } catch (err) {
       console.error('Erro ao salvar metadados:', err);
@@ -102,67 +65,10 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
     }
   };
 
-  const handleReset = () => {
-    if (article.csl_json) {
-      try {
-        const csl = typeof article.csl_json === 'string' ? JSON.parse(article.csl_json) : article.csl_json;
+  // Prefer the metadata the article was imported with; without it, go back to the saved values.
+  const handleReset = () => setFields(tryCitationFieldsFromCsl(article.csl_json) ?? citationFieldsFromArticle(article));
 
-        let authorsString = '';
-        if (csl.author && Array.isArray(csl.author)) {
-          authorsString = csl.author
-            .map((auth: { family?: string; given?: string; literal?: string }) => {
-              if (auth.family && auth.given) {
-                return `${auth.given} ${auth.family}`;
-              }
-              return auth.literal || auth.family || auth.given || '';
-            })
-            .filter(Boolean)
-            .join('; ');
-        }
-
-        let yearString = '';
-        if (csl.issued && csl.issued['date-parts'] && csl.issued['date-parts'][0]) {
-          yearString = csl.issued['date-parts'][0][0]?.toString() || '';
-        }
-
-        setEditableArticle({
-          ...editableArticle,
-          title: csl.title || '',
-          authors: authorsString,
-          year: yearString,
-          doi: csl.DOI || '',
-          journal: csl['container-title'] || '',
-          volume: csl.volume || '',
-          issue: csl.issue || '',
-          pages: csl.pages || '',
-          url: csl.URL || '',
-          accessed: '',
-        });
-        return;
-      } catch (err) {
-        console.error('Failed to parse csl_json for reset', err);
-      }
-    }
-
-    // Fallback to database values
-    setEditableArticle({
-      ...article,
-      title: article.title || '',
-      authors: article.authors || '',
-      year: article.year?.toString() || '',
-      doi: article.doi || '',
-      journal: article.journal || '',
-      volume: article.volume || '',
-      issue: article.issue || '',
-      pages: article.pages || '',
-      url: article.url || '',
-      accessed: article.accessed || '',
-    });
-  };
-
-  const setField = (field: string) => (value: string) => {
-    setEditableArticle({ ...editableArticle, [field]: value });
-  };
+  const setField = (field: keyof CitationFields, value: string) => setFields({ ...fields, [field]: value });
 
   return createPortal(
     <div
@@ -220,11 +126,11 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
                   fontFamily: 'inherit',
                 }}
               >
-                <option value="abnt">ABNT</option>
-                <option value="apa">APA</option>
-                <option value="vancouver">Vancouver</option>
-                <option value="harvard1">Harvard</option>
-                <option value="ieee">IEEE</option>
+                {CITATION_STYLE_OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </div>
             <label
@@ -286,29 +192,7 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
                   borderTop: '1px solid var(--border-color)',
                 }}
               >
-                <LabeledField compact label="Título" name="title" value={editableArticle.title || ''} onChange={setField('title')} />
-                <LabeledField
-                  compact
-                  label="Autores (separados por ; ou ,)"
-                  name="authors"
-                  value={editableArticle.authors || ''}
-                  onChange={setField('authors')}
-                  hint={FULL_NAMES_HINT}
-                />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <LabeledField compact label="Ano" name="year" type="number" value={editableArticle.year || ''} onChange={setField('year')} />
-                  <LabeledField compact label="DOI" name="doi" value={editableArticle.doi || ''} onChange={setField('doi')} />
-                </div>
-                <LabeledField compact label="Revista / Periódico" name="journal" value={editableArticle.journal || ''} onChange={setField('journal')} />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                  <LabeledField compact label="Volume" name="volume" value={editableArticle.volume || ''} onChange={setField('volume')} />
-                  <LabeledField compact label="Edição (Issue)" name="issue" value={editableArticle.issue || ''} onChange={setField('issue')} />
-                  <LabeledField compact label="Páginas" name="pages" value={editableArticle.pages || ''} onChange={setField('pages')} />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
-                  <LabeledField compact label="Disponível em (URL)" name="url" value={editableArticle.url || ''} onChange={setField('url')} />
-                  <LabeledField compact label="Acesso em" name="accessed" type="date" value={editableArticle.accessed || ''} onChange={setField('accessed')} />
-                </div>
+                <CitationMetadataFields fields={fields} onChange={setField} />
                 <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                   <button
                     type="button"
@@ -396,7 +280,7 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
                 {format === 'html' ? <div dangerouslySetInnerHTML={{ __html: citationText }} /> : citationText}
               </div>
               <button
-                onClick={handleCopy}
+                onClick={() => copy([citationText], format)}
                 className="btn-primary"
                 style={{
                   position: 'absolute',

@@ -27,7 +27,15 @@ const readBlob = (blob: Blob) =>
   });
 
 const article = (id: number, overrides: Partial<Article> = {}): Article =>
-  ({ id, project_id: 1, title: `T${id}`, authors: `Autor${id}`, year: 2000 + id, status: 'read', ...overrides }) as Article;
+  ({
+    id,
+    project_id: 1,
+    title: `T${id}`,
+    authors: `Autor${id}`,
+    year: 2000 + id,
+    status: 'read',
+    ...overrides,
+  }) as Article;
 
 let service: FakeProjectService;
 
@@ -35,7 +43,12 @@ function renderModal(articles: Article[], extra: { onClose?: () => void; onArtic
   const onClose = extra.onClose ?? vi.fn();
   render(
     <ServicesProvider apiService={service}>
-      <MassCitationModal isOpen={true} onClose={onClose} articles={articles} onArticlesUpdated={extra.onArticlesUpdated} />
+      <MassCitationModal
+        isOpen={true}
+        onClose={onClose}
+        articles={articles}
+        onArticlesUpdated={extra.onArticlesUpdated}
+      />
     </ServicesProvider>,
   );
   return { onClose };
@@ -188,7 +201,7 @@ describe('MassCitationModal editing', () => {
     fireEvent.click(screen.getByRole('button', { name: /Resetar/ }));
 
     expect(field('title')).toHaveValue('Original');
-    expect(consoleError).toHaveBeenCalledWith('Failed to parse csl_json for reset in mass citation modal', expect.any(Error));
+    expect(consoleError).toHaveBeenCalledWith('Failed to parse csl_json for reset', expect.any(Error));
   });
 
   it('reads pages from the standard CSL "page" field on reset', () => {
