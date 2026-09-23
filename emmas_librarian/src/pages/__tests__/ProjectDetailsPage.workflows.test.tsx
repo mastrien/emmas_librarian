@@ -175,6 +175,13 @@ describe('ProjectDetailsPage article forms', () => {
     await waitFor(() => expect(service.getArticles).toHaveBeenCalledTimes(2));
   });
 
+  it('treats a legacy bare source value as a single source instead of crashing the page', async () => {
+    await renderProjectPage(givenProject([article({ id: 8, title: 'Legado', source_databases: 'Manual' })]));
+
+    expect(within(mainTable()).getByText('⚠️ Manual')).toBeInTheDocument();
+    expect(within(mainTable()).getByTitle('Editar Metadados')).toBeInTheDocument();
+  });
+
   it('only offers editing for manual articles', async () => {
     await renderProjectPage(givenProject([article({ id: 8, title: 'Importado', source_databases: '["Scopus"]' })]));
 

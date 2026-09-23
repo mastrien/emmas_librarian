@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Article } from '../../types';
 import { TableVirtuoso } from 'react-virtuoso';
+import { SourceDatabaseBadges } from './SourceDatabaseBadges';
 
 interface ArticleTableProps {
   paginatedArticles: Article[];
@@ -126,32 +127,7 @@ export const ArticleTable: React.FC<ArticleTableProps> = memo(
                 </td>
                 <td style={{ padding: '1.25rem 1.5rem' }}>
                   <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                    {(() => {
-                      try {
-                        return JSON.parse(article.source_databases || '[]').map((base: string) => {
-                          const isManual = base === 'Manual';
-                          return (
-                            <span
-                              key={base}
-                              style={{
-                                padding: '0.2rem 0.6rem',
-                                background: isManual ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-surface)',
-                                border: isManual ? '1px solid var(--color-danger)' : '1px solid var(--border-color)',
-                                borderRadius: 'var(--radius-xl)',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                color: isManual ? 'var(--color-danger)' : 'var(--color-primary)',
-                              }}
-                              title={isManual ? 'Metadados adicionados manualmente (podem conter erros)' : undefined}
-                            >
-                              {isManual ? '⚠️ Manual' : base}
-                            </span>
-                          );
-                        });
-                      } catch (e) {
-                        return null;
-                      }
-                    })()}
+                    <SourceDatabaseBadges sourceDatabases={article.source_databases} />
                     {article.is_oa === 1 && (
                       <span
                         style={{

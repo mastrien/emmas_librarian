@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Edit2, CopyPlus, Loader2, Upload, ZoomOut, ZoomIn, X as XIcon } from 'lucide-react';
 import { HelpButton } from '../../../components/common/HelpButton';
 import type { Article } from '../../../types';
+import { isManualArticle } from '../../../utils/sourceDatabases';
 
 interface ArticleReaderToolbarProps {
   article: Article;
@@ -27,13 +28,6 @@ export const ArticleReaderToolbar: React.FC<ArticleReaderToolbarProps> = ({
   setIsEditingMetadata,
   setIsCitationModalOpen,
 }) => {
-  const isArticleManual = (article: Article) => {
-    try {
-      return JSON.parse(article.source_databases as string).includes('Manual');
-    } catch {
-      return false;
-    }
-  };
 
   return (
     <header
@@ -78,7 +72,7 @@ export const ArticleReaderToolbar: React.FC<ArticleReaderToolbarProps> = ({
         >
           {article.title}
         </h2>
-        {isArticleManual(article) && (
+        {isManualArticle(article) && (
           <button
             onClick={() => setIsEditingMetadata(true)}
             className="btn-secondary"

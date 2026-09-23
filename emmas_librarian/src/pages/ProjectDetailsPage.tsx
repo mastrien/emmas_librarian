@@ -31,16 +31,10 @@ import { ProjectSidebar } from './ProjectDetails/components/ProjectSidebar';
 import { ProjectCategoriesTab } from './ProjectDetails/components/ProjectCategoriesTab';
 import { DiarySection } from '../components/common/DiarySection';
 import { SearchHistoryModal } from '../components/modals/SearchHistoryModal';
+import { isManualArticle } from '../utils/sourceDatabases';
 
 const ITEMS_PER_PAGE = 50;
 
-const isArticleManual = (article: Article) => {
-  try {
-    return JSON.parse(article.source_databases as string).includes('Manual');
-  } catch {
-    return false;
-  }
-};
 
 export const ProjectDetailsPage: React.FC = () => {
   const projectService = useProjectService();
@@ -1020,7 +1014,7 @@ export const ProjectDetailsPage: React.FC = () => {
                   setEditingArticle={modals.setEditingArticle}
                   setArchivingId={modals.setArchivingId}
                   setCitationArticle={modals.setCitationArticle}
-                  isArticleManual={isArticleManual}
+                  isArticleManual={isManualArticle}
                 />
 
                 {/* Bottom pagination */}
