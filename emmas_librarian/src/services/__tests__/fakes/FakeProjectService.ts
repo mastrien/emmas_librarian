@@ -1,5 +1,6 @@
 import type {
   SearchHistoryRecord,
+  SearchHistoryItem,
   TrashItem,
   ProjectCategory,
   ArticleCategory,
@@ -72,7 +73,7 @@ export class FakeProjectService implements IProjectService {
   deleteProject = vi.fn(async (_id: number): Promise<void> => undefined);
 
   // ── Search ──────────────────────────────────────────────────────────
-  getSearchHistory = vi.fn(async (_projectId: number): Promise<unknown[]> => []);
+  getSearchHistory = vi.fn(async (_projectId: number): Promise<SearchHistoryItem[]> => []);
 
   revertSearch = vi.fn(async (_searchId: number): Promise<void> => undefined);
 

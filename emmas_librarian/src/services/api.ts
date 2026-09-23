@@ -11,6 +11,7 @@ import {
   type InvestigationResult,
   type QueryASTNode,
   type DatabaseTranslationMap,
+  type SearchHistoryItem,
   ProjectCategory,
   ArticleCategory,
   AIModelConfig,
@@ -56,7 +57,7 @@ export const projectService = {
     await safeInvoke(IpcChannel.PROJECTS_DELETE, id);
   },
 
-  async getSearchHistory(projectId: number): Promise<unknown[]> {
+  async getSearchHistory(projectId: number): Promise<SearchHistoryItem[]> {
     return (await safeInvoke(IpcChannel.PROJECTS_GET_SEARCH_HISTORY, projectId)) as any;
   },
 

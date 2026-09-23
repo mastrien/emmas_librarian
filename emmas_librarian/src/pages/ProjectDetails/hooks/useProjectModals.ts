@@ -36,3 +36,5 @@ export const useProjectModals = () => {
     showQuotaModal, setShowQuotaModal,
   };
 };
+
+export type ProjectModals = ReturnType<typeof useProjectModals>;

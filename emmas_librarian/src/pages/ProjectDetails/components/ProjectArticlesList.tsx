@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, FileText, Upload, Loader2, Edit2, Archive, CopyPlus, ExternalLink, X as XIcon, CheckCircle, History } from 'lucide-react';
+import { Calendar, FileText, Upload, Edit2, Archive, CopyPlus, ExternalLink, X as XIcon, CheckCircle, History } from 'lucide-react';
 import { Article } from '../../../types';
 import { SourceDatabaseBadges } from '../../../components/common/SourceDatabaseBadges';
 
@@ -9,7 +9,6 @@ interface ProjectArticlesListProps {
   setSelectedArticleForDetails: (article: Article) => void;
   handleUnlinkClick: (id: number) => void;
   handleUploadClick: (id: number) => void;
-  uploadingId: number | null;
   handleStatusChange: (id: number, status: 'new' | 'read' | 'archived') => void;
   setEditingArticle: (article: Article) => void;
   setArchivingId: (id: number) => void;
@@ -22,7 +21,6 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
   setSelectedArticleForDetails,
   handleUnlinkClick,
   handleUploadClick,
-  uploadingId,
   handleStatusChange,
   setEditingArticle,
   setArchivingId,
@@ -199,16 +197,11 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
                   ) : (
                     <button
                       onClick={() => handleUploadClick(article.id)}
-                      disabled={uploadingId === article.id}
                       className="btn-secondary"
                       style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
                       title="Vincular PDF"
                     >
-                      {uploadingId === article.id ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <Upload size={14} />
-                      )}{' '}
+                      <Upload size={14} />{' '}
                       PDF
                     </button>
                   )}

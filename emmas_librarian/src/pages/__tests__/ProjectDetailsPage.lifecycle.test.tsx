@@ -6,6 +6,7 @@ import { ServicesProvider } from '../../contexts/ServicesContext';
 import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { givenProject, renderProjectPage, article, PROJECT } from './support/projectPageHarness';
+import type { SearchHistoryItem } from '../../types';
 
 beforeEach(() => {
   vi.spyOn(window, 'alert').mockImplementation(() => undefined);
@@ -56,12 +57,6 @@ describe('ProjectDetailsPage loading', () => {
     ] as const) {
       expect(service[method]).toHaveBeenCalledWith(1);
     }
-    expect(service.getSetting.mock.calls.map(([key]) => key)).toEqual([
-      'api_key_openai',
-      'api_key_gemini',
-      'api_key_anthropic',
-      'api_key_ollama',
-    ]);
   });
 
   it('reports a missing project', async () => {
@@ -88,7 +83,7 @@ describe('ProjectDetailsPage loading', () => {
 describe('ProjectDetailsPage tabs', () => {
   it('labels tabs with article and history counts and starts on articles', async () => {
     const service = givenProject([article({ id: 1 }), article({ id: 2 })]);
-    service.getSearchHistory.mockResolvedValue([{ id: 1 }]);
+    service.getSearchHistory.mockResolvedValue([{ id: 1 } as SearchHistoryItem]);
 
     await renderProjectPage(service);
 

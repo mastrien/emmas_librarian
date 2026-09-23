@@ -22,6 +22,7 @@ import type {
   QueryASTNode,
   DatabaseTranslationMap,
   SearchHistoryRecord,
+  SearchHistoryItem,
   TrashItem,
   ProjectCategory,
   ArticleCategory,
@@ -92,7 +93,7 @@ export interface IProjectService {
   deleteProject(id: number): Promise<void>;
 
   // ── Search ────────────────────────────────────────────────────────
-  getSearchHistory(projectId: number): Promise<unknown[]>;
+  getSearchHistory(projectId: number): Promise<SearchHistoryItem[]>;
   revertSearch(searchId: number): Promise<void>;
   searchAndPersist(
     projectId: number,

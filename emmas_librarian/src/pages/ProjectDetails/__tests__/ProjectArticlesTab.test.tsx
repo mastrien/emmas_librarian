@@ -1,209 +1,160 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ProjectArticlesTab } from '../components/ProjectArticlesTab';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { ProjectArticlesTab } from '../components/ProjectArticlesTab';
+import { useProjectFiltering } from '../hooks/useProjectFiltering';
+import type { ProjectModals } from '../hooks/useProjectModals';
+import type { Article } from '../../../types';
 
-vi.mock('../components/ProjectArticlesList', () => ({
-  ProjectArticlesList: () => <div data-testid="ProjectArticlesList">List</div>
-}));
+const article = (id: number, overrides: Partial<Article> = {}): Article =>
+  ({ id, project_id: 1, title: `Artigo ${id}`, authors: 'Ana', status: 'new', source_databases: '["Scopus"]', ...overrides }) as Article;
 
-vi.mock('../components/ProjectSidebar', () => ({
-  ProjectSidebar: () => <div data-testid="ProjectSidebar">Sidebar</div>
-}));
+function modalsDouble(): ProjectModals {
+  const setters = [
+    'setIsMassCitationModalOpen',
+    'setSelectedArticleForDetails',
+    'setCitationArticle',
+    'setEditingArticle',
+    'setArchivingId',
+  ] as const;
+  return Object.fromEntries(setters.map((name) => [name, vi.fn()])) as unknown as ProjectModals;
+}
 
-describe('ProjectArticlesTab', () => {
-  const defaultProps = {
-    searchTerm: '',
-    setSearchTerm: vi.fn(),
-    onlyWithPdf: false,
-    setOnlyWithPdf: vi.fn(),
-    onlyOpenAccess: false,
-    setOnlyOpenAccess: vi.fn(),
-    isSidebarOpen: false,
-    setIsSidebarOpen: vi.fn(),
-    sortOrder: 'year-desc',
-    setSortOrder: vi.fn(),
-    statusFilter: 'all' as any,
-    setStatusFilter: vi.fn(),
-    uniqueDatabases: [],
-    selectedDatabases: [],
-    setSelectedDatabases: vi.fn(),
-    uniqueDocTypes: [],
-    selectedDocType: '',
-    setSelectedDocType: vi.fn(),
-    keywordFrequencies: [],
-    selectedKeyword: '',
-    setSelectedKeyword: vi.fn(),
-    currentPage: 1,
-    setCurrentPage: vi.fn(),
-    totalPages: 1,
-    activeArticles: [],
-    readArticles: [],
-    archivedArticles: [],
-    paginatedArticles: [],
-    isReadArticlesOpen: false,
-    setIsReadArticlesOpen: vi.fn(),
-    isArchivedArticlesOpen: false,
-    setIsArchivedArticlesOpen: vi.fn(),
-    modals: {
-      setIsMassCitationModalOpen: vi.fn(),
-      setSelectedArticleForDetails: vi.fn(),
-      setCitationArticle: vi.fn(),
-    },
-    handleUnlinkClick: vi.fn(),
-    handleUploadClick: vi.fn(),
-    uploadingId: null,
-    handleStatusChange: vi.fn(),
-    isArticleManual: vi.fn().mockReturnValue(false),
+interface HarnessProps {
+  articles: Article[];
+  isSidebarOpen?: boolean;
+  isArticleManual?: (article: Article) => boolean;
+  pageSize?: number;
+}
+
+function renderTab({ articles, isSidebarOpen = true, isArticleManual = () => false, pageSize = 50 }: HarnessProps) {
+  const handlers = {
+    modals: modalsDouble(),
+    onToggleSidebar: vi.fn(),
+    onStatusChange: vi.fn(),
+    onUnlinkPdf: vi.fn(),
+    onAttachPdf: vi.fn(),
   };
+  // Uses the real filtering hook so the tab is exercised with the state shape the page gives it.
+  function Harness() {
+    const filtering = useProjectFiltering(articles, pageSize);
+    return <ProjectArticlesTab filtering={filtering} isSidebarOpen={isSidebarOpen} isArticleManual={isArticleManual} {...handlers} />;
+  }
+  render(
+    <MemoryRouter>
+      <Harness />
+    </MemoryRouter>,
+  );
+  return handlers;
+}
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+const mainList = () => screen.getByTestId('main-articles-table');
+const section = (label: RegExp) => screen.getByText(label).closest('details') as HTMLElement;
 
-  const renderComponent = (props = {}) => {
-    return render(
-      <MemoryRouter>
-        <ProjectArticlesTab {...defaultProps} {...props} />
-      </MemoryRouter>
-    );
-  };
+describe('ProjectArticlesTab layout', () => {
+  it('shows the filter bar, the sidebar and the active articles', () => {
+    renderTab({ articles: [article(1)] });
 
-  it('renders filters and list', () => {
-    renderComponent();
     expect(screen.getByPlaceholderText('Filtrar por título ou autor...')).toBeInTheDocument();
-    expect(screen.getByText('Apenas com PDF vinculado')).toBeInTheDocument();
-    expect(screen.getByText('Apenas Acesso Aberto')).toBeInTheDocument();
-    expect(screen.getByText('Filtros')).toBeInTheDocument();
-    expect(screen.getByTestId('ProjectArticlesList')).toBeInTheDocument();
+    expect(screen.getByLabelText('Todos')).toBeInTheDocument();
+    expect(within(mainList()).getByText('Artigo 1')).toBeInTheDocument();
   });
 
-  it('handles search term change', () => {
-    renderComponent();
-    const input = screen.getByPlaceholderText('Filtrar por título ou autor...');
-    act(() => {
-      fireEvent.change(input, { target: { value: 'test search' } });
-    });
-    expect(defaultProps.setSearchTerm).toHaveBeenCalledWith('test search');
-    expect(defaultProps.setCurrentPage).toHaveBeenCalledWith(1);
+  it('hides the sidebar when closed and asks the page to toggle it', () => {
+    const handlers = renderTab({ articles: [], isSidebarOpen: false });
+
+    expect(screen.queryByLabelText('Todos')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Filtros/ }));
+    expect(handlers.onToggleSidebar).toHaveBeenCalledTimes(1);
   });
 
-  it('handles PDF filter change', () => {
-    renderComponent();
-    const checkbox = screen.getByLabelText('Apenas com PDF vinculado');
-    act(() => {
-      fireEvent.click(checkbox);
-    });
-    expect(defaultProps.setOnlyWithPdf).toHaveBeenCalledWith(true);
-    expect(defaultProps.setCurrentPage).toHaveBeenCalledWith(1);
+  it('filters the list through the shared filtering state', () => {
+    renderTab({ articles: [article(1, { title: 'Genes' }), article(2, { title: 'Proteínas' })] });
+
+    fireEvent.change(screen.getByPlaceholderText('Filtrar por título ou autor...'), { target: { value: 'gen' } });
+
+    expect(within(mainList()).getByText('Genes')).toBeInTheDocument();
+    expect(within(mainList()).queryByText('Proteínas')).not.toBeInTheDocument();
+  });
+});
+
+describe('ProjectArticlesTab read and archived sections', () => {
+  const read = article(2, { title: 'Lido', status: 'read' });
+  const archived = article(3, { title: 'Arquivado', status: 'archived', archive_note: 'fora do tema' });
+
+  it('wires the read section actions', () => {
+    const { modals, onStatusChange } = renderTab({ articles: [read] });
+    const readSection = within(section(/Artigos Lidos \(1\)/));
+
+    fireEvent.click(readSection.getByRole('button', { name: 'Detalhes' }));
+    fireEvent.click(readSection.getByRole('button', { name: 'Citar' }));
+    fireEvent.click(readSection.getByRole('button', { name: 'Desmarcar' }));
+    fireEvent.click(readSection.getByRole('button', { name: /Citação em Massa/ }));
+
+    expect(modals.setSelectedArticleForDetails).toHaveBeenCalledWith(read);
+    expect(modals.setCitationArticle).toHaveBeenCalledWith(read);
+    expect(onStatusChange).toHaveBeenCalledWith(2, 'new');
+    expect(modals.setIsMassCitationModalOpen).toHaveBeenCalledWith(true);
+    expect(readSection.getByRole('link', { name: 'Ver' })).toHaveAttribute('href', '/articles/2');
   });
 
-  it('handles Open Access filter change', () => {
-    renderComponent();
-    const checkbox = screen.getByLabelText('Apenas Acesso Aberto');
-    act(() => {
-      fireEvent.click(checkbox);
-    });
-    expect(defaultProps.setOnlyOpenAccess).toHaveBeenCalledWith(true);
-    expect(defaultProps.setCurrentPage).toHaveBeenCalledWith(1);
+  it('shows the archive reason and restores an archived article', () => {
+    const { onStatusChange } = renderTab({ articles: [archived] });
+    const archivedSection = within(section(/Artigos Arquivados \(1\)/));
+
+    expect(archivedSection.getByText('Motivo: fora do tema')).toBeInTheDocument();
+    fireEvent.click(archivedSection.getByRole('button', { name: 'Restaurar' }));
+
+    expect(onStatusChange).toHaveBeenCalledWith(3, 'new');
   });
 
-  it('handles Sidebar toggle', () => {
-    renderComponent();
-    const btn = screen.getByText('Filtros');
-    act(() => {
-      fireEvent.click(btn);
-    });
-    expect(defaultProps.setIsSidebarOpen).toHaveBeenCalledWith(true);
+  it('omits empty sections', () => {
+    renderTab({ articles: [article(1)] });
+
+    expect(screen.queryByText(/Artigos Lidos/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Artigos Arquivados/)).not.toBeInTheDocument();
   });
 
-  it('shows sidebar when isSidebarOpen is true', () => {
-    renderComponent({ isSidebarOpen: true });
-    expect(screen.getByTestId('ProjectSidebar')).toBeInTheDocument();
+  it('tracks whether each section is expanded', () => {
+    renderTab({ articles: [read] });
+    const details = section(/Artigos Lidos \(1\)/) as HTMLDetailsElement;
+
+    details.open = true;
+    fireEvent(details, new Event('toggle'));
+
+    expect(details.querySelector('.lucide-chevron-down')).not.toBeNull();
   });
+});
 
-  it('handles sort change', () => {
-    renderComponent();
-    const select = screen.getByDisplayValue('Mais Recentes (Ano)');
-    act(() => {
-      fireEvent.change(select, { target: { value: 'title-asc' } });
-    });
-    expect(defaultProps.setSortOrder).toHaveBeenCalledWith('title-asc');
-    expect(defaultProps.setCurrentPage).toHaveBeenCalledWith(1);
+describe('ProjectArticlesTab list actions', () => {
+  it('forwards row actions to the page and the modals', () => {
+    const withPdf = article(4, { title: 'Com PDF', local_file_path: '/a.pdf' });
+    const withoutPdf = article(5, { title: 'Sem PDF' });
+    const { modals, onStatusChange, onUnlinkPdf, onAttachPdf } = renderTab({ articles: [withPdf, withoutPdf], isArticleManual: () => true });
+    const row = (title: string) => within(within(mainList()).getByText(title).closest('tr') as HTMLElement);
+
+    fireEvent.click(row('Com PDF').getByTitle('Desvincular PDF'));
+    fireEvent.click(row('Sem PDF').getByTitle('Vincular PDF'));
+    fireEvent.click(row('Sem PDF').getByTitle('Marcar como Lido'));
+    fireEvent.click(row('Sem PDF').getByTitle('Arquivar'));
+    fireEvent.click(row('Sem PDF').getByTitle('Editar Metadados'));
+
+    expect(onUnlinkPdf).toHaveBeenCalledWith(4);
+    expect(onAttachPdf).toHaveBeenCalledWith(5);
+    expect(onStatusChange).toHaveBeenCalledWith(5, 'read');
+    expect(modals.setArchivingId).toHaveBeenCalledWith(5);
+    expect(modals.setEditingArticle).toHaveBeenCalledWith(withoutPdf);
   });
+});
 
-  it('renders read articles accordion', () => {
-    const readArticles = [{ id: 1, title: 'Read Article 1' }];
-    renderComponent({ readArticles });
-    expect(screen.getByText('Artigos Lidos (1)')).toBeInTheDocument();
-    expect(screen.getByText('Read Article 1')).toBeInTheDocument();
-  });
+describe('ProjectArticlesTab pagination', () => {
+  it('paginates active articles by the configured page size', () => {
+    renderTab({ articles: [article(1), article(2), article(3)], pageSize: 2 });
 
-  it('handles read articles actions', () => {
-    const readArticles = [{ id: 1, title: 'Read Article 1' }];
-    renderComponent({ readArticles, isReadArticlesOpen: true });
-    
-    // Mass citation
-    const massCitationBtn = screen.getByText('Citação em Massa');
-    act(() => {
-      fireEvent.click(massCitationBtn);
-    });
-    expect(defaultProps.modals.setIsMassCitationModalOpen).toHaveBeenCalledWith(true);
-
-    // Details
-    const detailsBtn = screen.getByText('Detalhes');
-    act(() => {
-      fireEvent.click(detailsBtn);
-    });
-    expect(defaultProps.modals.setSelectedArticleForDetails).toHaveBeenCalledWith(readArticles[0]);
-
-    // Cite
-    const citeBtn = screen.getByText('Citar');
-    act(() => {
-      fireEvent.click(citeBtn);
-    });
-    expect(defaultProps.modals.setCitationArticle).toHaveBeenCalledWith(readArticles[0]);
-
-    // Unmark
-    const unmarkBtn = screen.getByText('Desmarcar');
-    act(() => {
-      fireEvent.click(unmarkBtn);
-    });
-    expect(defaultProps.handleStatusChange).toHaveBeenCalledWith(1, 'new');
-  });
-
-  it('renders archived articles accordion', () => {
-    const archivedArticles = [{ id: 2, title: 'Archived Article 2', archive_note: 'Not relevant' }];
-    renderComponent({ archivedArticles, isArchivedArticlesOpen: true });
-    expect(screen.getByText('Artigos Arquivados (1)')).toBeInTheDocument();
-    expect(screen.getByText('Archived Article 2')).toBeInTheDocument();
-    expect(screen.getByText('Motivo: Not relevant')).toBeInTheDocument();
-  });
-
-  it('handles archived articles actions', () => {
-    const archivedArticles = [{ id: 2, title: 'Archived Article 2' }];
-    renderComponent({ archivedArticles, isArchivedArticlesOpen: true });
-    
-    // Restore
-    const restoreBtn = screen.getByText('Restaurar');
-    act(() => {
-      fireEvent.click(restoreBtn);
-    });
-    expect(defaultProps.handleStatusChange).toHaveBeenCalledWith(2, 'new');
-  });
-
-  it('renders pagination when more than 50 articles', () => {
-    const activeArticles = Array(51).fill({ id: 1 });
-    renderComponent({ activeArticles, totalPages: 2 });
-    
-    expect(screen.getByText(/Mostrando 1-50 de 51 artigos/)).toBeInTheDocument();
-    
-    // Pagination buttons are present
-    const prevBtns = screen.getAllByRole('button').filter(b => b.textContent?.includes('Anterior') || b.querySelector('svg.lucide-chevron-left'));
-    expect(prevBtns.length).toBeGreaterThan(0);
-
-    const nextBtns = screen.getAllByRole('button').filter(b => b.textContent?.includes('Próxima') || b.querySelector('svg.lucide-chevron-right'));
-    expect(nextBtns.length).toBeGreaterThan(0);
+    expect(screen.getByText('Mostrando 1-2 de 3 artigos')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Próxima/ }));
+    expect(screen.getByText('Mostrando 3-3 de 3 artigos')).toBeInTheDocument();
+    expect(within(mainList()).getAllByRole('row').filter((r) => r.textContent?.includes('Artigo'))).toHaveLength(1);
   });
 });

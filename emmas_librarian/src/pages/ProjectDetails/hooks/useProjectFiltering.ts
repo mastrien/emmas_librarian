@@ -140,6 +140,7 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
   }, [activeArticles, currentPage, itemsPerPage]);
 
   return {
+    itemsPerPage,
     searchTerm,
     setSearchTerm,
     onlyWithPdf,
@@ -173,3 +174,5 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
     setIsArchivedArticlesOpen,
   };
 };
+
+export type ProjectFiltering = ReturnType<typeof useProjectFiltering>;

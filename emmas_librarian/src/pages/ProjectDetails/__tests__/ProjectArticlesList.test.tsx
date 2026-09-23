@@ -10,7 +10,6 @@ describe('ProjectArticlesList', () => {
     setSelectedArticleForDetails: vi.fn(),
     handleUnlinkClick: vi.fn(),
     handleUploadClick: vi.fn(),
-    uploadingId: null,
     handleStatusChange: vi.fn(),
     setEditingArticle: vi.fn(),
     setArchivingId: vi.fn(),
