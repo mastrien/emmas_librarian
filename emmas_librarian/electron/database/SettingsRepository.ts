@@ -36,7 +36,7 @@ export class SettingsRepository {
       try {
         const buf = Buffer.from(row.value, 'base64');
         return safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(buf) : row.value;
-      } catch (e) {
+      } catch {
         return row.value;
       }
     }

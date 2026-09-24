@@ -223,7 +223,7 @@ const ArticleResultAccordion: React.FC<{
                   ragResult = parsed;
                 }
               }
-            } catch (e) {}
+            } catch {}
 
             return (
               <div

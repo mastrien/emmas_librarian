@@ -258,7 +258,7 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
             : null
         }
         history={history}
-        onNavigateToSearch={(searchId) => {
+        onNavigateToSearch={() => {
           modals.setSelectedArticleForDetails(null);
           setActiveTab('history');
         }}

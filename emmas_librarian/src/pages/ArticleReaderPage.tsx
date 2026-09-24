@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { PdfLoader, PdfHighlighter, Highlight, Popup, AreaHighlight } from 'react-pdf-highlighter';
+import { useParams } from 'react-router-dom';
 
 import 'react-pdf-highlighter/dist/style/AreaHighlight.css';
 import 'react-pdf-highlighter/dist/style/Highlight.css';
@@ -31,7 +29,6 @@ import { ArticleReaderPdfView } from './ArticleReader/components/ArticleReaderPd
 export const ArticleReaderPage: React.FC = () => {
   const projectService = useProjectService();
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
 
   // Toolbars and Modals State
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
@@ -71,7 +68,6 @@ export const ArticleReaderPage: React.FC = () => {
     setEditingId,
     editContent,
     setEditContent,
-    anchoringStatus,
     setAnchoringStatus,
     addHighlight,
     handleCreateStandaloneAnnotation,
@@ -89,8 +85,6 @@ export const ArticleReaderPage: React.FC = () => {
     pdfUrl,
     projectCategories,
     articleCategories,
-    writingPadContent,
-    setWritingPadContent,
     aiSummary,
     setAiSummary,
     hasAiKey,
@@ -190,16 +184,6 @@ export const ArticleReaderPage: React.FC = () => {
       });
       setCurrentPage(pageNum);
       setInputPage(pageNum.toString());
-    }
-  };
-
-  const handlePadChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value;
-    setWritingPadContent(val);
-    if (article?.project_id) {
-      projectService.updateProjectWritingPad(article.project_id, val).catch((error) => {
-        console.error('Erro ao salvar rascunho:', error);
-      });
     }
   };
 

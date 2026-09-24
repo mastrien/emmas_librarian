@@ -224,7 +224,7 @@ export class AIService {
     if (article?.ai_summary) {
       try {
         return JSON.parse(article.ai_summary);
-      } catch (e) {
+      } catch {
         // Fallback to regenerate if parsing fails
       }
     }
@@ -387,7 +387,7 @@ ${contextPrompt}
             }
           }
         }
-      } catch (err) {
+      } catch {
         console.error('Failed to parse LLM JSON for extraction:', result);
         throw new Error('A IA não retornou um formato JSON válido para extração.');
       }
@@ -424,7 +424,7 @@ ${truncatedText}
     try {
       const parsed = JSON.parse(result);
       return parsed;
-    } catch (err) {
+    } catch {
       console.error('Failed to parse LLM JSON for metadata:', result);
       throw new Error('A IA não retornou um formato JSON válido para os metadados.');
     }

@@ -21,16 +21,13 @@ import type {
   InvestigationResult,
   QueryASTNode,
   DatabaseTranslationMap,
-  SearchHistoryRecord,
   SearchHistoryItem,
-  TrashItem,
   ProjectCategory,
   ArticleCategory,
   AIModelConfig,
   AISkill,
   AIProvider,
   ScientificVenue,
-  ScientificMilestone,
   MilestoneStatus,
 } from '../types';
 

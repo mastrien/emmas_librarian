@@ -1,14 +1,13 @@
-import { app, BrowserWindow, session, shell, dialog, nativeImage, protocol, net } from 'electron';
+import { app, BrowserWindow, session, shell, dialog, nativeImage, protocol } from 'electron';
 import path from 'path';
-import { pathToFileURL } from 'url';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
+import { setupIpcRegistries } from './ipc/ipcRegistries';
 
 // Configure logging for auto-updater
 autoUpdater.logger = log;
 log.info('App starting...');
 const appStartTime = performance.now();
-import { setupIpcRegistries } from './ipc/ipcRegistries';
 
 const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
 const isE2ETest = process.argv.some(

@@ -45,7 +45,7 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
       if (selected) {
         setFilePath(selected);
       }
-    } catch (err) {
+    } catch {
       alert('Erro ao selecionar o arquivo PDF');
     }
   };

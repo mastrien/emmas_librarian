@@ -12,8 +12,6 @@ import {
   type QueryASTNode,
   type DatabaseTranslationMap,
   type SearchHistoryItem,
-  ProjectCategory,
-  ArticleCategory,
   AIModelConfig,
   AISkill,
   AIProvider,

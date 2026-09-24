@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SearchOrchestrator } from '../SearchOrchestrator';
 import { QueryTranslator } from '../QueryTranslator';
-import { DatabaseAdapter } from '../database/DatabaseAdapter';
-import type { OpenAlexArticle } from '../services/openalex/types';
+import { ApiIntegrator } from '../ApiIntegrator';
+import { NormalizedArticle } from '../types';
+import { Article } from '../../../src/types';
+import { ArticleInput } from '../../database/DatabaseAdapter';
 
 const mockLoadablePath: string | null = null;
 vi.mock('sqlite-vec', async (importOriginal) => {
@@ -12,10 +14,6 @@ vi.mock('sqlite-vec', async (importOriginal) => {
     getLoadablePath: () => mockLoadablePath || original.getLoadablePath(),
   };
 });
-import { ApiIntegrator } from '../ApiIntegrator';
-import { NormalizedArticle } from '../types';
-import { Article } from '../../../src/types';
-import { ArticleInput } from '../../database/DatabaseAdapter';
 
 // ---------------------------------------------------------------------------
 // In-memory mock for DatabaseAdapter — avoids the native better-sqlite3 dep.

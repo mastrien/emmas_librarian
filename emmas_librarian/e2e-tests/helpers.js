@@ -36,7 +36,7 @@ async function dismissChangelog(window) {
       await changelogBtn.click().catch(() => {});
       await window.waitForTimeout(300);
     }
-  } catch (e) {
+  } catch {
     // Changelog modal not shown
   }
 }
@@ -81,7 +81,7 @@ async function navigateTo(window, target) {
         await directLink.click({ timeout: 5000 });
         return;
       }
-    } catch (err) {
+    } catch {
       // Element was likely detached during a re-render; retry
       if (attempt < 2) {
         await window.waitForTimeout(500);

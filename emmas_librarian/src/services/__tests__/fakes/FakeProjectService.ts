@@ -1,7 +1,5 @@
 import type {
-  SearchHistoryRecord,
   SearchHistoryItem,
-  TrashItem,
   ProjectCategory,
   ArticleCategory,
   AIModelConfig,

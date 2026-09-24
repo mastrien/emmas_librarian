@@ -1,9 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BackupService } from '../BackupService';
 import { dialog, app } from 'electron';
 import fs from 'fs';
-import path from 'path';
-import AdmZip from 'adm-zip';
 import Database from 'better-sqlite3';
 
 vi.mock('electron', () => ({

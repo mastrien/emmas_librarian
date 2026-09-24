@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AIService } from '../AIService';
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import { AIModelConfigRepository } from '../../database/AIModelConfigRepository';
 import { extractTextWithCoordinates } from '../PdfExtractor';
 
 vi.mock('../PdfExtractor', () => ({
@@ -10,7 +9,6 @@ vi.mock('../PdfExtractor', () => ({
     totalPages: 1,
     totalCharacters: 45,
   }),
-  renderPagesAsImages: vi.fn().mockResolvedValue(new Map()),
 }));
 
 const { mockGetConfig } = vi.hoisted(() => ({

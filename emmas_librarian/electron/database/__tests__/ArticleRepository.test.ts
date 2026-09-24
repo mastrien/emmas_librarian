@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
-import crypto from 'crypto';
 import { ArticleRepository } from '../ArticleRepository';
 import { ArticleCategoryRepository } from '../ArticleCategoryRepository';
 import { PdfLibraryRepository } from '../PdfLibraryRepository';
@@ -112,7 +111,7 @@ describe('ArticleRepository', () => {
 
     it('should find duplicate by normalized title', () => {
       repo.saveArticle(projectId, { title: 'Special & Title! (2020)' });
-      const dup = repo.findDuplicateArticle(projectId, null, 'Special and Title 2020'); // Normalization will strip &!(), but wait, normalizeTitleForDb strips non-alphanumeric and spaces.
+      repo.findDuplicateArticle(projectId, null, 'Special and Title 2020'); // Normalization will strip &!(), but wait, normalizeTitleForDb strips non-alphanumeric and spaces.
       // Wait, let's use a simpler one.
       repo.saveArticle(projectId, { title: 'Título cõm Açentos' });
       const dup2 = repo.findDuplicateArticle(projectId, null, 'Titulo com Acentos');

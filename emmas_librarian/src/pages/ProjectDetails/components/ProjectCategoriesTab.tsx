@@ -16,7 +16,6 @@ export const ProjectCategoriesTab: React.FC<ProjectCategoriesTabProps> = ({
   projectCategories,
   articleCategories,
   nonArchivedArticles,
-  onCategorySaved,
 }) => {
   const projectService = useProjectService();
   return (

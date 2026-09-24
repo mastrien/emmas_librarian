@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { X, Search, FileText, Upload, Link2, Info } from 'lucide-react';
+import { X, Search, FileText, Upload, Link2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useProjectService } from '../../contexts/ServicesContext';
 

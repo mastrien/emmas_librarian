@@ -19,7 +19,7 @@ function cleanTempPdf(tempPdfPath, tempDir) {
   try {
     fs.unlinkSync(tempPdfPath);
     fs.rmdirSync(tempDir);
-  } catch (e) {
+  } catch {
     // Ignore cleanup errors
   }
 }

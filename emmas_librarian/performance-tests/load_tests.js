@@ -189,7 +189,7 @@ export function runSoak() {
         heapTotalTrend.add(parsed.memory.heapTotal);
         externalTrend.add(parsed.memory.external);
       }
-    } catch (e) {
+    } catch {
       // Ignored if JSON parsing fails
     }
   }

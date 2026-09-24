@@ -68,7 +68,7 @@ export class PdfLibraryRepository {
     if (chunkIds.length > 0) {
       try {
         this.db.prepare(`DELETE FROM pdf_chunk_embeddings WHERE rowid IN (${chunkIds.join(',')})`).run();
-      } catch (e) {}
+      } catch {}
       this.db.prepare('DELETE FROM pdf_chunks WHERE article_id = ?').run(articleId);
     }
 

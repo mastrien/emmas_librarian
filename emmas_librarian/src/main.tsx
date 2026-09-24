@@ -2,12 +2,13 @@
 // to ensure correct initialization order in production builds.
 // See public/vendor/prismjs/ and the error report in relatorio_erro_prism.md.
 
-import { StrictMode, Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import * as ReactDOMClient from 'react-dom/client';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/common/Layout';
 import { GlobalErrorProvider } from './contexts/GlobalErrorContext';
 import { ErrorModal } from './components/modals/ErrorModal';
+import './style.css';
 
 // Suppress React 19 warnings originating from third-party libraries (e.g. react-pdf-highlighter)
 const originalConsoleError = console.error;
@@ -62,7 +63,7 @@ try {
       return root;
     },
   });
-} catch (err) {
+} catch {
   // Safe fallback if target environment freezes module exports
 }
 
@@ -85,7 +86,6 @@ const PdfLibraryPage = lazy(() =>
   import('./pages/PdfLibraryPage').then((module) => ({ default: module.PdfLibraryPage })),
 );
 const AgendaPage = lazy(() => import('./pages/AgendaPage').then((module) => ({ default: module.AgendaPage })));
-import './style.css';
 
 // Initialize theme and accent
 const savedTheme = localStorage.getItem('theme') || 'light';

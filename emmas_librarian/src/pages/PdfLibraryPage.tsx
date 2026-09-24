@@ -1,18 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  FileText,
-  Trash2,
-  Link2,
-  Search,
-  Database,
-  AlertTriangle,
-  ExternalLink,
-  Clock,
-  ArrowLeft,
-  Info,
-  Upload,
-} from 'lucide-react';
+import { Trash2, Link2, Search, AlertTriangle, ExternalLink, ArrowLeft, Info, Upload } from 'lucide-react';
 import { useProjectService } from '../contexts/ServicesContext';
 import { Article, Project } from '../types';
 
@@ -82,7 +70,7 @@ export const PdfLibraryPage: React.FC = () => {
         hour: '2-digit',
         minute: '2-digit',
       });
-    } catch (e) {
+    } catch {
       return dateStr;
     }
   };

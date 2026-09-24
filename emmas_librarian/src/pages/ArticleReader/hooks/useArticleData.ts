@@ -182,7 +182,7 @@ export function useArticleData(
         await projectService.uploadPdf(parseInt(id), filePath);
         await fetchData();
       }
-    } catch (err) {
+    } catch {
       alert('Erro ao vincular PDF');
     } finally {
       setUploading(false);
@@ -201,7 +201,7 @@ export function useArticleData(
         setPdfUrl('');
         setAiSummary(null);
         await fetchData();
-      } catch (err) {
+      } catch {
         alert('Erro ao desvincular o PDF');
       }
     }

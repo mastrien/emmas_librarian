@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DatabaseAdapter } from '../DatabaseAdapter';
-import * as sqliteVec from 'sqlite-vec';
 
 let mockLoadablePath: string | null = null;
 
@@ -72,7 +71,7 @@ describe('DatabaseAdapter', () => {
     expect(anns).toHaveLength(1);
     expect(anns[0].content_markdown).toBe('Test Annotation');
 
-    const hlId = dbAdapter.saveHighlight(articleId, '#ff0', '{}', 'Test Quote', annId);
+    dbAdapter.saveHighlight(articleId, '#ff0', '{}', 'Test Quote', annId);
     const highlights = dbAdapter.getHighlights(articleId);
     expect(highlights).toHaveLength(1);
     expect(highlights[0].color).toBe('#ff0');

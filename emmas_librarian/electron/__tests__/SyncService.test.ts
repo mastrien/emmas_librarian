@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SyncService } from '../database/SyncService';
-import { dialog, app } from 'electron';
-import fs from 'fs';
+import { app } from 'electron';
 
 vi.mock('electron', () => ({
   app: {
@@ -242,8 +241,6 @@ describe('SyncService', () => {
   describe('Full Backup & Restore', () => {
     it('exports backup successfully and checkpoints WAL before reading DB', async () => {
       const mockAddFile = vi.fn();
-      const mockAddLocalFolder = vi.fn();
-      const mockWriteZip = vi.fn();
 
       (globalThis as unknown).mockAddFile = mockAddFile;
       (globalThis as unknown).mockShowSaveDialog.mockResolvedValueOnce({

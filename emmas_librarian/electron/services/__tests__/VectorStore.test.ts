@@ -7,8 +7,7 @@
  * removeArticleChunks can be exercised end-to-end through VectorStore logic.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import type { Database } from 'better-sqlite3';
+import type { PdfTextChunk } from '../PdfExtractor';
 
 const mockLoadablePath: string | null = null;
 vi.mock('sqlite-vec', async (importOriginal) => {
@@ -18,7 +17,6 @@ vi.mock('sqlite-vec', async (importOriginal) => {
     getLoadablePath: () => mockLoadablePath || original.getLoadablePath(),
   };
 });
-import type { PdfTextChunk } from '../PdfExtractor';
 
 // ---------------------------------------------------------------------------
 // In-memory row types
@@ -47,9 +45,6 @@ interface EmbeddingRow {
 let chunkRows: ChunkRow[] = [];
 let embeddingRows: EmbeddingRow[] = [];
 let nextChunkId = 1;
-
-/** Tracks the sql string passed to the last exec() call. */
-let lastExecSql = '';
 
 /** Tracks whether the embeddings table "exists" in our virtual sqlite_master. */
 let embeddingsTableExists = false;
@@ -263,7 +258,6 @@ describe('VectorStore', () => {
     chunkRows = [];
     embeddingRows = [];
     nextChunkId = 1;
-    lastExecSql = '';
     embeddingsTableExists = false;
     currentDimension = 0;
 
@@ -271,7 +265,6 @@ describe('VectorStore', () => {
     db = {
       prepare: vi.fn((sql: string) => buildStatement(sql)),
       exec: vi.fn((sql: string) => {
-        lastExecSql = sql;
         // Track whether the embeddings table was (re)created
         if (sql.includes('CREATE VIRTUAL TABLE pdf_chunk_embeddings')) {
           embeddingsTableExists = true;

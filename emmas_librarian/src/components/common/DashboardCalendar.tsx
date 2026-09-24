@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ScientificVenue } from '../../types';
 
 interface DashboardCalendarProps {
@@ -10,13 +10,7 @@ interface DashboardCalendarProps {
   onSelectDate?: (dateStr: string) => void;
 }
 
-export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
-  diarySet,
-  venues = [],
-  onAddVenue,
-  onOpenAgenda,
-  onSelectDate,
-}) => {
+export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ diarySet, venues = [], onSelectDate }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();

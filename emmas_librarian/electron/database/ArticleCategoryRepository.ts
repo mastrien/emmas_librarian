@@ -156,7 +156,7 @@ export class ArticleCategoryRepository {
       for (const optId of idsToInsert) {
         try {
           insertStmt.run(articleId, categoryId, optId);
-        } catch (e) {}
+        } catch {}
       }
     } else {
       if (value === null || value === '') {

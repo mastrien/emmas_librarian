@@ -126,9 +126,3 @@ export async function extractTextWithCoordinates(
     totalCharacters,
   };
 }
-
-/** Renderiza páginas específicas como imagens Base64 para VLM. (Placeholder) */
-export async function renderPagesAsImages(pdfPath: string, pages: number[]): Promise<Map<number, string>> {
-  // Not implemented yet
-  return new Map<number, string>();
-}

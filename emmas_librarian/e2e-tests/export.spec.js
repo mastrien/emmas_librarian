@@ -53,6 +53,6 @@ test('F-06 Export bibliographic references to CSV', async () => {
     try {
       fs.unlinkSync(tempCsvPath);
       fs.rmdirSync(tempDir);
-    } catch (e) {}
+    } catch {}
   }
 });

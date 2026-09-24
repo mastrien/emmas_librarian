@@ -162,7 +162,7 @@ export const ProjectOverviewTab: React.FC<ProjectOverviewTabProps> = ({
                   try {
                     const parsed = JSON.parse(db);
                     if (Array.isArray(parsed) && parsed.length > 0) db = parsed[0];
-                  } catch (e) {
+                  } catch {
                     /* ignore */
                   }
                   acc[db] = (acc[db] || 0) + 1;

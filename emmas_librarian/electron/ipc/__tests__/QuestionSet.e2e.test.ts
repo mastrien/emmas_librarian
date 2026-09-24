@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import { setupAiIpcHandlers } from '../aiIpcHandlers';
-import { ProjectRepository } from '../../database/ProjectRepository';
-import { ArticleRepository } from '../../database/ArticleRepository';
-import { QuestionSetRepository } from '../../database/QuestionSetRepository';
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import fs from 'fs';
+import path from 'path';
+import { IpcChannel } from '../../types';
 
 const mockLoadablePath: string | null = null;
 vi.mock('sqlite-vec', async (importOriginal) => {
@@ -14,9 +14,6 @@ vi.mock('sqlite-vec', async (importOriginal) => {
     getLoadablePath: () => mockLoadablePath || original.getLoadablePath(),
   };
 });
-import fs from 'fs';
-import path from 'path';
-import { IpcChannel } from '../../types';
 
 // Mock the ipcMain so we can capture and call the registered handlers
 const handlers: Record<string, Function> = {};

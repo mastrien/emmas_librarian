@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { X, Search, Database, Share2, Info } from 'lucide-react';
+import { X, Search, Share2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { Article, Project } from '../../types';

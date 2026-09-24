@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, ChevronRight, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { Calendar, ChevronRight } from 'lucide-react';
 import { ScientificVenue, ScientificMilestone, MilestoneStatus } from '../../types';
 
 interface DeadlineBannerProps {

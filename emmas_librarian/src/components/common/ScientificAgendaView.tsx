@@ -1,18 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Plus,
-  Search,
-  Calendar as CalendarIcon,
-  CheckCircle2,
-  Circle,
-  Clock,
-  ExternalLink,
-  Edit2,
-  Trash2,
-  Tag,
-  ChevronRight,
-} from 'lucide-react';
-import { ScientificVenue, ScientificMilestone, VenueCategory, MilestoneStatus } from '../../types';
+import { Plus, Search, Calendar as CalendarIcon, ExternalLink, Edit2, Trash2 } from 'lucide-react';
+import { ScientificVenue, VenueCategory, MilestoneStatus } from '../../types';
 import { DashboardCalendar } from './DashboardCalendar';
 
 interface ScientificAgendaViewProps {
@@ -65,7 +53,7 @@ export const ScientificAgendaView: React.FC<ScientificAgendaViewProps> = ({
 
     try {
       await onToggleMilestoneStatus(milestoneId, newStatus);
-    } catch (err) {
+    } catch {
       // Rollback on failure
       setLocalVenues(venues);
     }

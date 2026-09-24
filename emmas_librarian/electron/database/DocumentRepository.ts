@@ -1,6 +1,5 @@
 import type { Database } from 'better-sqlite3';
-import { Annotation, Highlight, ProjectDocument } from '../../src/types';
-import { HighlightWithComment } from './DatabaseAdapter';
+import { ProjectDocument } from '../../src/types';
 import fs from 'fs';
 
 export class DocumentRepository {

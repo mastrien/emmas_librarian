@@ -50,7 +50,7 @@ describe('AnnotationRepository', () => {
     });
 
     it('should not get annotations for deleted articles or projects', () => {
-      const id = repo.saveAnnotation(articleId, 'Test content');
+      repo.saveAnnotation(articleId, 'Test content');
 
       db.prepare("UPDATE projects SET deleted_at = datetime('now') WHERE id = ?").run(projectId);
       expect(repo.getAnnotations(articleId)).toHaveLength(0);
@@ -86,7 +86,7 @@ describe('AnnotationRepository', () => {
 
     it('should save and get highlights with annotation', () => {
       const annotationId = repo.saveAnnotation(articleId, 'Comment');
-      const id = repo.saveHighlight(articleId, '#00ff00', 'pos2', 'text2', annotationId);
+      repo.saveHighlight(articleId, '#00ff00', 'pos2', 'text2', annotationId);
 
       const highlights = repo.getHighlights(articleId);
       expect(highlights).toHaveLength(1);

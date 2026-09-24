@@ -3,8 +3,6 @@ import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PdfLoader, PdfHighlighter, Highlight, Popup, AreaHighlight } from 'react-pdf-highlighter';
 
 // @ts-ignore
-import * as pdfjs from 'pdfjs-dist/build/pdf';
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 import { TipContent } from '../../../components/reader/TipContent';
 import { ReaderSidebar } from '../../../components/reader/ReaderSidebar';
@@ -61,7 +59,6 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
   addHighlight,
   showToast,
   currentPage,
-  setCurrentPage,
   inputPage,
   setInputPage,
   goToPage,
@@ -212,7 +209,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
                               ''}
                           </div>
                         }
-                        onMouseOver={(popupContent) => setTip(highlight, (highlight) => popupContent)}
+                        onMouseOver={(popupContent) => setTip(highlight, () => popupContent)}
                         onMouseOut={hideTip}
                       >
                         {component}

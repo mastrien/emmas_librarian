@@ -21,7 +21,6 @@ import {
   ProjectDocument,
   ProjectCategory,
   ArticleCategory,
-  CategoryOption,
 } from '../../src/types';
 
 export interface ArticleInput {

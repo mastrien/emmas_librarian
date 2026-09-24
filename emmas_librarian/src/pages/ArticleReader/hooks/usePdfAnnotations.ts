@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { Highlight, Annotation } from '../../../types';
 type IHighlight = {

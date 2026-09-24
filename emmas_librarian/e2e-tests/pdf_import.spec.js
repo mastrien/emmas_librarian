@@ -33,6 +33,6 @@ test('F-04 Import article via PDF', async () => {
     try {
       fs.unlinkSync(tempPdfPath);
       fs.rmdirSync(tempDir);
-    } catch (e) {}
+    } catch {}
   }
 });

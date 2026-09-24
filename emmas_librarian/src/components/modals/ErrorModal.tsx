@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertCircle, AlertTriangle, X as XIcon, Clipboard, Check } from 'lucide-react';
 import { useGlobalError } from '../../contexts/GlobalErrorContext';

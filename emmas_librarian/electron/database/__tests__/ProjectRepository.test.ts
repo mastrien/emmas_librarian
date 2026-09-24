@@ -172,7 +172,7 @@ describe('ProjectRepository', () => {
     it('should create and retrieve project categories', () => {
       const project = repo.createProject('Cat Project');
 
-      const textCatId = repo.createProjectCategory(project.id, 'TextCat', 'text');
+      repo.createProjectCategory(project.id, 'TextCat', 'text');
       const enumCatId = repo.createProjectCategory(project.id, 'EnumCat', 'enum');
 
       repo.addProjectCategoryOption(enumCatId, 'Opt1');
