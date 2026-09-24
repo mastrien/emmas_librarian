@@ -156,7 +156,9 @@ export class ArticleCategoryRepository {
       for (const optId of idsToInsert) {
         try {
           insertStmt.run(articleId, categoryId, optId);
-        } catch {}
+        } catch {
+          // The same option may be listed twice; the (article, category, option) primary key keeps one row.
+        }
       }
     } else {
       if (value === null || value === '') {

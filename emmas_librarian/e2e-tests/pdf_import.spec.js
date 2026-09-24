@@ -33,6 +33,8 @@ test('F-04 Import article via PDF', async () => {
     try {
       fs.unlinkSync(tempPdfPath);
       fs.rmdirSync(tempDir);
-    } catch {}
+    } catch {
+      // Best-effort temp dir cleanup; leftovers do not affect the test.
+    }
   }
 });

@@ -7,7 +7,7 @@ import 'react-pdf-highlighter/dist/style/MouseSelection.css';
 import 'react-pdf-highlighter/dist/style/PdfHighlighter.css';
 import 'react-pdf-highlighter/dist/style/Tip.css';
 import 'react-pdf-highlighter/dist/style/pdf_viewer.css';
-// @ts-ignore
+// @ts-expect-error -- pdfjs-dist ships no type declarations for the build/pdf entry point
 import * as pdfjs from 'pdfjs-dist/build/pdf';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 

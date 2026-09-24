@@ -234,3 +234,6 @@ export const ArticleTable: React.FC<ArticleTableProps> = memo(
     );
   },
 );
+
+// memo() wraps an anonymous render function, so give React DevTools a readable name.
+ArticleTable.displayName = 'ArticleTable';

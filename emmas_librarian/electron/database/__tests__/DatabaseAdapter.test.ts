@@ -1,4 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import Database from 'better-sqlite3';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 
 let mockLoadablePath: string | null = null;
@@ -391,10 +395,6 @@ describe('DatabaseAdapter', () => {
       csl_json: '{}',
     });
 
-    const fs = require('fs');
-    const path = require('path');
-    const os = require('os');
-
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emmas-lib-test-'));
     const file1 = path.join(tempDir, 'file1.pdf');
     const file2 = path.join(tempDir, 'file2.pdf');
@@ -415,11 +415,12 @@ describe('DatabaseAdapter', () => {
     try {
       fs.unlinkSync(file2);
       fs.rmdirSync(tempDir);
-    } catch {}
+    } catch {
+      // Best-effort cleanup of the OS temp dir; a leftover file does not affect the assertions.
+    }
   });
 
   it('correctly rewrites app.asar to app.asar.unpacked when loading sqlite-vec extension', () => {
-    const Database = require('better-sqlite3');
     const loadExtensionSpy = vi.spyOn(Database.prototype, 'loadExtension').mockImplementation(() => {});
 
     mockLoadablePath = 'C:\\Program Files\\Emma\\resources\\app.asar\\node_modules\\sqlite-vec-windows-x64\\vec0.dll';

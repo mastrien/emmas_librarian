@@ -70,7 +70,6 @@ describe('ArticleTable', () => {
   const renderComponent = (props = {}) => {
     return render(
       <BrowserRouter>
-        {/* @ts-ignore */}
         <ArticleTable {...defaultProps} {...props} />
       </BrowserRouter>,
     );

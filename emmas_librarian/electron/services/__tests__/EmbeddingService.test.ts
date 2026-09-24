@@ -26,7 +26,7 @@ describe('EmbeddingService', () => {
 
     expect(result).toEqual([0.1, 0.2, 0.3]);
     expect(global.fetch).toHaveBeenCalledWith('http://localhost:11434/api/embeddings', expect.any(Object));
-    // @ts-ignore
+    // @ts-expect-error -- global.fetch is a vi.fn() here, typed as the real fetch
     const reqBody = JSON.parse((global.fetch as any).mock.calls[0][1].body);
     expect(reqBody.model).toBe('nomic-embed-text');
     expect(reqBody.prompt).toBe('hello world');

@@ -68,7 +68,9 @@ export class PdfLibraryRepository {
     if (chunkIds.length > 0) {
       try {
         this.db.prepare(`DELETE FROM pdf_chunk_embeddings WHERE rowid IN (${chunkIds.join(',')})`).run();
-      } catch {}
+      } catch {
+        // pdf_chunk_embeddings only exists when sqlite-vec loaded; without it there is nothing to delete.
+      }
       this.db.prepare('DELETE FROM pdf_chunks WHERE article_id = ?').run(articleId);
     }
 

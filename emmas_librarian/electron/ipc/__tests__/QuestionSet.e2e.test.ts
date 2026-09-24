@@ -16,9 +16,10 @@ vi.mock('sqlite-vec', async (importOriginal) => {
 });
 
 // Mock the ipcMain so we can capture and call the registered handlers
-const handlers: Record<string, Function> = {};
+type IpcHandler = (...args: unknown[]) => unknown;
+const handlers: Record<string, IpcHandler> = {};
 const mockIpcMain = {
-  handle: (channel: string, callback: Function) => {
+  handle: (channel: string, callback: IpcHandler) => {
     handlers[channel] = callback;
   },
 };

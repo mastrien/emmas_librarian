@@ -251,7 +251,9 @@ export default function QuestionSetCatalog({
             try {
               const parsed = JSON.parse(set.questions);
               if (Array.isArray(parsed)) qCount = parsed.length;
-            } catch {}
+            } catch {
+              // A malformed questions column counts as zero questions.
+            }
 
             if (isEditingThis) {
               return (

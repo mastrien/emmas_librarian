@@ -11,7 +11,7 @@ vi.mock('react-pdf-highlighter', () => ({
     <div data-testid="pdf-loader">{children({ numPages: 10, getPage: vi.fn() })}</div>
   ),
   PdfHighlighter: (props: any) => {
-    // @ts-ignore
+    // @ts-expect-error -- test-only global carrying the props the mocked PdfHighlighter received
     global.mockPdfHighlighterProps = props;
     return <div data-testid="pdf-highlighter" className="pdfViewer" />;
   },
@@ -145,11 +145,11 @@ describe('ArticleReaderPage', () => {
     );
 
     await vi.waitFor(() => {
-      // @ts-ignore
+      // @ts-expect-error -- test-only global set by the PdfHighlighter mock
       expect(global.mockPdfHighlighterProps).toBeDefined();
     });
 
-    // @ts-ignore
+    // @ts-expect-error -- test-only global set by the PdfHighlighter mock
     const passedHighlights = global.mockPdfHighlighterProps.highlights;
     expect(passedHighlights).toHaveLength(1);
 
@@ -163,7 +163,7 @@ describe('ArticleReaderPage', () => {
     expect(hl.comment.text).toBe('A note');
 
     // Clean up
-    // @ts-ignore
+    // @ts-expect-error -- test-only global set by the PdfHighlighter mock
     delete global.mockPdfHighlighterProps;
   });
 });

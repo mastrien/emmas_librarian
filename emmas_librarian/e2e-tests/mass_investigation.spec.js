@@ -68,6 +68,8 @@ test('Massive Investigation Modal - Checkbox state persists across re-renders', 
     try {
       fs.unlinkSync(tempPdfPath);
       fs.rmdirSync(tempDir);
-    } catch {}
+    } catch {
+      // Best-effort temp dir cleanup; leftovers do not affect the test.
+    }
   }
 });

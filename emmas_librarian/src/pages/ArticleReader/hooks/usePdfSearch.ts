@@ -98,7 +98,9 @@ export function usePdfSearch(
       document.querySelectorAll('.textLayer span mark').forEach((mark) => {
         const parent = mark.parentNode;
         if (parent) {
-          parent.textContent = parent.textContent;
+          // Rewriting the text drops the <mark> elements and restores pdf.js's plain text node.
+          const plainText = parent.textContent;
+          parent.textContent = plainText;
         }
       });
       document.querySelectorAll('.textLayer').forEach((layer) => {

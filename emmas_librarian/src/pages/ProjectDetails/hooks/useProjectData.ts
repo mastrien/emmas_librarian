@@ -29,7 +29,9 @@ export function useProjectData(projectId: number | null, onArticlesReloaded?: (a
   const [articleCategories, setArticleCategories] = useState<ArticleCategory[]>([]);
   // Kept in a ref so a new callback identity does not re-trigger the initial load.
   const articlesReloaded = useRef(onArticlesReloaded);
-  articlesReloaded.current = onArticlesReloaded;
+  useEffect(() => {
+    articlesReloaded.current = onArticlesReloaded;
+  }, [onArticlesReloaded]);
 
   const reload = useCallback(async () => {
     if (projectId === null) return;

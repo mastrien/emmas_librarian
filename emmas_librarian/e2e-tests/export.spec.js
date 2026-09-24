@@ -53,6 +53,8 @@ test('F-06 Export bibliographic references to CSV', async () => {
     try {
       fs.unlinkSync(tempCsvPath);
       fs.rmdirSync(tempDir);
-    } catch {}
+    } catch {
+      // Best-effort temp dir cleanup; leftovers do not affect the test.
+    }
   }
 });

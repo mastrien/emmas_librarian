@@ -223,7 +223,9 @@ const ArticleResultAccordion: React.FC<{
                   ragResult = parsed;
                 }
               }
-            } catch {}
+            } catch {
+              // Older results store the answer as plain text, not RAG JSON; they render as text below.
+            }
 
             return (
               <div

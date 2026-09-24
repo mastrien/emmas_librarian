@@ -2,8 +2,6 @@ import React from 'react';
 import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PdfLoader, PdfHighlighter, Highlight, Popup, AreaHighlight } from 'react-pdf-highlighter';
 
-// @ts-ignore
-
 import { TipContent } from '../../../components/reader/TipContent';
 import { ReaderSidebar } from '../../../components/reader/ReaderSidebar';
 import { Annotation } from '../../../types';

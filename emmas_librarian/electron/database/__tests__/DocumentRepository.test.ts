@@ -102,7 +102,7 @@ describe('DocumentRepository', () => {
 
     it('should handle null updates (coalesced to null or empty string)', () => {
       const id = repo.saveProjectDocument(1, 'Title', 'url', 'path', 'cat');
-      // @ts-ignore testing undefined/null fallback
+      // @ts-expect-error testing undefined/null fallback
       repo.updateProjectDocument(id, null, null, null, null);
       const docs = repo.getProjectDocuments(1);
       const doc = docs.find((d) => d.id === id);
@@ -129,7 +129,7 @@ describe('DocumentRepository', () => {
 
     it('should filter invalid ids in reorder', () => {
       const id1 = repo.saveProjectDocument(1, 'Doc 1');
-      // @ts-ignore
+      // @ts-expect-error -- ids straight from IPC may contain null/undefined/strings
       repo.reorderProjectDocuments(1, [undefined, id1, null, 'invalid']);
 
       const docs = repo.getProjectDocuments(1);
@@ -138,7 +138,7 @@ describe('DocumentRepository', () => {
 
     it('should do nothing if orderedIds is not an array', () => {
       const id1 = repo.saveProjectDocument(1, 'Doc 1');
-      // @ts-ignore
+      // @ts-expect-error -- a malformed IPC payload may not be an array at all
       repo.reorderProjectDocuments(1, 'not-an-array');
 
       const docs = repo.getProjectDocuments(1);

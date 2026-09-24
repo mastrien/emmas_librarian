@@ -68,7 +68,7 @@ const tabStyle = (active: boolean): React.CSSProperties => ({
  *   <AIExtractionModal isOpen={open} onClose={close} articlesWithPdf={withPdf} aiQuestions={qs} ... />
  */
 export const AIExtractionModal = (props: AIExtractionModalProps) => {
-  const { isOpen, onClose, articlesWithPdf, isExtracting, aiExtractionResults } = props;
+  const { isOpen, onClose, articlesWithPdf, isExtracting, aiExtractionResults, cancelExtractionRef } = props;
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ExtractionTab>('new');
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<InvestigationHistoryRecord | null>(null);
@@ -87,6 +87,11 @@ export const AIExtractionModal = (props: AIExtractionModalProps) => {
   }, [isOpen, isExtracting, aiExtractionResults, articlesWithPdf]);
 
   if (!isOpen) return null;
+
+  // The running extraction polls this ref between articles and stops at the next one.
+  const requestCancel = () => {
+    cancelExtractionRef.current = true;
+  };
 
   const switchTab = (tab: ExtractionTab) => {
     setActiveTab(tab);
@@ -158,7 +163,7 @@ export const AIExtractionModal = (props: AIExtractionModalProps) => {
             progress={props.extractionProgress}
             results={aiExtractionResults}
             onStart={props.handleMassiveExtraction}
-            onCancel={() => (props.cancelExtractionRef.current = true)}
+            onCancel={requestCancel}
             onFinish={onClose}
             onViewEvidence={viewEvidence}
           />

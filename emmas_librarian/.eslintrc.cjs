@@ -35,6 +35,9 @@ module.exports = {
     'react/prop-types': 'off',
     // Quotes and apostrophes are ordinary text in our Portuguese copy; only flag characters that break JSX.
     'react/no-unescaped-entities': ['error', { forbid: ['>', '}'] }],
+    // React Compiler advisory: flags the "reset form when opened" and "load on mount" effects used across
+    // the app. Kept visible as a warning until those are moved to keyed remounts / data hooks.
+    'react-hooks/set-state-in-effect': 'warn',
     // A leading underscore marks a parameter or binding that is intentionally unused.
     '@typescript-eslint/no-unused-vars': [
       'error',
@@ -44,7 +47,13 @@ module.exports = {
   overrides: [
     {
       // Playwright specs and build scripts are plain CommonJS Node scripts.
-      files: ['e2e-tests/**/*.js', 'build-db.js', 'playwright.config.js', 'scripts/**/*.js'],
+      files: [
+        'e2e-tests/**/*.js',
+        'build-db.js',
+        'playwright.config.js',
+        'scripts/**/*.js',
+        'performance-tests/performance-harness.js',
+      ],
       rules: { '@typescript-eslint/no-require-imports': 'off' },
     },
     {
