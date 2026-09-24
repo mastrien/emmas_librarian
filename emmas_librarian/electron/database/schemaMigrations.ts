@@ -136,7 +136,7 @@ const PDF_LIBRARY_TABLE = `
  * a failing step is logged and skipped so the app still opens.
  *
  * Usage:
- *   initializeSchema(db, () => articleRepo.backfillExistingPdfs());
+ *   initializeSchema(db, () => pdfLibraryRepo.backfillExistingPdfs());
  */
 export function initializeSchema(db: Database.Database, backfillPdfLibrary: () => void): void {
   db.exec(readSchemaFile());

@@ -4,7 +4,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { DatabaseAdapter } from '../DatabaseAdapter';
-import { ArticleRepository } from '../ArticleRepository';
+import { PdfLibraryRepository } from '../PdfLibraryRepository';
 
 const loadable = vi.hoisted(() => ({ override: null as string | null }));
 
@@ -243,7 +243,7 @@ describe('migration failures are logged and do not prevent opening the database'
     [
       'PDF library backfill',
       () =>
-        vi.spyOn(ArticleRepository.prototype, 'backfillExistingPdfs').mockImplementation(() => {
+        vi.spyOn(PdfLibraryRepository.prototype, 'backfillExistingPdfs').mockImplementation(() => {
           throw new Error('boom');
         }),
       'Schema migrations error',

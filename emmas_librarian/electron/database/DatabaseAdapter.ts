@@ -3,6 +3,8 @@ import * as sqliteVec from 'sqlite-vec';
 import { ProjectRepository } from './ProjectRepository';
 import { SettingsRepository } from './SettingsRepository';
 import { ArticleRepository } from './ArticleRepository';
+import { ArticleCategoryRepository } from './ArticleCategoryRepository';
+import { PdfLibraryRepository } from './PdfLibraryRepository';
 import { HistoryRepository } from './HistoryRepository';
 import { DocumentRepository } from './DocumentRepository';
 import { AnnotationRepository } from './AnnotationRepository';
@@ -10,8 +12,17 @@ import { TrashRepository } from './TrashRepository';
 import { MassiveInvestigationRepository } from './MassiveInvestigationRepository';
 import { initializeSchema } from './schemaMigrations';
 
-import { Project, Article, Annotation, Highlight, DiaryEntry, ProjectDocument, ProjectCategory, ArticleCategory, CategoryOption } from '../../src/types';
-
+import {
+  Project,
+  Article,
+  Annotation,
+  Highlight,
+  DiaryEntry,
+  ProjectDocument,
+  ProjectCategory,
+  ArticleCategory,
+  CategoryOption,
+} from '../../src/types';
 
 export interface ArticleInput {
   doi?: string;
@@ -48,6 +59,8 @@ export class DatabaseAdapter {
   public projectRepo: ProjectRepository;
   public settingsRepo: SettingsRepository;
   public articleRepo: ArticleRepository;
+  public articleCategoryRepo: ArticleCategoryRepository;
+  public pdfLibraryRepo: PdfLibraryRepository;
   public historyRepo: HistoryRepository;
   public documentRepo: DocumentRepository;
   public annotationRepo: AnnotationRepository;
@@ -63,6 +76,8 @@ export class DatabaseAdapter {
     this.projectRepo = new ProjectRepository(this.db);
     this.settingsRepo = new SettingsRepository(this.db);
     this.articleRepo = new ArticleRepository(this.db);
+    this.articleCategoryRepo = new ArticleCategoryRepository(this.db);
+    this.pdfLibraryRepo = new PdfLibraryRepository(this.db);
     this.historyRepo = new HistoryRepository(this.db);
     this.documentRepo = new DocumentRepository(this.db);
     this.annotationRepo = new AnnotationRepository(this.db);
@@ -92,94 +107,277 @@ export class DatabaseAdapter {
   }
 
   private initSchema() {
-    initializeSchema(this.db, () => this.articleRepo.backfillExistingPdfs());
+    initializeSchema(this.db, () => this.pdfLibraryRepo.backfillExistingPdfs());
   }
 
   // --- Project ---
-  createProject(name: string): Project { return this.projectRepo.createProject(name); }
-  getProject(id: number): Project | undefined { return this.projectRepo.getProject(id); }
-  updateProjectWritingPad(id: number, content: string) { return this.projectRepo.updateProjectWritingPad(id, content); }
-  getProjectWritingPad(id: number): string | null { return this.projectRepo.getProjectWritingPad(id); }
-  updateProject(id: number, name: string): void { return this.projectRepo.updateProject(id, name); }
-  deleteProject(id: number): void { return this.projectRepo.deleteProject(id); }
-  deleteProjectPermanent(id: number): void { return this.projectRepo.deleteProjectPermanent(id); }
-  getAllProjects(): Project[] { return this.projectRepo.getAllProjects(); }
+  createProject(name: string): Project {
+    return this.projectRepo.createProject(name);
+  }
+  getProject(id: number): Project | undefined {
+    return this.projectRepo.getProject(id);
+  }
+  updateProjectWritingPad(id: number, content: string) {
+    return this.projectRepo.updateProjectWritingPad(id, content);
+  }
+  getProjectWritingPad(id: number): string | null {
+    return this.projectRepo.getProjectWritingPad(id);
+  }
+  updateProject(id: number, name: string): void {
+    return this.projectRepo.updateProject(id, name);
+  }
+  deleteProject(id: number): void {
+    return this.projectRepo.deleteProject(id);
+  }
+  deleteProjectPermanent(id: number): void {
+    return this.projectRepo.deleteProjectPermanent(id);
+  }
+  getAllProjects(): Project[] {
+    return this.projectRepo.getAllProjects();
+  }
 
   // --- Article ---
-  findDuplicateArticle(projectId: number, doi: string | null | undefined, title: string): Article | undefined { return this.articleRepo.findDuplicateArticle(projectId, doi, title); }
-  saveArticle(projectId: number, data: ArticleInput): number { return this.articleRepo.saveArticle(projectId, data); }
-  getArticle(id: number): Article | undefined { return this.articleRepo.getArticle(id); }
-  getArticlesByProject(projectId: number): Article[] { return this.articleRepo.getArticlesByProject(projectId); }
-  updateArticleFilePath(articleId: number, path: string | null): void { return this.articleRepo.updateArticleFilePath(articleId, path); }
-  updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', archiveNote?: string): void { return this.articleRepo.updateArticleStatus(articleId, status, archiveNote); }
-  updateArticleMetadata(articleId: number, data: Partial<ArticleInput>): void { return this.articleRepo.updateArticleMetadata(articleId, data); }
-  updateArticleAiSummary(articleId: number, summary: string): void { return this.articleRepo.updateArticleAiSummary(articleId, summary); }
-  deleteArticle(id: number): void { return this.articleRepo.deleteArticle(id); }
+  findDuplicateArticle(projectId: number, doi: string | null | undefined, title: string): Article | undefined {
+    return this.articleRepo.findDuplicateArticle(projectId, doi, title);
+  }
+  saveArticle(projectId: number, data: ArticleInput): number {
+    return this.articleRepo.saveArticle(projectId, data);
+  }
+  getArticle(id: number): Article | undefined {
+    return this.articleRepo.getArticle(id);
+  }
+  getArticlesByProject(projectId: number): Article[] {
+    return this.articleRepo.getArticlesByProject(projectId);
+  }
+  updateArticleFilePath(articleId: number, path: string | null): void {
+    return this.articleRepo.updateArticleFilePath(articleId, path);
+  }
+  updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', archiveNote?: string): void {
+    return this.articleRepo.updateArticleStatus(articleId, status, archiveNote);
+  }
+  updateArticleMetadata(articleId: number, data: Partial<ArticleInput>): void {
+    return this.articleRepo.updateArticleMetadata(articleId, data);
+  }
+  updateArticleAiSummary(articleId: number, summary: string): void {
+    return this.articleRepo.updateArticleAiSummary(articleId, summary);
+  }
+  deleteArticle(id: number): void {
+    return this.articleRepo.deleteArticle(id);
+  }
 
   // --- Annotation & Highlight ---
-  saveAnnotation(articleId: number, content: string): number { return this.annotationRepo.saveAnnotation(articleId, content); }
-  getAnnotations(articleId: number): Annotation[] { return this.annotationRepo.getAnnotations(articleId); }
-  updateAnnotation(id: number, content: string): void { return this.annotationRepo.updateAnnotation(id, content); }
-  deleteAnnotation(id: number): void { return this.annotationRepo.deleteAnnotation(id); }
-  saveHighlight(articleId: number, color: string, positionData: string, contentText: string | null, annotationId?: number): number { return this.annotationRepo.saveHighlight(articleId, color, positionData, contentText, annotationId); }
-  getHighlights(articleId: number): HighlightWithComment[] { return this.annotationRepo.getHighlights(articleId); }
-  deleteHighlight(id: number): void { return this.annotationRepo.deleteHighlight(id); }
-  savePendingHighlight(articleId: number, quote: string, contextBefore: string, contextAfter: string, comment: string): number { return this.annotationRepo.savePendingHighlight(articleId, quote, contextBefore, contextAfter, comment); }
-  getPendingHighlights(articleId: number): Highlight[] { return this.annotationRepo.getPendingHighlights(articleId); }
-  deletePendingHighlight(id: number): void { return this.annotationRepo.deletePendingHighlight(id); }
+  saveAnnotation(articleId: number, content: string): number {
+    return this.annotationRepo.saveAnnotation(articleId, content);
+  }
+  getAnnotations(articleId: number): Annotation[] {
+    return this.annotationRepo.getAnnotations(articleId);
+  }
+  updateAnnotation(id: number, content: string): void {
+    return this.annotationRepo.updateAnnotation(id, content);
+  }
+  deleteAnnotation(id: number): void {
+    return this.annotationRepo.deleteAnnotation(id);
+  }
+  saveHighlight(
+    articleId: number,
+    color: string,
+    positionData: string,
+    contentText: string | null,
+    annotationId?: number,
+  ): number {
+    return this.annotationRepo.saveHighlight(articleId, color, positionData, contentText, annotationId);
+  }
+  getHighlights(articleId: number): HighlightWithComment[] {
+    return this.annotationRepo.getHighlights(articleId);
+  }
+  deleteHighlight(id: number): void {
+    return this.annotationRepo.deleteHighlight(id);
+  }
+  savePendingHighlight(
+    articleId: number,
+    quote: string,
+    contextBefore: string,
+    contextAfter: string,
+    comment: string,
+  ): number {
+    return this.annotationRepo.savePendingHighlight(articleId, quote, contextBefore, contextAfter, comment);
+  }
+  getPendingHighlights(articleId: number): Highlight[] {
+    return this.annotationRepo.getPendingHighlights(articleId);
+  }
+  deletePendingHighlight(id: number): void {
+    return this.annotationRepo.deletePendingHighlight(id);
+  }
 
   // --- Massive Investigation ---
-  saveMassiveInvestigation(projectId: number, questions: string[], articlesIds: number[], modelUsed: string, status: string): number { return this.investigationRepo.saveMassiveInvestigation(projectId, questions, articlesIds, modelUsed, status); }
-  getMassiveInvestigations(projectId: number): unknown[] { return this.investigationRepo.getMassiveInvestigations(projectId); }
+  saveMassiveInvestigation(
+    projectId: number,
+    questions: string[],
+    articlesIds: number[],
+    modelUsed: string,
+    status: string,
+  ): number {
+    return this.investigationRepo.saveMassiveInvestigation(projectId, questions, articlesIds, modelUsed, status);
+  }
+  getMassiveInvestigations(projectId: number): unknown[] {
+    return this.investigationRepo.getMassiveInvestigations(projectId);
+  }
 
   // --- Settings ---
-  public getSetting(key: string): string | null { return this.settingsRepo.getSetting(key); }
-  public setSetting(key: string, value: string): void { return this.settingsRepo.setSetting(key, value); }
+  public getSetting(key: string): string | null {
+    return this.settingsRepo.getSetting(key);
+  }
+  public setSetting(key: string, value: string): void {
+    return this.settingsRepo.setSetting(key, value);
+  }
 
   // --- History ---
-  public saveSearchHistory(projectId: number, unifiedQuery: string, translatedQueries: Record<string, string>, totalResults: number, breakdown: Record<string, unknown>, sortBy?: string, limitVal?: number): number { return this.historyRepo.saveSearchHistory(projectId, unifiedQuery, translatedQueries, totalResults, breakdown, sortBy, limitVal); }
-  public getSearchHistory(projectId: number): unknown[] { return this.historyRepo.getSearchHistory(projectId); }
-  public revertSearch(searchId: number): void { return this.historyRepo.revertSearch(searchId); }
-  public saveDiaryEntry(projectId: number, entryDate: string, content: string): void { return this.historyRepo.saveDiaryEntry(projectId, entryDate, content); }
-  public getDiaryEntries(projectId: number): DiaryEntry[] { return this.historyRepo.getDiaryEntries(projectId); }
-  public getDiaryEntry(projectId: number, entryDate: string): DiaryEntry | undefined { return this.historyRepo.getDiaryEntry(projectId, entryDate); }
-  public deleteDiaryEntry(projectId: number, entryDate: string): void { return this.historyRepo.deleteDiaryEntry(projectId, entryDate); }
-  public getDiaryEntryHistory(projectId: number, entryDate: string): unknown[] { return this.historyRepo.getDiaryEntryHistory(projectId, entryDate); }
-  public restoreDiaryEntryVersion(versionId: number): void { return this.historyRepo.restoreDiaryEntryVersion(versionId); }
+  public saveSearchHistory(
+    projectId: number,
+    unifiedQuery: string,
+    translatedQueries: Record<string, string>,
+    totalResults: number,
+    breakdown: Record<string, unknown>,
+    sortBy?: string,
+    limitVal?: number,
+  ): number {
+    return this.historyRepo.saveSearchHistory(
+      projectId,
+      unifiedQuery,
+      translatedQueries,
+      totalResults,
+      breakdown,
+      sortBy,
+      limitVal,
+    );
+  }
+  public getSearchHistory(projectId: number): unknown[] {
+    return this.historyRepo.getSearchHistory(projectId);
+  }
+  public revertSearch(searchId: number): void {
+    return this.historyRepo.revertSearch(searchId);
+  }
+  public saveDiaryEntry(projectId: number, entryDate: string, content: string): void {
+    return this.historyRepo.saveDiaryEntry(projectId, entryDate, content);
+  }
+  public getDiaryEntries(projectId: number): DiaryEntry[] {
+    return this.historyRepo.getDiaryEntries(projectId);
+  }
+  public getDiaryEntry(projectId: number, entryDate: string): DiaryEntry | undefined {
+    return this.historyRepo.getDiaryEntry(projectId, entryDate);
+  }
+  public deleteDiaryEntry(projectId: number, entryDate: string): void {
+    return this.historyRepo.deleteDiaryEntry(projectId, entryDate);
+  }
+  public getDiaryEntryHistory(projectId: number, entryDate: string): unknown[] {
+    return this.historyRepo.getDiaryEntryHistory(projectId, entryDate);
+  }
+  public restoreDiaryEntryVersion(versionId: number): void {
+    return this.historyRepo.restoreDiaryEntryVersion(versionId);
+  }
 
   // --- Documents ---
-  public saveProjectDocument(projectId: number, title: string, url?: string | null, localFilePath?: string | null, category?: string | null): number { return this.documentRepo.saveProjectDocument(projectId, title, url, localFilePath, category); }
-  public getProjectDocuments(projectId: number): ProjectDocument[] { return this.documentRepo.getProjectDocuments(projectId); }
-  public updateProjectDocument(id: number, title: string, url: string | null, localFilePath: string | null, category: string | null): void { return this.documentRepo.updateProjectDocument(id, title, url, localFilePath, category); }
-  public reorderProjectDocuments(projectId: number, orderedIds: number[]): void { return this.documentRepo.reorderProjectDocuments(projectId, orderedIds); }
-  public deleteProjectDocument(id: number): void { return this.documentRepo.deleteProjectDocument(id); }
+  public saveProjectDocument(
+    projectId: number,
+    title: string,
+    url?: string | null,
+    localFilePath?: string | null,
+    category?: string | null,
+  ): number {
+    return this.documentRepo.saveProjectDocument(projectId, title, url, localFilePath, category);
+  }
+  public getProjectDocuments(projectId: number): ProjectDocument[] {
+    return this.documentRepo.getProjectDocuments(projectId);
+  }
+  public updateProjectDocument(
+    id: number,
+    title: string,
+    url: string | null,
+    localFilePath: string | null,
+    category: string | null,
+  ): void {
+    return this.documentRepo.updateProjectDocument(id, title, url, localFilePath, category);
+  }
+  public reorderProjectDocuments(projectId: number, orderedIds: number[]): void {
+    return this.documentRepo.reorderProjectDocuments(projectId, orderedIds);
+  }
+  public deleteProjectDocument(id: number): void {
+    return this.documentRepo.deleteProjectDocument(id);
+  }
 
   // --- Categories ---
-  public getProjectCategories(projectId: number): ProjectCategory[] { return this.projectRepo.getProjectCategories(projectId); }
-  public createProjectCategory(projectId: number, name: string, type: string, options?: any): number { return this.projectRepo.createProjectCategory(projectId, name, type as any, options); }
-  public updateProjectCategory(categoryId: number, name: string, type: string, options?: any): void { return this.projectRepo.updateProjectCategory(categoryId, name, type as any, options); }
-  public syncProjectCategoryOptions(categoryId: number, options: { id?: number; name: string }[]): void { return this.projectRepo.syncProjectCategoryOptions(categoryId, options); }
-  public deleteProjectCategory(categoryId: number): void { return this.projectRepo.deleteProjectCategory(categoryId); }
-  public getArticleCategories(articleId: number): ArticleCategory[] { return this.articleRepo.getArticleCategories(articleId); }
-  public getAllProjectArticleCategories(projectId: number): ArticleCategory[] { return this.articleRepo.getAllProjectArticleCategories(projectId); }
-  public setArticleCategory(articleId: number, categoryId: number, value: string | null): void { return this.articleRepo.setArticleCategory(articleId, categoryId, value); }
+  public getProjectCategories(projectId: number): ProjectCategory[] {
+    return this.projectRepo.getProjectCategories(projectId);
+  }
+  public createProjectCategory(projectId: number, name: string, type: string, options?: any): number {
+    return this.projectRepo.createProjectCategory(projectId, name, type as any, options);
+  }
+  public updateProjectCategory(categoryId: number, name: string, type: string, options?: any): void {
+    return this.projectRepo.updateProjectCategory(categoryId, name, type as any, options);
+  }
+  public syncProjectCategoryOptions(categoryId: number, options: { id?: number; name: string }[]): void {
+    return this.projectRepo.syncProjectCategoryOptions(categoryId, options);
+  }
+  public deleteProjectCategory(categoryId: number): void {
+    return this.projectRepo.deleteProjectCategory(categoryId);
+  }
+  public getArticleCategories(articleId: number): ArticleCategory[] {
+    return this.articleCategoryRepo.getArticleCategories(articleId);
+  }
+  public getAllProjectArticleCategories(projectId: number): ArticleCategory[] {
+    return this.articleCategoryRepo.getAllProjectArticleCategories(projectId);
+  }
+  public setArticleCategory(articleId: number, categoryId: number, value: string | null): void {
+    return this.articleCategoryRepo.setArticleCategory(articleId, categoryId, value);
+  }
 
   // --- Trash ---
-  public getTrashItems(): unknown[] { return this.trashRepo.getTrashItems(); }
-  public restoreTrashItem(type: 'project' | 'article' | 'annotation', id: number): void { return this.trashRepo.restoreTrashItem(type, id); }
-  public deleteTrashItemPermanent(type: 'project' | 'article' | 'annotation', id: number): void { return this.trashRepo.deleteTrashItemPermanent(type, id); }
-  public emptyTrash(): void { return this.trashRepo.emptyTrash(); }
+  public getTrashItems(): unknown[] {
+    return this.trashRepo.getTrashItems();
+  }
+  public restoreTrashItem(type: 'project' | 'article' | 'annotation', id: number): void {
+    return this.trashRepo.restoreTrashItem(type, id);
+  }
+  public deleteTrashItemPermanent(type: 'project' | 'article' | 'annotation', id: number): void {
+    return this.trashRepo.deleteTrashItemPermanent(type, id);
+  }
+  public emptyTrash(): void {
+    return this.trashRepo.emptyTrash();
+  }
 
   // --- PDF Library & Sync ---
-  public getStoredPdfs(): unknown[] { return this.articleRepo.getStoredPdfs(); }
-  public getArticlesForPdf(filePath: string): { id: number; title: string; project_id: number }[] { return this.articleRepo.getArticlesForPdf(filePath); }
-  public deletePdfRecord(filePath: string): void { return this.articleRepo.deletePdfRecord(filePath); }
-  public deletePdfLibraryRecord(filePath: string): number[] { return this.articleRepo.deletePdfLibraryRecord(filePath); }
-  public unlinkPdfFromArticle(articleId: number): void { return this.articleRepo.unlinkPdfFromArticle(articleId); }
-  public linkPdfToArticle(articleId: number, filePath: string): void { return this.articleRepo.linkPdfToArticle(articleId, filePath); }
-  public registerPdfInLibrary(filePath: string, hash: string, filename: string, size: number): void { return this.articleRepo.registerPdfInLibrary(filePath, hash, filename, size); }
-  public importArticlesFromProject(sourceProjectId: number, destProjectId: number, articleIds: number[], searchHistoryId: number): void { return this.articleRepo.importArticlesFromProject(sourceProjectId, destProjectId, articleIds, searchHistoryId); }
-  public getPdfByHash(hash: string): any { return this.articleRepo.getPdfByHash(hash); }
+  public getStoredPdfs(): unknown[] {
+    return this.pdfLibraryRepo.getStoredPdfs();
+  }
+  public getArticlesForPdf(filePath: string): { id: number; title: string; project_id: number }[] {
+    return this.pdfLibraryRepo.getArticlesForPdf(filePath);
+  }
+  public deletePdfRecord(filePath: string): void {
+    return this.pdfLibraryRepo.deletePdfRecord(filePath);
+  }
+  public deletePdfLibraryRecord(filePath: string): number[] {
+    return this.pdfLibraryRepo.deletePdfLibraryRecord(filePath);
+  }
+  public unlinkPdfFromArticle(articleId: number): void {
+    return this.pdfLibraryRepo.unlinkPdfFromArticle(articleId);
+  }
+  public linkPdfToArticle(articleId: number, filePath: string): void {
+    return this.pdfLibraryRepo.linkPdfToArticle(articleId, filePath);
+  }
+  public registerPdfInLibrary(filePath: string, hash: string, filename: string, size: number): void {
+    return this.pdfLibraryRepo.registerPdfInLibrary(filePath, hash, filename, size);
+  }
+  public importArticlesFromProject(
+    sourceProjectId: number,
+    destProjectId: number,
+    articleIds: number[],
+    searchHistoryId: number,
+  ): void {
+    return this.articleRepo.importArticlesFromProject(sourceProjectId, destProjectId, articleIds, searchHistoryId);
+  }
+  public getPdfByHash(hash: string): any {
+    return this.pdfLibraryRepo.getPdfByHash(hash);
+  }
 
   // --- Maintenance ---
   public checkIntegrity(): boolean {
