@@ -24,9 +24,14 @@
 - Tests run with a single command: `npm --prefix emmas_librarian run test` (or `npm run test` inside the `emmas_librarian` directory).
 - Every new function gets a test. Bug fixes get a regression test.
 - Mock external I/O (API, DB, filesystem) with named fake classes,
-  not inline stubs.
+  not inline stubs. Exception: code whose job *is* persistence
+  (repositories, migrations, backup/import/export) is tested against
+  real SQLite and temp files — mocked queries hid real bugs there.
 - Tests must be F.I.R.S.T: fast, independent, repeatable,
   self-validating, timely.
+- How-to, pitfalls and review checklist: `.claude/skills/emma-writing-tests/`
+  (unit/integration) and `.claude/skills/emma-e2e-tests/` (Playwright E2E,
+  test PDF fixture). Read them before writing or fixing tests.
 
 ## Dependencies
 
