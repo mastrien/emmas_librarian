@@ -38,4 +38,15 @@ describe('AttachPdfModal', () => {
     expect(screen.getByText('Upload do Computador')).toBeInTheDocument();
     expect(screen.getByText('Selecionar da Biblioteca')).toBeInTheDocument();
   });
+
+  it('renders its content when opened after rendering closed', () => {
+    const modal = (isOpen: boolean) => (
+      <AttachPdfModal isOpen={isOpen} articleId={1} articleTitle="T" onClose={vi.fn()} onAttached={vi.fn()} />
+    );
+    const { rerender } = render(modal(false));
+
+    rerender(modal(true));
+
+    expect(screen.getByText('Anexar PDF ao Artigo')).toBeInTheDocument();
+  });
 });

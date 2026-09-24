@@ -11,14 +11,15 @@ interface ImportArticlesModalProps {
   onImportComplete: () => void;
 }
 
-export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = ({
-  isOpen,
+// Hooks live in the content component so the early return for a closed modal cannot change hook order.
+export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = (props) =>
+  props.isOpen ? <ImportArticlesModalContent {...props} /> : null;
+
+const ImportArticlesModalContent: React.FC<ImportArticlesModalProps> = ({
   destProjectId,
   onClose,
   onImportComplete,
 }) => {
-  if (!isOpen) return null;
-
   const projectService = useProjectService();
   const [projects, setProjects] = useState<Project[]>([]);
   const [sourceProjectId, setSourceProjectId] = useState<number | ''>('');

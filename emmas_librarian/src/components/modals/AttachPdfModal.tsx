@@ -20,15 +20,11 @@ interface StoredPdf {
   created_at: string;
 }
 
-export const AttachPdfModal: React.FC<AttachPdfModalProps> = ({
-  isOpen,
-  articleId,
-  articleTitle,
-  onClose,
-  onAttached,
-}) => {
-  if (!isOpen) return null;
+// Hooks live in the content component so the early return for a closed modal cannot change hook order.
+export const AttachPdfModal: React.FC<AttachPdfModalProps> = (props) =>
+  props.isOpen ? <AttachPdfModalContent {...props} /> : null;
 
+const AttachPdfModalContent: React.FC<AttachPdfModalProps> = ({ articleId, articleTitle, onClose, onAttached }) => {
   const projectService = useProjectService();
   const [pdfs, setPdfs] = useState<StoredPdf[]>([]);
   const [searchTerm, setSearchTerm] = useState('');

@@ -29,4 +29,15 @@ describe('ImportArticlesModal', () => {
     expect(screen.getByText('Importar Artigos de Outro Projeto')).toBeInTheDocument();
     expect(screen.getByText('-- Selecione o projeto de origem --')).toBeInTheDocument();
   });
+
+  it('renders its content when opened after rendering closed', () => {
+    const modal = (isOpen: boolean) => (
+      <ImportArticlesModal isOpen={isOpen} destProjectId={1} onClose={vi.fn()} onImportComplete={vi.fn()} />
+    );
+    const { rerender } = render(modal(false));
+
+    rerender(modal(true));
+
+    expect(screen.getByText('Importar Artigos de Outro Projeto')).toBeInTheDocument();
+  });
 });
