@@ -92,10 +92,10 @@ export const ArticleReaderPage: React.FC = () => {
     fetchCategories,
     handleFileUpload,
     handleUnlinkClick,
-  } = useArticleData(id, setHighlights as any, setStandaloneAnnotations, setAnchoringStatus);
+  } = useArticleData(id, setHighlights, setStandaloneAnnotations, setAnchoringStatus);
 
   const { scale, handleZoom } = usePdfZoom(highlighterRef);
-  const { searchQuery, setSearchQuery, searchResults, isSearching } = usePdfSearch(
+  const { searchQuery, setSearchQuery, searchResults, isSearching, handleSearch } = usePdfSearch(
     sidebarTab,
     highlighterRef,
     setCurrentPage,
@@ -272,6 +272,7 @@ export const ArticleReaderPage: React.FC = () => {
             setSearchQuery={setSearchQuery}
             searchResults={searchResults}
             isSearching={isSearching}
+            onSearch={handleSearch}
             aiSummary={aiSummary}
             isGeneratingAi={isGeneratingAi}
             generateSummary={generateSummary}

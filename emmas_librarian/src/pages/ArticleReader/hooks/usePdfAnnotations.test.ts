@@ -2,7 +2,19 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { usePdfAnnotations } from './usePdfAnnotations';
 import { projectService } from '../../../services/api';
-import { Highlight, Annotation } from '../../../types';
+import { Annotation } from '../../../types';
+import type { ViewerHighlight } from '../viewerHighlight';
+
+/** A highlight in the shape the viewer reads (see viewerHighlight.ts). */
+const viewerHighlight = (overrides: Partial<ViewerHighlight> = {}): ViewerHighlight => ({
+  id: '99',
+  article_id: 1,
+  position: { pageNumber: 1 },
+  content: { text: 'Quote' },
+  comment: { text: '', emoji: '' },
+  color: 'yellow',
+  ...overrides,
+});
 
 vi.mock('../../../services/api', async () => {
   const { FakeProjectService } = await import('../../../services/__tests__/fakes/FakeProjectService');
@@ -16,11 +28,19 @@ describe('usePdfAnnotations', () => {
     vi.stubGlobal('alert', vi.fn());
   });
 
-  it('adds a highlight successfully', async () => {
-    (projectService.createHighlight as Mock).mockResolvedValue({
-      id: 99,
-      annotation_id: 100,
-    });
+  it('adds a highlight and keeps it in the shape the PDF viewer reads', async () => {
+    (projectService.createHighlight as Mock).mockResolvedValue({ id: 99, annotation_id: -1 });
+    (projectService.getHighlights as Mock).mockResolvedValue([
+      {
+        id: '99',
+        article_id: 1,
+        color: 'red',
+        position_data: { page: 1 },
+        content_text: 'Some text',
+        comment: 'My comment',
+        annotation_id: 100,
+      },
+    ]);
 
     const { result } = renderHook(() => usePdfAnnotations('1'));
 
@@ -34,9 +54,18 @@ describe('usePdfAnnotations', () => {
     });
 
     expect(projectService.createHighlight).toHaveBeenCalledWith(1, 'red', { page: 1 }, 'Some text', 'My comment');
-    expect(result.current.highlights).toHaveLength(1);
-    expect(result.current.highlights[0].id).toBe('99');
-    expect(result.current.highlights[0].color).toBe('red');
+    // Regression: the new highlight used to be stored as a DB row (position_data), crashing the viewer.
+    expect(result.current.highlights).toEqual([
+      {
+        id: '99',
+        article_id: 1,
+        color: 'red',
+        position: { page: 1 },
+        content: { text: 'Some text' },
+        comment: { text: 'My comment', emoji: '' },
+        annotation_id: 100,
+      },
+    ]);
   });
 
   it('creates standalone annotation', async () => {
@@ -74,7 +103,7 @@ describe('usePdfAnnotations', () => {
   it('deletes highlight if confirmed', async () => {
     const { result } = renderHook(() => usePdfAnnotations('1'));
     act(() => {
-      result.current.setHighlights([{ id: '99' } as Highlight]);
+      result.current.setHighlights([viewerHighlight()]);
     });
 
     await act(async () => {
@@ -89,7 +118,7 @@ describe('usePdfAnnotations', () => {
     vi.stubGlobal('confirm', () => false);
     const { result } = renderHook(() => usePdfAnnotations('1'));
     act(() => {
-      result.current.setHighlights([{ id: '99' } as Highlight]);
+      result.current.setHighlights([viewerHighlight()]);
     });
 
     await act(async () => {
@@ -116,7 +145,7 @@ describe('usePdfAnnotations', () => {
 
   it('edits highlight annotation', async () => {
     const { result } = renderHook(() => usePdfAnnotations('1'));
-    const highlight = { id: '99', annotation_id: 100, comment: 'Old text' } as Highlight;
+    const highlight = viewerHighlight({ annotation_id: 100, comment: { text: 'Old text', emoji: '' } });
 
     await act(async () => {
       await result.current.handleEditHighlightAnnotation(highlight, {
@@ -130,7 +159,7 @@ describe('usePdfAnnotations', () => {
 
   it('alerts if highlight has no annotation_id on edit', async () => {
     const { result } = renderHook(() => usePdfAnnotations('1'));
-    const highlight = { id: '99', comment: 'Old text' } as Highlight; // no annotation_id
+    const highlight = viewerHighlight({ comment: { text: 'Old text', emoji: '' } }); // no annotation_id
 
     await act(async () => {
       await result.current.handleEditHighlightAnnotation(highlight, {
@@ -146,7 +175,7 @@ describe('usePdfAnnotations', () => {
 
   it('edits highlight annotation with empty comment', async () => {
     const { result } = renderHook(() => usePdfAnnotations('1'));
-    const highlight = { id: '99', annotation_id: 100 } as Highlight; // no comment
+    const highlight = viewerHighlight({ annotation_id: 100 }); // empty comment
 
     await act(async () => {
       await result.current.handleEditHighlightAnnotation(highlight, {
@@ -213,7 +242,10 @@ describe('usePdfAnnotations', () => {
   it('saves edit for highlight, leaving others intact', async () => {
     const { result } = renderHook(() => usePdfAnnotations('1'));
     act(() => {
-      result.current.setHighlights([{ id: '99', comment: 'Old', article_id: 1 } as Highlight]);
+      result.current.setHighlights([
+        viewerHighlight({ comment: { text: 'Old', emoji: '' } }),
+        viewerHighlight({ id: '100', comment: { text: 'Untouched', emoji: '' } }),
+      ]);
       result.current.setEditingId('99');
       result.current.setEditContent('New');
     });
@@ -223,7 +255,9 @@ describe('usePdfAnnotations', () => {
     });
 
     expect(projectService.updateAnnotation).toHaveBeenCalledWith(100, 'New');
-    expect(result.current.highlights[0].comment).toBe('New');
+    // The note stays an object: a plain string here also broke the viewer.
+    expect(result.current.highlights[0].comment).toEqual({ text: 'New', emoji: '' });
+    expect(result.current.highlights[1].comment.text).toBe('Untouched');
     expect(result.current.editingId).toBeNull();
   });
 

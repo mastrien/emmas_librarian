@@ -11,6 +11,15 @@ import type { Article } from '../../types';
 /** Props the mocked PdfHighlighter last received, so tests can inspect the mapped highlights. */
 const highlighter = vi.hoisted(() => ({ props: null as null | { highlights: HighlighterHighlight[] } }));
 
+/** A 3-page document whose second page contains "saturação teórica" (what the in-PDF search reads). */
+const fakePdf = vi.hoisted(() => {
+  const pages = ['introdução do artigo', 'o índice de saturação teórica foi calculado', 'referências'];
+  return {
+    numPages: pages.length,
+    getPage: async (n: number) => ({ getTextContent: async () => ({ items: [{ str: pages[n - 1] }] }) }),
+  };
+});
+
 interface HighlighterHighlight {
   position: { pageNumber: number };
   content: { text: string };
@@ -19,7 +28,7 @@ interface HighlighterHighlight {
 
 vi.mock('react-pdf-highlighter', () => ({
   PdfLoader: ({ children }: { children: (pdf: unknown) => React.ReactNode }) => (
-    <div data-testid="pdf-loader">{children({ numPages: 10, getPage: vi.fn() })}</div>
+    <div data-testid="pdf-loader">{children(fakePdf)}</div>
   ),
   PdfHighlighter: (props: { highlights: HighlighterHighlight[] }) => {
     highlighter.props = props;
@@ -108,6 +117,21 @@ describe('ArticleReaderPage', () => {
     expect(await screen.findByText('This is the expected abstract text loaded from search API.')).toBeInTheDocument();
     expect(screen.getByText('Buscar por DOI')).toBeInTheDocument();
     expect(screen.getAllByText('Vincular PDF Local').length).toBeGreaterThan(0);
+  });
+
+  it('searches the loaded PDF from the "Pesquisar" tab without submitting the page', async () => {
+    renderReader();
+    await screen.findByText('Article');
+    fireEvent.click(screen.getByText('Pesquisar'));
+    fireEvent.change(screen.getByPlaceholderText('Termo para busca...'), { target: { value: 'saturação teórica' } });
+
+    // Regression: the form submit handler was a no-op without preventDefault, so it reloaded the reader.
+    const submit = new Event('submit', { bubbles: true, cancelable: true });
+    fireEvent(screen.getByPlaceholderText('Termo para busca...').closest('form')!, submit);
+
+    expect(submit.defaultPrevented).toBe(true);
+    expect(await screen.findByText('1 ocorrência(s) encontrada(s)')).toBeInTheDocument();
+    expect(screen.getByText('Página 2')).toBeInTheDocument();
   });
 
   it('maps highlight data structure correctly for react-pdf-highlighter to prevent crash', async () => {

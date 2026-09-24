@@ -62,6 +62,8 @@ export const DiaryPageToolbar: React.FC<DiaryPageToolbarProps> = (props) => (
       <button
         onClick={props.onDelete}
         className="btn-secondary"
+        title="Excluir página"
+        aria-label="Excluir página"
         style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', color: 'var(--color-danger)' }}
       >
         <Trash2 size={14} />

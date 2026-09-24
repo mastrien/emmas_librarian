@@ -7,7 +7,8 @@ interface SearchResult {
   highlightStart: number;
 }
 
-interface PdfDocumentProxy {
+/** The part of pdf.js's document that text search needs. */
+export interface PdfDocumentProxy {
   numPages: number;
   getPage: (pageNum: number) => Promise<{
     getTextContent: () => Promise<{

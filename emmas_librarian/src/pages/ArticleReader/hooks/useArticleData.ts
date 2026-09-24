@@ -2,10 +2,11 @@ import { useState, useCallback } from 'react';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { Article, Highlight, Annotation, ProjectCategory, ArticleCategory } from '../../../types';
 import { anchorPendingHighlights } from '../../../utils/pdfTextSearch';
+import { toViewerHighlight, type ViewerHighlight } from '../viewerHighlight';
 
 export function useArticleData(
   id: string | undefined,
-  setHighlights: (h: unknown[]) => void,
+  setHighlights: (h: ViewerHighlight[]) => void,
   setStandaloneAnnotations: (a: Annotation[]) => void,
   setAnchoringStatus: (s: string) => void,
 ) {
@@ -76,17 +77,7 @@ export function useArticleData(
       const attachedAnnIds = new Set(highData.map((h: Highlight) => h.annotation_id));
       setStandaloneAnnotations(annData.filter((a: Annotation) => !attachedAnnIds.has(a.id)));
 
-      setHighlights(
-        highData.map((h: Highlight) => ({
-          id: h.id.toString(),
-          position: h.position_data,
-          content: { text: (h as unknown as Record<string, unknown>).content_text || h.comment || '' },
-          comment: { text: h.comment || '', emoji: '' },
-          color: h.color || 'yellow',
-          annotation_id: h.annotation_id,
-          article_id: h.article_id,
-        })),
-      );
+      setHighlights(highData.map(toViewerHighlight));
 
       if (artData.local_file_path) {
         const buffer = (await projectService.getPdfBuffer(parseInt(id))) as
@@ -134,17 +125,7 @@ export function useArticleData(
               }
               // Refresh highlights after saving
               const newHighData = await projectService.getHighlights(parseInt(id));
-              setHighlights(
-                newHighData.map((h: Highlight) => ({
-                  id: h.id.toString(),
-                  position: h.position_data,
-                  content: { text: (h as unknown as Record<string, unknown>).content_text || h.comment || '' },
-                  comment: { text: h.comment || '', emoji: '' },
-                  color: h.color || 'yellow',
-                  annotation_id: h.annotation_id,
-                  article_id: h.article_id,
-                })),
-              );
+              setHighlights(newHighData.map(toViewerHighlight));
             }
             // If some couldn't be anchored, create standalone annotations so they aren't lost
             if (unanchoredHighlights && unanchoredHighlights.length > 0) {
