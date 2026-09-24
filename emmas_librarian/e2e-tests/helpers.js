@@ -15,24 +15,28 @@ function checkHeadless() {
 /**
  * Launches the built app on a fresh, empty data folder (emma.db, PDFs, settings) that is deleted on close,
  * so specs never read or write a real library and never see each other's data.
+ * Pass `{ userDataDir }` to reuse a folder the spec owns (e.g. to relaunch after a restore); it is then kept.
+ * E2E_SKIP_RELAUNCH stops backup restores from relaunching an Electron window the harness cannot control.
  */
-async function launchApp(env = {}) {
+async function launchApp(env = {}, { userDataDir } = {}) {
   checkHeadless();
   const mainPath = path.resolve(__dirname, '../dist-electron/electron/main.js');
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emmas-e2e-'));
+  const dataDir = userDataDir ?? fs.mkdtempSync(path.join(os.tmpdir(), 'emmas-e2e-'));
   const electronApp = await electron.launch({
     args: [mainPath],
-    env: { ...process.env, E2E_USER_DATA_DIR: userDataDir, ...env },
+    env: { ...process.env, E2E_USER_DATA_DIR: dataDir, E2E_SKIP_RELAUNCH: 'true', ...env },
   });
-  electronApp.on('close', () => fs.rmSync(userDataDir, { recursive: true, force: true }));
+  if (!userDataDir) electronApp.on('close', () => fs.rmSync(dataDir, { recursive: true, force: true }));
   return electronApp;
 }
 
 async function dismissChangelog(window) {
   try {
+    // Mark the running version as seen so the changelog never reopens over a later page. (A fixed old version
+    // made it reappear whenever the layout remounted, e.g. when opening the reader.)
     await window
-      .evaluate(() => {
-        localStorage.setItem('last_seen_version', '1.1.19');
+      .evaluate(async () => {
+        localStorage.setItem('last_seen_version', await window.electronAPI.invoke('app:getVersion'));
       })
       .catch(() => {});
 
