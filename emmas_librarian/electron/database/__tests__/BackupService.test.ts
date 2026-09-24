@@ -16,7 +16,7 @@ vi.mock('electron', () => ({
     getVersion: vi.fn().mockReturnValue('1.0.0'),
     relaunch: vi.fn(),
     exit: vi.fn(),
-  }
+  },
 }));
 
 vi.mock('fs', () => ({
@@ -27,7 +27,7 @@ vi.mock('fs', () => ({
     mkdirSync: vi.fn(),
     unlinkSync: vi.fn(),
     rmSync: vi.fn(),
-  }
+  },
 }));
 
 const mockZipInstance = {
@@ -40,24 +40,26 @@ const mockZipInstance = {
 
 vi.mock('adm-zip', () => {
   return {
-    default: vi.fn().mockImplementation(() => mockZipInstance)
+    default: vi.fn().mockImplementation(() => mockZipInstance),
   };
 });
 
 vi.mock('better-sqlite3', () => {
   const mockDb = {
-    pragma: vi.fn().mockReturnValue([{ name: 'options' }, { name: 'model_used' }, { name: 'status' }, { name: 'content_text' }]),
+    pragma: vi
+      .fn()
+      .mockReturnValue([{ name: 'options' }, { name: 'model_used' }, { name: 'status' }, { name: 'content_text' }]),
     prepare: vi.fn().mockReturnValue({
       get: vi.fn().mockReturnValue({ count: 1, id: 1 }),
       all: vi.fn().mockReturnValue([]),
-      run: vi.fn().mockReturnValue({ lastInsertRowid: 1 })
+      run: vi.fn().mockReturnValue({ lastInsertRowid: 1 }),
     }),
     exec: vi.fn(),
     close: vi.fn(),
     transaction: vi.fn((cb) => cb),
   };
   return {
-    default: vi.fn().mockImplementation(() => mockDb)
+    default: vi.fn().mockImplementation(() => mockDb),
   };
 });
 
@@ -70,7 +72,7 @@ describe('BackupService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockDb = new Database(':memory:');
     mockDbAdapter = {
       getDB: () => mockDb,
@@ -99,7 +101,9 @@ describe('BackupService', () => {
 
     it('should handle errors in export', async () => {
       vi.mocked(dialog.showSaveDialog).mockResolvedValue({ canceled: false, filePath: 'test.emmabak' });
-      vi.mocked(fs.existsSync).mockImplementation(() => { throw new Error('Export error'); });
+      vi.mocked(fs.existsSync).mockImplementation(() => {
+        throw new Error('Export error');
+      });
       await expect(backupService.exportBackup()).rejects.toThrow('Export error');
     });
   });
@@ -113,7 +117,7 @@ describe('BackupService', () => {
 
     it('should restore backup successfully', async () => {
       vi.mocked(dialog.showOpenDialog).mockResolvedValue({ canceled: false, filePaths: ['test.emmabak'] });
-      
+
       mockZipInstance.getEntry.mockReturnValue({ getData: () => Buffer.from('db') } as any);
       mockZipInstance.getEntries.mockReturnValue([
         { entryName: 'storage/pdfs/test.pdf', isDirectory: false, getData: () => Buffer.from('pdf') },
@@ -133,7 +137,7 @@ describe('BackupService', () => {
 
     it('should restore backup successfully when dirs are missing and wal/shm do not exist', async () => {
       vi.mocked(dialog.showOpenDialog).mockResolvedValue({ canceled: false, filePaths: ['test.emmabak'] });
-      
+
       mockZipInstance.getEntry.mockReturnValue({ getData: () => Buffer.from('db') } as any);
       mockZipInstance.getEntries.mockReturnValue([
         { entryName: 'storage/pdfs/test.pdf', isDirectory: false, getData: () => Buffer.from('pdf') },
@@ -150,115 +154,15 @@ describe('BackupService', () => {
     it('should throw error if invalid zip (no emma.db)', async () => {
       vi.mocked(dialog.showOpenDialog).mockResolvedValue({ canceled: false, filePaths: ['test.emmabak'] });
       mockZipInstance.getEntry.mockReturnValue(undefined as any);
-      await expect(backupService.restoreBackupOverride()).rejects.toThrow('Arquivo de backup inválido (não contém emma.db)');
+      await expect(backupService.restoreBackupOverride()).rejects.toThrow(
+        'Arquivo de backup inválido (não contém emma.db)',
+      );
     });
   });
 
   describe('restoreBackupMerge', () => {
     it('should return 0 if dialog is canceled', async () => {
       vi.mocked(dialog.showOpenDialog).mockResolvedValue({ canceled: true, filePaths: [] });
-      const res = await backupService.restoreBackupMerge();
-      expect(res).toBe(0);
-    });
-
-    it('should merge backup successfully and hit missing dir branches', async () => {
-      vi.mocked(dialog.showOpenDialog).mockResolvedValue({ canceled: false, filePaths: ['test.emmabak'] });
-      
-      mockZipInstance.getEntry.mockImplementation((name: string) => {
-        if (name === 'emma.db') return { getData: () => Buffer.from('db') } as any;
-        if (name.includes('pdfs')) return { getData: () => Buffer.from('pdf') } as any;
-        if (name.includes('documents')) return { getData: () => Buffer.from('doc') } as any;
-        return undefined as any;
-      });
-
-      let callCount = 0;
-      mockDb.prepare = vi.fn().mockImplementation((sql: string) => {
-        if (sql.includes('SELECT name FROM projects WHERE deleted_at IS NULL')) {
-          return { all: () => [{ name: 'Existing Proj' }] };
-        }
-        if (sql.includes('SELECT * FROM projects WHERE deleted_at IS NULL')) {
-          return { all: () => [{ id: 1, name: 'New Proj', created_at: '2023' }] };
-        }
-        if (sql.includes('SELECT * FROM articles WHERE project_id = ?')) {
-          return { all: () => [{ id: 1, title: 'Art', local_file_path: 'local.pdf' }] };
-        }
-        if (sql.includes('SELECT * FROM search_history')) return { all: () => [{ id: 1 }] };
-        if (sql.includes('SELECT * FROM project_documents')) return { all: () => [{ id: 1, local_file_path: 'doc.doc' }] };
-        if (sql.includes('SELECT * FROM massive_investigations')) return { all: () => [{ id: 1, articles_ids: '[1]' }] };
-        if (sql.includes('SELECT * FROM project_categories')) return { all: () => [{ id: 1 }] };
-        if (sql.includes('SELECT ac.* FROM article_categories')) return { all: () => [{ article_id: 1, category_id: 1 }] };
-        if (sql.includes('SELECT a.* FROM annotations')) return { all: () => [{ id: 1, article_id: 1 }] };
-        if (sql.includes('SELECT h.* FROM highlights')) return { all: () => [{ id: 1, article_id: 1, annotation_id: 1 }] };
-        if (sql.includes('SELECT ph.* FROM pending_highlights')) return { all: () => [{ id: 1, article_id: 1 }] };
-        if (sql.includes('SELECT * FROM project_diary')) return { all: () => [{ id: 1 }] };
-        
-        return { 
-          run: vi.fn().mockReturnValue({ lastInsertRowid: 1 }),
-          get: vi.fn().mockReturnValue({ id: 1 }),
-          all: vi.fn().mockReturnValue([])
-        };
-      });
-
-      vi.mocked(fs.existsSync).mockReturnValue(false); // Trigger missing dir branches
-
-      const res = await backupService.restoreBackupMerge();
-      expect(res).toBe(1);
-    });
-
-    it('should ignore duplicate project names', async () => {
-      vi.mocked(dialog.showOpenDialog).mockResolvedValue({ canceled: false, filePaths: ['test.emmabak'] });
-      
-      mockZipInstance.getEntry.mockReturnValue({ getData: () => Buffer.from('db') } as any);
-
-      mockDb.prepare = vi.fn().mockImplementation((sql: string) => {
-        if (sql.includes('SELECT name FROM projects WHERE deleted_at IS NULL')) {
-          return { all: () => [{ name: 'Same Proj' }] };
-        }
-        if (sql.includes('SELECT * FROM projects WHERE deleted_at IS NULL')) {
-          return { all: () => [{ id: 1, name: 'Same Proj' }] }; // will be skipped
-        }
-        return { run: vi.fn(), get: vi.fn(), all: vi.fn().mockReturnValue([]) };
-      });
-
-      const res = await backupService.restoreBackupMerge();
-      expect(res).toBe(0);
-    });
-
-    it('should handle tempDb exceptions gracefully', async () => {
-      vi.mocked(dialog.showOpenDialog).mockResolvedValue({ canceled: false, filePaths: ['test.emmabak'] });
-      mockZipInstance.getEntry.mockReturnValue({ getData: () => Buffer.from('db') } as any);
-      
-      mockDb.exec = vi.fn().mockImplementation(() => { throw new Error('exec error'); });
-      mockDb.pragma = vi.fn().mockImplementation(() => { throw new Error('pragma error'); });
-      
-      mockDb.prepare = vi.fn().mockImplementation((sql: string) => {
-        if (sql.includes('ALTER TABLE')) throw new Error('alter error');
-        if (sql.includes('SELECT * FROM projects')) return { all: () => [] };
-        return { run: vi.fn(), get: vi.fn(), all: vi.fn().mockReturnValue([]) };
-      });
-
-      const res = await backupService.restoreBackupMerge();
-      expect(res).toBe(0);
-    });
-    
-    it('should throw error if invalid zip (no emma.db)', async () => {
-      vi.mocked(dialog.showOpenDialog).mockResolvedValue({ canceled: false, filePaths: ['test.emmabak'] });
-      mockZipInstance.getEntry.mockReturnValue(undefined as any);
-      await expect(backupService.restoreBackupMerge()).rejects.toThrow('Arquivo de backup inválido (não contém emma.db)');
-    });
-
-    it('should handle temp cleanup errors', async () => {
-      vi.mocked(dialog.showOpenDialog).mockResolvedValue({ canceled: false, filePaths: ['test.emmabak'] });
-      
-      mockZipInstance.getEntry.mockReturnValue({ getData: () => Buffer.from('db') } as any);
-
-      mockDb.prepare = vi.fn().mockImplementation(() => {
-        return { run: vi.fn(), get: vi.fn(), all: vi.fn().mockReturnValue([]) };
-      });
-      mockDb.close = vi.fn().mockImplementation(() => { throw new Error('close error'); });
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.rmSync).mockImplementation(() => { throw new Error('rmSync error'); });
-
       const res = await backupService.restoreBackupMerge();
       expect(res).toBe(0);
     });

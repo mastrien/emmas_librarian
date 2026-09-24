@@ -82,6 +82,9 @@ describe('SyncService', () => {
         }),
       },
     };
+    // Same contract as DatabaseAdapter: getDB() exposes the connection, checkpoint() flushes the WAL.
+    mockdbAdapter.getDB = () => mockdbAdapter.db;
+    mockdbAdapter.checkpoint = () => mockdbAdapter.db.pragma('wal_checkpoint(TRUNCATE)');
   });
 
   it('exports project successfully with default mock database', async () => {
