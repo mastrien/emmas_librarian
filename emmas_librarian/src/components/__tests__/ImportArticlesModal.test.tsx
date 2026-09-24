@@ -13,6 +13,10 @@ describe('ImportArticlesModal', () => {
   beforeEach(() => {
     Object.assign(projectService, fakeService);
     fakeService.reset();
+    fakeService.getProjects.mockResolvedValue([
+      { id: 1, name: 'Destino', created_at: '' },
+      { id: 2, name: 'Origem', created_at: '' },
+    ]);
   });
 
   it('does not render when isOpen is false', () => {
@@ -22,14 +26,16 @@ describe('ImportArticlesModal', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('renders select project option when open', () => {
+  it('offers every other project as a source, excluding the destination', async () => {
     render(<ImportArticlesModal isOpen={true} destProjectId={1} onClose={vi.fn()} onImportComplete={vi.fn()} />);
 
     expect(screen.getByText('Importar Artigos de Outro Projeto')).toBeInTheDocument();
-    expect(screen.getByText('-- Selecione o projeto de origem --')).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: 'Origem' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '-- Selecione o projeto de origem --' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Destino' })).not.toBeInTheDocument();
   });
 
-  it('renders its content when opened after rendering closed', () => {
+  it('renders its content when opened after rendering closed', async () => {
     const modal = (isOpen: boolean) => (
       <ImportArticlesModal isOpen={isOpen} destProjectId={1} onClose={vi.fn()} onImportComplete={vi.fn()} />
     );
@@ -38,5 +44,6 @@ describe('ImportArticlesModal', () => {
     rerender(modal(true));
 
     expect(screen.getByText('Importar Artigos de Outro Projeto')).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: 'Origem' })).toBeInTheDocument();
   });
 });

@@ -1,18 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { AIExtractionModal } from '../modals/AIExtractionModal';
 import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
 import { MemoryRouter } from 'react-router-dom';
+import { ServicesProvider } from '../../contexts/ServicesContext';
+import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 
-const renderWithProviders = (ui: React.ReactElement) => {
-  return render(
+const service = FakeProjectService.create();
+// QuestionSetCatalog is incidental here: keep its load pending so it never updates state after a test ends.
+service.getQuestionSets.mockReturnValue(new Promise(() => undefined));
+
+// The same tree for render and rerender, so a rerender updates the modal instead of remounting it.
+const withProviders = (ui: React.ReactElement) => (
+  <ServicesProvider apiService={service}>
     <MemoryRouter>
       <GlobalErrorProvider>{ui}</GlobalErrorProvider>
-    </MemoryRouter>,
-  );
-};
+    </MemoryRouter>
+  </ServicesProvider>
+);
+
+const renderWithProviders = (ui: React.ReactElement) => render(withProviders(ui));
 
 describe('AIExtractionModal', () => {
   const mockArticlesWithPdf = [
@@ -101,13 +110,7 @@ describe('AIExtractionModal', () => {
 
     // Re-render with new array reference
     const newArticlesRef = [...mockArticlesWithPdf];
-    rerender(
-      <MemoryRouter>
-        <GlobalErrorProvider>
-          <AIExtractionModal {...defaultProps} articlesWithPdf={newArticlesRef as any[]} />
-        </GlobalErrorProvider>
-      </MemoryRouter>,
-    );
+    rerender(withProviders(<AIExtractionModal {...defaultProps} articlesWithPdf={newArticlesRef as any[]} />));
 
     // Should still be 1 out of 2 selected (it shouldn't have reset)
     expectSelectionCount('1 de 2 selecionados');
@@ -235,7 +238,7 @@ describe('AIExtractionModal', () => {
     const viewDetailsBtn = screen.getByText('Ver Detalhes');
     fireEvent.click(viewDetailsBtn);
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(screen.getByText('📄 Artigo: Article 1')).toBeInTheDocument();
     });
 

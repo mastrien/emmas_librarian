@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { DashboardPage } from '../DashboardPage';
 import { ServicesContext } from '../../contexts/ServicesContext';
@@ -80,21 +80,6 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Project 1')).toBeInTheDocument();
     expect(screen.getAllByText('Ativos')[0]).toBeInTheDocument();
     expect(screen.getAllByTestId('mock-pie-chart')).toHaveLength(2); // Global stats charts
-  });
-
-  it('updates current time every second', async () => {
-    vi.useFakeTimers();
-    fakeService.getProjects.mockResolvedValue([]);
-    fakeService.getScientificVenues.mockResolvedValue([]);
-
-    renderDashboard();
-
-    // We cannot use waitFor with fake timers easily, so we advance manually.
-    act(() => {
-      vi.advanceTimersByTime(1500);
-    });
-
-    vi.useRealTimers();
   });
 
   it('handles error when loading data', async () => {

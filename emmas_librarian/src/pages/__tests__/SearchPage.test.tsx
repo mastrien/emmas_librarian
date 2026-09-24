@@ -323,8 +323,9 @@ describe('SearchPage', () => {
     expect(limitInput).toHaveValue(50);
   });
 
-  it('handles search click when id is missing', async () => {
-    // Render without id param
+  it('renders nothing and loads no project when the route has no id', async () => {
+    // The live query translation is irrelevant without a project; keep it pending so it cannot update after the test.
+    fakeService.translateQuery.mockReturnValue(new Promise(() => undefined));
     render(
       <ServicesProvider apiService={fakeService}>
         <MemoryRouter initialEntries={[`/projects/search`]}>
@@ -339,6 +340,8 @@ describe('SearchPage', () => {
     // Project won't load since there's no id, the page returns null.
     // So there's nothing to click. We just ensure it renders null (no project title).
     expect(screen.queryByText('Fazer Nova Busca')).not.toBeInTheDocument();
+    expect(fakeService.getProject).not.toHaveBeenCalled();
+    expect(fakeService.getSetting).not.toHaveBeenCalled();
   });
 
   describe('search payload and limits', () => {

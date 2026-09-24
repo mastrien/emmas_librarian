@@ -45,7 +45,8 @@ const historyRecord = (overrides: Partial<InvestigationHistoryRecord> = {}): Inv
 
 beforeEach(() => {
   service = FakeProjectService.create();
-  service.getQuestionSets.mockResolvedValue([]);
+  // QuestionSetCatalog is incidental here: keep its load pending so it never updates state after a test ends.
+  service.getQuestionSets.mockReturnValue(new Promise(() => undefined));
   props = {
     isOpen: true,
     onClose: vi.fn(),
@@ -91,6 +92,7 @@ describe('AIExtractionModal question editing', () => {
   });
 
   it('opens and cancels the new question set form', async () => {
+    service.getQuestionSets.mockResolvedValue([]);
     renderModal();
 
     fireEvent.click(screen.getByRole('button', { name: '+ Salvar Atual' }));
