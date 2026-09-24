@@ -18,25 +18,13 @@ describe('ImportArticlesModal', () => {
 
   it('does not render when isOpen is false', () => {
     const { container } = render(
-      <ImportArticlesModal
-        isOpen={false}
-        destProjectId={1}
-        onClose={vi.fn()}
-        onImportComplete={vi.fn()}
-      />
+      <ImportArticlesModal isOpen={false} destProjectId={1} onClose={vi.fn()} onImportComplete={vi.fn()} />,
     );
     expect(container.innerHTML).toBe('');
   });
 
   it('renders select project option when open', () => {
-    render(
-      <ImportArticlesModal
-        isOpen={true}
-        destProjectId={1}
-        onClose={vi.fn()}
-        onImportComplete={vi.fn()}
-      />
-    );
+    render(<ImportArticlesModal isOpen={true} destProjectId={1} onClose={vi.fn()} onImportComplete={vi.fn()} />);
 
     expect(screen.getByText('Importar Artigos de Outro Projeto')).toBeInTheDocument();
     expect(screen.getByText('-- Selecione o projeto de origem --')).toBeInTheDocument();

@@ -145,7 +145,7 @@ export const PdfLibraryPage: React.FC = () => {
     const warningMsg = isShared
       ? `Atenção: Este PDF está sendo usado em ${pdf.articles.length} artigo(s). Excluí-lo removerá permanentemente o arquivo físico e limpará cascata de destaques, anotações e indexadores de IA em todos os projetos associados. Deseja mesmo prosseguir?`
       : 'Deseja excluir permanentemente este PDF do sistema? Esta ação não pode ser desfeita.';
-    
+
     if (window.confirm(warningMsg)) {
       try {
         await projectService.deletePdfLibraryRecord(pdf.file_path);
@@ -158,9 +158,7 @@ export const PdfLibraryPage: React.FC = () => {
 
   const filteredPdfs = pdfs.filter((pdf) => {
     const matchesFile = pdf.filename.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesArticle = pdf.articles.some((a) =>
-      a.article_title.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+    const matchesArticle = pdf.articles.some((a) => a.article_title.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesFile || matchesArticle;
   });
 
@@ -175,7 +173,15 @@ export const PdfLibraryPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <button
             onClick={() => navigate('/')}
@@ -212,27 +218,55 @@ export const PdfLibraryPage: React.FC = () => {
       {/* Metrics Dashboard */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
         <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>TOTAL DE ARQUIVOS</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '0.5rem', color: 'var(--color-primary)' }}>{pdfs.length}</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>
+            TOTAL DE ARQUIVOS
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '0.5rem', color: 'var(--color-primary)' }}>
+            {pdfs.length}
+          </div>
         </div>
         <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>ESPAÇO UTILIZADO</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '0.5rem', color: 'var(--color-success)' }}>{formatBytes(totalSize)}</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '0.5rem', color: 'var(--color-success)' }}>
+            {formatBytes(totalSize)}
+          </div>
         </div>
         <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>PDFs REUTILIZADOS</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '0.5rem', color: 'var(--color-warning)' }}>{sharedCount}</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '0.5rem', color: 'var(--color-warning)' }}>
+            {sharedCount}
+          </div>
         </div>
         <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>PDFs ÓRFÃOS</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '0.5rem', color: '#ef4444' }}>{orphanCount}</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '0.5rem', color: '#ef4444' }}>
+            {orphanCount}
+          </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div
+        className="glass-panel"
+        style={{
+          padding: '1.5rem',
+          borderRadius: 'var(--radius-lg)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.5rem',
+        }}
+      >
         <div style={{ display: 'flex', gap: '1rem', position: 'relative' }}>
-          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <Search
+            size={18}
+            style={{
+              position: 'absolute',
+              left: '1rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--text-muted)',
+            }}
+          />
           <input
             type="text"
             className="input-field"
@@ -250,20 +284,35 @@ export const PdfLibraryPage: React.FC = () => {
               Nenhum arquivo PDF encontrado.
             </div>
           ) : (
-            <table className="table" style={{ width: '100%', minWidth: '750px', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+            <table
+              className="table"
+              style={{ width: '100%', minWidth: '750px', tableLayout: 'fixed', borderCollapse: 'collapse' }}
+            >
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
                   <th style={{ padding: '1rem 0.5rem', width: '28%' }}>Arquivo</th>
                   <th style={{ padding: '1rem 0.5rem', width: '12%', whiteSpace: 'nowrap' }}>Tamanho</th>
                   <th style={{ padding: '1rem 0.5rem', width: '18%', whiteSpace: 'nowrap' }}>Data de Adição</th>
                   <th style={{ padding: '1rem 0.5rem', width: '24%' }}>Artigos e Projetos Vinculados</th>
-                  <th style={{ padding: '1rem 0.5rem', width: '18%', textAlign: 'right', whiteSpace: 'nowrap' }}>Ações</th>
+                  <th style={{ padding: '1rem 0.5rem', width: '18%', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredPdfs.map((pdf) => (
-                  <tr key={pdf.file_path} style={{ borderBottom: '1px solid var(--border-color)', verticalAlign: 'top' }}>
-                    <td style={{ padding: '1rem 0.5rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <tr
+                    key={pdf.file_path}
+                    style={{ borderBottom: '1px solid var(--border-color)', verticalAlign: 'top' }}
+                  >
+                    <td
+                      style={{
+                        padding: '1rem 0.5rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       <span
                         title={pdf.filename}
                         style={{
@@ -279,22 +328,44 @@ export const PdfLibraryPage: React.FC = () => {
                         {pdf.filename}
                       </span>
                     </td>
-                    <td style={{ padding: '1rem 0.5rem', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>{formatBytes(pdf.file_size)}</td>
-                    <td style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '1rem 0.5rem', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+                      {formatBytes(pdf.file_size)}
+                    </td>
+                    <td
+                      style={{
+                        padding: '1rem 0.5rem',
+                        color: 'var(--text-muted)',
+                        fontSize: '0.85rem',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       {formatDate(pdf.created_at)}
                     </td>
                     <td style={{ padding: '1rem 0.5rem', overflow: 'hidden' }}>
                       {pdf.articles.length === 0 ? (
-                        <span style={{ fontSize: '0.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            color: '#ef4444',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.2rem',
+                          }}
+                        >
                           <AlertTriangle size={12} /> Órfão (Nenhum vínculo)
                         </span>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', overflow: 'hidden' }}>
                           <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                            {pdf.articles.length === 1 ? 'Utilizado em 1 artigo' : `Utilizado em ${pdf.articles.length} artigos`}
+                            {pdf.articles.length === 1
+                              ? 'Utilizado em 1 artigo'
+                              : `Utilizado em ${pdf.articles.length} artigos`}
                           </span>
                           {pdf.articles.map((art) => (
-                            <div key={art.article_id} style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', overflow: 'hidden' }}>
+                            <div
+                              key={art.article_id}
+                              style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', overflow: 'hidden' }}
+                            >
                               <span
                                 onClick={() => navigate(`/articles/${art.article_id}`)}
                                 title={art.article_title}
@@ -336,7 +407,15 @@ export const PdfLibraryPage: React.FC = () => {
                       )}
                     </td>
                     <td style={{ padding: '1rem 0.5rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '0.35rem',
+                          justifyContent: 'flex-end',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                        }}
+                      >
                         {pdf.articles.length > 0 && (
                           <button
                             className="btn-secondary"
@@ -351,7 +430,13 @@ export const PdfLibraryPage: React.FC = () => {
                           className="btn-secondary"
                           onClick={() => handleOpenLinkModal(pdf)}
                           title="Vincular a outro Artigo"
-                          style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                          style={{
+                            padding: '0.3rem 0.5rem',
+                            fontSize: '0.8rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.2rem',
+                          }}
                         >
                           <Link2 size={13} /> Vincular
                         </button>
@@ -359,7 +444,13 @@ export const PdfLibraryPage: React.FC = () => {
                           className="btn-secondary"
                           onClick={() => handleDeletePdf(pdf)}
                           title="Excluir PDF"
-                          style={{ padding: '0.3rem 0.5rem', fontSize: '0.8rem', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', background: 'rgba(239, 68, 68, 0.05)' }}
+                          style={{
+                            padding: '0.3rem 0.5rem',
+                            fontSize: '0.8rem',
+                            color: '#ef4444',
+                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                            background: 'rgba(239, 68, 68, 0.05)',
+                          }}
                         >
                           <Trash2 size={13} />
                         </button>
@@ -390,7 +481,8 @@ export const PdfLibraryPage: React.FC = () => {
           <div className="card fade-in" style={{ width: '90%', maxWidth: '500px', padding: '2rem' }}>
             <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem', fontWeight: 700 }}>Vincular PDF a um Artigo</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-              Selecione o projeto e o artigo correspondente para vincular o PDF: <strong style={{ color: 'var(--text-main)' }}>{selectedPdf.filename}</strong>
+              Selecione o projeto e o artigo correspondente para vincular o PDF:{' '}
+              <strong style={{ color: 'var(--text-main)' }}>{selectedPdf.filename}</strong>
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2rem' }}>
@@ -412,9 +504,20 @@ export const PdfLibraryPage: React.FC = () => {
 
               {selectedProjectId !== '' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>ARTIGO (APENAS SEM PDF)</label>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                    ARTIGO (APENAS SEM PDF)
+                  </label>
                   {projectArticles.length === 0 ? (
-                    <div style={{ fontSize: '0.9rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.5rem 0' }}>
+                    <div
+                      style={{
+                        fontSize: '0.9rem',
+                        color: '#ef4444',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        padding: '0.5rem 0',
+                      }}
+                    >
                       <Info size={14} /> Nenhum artigo sem PDF neste projeto.
                     </div>
                   ) : (
@@ -445,11 +548,7 @@ export const PdfLibraryPage: React.FC = () => {
               >
                 Cancelar
               </button>
-              <button
-                className="btn-primary"
-                onClick={handleConfirmLink}
-                disabled={!selectedArticleId}
-              >
+              <button className="btn-primary" onClick={handleConfirmLink} disabled={!selectedArticleId}>
                 Vincular PDF
               </button>
             </div>

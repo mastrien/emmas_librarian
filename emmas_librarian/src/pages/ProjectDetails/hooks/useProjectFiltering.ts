@@ -5,7 +5,10 @@ import { parseSourceDatabases } from '../../../utils/sourceDatabases';
 // Author and index keywords are stored as semicolon-separated strings.
 function articleKeywords(article: Article): string[] {
   return [article.author_keywords, article.index_keywords].flatMap((field) =>
-    (field ?? '').split(';').map((k) => k.trim()).filter(Boolean),
+    (field ?? '')
+      .split(';')
+      .map((k) => k.trim())
+      .filter(Boolean),
   );
 }
 
@@ -17,7 +20,7 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
   const [selectedDatabases, setSelectedDatabases] = useState<string[]>([]);
   const [selectedDocType, setSelectedDocType] = useState<string>('');
   const [selectedKeyword, setSelectedKeyword] = useState<string>('');
-  
+
   const [sortOrder, setSortOrder] = useState(() => {
     return localStorage.getItem('emmas_librarian_sort_order') || 'added-desc';
   });
@@ -132,7 +135,7 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
   const readArticles = useMemo(() => articles.filter((a) => a.status === 'read'), [articles]);
   const archivedArticles = useMemo(() => articles.filter((a) => a.status === 'archived'), [articles]);
   const filteredArticles = activeArticles;
-  
+
   const totalPages = Math.ceil(activeArticles.length / itemsPerPage);
   const paginatedArticles = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;

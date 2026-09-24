@@ -46,7 +46,13 @@ export const AiSettings: React.FC<AiSettingsProps> = (props) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <ProviderKeys {...props} />
       <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
-        <SaveSettingsButton onClick={props.handleSaveKeys} saving={props.saving} saved={props.saved} idleLabel="Salvar Chaves" iconSize={20} />
+        <SaveSettingsButton
+          onClick={props.handleSaveKeys}
+          saving={props.saving}
+          saved={props.saved}
+          idleLabel="Salvar Chaves"
+          iconSize={20}
+        />
       </div>
       <AdvancedAiSettings {...props} />
     </div>
@@ -80,7 +86,12 @@ const DataSharingNotice: React.FC = () => (
 const ProviderKeys: React.FC<AiSettingsProps> = (props) => (
   <>
     <KeyField label="OpenAI API Key" value={props.openaiKey} onChange={props.setOpenaiKey} placeholder="sk-..." />
-    <KeyField label="Google Gemini API Key" value={props.geminiKey} onChange={props.setGeminiKey} placeholder="AIza..." />
+    <KeyField
+      label="Google Gemini API Key"
+      value={props.geminiKey}
+      onChange={props.setGeminiKey}
+      placeholder="AIza..."
+    />
     <KeyField
       label="Anthropic API Key"
       value={props.anthropicKey}
@@ -92,7 +103,9 @@ const ProviderKeys: React.FC<AiSettingsProps> = (props) => (
       label={
         <>
           Ollama URL (Local){' '}
-          <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>(Ex: http://127.0.0.1:11434/v1)</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>
+            (Ex: http://127.0.0.1:11434/v1)
+          </span>
         </>
       }
       value={props.ollamaUrl}
@@ -111,7 +124,9 @@ const ProviderKeys: React.FC<AiSettingsProps> = (props) => (
 
 const AdvancedAiSettings: React.FC<AiSettingsProps> = (props) => (
   <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--border-color)' }}>
-    <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: 'var(--text-heading)' }}>Configurações Avançadas por Funcionalidade</h3>
+    <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: 'var(--text-heading)' }}>
+      Configurações Avançadas por Funcionalidade
+    </h3>
     <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
       Personalize qual provedor e modelo devem ser utilizados para cada tipo de funcionalidade.
     </p>
@@ -125,10 +140,20 @@ const AdvancedAiSettings: React.FC<AiSettingsProps> = (props) => (
         />
       ))}
       <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-        <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-heading)' }}>Parâmetros Avançados de RAG (Investigação Massiva)</h4>
+        <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-heading)' }}>
+          Parâmetros Avançados de RAG (Investigação Massiva)
+        </h4>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-          <NumberSetting label="Tamanho do Chunk (caracteres)" value={props.ragChunkSize} onChange={props.setRagChunkSize} />
-          <NumberSetting label="Overlap (caracteres)" value={props.ragChunkOverlap} onChange={props.setRagChunkOverlap} />
+          <NumberSetting
+            label="Tamanho do Chunk (caracteres)"
+            value={props.ragChunkSize}
+            onChange={props.setRagChunkSize}
+          />
+          <NumberSetting
+            label="Overlap (caracteres)"
+            value={props.ragChunkOverlap}
+            onChange={props.setRagChunkOverlap}
+          />
           <NumberSetting label="Chunks Recuperados (Top K)" value={props.ragTopK} onChange={props.setRagTopK} />
         </div>
       </div>

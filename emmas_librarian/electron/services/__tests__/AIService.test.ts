@@ -304,7 +304,9 @@ describe('AIService', () => {
       model_name: 'llama3.1:70b',
     } as any);
 
-    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('Chave do Ollama Cloud não configurada');
+    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow(
+      'Chave do Ollama Cloud não configurada',
+    );
   });
 
   it('should throw QUOTA_EXCEEDED when API returns 429', async () => {

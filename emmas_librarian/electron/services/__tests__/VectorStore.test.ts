@@ -10,7 +10,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import type { Database } from 'better-sqlite3';
 
-let mockLoadablePath: string | null = null;
+const mockLoadablePath: string | null = null;
 vi.mock('sqlite-vec', async (importOriginal) => {
   const original = await importOriginal<typeof import('sqlite-vec')>();
   return {
@@ -131,9 +131,7 @@ function buildStatement(sql: string): Database.Statement {
     return {
       run: vi.fn(),
       get: vi.fn(),
-      all: vi.fn((articleId: number) =>
-        chunkRows.filter((c) => c.article_id === articleId).map((c) => ({ id: c.id })),
-      ),
+      all: vi.fn((articleId: number) => chunkRows.filter((c) => c.article_id === articleId).map((c) => ({ id: c.id }))),
     } as unknown as Database.Statement;
   }
 
@@ -258,7 +256,7 @@ vi.mock('sqlite-vec', () => ({ default: { load: vi.fn() } }));
 // ---------------------------------------------------------------------------
 describe('VectorStore', () => {
   let db: Database.Database;
-  let store: ReturnType<typeof import('../VectorStore')['VectorStore']['prototype']['constructor']>;
+  let store: ReturnType<(typeof import('../VectorStore'))['VectorStore']['prototype']['constructor']>;
 
   beforeEach(async () => {
     // Reset in-memory state

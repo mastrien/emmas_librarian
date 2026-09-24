@@ -18,7 +18,12 @@ interface MassiveExtractionOptions {
   onFatalError: (error: unknown) => void;
 }
 
-const PROVIDER_NAMES: Record<string, string> = { openai: 'OpenAI', gemini: 'Gemini', anthropic: 'Anthropic', ollama: 'Ollama' };
+const PROVIDER_NAMES: Record<string, string> = {
+  openai: 'OpenAI',
+  gemini: 'Gemini',
+  anthropic: 'Anthropic',
+  ollama: 'Ollama',
+};
 
 /**
  * Runs the same questions over each selected article, one at a time, then persists the run.
@@ -59,7 +64,15 @@ export function useMassiveExtraction(options: MassiveExtractionOptions) {
         onQuotaExceeded: options.onQuotaExceeded,
       });
       if (options.projectId !== null && collected.length > 0) {
-        await persistInvestigation(projectService, options.projectId, validQuestions, selectedIds, targets, collected, status);
+        await persistInvestigation(
+          projectService,
+          options.projectId,
+          validQuestions,
+          selectedIds,
+          targets,
+          collected,
+          status,
+        );
         options.onHistoryChanged(await projectService.getMassiveInvestigations(options.projectId));
       }
     } catch (err) {
@@ -79,7 +92,12 @@ interface ExtractionCallbacks {
   onQuotaExceeded: () => void;
 }
 
-async function extractSequentially(service: IProjectService, targets: Article[], questions: string[], callbacks: ExtractionCallbacks) {
+async function extractSequentially(
+  service: IProjectService,
+  targets: Article[],
+  questions: string[],
+  callbacks: ExtractionCallbacks,
+) {
   const collected: ArticleExtraction[] = [];
   for (let i = 0; i < targets.length && !callbacks.cancelRef.current; i++) {
     callbacks.onProgress(i + 1);
@@ -106,7 +124,8 @@ async function extractOne(service: IProjectService, article: Article, questions:
 }
 
 // Providers signal exhausted credits with HTTP 429 or a QUOTA_EXCEEDED code in the error message.
-const isQuotaMessage = (message?: string) => !!message && (message.includes('429') || message.includes('QUOTA_EXCEEDED'));
+const isQuotaMessage = (message?: string) =>
+  !!message && (message.includes('429') || message.includes('QUOTA_EXCEEDED'));
 
 async function persistInvestigation(
   service: IProjectService,

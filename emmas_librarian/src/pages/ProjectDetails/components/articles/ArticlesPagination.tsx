@@ -21,7 +21,13 @@ const next = (totalPages: number) => (page: number) => Math.min(totalPages, page
  * Usage:
  *   <PaginationSummary currentPage={p} totalPages={t} pageSize={50} totalItems={n} onPageChange={setPage} />
  */
-export const PaginationSummary: React.FC<PaginationSummaryProps> = ({ currentPage, totalPages, pageSize, totalItems, onPageChange }) => {
+export const PaginationSummary: React.FC<PaginationSummaryProps> = ({
+  currentPage,
+  totalPages,
+  pageSize,
+  totalItems,
+  onPageChange,
+}) => {
   const firstShown = (currentPage - 1) * pageSize + 1;
   const lastShown = Math.min(currentPage * pageSize, totalItems);
   const compact: React.CSSProperties = { padding: '0.3rem 0.6rem', fontSize: '0.8rem' };
@@ -40,13 +46,23 @@ export const PaginationSummary: React.FC<PaginationSummaryProps> = ({ currentPag
         Mostrando {firstShown}-{lastShown} de {totalItems} artigos
       </span>
       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-        <button onClick={() => onPageChange(previous)} disabled={currentPage === 1} className="btn-secondary" style={compact}>
+        <button
+          onClick={() => onPageChange(previous)}
+          disabled={currentPage === 1}
+          className="btn-secondary"
+          style={compact}
+        >
           <ChevronLeft size={14} />
         </button>
         <span style={{ fontWeight: 600 }}>
           {currentPage} / {totalPages}
         </span>
-        <button onClick={() => onPageChange(next(totalPages))} disabled={currentPage === totalPages} className="btn-secondary" style={compact}>
+        <button
+          onClick={() => onPageChange(next(totalPages))}
+          disabled={currentPage === totalPages}
+          className="btn-secondary"
+          style={compact}
+        >
           <ChevronRight size={14} />
         </button>
       </div>

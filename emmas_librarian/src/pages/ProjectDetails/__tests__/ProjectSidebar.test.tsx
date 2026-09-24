@@ -49,14 +49,14 @@ describe('ProjectSidebar', () => {
   it('renders and handles database filters', () => {
     renderComponent({
       uniqueDatabases: ['Scopus', 'PubMed'],
-      selectedDatabases: ['Scopus']
+      selectedDatabases: ['Scopus'],
     });
-    
+
     expect(screen.getByText('BASES DE DADOS')).toBeInTheDocument();
-    
+
     const scopusCheck = screen.getByLabelText('Scopus') as HTMLInputElement;
     expect(scopusCheck.checked).toBe(true);
-    
+
     const pubmedCheck = screen.getByLabelText('PubMed') as HTMLInputElement;
     expect(pubmedCheck.checked).toBe(false);
 
@@ -77,26 +77,29 @@ describe('ProjectSidebar', () => {
   it('renders and handles document types', () => {
     renderComponent({
       uniqueDocTypes: ['Article', 'Review'],
-      selectedDocType: 'Article'
+      selectedDocType: 'Article',
     });
-    
+
     expect(screen.getByText('TIPO DE DOCUMENTO')).toBeInTheDocument();
-    
+
     const select = screen.getByDisplayValue('Article');
     act(() => {
       fireEvent.change(select, { target: { value: 'Review' } });
     });
-    
+
     expect(defaultProps.setSelectedDocType).toHaveBeenCalledWith('Review');
     expect(defaultProps.setCurrentPage).toHaveBeenCalledWith(1);
   });
 
   it('renders and handles keyword tags', () => {
     renderComponent({
-      keywordFrequencies: [{ keyword: 'AI', count: 5 }, { keyword: 'ML', count: 3 }],
-      selectedKeyword: 'AI'
+      keywordFrequencies: [
+        { keyword: 'AI', count: 5 },
+        { keyword: 'ML', count: 3 },
+      ],
+      selectedKeyword: 'AI',
     });
-    
+
     expect(screen.getByText('NUVEM DE PALAVRAS-CHAVE')).toBeInTheDocument();
     expect(screen.getByText('AI')).toBeInTheDocument();
     expect(screen.getByText('(5)')).toBeInTheDocument();

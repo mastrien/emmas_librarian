@@ -153,7 +153,9 @@ export class HistoryRepository {
   }
 
   public restoreDiaryEntryVersion(versionId: number): void {
-    const hist = this.db.prepare('SELECT * FROM project_diary_history WHERE id = ?').get(versionId) as { project_id: number; entry_date: string; content: string } | undefined;
+    const hist = this.db.prepare('SELECT * FROM project_diary_history WHERE id = ?').get(versionId) as
+      | { project_id: number; entry_date: string; content: string }
+      | undefined;
     if (hist) {
       this.saveDiaryEntry(hist.project_id, hist.entry_date, hist.content);
     }

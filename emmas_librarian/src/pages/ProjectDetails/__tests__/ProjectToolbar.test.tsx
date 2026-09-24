@@ -40,7 +40,7 @@ describe('ProjectToolbar', () => {
     return render(
       <MemoryRouter>
         <ProjectToolbar {...defaultProps} {...props} />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
   };
 
@@ -68,7 +68,7 @@ describe('ProjectToolbar', () => {
 
   it('renders and handles Adicionar Artigos dropdown items', () => {
     renderComponent({ isAddArticlesMenuOpen: true });
-    
+
     // Batch import
     const batchImport = screen.getByText('Importar PDFs em Lote');
     act(() => {
@@ -100,7 +100,7 @@ describe('ProjectToolbar', () => {
 
   it('renders and handles Exportar dropdown items', async () => {
     renderComponent({ isExportMenuOpen: true });
-    
+
     // Biblioshiny
     const biblio = screen.getByText('Biblioshiny');
     await act(async () => {
@@ -132,19 +132,21 @@ describe('ProjectToolbar', () => {
 
   it('renders empty quick access state', () => {
     renderComponent();
-    expect(screen.getByText('Nenhum link ou documento cadastrado. Clique na engrenagem para adicionar.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Nenhum link ou documento cadastrado. Clique na engrenagem para adicionar.'),
+    ).toBeInTheDocument();
   });
 
   it('renders and handles quick access documents', () => {
     const projectDocuments = [
       { id: 1, project_id: 1, created_at: '', title: 'Google', url: 'https://google.com', category: 'General' },
-      { id: 2, project_id: 1, created_at: '', title: 'Local File', local_file_path: '/local/file.pdf', category: '' }
+      { id: 2, project_id: 1, created_at: '', title: 'Local File', local_file_path: '/local/file.pdf', category: '' },
     ];
-    
+
     renderComponent({ projectDocuments });
-    
+
     expect(screen.getByText('General')).toBeInTheDocument();
-    
+
     const googleBtn = screen.getByText('Google');
     act(() => {
       fireEvent.click(googleBtn);

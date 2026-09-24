@@ -13,7 +13,10 @@ describe('SourceDatabaseBadges', () => {
   it('flags manually added articles', () => {
     render(<SourceDatabaseBadges sourceDatabases='["Manual"]' />);
 
-    expect(screen.getByText('⚠️ Manual')).toHaveAttribute('title', 'Metadados adicionados manualmente (podem conter erros)');
+    expect(screen.getByText('⚠️ Manual')).toHaveAttribute(
+      'title',
+      'Metadados adicionados manualmente (podem conter erros)',
+    );
   });
 
   it('does not flag regular sources', () => {

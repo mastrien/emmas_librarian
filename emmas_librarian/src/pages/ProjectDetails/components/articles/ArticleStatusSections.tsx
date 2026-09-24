@@ -84,15 +84,27 @@ interface ArchivedArticlesSectionProps {
  * Usage:
  *   <ArchivedArticlesSection articles={archived} isOpen={open} onToggle={setOpen} onRestore={restore} />
  */
-export const ArchivedArticlesSection: React.FC<ArchivedArticlesSectionProps> = ({ articles, isOpen, onToggle, onRestore }) => {
+export const ArchivedArticlesSection: React.FC<ArchivedArticlesSectionProps> = ({
+  articles,
+  isOpen,
+  onToggle,
+  onRestore,
+}) => {
   if (articles.length === 0) return null;
   return (
-    <ArticleAccordion label={`Artigos Arquivados (${articles.length})`} color="var(--color-danger)" isOpen={isOpen} onToggle={onToggle}>
+    <ArticleAccordion
+      label={`Artigos Arquivados (${articles.length})`}
+      color="var(--color-danger)"
+      isOpen={isOpen}
+      onToggle={onToggle}
+    >
       {articles.map((article) => (
         <tr key={article.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
           <td style={cell}>
             <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{article.title}</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>Motivo: {article.archive_note}</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>
+              Motivo: {article.archive_note}
+            </div>
           </td>
           <td style={{ ...cell, width: '150px' }}>
             <button onClick={() => onRestore(article.id)} className="btn-secondary" style={smallButton}>

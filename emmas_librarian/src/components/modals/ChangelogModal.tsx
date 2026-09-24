@@ -47,7 +47,14 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
         }}
       >
         <div style={{ padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: '1.5rem',
+            }}
+          >
             <div>
               <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Sparkles className="text-primary" size={24} color="var(--color-primary)" />
@@ -131,8 +138,8 @@ const ApiKeyReminder: React.FC = () => (
     <div>
       <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600 }}>Aviso Importante</p>
       <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-        Certifique-se de configurar suas chaves de API nas configurações se deseja continuar usando os resumos de IA e busca
-        avançada.
+        Certifique-se de configurar suas chaves de API nas configurações se deseja continuar usando os resumos de IA e
+        busca avançada.
       </p>
     </div>
   </div>

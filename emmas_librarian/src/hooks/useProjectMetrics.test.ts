@@ -26,10 +26,9 @@ describe('useProjectMetrics', () => {
       { id: 6, status: 'unknown', local_file_path: null },
     ] as unknown as Article[];
 
-    const { result, rerender } = renderHook(
-      ({ articles }) => useProjectMetrics(articles),
-      { initialProps: { articles: mockArticles } }
-    );
+    const { result, rerender } = renderHook(({ articles }) => useProjectMetrics(articles), {
+      initialProps: { articles: mockArticles },
+    });
 
     expect(result.current).toEqual({
       total: 6,

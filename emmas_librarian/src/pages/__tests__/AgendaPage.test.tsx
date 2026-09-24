@@ -20,7 +20,7 @@ vi.mock('../../components/common/ScientificAgendaView', () => ({
 }));
 
 vi.mock('../../components/modals/VenueFormModal', () => ({
-  VenueFormModal: ({ isOpen, onClose, onSave, initialData }: any) => (
+  VenueFormModal: ({ isOpen, onClose, onSave, initialData }: any) =>
     isOpen ? (
       <div data-testid="mock-venue-form">
         Venue Form
@@ -28,8 +28,7 @@ vi.mock('../../components/modals/VenueFormModal', () => ({
         <button onClick={() => onSave({ title: 'New Venue', acronym: 'NV' })}>Save Venue</button>
         <button onClick={onClose}>Close Form</button>
       </div>
-    ) : null
-  ),
+    ) : null,
 }));
 
 describe('AgendaPage', () => {
@@ -46,16 +45,24 @@ describe('AgendaPage', () => {
     return render(
       <ServicesProvider apiService={fakeService}>
         <AgendaPage />
-      </ServicesProvider>
+      </ServicesProvider>,
     );
   };
 
   it('loads and displays venues', async () => {
     fakeService.getScientificVenues.mockResolvedValue([
-      { id: 1, title: 'Venue 1', acronym: 'V1', url: '', created_at: '', category: 'conference' as const, milestones: [] }
+      {
+        id: 1,
+        title: 'Venue 1',
+        acronym: 'V1',
+        url: '',
+        created_at: '',
+        category: 'conference' as const,
+        milestones: [],
+      },
     ]);
     renderPage();
-    
+
     await waitFor(() => {
       expect(fakeService.getScientificVenues).toHaveBeenCalled();
       expect(screen.getByTestId('venues-count').textContent).toBe('1');
@@ -65,7 +72,7 @@ describe('AgendaPage', () => {
   it('handles load venues error', async () => {
     fakeService.getScientificVenues.mockRejectedValue(new Error('Load error'));
     renderPage();
-    
+
     await waitFor(() => {
       expect(console.error).toHaveBeenCalledWith('Erro ao carregar eventos da agenda:', expect.any(Error));
     });
@@ -74,7 +81,7 @@ describe('AgendaPage', () => {
   it('opens add venue modal', async () => {
     fakeService.getScientificVenues.mockResolvedValue([]);
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
@@ -90,7 +97,7 @@ describe('AgendaPage', () => {
   it('opens edit venue modal', async () => {
     fakeService.getScientificVenues.mockResolvedValue([]);
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
@@ -106,7 +113,7 @@ describe('AgendaPage', () => {
   it('saves new venue', async () => {
     fakeService.getScientificVenues.mockResolvedValue([]);
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
@@ -127,7 +134,7 @@ describe('AgendaPage', () => {
   it('updates existing venue', async () => {
     fakeService.getScientificVenues.mockResolvedValue([]);
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
@@ -149,7 +156,7 @@ describe('AgendaPage', () => {
     fakeService.getScientificVenues.mockResolvedValue([]);
     fakeService.createScientificVenue.mockRejectedValue(new Error('Save error'));
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
@@ -170,7 +177,7 @@ describe('AgendaPage', () => {
   it('deletes venue', async () => {
     fakeService.getScientificVenues.mockResolvedValue([]);
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
@@ -188,7 +195,7 @@ describe('AgendaPage', () => {
     vi.spyOn(window, 'confirm').mockImplementation(() => false);
     fakeService.getScientificVenues.mockResolvedValue([]);
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
@@ -206,7 +213,7 @@ describe('AgendaPage', () => {
     fakeService.getScientificVenues.mockResolvedValue([]);
     fakeService.deleteScientificVenue.mockRejectedValue(new Error('Delete error'));
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
@@ -221,7 +228,7 @@ describe('AgendaPage', () => {
   it('toggles milestone status', async () => {
     fakeService.getScientificVenues.mockResolvedValue([]);
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
@@ -237,7 +244,7 @@ describe('AgendaPage', () => {
     fakeService.getScientificVenues.mockResolvedValue([]);
     fakeService.toggleMilestoneStatus.mockRejectedValue(new Error('Toggle error'));
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
@@ -252,7 +259,7 @@ describe('AgendaPage', () => {
   it('handles null venues returned from service', async () => {
     fakeService.getScientificVenues.mockResolvedValue(null as any);
     renderPage();
-    
+
     await waitFor(() => {
       expect(fakeService.getScientificVenues).toHaveBeenCalled();
       // Should default to empty array, so count is 0

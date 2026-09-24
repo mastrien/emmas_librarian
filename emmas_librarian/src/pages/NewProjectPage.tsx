@@ -22,7 +22,12 @@ export const NewProjectPage: React.FC = () => {
       navigate(`/projects/${project.id}`);
     } catch (err: unknown) {
       // Raw (non-AppError) IPC failures carry Electron's "Error invoking remote method '<channel>':" prefix.
-      setError(describeError(err, 'Erro ao criar projeto').replace(/^Error:\s*Error\s*invoking\s*remote\s*method\s*'.*?':\s*/i, ''));
+      setError(
+        describeError(err, 'Erro ao criar projeto').replace(
+          /^Error:\s*Error\s*invoking\s*remote\s*method\s*'.*?':\s*/i,
+          '',
+        ),
+      );
     } finally {
       setLoading(false);
     }

@@ -34,7 +34,14 @@ export function registerSearchHandlers(ipc: IpcRegistrar, db: DatabaseAdapter, o
   handle(
     ipc,
     IpcChannel.SEARCH_EXECUTE,
-    (_e, projectId: number, queryMap: Record<string, string>, limit: number, sortBy: QuerySort, unifiedQuery: string) =>
+    (
+      _e,
+      projectId: number,
+      queryMap: Record<string, string>,
+      limit: number,
+      sortBy: QuerySort,
+      unifiedQuery: string,
+    ) =>
       process.env.E2E_MOCK_SEARCH === 'true'
         ? persistE2eMockSearch(db, projectId, queryMap, unifiedQuery)
         : orchestrator.searchAndPersist(projectId, queryMap, limit, sortBy, unifiedQuery),

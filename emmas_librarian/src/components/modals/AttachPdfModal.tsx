@@ -84,9 +84,7 @@ export const AttachPdfModal: React.FC<AttachPdfModalProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const filteredPdfs = pdfs.filter((pdf) =>
-    pdf.filename.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPdfs = pdfs.filter((pdf) => pdf.filename.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return createPortal(
     <div
@@ -117,7 +115,15 @@ export const AttachPdfModal: React.FC<AttachPdfModalProps> = ({
       >
         <button
           onClick={onClose}
-          style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+          style={{
+            position: 'absolute',
+            top: '1.5rem',
+            right: '1.5rem',
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+          }}
         >
           <X size={24} />
         </button>
@@ -165,9 +171,20 @@ export const AttachPdfModal: React.FC<AttachPdfModalProps> = ({
             </button>
           </div>
         ) : (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, gap: '1rem' }}>
+          <div
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, gap: '1rem' }}
+          >
             <div style={{ display: 'flex', gap: '1rem', position: 'relative' }}>
-              <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Search
+                size={18}
+                style={{
+                  position: 'absolute',
+                  left: '1rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
               <input
                 type="text"
                 className="input-field"
@@ -187,7 +204,15 @@ export const AttachPdfModal: React.FC<AttachPdfModalProps> = ({
                 Nenhum PDF encontrado na biblioteca global.
               </div>
             ) : (
-              <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '0.5rem' }}>
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '0.5rem',
+                }}
+              >
                 {filteredPdfs.map((pdf) => (
                   <div
                     key={pdf.file_path}
@@ -202,15 +227,25 @@ export const AttachPdfModal: React.FC<AttachPdfModalProps> = ({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, overflow: 'hidden' }}>
                       <FileText size={16} color="var(--color-primary)" style={{ flexShrink: 0 }} />
                       <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>{pdf.filename}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatBytes(pdf.file_size)}</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                          {pdf.filename}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {formatBytes(pdf.file_size)}
+                        </div>
                       </div>
                     </div>
                     <button
                       className="btn-secondary"
                       onClick={() => handleLinkExisting(pdf.file_path)}
                       title="Vincular este PDF"
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                      style={{
+                        padding: '0.25rem 0.5rem',
+                        fontSize: '0.8rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.2rem',
+                      }}
                     >
                       <Link2 size={12} /> Vincular
                     </button>
@@ -232,6 +267,6 @@ export const AttachPdfModal: React.FC<AttachPdfModalProps> = ({
         )}
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };

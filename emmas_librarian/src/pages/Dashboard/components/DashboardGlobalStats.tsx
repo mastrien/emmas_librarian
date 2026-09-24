@@ -125,9 +125,7 @@ export const DashboardGlobalStats: React.FC<DashboardGlobalStatsProps> = ({ stat
                         backgroundColor: chartData.datasets[0].backgroundColor[index] as string,
                       }}
                     />
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                      {chartData.labels[index]}
-                    </span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{chartData.labels[index]}</span>
                   </div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-heading)' }}>{val}</div>
                 </div>

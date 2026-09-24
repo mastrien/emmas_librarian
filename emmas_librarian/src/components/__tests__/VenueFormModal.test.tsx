@@ -8,13 +8,7 @@ describe('VenueFormModal (TDD)', () => {
   const mockOnClose = vi.fn();
 
   it('renders modal in portal and displays predefined milestones', () => {
-    render(
-      <VenueFormModal
-        isOpen={true}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />,
-    );
+    render(<VenueFormModal isOpen={true} onClose={mockOnClose} onSave={mockOnSave} />);
 
     expect(screen.getByText('Novo Evento / Periódico')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Inscrição')).toBeInTheDocument();
@@ -23,13 +17,7 @@ describe('VenueFormModal (TDD)', () => {
   });
 
   it('validates that end_date cannot be before target_date for range milestones', async () => {
-    render(
-      <VenueFormModal
-        isOpen={true}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />,
-    );
+    render(<VenueFormModal isOpen={true} onClose={mockOnClose} onSave={mockOnSave} />);
 
     fireEvent.change(screen.getByPlaceholderText(/Simpósio Brasileiro de BD/i), {
       target: { value: 'Conferência de IA' },
@@ -48,7 +36,9 @@ describe('VenueFormModal (TDD)', () => {
     fireEvent.click(confirmFieldBtn);
 
     // Get all date inputs rendered in the modal
-    const allDateInputs = screen.getAllByDisplayValue((val) => typeof val === 'string').filter((i) => i.getAttribute('type') === 'date');
+    const allDateInputs = screen
+      .getAllByDisplayValue((val) => typeof val === 'string')
+      .filter((i) => i.getAttribute('type') === 'date');
     const targetDateInput = allDateInputs[allDateInputs.length - 2];
     const endDateInput = allDateInputs[allDateInputs.length - 1];
 
@@ -64,13 +54,7 @@ describe('VenueFormModal (TDD)', () => {
   });
 
   it('allows adding a custom field inline without prompt()', () => {
-    render(
-      <VenueFormModal
-        isOpen={true}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-      />,
-    );
+    render(<VenueFormModal isOpen={true} onClose={mockOnClose} onSave={mockOnSave} />);
 
     fireEvent.click(screen.getByText(/Criar Novo Campo/i));
 
@@ -83,14 +67,7 @@ describe('VenueFormModal (TDD)', () => {
   });
 
   it('successfully calls onSave when valid data is submitted', async () => {
-    render(
-      <VenueFormModal
-        isOpen={true}
-        onClose={mockOnClose}
-        onSave={mockOnSave}
-        initialDate="2026-09-15"
-      />,
-    );
+    render(<VenueFormModal isOpen={true} onClose={mockOnClose} onSave={mockOnSave} initialDate="2026-09-15" />);
 
     fireEvent.change(screen.getByPlaceholderText(/Simpósio Brasileiro de BD/i), {
       target: { value: 'Simpósio Teste' },

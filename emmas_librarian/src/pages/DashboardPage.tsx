@@ -248,9 +248,22 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {loading ? (
-        <div data-testid="dashboard-loading-skeleton" className="fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-          {[1, 2, 3].map(i => (
-            <div key={i} style={{ height: '180px', backgroundColor: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+        <div
+          data-testid="dashboard-loading-skeleton"
+          className="fade-in"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}
+        >
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              style={{
+                height: '180px',
+                backgroundColor: 'var(--bg-surface)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-color)',
+                animation: 'pulse 1.5s infinite ease-in-out',
+              }}
+            ></div>
           ))}
         </div>
       ) : (

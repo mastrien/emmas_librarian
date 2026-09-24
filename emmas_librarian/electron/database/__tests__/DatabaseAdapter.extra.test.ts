@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { safeStorage } from 'electron';
 
-let mockLoadablePath: string | null = null;
+const mockLoadablePath: string | null = null;
 vi.mock('sqlite-vec', async (importOriginal) => {
   const original = await importOriginal<typeof import('sqlite-vec')>();
   return {
@@ -120,11 +120,11 @@ describe('DatabaseAdapter Settings & Extra', () => {
     });
 
     dbAdapter.setArticleCategory(articleId, categoryId, 'RCT');
-    let artCats = dbAdapter.getArticleCategories(articleId);
+    const artCats = dbAdapter.getArticleCategories(articleId);
     expect(artCats).toHaveLength(1);
     expect(artCats[0].value).toBe('RCT');
 
-    let allProjCats = dbAdapter.getAllProjectArticleCategories(proj.id);
+    const allProjCats = dbAdapter.getAllProjectArticleCategories(proj.id);
     expect(allProjCats).toHaveLength(1);
     expect(allProjCats[0].value).toBe('RCT');
 

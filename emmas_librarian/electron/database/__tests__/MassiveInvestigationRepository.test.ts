@@ -23,13 +23,7 @@ describe('MassiveInvestigationRepository', () => {
   });
 
   it('should save a massive investigation', () => {
-    const id = repo.saveMassiveInvestigation(
-      1,
-      ['Question 1?', 'Question 2?'],
-      [101, 102],
-      'gemini-pro',
-      'running'
-    );
+    const id = repo.saveMassiveInvestigation(1, ['Question 1?', 'Question 2?'], [101, 102], 'gemini-pro', 'running');
     expect(id).toBeTypeOf('number');
     expect(id).toBeGreaterThan(0);
   });
@@ -40,16 +34,16 @@ describe('MassiveInvestigationRepository', () => {
 
     const invs = repo.getMassiveInvestigations(1) as any[];
     expect(invs.length).toBe(2);
-    
+
     // Order is created_at DESC. Without delay, they might have the same created_at.
     expect(invs[0].project_id).toBe(1);
     expect(invs[1].project_id).toBe(1);
-    
-    const statuses = invs.map(i => i.status);
+
+    const statuses = invs.map((i) => i.status);
     expect(statuses).toContain('done');
     expect(statuses).toContain('pending');
   });
-  
+
   it('should return empty array for project without investigations', () => {
     const invs = repo.getMassiveInvestigations(999);
     expect(invs).toEqual([]);

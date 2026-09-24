@@ -15,8 +15,13 @@ vi.mock('../ProjectDetails/components/ProjectArticlesList', () => ({
   ),
 }));
 
-const many = Array.from({ length: 60 }, (_, i) => article({ id: i + 1, title: `Artigo ${String(i + 1).padStart(2, '0')}` }));
-const visibleTitles = () => within(screen.getByTestId('main-articles-table')).getAllByRole('listitem').map((li) => li.textContent);
+const many = Array.from({ length: 60 }, (_, i) =>
+  article({ id: i + 1, title: `Artigo ${String(i + 1).padStart(2, '0')}` }),
+);
+const visibleTitles = () =>
+  within(screen.getByTestId('main-articles-table'))
+    .getAllByRole('listitem')
+    .map((li) => li.textContent);
 
 describe('ProjectDetailsPage pagination', () => {
   it('shows the first 50 active articles with the bottom controls', async () => {
@@ -54,10 +59,19 @@ describe('ProjectDetailsPage pagination', () => {
   });
 
   it.each([
-    ['searching', () => fireEvent.change(screen.getByPlaceholderText('Filtrar por título ou autor...'), { target: { value: 'Artigo' } })],
+    [
+      'searching',
+      () =>
+        fireEvent.change(screen.getByPlaceholderText('Filtrar por título ou autor...'), {
+          target: { value: 'Artigo' },
+        }),
+    ],
     ['toggling the PDF filter', () => fireEvent.click(screen.getByLabelText('Apenas com PDF vinculado'))],
     ['toggling the open access filter', () => fireEvent.click(screen.getByLabelText('Apenas Acesso Aberto'))],
-    ['changing the sort order', () => fireEvent.change(screen.getByRole('combobox'), { target: { value: 'title-desc' } })],
+    [
+      'changing the sort order',
+      () => fireEvent.change(screen.getByRole('combobox'), { target: { value: 'title-desc' } }),
+    ],
   ])('returns to page 1 after %s', async (_label, change) => {
     await renderProjectPage(givenProject(many));
     fireEvent.click(screen.getByRole('button', { name: /Próxima/ }));

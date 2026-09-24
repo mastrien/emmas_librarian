@@ -7,9 +7,13 @@ import { harness, resetIpcHarness, invoke, rejectionPayload, PDF_DIR } from './f
 vi.mock('electron', () => import('./fakes/ipcHarness').then((h) => h.electronModule));
 vi.mock('fs', () => import('./fakes/ipcHarness').then((h) => h.fsModule));
 vi.mock('../../database/DatabaseAdapter', () => import('./fakes/ipcHarness').then((h) => h.databaseAdapterModule));
-vi.mock('../../database/ScientificVenueRepository', () => import('./fakes/ipcHarness').then((h) => h.venueRepositoryModule));
+vi.mock('../../database/ScientificVenueRepository', () =>
+  import('./fakes/ipcHarness').then((h) => h.venueRepositoryModule),
+);
 vi.mock('../../database/SyncService', () => import('./fakes/ipcHarness').then((h) => h.syncServiceModule));
-vi.mock('../../services/SearchOrchestrator', () => import('./fakes/ipcHarness').then((h) => h.searchOrchestratorModule));
+vi.mock('../../services/SearchOrchestrator', () =>
+  import('./fakes/ipcHarness').then((h) => h.searchOrchestratorModule),
+);
 vi.mock('../../services/QueryTranslator', () => import('./fakes/ipcHarness').then((h) => h.queryTranslatorModule));
 vi.mock('../../services/ApiIntegrator', () => import('./fakes/ipcHarness').then((h) => h.apiIntegratorModule));
 vi.mock('../../services/ExportService', () => import('./fakes/ipcHarness').then((h) => h.exportServiceModule));
@@ -82,7 +86,9 @@ describe('SEARCH_EXECUTE in E2E mock mode', () => {
 
     expect(result).toEqual({ savedCount: 1, breakdown: { openalex: { count: 1 } }, articles: [{ id: 99 }] });
     expect(harness.orchestrator.searchAndPersist).not.toHaveBeenCalled();
-    expect(db.saveSearchHistory).toHaveBeenCalledWith(1, 'machine learning', { openalex: 'ml' }, 1, { openalex: { count: 1 } });
+    expect(db.saveSearchHistory).toHaveBeenCalledWith(1, 'machine learning', { openalex: 'ml' }, 1, {
+      openalex: { count: 1 },
+    });
     expect(db.saveArticle).toHaveBeenCalledWith(1, {
       doi: '10.1234/e2e-mock-doi',
       title: 'Aprendizado de Maquina E2E',
@@ -147,7 +153,9 @@ describe('ARTICLES_CREATE_MANUAL', () => {
 
   it('logs the addition and saves every provided field', async () => {
     expect(await invoke(IpcChannel.ARTICLES_CREATE_MANUAL, 1, full)).toBe(12);
-    expect(db.saveSearchHistory).toHaveBeenCalledWith(1, 'Adição manual de artigo avulso: T', {}, 1, { Manual: { count: 1 } });
+    expect(db.saveSearchHistory).toHaveBeenCalledWith(1, 'Adição manual de artigo avulso: T', {}, 1, {
+      Manual: { count: 1 },
+    });
     expect(db.saveArticle).toHaveBeenCalledWith(1, {
       title: 'T',
       authors: 'A. Autor',
@@ -182,7 +190,10 @@ describe('ARTICLES_CREATE_MANUAL', () => {
 
     expect(await invoke(IpcChannel.ARTICLES_CREATE_MANUAL, 1, full)).toBe(12);
     expect(db.saveArticle.mock.calls[0][1]).toMatchObject({ search_id: undefined });
-    expect(consoleError).toHaveBeenCalledWith('Failed to log manual article creation to search history:', expect.any(Error));
+    expect(consoleError).toHaveBeenCalledWith(
+      'Failed to log manual article creation to search history:',
+      expect.any(Error),
+    );
   });
 
   it('copies an attached PDF into storage and records its path', async () => {
@@ -220,7 +231,9 @@ describe('ARTICLES_CREATE_FROM_PDFS', () => {
 
   it('creates one article per PDF, titled after the file, and links the stored copy', async () => {
     expect(await invoke(IpcChannel.ARTICLES_CREATE_FROM_PDFS, 1, [first, second])).toBe(2);
-    expect(db.saveSearchHistory).toHaveBeenCalledWith(1, 'Importação em Lote de 2 PDFs', {}, 2, { Manual: { count: 2 } });
+    expect(db.saveSearchHistory).toHaveBeenCalledWith(1, 'Importação em Lote de 2 PDFs', {}, 2, {
+      Manual: { count: 2 },
+    });
     expect(db.saveArticle).toHaveBeenNthCalledWith(1, 1, {
       title: 'Deep Learning',
       authors: '',

@@ -196,7 +196,13 @@ export class FakeProjectService implements IProjectService {
   });
 
   createProjectDocument = vi.fn(
-    async (projectId: number, title: string, url?: string, sourceFilePath?: string, category?: string): Promise<number> => {
+    async (
+      projectId: number,
+      title: string,
+      url?: string,
+      sourceFilePath?: string,
+      category?: string,
+    ): Promise<number> => {
       const id = this.documents.length + 1;
       const doc: ProjectDocument = {
         id,
@@ -214,7 +220,13 @@ export class FakeProjectService implements IProjectService {
   );
 
   updateProjectDocument = vi.fn(
-    async (id: number, title: string, url?: string | null, sourceFilePath?: string | null, category?: string | null): Promise<void> => {
+    async (
+      id: number,
+      title: string,
+      url?: string | null,
+      sourceFilePath?: string | null,
+      category?: string | null,
+    ): Promise<void> => {
       const idx = this.documents.findIndex((d) => d.id === id);
       if (idx !== -1) {
         this.documents[idx] = {
@@ -363,7 +375,9 @@ export class FakeProjectService implements IProjectService {
 
   getQuestionSet = vi.fn(async (id: number): Promise<QuestionSet> => storedQuestionSet({ id }));
 
-  createQuestionSet = vi.fn(async (data: QuestionSetInput): Promise<QuestionSet> => storedQuestionSet({ id: 1, ...data }));
+  createQuestionSet = vi.fn(
+    async (data: QuestionSetInput): Promise<QuestionSet> => storedQuestionSet({ id: 1, ...data }),
+  );
 
   updateQuestionSet = vi.fn(
     async (_id: number, _data: Partial<Omit<QuestionSetInput, 'project_id'>>): Promise<void> => undefined,

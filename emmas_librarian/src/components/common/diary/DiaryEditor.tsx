@@ -50,7 +50,10 @@ const DiaryToolbarContents: React.FC = () => (
  * Usage:
  *   <DiaryEditor ref={editorRef} date={date} markdown={content} readOnly={!edit} onChange={onChange} />
  */
-export const DiaryEditor = forwardRef<MDXEditorMethods, DiaryEditorProps>(function DiaryEditor({ date, markdown, readOnly, onChange }, ref) {
+export const DiaryEditor = forwardRef<MDXEditorMethods, DiaryEditorProps>(function DiaryEditor(
+  { date, markdown, readOnly, onChange },
+  ref,
+) {
   return (
     <>
       <div
@@ -84,8 +87,8 @@ export const DiaryEditor = forwardRef<MDXEditorMethods, DiaryEditorProps>(functi
         />
       </div>
       <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-        Editor Markdown com visualização ao vivo. Use atalhos como <strong># </strong> para títulos, <strong>- </strong> para listas,{' '}
-        <strong>Ctrl+B</strong> para negrito. Salva automaticamente após 2 segundos.
+        Editor Markdown com visualização ao vivo. Use atalhos como <strong># </strong> para títulos, <strong>- </strong>{' '}
+        para listas, <strong>Ctrl+B</strong> para negrito. Salva automaticamente após 2 segundos.
       </p>
     </>
   );

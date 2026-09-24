@@ -8,9 +8,13 @@ import type { RecordingDouble } from './fakes/RecordingDouble';
 vi.mock('electron', () => import('./fakes/ipcHarness').then((h) => h.electronModule));
 vi.mock('fs', () => import('./fakes/ipcHarness').then((h) => h.fsModule));
 vi.mock('../../database/DatabaseAdapter', () => import('./fakes/ipcHarness').then((h) => h.databaseAdapterModule));
-vi.mock('../../database/ScientificVenueRepository', () => import('./fakes/ipcHarness').then((h) => h.venueRepositoryModule));
+vi.mock('../../database/ScientificVenueRepository', () =>
+  import('./fakes/ipcHarness').then((h) => h.venueRepositoryModule),
+);
 vi.mock('../../database/SyncService', () => import('./fakes/ipcHarness').then((h) => h.syncServiceModule));
-vi.mock('../../services/SearchOrchestrator', () => import('./fakes/ipcHarness').then((h) => h.searchOrchestratorModule));
+vi.mock('../../services/SearchOrchestrator', () =>
+  import('./fakes/ipcHarness').then((h) => h.searchOrchestratorModule),
+);
 vi.mock('../../services/QueryTranslator', () => import('./fakes/ipcHarness').then((h) => h.queryTranslatorModule));
 vi.mock('../../services/ApiIntegrator', () => import('./fakes/ipcHarness').then((h) => h.apiIntegratorModule));
 vi.mock('../../services/ExportService', () => import('./fakes/ipcHarness').then((h) => h.exportServiceModule));
@@ -98,12 +102,54 @@ const cases: DelegationCase[] = [
     forwarded: [{ type: 'term' }],
     outcome: 'passthrough',
   },
-  { channel: IpcChannel.SYNC_EXPORT_PROJECT, args: [1], target: () => harness.sync, method: 'exportProject', forwarded: [1], outcome: 'passthrough' },
-  { channel: IpcChannel.SYNC_IMPORT_PROJECT, args: ['/p.zip'], target: () => harness.sync, method: 'importProject', forwarded: ['/p.zip'], outcome: 'passthrough' },
-  { channel: IpcChannel.BACKUP_EXPORT, args: [], target: () => harness.sync, method: 'exportBackup', forwarded: [], outcome: 'passthrough' },
-  { channel: IpcChannel.BACKUP_RESTORE_OVERRIDE, args: [], target: () => harness.sync, method: 'restoreBackupOverride', forwarded: [], outcome: 'passthrough' },
-  { channel: IpcChannel.BACKUP_RESTORE_MERGE, args: [], target: () => harness.sync, method: 'restoreBackupMerge', forwarded: [], outcome: 'passthrough' },
-  { channel: IpcChannel.BACKUP_LIST_AUTO, args: [], target: () => harness.backup, method: 'listAutoBackups', forwarded: [], outcome: 'passthrough' },
+  {
+    channel: IpcChannel.SYNC_EXPORT_PROJECT,
+    args: [1],
+    target: () => harness.sync,
+    method: 'exportProject',
+    forwarded: [1],
+    outcome: 'passthrough',
+  },
+  {
+    channel: IpcChannel.SYNC_IMPORT_PROJECT,
+    args: ['/p.zip'],
+    target: () => harness.sync,
+    method: 'importProject',
+    forwarded: ['/p.zip'],
+    outcome: 'passthrough',
+  },
+  {
+    channel: IpcChannel.BACKUP_EXPORT,
+    args: [],
+    target: () => harness.sync,
+    method: 'exportBackup',
+    forwarded: [],
+    outcome: 'passthrough',
+  },
+  {
+    channel: IpcChannel.BACKUP_RESTORE_OVERRIDE,
+    args: [],
+    target: () => harness.sync,
+    method: 'restoreBackupOverride',
+    forwarded: [],
+    outcome: 'passthrough',
+  },
+  {
+    channel: IpcChannel.BACKUP_RESTORE_MERGE,
+    args: [],
+    target: () => harness.sync,
+    method: 'restoreBackupMerge',
+    forwarded: [],
+    outcome: 'passthrough',
+  },
+  {
+    channel: IpcChannel.BACKUP_LIST_AUTO,
+    args: [],
+    target: () => harness.backup,
+    method: 'listAutoBackups',
+    forwarded: [],
+    outcome: 'passthrough',
+  },
   {
     channel: IpcChannel.BACKUP_RESTORE_AUTO,
     args: ['auto.zip'],
@@ -112,8 +158,22 @@ const cases: DelegationCase[] = [
     forwarded: ['auto.zip'],
     outcome: 'passthrough',
   },
-  { channel: IpcChannel.SCIENTIFIC_VENUES_GET_ALL, args: [], target: () => harness.venues, method: 'getAllVenues', forwarded: [], outcome: 'passthrough' },
-  { channel: IpcChannel.SCIENTIFIC_VENUE_CREATE, args: [venue], target: () => harness.venues, method: 'createVenue', forwarded: [venue], outcome: 'passthrough' },
+  {
+    channel: IpcChannel.SCIENTIFIC_VENUES_GET_ALL,
+    args: [],
+    target: () => harness.venues,
+    method: 'getAllVenues',
+    forwarded: [],
+    outcome: 'passthrough',
+  },
+  {
+    channel: IpcChannel.SCIENTIFIC_VENUE_CREATE,
+    args: [venue],
+    target: () => harness.venues,
+    method: 'createVenue',
+    forwarded: [venue],
+    outcome: 'passthrough',
+  },
   {
     channel: IpcChannel.SCIENTIFIC_VENUE_UPDATE,
     args: [{ id: 3, venueData: venue }],
@@ -122,7 +182,14 @@ const cases: DelegationCase[] = [
     forwarded: [3, venue],
     outcome: 'passthrough',
   },
-  { channel: IpcChannel.SCIENTIFIC_VENUE_DELETE, args: [3], target: () => harness.venues, method: 'deleteVenue', forwarded: [3], outcome: 'passthrough' },
+  {
+    channel: IpcChannel.SCIENTIFIC_VENUE_DELETE,
+    args: [3],
+    target: () => harness.venues,
+    method: 'deleteVenue',
+    forwarded: [3],
+    outcome: 'passthrough',
+  },
   {
     channel: IpcChannel.SCIENTIFIC_MILESTONE_TOGGLE_STATUS,
     args: [{ milestoneId: 9, status: 'done' }],
@@ -162,19 +229,25 @@ describe('IPC channel contract', () => {
 });
 
 describe('IPC delegation', () => {
-  it.each(cases)('$channel calls $method with the renderer arguments', async ({ channel, args, target, method, forwarded }) => {
-    await invoke(channel, ...args);
+  it.each(cases)(
+    '$channel calls $method with the renderer arguments',
+    async ({ channel, args, target, method, forwarded }) => {
+      await invoke(channel, ...args);
 
-    expect(target()[method]).toHaveBeenCalledTimes(1);
-    expect(target()[method]).toHaveBeenCalledWith(...forwarded);
-  });
+      expect(target()[method]).toHaveBeenCalledTimes(1);
+      expect(target()[method]).toHaveBeenCalledWith(...forwarded);
+    },
+  );
 
-  it.each(cases)('$channel returns the expected result ($outcome)', async ({ channel, args, target, method, outcome }) => {
-    const response = { from: method };
-    target()[method].mockReturnValue(response);
+  it.each(cases)(
+    '$channel returns the expected result ($outcome)',
+    async ({ channel, args, target, method, outcome }) => {
+      const response = { from: method };
+      target()[method].mockReturnValue(response);
 
-    expect(await invoke(channel, ...args)).toEqual(EXPECTED_RESULT[outcome](response));
-  });
+      expect(await invoke(channel, ...args)).toEqual(EXPECTED_RESULT[outcome](response));
+    },
+  );
 
   it('defaults a missing document order to an empty list', async () => {
     await invoke(IpcChannel.PROJECT_DOCUMENTS_REORDER, 1, null);

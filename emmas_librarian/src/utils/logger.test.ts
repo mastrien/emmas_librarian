@@ -23,14 +23,19 @@ describe('Logger', () => {
     it('logs info with timestamp and action', () => {
       Logger.info('TEST_ACTION');
       expect(consoleInfoSpy).toHaveBeenCalledWith(
-        JSON.stringify({ level: 'INFO', action: 'TEST_ACTION', timestamp: '2023-01-01T12:00:00.000Z' })
+        JSON.stringify({ level: 'INFO', action: 'TEST_ACTION', timestamp: '2023-01-01T12:00:00.000Z' }),
       );
     });
 
     it('logs info with details when provided', () => {
       Logger.info('TEST_ACTION', { key: 'value' });
       expect(consoleInfoSpy).toHaveBeenCalledWith(
-        JSON.stringify({ level: 'INFO', action: 'TEST_ACTION', details: { key: 'value' }, timestamp: '2023-01-01T12:00:00.000Z' })
+        JSON.stringify({
+          level: 'INFO',
+          action: 'TEST_ACTION',
+          details: { key: 'value' },
+          timestamp: '2023-01-01T12:00:00.000Z',
+        }),
       );
     });
   });
@@ -39,14 +44,19 @@ describe('Logger', () => {
     it('logs warn with timestamp and action', () => {
       Logger.warn('TEST_WARN');
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        JSON.stringify({ level: 'WARN', action: 'TEST_WARN', timestamp: '2023-01-01T12:00:00.000Z' })
+        JSON.stringify({ level: 'WARN', action: 'TEST_WARN', timestamp: '2023-01-01T12:00:00.000Z' }),
       );
     });
 
     it('logs warn with details when provided', () => {
       Logger.warn('TEST_WARN', { key: 'warn_value' });
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        JSON.stringify({ level: 'WARN', action: 'TEST_WARN', details: { key: 'warn_value' }, timestamp: '2023-01-01T12:00:00.000Z' })
+        JSON.stringify({
+          level: 'WARN',
+          action: 'TEST_WARN',
+          details: { key: 'warn_value' },
+          timestamp: '2023-01-01T12:00:00.000Z',
+        }),
       );
     });
   });
@@ -55,14 +65,19 @@ describe('Logger', () => {
     it('logs error with timestamp and action', () => {
       Logger.error('TEST_ERROR');
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        JSON.stringify({ level: 'ERROR', action: 'TEST_ERROR', timestamp: '2023-01-01T12:00:00.000Z' })
+        JSON.stringify({ level: 'ERROR', action: 'TEST_ERROR', timestamp: '2023-01-01T12:00:00.000Z' }),
       );
     });
 
     it('logs error with object details', () => {
       Logger.error('TEST_ERROR', { code: 500 });
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        JSON.stringify({ level: 'ERROR', action: 'TEST_ERROR', details: { code: 500 }, timestamp: '2023-01-01T12:00:00.000Z' })
+        JSON.stringify({
+          level: 'ERROR',
+          action: 'TEST_ERROR',
+          details: { code: 500 },
+          timestamp: '2023-01-01T12:00:00.000Z',
+        }),
       );
     });
 
@@ -70,16 +85,16 @@ describe('Logger', () => {
       const err = new Error('Something went wrong');
       err.name = 'CustomError';
       err.stack = 'Error stack trace details';
-      
+
       Logger.error('TEST_ERROR', err);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         JSON.stringify({
           level: 'ERROR',
           action: 'TEST_ERROR',
           details: { message: 'Something went wrong', stack: 'Error stack trace details', name: 'CustomError' },
-          timestamp: '2023-01-01T12:00:00.000Z'
-        })
+          timestamp: '2023-01-01T12:00:00.000Z',
+        }),
       );
     });
   });

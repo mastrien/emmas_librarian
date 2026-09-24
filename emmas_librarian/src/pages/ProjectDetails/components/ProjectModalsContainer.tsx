@@ -70,17 +70,17 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
   cancelExtractionRef,
   showKeyAlert,
   setShowKeyAlert,
-  setActiveTab
+  setActiveTab,
 }) => {
   const projectService = useProjectService();
   const navigate = useNavigate();
-  
+
   return (
     <>
-      <ArchiveModal 
-        isOpen={modals.archivingId !== null} 
-        onClose={() => modals.setArchivingId(null)} 
-        onSubmit={handleArchiveSubmit} 
+      <ArchiveModal
+        isOpen={modals.archivingId !== null}
+        onClose={() => modals.setArchivingId(null)}
+        onSubmit={handleArchiveSubmit}
       />
 
       <ProjectCategoriesModal

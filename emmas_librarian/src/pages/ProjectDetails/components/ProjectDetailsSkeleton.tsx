@@ -17,7 +17,15 @@ const pulse = (height: string, width: string, radius = 'var(--radius-md)'): Reac
  */
 export const ProjectDetailsSkeleton: React.FC = () => (
   <div className="fade-in" style={{ maxWidth: '1200px', margin: '0 auto', minHeight: '80vh' }}>
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        marginBottom: '1.5rem',
+        color: 'var(--text-muted)',
+      }}
+    >
       <ArrowLeft size={18} /> Voltar para Projetos
     </div>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
@@ -31,7 +39,15 @@ export const ProjectDetailsSkeleton: React.FC = () => (
         ))}
       </div>
     </div>
-    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: '1rem',
+        marginBottom: '1.5rem',
+        borderBottom: '2px solid var(--border-color)',
+        paddingBottom: '0.5rem',
+      }}
+    >
       {[1, 2, 3, 4, 5].map((i) => (
         <div key={i} style={pulse('30px', '90px', 'var(--radius-sm)')} />
       ))}

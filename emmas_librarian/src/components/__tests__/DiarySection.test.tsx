@@ -15,11 +15,21 @@ const OTHER = '2026-03-04';
 
 let service: FakeProjectService;
 
-const entry = (entry_date: string, content = ''): DiaryEntry => ({ id: 0, project_id: PROJECT_ID, entry_date, content });
+const entry = (entry_date: string, content = ''): DiaryEntry => ({
+  id: 0,
+  project_id: PROJECT_ID,
+  entry_date,
+  content,
+});
 
 function longDate(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return new Date(y, m - 1, d).toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
 function shortDate(iso: string): string {
@@ -49,7 +59,8 @@ async function openEntry(iso: string, expectedContent: string): Promise<HTMLText
 }
 
 const typeInto = (editor: HTMLElement, text: string) => fireEvent.change(editor, { target: { value: text } });
-const deleteButton = () => screen.getAllByRole('button').find((b) => b.style.color === 'var(--color-danger)') as HTMLElement;
+const deleteButton = () =>
+  screen.getAllByRole('button').find((b) => b.style.color === 'var(--color-danger)') as HTMLElement;
 
 beforeEach(() => {
   service = FakeProjectService.create();
@@ -249,7 +260,9 @@ describe('DiarySection history', () => {
 
   it('restores a version into the editor', async () => {
     givenEntries(entry(PAST, 'old'));
-    service.getDiaryEntryHistory.mockResolvedValue([{ id: 10, content: 'restored', updated_at: '2026-03-05T10:00:00Z' }]);
+    service.getDiaryEntryHistory.mockResolvedValue([
+      { id: 10, content: 'restored', updated_at: '2026-03-05T10:00:00Z' },
+    ]);
     renderDiary();
     const editor = await openEntry(PAST, 'old');
     fireEvent.click(screen.getByRole('button', { name: /Histórico/ }));
@@ -279,7 +292,9 @@ describe('DiarySection history', () => {
     fireEvent.click(screen.getByRole('button', { name: /Histórico/ }));
     fireEvent.click(await screen.findByRole('button', { name: 'Restaurar' }));
 
-    await waitFor(() => expect(consoleError).toHaveBeenCalledWith('Failed to restore diary version:', expect.any(Error)));
+    await waitFor(() =>
+      expect(consoleError).toHaveBeenCalledWith('Failed to restore diary version:', expect.any(Error)),
+    );
     expect(screen.getByText('Histórico de Versões')).toBeInTheDocument();
     consoleError.mockRestore();
   });

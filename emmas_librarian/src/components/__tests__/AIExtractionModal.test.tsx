@@ -58,7 +58,9 @@ describe('AIExtractionModal', () => {
 
     const expectSelectionCount = (countStr: string) => {
       expect(
-        screen.getByText((_, el) => el?.tagName.toLowerCase() === 'span' && (el.textContent?.includes(countStr) ?? false))
+        screen.getByText(
+          (_, el) => el?.tagName.toLowerCase() === 'span' && (el.textContent?.includes(countStr) ?? false),
+        ),
       ).toBeInTheDocument();
     };
 
@@ -84,7 +86,9 @@ describe('AIExtractionModal', () => {
 
     const expectSelectionCount = (countStr: string) => {
       expect(
-        screen.getByText((_, el) => el?.tagName.toLowerCase() === 'span' && (el.textContent?.includes(countStr) ?? false))
+        screen.getByText(
+          (_, el) => el?.tagName.toLowerCase() === 'span' && (el.textContent?.includes(countStr) ?? false),
+        ),
       ).toBeInTheDocument();
     };
 
@@ -103,7 +107,7 @@ describe('AIExtractionModal', () => {
         <GlobalErrorProvider>
           <AIExtractionModal {...defaultProps} articlesWithPdf={newArticlesRef as any[]} />
         </GlobalErrorProvider>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Should still be 1 out of 2 selected (it shouldn't have reset)

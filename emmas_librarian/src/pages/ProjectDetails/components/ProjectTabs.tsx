@@ -25,7 +25,9 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({ activeTab, onSelect, a
     { id: 'history', label: `Histórico (${historyCount})`, icon: <History size={16} /> },
   ];
   return (
-    <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '1.5rem', borderBottom: '2px solid var(--border-color)' }}>
+    <div
+      style={{ display: 'flex', gap: '0.25rem', marginBottom: '1.5rem', borderBottom: '2px solid var(--border-color)' }}
+    >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (

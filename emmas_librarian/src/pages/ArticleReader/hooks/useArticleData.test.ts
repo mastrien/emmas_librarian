@@ -27,7 +27,7 @@ describe('useArticleData', () => {
 
   it('initializes correctly', () => {
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
     expect(result.current.article).toBeNull();
     expect(result.current.loading).toBe(true);
@@ -39,9 +39,9 @@ describe('useArticleData', () => {
     (projectService.getArticleCategories as Mock).mockResolvedValue([1]);
 
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
-    
+
     act(() => {
       // simulate article already fetched
       result.current.setArticle({ id: 1, project_id: 1 } as any);
@@ -57,8 +57,10 @@ describe('useArticleData', () => {
 
   it('fetches data correctly without local pdf', async () => {
     (projectService.getArticle as Mock).mockResolvedValue({
-      id: 1, project_id: 10, ai_summary: JSON.stringify({ generalSummary: 'Gen', sectionSummary: 'Sec' }),
-      local_file_path: null
+      id: 1,
+      project_id: 10,
+      ai_summary: JSON.stringify({ generalSummary: 'Gen', sectionSummary: 'Sec' }),
+      local_file_path: null,
     });
     (projectService.getHighlights as Mock).mockResolvedValue([{ id: 100, annotation_id: 200, position_data: {} }]);
     (projectService.getAnnotations as Mock).mockResolvedValue([{ id: 200 }, { id: 201 }]); // 200 is attached, 201 standalone
@@ -68,7 +70,7 @@ describe('useArticleData', () => {
     (projectService.getArticleCategories as Mock).mockResolvedValue([]);
 
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
     await act(async () => {
@@ -79,7 +81,7 @@ describe('useArticleData', () => {
     expect(result.current.aiSummary).toEqual({ generalSummary: 'Gen', sectionSummary: 'Sec' });
     expect(result.current.writingPadContent).toBe('pad content');
     expect(result.current.hasAiKey).toBe(true);
-    
+
     expect(setStandaloneAnnotations).toHaveBeenCalledWith([{ id: 201 }]); // 200 filtered out
     expect(setHighlights).toHaveBeenCalled();
     expect(result.current.loading).toBe(false);
@@ -99,12 +101,14 @@ describe('useArticleData', () => {
     (projectService.getPendingHighlights as Mock).mockResolvedValue([{ id: 999 }]);
 
     (pdfTextSearch.anchorPendingHighlights as Mock).mockResolvedValue({
-      anchoredHighlights: [{ pendingId: 999, color: 'red', position: {}, content: {text: ''}, comment: {text: ''} }],
-      unanchoredHighlights: [{ id: 888, comment: 'C', quote: 'Q' }]
+      anchoredHighlights: [
+        { pendingId: 999, color: 'red', position: {}, content: { text: '' }, comment: { text: '' } },
+      ],
+      unanchoredHighlights: [{ id: 888, comment: 'C', quote: 'Q' }],
     });
 
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
     await act(async () => {
@@ -133,7 +137,7 @@ describe('useArticleData', () => {
     (pdfTextSearch.anchorPendingHighlights as Mock).mockRejectedValue(new Error('fail'));
 
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
     await act(async () => {
@@ -147,7 +151,7 @@ describe('useArticleData', () => {
   it('handles file upload', async () => {
     (projectService.openPdfDialog as Mock).mockResolvedValue('/new-path.pdf');
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
     await act(async () => {
@@ -169,7 +173,7 @@ describe('useArticleData', () => {
     (projectService.getPendingHighlights as Mock).mockResolvedValue([]);
 
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
     await act(async () => {
@@ -191,7 +195,7 @@ describe('useArticleData', () => {
 
   it('does not unlink if not confirmed', async () => {
     vi.stubGlobal('confirm', () => false);
-    
+
     (projectService.getArticle as Mock).mockResolvedValue({ id: 1, project_id: 10, local_file_path: '/path.pdf' });
     (projectService.getHighlights as Mock).mockResolvedValue([]);
     (projectService.getAnnotations as Mock).mockResolvedValue([]);
@@ -203,7 +207,7 @@ describe('useArticleData', () => {
     (projectService.getPendingHighlights as Mock).mockResolvedValue([]);
 
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
     await act(async () => {
@@ -223,9 +227,9 @@ describe('useArticleData', () => {
   it('handles error in fetchData', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     (projectService.getArticle as Mock).mockRejectedValue(new Error('fail'));
-    
+
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
     await act(async () => {
@@ -239,9 +243,9 @@ describe('useArticleData', () => {
   it('handles error in handleFileUpload', async () => {
     (projectService.openPdfDialog as Mock).mockResolvedValue('/new-path.pdf');
     (projectService.uploadPdf as Mock).mockRejectedValue(new Error('fail'));
-    
+
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
     await act(async () => {
@@ -253,9 +257,9 @@ describe('useArticleData', () => {
 
   it('handles error in handleUnlinkClick', async () => {
     (projectService.unlinkPdf as Mock).mockRejectedValue(new Error('fail'));
-    
+
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
     act(() => {
@@ -274,9 +278,9 @@ describe('useArticleData', () => {
     (projectService.getProjectCategories as Mock).mockRejectedValue(new Error('fail'));
 
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
-    
+
     act(() => {
       result.current.setArticle({ id: 1, project_id: 1 } as any);
     });
@@ -292,7 +296,10 @@ describe('useArticleData', () => {
   it('handles invalid json in ai_summary during fetchData', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     (projectService.getArticle as Mock).mockResolvedValue({
-      id: 1, project_id: 10, ai_summary: 'invalid json', local_file_path: null
+      id: 1,
+      project_id: 10,
+      ai_summary: 'invalid json',
+      local_file_path: null,
     });
     (projectService.getHighlights as Mock).mockResolvedValue([]);
     (projectService.getAnnotations as Mock).mockResolvedValue([]);
@@ -302,7 +309,7 @@ describe('useArticleData', () => {
     (projectService.getArticleCategories as Mock).mockResolvedValue([]);
 
     const { result } = renderHook(() =>
-      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus)
+      useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
     await act(async () => {

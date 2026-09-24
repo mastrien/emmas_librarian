@@ -8,7 +8,15 @@ import type { ProjectModals } from '../hooks/useProjectModals';
 import type { Article } from '../../../types';
 
 const article = (id: number, overrides: Partial<Article> = {}): Article =>
-  ({ id, project_id: 1, title: `Artigo ${id}`, authors: 'Ana', status: 'new', source_databases: '["Scopus"]', ...overrides }) as Article;
+  ({
+    id,
+    project_id: 1,
+    title: `Artigo ${id}`,
+    authors: 'Ana',
+    status: 'new',
+    source_databases: '["Scopus"]',
+    ...overrides,
+  }) as Article;
 
 function modalsDouble(): ProjectModals {
   const setters = [
@@ -39,7 +47,14 @@ function renderTab({ articles, isSidebarOpen = true, isArticleManual = () => fal
   // Uses the real filtering hook so the tab is exercised with the state shape the page gives it.
   function Harness() {
     const filtering = useProjectFiltering(articles, pageSize);
-    return <ProjectArticlesTab filtering={filtering} isSidebarOpen={isSidebarOpen} isArticleManual={isArticleManual} {...handlers} />;
+    return (
+      <ProjectArticlesTab
+        filtering={filtering}
+        isSidebarOpen={isSidebarOpen}
+        isArticleManual={isArticleManual}
+        {...handlers}
+      />
+    );
   }
   render(
     <MemoryRouter>
@@ -131,7 +146,10 @@ describe('ProjectArticlesTab list actions', () => {
   it('forwards row actions to the page and the modals', () => {
     const withPdf = article(4, { title: 'Com PDF', local_file_path: '/a.pdf' });
     const withoutPdf = article(5, { title: 'Sem PDF' });
-    const { modals, onStatusChange, onUnlinkPdf, onAttachPdf } = renderTab({ articles: [withPdf, withoutPdf], isArticleManual: () => true });
+    const { modals, onStatusChange, onUnlinkPdf, onAttachPdf } = renderTab({
+      articles: [withPdf, withoutPdf],
+      isArticleManual: () => true,
+    });
     const row = (title: string) => within(within(mainList()).getByText(title).closest('tr') as HTMLElement);
 
     fireEvent.click(row('Com PDF').getByTitle('Desvincular PDF'));
@@ -155,6 +173,10 @@ describe('ProjectArticlesTab pagination', () => {
     expect(screen.getByText('Mostrando 1-2 de 3 artigos')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Próxima/ }));
     expect(screen.getByText('Mostrando 3-3 de 3 artigos')).toBeInTheDocument();
-    expect(within(mainList()).getAllByRole('row').filter((r) => r.textContent?.includes('Artigo'))).toHaveLength(1);
+    expect(
+      within(mainList())
+        .getAllByRole('row')
+        .filter((r) => r.textContent?.includes('Artigo')),
+    ).toHaveLength(1);
   });
 });

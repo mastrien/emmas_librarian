@@ -67,7 +67,10 @@ export const fsModule = { default: fsFacade, ...fsFacade };
 export const databaseAdapterModule = { DatabaseAdapter: constructing(harness.db) };
 export const venueRepositoryModule = { ScientificVenueRepository: constructing(harness.venues) };
 export const searchOrchestratorModule = { SearchOrchestrator: constructing(harness.orchestrator) };
-export const queryTranslatorModule = { QueryTranslator: constructing(harness.translator), queryTranslator: harness.translator };
+export const queryTranslatorModule = {
+  QueryTranslator: constructing(harness.translator),
+  queryTranslator: harness.translator,
+};
 export const apiIntegratorModule = { ApiIntegrator: constructing(createRecordingDouble()) };
 export const exportServiceModule = { ExportService: constructing(harness.exporter) };
 export const aiServiceModule = { AIService: constructing(harness.ai) };
@@ -76,7 +79,9 @@ export const backupServiceModule = { BackupService: constructing(harness.backup)
 
 const doubles = [harness.db, harness.sqlite, harness.backup, harness.orchestrator, harness.translator];
 const moreDoubles = [harness.exporter, harness.ai, harness.sync, harness.venues];
-const plainMocks = [harness.app, harness.dialog, harness.shell, harness.windows].flatMap((group) => Object.values(group));
+const plainMocks = [harness.app, harness.dialog, harness.shell, harness.windows].flatMap((group) =>
+  Object.values(group),
+);
 
 export function resetIpcHarness(): void {
   harness.ipcMain.reset();
@@ -93,7 +98,9 @@ export function invoke(channel: string, ...args: unknown[]): Promise<unknown> {
 }
 
 /** Awaits a handler expected to fail and returns the AppError payload the renderer receives. */
-export async function rejectionPayload(pending: Promise<unknown>): Promise<{ code: string; type: string; message: string }> {
+export async function rejectionPayload(
+  pending: Promise<unknown>,
+): Promise<{ code: string; type: string; message: string }> {
   const error = await pending.then(
     () => expect.unreachable('handler should have rejected'),
     (e: unknown) => e,

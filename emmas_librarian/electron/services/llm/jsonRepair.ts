@@ -29,7 +29,10 @@ function assertNonEmptyString(rawInput: unknown): asserts rawInput is string {
 
 function stripMarkdownFence(text: string): string {
   if (!text.startsWith('```')) return text;
-  return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  return text
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
 }
 
 function tryParse(text: string): ParseAttempt {

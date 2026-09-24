@@ -19,9 +19,19 @@ interface KeyFieldProps {
  */
 export const KeyField: React.FC<KeyFieldProps> = ({ label, value, onChange, placeholder, secret = true, title }) => (
   <div>
-    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>{label}</label>
+    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>
+      {label}
+    </label>
     <div style={{ position: 'relative' }}>
-      <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+      <div
+        style={{
+          position: 'absolute',
+          left: '1rem',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          color: 'var(--text-muted)',
+        }}
+      >
         <Key size={18} />
       </div>
       <input
@@ -75,7 +85,13 @@ export const NumberSetting: React.FC<{ label: string; value: string; onChange: (
 }) => (
   <div>
     <label style={smallLabelStyle}>{label}</label>
-    <input type="number" value={value} onChange={(e) => onChange(e.target.value)} className="input-field" style={settingsInputStyle} />
+    <input
+      type="number"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="input-field"
+      style={settingsInputStyle}
+    />
   </div>
 );
 
@@ -94,7 +110,14 @@ interface SaveSettingsButtonProps {
  * Usage:
  *   <SaveSettingsButton onClick={save} saving={saving} saved={saved} idleLabel="Salvar Chaves" iconSize={20} />
  */
-export const SaveSettingsButton: React.FC<SaveSettingsButtonProps> = ({ onClick, saving, saved, idleLabel, iconSize, iconStyle }) => (
+export const SaveSettingsButton: React.FC<SaveSettingsButtonProps> = ({
+  onClick,
+  saving,
+  saved,
+  idleLabel,
+  iconSize,
+  iconStyle,
+}) => (
   <button onClick={onClick} className="btn-primary" disabled={saving} style={{ minWidth: '150px' }}>
     {saved ? <CheckCircle size={iconSize} style={iconStyle} /> : <Save size={iconSize} style={iconStyle} />}
     {saving ? 'Salvando...' : saved ? 'Salvo!' : idleLabel}

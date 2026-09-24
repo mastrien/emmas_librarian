@@ -265,11 +265,7 @@ export const ArticleReaderPage: React.FC = () => {
 
       <div style={{ flexGrow: 1, position: 'relative', minHeight: 0 }}>
         {!hasLocalFile && article ? (
-          <PdfPlaceholderView
-            article={article}
-            uploading={uploading}
-            onFileUpload={() => setIsAttachModalOpen(true)}
-          />
+          <PdfPlaceholderView article={article} uploading={uploading} onFileUpload={() => setIsAttachModalOpen(true)} />
         ) : (
           <ArticleReaderPdfView
             pdfUrl={pdfUrl || ''}

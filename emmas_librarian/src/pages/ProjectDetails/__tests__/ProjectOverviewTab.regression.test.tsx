@@ -9,27 +9,27 @@ describe('ProjectOverviewTab - Regression Tests', () => {
     // If the components (like LinearScale, CategoryScale) are not properly
     // registered using ChartJS.register(), rendering these charts will
     // throw an error synchronously.
-    
+
     const dummyArticle: any = {
-      id: 1, 
-      year: 2021, 
-      is_oa: 1, 
-      source_databases: '["Scopus"]', 
-      publisher: 'Elsevier', 
+      id: 1,
+      year: 2021,
+      is_oa: 1,
+      source_databases: '["Scopus"]',
+      publisher: 'Elsevier',
       doi: '10.123/1',
       project_id: 1,
       title: 'Test Article',
-      status: 'new'
+      status: 'new',
     };
 
     expect(() => {
       render(
-        <ProjectOverviewTab 
-          activeArticles={[dummyArticle]} 
-          readArticles={[]} 
-          archivedArticles={[]} 
-          filteredArticles={[dummyArticle]} 
-        />
+        <ProjectOverviewTab
+          activeArticles={[dummyArticle]}
+          readArticles={[]}
+          archivedArticles={[]}
+          filteredArticles={[dummyArticle]}
+        />,
       );
     }).not.toThrow();
   });

@@ -19,27 +19,45 @@ export function registerDocumentHandlers(ipc: IpcRegistrar, db: DatabaseAdapter)
   handle(
     ipc,
     IpcChannel.PROJECT_DOCUMENTS_CREATE,
-    (_e, projectId: number, title: string, url?: Optional<string>, sourceFilePath?: Optional<string>, category?: Optional<string>) => {
-      const stored = sourceFilePath ? copyIntoDocuments(sourceFilePath, `doc_${projectId}_${Date.now()}.pdf`, 'project document') : null;
+    (
+      _e,
+      projectId: number,
+      title: string,
+      url?: Optional<string>,
+      sourceFilePath?: Optional<string>,
+      category?: Optional<string>,
+    ) => {
+      const stored = sourceFilePath
+        ? copyIntoDocuments(sourceFilePath, `doc_${projectId}_${Date.now()}.pdf`, 'project document')
+        : null;
       return db.saveProjectDocument(projectId, title, url ?? null, stored, category ?? null);
     },
   );
   handle(
     ipc,
     IpcChannel.PROJECT_DOCUMENTS_UPDATE,
-    (_e, id: number, title: string, url?: Optional<string>, sourceFilePath?: Optional<string>, category?: Optional<string>) =>
-      db.updateProjectDocument(id, title, url ?? null, resolveUpdatedFile(sourceFilePath), category ?? null),
+    (
+      _e,
+      id: number,
+      title: string,
+      url?: Optional<string>,
+      sourceFilePath?: Optional<string>,
+      category?: Optional<string>,
+    ) => db.updateProjectDocument(id, title, url ?? null, resolveUpdatedFile(sourceFilePath), category ?? null),
   );
   handle(ipc, IpcChannel.PROJECT_DOCUMENTS_REORDER, (_e, projectId: number, orderedIds?: number[] | null) =>
     db.reorderProjectDocuments(projectId, orderedIds || []),
   );
   handle(ipc, IpcChannel.PROJECT_DOCUMENTS_DELETE, (_e, id: number) => db.deleteProjectDocument(id));
-  handle(ipc, IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, (_e, url?: string, filePath?: string) => openDocument(url, filePath));
+  handle(ipc, IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, (_e, url?: string, filePath?: string) =>
+    openDocument(url, filePath),
+  );
 }
 
 // A path already inside project storage was copied before; anything else is a newly attached external file.
 function resolveUpdatedFile(sourceFilePath: Optional<string>): string | null {
-  if (!sourceFilePath || sourceFilePath.includes(path.join('storage', 'project_documents'))) return sourceFilePath ?? null;
+  if (!sourceFilePath || sourceFilePath.includes(path.join('storage', 'project_documents')))
+    return sourceFilePath ?? null;
   return copyIntoDocuments(sourceFilePath, `doc_${Date.now()}.pdf`, 'updating project document') ?? sourceFilePath;
 }
 

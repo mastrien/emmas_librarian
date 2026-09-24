@@ -10,7 +10,10 @@ export interface DiaryVersion {
 
 const PREVIEW_LENGTH = 150;
 
-const DiaryDialog: React.FC<{ cardStyle: React.CSSProperties; children: React.ReactNode }> = ({ cardStyle, children }) =>
+const DiaryDialog: React.FC<{ cardStyle: React.CSSProperties; children: React.ReactNode }> = ({
+  cardStyle,
+  children,
+}) =>
   createPortal(
     <div
       style={{
@@ -72,7 +75,9 @@ interface DiaryHistoryDialogProps {
  *   {showHistory && <DiaryHistoryDialog date={date} versions={versions} onRestore={restore} onClose={close} />}
  */
 export const DiaryHistoryDialog: React.FC<DiaryHistoryDialogProps> = ({ date, versions, onRestore, onClose }) => (
-  <DiaryDialog cardStyle={{ width: '500px', maxWidth: '90%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+  <DiaryDialog
+    cardStyle={{ width: '500px', maxWidth: '90%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}
+  >
     <h3 style={{ margin: '0 0 1rem 0', color: 'var(--text-heading)' }}>Histórico de Versões</h3>
     <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
       Selecione uma versão anterior para restaurar no diário de <strong>{formatDiaryDate(date)}</strong>.
@@ -88,7 +93,11 @@ export const DiaryHistoryDialog: React.FC<DiaryHistoryDialogProps> = ({ date, ve
         paddingRight: '0.5rem',
       }}
     >
-      {versions.length === 0 ? <NoVersions /> : versions.map((v) => <VersionCard key={v.id} version={v} onRestore={onRestore} />)}
+      {versions.length === 0 ? (
+        <NoVersions />
+      ) : (
+        versions.map((v) => <VersionCard key={v.id} version={v} onRestore={onRestore} />)
+      )}
     </div>
     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
       <button onClick={onClose} className="btn-secondary" style={{ padding: '0.5rem 1.5rem' }}>
@@ -115,7 +124,10 @@ const NoVersions: React.FC = () => (
 const previewOf = (content: string) =>
   !content ? '(Vazio)' : content.length > PREVIEW_LENGTH ? content.substring(0, PREVIEW_LENGTH) + '...' : content;
 
-const VersionCard: React.FC<{ version: DiaryVersion; onRestore: (versionId: number) => void }> = ({ version, onRestore }) => (
+const VersionCard: React.FC<{ version: DiaryVersion; onRestore: (versionId: number) => void }> = ({
+  version,
+  onRestore,
+}) => (
   <div
     style={{
       display: 'flex',

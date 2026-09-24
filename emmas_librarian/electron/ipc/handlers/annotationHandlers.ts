@@ -10,7 +10,9 @@ import { handle, type IpcRegistrar } from './handle';
  */
 export function registerAnnotationHandlers(ipc: IpcRegistrar, db: DatabaseAdapter): void {
   handle(ipc, IpcChannel.ANNOTATIONS_GET, (_e, articleId: number) => db.getAnnotations(articleId));
-  handle(ipc, IpcChannel.ANNOTATIONS_CREATE, (_e, articleId: number, content: string) => db.saveAnnotation(articleId, content));
+  handle(ipc, IpcChannel.ANNOTATIONS_CREATE, (_e, articleId: number, content: string) =>
+    db.saveAnnotation(articleId, content),
+  );
   handle(ipc, IpcChannel.ANNOTATIONS_UPDATE, (_e, id: number, content: string) => db.updateAnnotation(id, content));
   handle(ipc, IpcChannel.ANNOTATIONS_DELETE, (_e, id: number) => db.deleteAnnotation(id));
 

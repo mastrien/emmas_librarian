@@ -53,7 +53,10 @@ test('F-15 Cross-project Article Sharing and Search History Traceability', async
     await expect(window.locator('h3:has-text("Importar Artigos de Outro Projeto")')).toBeVisible();
 
     // 5. Select Source Project in the dropdown
-    await window.waitForSelector(`select[id="source-project-select"] option:has-text("${sourceProjectName}")`, { state: 'attached', timeout: 10000 });
+    await window.waitForSelector(`select[id="source-project-select"] option:has-text("${sourceProjectName}")`, {
+      state: 'attached',
+      timeout: 10000,
+    });
     await window.selectOption('select[id="source-project-select"]', { label: sourceProjectName });
 
     // Wait for articles to load — partial regex match for "{count} artigos encontrados"
@@ -143,7 +146,9 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
     await window.click('button:has-text("Selecionar da Biblioteca")');
 
     // Choose PDF from list modal — select the specific unique PDF item's link button (AttachPdfModal renders divs, not trs)
-    await window.waitForSelector(`div:has-text("${pdfFilename}") button[title="Vincular este PDF"]`, { timeout: 10000 });
+    await window.waitForSelector(`div:has-text("${pdfFilename}") button[title="Vincular este PDF"]`, {
+      timeout: 10000,
+    });
     await window.click(`div:has-text("${pdfFilename}") button[title="Vincular este PDF"]`);
     await window.waitForSelector('text="Visualizar PDF"', { timeout: 10000 });
     await window.click('button:has-text("Fechar")');

@@ -129,7 +129,13 @@ describe('DatabaseAdapter', () => {
 
   it('manages project documents with edit, category and reorder', () => {
     const proj = dbAdapter.createProject('Doc Project');
-    const docId1 = dbAdapter.saveProjectDocument(proj.id, 'Test Doc 1', 'https://example.com', '/mock/path.pdf', 'Reuniões');
+    const docId1 = dbAdapter.saveProjectDocument(
+      proj.id,
+      'Test Doc 1',
+      'https://example.com',
+      '/mock/path.pdf',
+      'Reuniões',
+    );
     const docId2 = dbAdapter.saveProjectDocument(proj.id, 'Test Doc 2', 'https://example2.com', undefined, 'Artigos');
 
     expect(docId1).toBeGreaterThan(0);
@@ -438,7 +444,6 @@ describe('DatabaseAdapter', () => {
       const adapter3 = new DatabaseAdapter(':memory:');
       adapter3.close();
       expect(loadExtensionSpy).toHaveBeenCalledWith('C:\\some_other_path\\vec0.dll');
-
     } finally {
       mockLoadablePath = null;
       loadExtensionSpy.mockRestore();
@@ -454,7 +459,7 @@ describe('DatabaseAdapter', () => {
 
   it('checks database integrity correctly', () => {
     expect(dbAdapter.checkIntegrity()).toBe(true);
-    
+
     // Mock to return empty to test false
     const pragmaSpy = vi.spyOn(dbAdapter.getDB(), 'pragma').mockReturnValue([]);
     expect(dbAdapter.checkIntegrity()).toBe(false);
@@ -462,10 +467,11 @@ describe('DatabaseAdapter', () => {
     pragmaSpy.mockReturnValue([{ integrity_check: 'not ok' }]);
     expect(dbAdapter.checkIntegrity()).toBe(false);
 
-    pragmaSpy.mockImplementation(() => { throw new Error('DB Error'); });
+    pragmaSpy.mockImplementation(() => {
+      throw new Error('DB Error');
+    });
     expect(dbAdapter.checkIntegrity()).toBe(false);
-    
+
     pragmaSpy.mockRestore();
   });
 });
-

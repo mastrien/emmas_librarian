@@ -103,7 +103,10 @@ describe('project documents keep positional args', () => {
   it('updateProjectDocument sends null for omitted optionals', async () => {
     await api.updateProjectDocument(3, 'Doc');
 
-    expect(bridge.lastInvocation()).toEqual({ channel: IpcChannel.PROJECT_DOCUMENTS_UPDATE, args: [3, 'Doc', null, null, null] });
+    expect(bridge.lastInvocation()).toEqual({
+      channel: IpcChannel.PROJECT_DOCUMENTS_UPDATE,
+      args: [3, 'Doc', null, null, null],
+    });
   });
 
   it('updateProjectDocument forwards provided optionals', async () => {

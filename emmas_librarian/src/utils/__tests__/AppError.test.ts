@@ -7,7 +7,12 @@ describe('FrontendAppError', () => {
 
     expect(error).toBeInstanceOf(FrontendAppError);
     expect(error).toBeInstanceOf(Error);
-    expect(error).toMatchObject({ name: 'FrontendAppError', code: 'ERR_NOT_FOUND', type: 'USER_ERROR', isAppError: true });
+    expect(error).toMatchObject({
+      name: 'FrontendAppError',
+      code: 'ERR_NOT_FOUND',
+      type: 'USER_ERROR',
+      isAppError: true,
+    });
     expect(error.details).toEqual({ id: 1 });
   });
 });
@@ -18,7 +23,12 @@ describe('parseIpcError', () => {
   });
 
   it('extracts an AppError payload embedded in the IPC message', () => {
-    const payload = JSON.stringify({ isAppError: true, code: 'ERR_INVALID_PDF', type: 'VALIDATION_ERROR', message: 'bad pdf' });
+    const payload = JSON.stringify({
+      isAppError: true,
+      code: 'ERR_INVALID_PDF',
+      type: 'VALIDATION_ERROR',
+      message: 'bad pdf',
+    });
 
     const parsed = parseIpcError(new Error(`Error invoking remote method 'x': Error: ${payload}`));
 

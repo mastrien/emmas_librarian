@@ -228,7 +228,9 @@ describe('ProjectDetailsPage delete', () => {
     fireEvent.click(deleteButton());
 
     expect(service.deleteProject).not.toHaveBeenCalled();
-    expect(within(screen.getByTestId('project-details-container')).getByRole('heading', { level: 1 })).toHaveTextContent('Tese');
+    expect(
+      within(screen.getByTestId('project-details-container')).getByRole('heading', { level: 1 }),
+    ).toHaveTextContent('Tese');
   });
 
   it('alerts when deletion fails', async () => {

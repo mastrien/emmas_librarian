@@ -4,7 +4,7 @@ import { QueryTranslator } from '../QueryTranslator';
 import { DatabaseAdapter } from '../database/DatabaseAdapter';
 import type { OpenAlexArticle } from '../services/openalex/types';
 
-let mockLoadablePath: string | null = null;
+const mockLoadablePath: string | null = null;
 vi.mock('sqlite-vec', async (importOriginal) => {
   const original = await importOriginal<typeof import('sqlite-vec')>();
   return {
@@ -56,9 +56,7 @@ class MockDatabaseAdapter {
    * for the project, merge source_databases instead of inserting a duplicate.
    */
   saveArticle(projectId: number, data: ArticleInput): number {
-    const existing = this.articles.find(
-      (a) => a.project_id === projectId && a.doi && data.doi && a.doi === data.doi,
-    );
+    const existing = this.articles.find((a) => a.project_id === projectId && a.doi && data.doi && a.doi === data.doi);
 
     if (existing) {
       // Merge source_databases arrays (stored as JSON strings)

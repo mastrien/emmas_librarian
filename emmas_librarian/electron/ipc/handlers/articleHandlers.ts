@@ -27,8 +27,11 @@ export function registerArticleHandlers(ipc: IpcRegistrar, db: DatabaseAdapter):
   handle(ipc, IpcChannel.ARTICLES_IMPORT_FROM_PROJECT, (_e, sourceId: number, destId: number, articleIds: number[]) =>
     importFromProject(db, sourceId, destId, articleIds),
   );
-  handle(ipc, IpcChannel.ARTICLES_CREATE_MANUAL, (_e, projectId: number, data: ManualArticleData, sourceFilePath?: string) =>
-    createManualArticle(db, projectId, data, sourceFilePath),
+  handle(
+    ipc,
+    IpcChannel.ARTICLES_CREATE_MANUAL,
+    (_e, projectId: number, data: ManualArticleData, sourceFilePath?: string) =>
+      createManualArticle(db, projectId, data, sourceFilePath),
   );
   handle(ipc, IpcChannel.ARTICLES_CREATE_FROM_PDFS, (_e, projectId: number, filePaths: string[]) =>
     createArticlesFromPdfs(db, projectId, filePaths),
@@ -92,7 +95,12 @@ function createArticlesFromPdfs(db: DatabaseAdapter, projectId: number, filePath
 }
 
 // Store the PDF first so a failed copy never leaves an article without its file.
-function importPdfAsArticle(db: DatabaseAdapter, projectId: number, sourceFilePath: string, searchId?: number): boolean {
+function importPdfAsArticle(
+  db: DatabaseAdapter,
+  projectId: number,
+  sourceFilePath: string,
+  searchId?: number,
+): boolean {
   try {
     const { destPath } = savePdfToStorage(db, sourceFilePath);
     const articleId = db.saveArticle(projectId, {

@@ -21,7 +21,7 @@ export function setupAiIpcHandlers(db: DatabaseAdapter, aiService: AIService, ip
       const article = db.getArticle(articleId);
       if (!article || !article.local_file_path || !fs.existsSync(article.local_file_path)) {
         throw new Error(
-          `[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=${articleId}. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.`
+          `[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=${articleId}. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.`,
         );
       }
       return aiService.generateSummary(articleId, article.local_file_path);
@@ -41,7 +41,7 @@ export function setupAiIpcHandlers(db: DatabaseAdapter, aiService: AIService, ip
       const article = db.getArticle(articleId);
       if (!article || !article.local_file_path || !fs.existsSync(article.local_file_path)) {
         throw new Error(
-          `[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=${articleId}. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.`
+          `[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=${articleId}. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.`,
         );
       }
       return aiService.massiveExtraction(articleId, article.local_file_path, questions);
@@ -54,7 +54,7 @@ export function setupAiIpcHandlers(db: DatabaseAdapter, aiService: AIService, ip
       const article = db.getArticle(articleId);
       if (!article || !article.local_file_path || !fs.existsSync(article.local_file_path)) {
         throw new Error(
-          `[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=${articleId}. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.`
+          `[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=${articleId}. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.`,
         );
       }
       return aiService.extractMetadataFromPdf(articleId, article.local_file_path);

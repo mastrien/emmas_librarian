@@ -11,7 +11,12 @@ function toLocalDate(isoDay: string): Date {
  *   formatDiaryDate('2026-03-05');
  */
 export function formatDiaryDate(isoDay: string): string {
-  return toLocalDate(isoDay).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return toLocalDate(isoDay).toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
 /**

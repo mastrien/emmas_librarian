@@ -87,7 +87,7 @@ export async function extractTextWithCoordinates(
             pushCurrentChunk();
 
             let keepText = '';
-            let keepBboxes: typeof currentBboxes = [];
+            const keepBboxes: typeof currentBboxes = [];
 
             for (let i = currentBboxes.length - 1; i >= 0; i--) {
               keepBboxes.unshift(currentBboxes[i]);

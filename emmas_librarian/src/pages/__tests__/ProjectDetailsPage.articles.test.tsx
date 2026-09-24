@@ -31,10 +31,7 @@ describe('ProjectDetailsPage filters', () => {
     expect(within(mainTable()).getByText('Paper about proteins')).toBeInTheDocument();
   });
 
-  it.each([
-    ['Apenas com PDF vinculado'],
-    ['Apenas Acesso Aberto'],
-  ])('narrows the list with "%s"', async (label) => {
+  it.each([['Apenas com PDF vinculado'], ['Apenas Acesso Aberto']])('narrows the list with "%s"', async (label) => {
     await renderProjectPage(givenProject(articles));
 
     fireEvent.click(screen.getByLabelText(label));
@@ -42,7 +39,9 @@ describe('ProjectDetailsPage filters', () => {
     expect(within(mainTable()).getByText('Paper about genes')).toBeInTheDocument();
     expect(within(mainTable()).queryByText('Paper about proteins')).not.toBeInTheDocument();
     // getComputedStyle cannot resolve var(); read the inline declaration instead.
-    expect((screen.getByLabelText(label).closest('label') as HTMLElement).style.border).toBe('1px solid var(--color-primary)');
+    expect((screen.getByLabelText(label).closest('label') as HTMLElement).style.border).toBe(
+      '1px solid var(--color-primary)',
+    );
   });
 
   it('reorders the list', async () => {
@@ -59,7 +58,13 @@ describe('ProjectDetailsPage filters', () => {
     await renderProjectPage(
       givenProject([
         article({ id: 1, title: 'Paper One', source_databases: '["OpenAlex"]', author_keywords: 'React; Testing' }),
-        article({ id: 2, title: 'Paper Two', source_databases: '["Scopus"]', status: 'read', author_keywords: 'Database; SQL' }),
+        article({
+          id: 2,
+          title: 'Paper Two',
+          source_databases: '["Scopus"]',
+          status: 'read',
+          author_keywords: 'Database; SQL',
+        }),
       ]),
     );
     const listed = (title: string) => within(mainTable()).queryByText(title);
@@ -166,7 +171,9 @@ describe('ProjectDetailsPage status changes from the main list', () => {
     await renderProjectPage(service);
 
     fireEvent.click(inRow('Artigo novo').getByTitle('Arquivar'));
-    fireEvent.change(screen.getByPlaceholderText('Por que este artigo não é relevante?'), { target: { value: 'duplicado' } });
+    fireEvent.change(screen.getByPlaceholderText('Por que este artigo não é relevante?'), {
+      target: { value: 'duplicado' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar Arquivamento' }));
 
     expect(await screen.findByText('Motivo: duplicado')).toBeInTheDocument();

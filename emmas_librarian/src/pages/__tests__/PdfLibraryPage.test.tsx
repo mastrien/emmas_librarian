@@ -12,7 +12,7 @@ const navigateMock = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
-    ...actual as any,
+    ...(actual as any),
     useNavigate: () => navigateMock,
   };
 });
@@ -23,7 +23,7 @@ const renderPage = () => {
       <ServicesContext.Provider value={fakeService as any}>
         <PdfLibraryPage />
       </ServicesContext.Provider>
-    </BrowserRouter>
+    </BrowserRouter>,
   );
 };
 
@@ -60,7 +60,7 @@ describe('PdfLibraryPage', () => {
         filename: 'doc1.pdf',
         file_size: 1048576, // 1 MB
         created_at: '2023-01-01T12:00:00.000Z',
-        articles: []
+        articles: [],
       },
       {
         id: 2,
@@ -71,9 +71,9 @@ describe('PdfLibraryPage', () => {
         created_at: 'invalid-date', // invalid date fallback
         articles: [
           { article_id: 10, article_title: 'Title 10', project_id: 20, project_name: 'Project 20' },
-          { article_id: 11, article_title: 'Title 11', project_id: 21, project_name: 'Project 21' }
-        ]
-      }
+          { article_id: 11, article_title: 'Title 11', project_id: 21, project_name: 'Project 21' },
+        ],
+      },
     ]);
 
     renderPage();
@@ -97,13 +97,23 @@ describe('PdfLibraryPage', () => {
   it('filters pdfs by search term', async () => {
     fakeService.getStoredPdfs.mockResolvedValue([
       {
-        id: 1, file_path: '1', file_hash: '1', filename: 'apple.pdf', file_size: 1, created_at: '',
-        articles: []
+        id: 1,
+        file_path: '1',
+        file_hash: '1',
+        filename: 'apple.pdf',
+        file_size: 1,
+        created_at: '',
+        articles: [],
       },
       {
-        id: 2, file_path: '2', file_hash: '2', filename: 'banana.pdf', file_size: 1, created_at: '',
-        articles: [{ article_id: 1, article_title: 'cherry', project_id: 1, project_name: 'P1' }]
-      }
+        id: 2,
+        file_path: '2',
+        file_hash: '2',
+        filename: 'banana.pdf',
+        file_size: 1,
+        created_at: '',
+        articles: [{ article_id: 1, article_title: 'cherry', project_id: 1, project_name: 'P1' }],
+      },
     ]);
 
     renderPage();
@@ -128,7 +138,7 @@ describe('PdfLibraryPage', () => {
   it('handles upload direct pdf', async () => {
     fakeService.getStoredPdfs.mockResolvedValue([]);
     fakeService.openPdfDialog.mockResolvedValue('/new/pdf.pdf');
-    
+
     renderPage();
 
     await waitFor(() => {
@@ -167,9 +177,14 @@ describe('PdfLibraryPage', () => {
   it('handles delete pdf for orphan file', async () => {
     fakeService.getStoredPdfs.mockResolvedValue([
       {
-        id: 1, file_path: 'orphan.pdf', file_hash: '1', filename: 'orphan.pdf', file_size: 1, created_at: '',
-        articles: []
-      }
+        id: 1,
+        file_path: 'orphan.pdf',
+        file_hash: '1',
+        filename: 'orphan.pdf',
+        file_size: 1,
+        created_at: '',
+        articles: [],
+      },
     ]);
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
@@ -183,7 +198,9 @@ describe('PdfLibraryPage', () => {
     fireEvent.click(btnDelete);
 
     await waitFor(() => {
-      expect(confirmSpy).toHaveBeenCalledWith('Deseja excluir permanentemente este PDF do sistema? Esta ação não pode ser desfeita.');
+      expect(confirmSpy).toHaveBeenCalledWith(
+        'Deseja excluir permanentemente este PDF do sistema? Esta ação não pode ser desfeita.',
+      );
       expect(fakeService.deletePdfLibraryRecord).toHaveBeenCalledWith('orphan.pdf');
       expect(fakeService.getStoredPdfs).toHaveBeenCalledTimes(2);
     });
@@ -193,9 +210,14 @@ describe('PdfLibraryPage', () => {
   it('handles delete pdf for shared file', async () => {
     fakeService.getStoredPdfs.mockResolvedValue([
       {
-        id: 1, file_path: 'shared.pdf', file_hash: '1', filename: 'shared.pdf', file_size: 1, created_at: '',
-        articles: [{ article_id: 1, article_title: 'A', project_id: 1, project_name: 'P' }]
-      }
+        id: 1,
+        file_path: 'shared.pdf',
+        file_hash: '1',
+        filename: 'shared.pdf',
+        file_size: 1,
+        created_at: '',
+        articles: [{ article_id: 1, article_title: 'A', project_id: 1, project_name: 'P' }],
+      },
     ]);
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
@@ -209,7 +231,9 @@ describe('PdfLibraryPage', () => {
     fireEvent.click(btnDelete);
 
     await waitFor(() => {
-      expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Atenção: Este PDF está sendo usado em 1 artigo(s).'));
+      expect(confirmSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Atenção: Este PDF está sendo usado em 1 artigo(s).'),
+      );
       expect(fakeService.deletePdfLibraryRecord).toHaveBeenCalledWith('shared.pdf');
     });
     confirmSpy.mockRestore();
@@ -218,9 +242,14 @@ describe('PdfLibraryPage', () => {
   it('handles delete pdf error', async () => {
     fakeService.getStoredPdfs.mockResolvedValue([
       {
-        id: 1, file_path: 'orphan.pdf', file_hash: '1', filename: 'orphan.pdf', file_size: 1, created_at: '',
-        articles: []
-      }
+        id: 1,
+        file_path: 'orphan.pdf',
+        file_hash: '1',
+        filename: 'orphan.pdf',
+        file_size: 1,
+        created_at: '',
+        articles: [],
+      },
     ]);
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     fakeService.deletePdfLibraryRecord.mockRejectedValue(new Error('Delete fail'));
@@ -244,15 +273,20 @@ describe('PdfLibraryPage', () => {
   it('handles link modal open, load projects, and confirm link', async () => {
     fakeService.getStoredPdfs.mockResolvedValue([
       {
-        id: 1, file_path: 'link.pdf', file_hash: '1', filename: 'link.pdf', file_size: 1, created_at: '',
-        articles: []
-      }
+        id: 1,
+        file_path: 'link.pdf',
+        file_hash: '1',
+        filename: 'link.pdf',
+        file_size: 1,
+        created_at: '',
+        articles: [],
+      },
     ]);
-    
+
     fakeService.getProjects.mockResolvedValue([{ id: 100, name: 'Project 100', created_at: '' }]);
     fakeService.getArticles.mockResolvedValue([
       { id: 200, title: 'Article 200', local_file_path: undefined, project_id: 100, status: 'new' } as any, // eligible
-      { id: 201, title: 'Article 201', local_file_path: 'other.pdf', project_id: 100, status: 'read' } as any // not eligible
+      { id: 201, title: 'Article 201', local_file_path: 'other.pdf', project_id: 100, status: 'read' } as any, // not eligible
     ]);
 
     renderPage();
@@ -267,13 +301,13 @@ describe('PdfLibraryPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Vincular PDF a um Artigo')).toBeInTheDocument();
     });
-    
+
     expect(fakeService.getProjects).toHaveBeenCalled();
-    
+
     // Select project
     const projectSelect = screen.getAllByRole('combobox')[0];
     fireEvent.change(projectSelect, { target: { value: '100' } });
-    
+
     await waitFor(() => {
       expect(fakeService.getArticles).toHaveBeenCalledWith(100);
     });
@@ -294,11 +328,16 @@ describe('PdfLibraryPage', () => {
   it('handles link modal with no eligible articles', async () => {
     fakeService.getStoredPdfs.mockResolvedValue([
       {
-        id: 1, file_path: 'link.pdf', file_hash: '1', filename: 'link.pdf', file_size: 1, created_at: '',
-        articles: []
-      }
+        id: 1,
+        file_path: 'link.pdf',
+        file_hash: '1',
+        filename: 'link.pdf',
+        file_size: 1,
+        created_at: '',
+        articles: [],
+      },
     ]);
-    
+
     fakeService.getProjects.mockResolvedValue([{ id: 100, name: 'Project 100', created_at: '' }]);
     fakeService.getArticles.mockResolvedValue([]);
 
@@ -313,10 +352,10 @@ describe('PdfLibraryPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Vincular PDF a um Artigo')).toBeInTheDocument();
     });
-    
+
     const projectSelect = screen.getAllByRole('combobox')[0];
     fireEvent.change(projectSelect, { target: { value: '100' } });
-    
+
     await waitFor(() => {
       expect(screen.getByText('Nenhum artigo sem PDF neste projeto.')).toBeInTheDocument();
     });
@@ -325,9 +364,14 @@ describe('PdfLibraryPage', () => {
   it('navigates to article reader and project', async () => {
     fakeService.getStoredPdfs.mockResolvedValue([
       {
-        id: 1, file_path: 'shared.pdf', file_hash: '1', filename: 'shared.pdf', file_size: 1, created_at: '',
-        articles: [{ article_id: 99, article_title: 'A', project_id: 88, project_name: 'P' }]
-      }
+        id: 1,
+        file_path: 'shared.pdf',
+        file_hash: '1',
+        filename: 'shared.pdf',
+        file_size: 1,
+        created_at: '',
+        articles: [{ article_id: 99, article_title: 'A', project_id: 88, project_name: 'P' }],
+      },
     ]);
 
     renderPage();

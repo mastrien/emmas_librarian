@@ -156,10 +156,18 @@ describe('ProjectDetailsPage article forms', () => {
 
     openAddMenu();
     fireEvent.click(screen.getByRole('button', { name: /Artigo Manual/ }));
-    fireEvent.change(screen.getByPlaceholderText('Ex: A New Approach to Bibliometrics'), { target: { value: 'Manual' } });
+    fireEvent.change(screen.getByPlaceholderText('Ex: A New Approach to Bibliometrics'), {
+      target: { value: 'Manual' },
+    });
     fireEvent.click(screen.getByRole('button', { name: /Salvar Artigo/ }));
 
-    await waitFor(() => expect(service.createManualArticle).toHaveBeenCalledWith(1, expect.objectContaining({ title: 'Manual' }), undefined));
+    await waitFor(() =>
+      expect(service.createManualArticle).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ title: 'Manual' }),
+        undefined,
+      ),
+    );
     await waitFor(() => expect(service.getArticles).toHaveBeenCalledTimes(2));
   });
 
@@ -171,7 +179,12 @@ describe('ProjectDetailsPage article forms', () => {
     fireEvent.change(screen.getByDisplayValue('Avulso'), { target: { value: 'Avulso revisado' } });
     fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
 
-    await waitFor(() => expect(service.updateArticleMetadata).toHaveBeenCalledWith(8, expect.objectContaining({ title: 'Avulso revisado' })));
+    await waitFor(() =>
+      expect(service.updateArticleMetadata).toHaveBeenCalledWith(
+        8,
+        expect.objectContaining({ title: 'Avulso revisado' }),
+      ),
+    );
     await waitFor(() => expect(service.getArticles).toHaveBeenCalledTimes(2));
   });
 
@@ -220,8 +233,20 @@ describe('ProjectDetailsPage massive investigation', () => {
       [1, ['  Q1?  ']],
       [2, ['  Q1?  ']],
     ]);
-    expect(service.saveMassiveInvestigation).toHaveBeenCalledWith(1, ['  Q1?  '], [1, 2], 'Gemini (gemini-2.5-pro)', 'Sucesso');
-    const success = { question: 'Q1?', answer: '{"question":"Q1?","answer":"sim"}', quote: null, status: 'success', error_message: null };
+    expect(service.saveMassiveInvestigation).toHaveBeenCalledWith(
+      1,
+      ['  Q1?  '],
+      [1, 2],
+      'Gemini (gemini-2.5-pro)',
+      'Sucesso',
+    );
+    const success = {
+      question: 'Q1?',
+      answer: '{"question":"Q1?","answer":"sim"}',
+      quote: null,
+      status: 'success',
+      error_message: null,
+    };
     expect(service.saveInvestigationResults.mock.calls).toEqual([
       [40, 1, [success]],
       [40, 2, [success]],
@@ -232,7 +257,9 @@ describe('ProjectDetailsPage massive investigation', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const service = givenProject(withPdfs);
     service.saveMassiveInvestigation.mockResolvedValue(41);
-    service.massiveExtraction.mockRejectedValueOnce(new Error('timeout')).mockResolvedValueOnce([{ question: 'Q1?' }] as never);
+    service.massiveExtraction
+      .mockRejectedValueOnce(new Error('timeout'))
+      .mockResolvedValueOnce([{ question: 'Q1?' }] as never);
 
     await runInvestigation(service);
 

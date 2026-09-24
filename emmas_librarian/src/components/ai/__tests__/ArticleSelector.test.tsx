@@ -68,7 +68,7 @@ describe('ArticleSelector', () => {
         selectedIds={[1]}
         setSelectedIds={setSelectedIds}
         searchHistory={mockSearchHistory}
-      />
+      />,
     );
 
     expect(screen.getByText('Alpha Deep Learning for Medicine')).toBeInTheDocument();
@@ -85,7 +85,7 @@ describe('ArticleSelector', () => {
         selectedIds={[]}
         setSelectedIds={setSelectedIds}
         searchHistory={mockSearchHistory}
-      />
+      />,
     );
 
     const searchInput = screen.getByPlaceholderText(/Buscar por título, autor, ano.../i);
@@ -104,7 +104,7 @@ describe('ArticleSelector', () => {
         selectedIds={[]}
         setSelectedIds={setSelectedIds}
         searchHistory={mockSearchHistory}
-      />
+      />,
     );
 
     const selectDropdown = screen.getByDisplayValue(/Todas as buscas/i);
@@ -123,7 +123,7 @@ describe('ArticleSelector', () => {
         selectedIds={[]}
         setSelectedIds={setSelectedIds}
         searchHistory={mockSearchHistory}
-      />
+      />,
     );
 
     const sortDropdown = screen.getByDisplayValue(/Título \(A-Z\)/i);
@@ -143,7 +143,7 @@ describe('ArticleSelector', () => {
         selectedIds={[1]}
         setSelectedIds={setSelectedIds}
         searchHistory={mockSearchHistory}
-      />
+      />,
     );
 
     const selectAllBtn = screen.getByRole('button', { name: /Selecionar Todos/i });
@@ -163,7 +163,7 @@ describe('ArticleSelector', () => {
         selectedIds={[1]}
         setSelectedIds={setSelectedIds}
         searchHistory={mockSearchHistory}
-      />
+      />,
     );
 
     const checkboxes = screen.getAllByRole('checkbox');

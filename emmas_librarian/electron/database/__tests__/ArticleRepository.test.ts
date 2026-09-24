@@ -267,7 +267,7 @@ describe('ArticleRepository', () => {
 
     it('should set enum/multiselect category with array', () => {
       categories.setArticleCategory(articleId, enumCatId, [opt1Id, 'invalid'] as any);
-      let cats = categories.getArticleCategories(articleId);
+      const cats = categories.getArticleCategories(articleId);
       expect(cats).toHaveLength(1);
       expect(cats[0].value).toBe('Opt1');
       expect((cats[0] as any).option_ids).toContain(opt1Id);
@@ -275,7 +275,7 @@ describe('ArticleRepository', () => {
 
     it('should set enum/multiselect category with comma separated string', () => {
       categories.setArticleCategory(articleId, enumCatId, `Opt1, ${opt2Id}, NotFound` as any);
-      let cats = categories.getArticleCategories(articleId);
+      const cats = categories.getArticleCategories(articleId);
       expect(cats).toHaveLength(1);
       expect(cats[0].value).toBe('Opt1, Opt2');
       expect((cats[0] as any).option_ids).toContain(opt1Id);

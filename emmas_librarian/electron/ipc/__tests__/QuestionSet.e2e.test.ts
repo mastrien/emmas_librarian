@@ -6,7 +6,7 @@ import { ArticleRepository } from '../../database/ArticleRepository';
 import { QuestionSetRepository } from '../../database/QuestionSetRepository';
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
 
-let mockLoadablePath: string | null = null;
+const mockLoadablePath: string | null = null;
 vi.mock('sqlite-vec', async (importOriginal) => {
   const original = await importOriginal<typeof import('sqlite-vec')>();
   return {

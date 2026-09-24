@@ -26,7 +26,13 @@ describe('withErrorHandling classification', () => {
   it('preserves AppError details through serialization', async () => {
     const payload = await classify(new AppError('ERR_NOT_FOUND', 'USER_ERROR', 'missing', { id: 7 }));
 
-    expect(payload).toEqual({ isAppError: true, code: 'ERR_NOT_FOUND', type: 'USER_ERROR', message: 'missing', details: { id: 7 } });
+    expect(payload).toEqual({
+      isAppError: true,
+      code: 'ERR_NOT_FOUND',
+      type: 'USER_ERROR',
+      message: 'missing',
+      details: { id: 7 },
+    });
   });
 
   it.each(['HTTP 429 Too Many Requests', 'RESOURCE QUOTA_EXCEEDED', 'insufficient_quota for org'])(

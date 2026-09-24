@@ -183,7 +183,7 @@ export class BackupService {
     if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath);
 
     fs.writeFileSync(this.dbPath, decompressed);
-    
+
     // Relaunch app to reconnect to new database
     app.relaunch();
     app.exit(0);

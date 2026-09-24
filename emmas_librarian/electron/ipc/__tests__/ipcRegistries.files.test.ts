@@ -7,9 +7,13 @@ import { harness, resetIpcHarness, invoke, rejectionPayload, flushStartupTasks, 
 vi.mock('electron', () => import('./fakes/ipcHarness').then((h) => h.electronModule));
 vi.mock('fs', () => import('./fakes/ipcHarness').then((h) => h.fsModule));
 vi.mock('../../database/DatabaseAdapter', () => import('./fakes/ipcHarness').then((h) => h.databaseAdapterModule));
-vi.mock('../../database/ScientificVenueRepository', () => import('./fakes/ipcHarness').then((h) => h.venueRepositoryModule));
+vi.mock('../../database/ScientificVenueRepository', () =>
+  import('./fakes/ipcHarness').then((h) => h.venueRepositoryModule),
+);
 vi.mock('../../database/SyncService', () => import('./fakes/ipcHarness').then((h) => h.syncServiceModule));
-vi.mock('../../services/SearchOrchestrator', () => import('./fakes/ipcHarness').then((h) => h.searchOrchestratorModule));
+vi.mock('../../services/SearchOrchestrator', () =>
+  import('./fakes/ipcHarness').then((h) => h.searchOrchestratorModule),
+);
 vi.mock('../../services/QueryTranslator', () => import('./fakes/ipcHarness').then((h) => h.queryTranslatorModule));
 vi.mock('../../services/ApiIntegrator', () => import('./fakes/ipcHarness').then((h) => h.apiIntegratorModule));
 vi.mock('../../services/ExportService', () => import('./fakes/ipcHarness').then((h) => h.exportServiceModule));
@@ -34,8 +38,22 @@ const notFound = (id: number) =>
   `[ERR_NOT_FOUND] Projeto não encontrado. Offending value: projectId=${id}. Expected shape: ID numérico de projeto cadastrado.`;
 
 describe.each([
-  { channel: IpcChannel.EXPORT_CSV, method: 'exportToCsv', content: 'a,b', title: 'Export Articles CSV', ext: 'csv', filter: 'CSV Files' },
-  { channel: IpcChannel.EXPORT_XLSX, method: 'exportToXlsx', content: Buffer.from('xlsx'), title: 'Export Articles XLSX', ext: 'xlsx', filter: 'Excel Files' },
+  {
+    channel: IpcChannel.EXPORT_CSV,
+    method: 'exportToCsv',
+    content: 'a,b',
+    title: 'Export Articles CSV',
+    ext: 'csv',
+    filter: 'CSV Files',
+  },
+  {
+    channel: IpcChannel.EXPORT_XLSX,
+    method: 'exportToXlsx',
+    content: Buffer.from('xlsx'),
+    title: 'Export Articles XLSX',
+    ext: 'xlsx',
+    filter: 'Excel Files',
+  },
 ])('$channel', ({ channel, method, content, title, ext, filter }) => {
   beforeEach(() => {
     db.getProject.mockReturnValue({ id: 1, name: 'Tese' });
@@ -144,7 +162,10 @@ describe('file dialogs', () => {
     dialog.showOpenDialog.mockResolvedValue({ canceled: false, filePaths: ['/a.pdf', '/b.pdf'] });
 
     expect(await invoke(IpcChannel.DIALOG_OPEN_MULTIPLE_FILES)).toEqual(['/a.pdf', '/b.pdf']);
-    expect(dialog.showOpenDialog).toHaveBeenCalledWith({ properties: ['openFile', 'multiSelections'], filters: pdfFilter });
+    expect(dialog.showOpenDialog).toHaveBeenCalledWith({
+      properties: ['openFile', 'multiSelections'],
+      filters: pdfFilter,
+    });
   });
 
   it.each([
@@ -253,7 +274,10 @@ describe('PROJECT_DOCUMENTS_UPDATE', () => {
     await invoke(IpcChannel.PROJECT_DOCUMENTS_UPDATE, 4, 'Ata', null, external, null);
 
     expect(db.updateProjectDocument).toHaveBeenCalledWith(4, 'Ata', null, external, null);
-    expect(consoleError).toHaveBeenCalledWith('Failed to copy PDF file for updating project document:', expect.any(Error));
+    expect(consoleError).toHaveBeenCalledWith(
+      'Failed to copy PDF file for updating project document:',
+      expect.any(Error),
+    );
   });
 });
 

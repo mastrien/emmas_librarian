@@ -28,7 +28,11 @@ export function registerPdfHandlers(ipc: IpcRegistrar, db: DatabaseAdapter): voi
   handle(ipc, IpcChannel.PDF_LIBRARY_LINK, (_e, articleId: number, filePath: string) => {
     db.linkPdfToArticle(articleId, filePath);
   });
-  handle(ipc, IpcChannel.PDF_LIBRARY_UPLOAD, (_e, sourceFilePath: string) => savePdfToStorage(db, sourceFilePath).destPath);
+  handle(
+    ipc,
+    IpcChannel.PDF_LIBRARY_UPLOAD,
+    (_e, sourceFilePath: string) => savePdfToStorage(db, sourceFilePath).destPath,
+  );
 }
 
 function readArticlePdf(db: DatabaseAdapter, articleId: number): Buffer {

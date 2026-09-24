@@ -59,18 +59,24 @@ const silenceConsoleError = () => vi.spyOn(console, 'error').mockImplementation(
 describe('sqlite-vec extension loading', () => {
   it('loads the extension from app.asar.unpacked inside a packaged app', () => {
     loadable.override = path.join('C:', 'app', 'resources', 'app.asar', 'node_modules', 'sqlite-vec', 'vec0');
-    const loadExtension = vi.spyOn(Database.prototype, 'loadExtension').mockImplementation(function (this: Database.Database) {
+    const loadExtension = vi.spyOn(Database.prototype, 'loadExtension').mockImplementation(function (
+      this: Database.Database,
+    ) {
       return this;
     });
 
     new DatabaseAdapter(':memory:').close();
 
-    expect(loadExtension).toHaveBeenCalledWith(path.join('C:', 'app', 'resources', 'app.asar.unpacked', 'node_modules', 'sqlite-vec', 'vec0'));
+    expect(loadExtension).toHaveBeenCalledWith(
+      path.join('C:', 'app', 'resources', 'app.asar.unpacked', 'node_modules', 'sqlite-vec', 'vec0'),
+    );
   });
 
   it('leaves an already unpacked path untouched', () => {
     loadable.override = path.join('C:', 'app', 'APP.ASAR.UNPACKED', 'vec0');
-    const loadExtension = vi.spyOn(Database.prototype, 'loadExtension').mockImplementation(function (this: Database.Database) {
+    const loadExtension = vi.spyOn(Database.prototype, 'loadExtension').mockImplementation(function (
+      this: Database.Database,
+    ) {
       return this;
     });
 
@@ -87,7 +93,10 @@ describe('sqlite-vec extension loading', () => {
 
     const adapter = new DatabaseAdapter(':memory:');
 
-    expect(consoleError).toHaveBeenCalledWith('Failed to load sqlite-vec extension', expect.objectContaining({ message: 'bad ELF' }));
+    expect(consoleError).toHaveBeenCalledWith(
+      'Failed to load sqlite-vec extension',
+      expect.objectContaining({ message: 'bad ELF' }),
+    );
     expect(adapter.getAllProjects()).toEqual([]);
     adapter.close();
   });
@@ -108,7 +117,9 @@ describe('is_oa / publisher backfill', () => {
     });
 
     const rows = reopen((raw) => raw.prepare('SELECT id, is_oa, publisher FROM articles ORDER BY id').all());
-    const flag = reopen((raw) => raw.prepare("SELECT value FROM settings WHERE key = 'backfilled_is_oa_publisher'").get());
+    const flag = reopen((raw) =>
+      raw.prepare("SELECT value FROM settings WHERE key = 'backfilled_is_oa_publisher'").get(),
+    );
 
     expect(rows).toEqual([
       { id: 1, is_oa: 1, publisher: 'Elsevier' },
@@ -128,7 +139,9 @@ describe('category options backfill', () => {
         "INSERT INTO articles (id, project_id, title, source_query, source_databases, csl_json) VALUES (?, 1, 't', 'q', '[]', '{}')",
       );
       [1, 2, 3].forEach((id) => article.run(id));
-      const category = raw.prepare('INSERT INTO project_categories (id, project_id, name, type, options) VALUES (?, 1, ?, ?, ?)');
+      const category = raw.prepare(
+        'INSERT INTO project_categories (id, project_id, name, type, options) VALUES (?, 1, ?, ?, ?)',
+      );
       category.run(10, 'Método', 'enum', 'Survey, Experimento');
       category.run(11, 'Temas', 'multiselect', 'IA,Saúde, ');
       category.run(12, 'Notas', 'text', 'ignored');
@@ -142,9 +155,11 @@ describe('category options backfill', () => {
   }
 
   const optionsOf = (raw: Database.Database, categoryId: number) =>
-    (raw.prepare('SELECT name FROM project_category_options WHERE category_id = ? ORDER BY id').all(categoryId) as { name: string }[]).map(
-      (o) => o.name,
-    );
+    (
+      raw.prepare('SELECT name FROM project_category_options WHERE category_id = ? ORDER BY id').all(categoryId) as {
+        name: string;
+      }[]
+    ).map((o) => o.name);
 
   const selectionsOf = (raw: Database.Database, articleId: number) =>
     (
@@ -201,8 +216,12 @@ describe('legacy schemas', () => {
 
   it('keeps only the latest diary entry per project and day in databases created before the unique constraint', () => {
     withRawDatabase((raw) => {
-      raw.exec('CREATE TABLE project_diary (id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, entry_date TEXT, content TEXT)');
-      const entry = raw.prepare("INSERT INTO project_diary (project_id, entry_date, content) VALUES (1, '2026-01-01', ?)");
+      raw.exec(
+        'CREATE TABLE project_diary (id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER, entry_date TEXT, content TEXT)',
+      );
+      const entry = raw.prepare(
+        "INSERT INTO project_diary (project_id, entry_date, content) VALUES (1, '2026-01-01', ?)",
+      );
       entry.run('first');
       entry.run('latest');
     });
@@ -231,10 +250,22 @@ describe('migration failures are logged and do not prevent opening the database'
   }
 
   it.each([
-    ['is_oa backfill', () => failPrepareMatching('backfilled_is_oa_publisher'), 'Failed to backfill articles is_oa/publisher:'],
+    [
+      'is_oa backfill',
+      () => failPrepareMatching('backfilled_is_oa_publisher'),
+      'Failed to backfill articles is_oa/publisher:',
+    ],
     ['category backfill', () => failPrepareMatching('backfilled_category_options'), 'Migration categories error'],
-    ['vector table migration', () => failPrepareMatching('migrated_vec_dimensions_v3'), 'Migration sqlite-vec dimensions error'],
-    ['pending highlights table', () => failExecStartingWith('CREATE TABLE IF NOT EXISTS pending_highlights'), 'Migration pending_highlights error'],
+    [
+      'vector table migration',
+      () => failPrepareMatching('migrated_vec_dimensions_v3'),
+      'Migration sqlite-vec dimensions error',
+    ],
+    [
+      'pending highlights table',
+      () => failExecStartingWith('CREATE TABLE IF NOT EXISTS pending_highlights'),
+      'Migration pending_highlights error',
+    ],
     [
       'massive investigations table',
       () => failExecStartingWith('CREATE TABLE IF NOT EXISTS massive_investigations'),

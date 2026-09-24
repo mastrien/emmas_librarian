@@ -85,7 +85,16 @@ export function useProjectActions(options: ProjectActionsOptions) {
     await reload();
   };
 
-  return { changeStatus, unlinkPdf, attachPdf, revertSearch, archive, createManualArticle, editArticle, ...useProjectHeaderActions(options) };
+  return {
+    changeStatus,
+    unlinkPdf,
+    attachPdf,
+    revertSearch,
+    archive,
+    createManualArticle,
+    editArticle,
+    ...useProjectHeaderActions(options),
+  };
 }
 
 function useProjectHeaderActions({ projectId, project, setProject }: ProjectActionsOptions) {

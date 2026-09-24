@@ -24,20 +24,14 @@ describe('AttachPdfModal', () => {
         articleTitle="Test Article"
         onClose={vi.fn()}
         onAttached={vi.fn()}
-      />
+      />,
     );
     expect(container.innerHTML).toBe('');
   });
 
   it('renders options view by default', () => {
     render(
-      <AttachPdfModal
-        isOpen={true}
-        articleId={1}
-        articleTitle="Test Article"
-        onClose={vi.fn()}
-        onAttached={vi.fn()}
-      />
+      <AttachPdfModal isOpen={true} articleId={1} articleTitle="Test Article" onClose={vi.fn()} onAttached={vi.fn()} />,
     );
 
     expect(screen.getByText('Anexar PDF ao Artigo')).toBeInTheDocument();

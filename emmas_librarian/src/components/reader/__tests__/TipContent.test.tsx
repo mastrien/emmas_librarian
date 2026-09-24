@@ -9,7 +9,12 @@ function renderTip() {
   const hideTipAndSelection = vi.fn();
   const addHighlight = vi.fn();
   render(
-    <TipContent position={position} content={content} hideTipAndSelection={hideTipAndSelection} addHighlight={addHighlight} />,
+    <TipContent
+      position={position}
+      content={content}
+      hideTipAndSelection={hideTipAndSelection}
+      addHighlight={addHighlight}
+    />,
   );
   return { hideTipAndSelection, addHighlight };
 }

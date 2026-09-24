@@ -135,7 +135,13 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
 
   return (
     <div style={{ display: 'flex', gap: '1.5rem', minHeight: '500px' }}>
-      <DiaryTimeline entries={entries} selectedDate={selectedDate} today={todayStr} onToday={handleToday} onSelect={selectDate} />
+      <DiaryTimeline
+        entries={entries}
+        selectedDate={selectedDate}
+        today={todayStr}
+        onToday={handleToday}
+        onSelect={selectDate}
+      />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {selectedDate ? (
           <>
@@ -150,7 +156,13 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
               onToggleEditMode={() => setIsEditMode(!isEditMode)}
               onDelete={() => setConfirmDelete(true)}
             />
-            <DiaryEditor ref={editorRef} date={selectedDate} markdown={content} readOnly={!isEditMode} onChange={handleContentChange} />
+            <DiaryEditor
+              ref={editorRef}
+              date={selectedDate}
+              markdown={content}
+              readOnly={!isEditMode}
+              onChange={handleContentChange}
+            />
           </>
         ) : (
           <DiaryEmptyState />
@@ -160,7 +172,12 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
         <DeleteDiaryPageDialog date={selectedDate} onCancel={() => setConfirmDelete(false)} onConfirm={handleDelete} />
       )}
       {showHistory && selectedDate && (
-        <DiaryHistoryDialog date={selectedDate} versions={historyList} onRestore={handleRestoreVersion} onClose={() => setShowHistory(false)} />
+        <DiaryHistoryDialog
+          date={selectedDate}
+          versions={historyList}
+          onRestore={handleRestoreVersion}
+          onClose={() => setShowHistory(false)}
+        />
       )}
     </div>
   );

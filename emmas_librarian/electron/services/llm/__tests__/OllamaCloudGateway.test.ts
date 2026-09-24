@@ -78,10 +78,7 @@ describe('OllamaCloudGateway', () => {
     const response = await gateway.complete('hello', 'gpt-oss:120b');
 
     expect(response).toBe('Default URL Response');
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://ollama.com/v1/chat/completions',
-      expect.any(Object),
-    );
+    expect(fetchMock).toHaveBeenCalledWith('https://ollama.com/v1/chat/completions', expect.any(Object));
   });
 
   it('should sanitize HTML 503 error responses into clean AppError messages', async () => {
@@ -91,8 +88,6 @@ describe('OllamaCloudGateway', () => {
       text: async () => '<html><body><h1>503 Service Unavailable</h1>No server is available</body></html>',
     });
     const gateway = new OllamaCloudGateway('https://ollama.com/v1', 'secret-cloud-key');
-    await expect(gateway.complete('hello', 'llama3')).rejects.toThrow(
-      '503 Service Unavailable No server is available',
-    );
+    await expect(gateway.complete('hello', 'llama3')).rejects.toThrow('503 Service Unavailable No server is available');
   });
 });

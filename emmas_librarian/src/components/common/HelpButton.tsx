@@ -276,13 +276,15 @@ const tutorials: Record<string, { title: string; content: React.ReactNode }> = {
           style={{ paddingLeft: '1.5rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
         >
           <li>
-            <strong>Armazenamento Local:</strong> Todos os PDFs aqui listados ficam guardados com segurança no seu dispositivo, de forma offline.
+            <strong>Armazenamento Local:</strong> Todos os PDFs aqui listados ficam guardados com segurança no seu
+            dispositivo, de forma offline.
           </li>
           <li>
             <strong>Pesquisa:</strong> Busque por nome do arquivo ou artigo correspondente.
           </li>
           <li>
-            <strong>Gerenciamento:</strong> Exclua os PDFs não utilizados para liberar espaço, ou desvincule-os temporariamente dos artigos.
+            <strong>Gerenciamento:</strong> Exclua os PDFs não utilizados para liberar espaço, ou desvincule-os
+            temporariamente dos artigos.
           </li>
         </ul>
       </>
@@ -303,7 +305,8 @@ const tutorials: Record<string, { title: string; content: React.ReactNode }> = {
             <strong>Tarefas:</strong> Crie check-lists das etapas pendentes de suas revisões bibliográficas.
           </li>
           <li>
-            <strong>Produtividade:</strong> A agenda te ajuda a manter o foco no objetivo central da pesquisa sem perder os prazos críticos.
+            <strong>Produtividade:</strong> A agenda te ajuda a manter o foco no objetivo central da pesquisa sem perder
+            os prazos críticos.
           </li>
         </ul>
       </>

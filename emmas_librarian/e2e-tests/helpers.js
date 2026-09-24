@@ -22,11 +22,16 @@ async function launchApp(env = {}) {
 
 async function dismissChangelog(window) {
   try {
-    await window.evaluate(() => {
-      localStorage.setItem('last_seen_version', '1.1.19');
-    }).catch(() => {});
+    await window
+      .evaluate(() => {
+        localStorage.setItem('last_seen_version', '1.1.19');
+      })
+      .catch(() => {});
 
-    const changelogBtn = window.locator('button').filter({ hasText: /^Entendido/ }).first();
+    const changelogBtn = window
+      .locator('button')
+      .filter({ hasText: /^Entendido/ })
+      .first();
     if (await changelogBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await changelogBtn.click().catch(() => {});
       await window.waitForTimeout(300);
@@ -38,8 +43,8 @@ async function dismissChangelog(window) {
 
 async function getFirstWindow(electronApp) {
   const window = await electronApp.firstWindow();
-  window.on('console', msg => console.log(`BROWSER CONSOLE: ${msg.type()} - ${msg.text()}`));
-  window.on('pageerror', exception => console.log(`BROWSER ERROR: ${exception}`));
+  window.on('console', (msg) => console.log(`BROWSER CONSOLE: ${msg.type()} - ${msg.text()}`));
+  window.on('pageerror', (exception) => console.log(`BROWSER ERROR: ${exception}`));
   await window.waitForLoadState('domcontentloaded');
   window.on('dialog', async (dialog) => {
     await dialog.accept().catch(() => {});

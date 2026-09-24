@@ -28,7 +28,6 @@ export const ArticleReaderToolbar: React.FC<ArticleReaderToolbarProps> = ({
   setIsEditingMetadata,
   setIsCitationModalOpen,
 }) => {
-
   return (
     <header
       className="glass-panel"

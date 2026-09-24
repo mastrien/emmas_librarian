@@ -22,7 +22,17 @@ const article = {
   local_file_path: '/pdfs/a.pdf',
 } as unknown as Article;
 
-const FIELDS = ['Título *', 'Autores', 'Ano', 'DOI', 'Revista / Periódico', 'Volume', 'Edição (Issue)', 'Páginas', 'Resumo'];
+const FIELDS = [
+  'Título *',
+  'Autores',
+  'Ano',
+  'DOI',
+  'Revista / Periódico',
+  'Volume',
+  'Edição (Issue)',
+  'Páginas',
+  'Resumo',
+];
 
 let service: FakeProjectService;
 
@@ -45,7 +55,8 @@ function renderModal(overrides: Partial<React.ComponentProps<typeof EditArticleM
   return { onClose, onSubmit: (overrides.onSubmit ?? onSubmit) as ReturnType<typeof vi.fn> };
 }
 
-const input = (label: string) => screen.getByText(label).parentElement!.querySelector('input, textarea') as HTMLInputElement;
+const input = (label: string) =>
+  screen.getByText(label).parentElement!.querySelector('input, textarea') as HTMLInputElement;
 const type = (label: string, value: string) => fireEvent.change(input(label), { target: { value } });
 const submit = () => fireEvent.submit(screen.getByRole('button', { name: /Salvar Alterações/ }).closest('form')!);
 const aiButton = () => screen.getByRole('button', { name: /Preencher com IA/ });
@@ -87,7 +98,12 @@ describe('EditArticleModal visibility', () => {
     rerender(
       <ServicesProvider apiService={service}>
         <GlobalErrorProvider>
-          <EditArticleModal isOpen={true} onClose={vi.fn()} article={{ ...article, id: 2, title: 'Second', year: 1999 } as Article} onSubmit={vi.fn()} />
+          <EditArticleModal
+            isOpen={true}
+            onClose={vi.fn()}
+            article={{ ...article, id: 2, title: 'Second', year: 1999 } as Article}
+            onSubmit={vi.fn()}
+          />
         </GlobalErrorProvider>
       </ServicesProvider>,
     );
@@ -231,7 +247,9 @@ describe('EditArticleModal AI fill', () => {
   });
 
   it('routes typed user-facing errors to the global error modal', async () => {
-    service.extractMetadata.mockRejectedValue(new FrontendAppError('ERR_MISSING_API_KEY', 'USER_ERROR', 'Configure a chave'));
+    service.extractMetadata.mockRejectedValue(
+      new FrontendAppError('ERR_MISSING_API_KEY', 'USER_ERROR', 'Configure a chave'),
+    );
     renderModal();
 
     fireEvent.click(aiButton());

@@ -119,7 +119,9 @@ describe('usePdfAnnotations', () => {
     const highlight = { id: '99', annotation_id: 100, comment: 'Old text' } as Highlight;
 
     await act(async () => {
-      await result.current.handleEditHighlightAnnotation(highlight, { stopPropagation: vi.fn() } as unknown as React.MouseEvent);
+      await result.current.handleEditHighlightAnnotation(highlight, {
+        stopPropagation: vi.fn(),
+      } as unknown as React.MouseEvent);
     });
 
     expect(result.current.editingId).toBe('99');
@@ -131,10 +133,14 @@ describe('usePdfAnnotations', () => {
     const highlight = { id: '99', comment: 'Old text' } as Highlight; // no annotation_id
 
     await act(async () => {
-      await result.current.handleEditHighlightAnnotation(highlight, { stopPropagation: vi.fn() } as unknown as React.MouseEvent);
+      await result.current.handleEditHighlightAnnotation(highlight, {
+        stopPropagation: vi.fn(),
+      } as unknown as React.MouseEvent);
     });
 
-    expect(window.alert).toHaveBeenCalledWith('Este destaque não possui uma anotação vinculada inicial. Crie um novo destaque com texto.');
+    expect(window.alert).toHaveBeenCalledWith(
+      'Este destaque não possui uma anotação vinculada inicial. Crie um novo destaque com texto.',
+    );
     expect(result.current.editingId).toBeNull();
   });
 
@@ -143,7 +149,9 @@ describe('usePdfAnnotations', () => {
     const highlight = { id: '99', annotation_id: 100 } as Highlight; // no comment
 
     await act(async () => {
-      await result.current.handleEditHighlightAnnotation(highlight, { stopPropagation: vi.fn() } as unknown as React.MouseEvent);
+      await result.current.handleEditHighlightAnnotation(highlight, {
+        stopPropagation: vi.fn(),
+      } as unknown as React.MouseEvent);
     });
 
     expect(result.current.editingId).toBe('99');
@@ -185,7 +193,7 @@ describe('usePdfAnnotations', () => {
     act(() => {
       result.current.setStandaloneAnnotations([
         { id: 200, content_markdown: 'Old', article_id: 1, created_at: '' },
-        { id: 201, content_markdown: 'Untouched', article_id: 1, created_at: '' }
+        { id: 201, content_markdown: 'Untouched', article_id: 1, created_at: '' },
       ]);
       result.current.setEditingId('200');
       result.current.setEditContent('New');

@@ -25,7 +25,9 @@ export function registerDialogHandlers(ipc: IpcRegistrar): void {
     });
     return !canceled && filePaths.length > 0 ? filePaths : [];
   });
-  handle(ipc, IpcChannel.DIALOG_SAVE_FILE, (_e, content: string, defaultPath?: string) => saveTextFile(content, defaultPath));
+  handle(ipc, IpcChannel.DIALOG_SAVE_FILE, (_e, content: string, defaultPath?: string) =>
+    saveTextFile(content, defaultPath),
+  );
 }
 
 async function saveTextFile(content: string, defaultPath?: string): Promise<boolean> {

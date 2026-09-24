@@ -305,12 +305,7 @@ export const SettingsPage: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <AppearanceSettings />
 
-        <ApiKeysSettings
-          scopusKey={scopusKey}
-          setScopusKey={setScopusKey}
-          wosKey={wosKey}
-          setWosKey={setWosKey}
-        />
+        <ApiKeysSettings scopusKey={scopusKey} setScopusKey={setScopusKey} wosKey={wosKey} setWosKey={setWosKey} />
 
         <AiSettings
           openaiKey={openaiKey}

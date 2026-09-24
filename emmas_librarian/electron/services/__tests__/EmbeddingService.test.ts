@@ -109,7 +109,9 @@ describe('EmbeddingService', () => {
   it('should throw if Ollama Cloud API key is missing', async () => {
     const config = { ...mockConfig, provider: 'ollama_cloud' as const };
     const service = new EmbeddingService(config, {});
-    await expect(service.embed('test')).rejects.toThrow('Chave de API do Ollama Cloud não configurada para embeddings.');
+    await expect(service.embed('test')).rejects.toThrow(
+      'Chave de API do Ollama Cloud não configurada para embeddings.',
+    );
   });
 
   it('should generate embedding using OpenAI', async () => {

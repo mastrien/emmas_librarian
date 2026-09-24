@@ -74,7 +74,14 @@ const FiltersSidebar: React.FC<{ filtering: ProjectFiltering }> = ({ filtering }
   />
 );
 
-const PaginatedArticles: React.FC<ProjectArticlesTabProps> = ({ filtering, modals, onStatusChange, onUnlinkPdf, onAttachPdf, isArticleManual }) => {
+const PaginatedArticles: React.FC<ProjectArticlesTabProps> = ({
+  filtering,
+  modals,
+  onStatusChange,
+  onUnlinkPdf,
+  onAttachPdf,
+  isArticleManual,
+}) => {
   const { activeArticles, itemsPerPage, currentPage, totalPages, setCurrentPage } = filtering;
   const isPaginated = activeArticles.length > itemsPerPage;
   return (
@@ -99,7 +106,9 @@ const PaginatedArticles: React.FC<ProjectArticlesTabProps> = ({ filtering, modal
         setCitationArticle={modals.setCitationArticle}
         isArticleManual={isArticleManual}
       />
-      {isPaginated && <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}
+      {isPaginated && (
+        <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+      )}
     </>
   );
 };

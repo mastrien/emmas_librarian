@@ -192,7 +192,10 @@ function setFlag(db: Database.Database, key: string): void {
 
 function backfillOpenAccessAndPublisher(db: Database.Database): void {
   if (isFlagSet(db, 'backfilled_is_oa_publisher')) return;
-  const rows = db.prepare('SELECT id, csl_json FROM articles WHERE csl_json IS NOT NULL').all() as { id: number; csl_json: string }[];
+  const rows = db.prepare('SELECT id, csl_json FROM articles WHERE csl_json IS NOT NULL').all() as {
+    id: number;
+    csl_json: string;
+  }[];
   if (rows.length > 0) {
     const update = db.prepare('UPDATE articles SET is_oa = ?, publisher = ? WHERE id = ?');
     db.transaction(() => rows.forEach((row) => updateOpenAccessFromCsl(update, row)))();
@@ -224,17 +227,24 @@ function backfillCategoryOptions(db: Database.Database): void {
     .prepare("SELECT id, type, options FROM project_categories WHERE type IN ('enum', 'multiselect')")
     .all() as { id: number; options?: string }[];
   const insertOption = db.prepare('INSERT INTO project_category_options (category_id, name) VALUES (?, ?)');
-  const insertSelection = db.prepare('INSERT INTO article_category_selections (article_id, category_id, option_id) VALUES (?, ?, ?)');
+  const insertSelection = db.prepare(
+    'INSERT INTO article_category_selections (article_id, category_id, option_id) VALUES (?, ?, ?)',
+  );
   for (const category of categories.filter((c) => c.options)) {
     const optionIds = new Map<string, number>();
-    const optionId = (name: string) => optionIds.get(name) ?? rememberOption(optionIds, name, insertOption.run(category.id, name));
+    const optionId = (name: string) =>
+      optionIds.get(name) ?? rememberOption(optionIds, name, insertOption.run(category.id, name));
     splitCsv(category.options).forEach(optionId);
-    const assignments = db.prepare('SELECT article_id, value FROM article_categories WHERE category_id = ?').all(category.id) as {
+    const assignments = db
+      .prepare('SELECT article_id, value FROM article_categories WHERE category_id = ?')
+      .all(category.id) as {
       article_id: number;
       value?: string;
     }[];
     for (const assignment of assignments) {
-      splitCsv(assignment.value).forEach((name) => insertIgnoringDuplicates(insertSelection, assignment.article_id, category.id, optionId(name)));
+      splitCsv(assignment.value).forEach((name) =>
+        insertIgnoringDuplicates(insertSelection, assignment.article_id, category.id, optionId(name)),
+      );
     }
   }
 }
@@ -244,7 +254,12 @@ function rememberOption(ids: Map<string, number>, name: string, result: Database
   return result.lastInsertRowid as number;
 }
 
-function insertIgnoringDuplicates(insert: Database.Statement, articleId: number, categoryId: number, optionId: number): void {
+function insertIgnoringDuplicates(
+  insert: Database.Statement,
+  articleId: number,
+  categoryId: number,
+  optionId: number,
+): void {
   try {
     insert.run(articleId, categoryId, optionId);
   } catch {
@@ -265,11 +280,23 @@ function migrateVectorTables(db: Database.Database): void {
 }
 
 function applyLegacyFixes(db: Database.Database, backfillPdfLibrary: () => void): void {
-  addColumnIfMissing(db, 'massive_investigations', 'model_used', 'ALTER TABLE massive_investigations ADD COLUMN model_used TEXT');
-  addColumnIfMissing(db, 'massive_investigations', 'status', 'ALTER TABLE massive_investigations ADD COLUMN status TEXT');
+  addColumnIfMissing(
+    db,
+    'massive_investigations',
+    'model_used',
+    'ALTER TABLE massive_investigations ADD COLUMN model_used TEXT',
+  );
+  addColumnIfMissing(
+    db,
+    'massive_investigations',
+    'status',
+    'ALTER TABLE massive_investigations ADD COLUMN status TEXT',
+  );
   addColumnIfMissing(db, 'highlights', 'content_text', 'ALTER TABLE highlights ADD COLUMN content_text TEXT');
   // Keep only the latest diary entry per day, then enforce it (older schemas lacked the constraint).
-  db.exec(`DELETE FROM project_diary WHERE id NOT IN (SELECT MAX(id) FROM project_diary GROUP BY project_id, entry_date);`);
+  db.exec(
+    `DELETE FROM project_diary WHERE id NOT IN (SELECT MAX(id) FROM project_diary GROUP BY project_id, entry_date);`,
+  );
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_project_diary_unique ON project_diary(project_id, entry_date);');
   db.exec(PDF_LIBRARY_TABLE);
   backfillPdfLibrary();

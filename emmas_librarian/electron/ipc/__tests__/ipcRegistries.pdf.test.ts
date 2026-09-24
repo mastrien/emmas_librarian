@@ -8,9 +8,13 @@ import { harness, resetIpcHarness, invoke, rejectionPayload, PDF_DIR } from './f
 vi.mock('electron', () => import('./fakes/ipcHarness').then((h) => h.electronModule));
 vi.mock('fs', () => import('./fakes/ipcHarness').then((h) => h.fsModule));
 vi.mock('../../database/DatabaseAdapter', () => import('./fakes/ipcHarness').then((h) => h.databaseAdapterModule));
-vi.mock('../../database/ScientificVenueRepository', () => import('./fakes/ipcHarness').then((h) => h.venueRepositoryModule));
+vi.mock('../../database/ScientificVenueRepository', () =>
+  import('./fakes/ipcHarness').then((h) => h.venueRepositoryModule),
+);
 vi.mock('../../database/SyncService', () => import('./fakes/ipcHarness').then((h) => h.syncServiceModule));
-vi.mock('../../services/SearchOrchestrator', () => import('./fakes/ipcHarness').then((h) => h.searchOrchestratorModule));
+vi.mock('../../services/SearchOrchestrator', () =>
+  import('./fakes/ipcHarness').then((h) => h.searchOrchestratorModule),
+);
 vi.mock('../../services/QueryTranslator', () => import('./fakes/ipcHarness').then((h) => h.queryTranslatorModule));
 vi.mock('../../services/ApiIntegrator', () => import('./fakes/ipcHarness').then((h) => h.apiIntegratorModule));
 vi.mock('../../services/ExportService', () => import('./fakes/ipcHarness').then((h) => h.exportServiceModule));
@@ -175,7 +179,10 @@ describe('PDF_UNLINK', () => {
 
     await invoke(IpcChannel.PDF_UNLINK, 2);
 
-    expect(consoleError).toHaveBeenCalledWith('Failed to delete physical PDF file:', expect.objectContaining({ message: 'EBUSY' }));
+    expect(consoleError).toHaveBeenCalledWith(
+      'Failed to delete physical PDF file:',
+      expect.objectContaining({ message: 'EBUSY' }),
+    );
     expect(db.deletePdfRecord).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });
@@ -206,7 +213,10 @@ describe('PDF_LIBRARY_DELETE', () => {
     disk.failNext('unlinkSync', new Error('EPERM'));
 
     expect(await invoke(IpcChannel.PDF_LIBRARY_DELETE, stored)).toEqual([4]);
-    expect(consoleError).toHaveBeenCalledWith('Failed to delete physical PDF file:', expect.objectContaining({ message: 'EPERM' }));
+    expect(consoleError).toHaveBeenCalledWith(
+      'Failed to delete physical PDF file:',
+      expect.objectContaining({ message: 'EPERM' }),
+    );
     consoleError.mockRestore();
   });
 });

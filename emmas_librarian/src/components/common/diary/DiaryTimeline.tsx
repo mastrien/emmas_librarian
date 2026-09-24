@@ -19,7 +19,11 @@ interface DiaryTimelineProps {
  */
 export const DiaryTimeline: React.FC<DiaryTimelineProps> = ({ entries, selectedDate, today, onToday, onSelect }) => (
   <div style={{ width: '220px', flexShrink: 0 }}>
-    <button onClick={onToday} className="btn-primary" style={{ width: '100%', padding: '0.75rem', marginBottom: '1.5rem' }}>
+    <button
+      onClick={onToday}
+      className="btn-primary"
+      style={{ width: '100%', padding: '0.75rem', marginBottom: '1.5rem' }}
+    >
       <Plus size={18} /> Página de Hoje
     </button>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -41,12 +45,12 @@ export const DiaryTimeline: React.FC<DiaryTimelineProps> = ({ entries, selectedD
   </div>
 );
 
-const TimelineItem: React.FC<{ date: string; isSelected: boolean; isToday: boolean; onSelect: (date: string) => void }> = ({
-  date,
-  isSelected,
-  isToday,
-  onSelect,
-}) => (
+const TimelineItem: React.FC<{
+  date: string;
+  isSelected: boolean;
+  isToday: boolean;
+  onSelect: (date: string) => void;
+}> = ({ date, isSelected, isToday, onSelect }) => (
   <button
     onClick={() => onSelect(date)}
     style={{

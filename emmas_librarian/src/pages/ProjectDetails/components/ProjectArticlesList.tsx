@@ -1,6 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, FileText, Upload, Edit2, Archive, CopyPlus, ExternalLink, X as XIcon, CheckCircle, History } from 'lucide-react';
+import {
+  Calendar,
+  FileText,
+  Upload,
+  Edit2,
+  Archive,
+  CopyPlus,
+  ExternalLink,
+  X as XIcon,
+  CheckCircle,
+  History,
+} from 'lucide-react';
 import { Article } from '../../../types';
 import { SourceDatabaseBadges } from '../../../components/common/SourceDatabaseBadges';
 
@@ -25,14 +36,11 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
   setEditingArticle,
   setArchivingId,
   setCitationArticle,
-  isArticleManual
+  isArticleManual,
 }) => {
   return (
     <div className="card" style={{ overflowX: 'auto', border: 'none', marginBottom: '2rem' }}>
-      <table
-        data-testid="main-articles-table"
-        style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}
-      >
+      <table data-testid="main-articles-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
         <thead>
           <tr style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
             <th
@@ -201,8 +209,7 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
                       style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
                       title="Vincular PDF"
                     >
-                      <Upload size={14} />{' '}
-                      PDF
+                      <Upload size={14} /> PDF
                     </button>
                   )}
 

@@ -50,7 +50,7 @@ function loadWindowContent(window: BrowserWindow): void {
       const startupTime = performance.now() - appStartTime;
       log.info(`[Performance] App initialized in ${startupTime.toFixed(2)}ms (Dev)`);
       console.log(`[Performance] App initialized in ${startupTime.toFixed(2)}ms (Dev)`);
-      
+
       window.show();
       if (!isE2ETest) {
         window.webContents.openDevTools();
@@ -126,7 +126,7 @@ process.on('unhandledRejection', (reason: unknown) => {
 });
 
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'emma-pdf', privileges: { standard: true, secure: true, supportFetchAPI: true, bypassCSP: true } }
+  { scheme: 'emma-pdf', privileges: { standard: true, secure: true, supportFetchAPI: true, bypassCSP: true } },
 ]);
 
 app

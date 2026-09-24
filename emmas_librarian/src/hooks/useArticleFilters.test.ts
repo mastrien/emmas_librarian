@@ -52,7 +52,7 @@ describe('useArticleFilters', () => {
       local_file_path: undefined,
       project_id: 1,
       created_at: '',
-    }
+    },
   ] as unknown as Article[];
 
   const mockCategories: Record<number, number[]> = {
@@ -91,7 +91,7 @@ describe('useArticleFilters', () => {
     });
 
     expect(result.current.filteredArticles).toHaveLength(2);
-    expect(result.current.filteredArticles.map(a => a.id)).toEqual([2, 4]);
+    expect(result.current.filteredArticles.map((a) => a.id)).toEqual([2, 4]);
   });
 
   it('filters by database (specific)', () => {
@@ -124,7 +124,7 @@ describe('useArticleFilters', () => {
     });
 
     expect(result.current.filteredArticles).toHaveLength(3);
-    expect(result.current.filteredArticles.map(a => a.id)).toEqual([2, 3, 4]);
+    expect(result.current.filteredArticles.map((a) => a.id)).toEqual([2, 3, 4]);
   });
 
   it('filters by category', () => {
@@ -135,7 +135,7 @@ describe('useArticleFilters', () => {
     });
 
     expect(result.current.filteredArticles).toHaveLength(2);
-    expect(result.current.filteredArticles.map(a => a.id)).toEqual([1, 2]);
+    expect(result.current.filteredArticles.map((a) => a.id)).toEqual([1, 2]);
 
     act(() => {
       result.current.setSelectedCategory(99); // non-existent category

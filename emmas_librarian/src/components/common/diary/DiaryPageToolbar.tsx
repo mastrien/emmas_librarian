@@ -35,7 +35,12 @@ export const DiaryPageToolbar: React.FC<DiaryPageToolbarProps> = (props) => (
       {props.isEditMode && (
         <>
           <SaveStatus saving={props.saving} hasChanges={props.hasChanges} hasContent={props.hasContent} />
-          <button onClick={props.onSave} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} disabled={!props.hasChanges}>
+          <button
+            onClick={props.onSave}
+            className="btn-secondary"
+            style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+            disabled={!props.hasChanges}
+          >
             <Save size={14} /> Salvar
           </button>
         </>
@@ -65,7 +70,11 @@ export const DiaryPageToolbar: React.FC<DiaryPageToolbarProps> = (props) => (
   </div>
 );
 
-const SaveStatus: React.FC<{ saving: boolean; hasChanges: boolean; hasContent: boolean }> = ({ saving, hasChanges, hasContent }) => {
+const SaveStatus: React.FC<{ saving: boolean; hasChanges: boolean; hasContent: boolean }> = ({
+  saving,
+  hasChanges,
+  hasContent,
+}) => {
   if (saving) return <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Salvando...</span>;
   if (hasChanges) return <span style={{ fontSize: '0.8rem', color: 'var(--color-primary)' }}>Não salvo</span>;
   if (hasContent) return <span style={{ fontSize: '0.8rem', color: 'var(--color-success)' }}>✓ Salvo</span>;

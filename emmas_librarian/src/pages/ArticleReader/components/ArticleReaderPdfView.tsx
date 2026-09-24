@@ -139,7 +139,9 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
           <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
             <div id="pdf-container" style={{ flexGrow: 1, position: 'relative', height: '100%' }}>
               <PdfHighlighter
-                ref={highlighterRef as React.MutableRefObject<PdfHighlighter<import('react-pdf-highlighter').IHighlight>>}
+                ref={
+                  highlighterRef as React.MutableRefObject<PdfHighlighter<import('react-pdf-highlighter').IHighlight>>
+                }
                 pdfDocument={pdfDocument}
                 pdfScaleValue={scale.toString()}
                 enableAreaSelection={(event) => event.altKey}
@@ -148,16 +150,8 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
                 onSelectionFinished={(position, content, hideTipAndSelection) =>
                   renderTip(position, content, hideTipAndSelection)
                 }
-                highlightTransform={(
-                  highlight,
-                  index,
-                  setTip,
-                  hideTip,
-                  viewportToScaled,
-                  screenshot,
-                  isScrolledTo,
-                ) => {
-                  const isTextHighlight = !Boolean(highlight.content && highlight.content.image);
+                highlightTransform={(highlight, index, setTip, hideTip, viewportToScaled, screenshot, isScrolledTo) => {
+                  const isTextHighlight = !(highlight.content && highlight.content.image);
 
                   const component = (
                     <div
@@ -324,7 +318,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
               setEditingId={setEditingId}
               onHighlightClick={() => {}}
             />
-            
+
             {/* Resizer Handle */}
             <div
               onMouseDown={(e) => {

@@ -58,7 +58,8 @@ function getSearchBadgeLabel(searchId: number | undefined, searchHistory: Search
   if (!searchId) return 'Manual / Importação';
   const found = searchHistory.find((h) => h.id === searchId);
   if (!found) return `Busca #${searchId}`;
-  const queryPreview = found.unified_query.length > 25 ? `${found.unified_query.substring(0, 25)}...` : found.unified_query;
+  const queryPreview =
+    found.unified_query.length > 25 ? `${found.unified_query.substring(0, 25)}...` : found.unified_query;
   return `#${searchId}: ${queryPreview}`;
 }
 
@@ -119,7 +120,7 @@ export const ArticleSelector: React.FC<ArticleSelectorProps> = ({
   // Filtered and sorted article list
   const filteredArticles = useMemo(() => {
     const filtered = articles.filter(
-      (a) => filterArticleByTerm(a, searchTerm) && filterArticleBySearchId(a, selectedSearchFilter)
+      (a) => filterArticleByTerm(a, searchTerm) && filterArticleBySearchId(a, selectedSearchFilter),
     );
     return sortArticles(filtered, sortBy);
   }, [articles, searchTerm, selectedSearchFilter, sortBy]);
@@ -254,9 +255,7 @@ export const ArticleSelector: React.FC<ArticleSelectorProps> = ({
       >
         <span style={{ color: 'var(--text-muted)' }}>
           <strong>{selectedIds.length}</strong> de <strong>{articles.length}</strong> selecionados
-          {filteredArticles.length !== articles.length && (
-            <span> ({filteredArticles.length} visíveis no filtro)</span>
-          )}
+          {filteredArticles.length !== articles.length && <span> ({filteredArticles.length} visíveis no filtro)</span>}
         </span>
 
         {!disabled && (
@@ -377,13 +376,27 @@ export const ArticleSelector: React.FC<ArticleSelectorProps> = ({
                     }}
                   >
                     {art.authors && (
-                      <span style={{ maxWidth: '220px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span
+                        style={{
+                          maxWidth: '220px',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
                         {art.authors}
                       </span>
                     )}
                     {art.year && <span>• {art.year}</span>}
                     {(art.journal || art.publisher) && (
-                      <span style={{ maxWidth: '180px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span
+                        style={{
+                          maxWidth: '180px',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
                         • {art.journal || art.publisher}
                       </span>
                     )}

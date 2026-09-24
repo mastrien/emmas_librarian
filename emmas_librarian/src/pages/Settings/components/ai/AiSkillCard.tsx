@@ -31,8 +31,23 @@ interface AiSkillCardProps {
  *   <AiSkillCard config={conf} suggestions={getModelSuggestions(conf.skill, conf.provider)} onUpdate={update} />
  */
 export const AiSkillCard: React.FC<AiSkillCardProps> = ({ config, suggestions, onUpdate }) => (
-  <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1rem', background: 'var(--bg-main)' }}>
-    <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-heading)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+  <div
+    style={{
+      border: '1px solid var(--border-color)',
+      borderRadius: 'var(--radius-md)',
+      padding: '1rem',
+      background: 'var(--bg-main)',
+    }}
+  >
+    <h4
+      style={{
+        margin: '0 0 1rem 0',
+        color: 'var(--text-heading)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+      }}
+    >
       {SKILL_TITLES[config.skill]}
     </h4>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -61,7 +76,11 @@ export const AiSkillCard: React.FC<AiSkillCardProps> = ({ config, suggestions, o
           style={settingsInputStyle}
           placeholder="Ex: gemini-2.5-flash"
         />
-        <ModelSuggestions current={config.model_name} suggestions={suggestions} onPick={(model) => onUpdate(config.skill, 'model_name', model)} />
+        <ModelSuggestions
+          current={config.model_name}
+          suggestions={suggestions}
+          onPick={(model) => onUpdate(config.skill, 'model_name', model)}
+        />
       </div>
     </div>
     {config.skill === 'embeddings' && <EmbeddingsRecommendation />}
@@ -116,7 +135,8 @@ const EmbeddingsRecommendation: React.FC = () => (
       lineHeight: '1.4',
     }}
   >
-    ⚠️ <strong>Aviso de Recomendação:</strong> Atualmente, a funcionalidade de vetorização (Embeddings) funciona melhor e com maior
-    estabilidade utilizando o <strong>Ollama (Local)</strong> ouvindo na porta 11434 com modelos como <code>nomic-embed-text</code>.
+    ⚠️ <strong>Aviso de Recomendação:</strong> Atualmente, a funcionalidade de vetorização (Embeddings) funciona melhor
+    e com maior estabilidade utilizando o <strong>Ollama (Local)</strong> ouvindo na porta 11434 com modelos como{' '}
+    <code>nomic-embed-text</code>.
   </div>
 );

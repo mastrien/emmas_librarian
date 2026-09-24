@@ -9,7 +9,8 @@ module.exports = {
     'plugin:react/jsx-runtime',
     'plugin:prettier/recommended',
   ],
-  ignorePatterns: ['dist', 'dist-electron', 'build', '.eslintrc.cjs', 'coverage'],
+  // public/ holds vendored, minified browser bundles (pdf.js worker, etc.) that are not ours to lint.
+  ignorePatterns: ['dist', 'dist-electron', 'build', 'release', '.eslintrc.cjs', 'coverage', 'public', 'reports', '.stryker-tmp'],
   parser: '@typescript-eslint/parser',
   plugins: ['prettier'],
   settings: {

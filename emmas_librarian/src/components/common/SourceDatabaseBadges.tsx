@@ -14,7 +14,10 @@ const MANUAL_WARNING = 'Metadados adicionados manualmente (podem conter erros)';
  * Usage:
  *   <SourceDatabaseBadges sourceDatabases={article.source_databases} emptyPlaceholder="-" />
  */
-export const SourceDatabaseBadges: React.FC<SourceDatabaseBadgesProps> = ({ sourceDatabases, emptyPlaceholder = null }) => {
+export const SourceDatabaseBadges: React.FC<SourceDatabaseBadgesProps> = ({
+  sourceDatabases,
+  emptyPlaceholder = null,
+}) => {
   const sources = parseSourceDatabases(sourceDatabases);
   if (sources.length === 0) return <>{emptyPlaceholder}</>;
   return (

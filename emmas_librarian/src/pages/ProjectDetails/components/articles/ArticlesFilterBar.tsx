@@ -27,16 +27,26 @@ interface ArticlesFilterBarProps {
  *   <ArticlesFilterBar filtering={filtering} isSidebarOpen={open} onToggleSidebar={toggle} />
  */
 export const ArticlesFilterBar: React.FC<ArticlesFilterBarProps> = ({ filtering, isSidebarOpen, onToggleSidebar }) => {
-  const resetPageAfter = <T,>(apply: (value: T) => void) => (value: T) => {
-    apply(value);
-    filtering.setCurrentPage(1);
-  };
+  const resetPageAfter =
+    <T,>(apply: (value: T) => void) =>
+    (value: T) => {
+      apply(value);
+      filtering.setCurrentPage(1);
+    };
 
   return (
     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
       <SearchBox value={filtering.searchTerm} onChange={resetPageAfter(filtering.setSearchTerm)} />
-      <FilterToggle label="Apenas com PDF vinculado" checked={filtering.onlyWithPdf} onChange={resetPageAfter(filtering.setOnlyWithPdf)} />
-      <FilterToggle label="Apenas Acesso Aberto" checked={filtering.onlyOpenAccess} onChange={resetPageAfter(filtering.setOnlyOpenAccess)} />
+      <FilterToggle
+        label="Apenas com PDF vinculado"
+        checked={filtering.onlyWithPdf}
+        onChange={resetPageAfter(filtering.setOnlyWithPdf)}
+      />
+      <FilterToggle
+        label="Apenas Acesso Aberto"
+        checked={filtering.onlyOpenAccess}
+        onChange={resetPageAfter(filtering.setOnlyOpenAccess)}
+      />
       <SidebarToggle isOpen={isSidebarOpen} onToggle={onToggleSidebar} />
       <SortSelect value={filtering.sortOrder} onChange={resetPageAfter(filtering.setSortOrder)} />
     </div>
@@ -45,7 +55,15 @@ export const ArticlesFilterBar: React.FC<ArticlesFilterBarProps> = ({ filtering,
 
 const SearchBox: React.FC<{ value: string; onChange: (value: string) => void }> = ({ value, onChange }) => (
   <div style={{ flex: 1, position: 'relative' }}>
-    <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+    <div
+      style={{
+        position: 'absolute',
+        left: '1rem',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        color: 'var(--text-muted)',
+      }}
+    >
       <Search size={18} />
     </div>
     <input

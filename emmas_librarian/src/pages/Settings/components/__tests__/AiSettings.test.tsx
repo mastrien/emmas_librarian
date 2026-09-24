@@ -127,7 +127,9 @@ describe('AiSettings per-skill configuration', () => {
   it('offers every supported provider', () => {
     renderSettings({ aiConfigs: [configs[0]] });
 
-    const options = within(screen.getByRole('combobox')).getAllByRole('option').map((o) => (o as HTMLOptionElement).value);
+    const options = within(screen.getByRole('combobox'))
+      .getAllByRole('option')
+      .map((o) => (o as HTMLOptionElement).value);
     expect(options).toEqual(['local', 'gemini', 'openai', 'anthropic', 'ollama', 'ollama_cloud']);
   });
 

@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Calendar as CalendarIcon, CheckCircle2, Circle, Clock, ExternalLink, Edit2, Trash2, Tag, ChevronRight } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  Circle,
+  Clock,
+  ExternalLink,
+  Edit2,
+  Trash2,
+  Tag,
+  ChevronRight,
+} from 'lucide-react';
 import { ScientificVenue, ScientificMilestone, VenueCategory, MilestoneStatus } from '../../types';
 import { DashboardCalendar } from './DashboardCalendar';
 
@@ -47,9 +59,7 @@ export const ScientificAgendaView: React.FC<ScientificAgendaViewProps> = ({
     setLocalVenues((prevVenues) =>
       prevVenues.map((v) => ({
         ...v,
-        milestones: (v.milestones || []).map((m) =>
-          m.id === milestoneId ? { ...m, status: newStatus } : m,
-        ),
+        milestones: (v.milestones || []).map((m) => (m.id === milestoneId ? { ...m, status: newStatus } : m)),
       })),
     );
 
@@ -72,22 +82,30 @@ export const ScientificAgendaView: React.FC<ScientificAgendaViewProps> = ({
     return true;
   });
 
-  const allMilestonesWithVenue = filteredVenues.flatMap((v) =>
-    (v.milestones || [])
-      .filter((m) => selectedStatus === 'all' || m.status === selectedStatus)
-      .map((m) => ({ milestone: m, venue: v })),
-  ).sort((a, b) => a.milestone.target_date.localeCompare(b.milestone.target_date));
+  const allMilestonesWithVenue = filteredVenues
+    .flatMap((v) =>
+      (v.milestones || [])
+        .filter((m) => selectedStatus === 'all' || m.status === selectedStatus)
+        .map((m) => ({ milestone: m, venue: v })),
+    )
+    .sort((a, b) => a.milestone.target_date.localeCompare(b.milestone.target_date));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Top Header Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <CalendarIcon size={24} color="var(--color-primary)" />
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-heading)' }}>
-              Agenda
-            </h1>
+            <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-heading)' }}>Agenda</h1>
             <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
               Gerencie seus eventos, prazos e chamadas de periódicos.
             </p>
@@ -256,7 +274,13 @@ export const ScientificAgendaView: React.FC<ScientificAgendaViewProps> = ({
                 Nenhum evento ou periódico encontrado.
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.25rem' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                  gap: '1.25rem',
+                }}
+              >
                 {filteredVenues.map((v) => (
                   <div
                     key={v.id}
@@ -272,7 +296,14 @@ export const ScientificAgendaView: React.FC<ScientificAgendaViewProps> = ({
                       position: 'relative',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: '0.5rem',
+                      }}
+                    >
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           <span
@@ -284,7 +315,14 @@ export const ScientificAgendaView: React.FC<ScientificAgendaViewProps> = ({
                               display: 'inline-block',
                             }}
                           />
-                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              color: 'var(--text-muted)',
+                              textTransform: 'uppercase',
+                            }}
+                          >
                             {CATEGORY_LABELS[v.category]}
                           </span>
                         </div>
@@ -308,7 +346,13 @@ export const ScientificAgendaView: React.FC<ScientificAgendaViewProps> = ({
                         <button
                           type="button"
                           onClick={() => onEditVenue(v)}
-                          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.2rem' }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                            padding: '0.2rem',
+                          }}
                           title="Editar Evento"
                         >
                           <Edit2 size={16} />
@@ -316,7 +360,13 @@ export const ScientificAgendaView: React.FC<ScientificAgendaViewProps> = ({
                         <button
                           type="button"
                           onClick={() => onDeleteVenue(v.id)}
-                          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.2rem' }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                            padding: '0.2rem',
+                          }}
                           title="Excluir Evento"
                         >
                           <Trash2 size={16} />
@@ -372,91 +422,107 @@ export const ScientificAgendaView: React.FC<ScientificAgendaViewProps> = ({
                 ))}
               </div>
             )
+          ) : /* Milestone List View */
+          allMilestonesWithVenue.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '3rem',
+                color: 'var(--text-muted)',
+                backgroundColor: 'var(--bg-surface)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              Nenhum prazo cadastrado.
+            </div>
           ) : (
-            /* Milestone List View */
-            allMilestonesWithVenue.length === 0 ? (
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '3rem',
-                  color: 'var(--text-muted)',
-                  backgroundColor: 'var(--bg-surface)',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '1px solid var(--border-color)',
-                }}
-              >
-                Nenhum prazo cadastrado.
-              </div>
-            ) : (
-              <div
-                style={{
-                  backgroundColor: 'var(--bg-surface)',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '1px solid var(--border-color)',
-                  overflow: 'hidden',
-                }}
-              >
-                {allMilestonesWithVenue.map(({ milestone: m, venue: v }) => {
-                  const isDone = m.status === 'completed';
-                  return (
-                    <div
-                      key={m.id || `${v.id}-${m.label}`}
-                      style={{
-                        padding: '0.85rem 1.25rem',
-                        borderBottom: '1px solid var(--border-color)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        backgroundColor: isDone ? 'rgba(0,0,0,0.02)' : 'transparent',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <input
-                          type="checkbox"
-                          checked={isDone}
-                          onChange={() => m.id && handleToggleStatus(m.id, m.status)}
-                          style={{ cursor: 'pointer' }}
-                        />
+            <div
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--border-color)',
+                overflow: 'hidden',
+              }}
+            >
+              {allMilestonesWithVenue.map(({ milestone: m, venue: v }) => {
+                const isDone = m.status === 'completed';
+                return (
+                  <div
+                    key={m.id || `${v.id}-${m.label}`}
+                    style={{
+                      padding: '0.85rem 1.25rem',
+                      borderBottom: '1px solid var(--border-color)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: isDone ? 'rgba(0,0,0,0.02)' : 'transparent',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={isDone}
+                        onChange={() => m.id && handleToggleStatus(m.id, m.status)}
+                        style={{ cursor: 'pointer' }}
+                      />
 
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: isDone ? 'var(--text-muted)' : 'var(--text-heading)' }}>
-                              {m.label}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: '0.7rem',
-                                padding: '0.1rem 0.4rem',
-                                borderRadius: '4px',
-                                backgroundColor: v.color ? `${v.color}22` : 'rgba(59, 130, 246, 0.15)',
-                                color: v.color || '#3b82f6',
-                                fontWeight: 600,
-                              }}
-                            >
-                              {v.acronym || v.title}
-                            </span>
-                          </div>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            {v.title}
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <span
+                            style={{
+                              fontWeight: 700,
+                              fontSize: '0.9rem',
+                              color: isDone ? 'var(--text-muted)' : 'var(--text-heading)',
+                            }}
+                          >
+                            {m.label}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.7rem',
+                              padding: '0.1rem 0.4rem',
+                              borderRadius: '4px',
+                              backgroundColor: v.color ? `${v.color}22` : 'rgba(59, 130, 246, 0.15)',
+                              color: v.color || '#3b82f6',
+                              fontWeight: 600,
+                            }}
+                          >
+                            {v.acronym || v.title}
                           </span>
                         </div>
-                      </div>
-
-                      <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace', color: isDone ? 'var(--text-muted)' : 'var(--text-main)' }}>
-                        {m.field_type === 'range' && m.end_date
-                          ? `${m.target_date} a ${m.end_date}`
-                          : `${m.target_date}${m.has_time && m.target_time ? ` às ${m.target_time}` : ''}`}
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{v.title}</span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )
+
+                    <div
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        fontFamily: 'monospace',
+                        color: isDone ? 'var(--text-muted)' : 'var(--text-main)',
+                      }}
+                    >
+                      {m.field_type === 'range' && m.end_date
+                        ? `${m.target_date} a ${m.end_date}`
+                        : `${m.target_date}${m.has_time && m.target_time ? ` às ${m.target_time}` : ''}`}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
 
         {/* Side Monthly Calendar Widget */}
-        <div style={{ backgroundColor: 'var(--bg-surface)', padding: '0.85rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
+        <div
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            padding: '0.85rem',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--border-color)',
+          }}
+        >
           <DashboardCalendar
             diarySet={diarySet}
             venues={localVenues}

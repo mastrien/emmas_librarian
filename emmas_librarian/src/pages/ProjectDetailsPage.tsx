@@ -49,7 +49,11 @@ export const ProjectDetailsPage: React.FC = () => {
   const data = useProjectData(projectId, refreshSelectedArticle);
   const filtering = useProjectFiltering(data.articles, ARTICLES_PER_PAGE);
   const actions = useProjectActions({ projectId, ...data, modals });
-  const pdfImport = useProjectPdfImport({ projectId, onImported: data.reload, isDropBlocked: () => modals.isQuickAccessModalOpen });
+  const pdfImport = useProjectPdfImport({
+    projectId,
+    onImported: data.reload,
+    isDropBlocked: () => modals.isQuickAccessModalOpen,
+  });
   const extraction = useMassiveExtraction({
     projectId,
     articles: data.articles,
@@ -76,7 +80,16 @@ export const ProjectDetailsPage: React.FC = () => {
       {...pdfImport.dropZone}
     >
       {pdfImport.isDragging && <PdfDropOverlay />}
-      <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
+      <Link
+        to="/"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          marginBottom: '1.5rem',
+          color: 'var(--text-muted)',
+        }}
+      >
         <ArrowLeft size={18} /> Voltar para Projetos
       </Link>
 
@@ -113,7 +126,12 @@ export const ProjectDetailsPage: React.FC = () => {
         />
       </div>
 
-      <ProjectTabs activeTab={activeTab} onSelect={setActiveTab} articleCount={data.articles.length} historyCount={data.history.length} />
+      <ProjectTabs
+        activeTab={activeTab}
+        onSelect={setActiveTab}
+        articleCount={data.articles.length}
+        historyCount={data.history.length}
+      />
 
       {activeTab === 'articles' && (
         <ProjectArticlesTab
@@ -146,7 +164,13 @@ export const ProjectDetailsPage: React.FC = () => {
       )}
       {activeTab === 'diary' && projectId !== null && <DiarySection projectId={projectId} />}
       {activeTab === 'history' && (
-        <SearchHistoryModal isOpen={true} onClose={() => {}} history={data.history} embedded={true} onRevertSearch={actions.revertSearch} />
+        <SearchHistoryModal
+          isOpen={true}
+          onClose={() => {}}
+          history={data.history}
+          embedded={true}
+          onRevertSearch={actions.revertSearch}
+        />
       )}
 
       <ProjectModalsContainer
