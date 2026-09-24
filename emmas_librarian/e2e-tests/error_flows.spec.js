@@ -23,6 +23,10 @@ test('F-10 Error flow: prevent duplicate project names', async () => {
 
     // Verify user remains on the new-project page
     expect(window.url()).toContain('/new-project');
+
+    // And the rejected attempt did not create a second project with that name.
+    await navigateTo(window, 'Projetos');
+    await expect(window.locator(`text=${duplicateName}`)).toHaveCount(1);
   } finally {
     await electronApp.close();
   }

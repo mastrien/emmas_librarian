@@ -3,6 +3,7 @@ import path from 'path';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import { setupIpcRegistries } from './ipc/ipcRegistries';
+import { isE2ELaunch, resolveUserDataDir } from './userDataDir';
 
 // Configure logging for auto-updater
 autoUpdater.logger = log;
@@ -10,15 +11,18 @@ log.info('App starting...');
 const appStartTime = performance.now();
 
 const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
-const isE2ETest = process.argv.some(
-  (arg) => arg.includes('--remote-debugging-port') || arg.includes('--user-data-dir'),
-);
+const isE2ETest = isE2ELaunch(process.argv);
 
-if (isDev && !isE2ETest) {
-  // Use a local 'dev_data' directory in the project root during development to isolate data
-  const devDataPath = path.join(process.cwd(), 'dev_data');
-  app.setPath('userData', devDataPath);
-}
+// Development uses ./dev_data and automated runs a throwaway folder, never the installed app's library.
+const userDataDir = resolveUserDataDir({
+  isPackaged: app.isPackaged,
+  isProductionEnv: process.env.NODE_ENV === 'production',
+  argv: process.argv,
+  env: process.env,
+  cwd: process.cwd(),
+  pid: process.pid,
+});
+if (userDataDir) app.setPath('userData', userDataDir);
 
 // Fix for GPU Cache creation errors in terminal
 app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');

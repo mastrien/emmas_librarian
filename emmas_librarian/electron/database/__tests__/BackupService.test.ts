@@ -82,6 +82,17 @@ describe('BackupService', () => {
   });
 
   describe('exportBackup', () => {
+    it('writes to E2E_MOCK_SAVE_FILE_PATH without opening the save dialog', async () => {
+      process.env.E2E_MOCK_SAVE_FILE_PATH = 'e2e.emmabak';
+      vi.mocked(fs.existsSync).mockReturnValue(false);
+      try {
+        expect(await backupService.exportBackup()).toBe('e2e.emmabak');
+        expect(dialog.showSaveDialog).not.toHaveBeenCalled();
+      } finally {
+        delete process.env.E2E_MOCK_SAVE_FILE_PATH;
+      }
+    });
+
     it('should return null if dialog is canceled', async () => {
       vi.mocked(dialog.showSaveDialog).mockResolvedValue({ canceled: true } as any);
       const res = await backupService.exportBackup();

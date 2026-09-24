@@ -1,4 +1,6 @@
 const { _electron: electron } = require('playwright');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 function checkHeadless() {
@@ -10,13 +12,19 @@ function checkHeadless() {
   }
 }
 
+/**
+ * Launches the built app on a fresh, empty data folder (emma.db, PDFs, settings) that is deleted on close,
+ * so specs never read or write a real library and never see each other's data.
+ */
 async function launchApp(env = {}) {
   checkHeadless();
   const mainPath = path.resolve(__dirname, '../dist-electron/electron/main.js');
+  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emmas-e2e-'));
   const electronApp = await electron.launch({
     args: [mainPath],
-    env: { ...process.env, ...env },
+    env: { ...process.env, E2E_USER_DATA_DIR: userDataDir, ...env },
   });
+  electronApp.on('close', () => fs.rmSync(userDataDir, { recursive: true, force: true }));
   return electronApp;
 }
 

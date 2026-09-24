@@ -45,12 +45,8 @@ export class BackupService {
   ) {}
 
   public async exportBackup(): Promise<string | null> {
-    const { canceled, filePath } = await dialog.showSaveDialog({
-      title: 'Exportar Backup Completo',
-      defaultPath: `backup_${new Date().toISOString().split('T')[0]}.emmabak`,
-      filters: BACKUP_FILTERS,
-    });
-    if (canceled || !filePath) return null;
+    const filePath = await this.chooseBackupPath();
+    if (!filePath) return null;
     try {
       this.buildBackupZip().writeZip(filePath);
       return filePath;
@@ -58,6 +54,17 @@ export class BackupService {
       console.error('Erro ao exportar backup:', err);
       throw err;
     }
+  }
+
+  // E2E runs cannot answer the native save dialog; they pass the target path like the other export handlers.
+  private async chooseBackupPath(): Promise<string | null> {
+    if (process.env.E2E_MOCK_SAVE_FILE_PATH) return process.env.E2E_MOCK_SAVE_FILE_PATH;
+    const { canceled, filePath } = await dialog.showSaveDialog({
+      title: 'Exportar Backup Completo',
+      defaultPath: `backup_${new Date().toISOString().split('T')[0]}.emmabak`,
+      filters: BACKUP_FILTERS,
+    });
+    return canceled || !filePath ? null : filePath;
   }
 
   private buildBackupZip(): AdmZip {
