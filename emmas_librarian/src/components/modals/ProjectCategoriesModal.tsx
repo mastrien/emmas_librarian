@@ -153,6 +153,8 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
           <button
             type="button"
             onClick={onClose}
+            title="Fechar"
+            aria-label="Fechar"
             style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             <X size={24} />

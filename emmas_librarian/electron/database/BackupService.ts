@@ -5,6 +5,7 @@ import { dialog, app } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import { DatabaseAdapter } from './DatabaseAdapter';
 import { mergeBackupProjects, type StorageDirs } from './backup/backupMerge';
+import { restartApp } from '../restartApp';
 
 const BACKUP_FILTERS = [{ name: "Emma's Librarian Backup", extensions: ['emmabak'] }];
 const STORAGE_FOLDERS = ['storage/pdfs', 'storage/project_documents'];
@@ -95,6 +96,8 @@ export class BackupService {
 
   private async pickBackupFile(title: string, providedPath?: string): Promise<string | null> {
     if (providedPath) return providedPath;
+    // E2E runs cannot answer the native open dialog; they pass the backup to restore instead.
+    if (process.env.E2E_MOCK_BACKUP_FILE) return process.env.E2E_MOCK_BACKUP_FILE;
     const { canceled, filePaths } = await dialog.showOpenDialog({
       title,
       filters: BACKUP_FILTERS,
@@ -114,8 +117,7 @@ export class BackupService {
       this.dbAdapter.close();
       this.overwriteDatabase(dbData);
       this.extractStorage(zip);
-      app.relaunch();
-      app.exit(0);
+      restartApp();
       return true;
     } catch (err) {
       console.error('Erro ao restaurar backup:', err);

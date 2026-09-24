@@ -170,6 +170,16 @@ describe('BackupService', () => {
   });
 
   describe('restoreBackupMerge', () => {
+    it('uses E2E_MOCK_BACKUP_FILE instead of the open dialog', async () => {
+      process.env.E2E_MOCK_BACKUP_FILE = 'missing.emmabak';
+      try {
+        await expect(backupService.restoreBackupMerge()).rejects.toThrow();
+        expect(dialog.showOpenDialog).not.toHaveBeenCalled();
+      } finally {
+        delete process.env.E2E_MOCK_BACKUP_FILE;
+      }
+    });
+
     it('should return 0 if dialog is canceled', async () => {
       vi.mocked(dialog.showOpenDialog).mockResolvedValue({ canceled: true, filePaths: [] });
       const res = await backupService.restoreBackupMerge();
