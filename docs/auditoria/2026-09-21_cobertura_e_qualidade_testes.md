@@ -191,3 +191,47 @@ Cobertura global: 79,55 → **85,0%** statements, 80,5 → **83,0%** branches, 6
 2. **Lint**: incluir `public/` e vendor no `ignorePatterns`, corrigir os ~500 erros reais e adicionar o lint ao workflow de CI.
 3. **P5**: corrigir os avisos de `act(...)` restantes nos testes antigos, aumentar a densidade de asserções dos specs E2E e revisar o `stryker.config.json`. **Não executar a mutação sem ordem explícita.**
 4. Atualizar este relatório com o resultado final.
+
+---
+
+## Encerramento (2026-09-24): refatoração, lint e P5 concluídos
+
+Todos os itens do plano foram concluídos, exceto a execução dos testes de mutação, que aguarda ordem explícita. Commits: `7e42fca`..`7e78ac4` (branch `feat/tutoriais`).
+
+### Refatoração
+- Nenhum arquivo-fonte passa mais de 500 linhas. Cada divisão foi precedida de testes de caracterização (commits `test:` separados) e mantém o comportamento: `MassCitationModal`, `ManageQuickAccessModal`, `VenueFormModal`, `SearchPage`, `ArticleDetailsModal`, `AIExtractionModal`, `ChangelogModal`, `AiSettings`, `DiarySection`, `api.ts`, `DatabaseAdapter`, `BackupService`, `ProjectSyncService` e `ArticleRepository` (este dividido em repositórios de artigo, categoria e biblioteca de PDF).
+- Lógica compartilhada extraída com testes unitários: `cslMetadata`, `citationClipboard`, `parseJsonList`, `fileNameFromPath`, `useDebounce`, `searchQueries`, `venueFormModel` e `documentReorder`, além do importador único de projetos (`backup/projectRows` + `backup/projectImport`), usado tanto pela importação de `.emmapcarc` quanto pela mesclagem de backup.
+
+### Bugs encontrados e corrigidos (todos com teste de regressão)
+| Gravidade | Bug | Commit |
+|---|---|---|
+| **Alta** | Importar qualquer projeto `.emmapcarc` com artigos falhava ("table articles has no column named created_at"). O defeito existe desde pelo menos a v1.1.20. | `724ea5c` |
+| **Alta** | "Importar e Mesclar Backup" copiava só 15 colunas de artigo e descartava resumo, palavras-chave, periódico/volume/páginas, citações, vínculo com a busca, bloco de notas, categorias/opções, resultados de investigação, histórico do diário e conjuntos de perguntas. | `d0bd776` |
+| **Alta** | Os testes E2E rodavam sobre o `userData` padrão do Electron, a biblioteca real do app instalado. | `64feb7d` |
+| Média | A exportação de projeto nunca incluía os arquivos dos documentos (lia `file_path` em vez de `local_file_path`). | `724ea5c` |
+| Média | Um `source_databases` em JSON não-lista (ex.: `"Scopus"`) derrubava o modal de detalhes do artigo. | `8731dc9` |
+| Média | Hooks declarados depois do `return null` no `ManageQuickAccessModal` quebravam o modal ao reabri-lo. | `463fa1a` |
+| Média | `questions`/`articles_ids` malformados no histórico derrubavam a aba de histórico da investigação. | `31b9371` |
+| Baixa | O `CitationModal` ignorava a chave padrão CSL `page` ao resetar. | `fd7ec74` |
+| Baixa | O aviso da Scopus mostrava `&gt` literal. | `a6008f7` |
+| Baixa | Número de edição ou páginas sozinho aparecia com vírgula inicial (", p. 3-4"). | `8731dc9` |
+
+### Lint (`52aa825`)
+- De 2.180 erros e 1.401 avisos para **0 erros**. `public/` (vendor) foi ignorado, e os imports e variáveis sem uso e o código morto foram removidos.
+- A CI agora roda `npm run lint:ci` com teto de avisos em catraca (hoje 344: 308 `no-explicit-any`, 22 `set-state-in-effect` e 14 `exhaustive-deps`).
+
+### P5
+- **`act(...)`**: 62 avisos → 0. Os testes passaram a esperar o estado carregado. Quatro testes sem nenhuma asserção real ("renders correctly", o relógio do dashboard) foram substituídos por asserções de comportamento (`9d14ac3`).
+- **E2E**: dados isolados por execução. O spec de backup passava sem fazer backup nenhum: o mock era ignorado porque o `contextBridge` congela `window.electronAPI`, e a asserção ficava dentro do handler do diálogo. Agora ele valida o `.emmabak` gerado. Os specs de importação de PDF, busca, fluxo de erro e exportação passaram a verificar resultados concretos. **12/12 passando localmente.**
+- **Stryker**: revisado, **não executado**. Recebeu modo incremental (reexecuta só o que mudou; a execução completa levaria ~19h), thresholds explícitos sem gate e exclusão do arquivo de notas de versão.
+
+### Estado final
+- Unitários/integração: **1.618 testes**, **91,2% statements / 89,6% branches / 85,8% functions**. Electron ≥ 94%. A catraca da CI está em 90/88/83.
+- A CI (`test.yml`) roda typecheck, lint e cobertura. O `release.yml` exige typecheck e testes.
+
+### Pendências recomendadas
+1. **Executar a mutação** (`npm run test:mutate`), apenas sob ordem explícita. Com o modo incremental, as execuções seguintes ficam bem mais curtas.
+2. Reduzir os 22 `react-hooks/set-state-in-effect`: trocar "resetar formulário ao abrir" por remontagem com `key` e os carregamentos por hooks de dados. Depois disso, voltar a regra para `error`.
+3. Reduzir gradualmente os 308 `no-explicit-any` e baixar o teto do `lint:ci`.
+4. O mock de extração da IA em E2E (`E2E_MOCK_AI_EXTRACTION`) devolve `{question, answer, confidence}`, formato diferente de `RAGExtractionResult` (`synthesizedAnswer`, `evidences`). O spec só verifica o fluxo, não a resposta exibida; vale alinhar o mock.
+5. Avaliar rodar um subconjunto E2E em CI (runner Windows com GUI), agora que os dados estão isolados.
