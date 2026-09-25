@@ -81,7 +81,9 @@ export class AIService {
     }
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content ?? data.content ?? (typeof data === 'string' ? data : JSON.stringify(data));
+    return (
+      data.choices?.[0]?.message?.content ?? data.content ?? (typeof data === 'string' ? data : JSON.stringify(data))
+    );
   }
 
   private async callGemini(prompt: string, apiKey: string, model: string = 'gemini-2.5-flash'): Promise<string> {
@@ -107,7 +109,11 @@ export class AIService {
     }
 
     const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? data.choices?.[0]?.message?.content ?? (typeof data === 'string' ? data : JSON.stringify(data));
+    return (
+      data.candidates?.[0]?.content?.parts?.[0]?.text ??
+      data.choices?.[0]?.message?.content ??
+      (typeof data === 'string' ? data : JSON.stringify(data))
+    );
   }
 
   private async callOllama(prompt: string, baseUrl: string, model: string): Promise<string> {
@@ -133,7 +139,12 @@ export class AIService {
     }
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content ?? data.response ?? data.content ?? (typeof data === 'string' ? data : JSON.stringify(data));
+    return (
+      data.choices?.[0]?.message?.content ??
+      data.response ??
+      data.content ??
+      (typeof data === 'string' ? data : JSON.stringify(data))
+    );
   }
 
   private async generateCompletion(
@@ -142,7 +153,7 @@ export class AIService {
   ): Promise<string> {
     const keys = this.getKeys();
     const configRepo = new AIModelConfigRepository(this.db.getDB());
-    let config = configRepo.getConfig(skill as any);
+    const config = configRepo.getConfig(skill as any);
 
     try {
       if (config) {
@@ -213,7 +224,7 @@ export class AIService {
     if (article?.ai_summary) {
       try {
         return JSON.parse(article.ai_summary);
-      } catch (e) {
+      } catch {
         // Fallback to regenerate if parsing fails
       }
     }
@@ -253,7 +264,7 @@ ${truncatedText}
       } catch (err) {
         console.error('Failed to parse LLM JSON:', err, 'Raw result:', result);
         throw new Error(
-          `[ERR_INVALID_AI_RESPONSE] A IA não retornou um formato JSON válido. Offending value: "${String(result).slice(0, 100)}...". Expected shape: Objeto JSON válido com resumo do artigo.`
+          `[ERR_INVALID_AI_RESPONSE] A IA não retornou um formato JSON válido. Offending value: "${String(result).slice(0, 100)}...". Expected shape: Objeto JSON válido com resumo do artigo.`,
         );
       }
     }
@@ -376,7 +387,7 @@ ${contextPrompt}
             }
           }
         }
-      } catch (err) {
+      } catch {
         console.error('Failed to parse LLM JSON for extraction:', result);
         throw new Error('A IA não retornou um formato JSON válido para extração.');
       }
@@ -413,7 +424,7 @@ ${truncatedText}
     try {
       const parsed = JSON.parse(result);
       return parsed;
-    } catch (err) {
+    } catch {
       console.error('Failed to parse LLM JSON for metadata:', result);
       throw new Error('A IA não retornou um formato JSON válido para os metadados.');
     }

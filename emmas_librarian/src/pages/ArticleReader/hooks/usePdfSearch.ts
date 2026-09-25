@@ -7,7 +7,8 @@ interface SearchResult {
   highlightStart: number;
 }
 
-interface PdfDocumentProxy {
+/** The part of pdf.js's document that text search needs. */
+export interface PdfDocumentProxy {
   numPages: number;
   getPage: (pageNum: number) => Promise<{
     getTextContent: () => Promise<{
@@ -98,7 +99,9 @@ export function usePdfSearch(
       document.querySelectorAll('.textLayer span mark').forEach((mark) => {
         const parent = mark.parentNode;
         if (parent) {
-          parent.textContent = parent.textContent;
+          // Rewriting the text drops the <mark> elements and restores pdf.js's plain text node.
+          const plainText = parent.textContent;
+          parent.textContent = plainText;
         }
       });
       document.querySelectorAll('.textLayer').forEach((layer) => {

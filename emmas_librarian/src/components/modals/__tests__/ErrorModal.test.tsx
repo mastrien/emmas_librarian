@@ -40,7 +40,7 @@ describe('ErrorModal', () => {
     });
 
     render(<ErrorModal />);
-    
+
     // Check if translation title is rendered
     expect(screen.getByText('Chave de API Ausente')).toBeInTheDocument();
     // Check if translation message is rendered
@@ -56,7 +56,7 @@ describe('ErrorModal', () => {
     });
 
     render(<ErrorModal />);
-    
+
     // Fallback translation
     expect(screen.getByText('Falha no Sistema')).toBeInTheDocument();
     expect(screen.getByText(/Ocorreu um problema inesperado no Emma's Librarian/i)).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('ErrorModal', () => {
     });
 
     render(<ErrorModal />);
-    
+
     expect(screen.getByText('Falha no Sistema')).toBeInTheDocument();
   });
 
@@ -86,7 +86,7 @@ describe('ErrorModal', () => {
     });
 
     render(<ErrorModal />);
-    
+
     // Details are initially hidden
     expect(screen.queryByText('Detalhes Técnicos:')).not.toBeInTheDocument();
 
@@ -102,9 +102,9 @@ describe('ErrorModal', () => {
 
     // Click copy
     fireEvent.click(screen.getByText('Copiar Logs'));
-    
+
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      `Type: SYSTEM_ERROR\nCode: ERR_INTERNAL\nMessage: Mensagem de teste\nStack: Error at mock stack`
+      `Type: SYSTEM_ERROR\nCode: ERR_INTERNAL\nMessage: Mensagem de teste\nStack: Error at mock stack`,
     );
 
     expect(screen.getByText('Copiado')).toBeInTheDocument();
@@ -128,11 +128,11 @@ describe('ErrorModal', () => {
     });
 
     render(<ErrorModal />);
-    
+
     // Click 'Entendi' button
     fireEvent.click(screen.getByText('Entendi'));
     expect(hideError).toHaveBeenCalledTimes(1);
-    
+
     // Click X icon button
     const xButton = screen.getAllByRole('button')[0]; // first button is the X close button
     fireEvent.click(xButton);

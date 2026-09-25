@@ -21,15 +21,13 @@ import type {
   InvestigationResult,
   QueryASTNode,
   DatabaseTranslationMap,
-  SearchHistoryRecord,
-  TrashItem,
+  SearchHistoryItem,
   ProjectCategory,
   ArticleCategory,
   AIModelConfig,
   AISkill,
   AIProvider,
   ScientificVenue,
-  ScientificMilestone,
   MilestoneStatus,
 } from '../types';
 
@@ -74,6 +72,13 @@ export interface ArticleSummary {
   sectionSummary: string;
 }
 
+export interface QuestionSetInput {
+  project_id: number | null;
+  name: string;
+  description?: string | null;
+  questions: string;
+}
+
 export interface IProjectService {
   // ── Projects ──────────────────────────────────────────────────────
   getProjects(): Promise<Project[]>;
@@ -85,7 +90,7 @@ export interface IProjectService {
   deleteProject(id: number): Promise<void>;
 
   // ── Search ────────────────────────────────────────────────────────
-  getSearchHistory(projectId: number): Promise<unknown[]>;
+  getSearchHistory(projectId: number): Promise<SearchHistoryItem[]>;
   revertSearch(searchId: number): Promise<void>;
   searchAndPersist(
     projectId: number,
@@ -149,8 +154,20 @@ export interface IProjectService {
   // ── Project Documents ─────────────────────────────────────────────
   openProjectDocument(url?: string, localFilePath?: string): Promise<void>;
   getProjectDocuments(projectId: number): Promise<ProjectDocument[]>;
-  createProjectDocument(projectId: number, title: string, url?: string | null, sourceFilePath?: string | null, category?: string | null): Promise<number>;
-  updateProjectDocument(id: number, title: string, url?: string | null, sourceFilePath?: string | null, category?: string | null): Promise<void>;
+  createProjectDocument(
+    projectId: number,
+    title: string,
+    url?: string | null,
+    sourceFilePath?: string | null,
+    category?: string | null,
+  ): Promise<number>;
+  updateProjectDocument(
+    id: number,
+    title: string,
+    url?: string | null,
+    sourceFilePath?: string | null,
+    category?: string | null,
+  ): Promise<void>;
   reorderProjectDocuments(projectId: number, orderedIds: number[]): Promise<void>;
   deleteProjectDocument(id: number): Promise<void>;
   openProjectDocumentExternal(url?: string, filePath?: string): Promise<void>;
@@ -212,7 +229,7 @@ export interface IProjectService {
   getInvestigationResultsByArticle(investigationId: number, articleId: number): Promise<InvestigationResult[]>;
 
   // ── Categories ────────────────────────────────────────────────────
-  getProjectCategories(projectId: number): Promise<unknown[]>;
+  getProjectCategories(projectId: number): Promise<ProjectCategory[]>;
   createProjectCategory(
     projectId: number,
     name: string,
@@ -226,20 +243,16 @@ export interface IProjectService {
     options?: Record<string, unknown> | null,
   ): Promise<void>;
   deleteProjectCategory(categoryId: number): Promise<void>;
-  getArticleCategories(articleId: number): Promise<unknown[]>;
+  getArticleCategories(articleId: number): Promise<ArticleCategory[]>;
   setArticleCategory(articleId: number, categoryId: number, value: string | null): Promise<void>;
-  getAllProjectArticleCategories(projectId: number): Promise<unknown[]>;
+  getAllProjectArticleCategories(projectId: number): Promise<ArticleCategory[]>;
 
   // ── Question Sets ─────────────────────────────────────────────────
   getQuestionSets(projectId: number | null): Promise<QuestionSet[]>;
   getQuestionSet(id: number): Promise<QuestionSet>;
-  createQuestionSet(data: {
-    project_id: number | null;
-    name: string;
-    description?: string;
-    questions: string[];
-  }): Promise<number>;
-  updateQuestionSet(id: number, data: { name?: string; description?: string; questions?: string[] }): Promise<void>;
+  /** `questions` is the JSON-encoded list, as stored by QuestionSetRepository. */
+  createQuestionSet(data: QuestionSetInput): Promise<QuestionSet>;
+  updateQuestionSet(id: number, data: Partial<Omit<QuestionSetInput, 'project_id'>>): Promise<void>;
   deleteQuestionSet(id: number): Promise<void>;
   duplicateQuestionSet(id: number, projectId: number | null): Promise<number>;
 

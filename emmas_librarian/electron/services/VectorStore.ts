@@ -110,7 +110,7 @@ export class VectorStore {
           similarityScore: row.similarityScore,
         }));
       }
-    } catch (e) {
+    } catch {
       // Fallback query if MATCH clause isn't supported by the loaded virtual table format
     }
 

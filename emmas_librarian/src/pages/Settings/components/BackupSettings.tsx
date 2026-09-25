@@ -22,9 +22,7 @@ export const BackupSettings: React.FC<BackupSettingsProps> = ({
 }) => {
   return (
     <div className="card" style={{ padding: '2rem' }}>
-      <h2
-        style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
-      >
+      <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <Save size={24} color="var(--color-primary)" /> Backup & Segurança
       </h2>
       <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
@@ -32,9 +30,7 @@ export const BackupSettings: React.FC<BackupSettingsProps> = ({
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <label
-          style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', userSelect: 'none' }}
-        >
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', userSelect: 'none' }}>
           <input
             type="checkbox"
             checked={autoBackups}
@@ -45,9 +41,7 @@ export const BackupSettings: React.FC<BackupSettingsProps> = ({
             <span style={{ fontWeight: 600, color: 'var(--text-heading)' }}>
               Habilitar backups automáticos locais (Recomendado)
             </span>
-            <span
-              style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}
-            >
+            <span style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
               Cria um backup comprimido (gzip) do banco de dados na inicialização com retenção inteligente (GFS).
             </span>
           </div>
@@ -92,8 +86,8 @@ export const BackupSettings: React.FC<BackupSettingsProps> = ({
             Histórico de Backups Automáticos
           </h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-            Cópia(s) comprimida(s) (.gz) salvas localmente na inicialização com rotação GFS. Clique em restaurar
-            para voltar o sistema ao estado correspondente (sobrescreve banco de dados e reinicia).
+            Cópia(s) comprimida(s) (.gz) salvas localmente na inicialização com rotação GFS. Clique em restaurar para
+            voltar o sistema ao estado correspondente (sobrescreve banco de dados e reinicia).
           </p>
 
           {autoBackupsList.length === 0 ? (
@@ -134,9 +128,7 @@ export const BackupSettings: React.FC<BackupSettingsProps> = ({
                   }}
                 >
                   <div>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-heading)' }}>
-                      {b.date}
-                    </span>
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-heading)' }}>{b.date}</span>
                     <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                       {(b.sizeBytes / 1024).toFixed(1)} KB (gzip)
                     </span>

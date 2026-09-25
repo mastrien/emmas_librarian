@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SearchOrchestrator } from '../SearchOrchestrator';
 import { QueryTranslator } from '../QueryTranslator';
-import { DatabaseAdapter } from '../database/DatabaseAdapter';
-import type { OpenAlexArticle } from '../services/openalex/types';
+import { ApiIntegrator } from '../ApiIntegrator';
+import { NormalizedArticle } from '../types';
+import { Article } from '../../../src/types';
+import { ArticleInput } from '../../database/DatabaseAdapter';
 
-let mockLoadablePath: string | null = null;
+const mockLoadablePath: string | null = null;
 vi.mock('sqlite-vec', async (importOriginal) => {
   const original = await importOriginal<typeof import('sqlite-vec')>();
   return {
@@ -12,10 +14,6 @@ vi.mock('sqlite-vec', async (importOriginal) => {
     getLoadablePath: () => mockLoadablePath || original.getLoadablePath(),
   };
 });
-import { ApiIntegrator } from '../ApiIntegrator';
-import { NormalizedArticle } from '../types';
-import { Article } from '../../../src/types';
-import { ArticleInput } from '../../database/DatabaseAdapter';
 
 // ---------------------------------------------------------------------------
 // In-memory mock for DatabaseAdapter — avoids the native better-sqlite3 dep.
@@ -56,9 +54,7 @@ class MockDatabaseAdapter {
    * for the project, merge source_databases instead of inserting a duplicate.
    */
   saveArticle(projectId: number, data: ArticleInput): number {
-    const existing = this.articles.find(
-      (a) => a.project_id === projectId && a.doi && data.doi && a.doi === data.doi,
-    );
+    const existing = this.articles.find((a) => a.project_id === projectId && a.doi && data.doi && a.doi === data.doi);
 
     if (existing) {
       // Merge source_databases arrays (stored as JSON strings)

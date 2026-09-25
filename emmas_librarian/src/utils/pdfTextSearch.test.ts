@@ -16,7 +16,10 @@ interface FakeItem {
 }
 
 class FakePage {
-  constructor(private textOrItems: string | FakeItem[], private hasEOL: boolean = false) {}
+  constructor(
+    private textOrItems: string | FakeItem[],
+    private hasEOL: boolean = false,
+  ) {}
 
   getViewport() {
     return { width: 800, height: 1000 };
@@ -71,7 +74,9 @@ describe('pdfTextSearch', () => {
     it('returns unanchored if quote is empty', async () => {
       const setStatus = vi.fn();
       const mockDoc = new FakePdfDoc([new FakePage('Hello world')]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 1,
@@ -91,7 +96,9 @@ describe('pdfTextSearch', () => {
     it('anchors a highlight when an exact match is found', async () => {
       const setStatus = vi.fn();
       const mockDoc = new FakePdfDoc([new FakePage('This is a simple test document')]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 1,
@@ -104,12 +111,12 @@ describe('pdfTextSearch', () => {
       };
 
       const result = await anchorPendingHighlights('test.pdf', [pending], setStatus);
-      
+
       expect(result.unanchoredHighlights).toHaveLength(0);
       expect(result.anchoredHighlights).toHaveLength(1);
       expect(result.anchoredHighlights[0].content.text).toBe('simple test');
       expect(result.anchoredHighlights[0].position.pageNumber).toBe(1);
-      
+
       // Checking bounding rect based on FakePage transform [1, 0, 0, 1, 50, 100], height: 12, pageHeight: 1000
       // x = 50, y = 1000 - 100 = 900
       // y1 = 900 - 12 = 888, y2 = 900, x1 = 50, x2 = 250
@@ -130,7 +137,9 @@ describe('pdfTextSearch', () => {
       const setStatus = vi.fn();
       // "ﬁ" -> "fi", en dash -> hyphen, curly quote -> straight quote
       const mockDoc = new FakePdfDoc([new FakePage('The ﬁne art – it’s great')]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 2,
@@ -153,7 +162,9 @@ describe('pdfTextSearch', () => {
     it('uses context to disambiguate multiple matches', async () => {
       const setStatus = vi.fn();
       const mockDoc = new FakePdfDoc([new FakePage('apple banana cherry apple date')]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 3,
@@ -173,7 +184,9 @@ describe('pdfTextSearch', () => {
     it('returns unanchored if match is not found', async () => {
       const setStatus = vi.fn();
       const mockDoc = new FakePdfDoc([new FakePage('Some text here')]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 4,
@@ -193,7 +206,9 @@ describe('pdfTextSearch', () => {
     it('handles hasEOL=true correctly', async () => {
       const setStatus = vi.fn();
       const mockDoc = new FakePdfDoc([new FakePage('Line 1', true)]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 5,
@@ -212,7 +227,9 @@ describe('pdfTextSearch', () => {
     it('returns unanchored if quote contains only spaces/invisible chars', async () => {
       const setStatus = vi.fn();
       const mockDoc = new FakePdfDoc([new FakePage('Some text')]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 6,
@@ -232,10 +249,12 @@ describe('pdfTextSearch', () => {
       const setStatus = vi.fn();
       const items: FakeItem[] = [
         { str: 'hello worl', hasEOL: false, transform: [1, 0, 0, 1, 10, 100], width: 90, height: 12 }, // start 0, end 10
-        { str: 'd', hasEOL: false, transform: [1, 0, 0, 1, 100, 100], width: 10, height: 12 }          // start 10, end 11
+        { str: 'd', hasEOL: false, transform: [1, 0, 0, 1, 100, 100], width: 10, height: 12 }, // start 10, end 11
       ];
       const mockDoc = new FakePdfDoc([new FakePage(items)]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 7,
@@ -251,7 +270,7 @@ describe('pdfTextSearch', () => {
       expect(result.anchoredHighlights).toHaveLength(1);
       // Both items must be included. If strippedEnd computation is off by -1, 'd' is skipped.
       expect(result.anchoredHighlights[0].position.rects).toHaveLength(2);
-      
+
       const rects = result.anchoredHighlights[0].position.rects;
       expect(rects[0]).toEqual({ x1: 10, y1: 888, x2: 100, y2: 900, width: 800, height: 1000 });
       expect(rects[1]).toEqual({ x1: 100, y1: 888, x2: 110, y2: 900, width: 800, height: 1000 });
@@ -263,12 +282,14 @@ describe('pdfTextSearch', () => {
       // we need the adjacent items to start exactly at the boundary.
       const items: FakeItem[] = [
         { str: 'prefix', hasEOL: false, transform: [1, 0, 0, 1, 10, 100], width: 60, height: 12 }, // 0 to 6
-        { str: 'm', hasEOL: false, transform: [1, 0, 0, 1, 70, 100], width: 10, height: 12 },      // 6 to 7
-        { str: 'atch', hasEOL: false, transform: [1, 0, 0, 1, 80, 100], width: 40, height: 12 },   // 7 to 11
-        { str: 'suffix', hasEOL: false, transform: [1, 0, 0, 1, 120, 100], width: 60, height: 12 } // 11 to 17
+        { str: 'm', hasEOL: false, transform: [1, 0, 0, 1, 70, 100], width: 10, height: 12 }, // 6 to 7
+        { str: 'atch', hasEOL: false, transform: [1, 0, 0, 1, 80, 100], width: 40, height: 12 }, // 7 to 11
+        { str: 'suffix', hasEOL: false, transform: [1, 0, 0, 1, 120, 100], width: 60, height: 12 }, // 11 to 17
       ];
       const mockDoc = new FakePdfDoc([new FakePage(items)]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 8,
@@ -284,7 +305,14 @@ describe('pdfTextSearch', () => {
       expect(result.anchoredHighlights).toHaveLength(1);
       // ONLY 'm' and 'atch' should be included. Length 2.
       expect(result.anchoredHighlights[0].position.rects).toHaveLength(2);
-      expect(result.anchoredHighlights[0].position.rects[0]).toEqual({ x1: 70, y1: 888, x2: 80, y2: 900, width: 800, height: 1000 });
+      expect(result.anchoredHighlights[0].position.rects[0]).toEqual({
+        x1: 70,
+        y1: 888,
+        x2: 80,
+        y2: 900,
+        width: 800,
+        height: 1000,
+      });
     });
 
     it('handles undefined pendingHighlights gracefully', async () => {
@@ -296,7 +324,9 @@ describe('pdfTextSearch', () => {
     it('handles overlapping index matches when query repeats', async () => {
       const setStatus = vi.fn();
       const mockDoc = new FakePdfDoc([new FakePage('aaaa')]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 11,
@@ -316,7 +346,9 @@ describe('pdfTextSearch', () => {
     it('ignores context if there is exactly one match', async () => {
       const setStatus = vi.fn();
       const mockDoc = new FakePdfDoc([new FakePage('unique string here')]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 12,
@@ -335,7 +367,9 @@ describe('pdfTextSearch', () => {
     it('returns unanchored if multiple matches but context does not help disambiguate', async () => {
       const setStatus = vi.fn();
       const mockDoc = new FakePdfDoc([new FakePage('apple banana apple')]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 13,
@@ -356,10 +390,12 @@ describe('pdfTextSearch', () => {
       const setStatus = vi.fn();
       const items: FakeItem[] = [
         { str: 'start text', hasEOL: false, transform: [1, 0, 0, 1, 10, 100], width: 100, height: 12 },
-        { str: ' more text', hasEOL: false, transform: [1, 0, 0, 1, 110, 100], width: 100, height: 12 }
+        { str: ' more text', hasEOL: false, transform: [1, 0, 0, 1, 110, 100], width: 100, height: 12 },
       ];
       const mockDoc = new FakePdfDoc([new FakePage(items)]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 14,
@@ -380,10 +416,12 @@ describe('pdfTextSearch', () => {
       const setStatus = vi.fn();
       const items: FakeItem[] = [
         { str: 'some text ', hasEOL: false, transform: [1, 0, 0, 1, 10, 100], width: 100, height: 12 },
-        { str: 'end', hasEOL: false, transform: [1, 0, 0, 1, 110, 100], width: 30, height: 12 }
+        { str: 'end', hasEOL: false, transform: [1, 0, 0, 1, 110, 100], width: 30, height: 12 },
       ];
       const mockDoc = new FakePdfDoc([new FakePage(items)]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 15,
@@ -405,9 +443,11 @@ describe('pdfTextSearch', () => {
       const mockDoc = new FakePdfDoc([
         new FakePage('page one text'),
         new FakePage('page two text'),
-        new FakePage('page three text')
+        new FakePage('page three text'),
       ]);
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 9,
@@ -427,7 +467,9 @@ describe('pdfTextSearch', () => {
     it('returns unanchored when no pages match', async () => {
       const setStatus = vi.fn();
       const mockDoc = new FakePdfDoc([]); // zero pages!
-      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ promise: Promise.resolve(mockDoc) });
+      (pdfjsLib.getDocument as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+        promise: Promise.resolve(mockDoc),
+      });
 
       const pending: PendingHighlight = {
         id: 10,

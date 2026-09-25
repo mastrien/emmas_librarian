@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AIService } from '../AIService';
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import { AIModelConfigRepository } from '../../database/AIModelConfigRepository';
 import { extractTextWithCoordinates } from '../PdfExtractor';
 
 vi.mock('../PdfExtractor', () => ({
@@ -10,7 +9,6 @@ vi.mock('../PdfExtractor', () => ({
     totalPages: 1,
     totalCharacters: 45,
   }),
-  renderPagesAsImages: vi.fn().mockResolvedValue(new Map()),
 }));
 
 const { mockGetConfig } = vi.hoisted(() => ({
@@ -304,7 +302,9 @@ describe('AIService', () => {
       model_name: 'llama3.1:70b',
     } as any);
 
-    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('Chave do Ollama Cloud não configurada');
+    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow(
+      'Chave do Ollama Cloud não configurada',
+    );
   });
 
   it('should throw QUOTA_EXCEEDED when API returns 429', async () => {

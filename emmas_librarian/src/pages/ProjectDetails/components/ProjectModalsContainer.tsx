@@ -15,7 +15,9 @@ import { MassCitationModal } from '../../../components/modals/MassCitationModal'
 import { AttachPdfModal } from '../../../components/modals/AttachPdfModal';
 import { ImportArticlesModal } from '../../../components/modals/ImportArticlesModal';
 import { Project, Article, ProjectDocument } from '../../../types';
-import { projectService } from '../../../services/api';
+import { useProjectService } from '../../../contexts/ServicesContext';
+import type { ProjectModals } from '../hooks/useProjectModals';
+import type { ProjectTabId } from './ProjectTabs';
 
 interface ProjectModalsContainerProps {
   projectId: number;
@@ -25,7 +27,7 @@ interface ProjectModalsContainerProps {
   history: any[];
   readArticles: Article[];
   investigationHistory: any[];
-  modals: any; // O objeto retornado pelo useProjectModals
+  modals: ProjectModals;
   fetchData: () => void;
   handleArchiveSubmit: (note: string) => void;
   handleEditArticleSubmit: (data: Partial<Article>) => Promise<void>;
@@ -41,7 +43,7 @@ interface ProjectModalsContainerProps {
   cancelExtractionRef: React.MutableRefObject<boolean>;
   showKeyAlert: boolean;
   setShowKeyAlert: (val: boolean) => void;
-  setActiveTab: (val: string) => void;
+  setActiveTab: (tab: ProjectTabId) => void;
 }
 
 export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
@@ -68,16 +70,17 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
   cancelExtractionRef,
   showKeyAlert,
   setShowKeyAlert,
-  setActiveTab
+  setActiveTab,
 }) => {
+  const projectService = useProjectService();
   const navigate = useNavigate();
-  
+
   return (
     <>
-      <ArchiveModal 
-        isOpen={modals.archivingId !== null} 
-        onClose={() => modals.setArchivingId(null)} 
-        onSubmit={handleArchiveSubmit} 
+      <ArchiveModal
+        isOpen={modals.archivingId !== null}
+        onClose={() => modals.setArchivingId(null)}
+        onSubmit={handleArchiveSubmit}
       />
 
       <ProjectCategoriesModal
@@ -251,11 +254,11 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
         onClose={() => modals.setSelectedArticleForDetails(null)}
         article={
           modals.selectedArticleForDetails
-            ? articles.find((a) => a.id === modals.selectedArticleForDetails.id) || modals.selectedArticleForDetails
+            ? articles.find((a) => a.id === modals.selectedArticleForDetails?.id) || modals.selectedArticleForDetails
             : null
         }
         history={history}
-        onNavigateToSearch={(searchId) => {
+        onNavigateToSearch={() => {
           modals.setSelectedArticleForDetails(null);
           setActiveTab('history');
         }}

@@ -171,35 +171,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   border: '1px solid var(--border-color)',
                 }}
               >
-                <Link
-                  to="/"
-                  className="menu-dropdown-item"
-                  onClick={() => setIsMenuOpen(false)}
-                >
+                <Link to="/" className="menu-dropdown-item" onClick={() => setIsMenuOpen(false)}>
                   <Folder size={18} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Projetos
                 </Link>
 
-                <Link
-                  to="/agenda"
-                  className="menu-dropdown-item"
-                  onClick={() => setIsMenuOpen(false)}
-                >
+                <Link to="/agenda" className="menu-dropdown-item" onClick={() => setIsMenuOpen(false)}>
                   <Calendar size={18} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Agenda
                 </Link>
 
-                <Link
-                  to="/pdfs"
-                  className="menu-dropdown-item"
-                  onClick={() => setIsMenuOpen(false)}
-                >
+                <Link to="/pdfs" className="menu-dropdown-item" onClick={() => setIsMenuOpen(false)}>
                   <FileText size={18} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Biblioteca de PDFs
                 </Link>
 
-                <Link
-                  to="/settings"
-                  className="menu-dropdown-item"
-                  onClick={() => setIsMenuOpen(false)}
-                >
+                <Link to="/settings" className="menu-dropdown-item" onClick={() => setIsMenuOpen(false)}>
                   <Settings size={18} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Configurações
                 </Link>
 

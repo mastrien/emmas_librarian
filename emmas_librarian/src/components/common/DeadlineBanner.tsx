@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, ChevronRight, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { Calendar, ChevronRight } from 'lucide-react';
 import { ScientificVenue, ScientificMilestone, MilestoneStatus } from '../../types';
 
 interface DeadlineBannerProps {
@@ -15,11 +15,7 @@ interface DeadlineItem {
   daysDiff: number;
 }
 
-export const DeadlineBanner: React.FC<DeadlineBannerProps> = ({
-  venues,
-  onToggleMilestoneStatus,
-  onOpenAgenda,
-}) => {
+export const DeadlineBanner: React.FC<DeadlineBannerProps> = ({ venues, onToggleMilestoneStatus, onOpenAgenda }) => {
   const [localVenues, setLocalVenues] = useState<ScientificVenue[]>(venues);
 
   useEffect(() => {
@@ -33,9 +29,7 @@ export const DeadlineBanner: React.FC<DeadlineBannerProps> = ({
     setLocalVenues((prev) =>
       prev.map((v) => ({
         ...v,
-        milestones: (v.milestones || []).map((m) =>
-          m.id === milestoneId ? { ...m, status: nextStatus } : m,
-        ),
+        milestones: (v.milestones || []).map((m) => (m.id === milestoneId ? { ...m, status: nextStatus } : m)),
       })),
     );
 
@@ -114,7 +108,15 @@ export const DeadlineBanner: React.FC<DeadlineBannerProps> = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <span
+          style={{
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            color: 'var(--text-heading)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}
+        >
           Próximos Prazos
         </span>
         <button
@@ -207,12 +209,30 @@ export const DeadlineBanner: React.FC<DeadlineBannerProps> = ({
                   onChange={() => milestone.id && handleToggle(milestone.id, milestone.status)}
                   style={{ cursor: 'pointer' }}
                 />
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-heading)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <span
+                  style={{
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: 'var(--text-heading)',
+                    flex: 1,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
                   {milestone.label}
                 </span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  fontSize: '0.75rem',
+                  color: 'var(--text-muted)',
+                }}
+              >
                 <Calendar size={13} />
                 <span>
                   {milestone.target_date}

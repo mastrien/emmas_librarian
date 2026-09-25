@@ -24,12 +24,6 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
   const [editCatOptions, setEditCatOptions] = useState<{ id?: number; name: string }[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadCategories();
-    }
-  }, [isOpen]);
-
   const loadCategories = async () => {
     setLoading(true);
     try {
@@ -41,6 +35,12 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      loadCategories();
+    }
+  }, [isOpen]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,6 +153,8 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
           <button
             type="button"
             onClick={onClose}
+            title="Fechar"
+            aria-label="Fechar"
             style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             <X size={24} />

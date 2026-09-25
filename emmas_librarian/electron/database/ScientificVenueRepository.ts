@@ -85,9 +85,7 @@ export class ScientificVenueRepository {
     const updateVenueStmt = this.db.prepare(
       'UPDATE scientific_venues SET title = ?, acronym = ?, category = ?, url = ?, color = ? WHERE id = ?',
     );
-    const deleteMilestonesStmt = this.db.prepare(
-      'DELETE FROM scientific_milestones WHERE venue_id = ?',
-    );
+    const deleteMilestonesStmt = this.db.prepare('DELETE FROM scientific_milestones WHERE venue_id = ?');
     const insertMilestoneStmt = this.db.prepare(
       'INSERT INTO scientific_milestones (venue_id, label, field_type, target_date, end_date, has_time, target_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     );

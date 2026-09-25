@@ -17,22 +17,37 @@ export const useProjectModals = () => {
   const [attachPdfArticle, setAttachPdfArticle] = useState<{ id: number; title: string } | null>(null);
 
   const [showQuotaModal, setShowQuotaModal] = useState(false);
-  
+
   return {
-    isManualModalOpen, setIsManualModalOpen,
-    isHistoryOpen, setIsHistoryOpen,
-    isCategoriesModalOpen, setIsCategoriesModalOpen,
-    isAIExtractionModalOpen, setIsAIExtractionModalOpen,
-    isImportArticlesModalOpen, setIsImportArticlesModalOpen,
-    isQuickAccessModalOpen, setIsQuickAccessModalOpen,
-    isMassCitationModalOpen, setIsMassCitationModalOpen,
-    
-    archivingId, setArchivingId,
-    editingArticle, setEditingArticle,
-    citationArticle, setCitationArticle,
-    selectedArticleForDetails, setSelectedArticleForDetails,
-    attachPdfArticle, setAttachPdfArticle,
-    
-    showQuotaModal, setShowQuotaModal,
+    isManualModalOpen,
+    setIsManualModalOpen,
+    isHistoryOpen,
+    setIsHistoryOpen,
+    isCategoriesModalOpen,
+    setIsCategoriesModalOpen,
+    isAIExtractionModalOpen,
+    setIsAIExtractionModalOpen,
+    isImportArticlesModalOpen,
+    setIsImportArticlesModalOpen,
+    isQuickAccessModalOpen,
+    setIsQuickAccessModalOpen,
+    isMassCitationModalOpen,
+    setIsMassCitationModalOpen,
+
+    archivingId,
+    setArchivingId,
+    editingArticle,
+    setEditingArticle,
+    citationArticle,
+    setCitationArticle,
+    selectedArticleForDetails,
+    setSelectedArticleForDetails,
+    attachPdfArticle,
+    setAttachPdfArticle,
+
+    showQuotaModal,
+    setShowQuotaModal,
   };
 };
+
+export type ProjectModals = ReturnType<typeof useProjectModals>;

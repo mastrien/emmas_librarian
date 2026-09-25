@@ -1,5 +1,16 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Article } from '../../../types';
+import { parseSourceDatabases } from '../../../utils/sourceDatabases';
+
+// Author and index keywords are stored as semicolon-separated strings.
+function articleKeywords(article: Article): string[] {
+  return [article.author_keywords, article.index_keywords].flatMap((field) =>
+    (field ?? '')
+      .split(';')
+      .map((k) => k.trim())
+      .filter(Boolean),
+  );
+}
 
 export const useProjectFiltering = (articles: Article[], itemsPerPage: number) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -9,7 +20,7 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
   const [selectedDatabases, setSelectedDatabases] = useState<string[]>([]);
   const [selectedDocType, setSelectedDocType] = useState<string>('');
   const [selectedKeyword, setSelectedKeyword] = useState<string>('');
-  
+
   const [sortOrder, setSortOrder] = useState(() => {
     return localStorage.getItem('emmas_librarian_sort_order') || 'added-desc';
   });
@@ -21,19 +32,8 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
   const keywordFrequencies = useMemo(() => {
     const freqs: { [key: string]: number } = {};
     articles.forEach((a) => {
-      const parse = (kStr?: string) =>
-        kStr
-          ? kStr
-              .split(';')
-              .map((k) => k.trim())
-              .filter(Boolean)
-          : [];
-      const keywords = [...parse(a.author_keywords), ...parse(a.index_keywords)];
-      keywords.forEach((kw) => {
-        const trimmed = kw.trim();
-        if (trimmed) {
-          freqs[trimmed] = (freqs[trimmed] || 0) + 1;
-        }
+      articleKeywords(a).forEach((kw) => {
+        freqs[kw] = (freqs[kw] || 0) + 1;
       });
     });
     return Object.entries(freqs)
@@ -44,20 +44,7 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
 
   const uniqueDatabases = useMemo(() => {
     const dbs = new Set<string>();
-    articles.forEach((a) => {
-      if (a.source_databases) {
-        try {
-          const parsed = JSON.parse(a.source_databases);
-          if (Array.isArray(parsed)) {
-            parsed.forEach((db) => dbs.add(db));
-          } else {
-            dbs.add(parsed);
-          }
-        } catch {
-          dbs.add(a.source_databases);
-        }
-      }
-    });
+    articles.forEach((a) => parseSourceDatabases(a.source_databases).forEach((db) => dbs.add(db)));
     return Array.from(dbs);
   }, [articles]);
 
@@ -118,13 +105,8 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
       }
 
       if (selectedDatabases.length > 0) {
-        try {
-          const articleBases = JSON.parse(a.source_databases || '[]');
-          const hasMatch = selectedDatabases.some((db) => articleBases.includes(db));
-          if (!hasMatch) return false;
-        } catch {
-          if (a.source_databases && !selectedDatabases.includes(a.source_databases)) return false;
-        }
+        const articleBases = parseSourceDatabases(a.source_databases);
+        if (!selectedDatabases.some((db) => articleBases.includes(db))) return false;
       }
 
       if (selectedDocType) {
@@ -132,14 +114,7 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
       }
 
       if (selectedKeyword) {
-        const parseKeywords = (kStr?: string) =>
-          kStr
-            ? kStr
-                .split(';')
-                .map((k) => k.trim().toLowerCase())
-                .filter(Boolean)
-            : [];
-        const keywords = [...parseKeywords(a.author_keywords), ...parseKeywords(a.index_keywords)];
+        const keywords = articleKeywords(a).map((k) => k.toLowerCase());
         if (!keywords.includes(selectedKeyword.toLowerCase())) return false;
       }
 
@@ -160,7 +135,7 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
   const readArticles = useMemo(() => articles.filter((a) => a.status === 'read'), [articles]);
   const archivedArticles = useMemo(() => articles.filter((a) => a.status === 'archived'), [articles]);
   const filteredArticles = activeArticles;
-  
+
   const totalPages = Math.ceil(activeArticles.length / itemsPerPage);
   const paginatedArticles = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -168,6 +143,7 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
   }, [activeArticles, currentPage, itemsPerPage]);
 
   return {
+    itemsPerPage,
     searchTerm,
     setSearchTerm,
     onlyWithPdf,
@@ -201,3 +177,5 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
     setIsArchivedArticlesOpen,
   };
 };
+
+export type ProjectFiltering = ReturnType<typeof useProjectFiltering>;

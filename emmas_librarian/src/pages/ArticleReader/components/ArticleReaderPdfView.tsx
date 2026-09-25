@@ -2,11 +2,8 @@ import React from 'react';
 import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PdfLoader, PdfHighlighter, Highlight, Popup, AreaHighlight } from 'react-pdf-highlighter';
 
-// @ts-ignore
-import * as pdfjs from 'pdfjs-dist/build/pdf';
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-
 import { TipContent } from '../../../components/reader/TipContent';
+import type { PdfDocumentProxy } from '../hooks/usePdfSearch';
 import { ReaderSidebar } from '../../../components/reader/ReaderSidebar';
 import { Annotation } from '../../../types';
 
@@ -33,6 +30,8 @@ interface ArticleReaderPdfViewProps {
   setSearchQuery: (query: string) => void;
   searchResults: any[];
   isSearching: boolean;
+  /** Runs the in-PDF search over the loaded document. */
+  onSearch: (pdfDocument: PdfDocumentProxy) => void;
   aiSummary: { generalSummary: string; sectionSummary: string } | null;
   isGeneratingAi: boolean;
   generateSummary: () => void;
@@ -61,7 +60,6 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
   addHighlight,
   showToast,
   currentPage,
-  setCurrentPage,
   inputPage,
   setInputPage,
   goToPage,
@@ -73,6 +71,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
   setSearchQuery,
   searchResults,
   isSearching,
+  onSearch,
   aiSummary,
   isGeneratingAi,
   generateSummary,
@@ -139,7 +138,9 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
           <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
             <div id="pdf-container" style={{ flexGrow: 1, position: 'relative', height: '100%' }}>
               <PdfHighlighter
-                ref={highlighterRef as React.MutableRefObject<PdfHighlighter<import('react-pdf-highlighter').IHighlight>>}
+                ref={
+                  highlighterRef as React.MutableRefObject<PdfHighlighter<import('react-pdf-highlighter').IHighlight>>
+                }
                 pdfDocument={pdfDocument}
                 pdfScaleValue={scale.toString()}
                 enableAreaSelection={(event) => event.altKey}
@@ -148,16 +149,8 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
                 onSelectionFinished={(position, content, hideTipAndSelection) =>
                   renderTip(position, content, hideTipAndSelection)
                 }
-                highlightTransform={(
-                  highlight,
-                  index,
-                  setTip,
-                  hideTip,
-                  viewportToScaled,
-                  screenshot,
-                  isScrolledTo,
-                ) => {
-                  const isTextHighlight = !Boolean(highlight.content && highlight.content.image);
+                highlightTransform={(highlight, index, setTip, hideTip, viewportToScaled, screenshot, isScrolledTo) => {
+                  const isTextHighlight = !(highlight.content && highlight.content.image);
 
                   const component = (
                     <div
@@ -218,7 +211,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
                               ''}
                           </div>
                         }
-                        onMouseOver={(popupContent) => setTip(highlight, (highlight) => popupContent)}
+                        onMouseOver={(popupContent) => setTip(highlight, () => popupContent)}
                         onMouseOut={hideTip}
                       >
                         {component}
@@ -249,6 +242,8 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
               >
                 <button
                   onClick={() => goToPage(Math.max(1, currentPage - 1))}
+                  title="Página anterior"
+                  aria-label="Página anterior"
                   disabled={currentPage <= 1}
                   style={{
                     background: 'none',
@@ -263,6 +258,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Pág</span>
                 <input
                   type="text"
+                  aria-label="Página atual"
                   value={inputPage}
                   onChange={(e) => setInputPage(e.target.value)}
                   onBlur={() => setInputPage(currentPage.toString())}
@@ -281,6 +277,8 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>de {pdfDocument.numPages}</span>
                 <button
                   onClick={() => goToPage(Math.min(pdfDocument.numPages, currentPage + 1))}
+                  title="Próxima página"
+                  aria-label="Próxima página"
                   disabled={currentPage >= pdfDocument.numPages}
                   style={{
                     background: 'none',
@@ -304,7 +302,11 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
               searchResults={searchResults}
               isSearching={isSearching}
               onResultClick={(pageNum) => goToPage(pageNum)}
-              onSearch={() => {}}
+              onSearch={(e) => {
+                // The search box is a <form>; without preventDefault the submit reloaded the whole reader.
+                e.preventDefault();
+                onSearch(pdfDocument as unknown as PdfDocumentProxy);
+              }}
               aiSummary={aiSummary}
               isGeneratingAi={isGeneratingAi}
               onGenerateSummary={generateSummary}
@@ -324,7 +326,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
               setEditingId={setEditingId}
               onHighlightClick={() => {}}
             />
-            
+
             {/* Resizer Handle */}
             <div
               onMouseDown={(e) => {

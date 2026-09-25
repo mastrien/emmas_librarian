@@ -3,7 +3,7 @@ const fs = require('fs');
 const adapterContent = fs.readFileSync('electron/database/DatabaseAdapter.ts', 'utf8');
 
 const lines = adapterContent.split('\n');
-const initSchemaEndIndex = lines.findIndex(line => line.includes('// Projects')) - 1;
+const initSchemaEndIndex = lines.findIndex((line) => line.includes('// Projects')) - 1;
 
 let newAdapter = lines.slice(0, initSchemaEndIndex).join('\n');
 
@@ -18,7 +18,7 @@ import { TrashRepository } from './TrashRepository';
 import { MassiveInvestigationRepository } from './MassiveInvestigationRepository';
 `;
 
-newAdapter = newAdapter.replace('import crypto from \'crypto\';', `import crypto from 'crypto';${importsToAdd}`);
+newAdapter = newAdapter.replace("import crypto from 'crypto';", `import crypto from 'crypto';${importsToAdd}`);
 
 const constructorAndProps = `
   public projectRepo: ProjectRepository;
@@ -49,7 +49,10 @@ const constructorAndProps = `
   }
 `;
 
-newAdapter = newAdapter.replace(/constructor\(dbPath: string\) \{[\s\S]*?initSchema\(\);\s*\}/, constructorAndProps.trim());
+newAdapter = newAdapter.replace(
+  /constructor\(dbPath: string\) \{[\s\S]*?initSchema\(\);\s*\}/,
+  constructorAndProps.trim(),
+);
 
 const backfillExistingPdfsCall = `
       // Run PDF backfill

@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import Database from 'better-sqlite3';
 import { DatabaseAdapter } from '../DatabaseAdapter';
-import * as sqliteVec from 'sqlite-vec';
 
 let mockLoadablePath: string | null = null;
 
@@ -72,7 +75,7 @@ describe('DatabaseAdapter', () => {
     expect(anns).toHaveLength(1);
     expect(anns[0].content_markdown).toBe('Test Annotation');
 
-    const hlId = dbAdapter.saveHighlight(articleId, '#ff0', '{}', 'Test Quote', annId);
+    dbAdapter.saveHighlight(articleId, '#ff0', '{}', 'Test Quote', annId);
     const highlights = dbAdapter.getHighlights(articleId);
     expect(highlights).toHaveLength(1);
     expect(highlights[0].color).toBe('#ff0');
@@ -129,7 +132,13 @@ describe('DatabaseAdapter', () => {
 
   it('manages project documents with edit, category and reorder', () => {
     const proj = dbAdapter.createProject('Doc Project');
-    const docId1 = dbAdapter.saveProjectDocument(proj.id, 'Test Doc 1', 'https://example.com', '/mock/path.pdf', 'Reuniões');
+    const docId1 = dbAdapter.saveProjectDocument(
+      proj.id,
+      'Test Doc 1',
+      'https://example.com',
+      '/mock/path.pdf',
+      'Reuniões',
+    );
     const docId2 = dbAdapter.saveProjectDocument(proj.id, 'Test Doc 2', 'https://example2.com', undefined, 'Artigos');
 
     expect(docId1).toBeGreaterThan(0);
@@ -386,10 +395,6 @@ describe('DatabaseAdapter', () => {
       csl_json: '{}',
     });
 
-    const fs = require('fs');
-    const path = require('path');
-    const os = require('os');
-
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emmas-lib-test-'));
     const file1 = path.join(tempDir, 'file1.pdf');
     const file2 = path.join(tempDir, 'file2.pdf');
@@ -410,11 +415,12 @@ describe('DatabaseAdapter', () => {
     try {
       fs.unlinkSync(file2);
       fs.rmdirSync(tempDir);
-    } catch {}
+    } catch {
+      // Best-effort cleanup of the OS temp dir; a leftover file does not affect the assertions.
+    }
   });
 
   it('correctly rewrites app.asar to app.asar.unpacked when loading sqlite-vec extension', () => {
-    const Database = require('better-sqlite3');
     const loadExtensionSpy = vi.spyOn(Database.prototype, 'loadExtension').mockImplementation(() => {});
 
     mockLoadablePath = 'C:\\Program Files\\Emma\\resources\\app.asar\\node_modules\\sqlite-vec-windows-x64\\vec0.dll';
@@ -438,7 +444,6 @@ describe('DatabaseAdapter', () => {
       const adapter3 = new DatabaseAdapter(':memory:');
       adapter3.close();
       expect(loadExtensionSpy).toHaveBeenCalledWith('C:\\some_other_path\\vec0.dll');
-
     } finally {
       mockLoadablePath = null;
       loadExtensionSpy.mockRestore();
@@ -454,7 +459,7 @@ describe('DatabaseAdapter', () => {
 
   it('checks database integrity correctly', () => {
     expect(dbAdapter.checkIntegrity()).toBe(true);
-    
+
     // Mock to return empty to test false
     const pragmaSpy = vi.spyOn(dbAdapter.getDB(), 'pragma').mockReturnValue([]);
     expect(dbAdapter.checkIntegrity()).toBe(false);
@@ -462,10 +467,11 @@ describe('DatabaseAdapter', () => {
     pragmaSpy.mockReturnValue([{ integrity_check: 'not ok' }]);
     expect(dbAdapter.checkIntegrity()).toBe(false);
 
-    pragmaSpy.mockImplementation(() => { throw new Error('DB Error'); });
+    pragmaSpy.mockImplementation(() => {
+      throw new Error('DB Error');
+    });
     expect(dbAdapter.checkIntegrity()).toBe(false);
-    
+
     pragmaSpy.mockRestore();
   });
 });
-

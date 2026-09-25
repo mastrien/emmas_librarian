@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SearchPage } from '../SearchPage';
@@ -11,7 +10,7 @@ const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
-    ...actual as any,
+    ...(actual as any),
     useNavigate: () => mockNavigate,
   };
 });
@@ -20,7 +19,10 @@ vi.mock('react-router-dom', async () => {
 vi.mock('../../components/common/QueryBuilder', () => ({
   QueryBuilder: ({ onChange }: any) => (
     <div data-testid="mock-query-builder">
-      <button onClick={() => onChange({ type: 'rule', field: 'title', operator: 'contains', value: 'test' })}>
+      <button
+        type="button"
+        onClick={() => onChange({ type: 'rule', field: 'title', operator: 'contains', value: 'test' })}
+      >
         Change Query
       </button>
     </div>
@@ -28,14 +30,13 @@ vi.mock('../../components/common/QueryBuilder', () => ({
 }));
 
 vi.mock('../../components/modals/SearchSummaryModal', () => ({
-  SearchSummaryModal: ({ isOpen, onClose }: any) => (
+  SearchSummaryModal: ({ isOpen, onClose }: any) =>
     isOpen ? (
       <div data-testid="mock-summary-modal">
         Summary Modal
         <button onClick={onClose}>Close Summary</button>
       </div>
-    ) : null
-  ),
+    ) : null,
 }));
 
 describe('SearchPage', () => {
@@ -44,7 +45,7 @@ describe('SearchPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     fakeService = FakeProjectService.create();
-    
+
     fakeService.getProject.mockResolvedValue({ id: 1, name: 'Test Project', created_at: '' });
     fakeService.getSetting.mockImplementation(async (key: string) => {
       if (key === 'scopus_api_key') return 'mock-scopus-key';
@@ -59,7 +60,7 @@ describe('SearchPage', () => {
     });
     fakeService.searchAndPersist.mockResolvedValue({
       savedCount: 10,
-      breakdown: { openalex: { count: 10 } }
+      breakdown: { openalex: { count: 10 } },
     });
   });
 
@@ -71,7 +72,7 @@ describe('SearchPage', () => {
             <Route path="/projects/:id/search" element={<SearchPage />} />
           </Routes>
         </MemoryRouter>
-      </ServicesProvider>
+      </ServicesProvider>,
     );
   };
 
@@ -80,7 +81,7 @@ describe('SearchPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
     });
-    
+
     expect(screen.getAllByText('OpenAlex').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Crossref').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Scopus').length).toBeGreaterThan(0);
@@ -90,7 +91,7 @@ describe('SearchPage', () => {
   it('handles database toggling and API key alert', async () => {
     fakeService.getSetting.mockResolvedValue(null);
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
     });
@@ -113,7 +114,7 @@ describe('SearchPage', () => {
   it('navigates to settings from key alert', async () => {
     fakeService.getSetting.mockResolvedValue(null);
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
     });
@@ -127,13 +128,13 @@ describe('SearchPage', () => {
     await act(async () => {
       fireEvent.click(configBtn);
     });
-    
+
     expect(mockNavigate).toHaveBeenCalledWith('/settings');
   });
 
   it('handles query translation and custom queries', async () => {
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByText('openalex-query')).toBeInTheDocument();
     });
@@ -165,7 +166,7 @@ describe('SearchPage', () => {
 
   it('performs search successfully', async () => {
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
     });
@@ -182,7 +183,7 @@ describe('SearchPage', () => {
 
     expect(fakeService.searchAndPersist).toHaveBeenCalled();
     expect(screen.getByTestId('mock-summary-modal')).toBeInTheDocument();
-    
+
     const closeBtn = screen.getByText('Close Summary');
     await act(async () => {
       fireEvent.click(closeBtn);
@@ -193,7 +194,7 @@ describe('SearchPage', () => {
   it('handles search error', async () => {
     fakeService.searchAndPersist.mockRejectedValue(new Error('Search failed horribly'));
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
     });
@@ -213,7 +214,7 @@ describe('SearchPage', () => {
 
   it('prevents search if invalid translation and no custom query', async () => {
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
     });
@@ -229,7 +230,7 @@ describe('SearchPage', () => {
 
   it('handles empty database selection', async () => {
     renderPage();
-    
+
     await waitFor(() => {
       expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
     });
@@ -241,7 +242,7 @@ describe('SearchPage', () => {
         fireEvent.click(btn);
       });
     }
-    
+
     await waitFor(() => {
       expect(screen.getByText('Selecione pelo menos uma base.')).toBeInTheDocument();
     });
@@ -253,10 +254,14 @@ describe('SearchPage', () => {
     await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
 
     const wosBtn = screen.getByRole('button', { name: /Web of Science/i });
-    await act(async () => { fireEvent.click(wosBtn); });
+    await act(async () => {
+      fireEvent.click(wosBtn);
+    });
 
     const searchBtn = screen.getByRole('button', { name: /Fazer Busca/i });
-    await act(async () => { fireEvent.click(searchBtn); });
+    await act(async () => {
+      fireEvent.click(searchBtn);
+    });
 
     expect(screen.getByText('String error message')).toBeInTheDocument();
   });
@@ -267,10 +272,14 @@ describe('SearchPage', () => {
     await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
 
     const wosBtn = screen.getByRole('button', { name: /Web of Science/i });
-    await act(async () => { fireEvent.click(wosBtn); });
+    await act(async () => {
+      fireEvent.click(wosBtn);
+    });
 
     const searchBtn = screen.getByRole('button', { name: /Fazer Busca/i });
-    await act(async () => { fireEvent.click(searchBtn); });
+    await act(async () => {
+      fireEvent.click(searchBtn);
+    });
 
     expect(screen.getByText('Object error property')).toBeInTheDocument();
   });
@@ -281,10 +290,14 @@ describe('SearchPage', () => {
     await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
 
     const wosBtn = screen.getByRole('button', { name: /Web of Science/i });
-    await act(async () => { fireEvent.click(wosBtn); });
+    await act(async () => {
+      fireEvent.click(wosBtn);
+    });
 
     const searchBtn = screen.getByRole('button', { name: /Fazer Busca/i });
-    await act(async () => { fireEvent.click(searchBtn); });
+    await act(async () => {
+      fireEvent.click(searchBtn);
+    });
 
     expect(screen.getByText('{"unknown":"data"}')).toBeInTheDocument();
   });
@@ -296,7 +309,7 @@ describe('SearchPage', () => {
     // We can't query by label easily because the input doesn't have an associated id/htmlFor,
     // but we can find the input by value "50" since it's the limit input.
     const limitInput = screen.getByDisplayValue('50');
-    
+
     // Change to valid number
     await act(async () => {
       fireEvent.change(limitInput, { target: { value: '100' } });
@@ -310,8 +323,9 @@ describe('SearchPage', () => {
     expect(limitInput).toHaveValue(50);
   });
 
-  it('handles search click when id is missing', async () => {
-    // Render without id param
+  it('renders nothing and loads no project when the route has no id', async () => {
+    // The live query translation is irrelevant without a project; keep it pending so it cannot update after the test.
+    fakeService.translateQuery.mockReturnValue(new Promise(() => undefined));
     render(
       <ServicesProvider apiService={fakeService}>
         <MemoryRouter initialEntries={[`/projects/search`]}>
@@ -320,11 +334,97 @@ describe('SearchPage', () => {
             <Route path="/projects/search" element={<SearchPage />} />
           </Routes>
         </MemoryRouter>
-      </ServicesProvider>
+      </ServicesProvider>,
     );
 
     // Project won't load since there's no id, the page returns null.
     // So there's nothing to click. We just ensure it renders null (no project title).
     expect(screen.queryByText('Fazer Nova Busca')).not.toBeInTheDocument();
+    expect(fakeService.getProject).not.toHaveBeenCalled();
+    expect(fakeService.getSetting).not.toHaveBeenCalled();
+  });
+
+  describe('search payload and limits', () => {
+    const ready = () => waitFor(() => expect(screen.getByText('openalex-query')).toBeInTheDocument());
+    const deselect = (name: RegExp) => fireEvent.click(screen.getByRole('button', { name }));
+
+    it('sends each base its translation or its custom query, plus a readable description of the tree', async () => {
+      renderPage();
+      await ready();
+      deselect(/Web of Science/);
+      fireEvent.click(screen.getAllByRole('button', { name: /Substituir por Query Customizada/ })[1]);
+      fireEvent.change(screen.getByPlaceholderText(/Digite a query exata/), { target: { value: 'custom-crossref' } });
+      fireEvent.change(screen.getByDisplayValue('Mais Relevantes (Padrão)'), { target: { value: 'citations' } });
+
+      fireEvent.click(screen.getByRole('button', { name: /Fazer Busca/ }));
+
+      await screen.findByTestId('mock-summary-modal');
+      expect(fakeService.searchAndPersist).toHaveBeenCalledWith(
+        1,
+        { openalex: 'openalex-query', crossref: 'custom-crossref', scopus: 'scopus-query' },
+        50,
+        'citations',
+        '(Todos contém "")',
+      );
+    });
+
+    it('describes a single rule without parentheses', async () => {
+      renderPage();
+      await ready();
+      deselect(/Web of Science/);
+      fireEvent.click(screen.getByText('Change Query'));
+
+      fireEvent.click(screen.getByRole('button', { name: /Fazer Busca/ }));
+
+      await screen.findByTestId('mock-summary-modal');
+      expect(fakeService.searchAndPersist.mock.calls[0][4]).toBe('Título contém "test"');
+    });
+
+    it('warns about the Crossref and Scopus caps for large limits', async () => {
+      renderPage();
+      await ready();
+
+      fireEvent.change(screen.getByDisplayValue('50'), { target: { value: '2000' } });
+
+      expect(screen.getByText('Atenção: A base Crossref será limitada a 1.000 resultados.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Aviso: A base Scopus pode retornar erro \(Exceeds maximum\) para limites > 200/),
+      ).toBeInTheDocument();
+    });
+
+    it('shows no cap warnings when those bases are not selected', async () => {
+      renderPage();
+      await ready();
+      deselect(/Crossref/);
+      deselect(/Scopus/);
+
+      fireEvent.change(screen.getByDisplayValue('50'), { target: { value: '2000' } });
+
+      expect(screen.queryByText(/Atenção: A base Crossref/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Aviso: A base Scopus/)).not.toBeInTheDocument();
+    });
+
+    it('shows a translating state until the translation arrives', async () => {
+      fakeService.translateQuery.mockReturnValue(new Promise(() => undefined));
+      renderPage();
+
+      await waitFor(() => expect(screen.getAllByText('Traduzindo...').length).toBeGreaterThan(0));
+    });
+
+    it('selects only the free bases when no API keys are configured', async () => {
+      fakeService.getSetting.mockResolvedValue(null);
+      renderPage();
+      await ready();
+
+      expect(screen.queryByText('scopus-query')).not.toBeInTheDocument();
+      expect(screen.getByText('crossref-query')).toBeInTheDocument();
+    });
+
+    it('returns to the dashboard when the project cannot be loaded', async () => {
+      fakeService.getProject.mockRejectedValue(new Error('gone'));
+      renderPage();
+
+      await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/'));
+    });
   });
 });

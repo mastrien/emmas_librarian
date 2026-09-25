@@ -58,7 +58,6 @@ export const DashboardProjectsList: React.FC<DashboardProjectsListProps> = ({ pr
             Criado em {new Date(project.created_at).toLocaleDateString()}
           </div>
 
-          {/* @ts-ignore */}
           {project.stats && (
             <div
               style={{
@@ -72,17 +71,14 @@ export const DashboardProjectsList: React.FC<DashboardProjectsListProps> = ({ pr
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
                 <span style={{ color: 'var(--text-muted)' }}>Ativos</span>
-                {/* @ts-ignore */}
                 <strong style={{ color: 'var(--color-primary)' }}>{project.stats.active}</strong>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
                 <span style={{ color: 'var(--text-muted)' }}>Lidos</span>
-                {/* @ts-ignore */}
                 <strong style={{ color: 'var(--color-success, #10b981)' }}>{project.stats.read}</strong>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
                 <span style={{ color: 'var(--text-muted)' }}>Arquivados</span>
-                {/* @ts-ignore */}
                 <strong style={{ color: 'var(--text-muted)' }}>{project.stats.archived}</strong>
               </div>
             </div>

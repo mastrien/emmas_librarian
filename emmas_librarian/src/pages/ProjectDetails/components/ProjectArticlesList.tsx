@@ -1,14 +1,25 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, FileText, Upload, Loader2, Edit2, Archive, CopyPlus, ExternalLink, X as XIcon, CheckCircle, History } from 'lucide-react';
+import {
+  Calendar,
+  FileText,
+  Upload,
+  Edit2,
+  Archive,
+  CopyPlus,
+  ExternalLink,
+  X as XIcon,
+  CheckCircle,
+  History,
+} from 'lucide-react';
 import { Article } from '../../../types';
+import { SourceDatabaseBadges } from '../../../components/common/SourceDatabaseBadges';
 
 interface ProjectArticlesListProps {
   paginatedArticles: Article[];
   setSelectedArticleForDetails: (article: Article) => void;
   handleUnlinkClick: (id: number) => void;
   handleUploadClick: (id: number) => void;
-  uploadingId: number | null;
   handleStatusChange: (id: number, status: 'new' | 'read' | 'archived') => void;
   setEditingArticle: (article: Article) => void;
   setArchivingId: (id: number) => void;
@@ -21,19 +32,15 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
   setSelectedArticleForDetails,
   handleUnlinkClick,
   handleUploadClick,
-  uploadingId,
   handleStatusChange,
   setEditingArticle,
   setArchivingId,
   setCitationArticle,
-  isArticleManual
+  isArticleManual,
 }) => {
   return (
     <div className="card" style={{ overflowX: 'auto', border: 'none', marginBottom: '2rem' }}>
-      <table
-        data-testid="main-articles-table"
-        style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}
-      >
+      <table data-testid="main-articles-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
         <thead>
           <tr style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
             <th
@@ -151,34 +158,10 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
               </td>
               <td style={{ padding: '1.25rem 1.5rem' }}>
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  {article.source_databases ? (
-                    JSON.parse(article.source_databases as string).map((base: string) => {
-                      const isManual = base === 'Manual';
-                      return (
-                        <span
-                          key={base}
-                          style={{
-                            padding: '0.2rem 0.6rem',
-                            background: isManual ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-surface)',
-                            border: isManual
-                              ? '1px solid var(--color-danger)'
-                              : '1px solid var(--border-color)',
-                            borderRadius: 'var(--radius-xl)',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            color: isManual ? 'var(--color-danger)' : 'var(--color-primary)',
-                          }}
-                          title={
-                            isManual ? 'Metadados adicionados manualmente (podem conter erros)' : undefined
-                          }
-                        >
-                          {isManual ? '⚠️ Manual' : base}
-                        </span>
-                      );
-                    })
-                  ) : (
-                    <span style={{ color: 'var(--text-muted)' }}>-</span>
-                  )}
+                  <SourceDatabaseBadges
+                    sourceDatabases={article.source_databases}
+                    emptyPlaceholder={<span style={{ color: 'var(--text-muted)' }}>-</span>}
+                  />
                   {article.is_oa === 1 && (
                     <span
                       style={{
@@ -222,17 +205,11 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
                   ) : (
                     <button
                       onClick={() => handleUploadClick(article.id)}
-                      disabled={uploadingId === article.id}
                       className="btn-secondary"
                       style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
                       title="Vincular PDF"
                     >
-                      {uploadingId === article.id ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <Upload size={14} />
-                      )}{' '}
-                      PDF
+                      <Upload size={14} /> PDF
                     </button>
                   )}
 

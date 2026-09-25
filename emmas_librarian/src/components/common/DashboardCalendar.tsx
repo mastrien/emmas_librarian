@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ScientificVenue } from '../../types';
 
 interface DashboardCalendarProps {
@@ -10,13 +10,7 @@ interface DashboardCalendarProps {
   onSelectDate?: (dateStr: string) => void;
 }
 
-export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
-  diarySet,
-  venues = [],
-  onAddVenue,
-  onOpenAgenda,
-  onSelectDate,
-}) => {
+export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ diarySet, venues = [], onSelectDate }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
@@ -79,11 +73,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
           justifyContent: 'center',
           aspectRatio: '1',
           borderRadius: '4px',
-          backgroundColor: isToday
-            ? 'var(--color-primary)'
-            : activeDiary
-              ? 'var(--bg-hover)'
-              : 'transparent',
+          backgroundColor: isToday ? 'var(--color-primary)' : activeDiary ? 'var(--bg-hover)' : 'transparent',
           color: isToday ? '#ffffff' : activeDiary ? 'var(--text-heading)' : 'var(--text-main)',
           fontSize: '0.8rem',
           fontWeight: isToday ? 'bold' : 'normal',
@@ -150,21 +140,44 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
           <button
             type="button"
             onClick={prevMonth}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', color: 'var(--text-muted)' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0.2rem',
+              color: 'var(--text-muted)',
+            }}
           >
             <ChevronLeft size={16} />
           </button>
           <button
             type="button"
             onClick={nextMonth}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', color: 'var(--text-muted)' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0.2rem',
+              color: 'var(--text-muted)',
+            }}
           >
             <ChevronRight size={16} />
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)',
+          gap: '2px',
+          textAlign: 'center',
+          fontSize: '0.75rem',
+          fontWeight: 600,
+          color: 'var(--text-muted)',
+          marginBottom: '0.2rem',
+        }}
+      >
         <div>Dom</div>
         <div>Seg</div>
         <div>Ter</div>
@@ -174,9 +187,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
         <div>Sáb</div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
-        {days}
-      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>{days}</div>
     </div>
   );
 };

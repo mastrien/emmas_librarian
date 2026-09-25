@@ -6,7 +6,6 @@ import {
   DatabaseTranslationMap,
   QueryTranslationResult,
   QueryField,
-  QueryOperator,
 } from '../types';
 
 export class QueryTranslator {

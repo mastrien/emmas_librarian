@@ -79,9 +79,7 @@ export const AppearanceSettings: React.FC = () => {
       </div>
 
       <div style={{ marginTop: '2.5rem' }}>
-        <h3 style={{ fontSize: '1.1rem', marginBottom: '1.2rem', color: 'var(--text-heading)' }}>
-          Cor de Destaque
-        </h3>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '1.2rem', color: 'var(--text-heading)' }}>Cor de Destaque</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
           {[
             { id: 'blue', color: '#4f46e5', label: 'Azul' },
@@ -103,8 +101,7 @@ export const AppearanceSettings: React.FC = () => {
                 border: `3px solid ${accent === colorObj.id ? 'var(--text-heading)' : 'transparent'}`,
                 cursor: 'pointer',
                 transition: 'transform var(--transition-fast)',
-                boxShadow:
-                  accent === colorObj.id ? '0 0 0 2px var(--bg-surface), 0 0 0 4px ' + colorObj.color : 'none',
+                boxShadow: accent === colorObj.id ? '0 0 0 2px var(--bg-surface), 0 0 0 4px ' + colorObj.color : 'none',
                 transform: accent === colorObj.id ? 'scale(1.1)' : 'scale(1)',
               }}
             />

@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectArticlesList } from '../components/ProjectArticlesList';
@@ -10,7 +9,6 @@ describe('ProjectArticlesList', () => {
     setSelectedArticleForDetails: vi.fn(),
     handleUnlinkClick: vi.fn(),
     handleUploadClick: vi.fn(),
-    uploadingId: null,
     handleStatusChange: vi.fn(),
     setEditingArticle: vi.fn(),
     setArchivingId: vi.fn(),
@@ -26,7 +24,7 @@ describe('ProjectArticlesList', () => {
     return render(
       <MemoryRouter>
         <ProjectArticlesList {...defaultProps} {...props} />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
   };
 
@@ -47,11 +45,11 @@ describe('ProjectArticlesList', () => {
         source_databases: '["Scopus"]',
         is_oa: 1,
         local_file_path: null,
-        status: 'new'
-      }
+        status: 'new',
+      },
     ];
     renderComponent({ paginatedArticles });
-    
+
     expect(screen.getByText('Article 1')).toBeInTheDocument();
     expect(screen.getByText('DOI: 10.123/1')).toBeInTheDocument();
     expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -64,12 +62,12 @@ describe('ProjectArticlesList', () => {
   it('handles click on article title', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1' }];
     renderComponent({ paginatedArticles });
-    
+
     const titleDiv = screen.getByText('Article 1');
     act(() => {
       fireEvent.click(titleDiv);
     });
-    
+
     expect(defaultProps.setSelectedArticleForDetails).toHaveBeenCalledWith(paginatedArticles[0]);
   });
 
@@ -82,25 +80,25 @@ describe('ProjectArticlesList', () => {
   it('handles unlink pdf click when file exists', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1', local_file_path: '/path.pdf' }];
     renderComponent({ paginatedArticles });
-    
+
     // Find button by title or content
     const unlinkBtn = screen.getByTitle('Desvincular PDF');
     act(() => {
       fireEvent.click(unlinkBtn);
     });
-    
+
     expect(defaultProps.handleUnlinkClick).toHaveBeenCalledWith(1);
   });
 
   it('handles upload pdf click when file missing', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1', local_file_path: null }];
     renderComponent({ paginatedArticles });
-    
+
     const uploadBtn = screen.getByTitle('Vincular PDF');
     act(() => {
       fireEvent.click(uploadBtn);
     });
-    
+
     expect(defaultProps.handleUploadClick).toHaveBeenCalledWith(1);
   });
 
@@ -108,10 +106,10 @@ describe('ProjectArticlesList', () => {
     const paginatedArticles = [
       { id: 1, title: 'New Article', status: 'new' },
       { id: 2, title: 'Read Article', status: 'read' },
-      { id: 3, title: 'Archived Article', status: 'archived' }
+      { id: 3, title: 'Archived Article', status: 'archived' },
     ];
     renderComponent({ paginatedArticles });
-    
+
     const readBtn = screen.getByTitle('Marcar como Lido');
     act(() => {
       fireEvent.click(readBtn);
@@ -134,12 +132,12 @@ describe('ProjectArticlesList', () => {
   it('handles archiving', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1', status: 'new' }];
     renderComponent({ paginatedArticles });
-    
+
     const archiveBtn = screen.getByTitle('Arquivar');
     act(() => {
       fireEvent.click(archiveBtn);
     });
-    
+
     expect(defaultProps.setArchivingId).toHaveBeenCalledWith(1);
   });
 
@@ -147,24 +145,24 @@ describe('ProjectArticlesList', () => {
     const isArticleManual = vi.fn().mockReturnValue(true);
     const paginatedArticles = [{ id: 1, title: 'Manual Article', status: 'new' }];
     renderComponent({ paginatedArticles, isArticleManual });
-    
+
     const editBtn = screen.getByTitle('Editar Metadados');
     act(() => {
       fireEvent.click(editBtn);
     });
-    
+
     expect(defaultProps.setEditingArticle).toHaveBeenCalledWith(paginatedArticles[0]);
   });
 
   it('handles citation', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1', status: 'new' }];
     renderComponent({ paginatedArticles });
-    
+
     const citeBtn = screen.getByTitle('Gerar Citação');
     act(() => {
       fireEvent.click(citeBtn);
     });
-    
+
     expect(defaultProps.setCitationArticle).toHaveBeenCalledWith(paginatedArticles[0]);
   });
 });

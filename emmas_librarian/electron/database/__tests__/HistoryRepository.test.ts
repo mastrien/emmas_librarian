@@ -33,15 +33,7 @@ describe('HistoryRepository', () => {
 
   describe('Search History', () => {
     it('should save and get search history', () => {
-      const id = repo.saveSearchHistory(
-        projectId,
-        'test query',
-        { pubmed: 'test' },
-        10,
-        { pubmed: 10 },
-        'date',
-        50
-      );
+      const id = repo.saveSearchHistory(projectId, 'test query', { pubmed: 'test' }, 10, { pubmed: 10 }, 'date', 50);
       expect(id).toBeGreaterThan(0);
 
       const history = repo.getSearchHistory(projectId) as any[];
@@ -64,10 +56,16 @@ describe('HistoryRepository', () => {
     it('should revert search and delete related data', () => {
       const searchId = repo.saveSearchHistory(projectId, 'q', {}, 0, {});
 
-      const articleInfo = db.prepare("INSERT INTO articles (project_id, title, search_id, local_file_path) VALUES (?, 'Title', ?, '/path/to/pdf')").run(projectId, searchId);
+      const articleInfo = db
+        .prepare(
+          "INSERT INTO articles (project_id, title, search_id, local_file_path) VALUES (?, 'Title', ?, '/path/to/pdf')",
+        )
+        .run(projectId, searchId);
       const articleId = articleInfo.lastInsertRowid as number;
 
-      const annotationInfo = db.prepare("INSERT INTO annotations (article_id, content_markdown) VALUES (?, 'content')").run(articleId);
+      const annotationInfo = db
+        .prepare("INSERT INTO annotations (article_id, content_markdown) VALUES (?, 'content')")
+        .run(articleId);
       const annotationId = annotationInfo.lastInsertRowid as number;
       db.prepare("INSERT INTO highlights (article_id, color, position_data) VALUES (?, 'red', 'pos')").run(articleId);
 
@@ -75,27 +73,40 @@ describe('HistoryRepository', () => {
 
       repo.revertSearch(searchId);
 
-      expect(db.prepare('SELECT count(*) as c FROM search_history WHERE id = ?').get(searchId) as any).toEqual({ c: 0 });
+      expect(db.prepare('SELECT count(*) as c FROM search_history WHERE id = ?').get(searchId) as any).toEqual({
+        c: 0,
+      });
       expect(db.prepare('SELECT count(*) as c FROM articles WHERE id = ?').get(articleId) as any).toEqual({ c: 0 });
-      expect(db.prepare('SELECT count(*) as c FROM annotations WHERE id = ?').get(annotationId) as any).toEqual({ c: 0 });
-      expect(db.prepare('SELECT count(*) as c FROM highlights WHERE article_id = ?').get(articleId) as any).toEqual({ c: 0 });
+      expect(db.prepare('SELECT count(*) as c FROM annotations WHERE id = ?').get(annotationId) as any).toEqual({
+        c: 0,
+      });
+      expect(db.prepare('SELECT count(*) as c FROM highlights WHERE article_id = ?').get(articleId) as any).toEqual({
+        c: 0,
+      });
 
       expect(fs.existsSync).toHaveBeenCalledWith('/path/to/pdf');
       expect(fs.unlinkSync).toHaveBeenCalledWith('/path/to/pdf');
     });
-    
+
     it('should catch error when deleting physical PDF in revertSearch', () => {
       const searchId = repo.saveSearchHistory(projectId, 'q', {}, 0, {});
-      db.prepare("INSERT INTO articles (project_id, title, search_id, local_file_path) VALUES (?, 'Title', ?, '/path/to/pdf')").run(projectId, searchId);
+      db.prepare(
+        "INSERT INTO articles (project_id, title, search_id, local_file_path) VALUES (?, 'Title', ?, '/path/to/pdf')",
+      ).run(projectId, searchId);
 
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.unlinkSync).mockImplementation(() => { throw new Error('Delete failed'); });
+      vi.mocked(fs.unlinkSync).mockImplementation(() => {
+        throw new Error('Delete failed');
+      });
 
       repo.revertSearch(searchId);
-      
-      expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Failed to delete physical PDF for article'), expect.any(Error));
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to delete physical PDF for article'),
+        expect.any(Error),
+      );
     });
-    
+
     it('should not throw if local_file_path is empty in revertSearch', () => {
       const searchId = repo.saveSearchHistory(projectId, 'q', {}, 0, {});
       db.prepare("INSERT INTO articles (project_id, title, search_id) VALUES (?, 'Title', ?)").run(projectId, searchId);
@@ -108,7 +119,7 @@ describe('HistoryRepository', () => {
   describe('Diary', () => {
     it('should save and get diary entry', () => {
       repo.saveDiaryEntry(projectId, '2023-01-01', 'Entry content');
-      
+
       const entries = repo.getDiaryEntries(projectId);
       expect(entries).toHaveLength(1);
       expect(entries[0].entry_date).toBe('2023-01-01');
@@ -141,7 +152,7 @@ describe('HistoryRepository', () => {
       expect(history).toHaveLength(1);
       expect(history[0].content).toBe('Content to delete');
     });
-    
+
     it('should not error when deleting non-existent diary entry', () => {
       repo.deleteDiaryEntry(projectId, '2023-01-02');
       const entry = repo.getDiaryEntry(projectId, '2023-01-02');
@@ -159,12 +170,12 @@ describe('HistoryRepository', () => {
 
       const entry = repo.getDiaryEntry(projectId, '2023-01-01');
       expect(entry?.content).toBe('Old content');
-      
+
       const newHistory = repo.getDiaryEntryHistory(projectId, '2023-01-01') as any[];
       expect(newHistory).toHaveLength(2);
       expect(newHistory[0].content).toBe('New content');
     });
-    
+
     it('should safely do nothing when restoring non-existent version', () => {
       repo.restoreDiaryEntryVersion(999);
     });

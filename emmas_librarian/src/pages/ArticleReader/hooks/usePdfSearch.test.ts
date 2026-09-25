@@ -33,7 +33,7 @@ describe('usePdfSearch', () => {
       numPages: 1,
       getPage: vi.fn(),
     };
-    
+
     await act(async () => {
       await result.current.handleSearch(mockPdfDoc);
     });
@@ -44,25 +44,27 @@ describe('usePdfSearch', () => {
 
   it('searches pdf text successfully', async () => {
     const { result } = renderHook(() => usePdfSearch('search', highlighterRef, setCurrentPage, setInputPage));
-    
+
     const mockPdfDoc = {
       numPages: 2,
       getPage: vi.fn().mockImplementation((pageNum) => {
         if (pageNum === 1) {
           return Promise.resolve({
-            getTextContent: () => Promise.resolve({
-              items: [
-                { str: 'Hello world! ' },
-                { str: 'This is a test.', hasEOL: true },
-                { str: 'Another line of testing.' }
-              ]
-            })
+            getTextContent: () =>
+              Promise.resolve({
+                items: [
+                  { str: 'Hello world! ' },
+                  { str: 'This is a test.', hasEOL: true },
+                  { str: 'Another line of testing.' },
+                ],
+              }),
           });
         }
         return Promise.resolve({
-          getTextContent: () => Promise.resolve({
-            items: [{ str: 'Page two content without match' }]
-          })
+          getTextContent: () =>
+            Promise.resolve({
+              items: [{ str: 'Page two content without match' }],
+            }),
         });
       }),
     };
@@ -113,16 +115,24 @@ describe('usePdfSearch', () => {
       position: {
         pageNumber: 2,
         boundingRect: { x1: 0, y1: 0, x2: 1, y2: 1, width: 1, height: 1 },
-      }
+      },
     });
     expect(setCurrentPage).toHaveBeenCalledWith(2);
     expect(setInputPage).toHaveBeenCalledWith('2');
   });
 
   it('handles error in handleResultClick', () => {
-    const errorHighlighterRef = { current: { scrollTo: vi.fn().mockImplementation(() => { throw new Error('fail'); }) } };
+    const errorHighlighterRef = {
+      current: {
+        scrollTo: vi.fn().mockImplementation(() => {
+          throw new Error('fail');
+        }),
+      },
+    };
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const { result } = renderHook(() => usePdfSearch('search', errorHighlighterRef as any, setCurrentPage, setInputPage));
+    const { result } = renderHook(() =>
+      usePdfSearch('search', errorHighlighterRef as any, setCurrentPage, setInputPage),
+    );
 
     act(() => {
       result.current.handleResultClick(2);
@@ -136,7 +146,7 @@ describe('usePdfSearch', () => {
     // Mock DOM elements
     const pdfContainer = document.createElement('div');
     pdfContainer.id = 'pdf-container';
-    
+
     const mockElement = document.createElement('div');
     mockElement.className = 'textLayer';
     const mockSpan = document.createElement('span');
@@ -164,7 +174,7 @@ describe('usePdfSearch', () => {
     newSpan.textContent = 'another test line';
     newLayer.appendChild(newSpan);
     pdfContainer.appendChild(newLayer);
-    
+
     // Trigger it again to cover clearTimeout branch
     const newLayer2 = document.createElement('div');
     newLayer2.className = 'textLayer';
@@ -172,15 +182,15 @@ describe('usePdfSearch', () => {
     newSpan2.textContent = 'one more test string';
     newLayer2.appendChild(newSpan2);
     pdfContainer.appendChild(newLayer2);
-    
+
     // MutationObserver is a microtask. Wait a microtick before advancing timers.
     await Promise.resolve();
-    
+
     // Wait for mutation observer setTimeout
     act(() => {
       vi.runAllTimers();
     });
-    
+
     expect(newSpan.innerHTML).toContain('<mark');
 
     // Clear dom
@@ -224,7 +234,7 @@ describe('usePdfSearch', () => {
     const { unmount } = renderHook(() => usePdfSearch('other-tab', highlighterRef, setCurrentPage, setInputPage));
 
     expect(mockSpan.innerHTML).not.toContain('<mark'); // cleanupDom should remove marks
-    
+
     document.body.innerHTML = '';
     unmount();
   });

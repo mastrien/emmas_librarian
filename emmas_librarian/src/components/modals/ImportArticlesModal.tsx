@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { X, Search, Database, Share2, Info } from 'lucide-react';
+import { X, Search, Share2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { Article, Project } from '../../types';
@@ -11,14 +11,15 @@ interface ImportArticlesModalProps {
   onImportComplete: () => void;
 }
 
-export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = ({
-  isOpen,
+// Hooks live in the content component so the early return for a closed modal cannot change hook order.
+export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = (props) =>
+  props.isOpen ? <ImportArticlesModalContent {...props} /> : null;
+
+const ImportArticlesModalContent: React.FC<ImportArticlesModalProps> = ({
   destProjectId,
   onClose,
   onImportComplete,
 }) => {
-  if (!isOpen) return null;
-
   const projectService = useProjectService();
   const [projects, setProjects] = useState<Project[]>([]);
   const [sourceProjectId, setSourceProjectId] = useState<number | ''>('');
@@ -71,7 +72,9 @@ export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = ({
 
   const handleImport = async () => {
     if (!sourceProjectId) return;
-    const ids = Object.keys(selectedIds).map(Number).filter((k) => selectedIds[k]);
+    const ids = Object.keys(selectedIds)
+      .map(Number)
+      .filter((k) => selectedIds[k]);
     if (ids.length === 0) return;
     try {
       setLoading(true);
@@ -85,9 +88,10 @@ export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = ({
     }
   };
 
-  const filteredArticles = articles.filter((a) =>
-    a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (a.authors && a.authors.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredArticles = articles.filter(
+    (a) =>
+      a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (a.authors && a.authors.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   const selectedCount = Object.values(selectedIds).filter(Boolean).length;
@@ -121,13 +125,30 @@ export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = ({
       >
         <button
           onClick={onClose}
-          style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+          style={{
+            position: 'absolute',
+            top: '1.5rem',
+            right: '1.5rem',
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+          }}
         >
           <X size={24} />
         </button>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.5rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h3
+            style={{
+              margin: '0 0 0.5rem 0',
+              fontSize: '1.5rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
             <Share2 size={24} color="var(--color-primary)" /> Importar Artigos de Outro Projeto
           </h3>
           <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.9rem' }}>
@@ -155,9 +176,20 @@ export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = ({
 
         {/* Articles List */}
         {sourceProjectId !== '' && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, gap: '1rem' }}>
+          <div
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, gap: '1rem' }}
+          >
             <div style={{ display: 'flex', gap: '1rem', position: 'relative' }}>
-              <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Search
+                size={18}
+                style={{
+                  position: 'absolute',
+                  left: '1rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
               <input
                 type="text"
                 className="input-field"
@@ -177,10 +209,33 @@ export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = ({
                 Nenhum artigo encontrado para importação.
               </div>
             ) : (
-              <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '0.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', borderBottom: '1px solid var(--border-color)', marginBottom: '0.5rem' }}>
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '0.5rem',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '0.5rem',
+                    borderBottom: '1px solid var(--border-color)',
+                    marginBottom: '0.5rem',
+                  }}
+                >
                   <div
-                    style={{ display: 'flex', alignItems: 'center', color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'var(--color-primary)',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                    }}
                   >
                     <input
                       type="checkbox"
@@ -220,9 +275,14 @@ export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = ({
                         onClick={(e) => e.stopPropagation()}
                       />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>{art.title}</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                          {art.title}
+                        </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {art.authors || 'Sem autores'} • {art.year || 'N/A'} {art.local_file_path && <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>• PDF Incluído</span>}
+                          {art.authors || 'Sem autores'} • {art.year || 'N/A'}{' '}
+                          {art.local_file_path && (
+                            <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>• PDF Incluído</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -234,10 +294,21 @@ export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = ({
         )}
 
         {/* Footer */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '1.5rem',
+            borderTop: '1px solid var(--border-color)',
+            paddingTop: '1.25rem',
+          }}
+        >
           <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
             {selectedCount > 0 ? (
-              <span><strong>{selectedCount}</strong> artigo(s) selecionado(s) para cópia.</span>
+              <span>
+                <strong>{selectedCount}</strong> artigo(s) selecionado(s) para cópia.
+              </span>
             ) : (
               <span>Selecione artigos para importar.</span>
             )}
@@ -246,17 +317,13 @@ export const ImportArticlesModal: React.FC<ImportArticlesModalProps> = ({
             <button className="btn-secondary" onClick={onClose} disabled={loading}>
               Cancelar
             </button>
-            <button
-              className="btn-primary"
-              onClick={handleImport}
-              disabled={selectedCount === 0 || loading}
-            >
+            <button className="btn-primary" onClick={handleImport} disabled={selectedCount === 0 || loading}>
               Confirmar Importação
             </button>
           </div>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };

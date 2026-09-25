@@ -1,8 +1,21 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Brain, Plus, ChevronDown, Upload, Share2, Download, Tag, Link as LinkIcon, Settings, FileIcon, ExternalLink } from 'lucide-react';
+import {
+  Search,
+  Brain,
+  Plus,
+  ChevronDown,
+  Upload,
+  Share2,
+  Download,
+  Tag,
+  Link as LinkIcon,
+  Settings,
+  FileIcon,
+  ExternalLink,
+} from 'lucide-react';
 import { Project, ProjectDocument } from '../../../types';
-import { projectService } from '../../../services/api';
+import { useProjectService } from '../../../contexts/ServicesContext';
 
 interface ProjectToolbarProps {
   project: Project;
@@ -43,12 +56,17 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
   handleAddMenuMouseEnter,
   handleAddMenuMouseLeave,
   handleExportMenuMouseEnter,
-  handleExportMenuMouseLeave
+  handleExportMenuMouseLeave,
 }) => {
+  const projectService = useProjectService();
   return (
     <>
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <Link to={`/projects/${project.id}/search`} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <Link
+          to={`/projects/${project.id}/search`}
+          className="btn-primary"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
           <Search size={18} /> Nova busca
         </Link>
 
@@ -179,7 +197,8 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
                   await projectService.exportProject(project.id);
                 }}
               >
-                <Download size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Pacote .emmapcarc (com PDFs)
+                <Download size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Pacote .emmapcarc (com
+                PDFs)
               </button>
             </div>
           )}
@@ -236,75 +255,78 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        {projectDocuments.length === 0 ? (
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
-            Nenhum link ou documento cadastrado. Clique na engrenagem para adicionar.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {Object.entries(
-              projectDocuments.reduce<Record<string, ProjectDocument[]>>((acc, doc) => {
-                const key = doc.category?.trim() || '';
-                if (!acc[key]) acc[key] = [];
-                acc[key].push(doc);
-                return acc;
-              }, {}),
-            )
-              .sort(([catA], [catB]) => {
-                if (catA === '') return -1;
-                if (catB === '') return 1;
-                return 0;
-              })
-              .map(([catName, docs]) => (
-              <div key={catName || 'uncategorized'} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                {catName && (
+          {projectDocuments.length === 0 ? (
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
+              Nenhum link ou documento cadastrado. Clique na engrenagem para adicionar.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {Object.entries(
+                projectDocuments.reduce<Record<string, ProjectDocument[]>>((acc, doc) => {
+                  const key = doc.category?.trim() || '';
+                  if (!acc[key]) acc[key] = [];
+                  acc[key].push(doc);
+                  return acc;
+                }, {}),
+              )
+                .sort(([catA], [catB]) => {
+                  if (catA === '') return -1;
+                  if (catB === '') return 1;
+                  return 0;
+                })
+                .map(([catName, docs]) => (
                   <div
-                    style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      color: 'var(--text-muted)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.3rem',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      marginBottom: '0.25rem',
-                    }}
+                    key={catName || 'uncategorized'}
+                    style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}
                   >
-                    <Tag size={12} /> {catName}
+                    {catName && (
+                      <div
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          color: 'var(--text-muted)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          marginBottom: '0.25rem',
+                        }}
+                      >
+                        <Tag size={12} /> {catName}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {docs.map((doc) => (
+                        <button
+                          key={doc.id}
+                          onClick={() => {
+                            projectService.openProjectDocumentExternal(doc.url, doc.local_file_path);
+                          }}
+                          className="btn-secondary"
+                          style={{
+                            padding: '0.4rem 0.8rem',
+                            fontSize: '0.85rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            background: 'var(--bg-main)',
+                          }}
+                          title={doc.url || doc.local_file_path}
+                        >
+                          {doc.url ? (
+                            <ExternalLink size={14} style={{ color: 'var(--color-primary)' }} />
+                          ) : (
+                            <FileIcon size={14} style={{ color: 'var(--color-primary)' }} />
+                          )}
+                          {doc.title}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                )}
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {docs.map((doc) => (
-                    <button
-                      key={doc.id}
-                      onClick={() => {
-                        projectService.openProjectDocumentExternal(doc.url, doc.local_file_path);
-                      }}
-                      className="btn-secondary"
-                      style={{
-                        padding: '0.4rem 0.8rem',
-                        fontSize: '0.85rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.4rem',
-                        background: 'var(--bg-main)',
-                      }}
-                      title={doc.url || doc.local_file_path}
-                    >
-                      {doc.url ? (
-                        <ExternalLink size={14} style={{ color: 'var(--color-primary)' }} />
-                      ) : (
-                        <FileIcon size={14} style={{ color: 'var(--color-primary)' }} />
-                      )}
-                      {doc.title}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                ))}
+            </div>
+          )}
         </div>
       </div>
     </>

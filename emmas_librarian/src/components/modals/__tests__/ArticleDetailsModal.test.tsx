@@ -1,10 +1,10 @@
-import React from 'react';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ArticleDetailsModal } from '../ArticleDetailsModal';
 import { MemoryRouter } from 'react-router-dom';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
+import type { SearchHistoryItem } from '../../../types';
 
 const mockArticle: any = {
   id: 1,
@@ -31,10 +31,16 @@ const mockArticle: any = {
   references_list: 'Ref 1; Ref 2',
 };
 
-const mockHistory = [
-  { id: 100, unified_query: 'Busca de Teste' },
-  { id: 101, unified_query: 'Importação de Teste' },
-];
+const historyItem = (id: number, unified_query: string): SearchHistoryItem => ({
+  id,
+  unified_query,
+  translated_queries: '{}',
+  total_results: 0,
+  results_breakdown: '{}',
+  created_at: '2026-01-01',
+});
+
+const mockHistory = [historyItem(100, 'Busca de Teste'), historyItem(101, 'Importação de Teste')];
 
 describe('ArticleDetailsModal', () => {
   let fakeService: FakeProjectService;
@@ -50,15 +56,9 @@ describe('ArticleDetailsModal', () => {
     return render(
       <ServicesProvider apiService={fakeService}>
         <MemoryRouter>
-          <ArticleDetailsModal
-            isOpen={true}
-            onClose={vi.fn()}
-            article={mockArticle}
-            history={mockHistory}
-            {...props}
-          />
+          <ArticleDetailsModal isOpen={true} onClose={vi.fn()} article={mockArticle} history={mockHistory} {...props} />
         </MemoryRouter>
-      </ServicesProvider>
+      </ServicesProvider>,
     );
   };
 
@@ -89,7 +89,7 @@ describe('ArticleDetailsModal', () => {
     expect(screen.getByText('Scopus')).toBeInTheDocument();
     expect(screen.getByText('PubMed')).toBeInTheDocument();
     expect(screen.getByText('Acesso Aberto')).toBeInTheDocument();
-    
+
     // Keywords
     expect(screen.getByText('Key1')).toBeInTheDocument();
     expect(screen.getByText('Key2')).toBeInTheDocument();
@@ -108,7 +108,7 @@ describe('ArticleDetailsModal', () => {
       is_oa: 0, // Acesso Fechado
     };
     renderModal({ article: incompleteArticle });
-    
+
     expect(screen.getByText('Incomplete Article')).toBeInTheDocument();
     expect(screen.getByText('Acesso Fechado')).toBeInTheDocument();
     expect(screen.getAllByText('N/A').length).toBeGreaterThan(0);
@@ -131,11 +131,11 @@ describe('ArticleDetailsModal', () => {
   it('calls onClose when overlay is clicked', async () => {
     const onClose = vi.fn();
     renderModal({ onClose });
-    
+
     const overlay = document.body.lastElementChild as Element;
     if (overlay) {
       await act(async () => {
-         fireEvent.click(overlay);
+        fireEvent.click(overlay);
       });
       expect(onClose).toHaveBeenCalled();
     }
@@ -155,7 +155,7 @@ describe('ArticleDetailsModal', () => {
   it('shows Importação in origin if query starts with Importação', () => {
     renderModal({
       article: { ...mockArticle, search_id: 101 },
-      history: mockHistory
+      history: mockHistory,
     });
     expect(screen.getByText(/Importação #101/)).toBeInTheDocument();
   });
@@ -163,7 +163,7 @@ describe('ArticleDetailsModal', () => {
   it('shows missing history gracefully', () => {
     renderModal({
       article: { ...mockArticle, search_id: 999 }, // not in history
-      history: mockHistory
+      history: mockHistory,
     });
     expect(screen.getByText(/Busca #999 \(Histórico carregando...\)/)).toBeInTheDocument();
   });
@@ -206,14 +206,14 @@ describe('ArticleDetailsModal', () => {
       fireEvent.click(unlinkButton);
     });
 
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Erro ao desvincular o PDF: Error: Network error'));
+    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Erro ao desvincular o PDF: Network error'));
   });
 
   it('calls onAttachPdf when click attach pdf button', async () => {
     const onAttachPdf = vi.fn();
-    renderModal({ 
+    renderModal({
       article: { ...mockArticle, local_file_path: null },
-      onAttachPdf 
+      onAttachPdf,
     });
 
     const attachButton = screen.getByText('Anexar PDF');
@@ -226,7 +226,7 @@ describe('ArticleDetailsModal', () => {
 
   it('parses databases correctly if it is not JSON', () => {
     renderModal({
-      article: { ...mockArticle, source_databases: 'SingleDB' }
+      article: { ...mockArticle, source_databases: 'SingleDB' },
     });
     expect(screen.getByText('SingleDB')).toBeInTheDocument();
   });
@@ -234,7 +234,7 @@ describe('ArticleDetailsModal', () => {
     renderModal();
 
     const searchButton = screen.getByText(/Busca #100/);
-    
+
     await act(async () => {
       fireEvent.mouseEnter(searchButton);
     });
@@ -249,7 +249,7 @@ describe('ArticleDetailsModal', () => {
   });
   it('parses databases correctly if it is already an array', () => {
     renderModal({
-      article: { ...mockArticle, source_databases: ['ArrayDB'] }
+      article: { ...mockArticle, source_databases: ['ArrayDB'] },
     });
     expect(screen.getByText('ArrayDB')).toBeInTheDocument();
   });

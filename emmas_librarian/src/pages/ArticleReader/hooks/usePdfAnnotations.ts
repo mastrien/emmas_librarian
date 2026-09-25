@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
-import { projectService } from '../../../services/api';
-import type { Highlight, Annotation } from '../../../types';
+import { useState } from 'react';
+import { useProjectService } from '../../../contexts/ServicesContext';
+import type { Annotation } from '../../../types';
+import { toViewerHighlight, withNote, type ViewerHighlight } from '../viewerHighlight';
 type IHighlight = {
   position: unknown;
   color?: string;
@@ -9,7 +10,8 @@ type IHighlight = {
 };
 
 export function usePdfAnnotations(id: string | undefined) {
-  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const projectService = useProjectService();
+  const [highlights, setHighlights] = useState<ViewerHighlight[]>([]);
   const [standaloneAnnotations, setStandaloneAnnotations] = useState<Annotation[]>([]);
   const [newAnnotationText, setNewAnnotationText] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -19,25 +21,15 @@ export function usePdfAnnotations(id: string | undefined) {
   const addHighlight = async (highlight: IHighlight) => {
     if (!id) return;
     try {
-      const response = await projectService.createHighlight(
+      await projectService.createHighlight(
         parseInt(id),
         highlight.color || 'yellow',
         highlight.position,
         highlight.content?.text || null,
         highlight.comment.text || undefined,
       );
-      setHighlights([
-        {
-          id: response.id.toString(),
-          article_id: parseInt(id),
-          color: highlight.color || 'yellow',
-          position_data: highlight.position,
-          annotation_id: response.annotation_id || undefined,
-          comment: highlight.comment.text || undefined,
-          content_text: highlight.content?.text || undefined,
-        },
-        ...highlights,
-      ]);
+      // Re-read instead of building the row locally: the service only reports a placeholder annotation id.
+      setHighlights((await projectService.getHighlights(parseInt(id))).map(toViewerHighlight));
     } catch (err) {
       console.error('Erro ao salvar destaque', err);
     }
@@ -77,14 +69,14 @@ export function usePdfAnnotations(id: string | undefined) {
     }
   };
 
-  const handleEditHighlightAnnotation = async (h: Highlight, e: React.MouseEvent) => {
+  const handleEditHighlightAnnotation = async (h: ViewerHighlight, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!h.annotation_id) {
       alert('Este destaque não possui uma anotação vinculada inicial. Crie um novo destaque com texto.');
       return;
     }
     setEditingId(h.id);
-    setEditContent(h.comment || '');
+    setEditContent(h.comment.text);
   };
 
   const handleEditStandaloneAnnotation = async (a: Annotation) => {
@@ -102,7 +94,7 @@ export function usePdfAnnotations(id: string | undefined) {
           ),
         );
       } else {
-        setHighlights(highlights.map((x) => (x.id === idToSave ? { ...x, comment: editContent } : x)));
+        setHighlights(highlights.map((x) => (x.id === idToSave ? withNote(x, editContent) : x)));
       }
       setEditingId(null);
       setEditContent('');

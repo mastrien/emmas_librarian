@@ -49,15 +49,13 @@ describe('ServicesContext', () => {
     // This is to test the specific branch in useProjectService where ctx is falsy.
     // The only way to simulate this is by explicitly passing undefined via the Provider.
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ServicesContext.Provider value={undefined as unknown as IProjectService}>
-        {children}
-      </ServicesContext.Provider>
+      <ServicesContext.Provider value={undefined as unknown as IProjectService}>{children}</ServicesContext.Provider>
     );
 
     const consoleError = console.error;
     console.error = () => {};
     expect(() => renderHook(() => useProjectService(), { wrapper })).toThrowError(
-      'useProjectService must be used within a <ServicesProvider>. Received context value: undefined'
+      'useProjectService must be used within a <ServicesProvider>. Received context value: undefined',
     );
     console.error = consoleError;
   });

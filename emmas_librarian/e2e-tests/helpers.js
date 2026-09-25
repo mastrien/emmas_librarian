@@ -1,4 +1,6 @@
 const { _electron: electron } = require('playwright');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 function checkHeadless() {
@@ -10,36 +12,51 @@ function checkHeadless() {
   }
 }
 
-async function launchApp(env = {}) {
+/**
+ * Launches the built app on a fresh, empty data folder (emma.db, PDFs, settings) that is deleted on close,
+ * so specs never read or write a real library and never see each other's data.
+ * Pass `{ userDataDir }` to reuse a folder the spec owns (e.g. to relaunch after a restore); it is then kept.
+ * E2E_SKIP_RELAUNCH stops backup restores from relaunching an Electron window the harness cannot control.
+ */
+async function launchApp(env = {}, { userDataDir } = {}) {
   checkHeadless();
   const mainPath = path.resolve(__dirname, '../dist-electron/electron/main.js');
+  const dataDir = userDataDir ?? fs.mkdtempSync(path.join(os.tmpdir(), 'emmas-e2e-'));
   const electronApp = await electron.launch({
     args: [mainPath],
-    env: { ...process.env, ...env },
+    env: { ...process.env, E2E_USER_DATA_DIR: dataDir, E2E_SKIP_RELAUNCH: 'true', ...env },
   });
+  if (!userDataDir) electronApp.on('close', () => fs.rmSync(dataDir, { recursive: true, force: true }));
   return electronApp;
 }
 
 async function dismissChangelog(window) {
   try {
-    await window.evaluate(() => {
-      localStorage.setItem('last_seen_version', '1.1.19');
-    }).catch(() => {});
+    // Mark the running version as seen so the changelog never reopens over a later page. (A fixed old version
+    // made it reappear whenever the layout remounted, e.g. when opening the reader.)
+    await window
+      .evaluate(async () => {
+        localStorage.setItem('last_seen_version', await window.electronAPI.invoke('app:getVersion'));
+      })
+      .catch(() => {});
 
-    const changelogBtn = window.locator('button').filter({ hasText: /^Entendido/ }).first();
+    const changelogBtn = window
+      .locator('button')
+      .filter({ hasText: /^Entendido/ })
+      .first();
     if (await changelogBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await changelogBtn.click().catch(() => {});
       await window.waitForTimeout(300);
     }
-  } catch (e) {
+  } catch {
     // Changelog modal not shown
   }
 }
 
 async function getFirstWindow(electronApp) {
   const window = await electronApp.firstWindow();
-  window.on('console', msg => console.log(`BROWSER CONSOLE: ${msg.type()} - ${msg.text()}`));
-  window.on('pageerror', exception => console.log(`BROWSER ERROR: ${exception}`));
+  window.on('console', (msg) => console.log(`BROWSER CONSOLE: ${msg.type()} - ${msg.text()}`));
+  window.on('pageerror', (exception) => console.log(`BROWSER ERROR: ${exception}`));
   await window.waitForLoadState('domcontentloaded');
   window.on('dialog', async (dialog) => {
     await dialog.accept().catch(() => {});
@@ -76,7 +93,7 @@ async function navigateTo(window, target) {
         await directLink.click({ timeout: 5000 });
         return;
       }
-    } catch (err) {
+    } catch {
       // Element was likely detached during a re-render; retry
       if (attempt < 2) {
         await window.waitForTimeout(500);
