@@ -173,5 +173,7 @@ Capítulo zero (Introdução), 2026-09-24. O autor aprovou o tom do rascunho e p
   ofereça logo no primeiro parágrafo um link para pular direto aos passos
   ("pode pular direto para a instalação"). O `<h3>` de destino ganha um `id`, e o
   script da página já resolve âncoras que ficam dentro de um capítulo.
-- **Visual da página:** links do texto com estilo próprio (rosa, sublinhado) e
-  nenhum canto arredondado (`border-radius`) em `tutoriais.css`.
+- **Visual da página:** links do texto com estilo próprio (rosa, sublinhado).
+  Cantos arredondados ficam (o autor voltou atrás na remoção), mas o sumário e
+  os botões de capítulo anterior/próximo não têm fundo nem borda de cartão: o
+  sumário é uma lista solta e os botões são links rosa simples.
