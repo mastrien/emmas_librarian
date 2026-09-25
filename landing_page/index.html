@@ -206,28 +206,6 @@
         </div>
     </footer>
 
-    <!-- Modal: Tutoriais em Breve -->
-    <div id="tutorials-modal" class="modal-overlay" aria-hidden="true">
-        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-            <button type="button" class="modal-close-btn" id="close-modal-x" aria-label="Fechar">&times;</button>
-            <div class="modal-icon-badge">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#db2777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
-                    <path d="M6 6h10"></path>
-                    <path d="M6 10h10"></path>
-                </svg>
-            </div>
-            <h3 id="modal-title">Tutoriais em Breve!</h3>
-            <p class="modal-description">
-                Estamos finalizando os guias completos, detalhados e ilustrados para você aproveitar ao máximo cada recurso do <strong>Emma's Librarian</strong>.
-            </p>
-            <p class="modal-subdescription">
-                Em breve esta seção estará no ar com tutoriais práticos sobre busca federada, leitura de PDFs, extração com IA e muito mais.
-            </p>
-            <button type="button" class="modal-confirm-btn" id="close-modal-btn">Entendido</button>
-        </div>
-    </div>
-
     <script>
         fetch('https://api.github.com/repos/mastrien/emmas_librarian/releases/latest')
             .then(res => res.json())
@@ -241,36 +219,6 @@
             .catch(() => {
                 document.getElementById('version-label').textContent = "Disponível no GitHub.";
             });
-
-        // Controle do Modal de Tutoriais
-        const modal = document.getElementById('tutorials-modal');
-        const openButtons = document.querySelectorAll('a[href="tutoriais.html"]');
-        const closeX = document.getElementById('close-modal-x');
-        const closeBtn = document.getElementById('close-modal-btn');
-
-        function openModal(e) {
-            if (e) e.preventDefault();
-            modal.classList.add('is-open');
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal() {
-            modal.classList.remove('is-open');
-            modal.setAttribute('aria-hidden', 'true');
-            document.body.style.overflow = '';
-        }
-
-        // Desbloqueado na branch feat/tutoriais: permite navegar normalmente para tutoriais.html
-        // openButtons.forEach(btn => btn.addEventListener('click', openModal));
-        closeX.addEventListener('click', closeModal);
-        closeBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
-        });
     </script>
 </body>
 </html>
