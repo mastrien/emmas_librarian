@@ -66,8 +66,8 @@ export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(ha
           new AppError(
             'ERR_DUPLICATE',
             'USER_ERROR',
-            `[ERR_DUPLICATE] Violação de unicidade no banco de dados. Valor conflitante detectado. Detalhes: ${message}`
-          ).toJSONString()
+            `[ERR_DUPLICATE] Violação de unicidade no banco de dados. Valor conflitante detectado. Detalhes: ${message}`,
+          ).toJSONString(),
         );
       }
 
@@ -76,8 +76,8 @@ export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(ha
           new AppError(
             'ERR_DATABASE_LOCKED',
             'SYSTEM_ERROR',
-            `[ERR_DATABASE_LOCKED] O banco de dados está temporariamente bloqueado. Tente novamente em instantes.`
-          ).toJSONString()
+            `[ERR_DATABASE_LOCKED] O banco de dados está temporariamente bloqueado. Tente novamente em instantes.`,
+          ).toJSONString(),
         );
       }
 
@@ -86,8 +86,8 @@ export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(ha
           new AppError(
             'ERR_DATABASE',
             'SYSTEM_ERROR',
-            `[ERR_DATABASE] Erro na operação de banco de dados. Causa: ${message}`
-          ).toJSONString()
+            `[ERR_DATABASE] Erro na operação de banco de dados. Causa: ${message}`,
+          ).toJSONString(),
         );
       }
 
@@ -102,8 +102,8 @@ export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(ha
           new AppError(
             'ERR_API_CONNECTION',
             'SYSTEM_ERROR',
-            `[ERR_API_CONNECTION] Não foi possível conectar ao provedor de IA. Verifique sua conexão com a internet ou se o serviço local de IA está em execução. (${message})`
-          ).toJSONString()
+            `[ERR_API_CONNECTION] Não foi possível conectar ao provedor de IA. Verifique sua conexão com a internet ou se o serviço local de IA está em execução. (${message})`,
+          ).toJSONString(),
         );
       }
 

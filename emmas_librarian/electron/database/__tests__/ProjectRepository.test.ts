@@ -4,8 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import { ProjectRepository } from '../ProjectRepository';
 
-
-
 describe('ProjectRepository', () => {
   let db: Database.Database;
   let repo: ProjectRepository;
@@ -36,7 +34,7 @@ describe('ProjectRepository', () => {
 
   it('should return undefined for a non-existent or deleted project', () => {
     expect(repo.getProject(999)).toBeUndefined();
-    
+
     const project = repo.createProject('To Delete');
     repo.deleteProject(project.id);
     expect(repo.getProject(project.id)).toBeUndefined();
@@ -53,7 +51,7 @@ describe('ProjectRepository', () => {
   it('should update project name', () => {
     const project = repo.createProject('Old Name');
     repo.updateProject(project.id, 'New Name');
-    
+
     const fetched = repo.getProject(project.id);
     expect(fetched?.name).toBe('New Name');
   });
@@ -61,32 +59,50 @@ describe('ProjectRepository', () => {
   it('should soft delete project', () => {
     const project = repo.createProject('To Soft Delete');
     repo.deleteProject(project.id);
-    
+
     const row = db.prepare('SELECT deleted_at FROM projects WHERE id = ?').get(project.id) as { deleted_at: string };
     expect(row.deleted_at).not.toBeNull();
   });
 
   it('should permanently delete project and related files', () => {
     const project = repo.createProject('Permanent Delete');
-    
+
     // Insert article with local_file_path
-    db.prepare('INSERT INTO articles (project_id, title, local_file_path) VALUES (?, ?, ?)')
-      .run(project.id, 'Art1', '/path/to/art1.pdf');
+    db.prepare('INSERT INTO articles (project_id, title, local_file_path) VALUES (?, ?, ?)').run(
+      project.id,
+      'Art1',
+      '/path/to/art1.pdf',
+    );
     const articleId = db.prepare('SELECT last_insert_rowid() as id').get() as { id: number };
-    db.prepare('INSERT INTO highlights (article_id, color, position_data, content_text) VALUES (?, ?, ?, ?)').run(articleId.id, 'red', '{}', 'highlight');
+    db.prepare('INSERT INTO highlights (article_id, color, position_data, content_text) VALUES (?, ?, ?, ?)').run(
+      articleId.id,
+      'red',
+      '{}',
+      'highlight',
+    );
     db.prepare('INSERT INTO annotations (article_id, content_markdown) VALUES (?, ?)').run(articleId.id, 'note');
 
     // Insert document with local_file_path
-    db.prepare('INSERT INTO project_documents (project_id, title, local_file_path) VALUES (?, ?, ?)')
-      .run(project.id, 'Doc1', '/path/to/doc1.pdf');
+    db.prepare('INSERT INTO project_documents (project_id, title, local_file_path) VALUES (?, ?, ?)').run(
+      project.id,
+      'Doc1',
+      '/path/to/doc1.pdf',
+    );
 
     // Insert other stuff
-    db.prepare('INSERT INTO search_history (project_id, unified_query, translated_queries, results_breakdown) VALUES (?, ?, ?, ?)')
-      .run(project.id, 'query', '[]', '{}');
-    db.prepare('INSERT INTO project_diary (project_id, entry_date, content) VALUES (?, ?, ?)')
-      .run(project.id, '2023-01-01', 'diary');
-    db.prepare('INSERT INTO project_diary_history (project_id, entry_date, content) VALUES (?, ?, ?)')
-      .run(project.id, '2023-01-01', 'diary');
+    db.prepare(
+      'INSERT INTO search_history (project_id, unified_query, translated_queries, results_breakdown) VALUES (?, ?, ?, ?)',
+    ).run(project.id, 'query', '[]', '{}');
+    db.prepare('INSERT INTO project_diary (project_id, entry_date, content) VALUES (?, ?, ?)').run(
+      project.id,
+      '2023-01-01',
+      'diary',
+    );
+    db.prepare('INSERT INTO project_diary_history (project_id, entry_date, content) VALUES (?, ?, ?)').run(
+      project.id,
+      '2023-01-01',
+      'diary',
+    );
 
     // Mock fs
     const existsSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
@@ -104,17 +120,23 @@ describe('ProjectRepository', () => {
     expect(db.prepare('SELECT * FROM annotations WHERE article_id = ?').all(articleId.id)).toHaveLength(0);
     expect(db.prepare('SELECT * FROM search_history WHERE project_id = ?').all(project.id)).toHaveLength(0);
     expect(db.prepare('SELECT * FROM project_diary WHERE project_id = ?').all(project.id)).toHaveLength(0);
-    
+
     existsSpy.mockRestore();
     unlinkSpy.mockRestore();
   });
 
   it('should handle fs errors silently during permanent delete', () => {
     const project = repo.createProject('Permanent Delete Error');
-    db.prepare('INSERT INTO articles (project_id, title, local_file_path) VALUES (?, ?, ?)')
-      .run(project.id, 'Art1', '/path/to/err.pdf');
-    db.prepare('INSERT INTO project_documents (project_id, title, local_file_path) VALUES (?, ?, ?)')
-      .run(project.id, 'Doc1', '/path/to/doc_err.pdf');
+    db.prepare('INSERT INTO articles (project_id, title, local_file_path) VALUES (?, ?, ?)').run(
+      project.id,
+      'Art1',
+      '/path/to/err.pdf',
+    );
+    db.prepare('INSERT INTO project_documents (project_id, title, local_file_path) VALUES (?, ?, ?)').run(
+      project.id,
+      'Doc1',
+      '/path/to/doc_err.pdf',
+    );
 
     const existsSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
     const unlinkSpy = vi.spyOn(fs, 'unlinkSync').mockImplementation(() => {
@@ -124,7 +146,7 @@ describe('ProjectRepository', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     expect(() => repo.deleteProjectPermanent(project.id)).not.toThrow();
-    
+
     expect(consoleError).toHaveBeenCalledTimes(2); // once for article, once for doc
 
     consoleError.mockRestore();
@@ -141,7 +163,7 @@ describe('ProjectRepository', () => {
 
     const projects = repo.getAllProjects();
     expect(projects).toHaveLength(2);
-    const names = projects.map(p => p.name);
+    const names = projects.map((p) => p.name);
     expect(names).toContain('P1');
     expect(names).toContain('P3');
   });
@@ -149,21 +171,21 @@ describe('ProjectRepository', () => {
   describe('Project Categories', () => {
     it('should create and retrieve project categories', () => {
       const project = repo.createProject('Cat Project');
-      
-      const textCatId = repo.createProjectCategory(project.id, 'TextCat', 'text');
+
+      repo.createProjectCategory(project.id, 'TextCat', 'text');
       const enumCatId = repo.createProjectCategory(project.id, 'EnumCat', 'enum');
-      
+
       repo.addProjectCategoryOption(enumCatId, 'Opt1');
       repo.addProjectCategoryOption(enumCatId, 'Opt2');
 
       const categories = repo.getProjectCategories(project.id);
       expect(categories).toHaveLength(2);
 
-      const textCat = categories.find(c => c.name === 'TextCat');
+      const textCat = categories.find((c) => c.name === 'TextCat');
       expect(textCat?.type).toBe('text');
       expect(textCat?.parsedOptions).toBeUndefined();
 
-      const enumCat = categories.find(c => c.name === 'EnumCat');
+      const enumCat = categories.find((c) => c.name === 'EnumCat');
       expect(enumCat?.type).toBe('enum');
       expect(enumCat?.parsedOptions).toHaveLength(2);
       expect(enumCat?.parsedOptions![0].name).toBe('Opt1');
@@ -172,7 +194,7 @@ describe('ProjectRepository', () => {
     it('should delete project category', () => {
       const project = repo.createProject('Cat Project');
       const catId = repo.createProjectCategory(project.id, 'To Delete', 'text');
-      
+
       repo.deleteProjectCategory(catId);
       const categories = repo.getProjectCategories(project.id);
       expect(categories).toHaveLength(0);
@@ -182,7 +204,7 @@ describe('ProjectRepository', () => {
       const project = repo.createProject('Cat Project');
       const catId = repo.createProjectCategory(project.id, 'Enum', 'enum');
       repo.addProjectCategoryOption(catId, 'Opt1');
-      
+
       const optId = repo.getProjectCategories(project.id)[0].parsedOptions![0].id;
       repo.removeProjectCategoryOption(optId);
 
@@ -193,9 +215,9 @@ describe('ProjectRepository', () => {
     it('should update project category (text type)', () => {
       const project = repo.createProject('Proj');
       const catId = repo.createProjectCategory(project.id, 'OldName', 'text');
-      
+
       repo.updateProjectCategory(catId, 'NewName', 'text', 'SomeOptions');
-      
+
       const cat = repo.getProjectCategories(project.id)[0];
       expect(cat.name).toBe('NewName');
       expect(cat.type).toBe('text');
@@ -205,26 +227,26 @@ describe('ProjectRepository', () => {
     it('should update project category (enum type with array options)', () => {
       const project = repo.createProject('Proj');
       const catId = repo.createProjectCategory(project.id, 'EnumCat', 'enum');
-      
+
       repo.addProjectCategoryOption(catId, 'OptKeep');
       repo.addProjectCategoryOption(catId, 'OptDelete');
-      
+
       const options = repo.getProjectCategories(project.id)[0].parsedOptions!;
-      const keepOpt = options.find(o => o.name === 'OptKeep')!;
-      
+      const keepOpt = options.find((o) => o.name === 'OptKeep')!;
+
       repo.updateProjectCategory(catId, 'NewEnumName', 'multiselect', [
         { id: keepOpt.id, name: 'OptKeepUpdated' },
-        { name: 'OptNew' }
+        { name: 'OptNew' },
       ] as any);
-      
+
       const updatedCat = repo.getProjectCategories(project.id)[0];
       expect(updatedCat.name).toBe('NewEnumName');
       expect(updatedCat.type).toBe('multiselect');
-      
+
       const opts = updatedCat.parsedOptions!;
       expect(opts).toHaveLength(2);
-      expect(opts.find(o => o.id === keepOpt.id)?.name).toBe('OptKeepUpdated');
-      expect(opts.find(o => o.name === 'OptNew')).toBeDefined();
+      expect(opts.find((o) => o.id === keepOpt.id)?.name).toBe('OptKeepUpdated');
+      expect(opts.find((o) => o.name === 'OptNew')).toBeDefined();
     });
   });
 });

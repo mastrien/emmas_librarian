@@ -3,14 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import QuestionSetCatalog from '../ai/QuestionSetCatalog';
 import { projectService } from '../../services/api';
 
-vi.mock('../../services/api', () => ({
-  projectService: {
-    getQuestionSets: vi.fn(),
-    createQuestionSet: vi.fn(),
-    deleteQuestionSet: vi.fn(),
-    duplicateQuestionSet: vi.fn(),
-  },
-}));
+vi.mock('../../services/api', async () => {
+  const { FakeProjectService } = await import('../../services/__tests__/fakes/FakeProjectService');
+  return { projectService: FakeProjectService.create() };
+});
 
 describe('QuestionSetCatalog', () => {
   beforeEach(() => {

@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -57,7 +57,8 @@ export class ReactErrorBoundary extends Component<Props, State> {
               <h2 className="text-xl font-bold text-slate-50">Algo deu errado na interface</h2>
             </div>
             <p className="text-sm text-slate-300">
-              Ocorreu um erro inesperado durante o carregamento deste componente. Os dados não salvos permanecem protegidos.
+              Ocorreu um erro inesperado durante o carregamento deste componente. Os dados não salvos permanecem
+              protegidos.
             </p>
             {this.state.error && (
               <div className="bg-slate-950 p-3 rounded text-xs font-mono text-red-300 overflow-x-auto max-h-32 border border-slate-700">

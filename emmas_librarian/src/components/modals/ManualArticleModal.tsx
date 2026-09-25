@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X as XIcon, Upload, Loader2, Plus } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
+import { describeError } from '../../utils/describeError';
+import { fileNameFromPath } from '../../utils/formatters';
+import { LabeledField } from '../common/LabeledField';
+import { AUTHORS_SEPARATOR_HINT } from '../common/articleFieldHints';
 
 interface ManualArticleModalProps {
   isOpen: boolean;
@@ -41,7 +45,7 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
       if (selected) {
         setFilePath(selected);
       }
-    } catch (err) {
+    } catch {
       alert('Erro ao selecionar o arquivo PDF');
     }
   };
@@ -66,24 +70,8 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
         filePath,
       );
       onClose();
-    } catch (err: Error | unknown) {
-      let errorMsg = 'Erro desconhecido';
-      if (err) {
-        if ((err as Error).message) {
-          errorMsg = (err as Error).message;
-        } else if (typeof err === 'string') {
-          errorMsg = err;
-        } else if (typeof err === 'object') {
-          try {
-            errorMsg = (err as { error?: string }).error || JSON.stringify(err);
-          } catch {
-            errorMsg = String(err);
-          }
-        } else {
-          errorMsg = String(err);
-        }
-      }
-      alert(`Erro ao adicionar artigo: ${errorMsg}`);
+    } catch (err: unknown) {
+      alert(`Erro ao adicionar artigo: ${describeError(err)}`);
     } finally {
       setSubmitting(false);
     }
@@ -161,202 +149,40 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '0.3rem',
-                  color: 'var(--text-muted)',
-                }}
-              >
-                Título *
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="Ex: A New Approach to Bibliometrics"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.6rem 0.8rem',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
-                  outline: 'none',
-                  background: 'var(--bg-surface)',
-                  color: 'var(--text-main)',
-                  fontFamily: 'inherit',
-                }}
+            <LabeledField
+              label="Título *"
+              value={title}
+              onChange={setTitle}
+              placeholder="Ex: A New Approach to Bibliometrics"
+              required
+            />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <LabeledField
+                label="Autores"
+                value={authors}
+                onChange={setAuthors}
+                placeholder="Ex: John Doe, Jane Smith"
+                hint={AUTHORS_SEPARATOR_HINT}
+              />
+              <LabeledField label="Ano" type="number" value={year} onChange={setYear} placeholder="Ex: 2026" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <LabeledField label="DOI" value={doi} onChange={setDoi} placeholder="Ex: 10.1000/xyz123" />
+              <LabeledField
+                label="Revista / Periódico"
+                value={journal}
+                onChange={setJournal}
+                placeholder="Ex: Nature"
               />
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '0.3rem',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  Autores
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: John Doe, Jane Smith"
-                  value={authors}
-                  onChange={(e) => setAuthors(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.6rem 0.8rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-color)',
-                    outline: 'none',
-                    background: 'var(--bg-surface)',
-                    color: 'var(--text-main)',
-                    fontFamily: 'inherit',
-                  }}
-                />
-                <span
-                  style={{
-                    display: 'block',
-                    fontSize: '0.75rem',
-                    color: 'var(--text-muted)',
-                    marginTop: '0.25rem',
-                    lineHeight: '1.2',
-                  }}
-                >
-                  Use ponto e vírgula (;) ou vírgula (,) para separar múltiplos autores. Se usar vírgula, use nomes
-                  completos (ex: 'João Silva, Maria Souza') para evitar que nomes simples sejam lidos como um único
-                  autor.
-                </span>
-              </div>
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '0.3rem',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  Ano
-                </label>
-                <input
-                  type="number"
-                  placeholder="Ex: 2026"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.6rem 0.8rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-color)',
-                    outline: 'none',
-                    background: 'var(--bg-surface)',
-                    color: 'var(--text-main)',
-                    fontFamily: 'inherit',
-                  }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '0.3rem',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  DOI
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: 10.1000/xyz123"
-                  value={doi}
-                  onChange={(e) => setDoi(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.6rem 0.8rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-color)',
-                    outline: 'none',
-                    background: 'var(--bg-surface)',
-                    color: 'var(--text-main)',
-                    fontFamily: 'inherit',
-                  }}
-                />
-              </div>
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '0.3rem',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  Revista / Periódico
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ex: Nature"
-                  value={journal}
-                  onChange={(e) => setJournal(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.6rem 0.8rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-color)',
-                    outline: 'none',
-                    background: 'var(--bg-surface)',
-                    color: 'var(--text-main)',
-                    fontFamily: 'inherit',
-                  }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '0.3rem',
-                  color: 'var(--text-muted)',
-                }}
-              >
-                Resumo
-              </label>
-              <textarea
-                placeholder="Resumo do artigo..."
-                value={abstract}
-                onChange={(e) => setAbstract(e.target.value)}
-                style={{
-                  width: '100%',
-                  height: '80px',
-                  padding: '0.6rem 0.8rem',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
-                  outline: 'none',
-                  resize: 'none',
-                  background: 'var(--bg-surface)',
-                  color: 'var(--text-main)',
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
+            <LabeledField
+              label="Resumo"
+              value={abstract}
+              onChange={setAbstract}
+              placeholder="Resumo do artigo..."
+              multiline
+              textareaHeight="80px"
+            />
 
             <div>
               <label
@@ -391,7 +217,7 @@ export const ManualArticleModal: React.FC<ManualArticleModalProps> = ({ isOpen, 
                     }}
                     title={filePath}
                   >
-                    {filePath.split('\\').pop()?.split('/').pop()}
+                    {fileNameFromPath(filePath)}
                   </div>
                 )}
                 {filePath && (

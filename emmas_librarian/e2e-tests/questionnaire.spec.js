@@ -60,6 +60,8 @@ test('F-07 Create and answer investigation questionnaire', async () => {
     try {
       fs.unlinkSync(tempPdfPath);
       fs.rmdirSync(tempDir);
-    } catch (e) {}
+    } catch {
+      // Best-effort temp dir cleanup; leftovers do not affect the test.
+    }
   }
 });

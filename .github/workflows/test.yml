@@ -1,0 +1,45 @@
+name: Tests
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'emmas_librarian/**'
+      - '.github/workflows/test.yml'
+  pull_request:
+    paths:
+      - 'emmas_librarian/**'
+      - '.github/workflows/test.yml'
+  workflow_dispatch:
+
+jobs:
+  unit:
+    # Windows matches release.yml and the dev machine; better-sqlite3 is a native module.
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: ./emmas_librarian
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: emmas_librarian/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Errors fail the build; the warning cap is a ratchet (lower it as `any`/effect warnings are fixed).
+      - name: Lint
+        run: npm run lint:ci
+
+      - name: Unit and integration tests with coverage thresholds
+        run: npm run coverage

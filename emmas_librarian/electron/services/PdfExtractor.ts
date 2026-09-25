@@ -87,7 +87,7 @@ export async function extractTextWithCoordinates(
             pushCurrentChunk();
 
             let keepText = '';
-            let keepBboxes: typeof currentBboxes = [];
+            const keepBboxes: typeof currentBboxes = [];
 
             for (let i = currentBboxes.length - 1; i >= 0; i--) {
               keepBboxes.unshift(currentBboxes[i]);
@@ -125,10 +125,4 @@ export async function extractTextWithCoordinates(
     totalPages,
     totalCharacters,
   };
-}
-
-/** Renderiza páginas específicas como imagens Base64 para VLM. (Placeholder) */
-export async function renderPagesAsImages(pdfPath: string, pages: number[]): Promise<Map<number, string>> {
-  // Not implemented yet
-  return new Map<number, string>();
 }

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
@@ -71,7 +70,6 @@ describe('ArticleTable', () => {
   const renderComponent = (props = {}) => {
     return render(
       <BrowserRouter>
-        {/* @ts-ignore */}
         <ArticleTable {...defaultProps} {...props} />
       </BrowserRouter>,
     );

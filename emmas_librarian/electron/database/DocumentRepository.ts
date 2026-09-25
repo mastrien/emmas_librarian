@@ -1,6 +1,5 @@
 import type { Database } from 'better-sqlite3';
-import { Annotation, Highlight, ProjectDocument } from '../../src/types';
-import { HighlightWithComment } from './DatabaseAdapter';
+import { ProjectDocument } from '../../src/types';
 import fs from 'fs';
 
 export class DocumentRepository {
@@ -29,7 +28,8 @@ export class DocumentRepository {
     const cleanProjectId = typeof projectId === 'number' ? projectId : Number(projectId);
     const cleanTitle = title && typeof title === 'string' ? title.trim() : '';
     const cleanUrl = url && typeof url === 'string' && url.trim() ? url.trim() : null;
-    const cleanFilePath = localFilePath && typeof localFilePath === 'string' && localFilePath.trim() ? localFilePath.trim() : null;
+    const cleanFilePath =
+      localFilePath && typeof localFilePath === 'string' && localFilePath.trim() ? localFilePath.trim() : null;
     const cleanCategory = category && typeof category === 'string' && category.trim() ? category.trim() : null;
 
     const stmt = this.db.prepare(`

@@ -26,14 +26,17 @@ test('Massive Investigation Modal - Checkbox state persists across re-renders', 
     await window.waitForTimeout(3000);
     const projectName = 'Massive Inv Project ' + Date.now();
     await createProject(window, projectName);
-    
+
     // Import PDF to have an article with local_file_path
     await triggerImport(window);
     const articleRow = window.locator('table >> text=E2E_Test_Article');
     await expect(articleRow).toBeVisible({ timeout: 10000 });
 
     // Open AI Extraction Modal
-    const massiveInvBtn = window.locator('button').filter({ hasText: /Extra.*IA/ }).first();
+    const massiveInvBtn = window
+      .locator('button')
+      .filter({ hasText: /Extra.*IA/ })
+      .first();
     await massiveInvBtn.click();
 
     // Scope all interactions to the modal container to avoid matching
@@ -49,7 +52,7 @@ test('Massive Investigation Modal - Checkbox state persists across re-renders', 
     const articleCheckbox = modal.locator('label input[type="checkbox"]').first();
     await expect(articleCheckbox).toBeVisible({ timeout: 5000 });
     await expect(articleCheckbox).toBeChecked();
-    
+
     // Uncheck the article
     await articleCheckbox.uncheck();
     await expect(articleCheckbox).not.toBeChecked();
@@ -65,6 +68,8 @@ test('Massive Investigation Modal - Checkbox state persists across re-renders', 
     try {
       fs.unlinkSync(tempPdfPath);
       fs.rmdirSync(tempDir);
-    } catch (e) {}
+    } catch {
+      // Best-effort temp dir cleanup; leftovers do not affect the test.
+    }
   }
 });

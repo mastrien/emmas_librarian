@@ -22,7 +22,7 @@ export function useArticleFilters(articles: Article[], articleCategories: Record
       }
 
       if (selectedDocType) {
-        if (selectedDocType === 'with_pdf' && !!!article.local_file_path) return false;
+        if (selectedDocType === 'with_pdf' && !article.local_file_path) return false;
         if (selectedDocType === 'without_pdf' && !!article.local_file_path) return false;
       }
 

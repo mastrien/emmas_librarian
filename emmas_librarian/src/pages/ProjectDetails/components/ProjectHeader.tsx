@@ -21,7 +21,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   newName,
   setNewName,
   handleUpdateName,
-  handleDeleteProject
+  handleDeleteProject,
 }) => {
   return (
     <div>

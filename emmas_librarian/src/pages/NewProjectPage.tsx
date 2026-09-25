@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjectService } from '../contexts/ServicesContext';
 import { Plus, Loader2 } from 'lucide-react';
+import { describeError } from '../utils/describeError';
 
 export const NewProjectPage: React.FC = () => {
   const projectService = useProjectService();
@@ -20,24 +21,13 @@ export const NewProjectPage: React.FC = () => {
       const project = await projectService.createProject(name);
       navigate(`/projects/${project.id}`);
     } catch (err: unknown) {
-      let errorMsg = 'Erro ao criar projeto';
-      if (err) {
-        if ((err as Error).message) {
-          errorMsg = (err as Error).message;
-          errorMsg = errorMsg.replace(/^Error:\s*Error\s*invoking\s*remote\s*method\s*'.*?':\s*/i, '');
-        } else if (typeof err === 'string') {
-          errorMsg = err;
-        } else if (typeof err === 'object') {
-          try {
-            errorMsg = (err as { error?: string }).error || JSON.stringify(err);
-          } catch {
-            errorMsg = String(err);
-          }
-        } else {
-          errorMsg = String(err);
-        }
-      }
-      setError(errorMsg);
+      // Raw (non-AppError) IPC failures carry Electron's "Error invoking remote method '<channel>':" prefix.
+      setError(
+        describeError(err, 'Erro ao criar projeto').replace(
+          /^Error:\s*Error\s*invoking\s*remote\s*method\s*'.*?':\s*/i,
+          '',
+        ),
+      );
     } finally {
       setLoading(false);
     }

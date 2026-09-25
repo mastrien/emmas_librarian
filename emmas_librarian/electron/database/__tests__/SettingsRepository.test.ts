@@ -9,7 +9,7 @@ vi.mock('electron', () => ({
     isEncryptionAvailable: vi.fn(() => true),
     encryptString: vi.fn((str) => Buffer.from(str)),
     decryptString: vi.fn((buf) => buf.toString()),
-  }
+  },
 }));
 
 describe('SettingsRepository', () => {

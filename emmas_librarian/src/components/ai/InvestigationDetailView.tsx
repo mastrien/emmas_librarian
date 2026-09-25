@@ -4,9 +4,10 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { type Article, type InvestigationResult } from '../../types';
 import { type InvestigationHistoryRecord } from '../modals/AIExtractionModal';
-import { projectService } from '../../services/api';
+import { useProjectService } from '../../contexts/ServicesContext';
 import { formatResultsAsCsv, formatResultsAsJson } from '../../utils/investigationExporter';
 import { RAGResultCard } from './RAGResultCard';
+import { parseJsonList } from '../../utils/parseJsonList';
 
 export interface InvestigationDetailViewProps {
   investigation: InvestigationHistoryRecord;
@@ -23,6 +24,7 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
   onBack,
   onReExecute,
 }) => {
+  const projectService = useProjectService();
   const navigate = useNavigate();
   const [results, setResults] = useState<InvestigationResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,8 +61,7 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
   );
 
   const articleIds = Object.keys(resultsByArticle).map(Number);
-  const qStr = investigation.questions || '[]';
-  const questionsList = JSON.parse(qStr);
+  const questionsList = parseJsonList<string>(investigation.questions);
 
   const handleReExecute = () => {
     onReExecute(questionsList, articleIds);
@@ -222,7 +223,9 @@ const ArticleResultAccordion: React.FC<{
                   ragResult = parsed;
                 }
               }
-            } catch (e) {}
+            } catch {
+              // Older results store the answer as plain text, not RAG JSON; they render as text below.
+            }
 
             return (
               <div

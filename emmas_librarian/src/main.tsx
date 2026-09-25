@@ -2,13 +2,13 @@
 // to ensure correct initialization order in production builds.
 // See public/vendor/prismjs/ and the error report in relatorio_erro_prism.md.
 
-import { StrictMode, Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import * as ReactDOMClient from 'react-dom/client';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/common/Layout';
 import { GlobalErrorProvider } from './contexts/GlobalErrorContext';
 import { ErrorModal } from './components/modals/ErrorModal';
-
+import './style.css';
 
 // Suppress React 19 warnings originating from third-party libraries (e.g. react-pdf-highlighter)
 const originalConsoleError = console.error;
@@ -63,7 +63,7 @@ try {
       return root;
     },
   });
-} catch (err) {
+} catch {
   // Safe fallback if target environment freezes module exports
 }
 
@@ -82,9 +82,10 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => 
 const TermsOfUsePage = lazy(() =>
   import('./pages/TermsOfUsePage').then((module) => ({ default: module.TermsOfUsePage })),
 );
-const PdfLibraryPage = lazy(() => import('./pages/PdfLibraryPage').then((module) => ({ default: module.PdfLibraryPage })));
+const PdfLibraryPage = lazy(() =>
+  import('./pages/PdfLibraryPage').then((module) => ({ default: module.PdfLibraryPage })),
+);
 const AgendaPage = lazy(() => import('./pages/AgendaPage').then((module) => ({ default: module.AgendaPage })));
-import './style.css';
 
 // Initialize theme and accent
 const savedTheme = localStorage.getItem('theme') || 'light';
@@ -109,17 +110,17 @@ if (rootEl)
             <Suspense
               fallback={<div className="flex-1 flex items-center justify-center p-8 text-gray-500">Loading...</div>}
             >
-                <Routes>
-                  <Route path="/" element={<DashboardPage />} />
-                  <Route path="/new-project" element={<NewProjectPage />} />
-                  <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-                  <Route path="/projects/:id/search" element={<SearchPage />} />
-                  <Route path="/articles/:id" element={<ArticleReaderPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/terms" element={<TermsOfUsePage />} />
-                  <Route path="/pdfs" element={<PdfLibraryPage />} />
-                  <Route path="/agenda" element={<AgendaPage />} />
-                </Routes>
+              <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/new-project" element={<NewProjectPage />} />
+                <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+                <Route path="/projects/:id/search" element={<SearchPage />} />
+                <Route path="/articles/:id" element={<ArticleReaderPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/terms" element={<TermsOfUsePage />} />
+                <Route path="/pdfs" element={<PdfLibraryPage />} />
+                <Route path="/agenda" element={<AgendaPage />} />
+              </Routes>
             </Suspense>
           </Layout>
         </HashRouter>

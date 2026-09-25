@@ -9,7 +9,9 @@ describe('GlobalErrorContext', () => {
     // Suppress console.error for this expected error in React rendering
     const consoleError = console.error;
     console.error = () => {};
-    expect(() => renderHook(() => useGlobalError())).toThrowError('useGlobalError must be used within a GlobalErrorProvider');
+    expect(() => renderHook(() => useGlobalError())).toThrowError(
+      'useGlobalError must be used within a GlobalErrorProvider',
+    );
     console.error = consoleError;
   });
 

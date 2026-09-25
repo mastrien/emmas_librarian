@@ -73,12 +73,16 @@ export class EmbeddingService {
 
     if (this.config.provider === 'ollama_cloud') {
       if (!this.keys?.ollamaCloud) {
-        throw new AppError('ERR_MISSING_API_KEY', 'USER_ERROR', 'Chave de API do Ollama Cloud não configurada para embeddings.');
+        throw new AppError(
+          'ERR_MISSING_API_KEY',
+          'USER_ERROR',
+          'Chave de API do Ollama Cloud não configurada para embeddings.',
+        );
       }
       let url = (this.keys?.ollamaCloudUrl || 'https://ollama.com/v1').trim();
       if (url.endsWith('/')) url = url.slice(0, -1);
 
-      let endpoint = url.endsWith('/embeddings') ? url : `${url}/embeddings`;
+      const endpoint = url.endsWith('/embeddings') ? url : `${url}/embeddings`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -100,7 +104,11 @@ export class EmbeddingService {
           );
         }
         const rawText = await response.text();
-        const cleanText = rawText.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim() || 'Serviço indisponível no provedor remoto.';
+        const cleanText =
+          rawText
+            .replace(/<[^>]*>?/gm, ' ')
+            .replace(/\s+/g, ' ')
+            .trim() || 'Serviço indisponível no provedor remoto.';
         throw new AppError(
           'ERR_API_CONNECTION',
           'SYSTEM_ERROR',
@@ -121,7 +129,12 @@ export class EmbeddingService {
     }
 
     if (this.config.provider === 'openai') {
-      if (!this.keys?.openai) throw new AppError('ERR_MISSING_API_KEY', 'USER_ERROR', 'Chave de API da OpenAI não configurada para embeddings.');
+      if (!this.keys?.openai)
+        throw new AppError(
+          'ERR_MISSING_API_KEY',
+          'USER_ERROR',
+          'Chave de API da OpenAI não configurada para embeddings.',
+        );
 
       return await this.fetchWithRetry(async () => {
         const response = await fetch('https://api.openai.com/v1/embeddings', {
@@ -139,9 +152,17 @@ export class EmbeddingService {
         if (!response.ok) {
           const errText = await response.text();
           if (response.status === 429) {
-            throw new AppError('ERR_API_QUOTA_EXCEEDED', 'USER_ERROR', `[ERR_API_QUOTA_EXCEEDED] Limite de cota/requisições da OpenAI excedido.`);
+            throw new AppError(
+              'ERR_API_QUOTA_EXCEEDED',
+              'USER_ERROR',
+              `[ERR_API_QUOTA_EXCEEDED] Limite de cota/requisições da OpenAI excedido.`,
+            );
           }
-          throw new AppError('ERR_API_CONNECTION', 'SYSTEM_ERROR', `OpenAI embedding error: ${response.statusText} - ${errText}`);
+          throw new AppError(
+            'ERR_API_CONNECTION',
+            'SYSTEM_ERROR',
+            `OpenAI embedding error: ${response.statusText} - ${errText}`,
+          );
         }
 
         const data = await response.json();
@@ -150,7 +171,12 @@ export class EmbeddingService {
     }
 
     if (this.config.provider === 'gemini') {
-      if (!this.keys?.gemini) throw new AppError('ERR_MISSING_API_KEY', 'USER_ERROR', 'Chave de API do Gemini não configurada para embeddings.');
+      if (!this.keys?.gemini)
+        throw new AppError(
+          'ERR_MISSING_API_KEY',
+          'USER_ERROR',
+          'Chave de API do Gemini não configurada para embeddings.',
+        );
 
       let rawModel = (this.config.model_name || 'text-embedding-004').trim();
       if (rawModel.startsWith('models/')) rawModel = rawModel.replace('models/', '');
@@ -178,7 +204,10 @@ export class EmbeddingService {
               `[ERR_API_QUOTA_EXCEEDED] Cota limite de requisições por minuto (100 RPM) da API gratuita do Gemini excedida. Aguarde alguns segundos e tente novamente.`,
             );
           }
-          const cleanText = errText.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+          const cleanText = errText
+            .replace(/<[^>]*>?/gm, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
           throw new AppError(
             'ERR_API_CONNECTION',
             'SYSTEM_ERROR',
@@ -188,7 +217,11 @@ export class EmbeddingService {
 
         const data = await response.json();
         if (!data.embedding?.values) {
-          throw new AppError('ERR_INVALID_AI_RESPONSE', 'SYSTEM_ERROR', `A API do Gemini não retornou um vetor de embedding válido.`);
+          throw new AppError(
+            'ERR_INVALID_AI_RESPONSE',
+            'SYSTEM_ERROR',
+            `A API do Gemini não retornou um vetor de embedding válido.`,
+          );
         }
         return data.embedding.values as number[];
       });
@@ -213,17 +246,30 @@ export class EmbeddingService {
     }
 
     if (this.config.provider === 'anthropic') {
-      throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', `O provedor Anthropic não possui API nativa de embeddings.`);
+      throw new AppError(
+        'ERR_MODEL_NOT_DEFINED',
+        'USER_ERROR',
+        `O provedor Anthropic não possui API nativa de embeddings.`,
+      );
     }
 
-    throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', `Provedor de embedding ${this.config.provider} não suportado.`);
+    throw new AppError(
+      'ERR_MODEL_NOT_DEFINED',
+      'USER_ERROR',
+      `Provedor de embedding ${this.config.provider} não suportado.`,
+    );
   }
 
   async embedBatch(texts: string[]): Promise<number[][]> {
     if (texts.length === 0) return [];
 
     if (this.config.provider === 'openai') {
-      if (!this.keys?.openai) throw new AppError('ERR_MISSING_API_KEY', 'USER_ERROR', 'Chave de API da OpenAI não configurada para embeddings.');
+      if (!this.keys?.openai)
+        throw new AppError(
+          'ERR_MISSING_API_KEY',
+          'USER_ERROR',
+          'Chave de API da OpenAI não configurada para embeddings.',
+        );
 
       return await this.fetchWithRetry(async () => {
         const response = await fetch('https://api.openai.com/v1/embeddings', {
@@ -241,9 +287,17 @@ export class EmbeddingService {
         if (!response.ok) {
           const errText = await response.text();
           if (response.status === 429) {
-            throw new AppError('ERR_API_QUOTA_EXCEEDED', 'USER_ERROR', `[ERR_API_QUOTA_EXCEEDED] Limite de cota/requisições da OpenAI excedido.`);
+            throw new AppError(
+              'ERR_API_QUOTA_EXCEEDED',
+              'USER_ERROR',
+              `[ERR_API_QUOTA_EXCEEDED] Limite de cota/requisições da OpenAI excedido.`,
+            );
           }
-          throw new AppError('ERR_API_CONNECTION', 'SYSTEM_ERROR', `OpenAI embedding error: ${response.statusText} - ${errText}`);
+          throw new AppError(
+            'ERR_API_CONNECTION',
+            'SYSTEM_ERROR',
+            `OpenAI embedding error: ${response.statusText} - ${errText}`,
+          );
         }
 
         const data = await response.json();
@@ -252,7 +306,12 @@ export class EmbeddingService {
     }
 
     if (this.config.provider === 'gemini') {
-      if (!this.keys?.gemini) throw new AppError('ERR_MISSING_API_KEY', 'USER_ERROR', 'Chave de API do Gemini não configurada para embeddings.');
+      if (!this.keys?.gemini)
+        throw new AppError(
+          'ERR_MISSING_API_KEY',
+          'USER_ERROR',
+          'Chave de API do Gemini não configurada para embeddings.',
+        );
 
       let rawModel = (this.config.model_name || 'text-embedding-004').trim();
       if (rawModel.startsWith('models/')) rawModel = rawModel.replace('models/', '');
@@ -287,7 +346,10 @@ export class EmbeddingService {
                 `[ERR_API_QUOTA_EXCEEDED] Cota limite de requisições por minuto da API gratuita do Gemini excedida. Aguarde alguns segundos e tente novamente.`,
               );
             }
-            const cleanText = errText.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+            const cleanText = errText
+              .replace(/<[^>]*>?/gm, ' ')
+              .replace(/\s+/g, ' ')
+              .trim();
             throw new AppError(
               'ERR_API_CONNECTION',
               'SYSTEM_ERROR',
@@ -297,7 +359,11 @@ export class EmbeddingService {
 
           const data = await response.json();
           if (!data.embeddings || !Array.isArray(data.embeddings)) {
-            throw new AppError('ERR_INVALID_AI_RESPONSE', 'SYSTEM_ERROR', `A API do Gemini não retornou vetores em lote válidos.`);
+            throw new AppError(
+              'ERR_INVALID_AI_RESPONSE',
+              'SYSTEM_ERROR',
+              `A API do Gemini não retornou vetores em lote válidos.`,
+            );
           }
           return data.embeddings.map((item: any) => item.values as number[]);
         });

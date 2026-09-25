@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import * as xlsx from 'xlsx';
 import { ExportService } from '../ExportService';
 import { Article } from '../../../src/types';
 
@@ -332,6 +333,38 @@ describe('ExportService', () => {
       checkDoi('10.1007/s11276-020-02345-z');
       checkDoi('');
       checkDoi(undefined);
+    });
+  });
+
+  describe('category columns', () => {
+    const categories = [{ id: 7, name: 'Método' }];
+    const values = [{ article_id: 1, category_id: 7, value: 'Survey "x"' }];
+
+    it('adds one CSV column per category, quoting values and leaving missing ones empty', () => {
+      const [header, first, second] = exportService.exportToCsv(mockArticles, categories, values).split('\n');
+
+      expect(header.endsWith(',Método')).toBe(true);
+      expect(first.endsWith(',"Survey ""x"""')).toBe(true);
+      expect(second.endsWith(',""')).toBe(true);
+    });
+
+    it('writes an XLSX sheet "Artigos" with the same columns', () => {
+      const buffer = exportService.exportToXlsx(mockArticles, categories, values);
+
+      const workbook = xlsx.read(buffer, { type: 'buffer' });
+      const rows = xlsx.utils.sheet_to_json<unknown[]>(workbook.Sheets['Artigos'], { header: 1 });
+      expect(rows[0]).toEqual(['id', 'doi', 'title', 'authors', 'year', 'source', 'status', 'Método']);
+      expect(rows[1]).toEqual([
+        1,
+        'https://doi.org/10.1000/xyz123',
+        'A Beautiful Paper on AI',
+        'Doe, John; Smith, Jane J.; Silva AB',
+        2024,
+        'OpenAlex',
+        'new',
+        'Survey "x"',
+      ]);
+      expect(rows[2][7]).toBe('');
     });
   });
 });

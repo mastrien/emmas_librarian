@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, Copy, Edit2, Check, X } from 'lucide-react';
-import { projectService } from '../../services/api';
+import { useProjectService } from '../../contexts/ServicesContext';
 import type { QuestionSet } from '../../types';
 
 interface QuestionSetCatalogProps {
@@ -18,6 +18,7 @@ export default function QuestionSetCatalog({
   isCreatingExternal,
   onCancelCreateExternal,
 }: QuestionSetCatalogProps) {
+  const projectService = useProjectService();
   const [sets, setSets] = useState<QuestionSet[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -250,7 +251,9 @@ export default function QuestionSetCatalog({
             try {
               const parsed = JSON.parse(set.questions);
               if (Array.isArray(parsed)) qCount = parsed.length;
-            } catch {}
+            } catch {
+              // A malformed questions column counts as zero questions.
+            }
 
             if (isEditingThis) {
               return (

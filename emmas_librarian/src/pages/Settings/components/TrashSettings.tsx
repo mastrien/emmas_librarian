@@ -17,14 +17,12 @@ export const TrashSettings: React.FC<TrashSettingsProps> = ({
 }) => {
   return (
     <div className="card" style={{ padding: '2rem' }}>
-      <h2
-        style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
-      >
+      <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <Trash2 size={24} color="var(--color-danger)" /> Lixeira (Trash Bin)
       </h2>
       <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-        Itens excluídos permanecem aqui e podem ser recuperados. Excluir permanentemente removerá os dados e os
-        arquivos PDF do disco.
+        Itens excluídos permanecem aqui e podem ser recuperados. Excluir permanentemente removerá os dados e os arquivos
+        PDF do disco.
       </p>
 
       {trashItems.length === 0 ? (
@@ -95,8 +93,7 @@ export const TrashSettings: React.FC<TrashSettingsProps> = ({
                             : item.type === 'article'
                               ? 'rgba(16, 185, 129, 0.1)'
                               : 'rgba(245, 158, 11, 0.1)',
-                        color:
-                          item.type === 'project' ? '#3b82f6' : item.type === 'article' ? '#10b981' : '#f59e0b',
+                        color: item.type === 'project' ? '#3b82f6' : item.type === 'article' ? '#10b981' : '#f59e0b',
                       }}
                     >
                       {item.type === 'project' ? 'Projeto' : item.type === 'article' ? 'Artigo' : 'Anotação'}

@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { PdfLoader, PdfHighlighter, Highlight, Popup, AreaHighlight } from 'react-pdf-highlighter';
+import { useParams } from 'react-router-dom';
 
 import 'react-pdf-highlighter/dist/style/AreaHighlight.css';
 import 'react-pdf-highlighter/dist/style/Highlight.css';
@@ -9,14 +7,14 @@ import 'react-pdf-highlighter/dist/style/MouseSelection.css';
 import 'react-pdf-highlighter/dist/style/PdfHighlighter.css';
 import 'react-pdf-highlighter/dist/style/Tip.css';
 import 'react-pdf-highlighter/dist/style/pdf_viewer.css';
-// @ts-ignore
+// @ts-expect-error -- pdfjs-dist ships no type declarations for the build/pdf entry point
 import * as pdfjs from 'pdfjs-dist/build/pdf';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 pdfjs.GlobalWorkerOptions.standardFontDataUrl = 'https://unpkg.com/pdfjs-dist@4.10.38/standard_fonts/';
 
-import { projectService } from '../services/api';
+import { useProjectService } from '../contexts/ServicesContext';
 import { PdfPlaceholderView } from '../components/reader/PdfPlaceholderView';
 
 import { useArticleData } from './ArticleReader/hooks/useArticleData';
@@ -29,8 +27,8 @@ import { ArticleReaderModals } from './ArticleReader/components/ArticleReaderMod
 import { ArticleReaderPdfView } from './ArticleReader/components/ArticleReaderPdfView';
 
 export const ArticleReaderPage: React.FC = () => {
+  const projectService = useProjectService();
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
 
   // Toolbars and Modals State
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
@@ -70,7 +68,6 @@ export const ArticleReaderPage: React.FC = () => {
     setEditingId,
     editContent,
     setEditContent,
-    anchoringStatus,
     setAnchoringStatus,
     addHighlight,
     handleCreateStandaloneAnnotation,
@@ -88,8 +85,6 @@ export const ArticleReaderPage: React.FC = () => {
     pdfUrl,
     projectCategories,
     articleCategories,
-    writingPadContent,
-    setWritingPadContent,
     aiSummary,
     setAiSummary,
     hasAiKey,
@@ -97,10 +92,10 @@ export const ArticleReaderPage: React.FC = () => {
     fetchCategories,
     handleFileUpload,
     handleUnlinkClick,
-  } = useArticleData(id, setHighlights as any, setStandaloneAnnotations, setAnchoringStatus);
+  } = useArticleData(id, setHighlights, setStandaloneAnnotations, setAnchoringStatus);
 
   const { scale, handleZoom } = usePdfZoom(highlighterRef);
-  const { searchQuery, setSearchQuery, searchResults, isSearching } = usePdfSearch(
+  const { searchQuery, setSearchQuery, searchResults, isSearching, handleSearch } = usePdfSearch(
     sidebarTab,
     highlighterRef,
     setCurrentPage,
@@ -192,16 +187,6 @@ export const ArticleReaderPage: React.FC = () => {
     }
   };
 
-  const handlePadChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value;
-    setWritingPadContent(val);
-    if (article?.project_id) {
-      projectService.updateProjectWritingPad(article.project_id, val).catch((error) => {
-        console.error('Erro ao salvar rascunho:', error);
-      });
-    }
-  };
-
   const handleEditMetadataSubmit = async (data: Record<string, unknown>) => {
     if (!article) return;
     await projectService.updateArticleMetadata(article.id, data);
@@ -264,11 +249,7 @@ export const ArticleReaderPage: React.FC = () => {
 
       <div style={{ flexGrow: 1, position: 'relative', minHeight: 0 }}>
         {!hasLocalFile && article ? (
-          <PdfPlaceholderView
-            article={article}
-            uploading={uploading}
-            onFileUpload={() => setIsAttachModalOpen(true)}
-          />
+          <PdfPlaceholderView article={article} uploading={uploading} onFileUpload={() => setIsAttachModalOpen(true)} />
         ) : (
           <ArticleReaderPdfView
             pdfUrl={pdfUrl || ''}
@@ -291,6 +272,7 @@ export const ArticleReaderPage: React.FC = () => {
             setSearchQuery={setSearchQuery}
             searchResults={searchResults}
             isSearching={isSearching}
+            onSearch={handleSearch}
             aiSummary={aiSummary}
             isGeneratingAi={isGeneratingAi}
             generateSummary={generateSummary}

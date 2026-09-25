@@ -22,6 +22,19 @@ jobs:
         working-directory: ./emmas_librarian
         run: npm ci
 
+      - name: Typecheck
+        working-directory: ./emmas_librarian
+        run: npm run typecheck
+
+      - name: Unit and integration tests
+        working-directory: ./emmas_librarian
+        run: npm test
+
+      # npm test rebuilds better-sqlite3 for the Node ABI; the packaged app needs the Electron ABI.
+      - name: Rebuild native modules for Electron
+        working-directory: ./emmas_librarian
+        run: npm run rebuild:electron
+
       - name: Build and Publish
         working-directory: ./emmas_librarian
         env:

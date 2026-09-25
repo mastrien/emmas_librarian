@@ -11,13 +11,24 @@ import {
   type InvestigationResult,
   type QueryASTNode,
   type DatabaseTranslationMap,
-  ProjectCategory,
-  ArticleCategory,
+  type SearchHistoryItem,
   AIModelConfig,
   AISkill,
   AIProvider,
 } from '../types';
 import { parseIpcError } from '../utils/AppError';
+import type { IProjectService } from './ProjectServiceInterface';
+
+// Highlights are stored with a numeric id and JSON-encoded position; the UI works with string ids and objects.
+interface HighlightRow {
+  id: number;
+  article_id: number;
+  color: string;
+  position_data: string;
+  content_text: string | null;
+  annotation_id: number | null;
+  comment?: string;
+}
 
 async function safeInvoke<TResponse = unknown>(channel: IpcChannel, ...args: unknown[]): Promise<TResponse> {
   try {
@@ -27,38 +38,28 @@ async function safeInvoke<TResponse = unknown>(channel: IpcChannel, ...args: unk
   }
 }
 
-export const projectService = {
-  async getProjects(): Promise<Project[]> {
-    return safeInvoke<Project[]>(IpcChannel.PROJECTS_GET_ALL);
-  },
+export const projectService: IProjectService = {
+  getProjects: (): Promise<Project[]> => safeInvoke<Project[]>(IpcChannel.PROJECTS_GET_ALL),
 
-  async createProject(name: string): Promise<Project> {
-    return safeInvoke<Project>(IpcChannel.PROJECTS_CREATE, name);
-  },
+  createProject: (name: string): Promise<Project> => safeInvoke<Project>(IpcChannel.PROJECTS_CREATE, name),
 
-  async getProject(projectId: number): Promise<Project> {
-    return safeInvoke<Project>(IpcChannel.PROJECTS_GET_ONE, projectId);
-  },
+  getProject: (projectId: number): Promise<Project> => safeInvoke<Project>(IpcChannel.PROJECTS_GET_ONE, projectId),
 
   async updateProject(id: number, name: string): Promise<void> {
     await safeInvoke(IpcChannel.PROJECTS_UPDATE, id, name);
   },
 
-  async getProjectWritingPad(id: number): Promise<string | null> {
-    return (await safeInvoke(IpcChannel.PROJECTS_GET_WRITING_PAD, id)) as any;
-  },
+  getProjectWritingPad: (id: number): Promise<string | null> => safeInvoke(IpcChannel.PROJECTS_GET_WRITING_PAD, id),
 
-  async updateProjectWritingPad(id: number, content: string): Promise<void> {
-    return (await safeInvoke(IpcChannel.PROJECTS_UPDATE_WRITING_PAD, id, content)) as any;
-  },
+  updateProjectWritingPad: (id: number, content: string): Promise<void> =>
+    safeInvoke(IpcChannel.PROJECTS_UPDATE_WRITING_PAD, id, content),
 
   async deleteProject(id: number): Promise<void> {
     await safeInvoke(IpcChannel.PROJECTS_DELETE, id);
   },
 
-  async getSearchHistory(projectId: number): Promise<unknown[]> {
-    return (await safeInvoke(IpcChannel.PROJECTS_GET_SEARCH_HISTORY, projectId)) as any;
-  },
+  getSearchHistory: (projectId: number): Promise<SearchHistoryItem[]> =>
+    safeInvoke(IpcChannel.PROJECTS_GET_SEARCH_HISTORY, projectId),
 
   async revertSearch(searchId: number): Promise<void> {
     await safeInvoke(IpcChannel.SEARCH_REVERT, searchId);
@@ -71,32 +72,22 @@ export const projectService = {
     sortBy: string,
     unifiedQuery: string,
   ): Promise<{ savedCount: number; breakdown: Record<string, { count: number; error?: string }> }> {
-    return (await safeInvoke(IpcChannel.SEARCH_EXECUTE, projectId, queryMap, limit, sortBy, unifiedQuery)) as any;
+    return safeInvoke(IpcChannel.SEARCH_EXECUTE, projectId, queryMap, limit, sortBy, unifiedQuery);
   },
 
-  async translateQuery(ast: QueryASTNode): Promise<DatabaseTranslationMap> {
-    return (await safeInvoke(IpcChannel.SEARCH_TRANSLATE_QUERY, ast)) as any;
-  },
+  translateQuery: (ast: QueryASTNode): Promise<DatabaseTranslationMap> =>
+    safeInvoke(IpcChannel.SEARCH_TRANSLATE_QUERY, ast),
 
-  async getArticles(projectId: number): Promise<Article[]> {
-    return (await safeInvoke(IpcChannel.ARTICLES_GET_BY_PROJECT, projectId)) as any;
-  },
+  getArticles: (projectId: number): Promise<Article[]> => safeInvoke(IpcChannel.ARTICLES_GET_BY_PROJECT, projectId),
 
-  async exportCsv(projectId: number): Promise<string | null> {
-    return (await safeInvoke(IpcChannel.EXPORT_CSV, projectId)) as any;
-  },
+  exportCsv: (projectId: number): Promise<string | null> => safeInvoke(IpcChannel.EXPORT_CSV, projectId),
 
-  async exportXlsx(projectId: number): Promise<string | null> {
-    return (await safeInvoke(IpcChannel.EXPORT_XLSX, projectId)) as any;
-  },
+  exportXlsx: (projectId: number): Promise<string | null> => safeInvoke(IpcChannel.EXPORT_XLSX, projectId),
 
-  async exportBiblioshiny(projectId: number): Promise<string | null> {
-    return (await safeInvoke(IpcChannel.EXPORT_BIBLIOSHINY, projectId)) as any;
-  },
+  exportBiblioshiny: (projectId: number): Promise<string | null> =>
+    safeInvoke(IpcChannel.EXPORT_BIBLIOSHINY, projectId),
 
-  async getArticle(articleId: number): Promise<Article> {
-    return (await safeInvoke(IpcChannel.ARTICLES_GET_ONE, articleId)) as any;
-  },
+  getArticle: (articleId: number): Promise<Article> => safeInvoke(IpcChannel.ARTICLES_GET_ONE, articleId),
 
   async updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', note?: string): Promise<void> {
     await safeInvoke(IpcChannel.ARTICLES_UPDATE_STATUS, articleId, status, note);
@@ -107,8 +98,8 @@ export const projectService = {
   },
 
   async getHighlights(articleId: number): Promise<Highlight[]> {
-    const dbHighlights = await safeInvoke(IpcChannel.HIGHLIGHTS_GET, articleId);
-    return (dbHighlights as unknown as any[]).map((h: any) => ({
+    const rows = await safeInvoke<HighlightRow[]>(IpcChannel.HIGHLIGHTS_GET, articleId);
+    return rows.map((h) => ({
       id: String(h.id),
       article_id: h.article_id,
       color: h.color,
@@ -138,9 +129,8 @@ export const projectService = {
     return { id, annotation_id: annotationContent ? -1 : null };
   },
 
-  async getAnnotations(articleId: number): Promise<Annotation[]> {
-    return safeInvoke<Annotation[]>(IpcChannel.ANNOTATIONS_GET, articleId);
-  },
+  getAnnotations: (articleId: number): Promise<Annotation[]> =>
+    safeInvoke<Annotation[]>(IpcChannel.ANNOTATIONS_GET, articleId),
 
   async createAnnotation(articleId: number, content: string): Promise<{ id: number }> {
     const id = await safeInvoke<number>(IpcChannel.ANNOTATIONS_CREATE, articleId, content);
@@ -159,17 +149,13 @@ export const projectService = {
     await safeInvoke(IpcChannel.HIGHLIGHTS_DELETE, id);
   },
 
-  async getSetting(key: string): Promise<string | null> {
-    return (await safeInvoke(IpcChannel.SETTINGS_GET, key)) as any;
-  },
+  getSetting: (key: string): Promise<string | null> => safeInvoke(IpcChannel.SETTINGS_GET, key),
 
   async setSetting(key: string, value: string): Promise<void> {
     await safeInvoke(IpcChannel.SETTINGS_SET, key, value);
   },
 
-  async getAiModelConfigs(): Promise<AIModelConfig[]> {
-    return (await safeInvoke(IpcChannel.AI_MODEL_CONFIG_GET_ALL)) as any;
-  },
+  getAiModelConfigs: (): Promise<AIModelConfig[]> => safeInvoke(IpcChannel.AI_MODEL_CONFIG_GET_ALL),
 
   async updateAiModelConfig(skill: AISkill, provider: AIProvider, modelName: string): Promise<void> {
     await safeInvoke(IpcChannel.AI_MODEL_CONFIG_UPDATE, skill, provider, modelName);
@@ -179,57 +165,40 @@ export const projectService = {
     await safeInvoke(IpcChannel.AI_MODEL_CONFIG_RESTORE);
   },
 
-  async openPdfDialog(): Promise<string | null> {
-    return (await safeInvoke(IpcChannel.DIALOG_OPEN_FILE)) as any;
-  },
+  openPdfDialog: (): Promise<string | null> => safeInvoke(IpcChannel.DIALOG_OPEN_FILE),
 
-  async openMultiplePdfsDialog(): Promise<string[]> {
-    return (await safeInvoke(IpcChannel.DIALOG_OPEN_MULTIPLE_FILES)) as any;
-  },
+  openMultiplePdfsDialog: (): Promise<string[]> => safeInvoke(IpcChannel.DIALOG_OPEN_MULTIPLE_FILES),
 
-  async saveExportedFile(content: string, defaultPath: string): Promise<boolean> {
-    return (await safeInvoke(IpcChannel.DIALOG_SAVE_FILE, content, defaultPath)) as any;
-  },
+  saveExportedFile: (content: string, defaultPath: string): Promise<boolean> =>
+    safeInvoke(IpcChannel.DIALOG_SAVE_FILE, content, defaultPath),
 
-  async uploadPdf(articleId: number, filePath: string): Promise<string> {
-    return (await safeInvoke(IpcChannel.PDF_UPLOAD, articleId, filePath)) as any;
-  },
+  uploadPdf: (articleId: number, filePath: string): Promise<string> =>
+    safeInvoke(IpcChannel.PDF_UPLOAD, articleId, filePath),
 
   async unlinkPdf(articleId: number): Promise<void> {
     await safeInvoke(IpcChannel.PDF_UNLINK, articleId);
   },
 
-  async createManualArticle(projectId: number, data: Partial<Article>, sourceFilePath?: string): Promise<number> {
-    return (await safeInvoke(IpcChannel.ARTICLES_CREATE_MANUAL, projectId, data, sourceFilePath)) as any;
-  },
+  createManualArticle: (projectId: number, data: Partial<Article>, sourceFilePath?: string): Promise<number> =>
+    safeInvoke(IpcChannel.ARTICLES_CREATE_MANUAL, projectId, data, sourceFilePath),
 
-  async createArticlesFromPdfs(projectId: number, filePaths: string[]): Promise<number> {
-    return (await safeInvoke(IpcChannel.ARTICLES_CREATE_FROM_PDFS, projectId, filePaths)) as any;
-  },
+  createArticlesFromPdfs: (projectId: number, filePaths: string[]): Promise<number> =>
+    safeInvoke(IpcChannel.ARTICLES_CREATE_FROM_PDFS, projectId, filePaths),
 
-  async getPdfBuffer(articleId: number): Promise<ArrayBuffer> {
-    return (await safeInvoke(IpcChannel.PDF_GET, articleId)) as any;
-  },
+  getPdfBuffer: (articleId: number): Promise<ArrayBuffer> => safeInvoke(IpcChannel.PDF_GET, articleId),
 
-  async getStoredPdfs(): Promise<any[]> {
-    return (await safeInvoke(IpcChannel.PDF_LIBRARY_LIST)) as any;
-  },
+  getStoredPdfs: () => safeInvoke(IpcChannel.PDF_LIBRARY_LIST),
 
-  async deletePdfLibraryRecord(filePath: string): Promise<number[]> {
-    return (await safeInvoke(IpcChannel.PDF_LIBRARY_DELETE, filePath)) as any;
-  },
+  deletePdfLibraryRecord: (filePath: string): Promise<number[]> => safeInvoke(IpcChannel.PDF_LIBRARY_DELETE, filePath),
 
   async linkPdfToArticle(articleId: number, filePath: string): Promise<void> {
     await safeInvoke(IpcChannel.PDF_LIBRARY_LINK, articleId, filePath);
   },
 
-  async uploadPdfToLibrary(filePath: string): Promise<string> {
-    return (await safeInvoke(IpcChannel.PDF_LIBRARY_UPLOAD, filePath)) as any;
-  },
+  uploadPdfToLibrary: (filePath: string): Promise<string> => safeInvoke(IpcChannel.PDF_LIBRARY_UPLOAD, filePath),
 
-  async importArticlesFromProject(sourceProjectId: number, destProjectId: number, articleIds: number[]): Promise<number> {
-    return (await safeInvoke(IpcChannel.ARTICLES_IMPORT_FROM_PROJECT, sourceProjectId, destProjectId, articleIds)) as any;
-  },
+  importArticlesFromProject: (sourceProjectId: number, destProjectId: number, articleIds: number[]): Promise<number> =>
+    safeInvoke(IpcChannel.ARTICLES_IMPORT_FROM_PROJECT, sourceProjectId, destProjectId, articleIds),
 
   // Project Documents
   async openProjectDocument(url?: string, localFilePath?: string): Promise<void> {
@@ -237,13 +206,10 @@ export const projectService = {
   },
 
   // Diary
-  async getDiaryEntries(projectId: number): Promise<unknown[]> {
-    return (await safeInvoke(IpcChannel.DIARY_GET_ALL, projectId)) as any;
-  },
+  getDiaryEntries: (projectId: number): Promise<unknown[]> => safeInvoke(IpcChannel.DIARY_GET_ALL, projectId),
 
-  async getDiaryEntry(projectId: number, entryDate: string): Promise<DiaryEntry | null> {
-    return (await safeInvoke(IpcChannel.DIARY_GET_ONE, projectId, entryDate)) as any;
-  },
+  getDiaryEntry: (projectId: number, entryDate: string): Promise<DiaryEntry | null> =>
+    safeInvoke(IpcChannel.DIARY_GET_ONE, projectId, entryDate),
 
   async saveDiaryEntry(projectId: number, entryDate: string, content: string): Promise<void> {
     await safeInvoke(IpcChannel.DIARY_SAVE, projectId, entryDate, content);
@@ -253,9 +219,7 @@ export const projectService = {
     await safeInvoke(IpcChannel.DIARY_DELETE, projectId, entryDate);
   },
 
-  async getTrashItems(): Promise<any[]> {
-    return (await safeInvoke(IpcChannel.TRASH_GET_ITEMS)) as any;
-  },
+  getTrashItems: () => safeInvoke(IpcChannel.TRASH_GET_ITEMS),
 
   async restoreTrashItem(type: 'project' | 'article' | 'annotation', id: number): Promise<void> {
     await safeInvoke(IpcChannel.TRASH_RESTORE_ITEM, type, id);
@@ -269,48 +233,37 @@ export const projectService = {
     await safeInvoke(IpcChannel.TRASH_EMPTY);
   },
 
-  async getDiaryEntryHistory(projectId: number, entryDate: string): Promise<any[]> {
-    return (await safeInvoke(IpcChannel.DIARY_GET_HISTORY, projectId, entryDate)) as any;
-  },
+  getDiaryEntryHistory: (projectId: number, entryDate: string) =>
+    safeInvoke(IpcChannel.DIARY_GET_HISTORY, projectId, entryDate),
 
   async restoreDiaryEntryVersion(versionId: number): Promise<void> {
     await safeInvoke(IpcChannel.DIARY_RESTORE_VERSION, versionId);
   },
 
-  async exportBackup(): Promise<string | null> {
-    return (await safeInvoke(IpcChannel.BACKUP_EXPORT)) as any;
-  },
+  exportBackup: (): Promise<string | null> => safeInvoke(IpcChannel.BACKUP_EXPORT),
 
-  async restoreBackupOverride(): Promise<boolean> {
-    return (await safeInvoke(IpcChannel.BACKUP_RESTORE_OVERRIDE)) as any;
-  },
+  restoreBackupOverride: (): Promise<boolean> => safeInvoke(IpcChannel.BACKUP_RESTORE_OVERRIDE),
 
-  async restoreBackupMerge(): Promise<number> {
-    return (await safeInvoke(IpcChannel.BACKUP_RESTORE_MERGE)) as any;
-  },
+  restoreBackupMerge: (): Promise<number> => safeInvoke(IpcChannel.BACKUP_RESTORE_MERGE),
 
   async listAutoBackups(): Promise<{ filename: string; date: string; sizeBytes: number }[]> {
-    return (await safeInvoke(IpcChannel.BACKUP_LIST_AUTO)) as any;
+    return safeInvoke(IpcChannel.BACKUP_LIST_AUTO);
   },
 
-  async restoreAutoBackup(filename: string): Promise<boolean> {
-    return (await safeInvoke(IpcChannel.BACKUP_RESTORE_AUTO, filename)) as any;
-  },
+  restoreAutoBackup: (filename: string): Promise<boolean> => safeInvoke(IpcChannel.BACKUP_RESTORE_AUTO, filename),
 
-  async getAppVersion(): Promise<string> {
-    return (await safeInvoke(IpcChannel.APP_GET_VERSION)) as any;
-  },
+  getAppVersion: (): Promise<string> => safeInvoke(IpcChannel.APP_GET_VERSION),
 
   // AI
   async generateSummary(articleId: number): Promise<{ generalSummary: string; sectionSummary: string }> {
-    return (await safeInvoke(IpcChannel.AI_GENERATE_SUMMARY, articleId)) as any;
+    return safeInvoke(IpcChannel.AI_GENERATE_SUMMARY, articleId);
   },
 
   async massiveExtraction(
     articleId: number,
     questions: string[],
   ): Promise<Array<{ question: string; answer: string; quote: string | null }>> {
-    return (await safeInvoke(IpcChannel.AI_MASSIVE_EXTRACTION, articleId, questions)) as any;
+    return safeInvoke(IpcChannel.AI_MASSIVE_EXTRACTION, articleId, questions);
   },
 
   async extractMetadata(articleId: number): Promise<{
@@ -326,21 +279,19 @@ export const projectService = {
     issue?: string;
     pages?: string;
   }> {
-    return (await safeInvoke(IpcChannel.AI_EXTRACT_METADATA, articleId)) as any;
+    return safeInvoke(IpcChannel.AI_EXTRACT_METADATA, articleId);
   },
 
-  async getPendingHighlights(articleId: number): Promise<PendingHighlight[]> {
-    return (await safeInvoke(IpcChannel.PENDING_HIGHLIGHTS_GET, articleId)) as any;
-  },
+  getPendingHighlights: (articleId: number): Promise<PendingHighlight[]> =>
+    safeInvoke(IpcChannel.PENDING_HIGHLIGHTS_GET, articleId),
 
   async deletePendingHighlight(id: number): Promise<void> {
     await safeInvoke(IpcChannel.PENDING_HIGHLIGHTS_DELETE, id);
   },
 
   // Project Documents
-  async getProjectDocuments(projectId: number): Promise<ProjectDocument[]> {
-    return (await safeInvoke(IpcChannel.PROJECT_DOCUMENTS_GET, projectId)) as any;
-  },
+  getProjectDocuments: (projectId: number): Promise<ProjectDocument[]> =>
+    safeInvoke(IpcChannel.PROJECT_DOCUMENTS_GET, projectId),
 
   async createProjectDocument(
     projectId: number,
@@ -349,14 +300,14 @@ export const projectService = {
     sourceFilePath?: string,
     category?: string,
   ): Promise<number> {
-    return (await safeInvoke(
+    return safeInvoke(
       IpcChannel.PROJECT_DOCUMENTS_CREATE,
       projectId,
       title,
       url ?? null,
       sourceFilePath ?? null,
       category ?? null,
-    )) as any;
+    );
   },
 
   async updateProjectDocument(
@@ -367,7 +318,14 @@ export const projectService = {
     category?: string,
   ): Promise<void> {
     // Electron IPC drops trailing undefined args — use null to keep arg positions
-    await safeInvoke(IpcChannel.PROJECT_DOCUMENTS_UPDATE, id, title, url ?? null, sourceFilePath ?? null, category ?? null);
+    await safeInvoke(
+      IpcChannel.PROJECT_DOCUMENTS_UPDATE,
+      id,
+      title,
+      url ?? null,
+      sourceFilePath ?? null,
+      category ?? null,
+    );
   },
 
   async reorderProjectDocuments(projectId: number, orderedIds: number[]): Promise<void> {
@@ -383,9 +341,8 @@ export const projectService = {
   },
 
   // Massive Investigations
-  async getMassiveInvestigations(projectId: number): Promise<MassiveInvestigation[]> {
-    return (await safeInvoke(IpcChannel.MASSIVE_INVESTIGATIONS_GET, projectId)) as any;
-  },
+  getMassiveInvestigations: (projectId: number): Promise<MassiveInvestigation[]> =>
+    safeInvoke(IpcChannel.MASSIVE_INVESTIGATIONS_GET, projectId),
 
   async saveMassiveInvestigation(
     projectId: number,
@@ -394,14 +351,7 @@ export const projectService = {
     modelUsed: string,
     status: string,
   ): Promise<number> {
-    return (await safeInvoke(
-      IpcChannel.MASSIVE_INVESTIGATIONS_SAVE,
-      projectId,
-      questions,
-      articlesIds,
-      modelUsed,
-      status,
-    )) as any;
+    return safeInvoke(IpcChannel.MASSIVE_INVESTIGATIONS_SAVE, projectId, questions, articlesIds, modelUsed, status);
   },
 
   // Investigation Results
@@ -418,27 +368,19 @@ export const projectService = {
   ): Promise<void> {
     await safeInvoke(IpcChannel.INVESTIGATION_RESULTS_SAVE, investigationId, articleId, results);
   },
-  async getInvestigationResults(investigationId: number): Promise<InvestigationResult[]> {
-    return (await safeInvoke(IpcChannel.INVESTIGATION_RESULTS_GET, investigationId)) as InvestigationResult[];
-  },
+  getInvestigationResults: (investigationId: number): Promise<InvestigationResult[]> =>
+    safeInvoke(IpcChannel.INVESTIGATION_RESULTS_GET, investigationId),
   async getInvestigationResultsByArticle(investigationId: number, articleId: number): Promise<InvestigationResult[]> {
-    return (await safeInvoke(
-      IpcChannel.INVESTIGATION_RESULTS_GET_BY_ARTICLE,
-      investigationId,
-      articleId,
-    )) as InvestigationResult[];
+    return safeInvoke(IpcChannel.INVESTIGATION_RESULTS_GET_BY_ARTICLE, investigationId, articleId);
   },
 
   // Categories
-  async getProjectCategories(projectId: number): Promise<any[]> {
-    return (await safeInvoke(IpcChannel.CATEGORIES_GET_PROJECT, projectId)) as any;
-  },
+  getProjectCategories: (projectId: number) => safeInvoke(IpcChannel.CATEGORIES_GET_PROJECT, projectId),
 
-  async createProjectCategory(projectId: number, name: string, type: string, options?: any): Promise<number> {
-    return (await safeInvoke(IpcChannel.CATEGORIES_CREATE_PROJECT, projectId, name, type, options)) as any;
-  },
+  createProjectCategory: (projectId: number, name: string, type: string, options?): Promise<number> =>
+    safeInvoke(IpcChannel.CATEGORIES_CREATE_PROJECT, projectId, name, type, options),
 
-  async updateProjectCategory(categoryId: number, name: string, type: string, options?: any): Promise<void> {
+  async updateProjectCategory(categoryId: number, name: string, type: string, options?): Promise<void> {
     await safeInvoke(IpcChannel.CATEGORIES_UPDATE_PROJECT, categoryId, name, type, options);
   },
 
@@ -446,65 +388,40 @@ export const projectService = {
     await safeInvoke(IpcChannel.CATEGORIES_DELETE_PROJECT, categoryId);
   },
 
-  async getArticleCategories(articleId: number): Promise<any[]> {
-    return (await safeInvoke(IpcChannel.CATEGORIES_GET_ARTICLE, articleId)) as any;
-  },
+  getArticleCategories: (articleId: number) => safeInvoke(IpcChannel.CATEGORIES_GET_ARTICLE, articleId),
 
   async setArticleCategory(articleId: number, categoryId: number, value: string | null): Promise<void> {
     await safeInvoke(IpcChannel.CATEGORIES_SET_ARTICLE, articleId, categoryId, value);
   },
 
-  async getAllProjectArticleCategories(projectId: number): Promise<any[]> {
-    return (await safeInvoke(IpcChannel.CATEGORIES_GET_ALL_PROJECT_ARTICLE, projectId)) as any;
-  },
+  getAllProjectArticleCategories: (projectId: number) =>
+    safeInvoke(IpcChannel.CATEGORIES_GET_ALL_PROJECT_ARTICLE, projectId),
 
   // Question Sets
-  async getQuestionSets(projectId: number | null): Promise<any[]> {
-    return (await safeInvoke(IpcChannel.QUESTION_SETS_LIST, projectId === undefined ? null : projectId)) as any;
-  },
-  async getQuestionSet(id: number): Promise<any> {
-    return (await safeInvoke(IpcChannel.QUESTION_SETS_GET, id)) as any;
-  },
-  async createQuestionSet(data: any): Promise<any> {
-    return (await safeInvoke(IpcChannel.QUESTION_SETS_CREATE, data)) as any;
-  },
-  async updateQuestionSet(id: number, data: any): Promise<void> {
+  getQuestionSets: (projectId: number | null) =>
+    safeInvoke(IpcChannel.QUESTION_SETS_LIST, projectId === undefined ? null : projectId),
+  getQuestionSet: (id: number) => safeInvoke(IpcChannel.QUESTION_SETS_GET, id),
+  createQuestionSet: (data) => safeInvoke(IpcChannel.QUESTION_SETS_CREATE, data),
+  async updateQuestionSet(id: number, data): Promise<void> {
     await safeInvoke(IpcChannel.QUESTION_SETS_UPDATE, id, data);
   },
   async deleteQuestionSet(id: number): Promise<void> {
     await safeInvoke(IpcChannel.QUESTION_SETS_DELETE, id);
   },
   async duplicateQuestionSet(id: number, projectId: number | null): Promise<number> {
-    return (await safeInvoke(
-      IpcChannel.QUESTION_SETS_DUPLICATE,
-      id,
-      projectId === undefined ? null : projectId,
-    )) as any;
+    return safeInvoke(IpcChannel.QUESTION_SETS_DUPLICATE, id, projectId === undefined ? null : projectId);
   },
 
   // Sync
-  async exportProject(projectId: number): Promise<string | null> {
-    return (await safeInvoke(IpcChannel.SYNC_EXPORT_PROJECT, projectId)) as any;
-  },
+  exportProject: (projectId: number): Promise<string | null> => safeInvoke(IpcChannel.SYNC_EXPORT_PROJECT, projectId),
 
-  async importProject(filePath?: string): Promise<number | null> {
-    return (await safeInvoke(IpcChannel.SYNC_IMPORT_PROJECT, filePath)) as any;
-  },
+  importProject: (filePath?: string): Promise<number | null> => safeInvoke(IpcChannel.SYNC_IMPORT_PROJECT, filePath),
 
   // Agenda / Scientific Venues
-  async getScientificVenues(): Promise<any[]> {
-    return (await safeInvoke(IpcChannel.SCIENTIFIC_VENUES_GET_ALL)) as any[];
-  },
-  async createScientificVenue(venueData: any): Promise<any> {
-    return (await safeInvoke(IpcChannel.SCIENTIFIC_VENUE_CREATE, venueData)) as any;
-  },
-  async updateScientificVenue(id: number, venueData: any): Promise<any> {
-    return (await safeInvoke(IpcChannel.SCIENTIFIC_VENUE_UPDATE, { id, venueData })) as any;
-  },
-  async deleteScientificVenue(id: number): Promise<boolean> {
-    return (await safeInvoke(IpcChannel.SCIENTIFIC_VENUE_DELETE, id)) as boolean;
-  },
-  async toggleMilestoneStatus(milestoneId: number, status: any): Promise<boolean> {
-    return (await safeInvoke(IpcChannel.SCIENTIFIC_MILESTONE_TOGGLE_STATUS, { milestoneId, status })) as boolean;
-  },
+  getScientificVenues: () => safeInvoke(IpcChannel.SCIENTIFIC_VENUES_GET_ALL),
+  createScientificVenue: (venueData) => safeInvoke(IpcChannel.SCIENTIFIC_VENUE_CREATE, venueData),
+  updateScientificVenue: (id: number, venueData) => safeInvoke(IpcChannel.SCIENTIFIC_VENUE_UPDATE, { id, venueData }),
+  deleteScientificVenue: (id: number): Promise<boolean> => safeInvoke(IpcChannel.SCIENTIFIC_VENUE_DELETE, id),
+  toggleMilestoneStatus: (milestoneId: number, status): Promise<boolean> =>
+    safeInvoke(IpcChannel.SCIENTIFIC_MILESTONE_TOGGLE_STATUS, { milestoneId, status }),
 };

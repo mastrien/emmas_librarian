@@ -1,50 +1,122 @@
-import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectModalsContainer } from '../components/ProjectModalsContainer';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock all modals
 vi.mock('../../../components/modals/ArchiveModal', () => ({
-  ArchiveModal: ({ isOpen, onClose, onSubmit }: any) => isOpen ? <div data-testid="ArchiveModal"><button onClick={() => onSubmit('note')}>Submit Archive</button><button onClick={onClose}>Close Archive</button></div> : null
+  ArchiveModal: ({ isOpen, onClose, onSubmit }: any) =>
+    isOpen ? (
+      <div data-testid="ArchiveModal">
+        <button onClick={() => onSubmit('note')}>Submit Archive</button>
+        <button onClick={onClose}>Close Archive</button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../../components/modals/ProjectCategoriesModal', () => ({
-  ProjectCategoriesModal: ({ isOpen, onClose }: any) => isOpen ? <div data-testid="ProjectCategoriesModal"><button onClick={onClose}>Close Categories</button></div> : null
+  ProjectCategoriesModal: ({ isOpen, onClose }: any) =>
+    isOpen ? (
+      <div data-testid="ProjectCategoriesModal">
+        <button onClick={onClose}>Close Categories</button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../../components/modals/EditArticleModal', () => ({
-  EditArticleModal: ({ isOpen, onClose, onSubmit }: any) => isOpen ? <div data-testid="EditArticleModal"><button onClick={() => onSubmit({})}>Submit Edit</button><button onClick={onClose}>Close Edit</button></div> : null
+  EditArticleModal: ({ isOpen, onClose, onSubmit }: any) =>
+    isOpen ? (
+      <div data-testid="EditArticleModal">
+        <button onClick={() => onSubmit({})}>Submit Edit</button>
+        <button onClick={onClose}>Close Edit</button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../../components/modals/ManualArticleModal', () => ({
-  ManualArticleModal: ({ isOpen, onClose, onSubmit }: any) => isOpen ? <div data-testid="ManualArticleModal"><button onClick={() => onSubmit({})}>Submit Manual</button><button onClick={onClose}>Close Manual</button></div> : null
+  ManualArticleModal: ({ isOpen, onClose, onSubmit }: any) =>
+    isOpen ? (
+      <div data-testid="ManualArticleModal">
+        <button onClick={() => onSubmit({})}>Submit Manual</button>
+        <button onClick={onClose}>Close Manual</button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../../components/modals/SearchHistoryModal', () => ({
-  SearchHistoryModal: ({ isOpen, onClose, onRevertSearch }: any) => isOpen ? <div data-testid="SearchHistoryModal"><button onClick={() => onRevertSearch(1)}>Revert Search</button><button onClick={onClose}>Close History</button></div> : null
+  SearchHistoryModal: ({ isOpen, onClose, onRevertSearch }: any) =>
+    isOpen ? (
+      <div data-testid="SearchHistoryModal">
+        <button onClick={() => onRevertSearch(1)}>Revert Search</button>
+        <button onClick={onClose}>Close History</button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../../components/modals/AIExtractionModal', () => ({
-  AIExtractionModal: ({ isOpen, onClose, handleMassiveExtraction }: any) => isOpen ? <div data-testid="AIExtractionModal"><button onClick={() => handleMassiveExtraction([1])}>Mass Extract</button><button onClick={onClose}>Close AI</button></div> : null
+  AIExtractionModal: ({ isOpen, onClose, handleMassiveExtraction }: any) =>
+    isOpen ? (
+      <div data-testid="AIExtractionModal">
+        <button onClick={() => handleMassiveExtraction([1])}>Mass Extract</button>
+        <button onClick={onClose}>Close AI</button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../../components/modals/ManageQuickAccessModal', () => ({
-  ManageQuickAccessModal: ({ isOpen, onClose, onDocumentsChanged }: any) => isOpen ? <div data-testid="ManageQuickAccessModal"><button onClick={onDocumentsChanged}>Changed Docs</button><button onClick={onClose}>Close Quick Access</button></div> : null
+  ManageQuickAccessModal: ({ isOpen, onClose, onDocumentsChanged }: any) =>
+    isOpen ? (
+      <div data-testid="ManageQuickAccessModal">
+        <button onClick={onDocumentsChanged}>Changed Docs</button>
+        <button onClick={onClose}>Close Quick Access</button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../../components/modals/CitationModal', () => ({
-  CitationModal: ({ isOpen, onClose, onArticleUpdated }: any) => isOpen ? <div data-testid="CitationModal"><button onClick={onArticleUpdated}>Updated Citation</button><button onClick={onClose}>Close Citation</button></div> : null
+  CitationModal: ({ isOpen, onClose, onArticleUpdated }: any) =>
+    isOpen ? (
+      <div data-testid="CitationModal">
+        <button onClick={onArticleUpdated}>Updated Citation</button>
+        <button onClick={onClose}>Close Citation</button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../../components/modals/MassCitationModal', () => ({
-  MassCitationModal: ({ isOpen, onClose, onArticlesUpdated }: any) => isOpen ? <div data-testid="MassCitationModal"><button onClick={onArticlesUpdated}>Updated Mass</button><button onClick={onClose}>Close Mass</button></div> : null
+  MassCitationModal: ({ isOpen, onClose, onArticlesUpdated }: any) =>
+    isOpen ? (
+      <div data-testid="MassCitationModal">
+        <button onClick={onArticlesUpdated}>Updated Mass</button>
+        <button onClick={onClose}>Close Mass</button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../../components/modals/ArticleDetailsModal', () => ({
-  ArticleDetailsModal: ({ isOpen, onClose, onNavigateToSearch, onArticleUpdated, onAttachPdf }: any) => isOpen ? <div data-testid="ArticleDetailsModal"><button onClick={() => onNavigateToSearch(1)}>Navigate Search</button><button onClick={onArticleUpdated}>Updated Article</button><button onClick={() => onAttachPdf({ id: 1 })}>Attach</button><button onClick={onClose}>Close Details</button></div> : null
+  ArticleDetailsModal: ({ isOpen, onClose, onNavigateToSearch, onArticleUpdated, onAttachPdf }: any) =>
+    isOpen ? (
+      <div data-testid="ArticleDetailsModal">
+        <button onClick={() => onNavigateToSearch(1)}>Navigate Search</button>
+        <button onClick={onArticleUpdated}>Updated Article</button>
+        <button onClick={() => onAttachPdf({ id: 1 })}>Attach</button>
+        <button onClick={onClose}>Close Details</button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../../components/modals/ImportArticlesModal', () => ({
-  ImportArticlesModal: ({ isOpen, onClose, onImportComplete }: any) => isOpen ? <div data-testid="ImportArticlesModal"><button onClick={onImportComplete}>Import Complete</button><button onClick={onClose}>Close Import</button></div> : null
+  ImportArticlesModal: ({ isOpen, onClose, onImportComplete }: any) =>
+    isOpen ? (
+      <div data-testid="ImportArticlesModal">
+        <button onClick={onImportComplete}>Import Complete</button>
+        <button onClick={onClose}>Close Import</button>
+      </div>
+    ) : null,
 }));
 vi.mock('../../../components/modals/AttachPdfModal', () => ({
-  AttachPdfModal: ({ isOpen, onClose, onAttached }: any) => isOpen ? <div data-testid="AttachPdfModal"><button onClick={onAttached}>Attached</button><button onClick={onClose}>Close Attach Pdf</button></div> : null
+  AttachPdfModal: ({ isOpen, onClose, onAttached }: any) =>
+    isOpen ? (
+      <div data-testid="AttachPdfModal">
+        <button onClick={onAttached}>Attached</button>
+        <button onClick={onClose}>Close Attach Pdf</button>
+      </div>
+    ) : null,
 }));
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom') as any;
+  const actual = (await vi.importActual('react-router-dom')) as any;
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -116,7 +188,7 @@ describe('ProjectModalsContainer', () => {
     return render(
       <MemoryRouter>
         <ProjectModalsContainer {...defaultProps} {...props} />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
   };
 
@@ -213,7 +285,7 @@ describe('ProjectModalsContainer', () => {
   it('renders and handles ArticleDetailsModal with finding article', () => {
     renderComponent({ modals: { ...defaultModalsState, selectedArticleForDetails: { id: 1 } } });
     expect(screen.getByTestId('ArticleDetailsModal')).toBeInTheDocument();
-    
+
     fireEvent.click(screen.getByText('Navigate Search'));
     expect(defaultModalsState.setSelectedArticleForDetails).toHaveBeenCalledWith(null);
     expect(defaultProps.setActiveTab).toHaveBeenCalledWith('history');

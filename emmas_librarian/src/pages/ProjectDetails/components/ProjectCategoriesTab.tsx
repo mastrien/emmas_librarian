@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tags, Download } from 'lucide-react';
 import { Project, Article } from '../../../types';
-import { projectService } from '../../../services/api';
+import { useProjectService } from '../../../contexts/ServicesContext';
 
 interface ProjectCategoriesTabProps {
   project: Project;
@@ -16,8 +16,8 @@ export const ProjectCategoriesTab: React.FC<ProjectCategoriesTabProps> = ({
   projectCategories,
   articleCategories,
   nonArchivedArticles,
-  onCategorySaved
 }) => {
+  const projectService = useProjectService();
   return (
     <div className="card fade-in" style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -125,8 +125,20 @@ export const ProjectCategoriesTab: React.FC<ProjectCategoriesTabProps> = ({
                       (ac) => Number(ac.article_id) === Number(article.id) && Number(ac.category_id) === Number(cat.id),
                     );
                     return (
-                      <td key={cat.id} style={{ padding: '1rem 1.5rem', minWidth: '150px', color: 'var(--text-main)', fontSize: '0.85rem' }}>
-                        {articleCat?.value === 'true' ? 'Sim' : articleCat?.value === 'false' ? 'Não' : articleCat?.value || '-'}
+                      <td
+                        key={cat.id}
+                        style={{
+                          padding: '1rem 1.5rem',
+                          minWidth: '150px',
+                          color: 'var(--text-main)',
+                          fontSize: '0.85rem',
+                        }}
+                      >
+                        {articleCat?.value === 'true'
+                          ? 'Sim'
+                          : articleCat?.value === 'false'
+                            ? 'Não'
+                            : articleCat?.value || '-'}
                       </td>
                     );
                   })}

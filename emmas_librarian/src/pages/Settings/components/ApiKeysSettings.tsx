@@ -23,8 +23,8 @@ export const ApiKeysSettings: React.FC<ApiKeysSettingsProps> = ({ scopusKey, set
         Chaves de API
       </h2>
       <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-        Insira suas chaves de API para habilitar buscas no Scopus e Web of Science. As chaves são armazenadas
-        localmente no seu banco de dados.
+        Insira suas chaves de API para habilitar buscas no Scopus e Web of Science. As chaves são armazenadas localmente
+        no seu banco de dados.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

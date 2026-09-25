@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ProjectOverviewTab } from '../components/ProjectOverviewTab';
@@ -20,21 +19,21 @@ vi.mock('react-chartjs-2', () => ({
         <span key={i}>{ds.data.join(', ')}</span>
       ))}
     </div>
-  )
+  ),
 }));
 
 describe('ProjectOverviewTab', () => {
   const activeArticles: any[] = [
     { id: 1, year: 2021, is_oa: 1, source_databases: 'Scopus', publisher: 'Elsevier', doi: '10.123/1' },
-    { id: 2, year: 2022, is_oa: 0, source_databases: '["PubMed"]', publisher: 'Springer', doi: '10.123/2' }
+    { id: 2, year: 2022, is_oa: 0, source_databases: '["PubMed"]', publisher: 'Springer', doi: '10.123/2' },
   ];
-  
+
   const readArticles: any[] = [
-    { id: 3, year: 2021, is_oa: 1, source_databases: '["Scopus","PubMed"]', publisher: 'Elsevier', doi: '' }
+    { id: 3, year: 2021, is_oa: 1, source_databases: '["Scopus","PubMed"]', publisher: 'Elsevier', doi: '' },
   ];
-  
+
   const archivedArticles: any[] = [
-    { id: 4, year: null, is_oa: null, source_databases: null, publisher: null, doi: null }
+    { id: 4, year: null, is_oa: null, source_databases: null, publisher: null, doi: null },
   ];
 
   const filteredArticles = [...activeArticles, ...readArticles, ...archivedArticles];
@@ -43,12 +42,12 @@ describe('ProjectOverviewTab', () => {
     activeArticles,
     readArticles,
     archivedArticles,
-    filteredArticles
+    filteredArticles,
   };
 
   it('renders overview tab with all charts', () => {
     render(<ProjectOverviewTab {...defaultProps} />);
-    
+
     expect(screen.getByText('Status dos Artigos')).toBeInTheDocument();
     expect(screen.getByText('Artigos por Ano')).toBeInTheDocument();
     expect(screen.getByText('Acesso Aberto (Open Access)')).toBeInTheDocument();
@@ -72,7 +71,7 @@ describe('ProjectOverviewTab', () => {
     render(<ProjectOverviewTab {...defaultProps} />);
     const bars = screen.getAllByTestId('bar-chart');
     const anoChart = bars[0];
-    
+
     // Years: 2021 (2), 2022 (1), N/A (1)
     expect(anoChart).toHaveTextContent('2021, 2022, N/A');
     expect(anoChart).toHaveTextContent('2, 1, 1');
@@ -82,7 +81,7 @@ describe('ProjectOverviewTab', () => {
     render(<ProjectOverviewTab {...defaultProps} />);
     const pies = screen.getAllByTestId('pie-chart');
     const oaChart = pies[1];
-    
+
     // OA: 2, Closed: 2
     expect(oaChart).toHaveTextContent('Open Access, Closed / Não especificado');
     expect(oaChart).toHaveTextContent('2, 2');
@@ -92,7 +91,7 @@ describe('ProjectOverviewTab', () => {
     render(<ProjectOverviewTab {...defaultProps} />);
     const pies = screen.getAllByTestId('pie-chart');
     const baseChart = pies[2];
-    
+
     // DBs: Scopus (2), PubMed (1), Desconhecido (1)
     expect(baseChart).toHaveTextContent('Scopus, PubMed, Desconhecido');
     expect(baseChart).toHaveTextContent('2, 1, 1');
@@ -102,7 +101,7 @@ describe('ProjectOverviewTab', () => {
     render(<ProjectOverviewTab {...defaultProps} />);
     const bars = screen.getAllByTestId('bar-chart');
     const editoraChart = bars[1];
-    
+
     // Publishers: Elsevier (2), Springer (1), Desconhecido (1)
     expect(editoraChart).toHaveTextContent('Elsevier, Springer, Desconhecido');
     expect(editoraChart).toHaveTextContent('2, 1, 1');
@@ -112,7 +111,7 @@ describe('ProjectOverviewTab', () => {
     render(<ProjectOverviewTab {...defaultProps} />);
     const pies = screen.getAllByTestId('pie-chart');
     const doiChart = pies[3];
-    
+
     // DOI: 2, Sem: 2
     expect(doiChart).toHaveTextContent('Com DOI, Sem DOI');
     expect(doiChart).toHaveTextContent('2, 2');
@@ -121,7 +120,7 @@ describe('ProjectOverviewTab', () => {
   it('handles empty articles gracefully', () => {
     render(<ProjectOverviewTab activeArticles={[]} readArticles={[]} archivedArticles={[]} filteredArticles={[]} />);
     const pies = screen.getAllByTestId('pie-chart');
-    
+
     expect(pies[0]).toHaveTextContent('Ativos, Lidos, Arquivados');
     expect(pies[0]).toHaveTextContent('0, 0, 0');
   });

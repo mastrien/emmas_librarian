@@ -1,6 +1,13 @@
 /* Estilos específicos para a página de tutoriais (Wiki) */
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     background: #f8fafc;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .tutorials-header {
@@ -54,11 +61,14 @@ body {
 
 /* 2-Column Wiki Layout */
 .wiki-layout {
+    flex: 1;
     display: grid;
-    grid-template-columns: 240px 1fr;
-    gap: 2rem;
-    padding: 2rem 1rem;
+    grid-template-columns: 280px 1fr;
+    gap: 1rem;
+    padding: 1.5rem 1rem;
     align-items: start;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Left Sidebar - Navigation */
@@ -70,19 +80,21 @@ body {
     position: sticky;
     top: 1.5rem;
     background: #ffffff;
-    padding: 1rem;
+    padding: 0.85rem;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
 }
 
 .nav-sticky h3 {
     margin-top: 0;
     color: #1e293b;
-    font-size: 1rem;
-    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
     border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 0.5rem;
+    padding-bottom: 0.4rem;
 }
 
 .nav-sticky ul {
@@ -92,17 +104,18 @@ body {
 }
 
 .nav-sticky li {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
 }
 
 .nav-sticky a {
     display: block;
     color: #475569;
     text-decoration: none;
-    padding: 0.4rem;
+    padding: 0.4rem 0.5rem;
     border-radius: 6px;
     transition: background 0.2s, color 0.2s;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+    line-height: 1.35;
 }
 
 .nav-sticky a:hover {
@@ -119,22 +132,68 @@ body {
 /* Main Content */
 .wiki-content {
     background: white;
-    padding: 2rem;
+    padding: 1.75rem 2rem;
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     border: 1px solid #e2e8f0;
 }
 
+/* Chapter mutual exclusion (Tabbed / Single Chapter View) */
 .wiki-section {
-    margin-bottom: 2.5rem;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 2rem;
+    display: none;
+    padding-bottom: 1rem;
 }
 
-.wiki-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
+.wiki-section.active {
+    display: block;
+    animation: fadeInChapter 0.25s ease-out;
+}
+
+@keyframes fadeInChapter {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chapter-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.chapter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.chapter-btn:hover {
+    background: #fdf2f8;
+    color: #db2777;
+    border-color: #fbcfe8;
+}
+
+.chapter-btn.next {
+    margin-left: auto;
 }
 
 .wiki-section h2 {
@@ -160,14 +219,16 @@ body {
 }
 
 .placeholder-img {
-    background: #f1f5f9;
-    border: 2px dashed #cbd5e1;
-    border-radius: 8px;
-    padding: 1.5rem;
+    background: #fdf2f8;
+    border: 2px dashed #f472b6;
+    border-radius: 10px;
+    padding: 1.75rem 1.5rem;
     text-align: center;
-    color: #64748b;
-    margin: 1rem 0;
+    color: #9d174d;
+    margin: 1.25rem 0;
     font-weight: 600;
+    font-size: 0.95rem;
+    line-height: 1.5;
 }
 
 /* Responsive */

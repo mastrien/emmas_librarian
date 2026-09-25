@@ -78,7 +78,10 @@ export class OllamaCloudGateway implements LLMProviderGateway {
 
   private sanitizeHtml(text: string): string {
     if (!text) return 'Nenhum detalhe retornado pelo servidor.';
-    const clean = text.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+    const clean = text
+      .replace(/<[^>]*>?/gm, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
     return clean || 'Serviço indisponível no provedor remoto.';
   }
 }

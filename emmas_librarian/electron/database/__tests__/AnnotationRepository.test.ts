@@ -20,7 +20,9 @@ describe('AnnotationRepository', () => {
     const projectInfo = db.prepare("INSERT INTO projects (name) VALUES ('Test Project')").run();
     projectId = projectInfo.lastInsertRowid as number;
 
-    const articleInfo = db.prepare("INSERT INTO articles (project_id, title) VALUES (?, 'Test Article')").run(projectId);
+    const articleInfo = db
+      .prepare("INSERT INTO articles (project_id, title) VALUES (?, 'Test Article')")
+      .run(projectId);
     articleId = articleInfo.lastInsertRowid as number;
   });
 
@@ -46,16 +48,16 @@ describe('AnnotationRepository', () => {
       const annotations = repo.getAnnotations(articleId);
       expect(annotations).toHaveLength(0);
     });
-    
+
     it('should not get annotations for deleted articles or projects', () => {
-      const id = repo.saveAnnotation(articleId, 'Test content');
-      
+      repo.saveAnnotation(articleId, 'Test content');
+
       db.prepare("UPDATE projects SET deleted_at = datetime('now') WHERE id = ?").run(projectId);
       expect(repo.getAnnotations(articleId)).toHaveLength(0);
-      
-      db.prepare("UPDATE projects SET deleted_at = NULL WHERE id = ?").run(projectId);
+
+      db.prepare('UPDATE projects SET deleted_at = NULL WHERE id = ?').run(projectId);
       expect(repo.getAnnotations(articleId)).toHaveLength(1);
-      
+
       db.prepare("UPDATE articles SET deleted_at = datetime('now') WHERE id = ?").run(articleId);
       expect(repo.getAnnotations(articleId)).toHaveLength(0);
     });
@@ -84,7 +86,7 @@ describe('AnnotationRepository', () => {
 
     it('should save and get highlights with annotation', () => {
       const annotationId = repo.saveAnnotation(articleId, 'Comment');
-      const id = repo.saveHighlight(articleId, '#00ff00', 'pos2', 'text2', annotationId);
+      repo.saveHighlight(articleId, '#00ff00', 'pos2', 'text2', annotationId);
 
       const highlights = repo.getHighlights(articleId);
       expect(highlights).toHaveLength(1);
@@ -115,13 +117,13 @@ describe('AnnotationRepository', () => {
 
     it('should not get highlights for deleted articles or projects', () => {
       repo.saveHighlight(articleId, '#ff0000', 'pos', 'text');
-      
+
       db.prepare("UPDATE projects SET deleted_at = datetime('now') WHERE id = ?").run(projectId);
       expect(repo.getHighlights(articleId)).toHaveLength(0);
-      
-      db.prepare("UPDATE projects SET deleted_at = NULL WHERE id = ?").run(projectId);
+
+      db.prepare('UPDATE projects SET deleted_at = NULL WHERE id = ?').run(projectId);
       expect(repo.getHighlights(articleId)).toHaveLength(1);
-      
+
       db.prepare("UPDATE articles SET deleted_at = datetime('now') WHERE id = ?").run(articleId);
       expect(repo.getHighlights(articleId)).toHaveLength(0);
     });

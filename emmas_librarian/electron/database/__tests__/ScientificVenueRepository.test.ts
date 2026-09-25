@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ScientificVenueRepository } from '../ScientificVenueRepository';
-import { ScientificVenue, MilestoneStatus } from '../../types';
+import { ScientificVenue } from '../../types';
 
 // ---------------------------------------------------------------------------
 // In-memory table rows
@@ -188,7 +188,7 @@ function createMockDatabase() {
 
   const mockDb = {
     prepare: vi.fn().mockImplementation((sql: string) => buildStatement(sql)),
-    transaction: vi.fn().mockImplementation((cb: Function) => {
+    transaction: vi.fn().mockImplementation((cb: (...args: unknown[]) => unknown) => {
       // better-sqlite3's transaction() returns a callable wrapper
       const wrapper = (...args: unknown[]) => cb(...args);
       return wrapper;

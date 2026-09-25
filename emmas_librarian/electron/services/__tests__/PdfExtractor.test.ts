@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { extractTextWithCoordinates, renderPagesAsImages } from '../PdfExtractor';
+import { extractTextWithCoordinates } from '../PdfExtractor';
 import fs from 'fs';
 
 vi.mock('fs', () => {
@@ -99,12 +99,6 @@ describe('PdfExtractor', () => {
     expect(result.chunks[1].text).toBe('Test text 2');
     expect(result.chunks[0].bbox).toEqual({ x: 10, y: 20, w: 50, h: 12 });
     expect(result.chunks[1].bbox).toEqual({ x: 10, y: 40, w: 60, h: 12 });
-  });
-
-  it('should return empty Map when calling renderPagesAsImages', async () => {
-    const result = await renderPagesAsImages('fake.pdf', [1, 2]);
-    expect(result).toBeInstanceOf(Map);
-    expect(result.size).toBe(0);
   });
 
   it('should go through all bboxes and include the first item in the overlap if chunkOverlap requires it', async () => {

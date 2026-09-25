@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
-import { projectService } from '../services/api';
+import { useProjectService } from '../contexts/ServicesContext';
 import type { AIModelConfig, AISkill, AIProvider } from '../types';
 
 import { AppearanceSettings } from './Settings/components/AppearanceSettings';
@@ -10,6 +10,7 @@ import { BackupSettings } from './Settings/components/BackupSettings';
 import { TrashSettings } from './Settings/components/TrashSettings';
 
 export const SettingsPage: React.FC = () => {
+  const projectService = useProjectService();
   const [scopusKey, setScopusKey] = useState('');
   const [wosKey, setWosKey] = useState('');
 
@@ -304,12 +305,7 @@ export const SettingsPage: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <AppearanceSettings />
 
-        <ApiKeysSettings
-          scopusKey={scopusKey}
-          setScopusKey={setScopusKey}
-          wosKey={wosKey}
-          setWosKey={setWosKey}
-        />
+        <ApiKeysSettings scopusKey={scopusKey} setScopusKey={setScopusKey} wosKey={wosKey} setWosKey={setWosKey} />
 
         <AiSettings
           openaiKey={openaiKey}
