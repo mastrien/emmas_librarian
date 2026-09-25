@@ -143,6 +143,29 @@ Não é um molde rígido; é o esqueleto que os posts dele seguem.
 5. Limitações e cuidados, sem rodeio.
 6. "E é isso!" + ponte para o próximo capítulo.
 
+## Capturas de tela
+
+As imagens ficam em `landing_page/assets/tutoriais/capN-<assunto>.png` e entram na
+página como `<img class="tutorial-img" ... width=".." height=".." loading="lazy">`
+(com largura e altura reais, senão os atalhos `#ancora` param no lugar errado).
+
+Para tirar as capturas, rode o app real numa pasta de dados descartável, nunca na
+biblioteca do autor:
+
+1. `npm run rebuild:electron && npx tsc -p tsconfig.electron.json` e o Vite em
+   segundo plano (`npx vite --port 5173 --strictPort`), dentro de `emmas_librarian/`.
+2. Um script Playwright (`_electron.launch`) com `E2E_USER_DATA_DIR` apontando para
+   uma pasta temporária e `E2E_SKIP_RELAUNCH=true`; janela em 1440x900.
+3. Dados de exemplo: importe o projeto do autor com
+   `window.electronAPI.invoke('sync:importProject', caminho)` (o arquivo de
+   exemplo fica em `writing_style_reference/`, que não é versionado) e crie prazos
+   genéricos via `scientificVenue:create`. Não use nomes reais de eventos com datas
+   inventadas.
+4. Não use `fullPage`: aparece um indicador de tamanho da janela. Role até o
+   elemento e desconte a altura do cabeçalho fixo (~130px).
+5. No fim: pare o Vite, apague a pasta temporária e rode `npm run rebuild:node`
+   (senão os testes unitários quebram).
+
 ## Checklist antes de entregar
 
 - [ ] Nenhuma palavra da lista de folheto; nenhuma promessa absoluta.
@@ -173,6 +196,15 @@ Capítulo zero (Introdução), 2026-09-24. O autor aprovou o tom do rascunho e p
   ofereça logo no primeiro parágrafo um link para pular direto aos passos
   ("pode pular direto para a instalação"). O `<h3>` de destino ganha um `id`, e o
   script da página já resolve âncoras que ficam dentro de um capítulo.
+- **Expressões que ele não usa:** "em que pé estão as coisas" foi vetado. Não
+  invente coloquialismos que não aparecem nos textos de referência; o coloquial
+  permitido é o da seção "Marcas de linguagem".
+- **Verifique no código antes de perguntar.** `[CONFIRMAR]` é só para o que o código
+  não responde (comportamento do Windows, planos futuros, intenção). O que está no
+  código (ex.: o que vai dentro de um `.emmapcarc`, em
+  `electron/database/backup/projectRows.ts`) deve ser lido, não perguntado.
+- **Processos externos longos (ex.: gerar chave de API):** pesquise, resuma em
+  poucos passos e deixe os links oficiais, em vez de descrever tela por tela.
 - **Visual da página:** links do texto com estilo próprio (rosa, sublinhado).
   Cantos arredondados ficam (o autor voltou atrás na remoção), mas o sumário e
   os botões de capítulo anterior/próximo não têm fundo nem borda de cartão: o
