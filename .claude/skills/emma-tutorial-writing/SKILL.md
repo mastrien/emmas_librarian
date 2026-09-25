@@ -160,3 +160,18 @@ Registre aqui cada correção feita pelo autor nos rascunhos, com o antes, o dep
 e a regra por trás. Estas regras têm prioridade sobre as seções acima.
 
 <!-- Ex.: - Antes: "..." / Depois: "..." / Regra: ... -->
+
+Capítulo zero (Introdução), 2026-09-24. O autor aprovou o tom do rascunho e pediu:
+
+- **Ferramenta externa citada vira link para o site oficial**, pelo menos na
+  primeira menção (ex.: `<a href="https://www.bibliometrix.org/">bibliometrix</a>`).
+- **Não suponha que o leitor conhece a ferramenta, mesmo sendo da área acadêmica.**
+  Explique em uma citação com o título em pergunta ("Você sabe o que é o
+  bibliometrix?"), dizendo o que ela é e pra que serve na prática, com perguntas
+  concretas que ela ajuda a responder e a ligação com o Emma's Librarian.
+- **Atalho para a parte prática.** Quando o capítulo abre com contexto ou teoria,
+  ofereça logo no primeiro parágrafo um link para pular direto aos passos
+  ("pode pular direto para a instalação"). O `<h3>` de destino ganha um `id`, e o
+  script da página já resolve âncoras que ficam dentro de um capítulo.
+- **Visual da página:** links do texto com estilo próprio (rosa, sublinhado) e
+  nenhum canto arredondado (`border-radius`) em `tutoriais.css`.

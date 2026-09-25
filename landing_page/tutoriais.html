@@ -52,13 +52,58 @@
             <!-- Introdução -->
             <section id="intro" class="wiki-section active">
                 <h2>Introdução - Visão Geral & Instalação</h2>
-                <p>O <strong>Emma's Librarian</strong> é uma estação de trabalho completa e de código aberto projetada para simplificar e acelerar a condução de revisões sistemáticas da literatura científica, integrando busca, leitura, anotação e síntese por IA com total privacidade local.</p>
-                
-                <h3>Como Instalar</h3>
-                <p>Baixe o instalador oficial mais recente na página inicial ou na seção de Releases do GitHub. A instalação é simples e não requer configurações complexas de servidores.</p>
+                <p>Boas vindas! Antes de entrar nas telas e nos botões, vale a pena contar um pouco de onde o <strong>Emma's Librarian</strong> veio, porque isso explica bastante coisa sobre o jeito que ele funciona. Mas se você já sabe do que se trata e só quer instalar, pode <a href="#como-instalar">pular direto para a instalação</a>.</p>
+
+                <h3>Como tudo começou</h3>
+                <p>O Emma's Librarian começou como um projeto pequeno, com um objetivo bem específico: fazer uma busca estruturada em várias bases acadêmicas de uma vez só (hoje são OpenAlex, Crossref, Scopus e Web of Science) e exportar o resultado num formato que ferramentas já consolidadas na literatura, como o <a href="https://www.bibliometrix.org/" target="_blank" rel="noopener noreferrer"><em>bibliometrix</em></a>, conseguissem ler. A ideia nunca foi refazer a análise bibliométrica, afinal o bibliometrix já faz isso muito bem, e sim facilitar a parte chata de buscar e juntar os dados de lugares diferentes, cada um com a sua sintaxe de busca e a sua interface.</p>
+                <blockquote>
+                    <p><strong>Você sabe o que é o bibliometrix?</strong></p>
+                    <p>O bibliometrix é um pacote da linguagem R, criado por Massimo Aria e Corrado Cuccurullo, feito pra análise bibliométrica e cientométrica, isto é, estudar a produção científica de uma área a partir dos dados das próprias publicações (autores, periódicos, ano, citações, palavras-chave). Ele vem com o <em>biblioshiny</em>, uma interface gráfica que abre no navegador, então dá pra usar sem escrever nenhuma linha de código em R.</p>
+                    <p>Na prática, com um conjunto de artigos exportado de uma base como a Scopus, dá pra responder perguntas como: quais autores e periódicos mais publicam sobre o tema? A produção está crescendo ou estagnou? Quais palavras-chave costumam aparecer juntas, e quais temas estão surgindo agora? Isso ajuda bastante a entender o terreno antes de mergulhar na leitura, e também a justificar, na introdução de um artigo, por que o seu tema é relevante. O Emma's Librarian exporta os artigos no mesmo formato de exportação da Scopus, que o bibliometrix já sabe ler.</p>
+                </blockquote>
+                <p>Só que, usando a ferramenta no dia a dia de projetos de pesquisa, foram aparecendo outras necessidades, e o projeto foi crescendo. Hoje, além da busca, ele permite:</p>
+                <ul>
+                    <li>gerenciar vários projetos de pesquisa ao mesmo tempo;</li>
+                    <li>acompanhar os prazos de cada projeto;</li>
+                    <li>guardar os links que você mais usa (o link da reunião do grupo, a pasta compartilhada, o documento do artigo que está sendo escrito) pra ter tudo à mão durante a escrita e as reuniões;</li>
+                    <li>manter um diário de pesquisa em cada projeto;</li>
+                    <li>ler e anotar os artigos dentro da própria plataforma;</li>
+                    <li>categorizar os artigos com critérios definidos por você e exportar essa categorização como planilha;</li>
+                    <li>fazer uma <strong>investigação massiva</strong>, que é fazer várias perguntas para vários artigos de uma vez.</li>
+                </ul>
+
+                <h3>Pra que serve um diário de pesquisa?</h3>
+                <p>Sabe quando alguém pergunta na reunião "e aí, o que você fez essa semana?" e dá branco? O diário existe pra isso. Cada projeto tem o seu, e a ideia é você registrar ali as decisões importantes (por que tal artigo foi excluído, por que a string de busca mudou), os <em>insights</em> que tiver durante a leitura e qualquer outra coisa que possa ser útil lembrar depois. Na hora de falar numa reunião, escrever a metodologia de um artigo ou montar um relatório, você não depende da memória, está tudo lá com data.</p>
+
+                <h3>E se a IA inventar uma resposta?</h3>
+                <p>Essa é uma preocupação válida, e foi levada a sério. Na investigação massiva, cada resposta vem acompanhada dos trechos do artigo que foram usados pra gerá-la (os <em>top-k</em> trechos mais relevantes que o RAG encontrou), junto com o quão relevante cada trecho foi considerado. Ou seja, você não precisa confiar na resposta às cegas, pode ir até a evidência e conferir se ela realmente diz aquilo.</p>
+                <p>Se RAG e <em>top-k</em> ainda soam estranhos, não se preocupe, o <a href="#ia-rag">Capítulo 5</a> explica isso com calma. Também vale dizer que os recursos de IA são opcionais: você escolhe o provedor (Ollama, rodando no seu próprio computador, ou Gemini, OpenAI e Anthropic, com a sua chave de API), e dá pra usar todo o resto da ferramenta sem configurar nenhum.</p>
+
+                <h3 id="como-instalar">Como instalar</h3>
+                <p>Hoje existem dois jeitos de baixar o Emma's Librarian: pelo botão de instalação na <a href="index.html">página inicial</a> ou pela aba <a href="https://github.com/mastrien/emmas_librarian/releases/latest" target="_blank" rel="noopener noreferrer">Releases do repositório no GitHub</a>. Os dois levam pro mesmo instalador, então tanto faz.</p>
+                <p>Por enquanto só existe versão para <strong>Windows</strong>. Como o sistema é feito em <em>Electron</em>, gerar uma versão para Linux não deve ser complicado, mas por agora é só Windows mesmo.</p>
+                <p>A instalação em si é a de qualquer programa do Windows:</p>
+                <ol>
+                    <li>Baixe o instalador da versão mais recente (um arquivo com nome parecido com <code>Emma's Librarian Setup 1.1.23.exe</code>).</li>
+                    <li>Execute o arquivo. É bem provável que apareça o aviso <strong>"O Windows protegeu o computador"</strong>. Isso acontece porque o instalador ainda não tem uma assinatura digital, e o Windows desconfia de programas que ele não reconhece. Pra seguir, clique em <strong>Mais informações</strong> e depois em <strong>Executar assim mesmo</strong>.</li>
+                    <li>Escolha se o programa vai ser instalado só para o seu usuário ou para todos os usuários do computador.</li>
+                    <li>Escolha a pasta de instalação (ou deixe a sugerida) e conclua. O instalador cria um atalho na área de trabalho e no menu Iniciar.</li>
+                </ol>
                 <div class="placeholder-img">
-                    📷 [Captura de Tela Recomendada: Tela inicial após instalação e primeiro lançamento do aplicativo]
+                    📷 [Captura: tela do instalador com a escolha entre instalar só para o usuário atual ou para todos]
                 </div>
+
+                <h3>E não precisa configurar mais nada?</h3>
+                <p>Não. Não tem servidor pra subir nem banco de dados pra configurar. Na primeira vez que você abre o programa, ele cria sozinho um banco SQLite onde ficam os metadados dos seus projetos e artigos, e uma pasta onde ficam os PDFs. Tudo isso fica no seu computador, na pasta do seu usuário do Windows (<code>C:\Users\seu_usuario\AppData\Roaming\emmas_librarian</code>).</p>
+                <blockquote>
+                    <p>Observação: a pasta que você escolhe na instalação é onde fica o <strong>programa</strong>, não os seus <strong>dados</strong>. Os dados ficam sempre na pasta do usuário do Windows que abriu o programa. Na prática, isso quer dizer que se duas pessoas usam o mesmo computador, cada uma com o seu usuário do Windows, cada uma vai ter a sua própria biblioteca, separada da outra.</p>
+                </blockquote>
+                <p>Saber onde os dados ficam também é útil na hora de fazer backup, que é assunto do <a href="#configuracoes-backup">Capítulo 8</a>.</p>
+                <div class="placeholder-img">
+                    📷 [Captura: primeira tela do aplicativo aberto logo depois da instalação]
+                </div>
+
+                <p><strong>E é isso!</strong> Com o programa instalado, o próximo passo é criar o seu primeiro projeto, que é o assunto do próximo capítulo.</p>
 
                 <div class="chapter-pagination">
                     <a href="#dashboard" class="chapter-btn next">Capítulo 1 - Dashboard & Projetos →</a>
@@ -259,38 +304,26 @@
     </footer>
 
     <script>
+        // O alvo pode ser um capítulo (#intro) ou um ponto dentro dele (#como-instalar);
+        // nos dois casos o capítulo que o contém é o que fica visível.
         function switchChapter(targetId) {
-            const sections = document.querySelectorAll('.wiki-section');
-            const navLinks = document.querySelectorAll('.nav-sticky a');
-            
-            let targetSection = document.getElementById(targetId);
-            if (!targetSection) {
-                targetSection = document.getElementById('intro');
-                targetId = 'intro';
-            }
+            const target = document.getElementById(targetId) || document.getElementById('intro');
+            const section = target.closest('.wiki-section') || document.getElementById('intro');
 
-            sections.forEach(sec => sec.classList.remove('active'));
-            targetSection.classList.add('active');
+            document.querySelectorAll('.wiki-section').forEach(sec => sec.classList.remove('active'));
+            section.classList.add('active');
 
-            navLinks.forEach(link => {
+            document.querySelectorAll('.nav-sticky a').forEach(link => {
                 const href = link.getAttribute('href').replace('#', '');
-                if (href === targetId) {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
+                link.classList.toggle('active', href === section.id);
             });
 
-            // Rolagem suave até o topo do conteúdo principal
-            const content = document.querySelector('.wiki-content');
-            if (content) {
+            // Capítulo inteiro: rola até o topo do conteúdo; ponto interno: rola até ele
+            const scrollTarget = target === section ? document.querySelector('.wiki-content') : target;
+            if (scrollTarget) {
                 const headerOffset = 30;
-                const elementPosition = content.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
+                const offsetPosition = scrollTarget.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
             }
         }
 
