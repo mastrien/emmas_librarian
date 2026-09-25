@@ -164,7 +164,10 @@ biblioteca do autor:
 4. Não use `fullPage`: aparece um indicador de tamanho da janela. Role até o
    elemento e desconte a altura do cabeçalho fixo (~130px).
 5. No fim: pare o Vite, apague a pasta temporária e rode `npm run rebuild:node`
-   (senão os testes unitários quebram).
+   (senão os testes unitários quebram). Parar a tarefa em segundo plano não mata
+   o `node vite.js` filho: confira quem escuta a porta 5173 e encerre pelo PID.
+6. Confira cada imagem antes de usar: elas já revelaram texto errado no rascunho
+   (botão que era só ícone, botão que ficava em outro canto da tela).
 
 ## Checklist antes de entregar
 
@@ -205,6 +208,11 @@ Capítulo zero (Introdução), 2026-09-24. O autor aprovou o tom do rascunho e p
   `electron/database/backup/projectRows.ts`) deve ser lido, não perguntado.
 - **Processos externos longos (ex.: gerar chave de API):** pesquise, resuma em
   poucos passos e deixe os links oficiais, em vez de descrever tela por tela.
+- **Não repita o mesmo fechamento em todo capítulo.** "E é isso!" é a marca dele,
+  mas usado igual no fim de todos os capítulos fica robótico. Guarde o "E é
+  isso!" pra poucos capítulos (o primeiro e o último) e varie nos outros: uma
+  ponte direta pro próximo assunto, uma retomada do exemplo, um "Por agora é
+  isso.", uma pergunta que o próximo capítulo responde.
 - **Visual da página:** links do texto com estilo próprio (rosa, sublinhado).
   Cantos arredondados ficam (o autor voltou atrás na remoção), mas o sumário e
   os botões de capítulo anterior/próximo não têm fundo nem borda de cartão: o
