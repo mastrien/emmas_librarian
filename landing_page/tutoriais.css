@@ -71,6 +71,12 @@ body {
     box-sizing: border-box;
 }
 
+/* Grid items default to min-width: auto, so one long unbreakable line (a Windows path in <code>)
+   used to widen the whole layout past the phone screen. */
+.wiki-layout > * {
+    min-width: 0;
+}
+
 /* Left Sidebar - Navigation */
 .wiki-nav {
     height: 100%;
@@ -253,6 +259,7 @@ body {
     padding: 0.1rem 0.35rem;
     border-radius: 4px;
     font-size: 0.9em;
+    overflow-wrap: anywhere;
 }
 
 .tutorial-img {
@@ -278,18 +285,149 @@ body {
     line-height: 1.5;
 }
 
+.nav-toggle {
+    display: none;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     .wiki-layout {
         grid-template-columns: 1fr;
+        padding: 1rem;
     }
-    
+
     .nav-sticky {
         position: static;
-        margin-bottom: 1.5rem;
+        max-height: none;
+        overflow: visible;
+        padding: 0;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
     }
-    
+
+    .nav-sticky h3 {
+        display: none;
+    }
+
+    .nav-toggle {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.15rem;
+        width: 100%;
+        padding: 0.75rem 2.5rem 0.75rem 1rem;
+        border: none;
+        background: none;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        position: relative;
+    }
+
+    /* Chevron drawn with borders so it looks the same on every font */
+    .nav-toggle::after {
+        content: '';
+        position: absolute;
+        right: 1.1rem;
+        top: 50%;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-right: 2px solid #db2777;
+        border-bottom: 2px solid #db2777;
+        transform: translateY(-70%) rotate(45deg);
+        transition: transform 0.2s;
+    }
+
+    .nav-sticky.open .nav-toggle::after {
+        transform: translateY(-30%) rotate(-135deg);
+    }
+
+    .nav-toggle-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .nav-toggle-current {
+        font-weight: 600;
+        color: #db2777;
+        font-size: 0.95rem;
+    }
+
+    .nav-sticky ul {
+        display: none;
+        padding: 0 0.5rem 0.5rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .nav-sticky.open ul {
+        display: block;
+    }
+
+    .nav-sticky li:first-child {
+        margin-top: 0.5rem;
+    }
+
     .wiki-content {
         padding: 1.5rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    .tutorials-header {
+        padding: 1rem 0;
+    }
+
+    .brand-logo-small {
+        width: 36px;
+        height: 36px;
+    }
+
+    .tutorials-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .tutorials-header p {
+        font-size: 0.85rem;
+    }
+
+    .wiki-content {
+        padding: 1.25rem 1rem;
+    }
+
+    .wiki-section h2 {
+        font-size: 1.3rem;
+    }
+
+    .wiki-section h3 {
+        font-size: 1.05rem;
+    }
+
+    .wiki-section ul,
+    .wiki-section ol {
+        padding-left: 1.25rem;
+    }
+
+    .wiki-section blockquote {
+        padding: 0.75rem;
+    }
+
+    .chapter-pagination {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.25rem;
+    }
+
+    .chapter-btn.next {
+        margin-left: 0;
+        justify-content: flex-end;
+        text-align: right;
     }
 }

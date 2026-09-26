@@ -32,7 +32,12 @@
         <aside class="wiki-nav">
             <div class="nav-sticky">
                 <h3>Capítulos</h3>
-                <ul>
+                <!-- Only shown on small screens, where the full list would push the chapter below the fold -->
+                <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="chapter-list">
+                    <span class="nav-toggle-label">Capítulos</span>
+                    <span class="nav-toggle-current">Introdução - Visão Geral & Instalação</span>
+                </button>
+                <ul id="chapter-list">
                     <li><a href="#intro" class="active">Introdução - Visão Geral & Instalação</a></li>
                     <li><a href="#dashboard">Capítulo 1 - Dashboard & Projetos</a></li>
                     <li><a href="#busca-federada">Capítulo 2 - Busca Federada (APIs)</a></li>
@@ -621,6 +626,7 @@
                 const href = link.getAttribute('href').replace('#', '');
                 link.classList.toggle('active', href === section.id);
             });
+            updateNavToggle();
 
             // Capítulo inteiro: rola até o topo do conteúdo; ponto interno: rola até ele
             const scrollTarget = target === section ? document.querySelector('.wiki-content') : target;
@@ -630,6 +636,23 @@
                 window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
             }
         }
+
+        // Sumário recolhível das telas pequenas: mostra o capítulo atual e fecha ao escolher outro
+        const navSticky = document.querySelector('.nav-sticky');
+        const navToggle = document.querySelector('.nav-toggle');
+
+        function setNavOpen(open) {
+            navSticky.classList.toggle('open', open);
+            navToggle.setAttribute('aria-expanded', String(open));
+        }
+
+        function updateNavToggle() {
+            const active = document.querySelector('.nav-sticky a.active');
+            if (active) navToggle.querySelector('.nav-toggle-current').textContent = active.textContent;
+            setNavOpen(false);
+        }
+
+        navToggle.addEventListener('click', () => setNavOpen(!navSticky.classList.contains('open')));
 
         // Intercepta cliques no menu lateral e nos botões de paginação anterior/próximo
         document.addEventListener('click', (e) => {
