@@ -199,6 +199,16 @@ Capítulo zero (Introdução), 2026-09-24. O autor aprovou o tom do rascunho e p
   ofereça logo no primeiro parágrafo um link para pular direto aos passos
   ("pode pular direto para a instalação"). O `<h3>` de destino ganha um `id`, e o
   script da página já resolve âncoras que ficam dentro de um capítulo.
+- **Atalho só quando alguém chegaria só por aquela parte** (capítulo 3, 2026-09-26).
+  O atalho do capítulo 3 ("se você só quer saber como marcar lidos/arquivados...")
+  foi chamado de forçado e inútil. Vale para: instalação, criar o primeiro projeto,
+  gerar chave de API, configurar provedor de IA (coisas que alguém procura
+  isoladamente, em capítulos longos). Não vale para pular uma seção curta até a
+  seguinte. Na dúvida, não coloque.
+- **Não invente dificuldade ou confusão pro leitor** (capítulo 3). "Um detalhe que
+  confunde no começo" sobre algo óbvio soa forçado. Pergunta retórica e aviso de
+  confusão só onde a dúvida é real (ex.: por que o total encontrado é maior que o
+  salvo); caso contrário, afirme direto, com o porquê em meia frase.
 - **Expressões que ele não usa:** "em que pé estão as coisas" foi vetado. Não
   invente coloquialismos que não aparecem nos textos de referência; o coloquial
   permitido é o da seção "Marcas de linguagem".
