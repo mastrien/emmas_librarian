@@ -235,6 +235,16 @@ Capítulo zero (Introdução), 2026-09-24. O autor aprovou o tom do rascunho e p
   perguntou como o score e a confiança são calculados. Quando a ferramenta mostra
   um número, diga de onde ele vem (fórmula ou autoavaliação do modelo) e o que
   ele não garante.
+- **Dados em tabela, não citados no meio do texto** (capítulo extra, 2026-09-26).
+  Em vez de citar a mensagem de um commit entre parênteses, mostre os commits em
+  uma tabela com data. Estatística vira gráfico: use a skill `dataviz` (paleta
+  validada, legenda, tabela "Ver os números", tooltip) e confira no celular.
+- **Onde ele é o autor, primeira pessoa.** No capítulo extra, as decisões são
+  dele: "era o que eu já conhecia e conseguia revisar", não "a equipe". Mas não
+  acrescente opiniões que ele não deu pra justificar a decisão.
+- **Citação de terceiros na forma que ele lembra.** Quando ele pedir uma fala
+  específica (ex.: o "10x" do Akita), use essa fala, sem trocar por outra citação
+  do mesmo autor.
 - **Expressões que ele não usa:** "em que pé estão as coisas" foi vetado. Não
   invente coloquialismos que não aparecem nos textos de referência; o coloquial
   permitido é o da seção "Marcas de linguagem".
