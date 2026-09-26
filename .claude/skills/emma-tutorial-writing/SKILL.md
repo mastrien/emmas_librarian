@@ -209,6 +209,32 @@ Capítulo zero (Introdução), 2026-09-24. O autor aprovou o tom do rascunho e p
   confunde no começo" sobre algo óbvio soa forçado. Pergunta retórica e aviso de
   confusão só onde a dúvida é real (ex.: por que o total encontrado é maior que o
   salvo); caso contrário, afirme direto, com o porquê em meia frase.
+- **Os padrões dele não são cota** (revisão dos capítulos 3 a 8, 2026-09-26). O
+  problema mais comum da revisão foi usar "lembra do Capítulo X?", "Pois é" e
+  retomadas parecidas de forma repetida e forçada, principalmente na abertura e
+  no fechamento dos capítulos. Uma referência a outro capítulo fica melhor como
+  informação ("mostrados no Capítulo 1") do que como pergunta. Use as marcas de
+  estilo quando surgirem naturalmente, não pra provar que o texto "soa como ele".
+- **Transição entre capítulos só quando ela existe.** A ponte do 6 pro 7 ("os PDFs
+  guardam o conteúdo, mas a pesquisa também tem prazos") foi forçada. Se os
+  assuntos não se ligam, o capítulo pode terminar sem ponte.
+- **Não invente analogia nem motivação que não é dele.** A analogia da
+  "bibliotecária e o especialista" pro RAG, e a ideia de que o nome do programa
+  veio daí, foram rejeitadas. A história do nome é dele e vai pro capítulo extra.
+  A explicação técnica que vinha junto foi aprovada. Prefira explicar o mecanismo
+  direto a criar uma analogia.
+- **Várias ferramentas na mesma seção viram subtítulos (`<h4>`), não parágrafos
+  com o nome em negrito.** Isso vale pras ferramentas do leitor, pros provedores
+  de IA e pros dois modelos do RAG.
+- **Todo capítulo precisa de imagem.** A falta de imagem foi o outro problema mais
+  comum. Tire as capturas junto com o texto (seção "Capturas de tela") e
+  confira cada uma: elas já revelaram que um recurso só existia pra artigos
+  manuais, que o score aparece em porcentagem na tela e um bug de janela fora da
+  tela.
+- **Explique números que o público vai querer entender.** O pessoal do INPE
+  perguntou como o score e a confiança são calculados. Quando a ferramenta mostra
+  um número, diga de onde ele vem (fórmula ou autoavaliação do modelo) e o que
+  ele não garante.
 - **Expressões que ele não usa:** "em que pé estão as coisas" foi vetado. Não
   invente coloquialismos que não aparecem nos textos de referência; o coloquial
   permitido é o da seção "Marcas de linguagem".
