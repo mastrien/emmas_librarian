@@ -50,6 +50,53 @@ Se você é um desenvolvedor e deseja rodar o projeto localmente, contribuir com
 
 Acompanhe as últimas novidades, melhorias e correções recentes do **Emma's Librarian**:
 
+### v1.1.23
+- **Leitor de PDF:** Tratamento aprimorado de erros e carregamento seguro dos arquivos dos artigos.
+- **Categorias e Lidos:** Correção no salvamento de textos de categorias e exibição consistente de artigos não arquivados.
+- **Investigação com IA:** Ajustes nos botões de ação e no fluxo de conclusão do modal de extração.
+
+### v1.1.22
+- **Leitor de PDF Instantâneo:** Novo protocolo customizado `emma-pdf://` que evita a lentidão do IPC do Electron ao abrir PDFs grandes.
+- **Categorias:** Painel de categorias do projeto refeito, sem inputs editáveis ocultos, para não pesar na renderização.
+- **Acesso Rápido:** Corrigido um loop silencioso no modal que atrapalhava a digitação.
+- **Extração com IA:** Corrigida a perda de dados quando mais de um campo era salvo de uma só vez.
+
+### v1.1.21
+- **Estabilidade:** Correções na navegação pelo menu "Mais opções" e no escopo dos seletores do modal de extração massiva, que causavam seleções indevidas de artigos.
+
+### v1.1.20
+- **UI/UX:** Animações *skeleton* no lugar dos avisos textuais de carregamento e adoção global de cores sólidas (sem botões em gradiente).
+- **Backups:** A restauração automática agora reinicia o aplicativo e reconecta a ponte de IPC corretamente.
+- **Embeddings Locais:** Motor local embutido baseado em ONNX (`@xenova/transformers`), sem instalação extra. Também há suporte ao provedor Ollama Cloud e retentativas automáticas em limites de taxa (429) do Gemini.
+
+### v1.1.19
+- **Agenda e Prazos:** Novo módulo global para eventos, conferências e periódicos, com múltiplos prazos (pontuais ou em intervalo), modos "Por Evento/Revista" e "Lista de Prazos" e calendário integrado.
+- **Dashboard:** Relógio em cores neutras e banner com os próximos prazos.
+
+### v1.1.18
+- **Acesso Rápido:** Edição de atalhos existentes, reordenação por arraste e grupos nomeados.
+
+### v1.1.17
+- **Interface:** Menu principal e ações do projeto agrupados em dropdowns.
+- **Importação de PDFs entre Projetos:** Corrigido o erro ao clonar artigos com PDFs e embeddings vetoriais.
+- **Biblioteca Global de PDFs:** Arquivos salvos com data e nome original (`YYYYMMDD_HHMMSS_nome.pdf`) e tabela melhor adaptada a telas menores.
+
+### v1.1.16
+- **Histórico de Buscas:** Critério de ordenação e limite de resultados passam a ser persistidos, exibidos e preservados na exportação/importação de projetos.
+
+### v1.1.15
+- **Extração Massiva:** Artigos cancelados, ignorados ou com falha agora constam no histórico com o status correspondente.
+- **Modelo de IA:** Provedor e modelo registrados no histórico refletem o modelo ativo da habilidade de extração.
+
+### v1.1.14
+- **Correção de Build:** Corrigido o erro `Not allowed to load local resource` ao abrir o app empacotado.
+
+### v1.1.13
+- **Categorias Relacionais:** Opções de categorias de seleção única e múltipla renomeáveis e reordenáveis sem perder o histórico dos artigos.
+- **IA:** Sets de perguntas reutilizáveis (globais ou por projeto), resultados de investigação por artigo e pergunta, e painel para escolher provedor e modelo por habilidade (OpenAI, Gemini, Anthropic e Ollama).
+- **RAG e Busca Semântica:** Chunks de PDF e embeddings vetoriais para respostas com citação de trecho e página.
+- **Exportação/Importação:** O `.emmapcarc` passa a incluir seleções de categorias, sets de perguntas e resultados de investigação.
+
 ### v1.1.12
 - **Sistema de Backup e Lixeira:** Implementação do BackupManager com rotação GFS (Grandfather-Father-Son) e lixeira para recuperação de projetos e artigos excluídos.
 - **Histórico do Diário:** Adicionado suporte a histórico de versões para o diário do projeto, permitindo visualizar e restaurar alterações passadas.
