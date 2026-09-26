@@ -636,7 +636,65 @@
             <!-- Extra: curiosidades ("Quem é Emma?") e bastidores do desenvolvimento -->
             <section id="extras" class="wiki-section">
                 <h2>Extra - Curiosidades & Bastidores</h2>
+                <p>Este capítulo não ensina a usar nada. É um espaço pra contar algumas coisas sobre o Emma's Librarian que não cabiam nos outros capítulos.</p>
+
+                <h3>Quem é Emma?</h3>
                 <p>Em breve.</p>
+
+                <h3 id="para-programadores">Você é programador? Isso pode te interessar</h3>
+                <p>A maior parte do código do Emma's Librarian foi escrita por agentes de IA. Eu sei que isso costuma gerar desconfiança, e com razão: todo mundo já viu (ou fez) um projeto "feito com IA" que funciona na demonstração e desmorona na primeira mudança. Esta seção é sobre o que foi feito pra esse projeto não virar isso, e sobre o que deu errado no caminho.</p>
+                <p>A base de quase tudo aqui vem de práticas de engenharia de software que existem há décadas, principalmente do <em>Extreme Programming</em> (Beck, 2000), e da forma como o Fabio Akita propôs aplicar essas práticas no desenvolvimento com agentes, que ele chamou de <em>Agile Vibe Coding</em>. Se você quiser ir direto na fonte, os textos dele que mais influenciaram este projeto são <a href="https://akitaonrails.com/2026/02/20/do-zero-a-pos-producao-em-1-semana-como-usar-ia-em-projetos-de-verdade-bastidores-do-the-m-akita-chronicles/" target="_blank" rel="noopener noreferrer">"Do Zero à Pós-Produção em 1 Semana"</a> e <a href="https://akitaonrails.com/2026/04/20/clean-code-para-agentes-de-ia/" target="_blank" rel="noopener noreferrer">"Clean Code pra Agentes de IA"</a>.</p>
+
+                <h4>Como o projeto começou (e mudou)</h4>
+                <p>O primeiro commit é de 17 de maio de 2026. Antes de qualquer código, foi escrita uma especificação, refinada até ter o suficiente pra um MVP com duas funções: a busca unificada em várias bases e a leitura de PDFs com marcações. No dia seguinte o MVP estava pronto, construído em dez ciclos curtos, cada um com testes antes da implementação (os commits têm nomes como "Implement Query Translation module for OpenAlex and Crossref with TDD").</p>
+                <p>Essa primeira versão era cliente-servidor, porque eu achava que o ecossistema de cientometria do Python ia ser essencial. Só que, usando a ferramenta, ficou claro que a análise bibliométrica já é bem resolvida por ferramentas como o bibliometrix, e que o melhor jeito de ajudar era exportar os dados num formato que elas já leem. Com o Python deixando de ser prioridade, fez mais sentido virar uma aplicação desktop. Entre Tauri e Electron, a escolha foi o Electron, por um motivo nada glamouroso: era o que a equipe já conhecia.</p>
+                <p>Até o momento em que escrevo, são 280 commits, feitos em 42 dias diferentes.</p>
+
+                <h4>Testes antes do código</h4>
+                <p>O desenvolvimento orientado a testes, o TDD (Beck, 2002), é o que segura tudo. Quando um agente muda um arquivo pra implementar uma coisa nova, ele pode quebrar outra sem perceber, e quem avisa são os testes. O Akita resume bem: os testes que o agente escreve viram a rede de segurança das mudanças que ele mesmo faz depois. Hoje o projeto tem 1.618 testes unitários e de integração, com cerca de 91% de cobertura de linhas, e 14 arquivos de testes de ponta a ponta (E2E), que abrem o aplicativo de verdade e clicam nas telas como um usuário faria.</p>
+
+                <h4>Cobertura não é qualidade de teste</h4>
+                <p>Só que ter muitos testes, ou uma cobertura alta, não garante que eles pegam falhas. Isso não é opinião: Inozemtseva e Holmes (2014) mostraram que a cobertura não tem uma correlação forte com a eficácia de uma suíte de testes. Por isso o projeto usa testes de mutação (Jia; Harman, 2011), com a ferramenta <a href="https://stryker-mutator.io/" target="_blank" rel="noopener noreferrer">Stryker</a>. A ideia é simples: a ferramenta faz pequenas alterações no código (troca um <code>&gt;</code> por <code>&gt;=</code>, apaga uma linha, inverte uma condição) e roda os testes. Se os testes continuam passando com o código errado, eles não estavam verificando aquilo de verdade.</p>
+                <p>O próprio projeto tem um exemplo disso. O arquivo que faz a busca de termos dentro do PDF tinha 100% de cobertura, e mesmo assim só 66,7% das mutações foram detectadas pelos testes. Ou seja, todas as linhas eram executadas, mas um terço das alterações passava despercebido.</p>
+                <blockquote>
+                    <p>Observação: a mutação tem um custo alto. Uma execução completa no projeto levaria cerca de 19 horas, então ela roda de forma incremental, só sobre o que mudou.</p>
+                </blockquote>
+
+                <h4>Regras explícitas pro agente</h4>
+                <p>Um agente não segue boas práticas por padrão. Se você não pedir funções pequenas, ele escreve funções de 200 linhas; se não pedir testes, ele não escreve. Por isso o repositório tem um arquivo <code>AGENTS.md</code>, lido pelo agente a cada sessão, com as regras do projeto. Ele segue de perto as recomendações do "Clean Code pra Agentes de IA":</p>
+                <ul>
+                    <li>funções de 4 a 20 linhas e arquivos com menos de 500 linhas, que cabem inteiros no que o agente consegue ler de uma vez;</li>
+                    <li>nomes específicos, que dão poucos resultados numa busca, porque é buscando texto que o agente navega pelo código;</li>
+                    <li>tipos explícitos, sem <code>any</code>;</li>
+                    <li>dependências injetadas, pra dar pra testar cada parte isolada;</li>
+                    <li>mensagens de erro com o valor que causou o erro e o formato esperado;</li>
+                    <li>todo código novo com teste, e toda correção de bug com um teste que reproduz o bug.</li>
+                </ul>
+                <p>Além do <code>AGENTS.md</code>, algumas tarefas que se repetem ganharam instruções próprias pro agente, como escrever testes unitários, escrever testes E2E e publicar uma versão nova.</p>
+
+                <h4>Commits pequenos e integração contínua</h4>
+                <p>Cada mudança significativa vira um commit com uma mensagem semântica (<code>feat:</code>, <code>fix:</code>, <code>refactor:</code>, <code>test:</code>...), o que permite desfazer uma mudança específica sem perder o resto. Dos 280 commits, 72 são correções, 58 são funcionalidades novas, 26 são refatorações e 20 são só de testes.</p>
+                <p>A integração contínua roda a verificação de tipos, o lint e os testes com cobertura em cada envio, e uma versão nova só é publicada se os testes passarem. O lint e a cobertura funcionam como uma catraca: o limite só pode subir. Quando o lint entrou na CI, o projeto tinha 2.180 erros de lint; hoje tem zero.</p>
+
+                <h4>Parar pra auditar</h4>
+                <p>De tempos em tempos, o desenvolvimento de funcionalidades novas foi pausado pra uma auditoria: desempenho, cobertura e qualidade dos testes, qualidade do código, segurança, tratamento de erros. Cada auditoria gera um relatório com o que foi encontrado, e depois vêm as correções.</p>
+                <p>E elas encontram coisas. A auditoria de testes de setembro, por exemplo, achou que importar um projeto <code>.emmapcarc</code> com artigos falhava desde a versão 1.1.20, que o "Importar e Mesclar" do backup descartava boa parte dos dados dos artigos, e que os próprios testes E2E estavam rodando sobre a biblioteca real do aplicativo instalado, em vez de uma pasta de teste. Todos esses bugs foram corrigidos, cada um com um teste que garante que ele não volta.</p>
+                <p>Nas mesmas auditorias entram as refatorações: antes de dividir um arquivo grande, são escritos testes que registram o comportamento atual (os chamados testes de caracterização), e só depois o arquivo é dividido. Hoje nenhum arquivo de código do projeto passa de 500 linhas.</p>
+
+                <h4>O que eu tiro disso tudo</h4>
+                <p>O agente não substitui a disciplina, ele amplifica o que já existe. Com testes, regras claras e revisão frequente, ele produz muito, e rápido. Sem isso, ele produz muito, rápido e errado, e você só percebe quando alguma coisa quebra. Nas palavras do Akita, IA programando sozinha é a receita pro desastre.</p>
+                <p>E nada disso deixa o projeto perfeito. Ainda existem centenas de avisos de lint pra resolver, a mutação completa ainda não foi executada, e cada auditoria nova encontra coisas que as anteriores deixaram passar. A diferença é que, com essas práticas, os problemas aparecem cedo e dá pra corrigir sem medo de quebrar o resto.</p>
+                <p>Se quiser olhar o código, os testes ou os relatórios de auditoria, tudo está no <a href="https://github.com/mastrien/emmas_librarian" target="_blank" rel="noopener noreferrer">repositório do projeto no GitHub</a>.</p>
+
+                <h4>Referências</h4>
+                <ul>
+                    <li>AKITA, F. M. Do zero à pós-produção em 1 semana: como usar IA em projetos de verdade. <em>AkitaOnRails.com</em>, 20 fev. 2026. Disponível em: <a href="https://akitaonrails.com/2026/02/20/do-zero-a-pos-producao-em-1-semana-como-usar-ia-em-projetos-de-verdade-bastidores-do-the-m-akita-chronicles/" target="_blank" rel="noopener noreferrer">akitaonrails.com</a>.</li>
+                    <li>AKITA, F. M. Clean Code pra agentes de IA. <em>AkitaOnRails.com</em>, 20 abr. 2026. Disponível em: <a href="https://akitaonrails.com/2026/04/20/clean-code-para-agentes-de-ia/" target="_blank" rel="noopener noreferrer">akitaonrails.com</a>.</li>
+                    <li>BECK, K. <em>Extreme Programming Explained: Embrace Change</em>. Reading, MA: Addison-Wesley Professional, 2000.</li>
+                    <li>BECK, K. <em>Test-Driven Development: By Example</em>. Boston, MA: Addison-Wesley Professional, 2002.</li>
+                    <li>INOZEMTSEVA, L.; HOLMES, R. Coverage is not strongly correlated with test suite effectiveness. In: <em>Proceedings of the 36th International Conference on Software Engineering (ICSE '14)</em>, p. 435-445. ACM, 2014.</li>
+                    <li>JIA, Y.; HARMAN, M. An analysis and survey of the development of mutation testing. <em>IEEE Transactions on Software Engineering</em>, v. 37, n. 5, p. 649-678, 2011.</li>
+                </ul>
 
                 <div class="chapter-pagination">
                     <a href="#configuracoes-backup" class="chapter-btn prev">← Capítulo 8 - Configurações & Backups</a>
