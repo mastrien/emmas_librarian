@@ -31,17 +31,43 @@ const renderModal = (overrides: Partial<React.ComponentProps<typeof SearchSummar
 };
 
 describe('SearchSummaryModal', () => {
-  it('shows totals, the per-database outcome and says nothing is saved yet', () => {
+  const stat = (label: string) =>
+    within(screen.getByRole('group', { name: 'Contagem da busca' })).getByText(label).parentElement!;
+
+  it('breaks the total down so that found - repeated - already in project = new', () => {
     renderModal();
 
-    expect(screen.getByText('Busca Concluída!')).toBeInTheDocument();
     expect(screen.getByText(/Nada foi salvo ainda/)).toBeInTheDocument();
-    expect(within(screen.getByText('Total Encontrado').parentElement!).getByText('5')).toBeInTheDocument();
-    expect(within(screen.getByText('Sem Duplicatas').parentElement!).getByText('2')).toBeInTheDocument();
-    expect(within(screen.getByText('Já no Projeto').parentElement!).getByText('1')).toBeInTheDocument();
+    expect(within(stat('Encontrados')).getByText('5')).toBeInTheDocument();
+    expect(within(stat('Repetidos')).getByText('3')).toBeInTheDocument();
+    expect(within(stat('Já no projeto')).getByText('1')).toBeInTheDocument();
+    expect(within(stat('Novos')).getByText('1')).toBeInTheDocument();
+    expect(screen.getByText(/Novos são os que entram no projeto ao salvar/)).toBeInTheDocument();
+  });
+
+  it('shows the per-database outcome, including failures', () => {
+    renderModal();
+
     expect(screen.getByText('Web of Science')).toBeInTheDocument();
     expect(screen.getByText('Falha')).toBeInTheDocument();
     expect(screen.getByText('API Timeout')).toBeInTheDocument();
+  });
+
+  it.each([
+    [[false], 'Salvar 1 novo no projeto'],
+    [[false, false], 'Salvar 2 novos no projeto'],
+    [[true], 'Salvar no projeto (nenhum artigo novo)'],
+  ])('says how many articles saving will add (%j already in project)', (flags, label) => {
+    const results = flags.map((alreadyInProject, i) => ({
+      title: `Artigo ${i}`,
+      sourceDatabases: ['OpenAlex'],
+      alreadyInProject,
+      details: {},
+    }));
+
+    renderModal({ preview: { ...preview, results } });
+
+    expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
   });
 
   it('lists every result with its authors, year and sources, flagging the ones already in the project', () => {
@@ -86,7 +112,7 @@ describe('SearchSummaryModal', () => {
   it('saves with "Salvar no projeto" and discards with "Descartar" or the close button', () => {
     const { onSave, onDiscard } = renderModal();
 
-    fireEvent.click(screen.getByRole('button', { name: /Salvar no projeto/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Salvar .*no projeto/ }));
     fireEvent.click(screen.getByRole('button', { name: /Descartar/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Fechar e descartar' }));
 
@@ -103,7 +129,7 @@ describe('SearchSummaryModal', () => {
   it('disables the choices while saving', () => {
     renderModal({ isSaving: true });
 
-    expect(screen.getByRole('button', { name: /Salvar no projeto/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Salvar .*no projeto/ })).toBeDisabled();
     expect(screen.getByRole('button', { name: /Descartar/ })).toBeDisabled();
   });
 });

@@ -133,6 +133,45 @@ describe('SearchOrchestrator', () => {
       });
     });
 
+    // DOIs are case-insensitive; bases do not agree on case (e.g. 10.1016/J.X vs 10.1016/j.x).
+    it('treats DOIs that differ only in case as the same article', async () => {
+      db.saveArticle(projectId, {
+        doi: '10.1016/j.old',
+        title: 'Old',
+        source_query: 'q',
+        source_databases: '[]',
+        csl_json: '{}',
+      });
+      api.results.openalex = [
+        found('10.1016/j.env.2024', 'Soil moisture', 'OpenAlex'),
+        found('10.1016/J.OLD', 'Old (v2)', 'OpenAlex'),
+      ];
+      api.results.scopus = [found('10.1016/J.ENV.2024', 'Soil Moisture: a review', 'Scopus')];
+
+      const preview = await orchestrator.preview(projectId, { openalex: 'q', scopus: 'q' }, 50, 'relevance', 'q');
+
+      expect(preview.results.map((r) => [r.doi, r.sourceDatabases, r.alreadyInProject])).toEqual([
+        ['10.1016/j.env.2024', ['OpenAlex', 'Scopus'], false],
+        ['10.1016/J.OLD', ['OpenAlex'], true],
+      ]);
+    });
+
+    it('links a third result by the DOI of one that was merged by title', async () => {
+      api.results.openalex = [found('', 'Soil moisture review', 'OpenAlex')];
+      api.results.crossref = [found('10.1/soil', 'Soil Moisture Review', 'Crossref')];
+      api.results.scopus = [found('10.1/SOIL', 'Soil moisture: a review', 'Scopus')];
+
+      const preview = await orchestrator.preview(
+        projectId,
+        { openalex: 'q', crossref: 'q', scopus: 'q' },
+        50,
+        'relevance',
+        'q',
+      );
+
+      expect(preview.results.map((r) => r.sourceDatabases)).toEqual([['OpenAlex', 'Crossref', 'Scopus']]);
+    });
+
     it('flags results that are already in the project', async () => {
       db.saveArticle(projectId, {
         doi: '10.1/old',
@@ -208,6 +247,24 @@ describe('SearchOrchestrator', () => {
 
       const [history] = db.getSearchHistory(projectId) as { query_state: string | null }[];
       expect(history.query_state).toBe(state);
+    });
+
+    // The history says "N artigos salvos", and "Desfazer Busca" removes exactly the articles this search added.
+    it('counts only the articles the search added, not the ones already in the project', async () => {
+      db.saveArticle(projectId, {
+        doi: '10.1/old',
+        title: 'Old',
+        source_query: 'q',
+        source_databases: '[]',
+        csl_json: '{}',
+      });
+      api.results.openalex = [found('10.1/old', 'Old', 'OpenAlex'), found('10.1/new', 'New', 'OpenAlex')];
+      const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q');
+
+      const summary = orchestrator.savePreview(previewId);
+
+      expect(summary.savedCount).toBe(1);
+      expect((db.getSearchHistory(projectId) as { total_results: number }[])[0].total_results).toBe(1);
     });
 
     it('does not duplicate articles when the same search is saved twice', async () => {

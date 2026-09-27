@@ -24,7 +24,7 @@ async function flow3QueryBuilderSearch(window, searchTerm) {
   await window.fill('input[placeholder="Termo de busca..."]', searchTerm);
   await window.click('button:has-text("Fazer Busca")');
 
-  const saveBtn = window.getByRole('button', { name: /Salvar no projeto/ });
+  const saveBtn = window.getByRole('button', { name: /Salvar .*no projeto/ });
   await saveBtn.waitFor({ state: 'visible', timeout: 10000 });
   await saveBtn.click();
 

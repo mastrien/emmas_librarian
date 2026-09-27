@@ -4,6 +4,7 @@ import { CheckCircle, Loader2, Save, Trash2, X } from 'lucide-react';
 import type { SearchPreview, SearchPreviewItem } from '../../types';
 import { ArticleDetailsModal } from './ArticleDetailsModal';
 import { previewItemToArticle } from './searchSummary/previewItemToArticle';
+import { saveButtonLabel, searchCounts, type SearchCounts } from './searchSummary/searchCounts';
 import { SearchBreakdownList } from './searchSummary/SearchBreakdownList';
 import { SearchPreviewList } from './searchSummary/SearchPreviewList';
 
@@ -27,6 +28,27 @@ const StatBox: React.FC<{ label: string; value: number; color?: string }> = ({ l
   <div style={statBoxStyle}>
     <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.4rem' }}>{label}</div>
     <div style={{ fontSize: '1.5rem', fontWeight: 700, color: color ?? 'var(--text-heading)' }}>{value}</div>
+  </div>
+);
+
+// The four numbers read as a subtraction, so the user sees where each found article went.
+const SummaryCounts: React.FC<{ counts: SearchCounts }> = ({ counts }) => (
+  <div style={{ marginBottom: '1.5rem' }}>
+    <div
+      role="group"
+      aria-label="Contagem da busca"
+      style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}
+    >
+      <StatBox label="Encontrados" value={counts.found} />
+      <StatBox label="Repetidos" value={counts.repeated} />
+      <StatBox label="Já no projeto" value={counts.alreadyInProject} />
+      <StatBox label="Novos" value={counts.added} color="var(--color-primary)" />
+    </div>
+    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.6rem 0 0 0' }}>
+      Encontrados soma o que cada base devolveu. Repetidos são as cópias do mesmo artigo vindas de mais de uma base
+      (mesmo DOI ou mesmo título). Novos são os que entram no projeto ao salvar; os que já estão nele só ganham a base
+      nova na lista de origem.
+    </p>
   </div>
 );
 
@@ -54,17 +76,15 @@ const SummaryHeader: React.FC = () => (
   </div>
 );
 
-const SummaryActions: React.FC<Omit<SearchSummaryModalProps, 'preview' | 'saveError'>> = ({
-  isSaving,
-  onSave,
-  onDiscard,
-}) => (
+type SummaryActionsProps = Omit<SearchSummaryModalProps, 'preview' | 'saveError'> & { added: number };
+
+const SummaryActions: React.FC<SummaryActionsProps> = ({ isSaving, onSave, onDiscard, added }) => (
   <div style={{ display: 'flex', gap: '1rem' }}>
     <button onClick={onDiscard} disabled={isSaving} className="btn-secondary" style={{ flex: 1, padding: '1rem' }}>
       <Trash2 size={18} /> Descartar
     </button>
     <button onClick={onSave} disabled={isSaving} className="btn-primary" style={{ flex: 2, padding: '1rem' }}>
-      {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} Salvar no projeto
+      {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {saveButtonLabel(added)}
     </button>
   </div>
 );
@@ -82,8 +102,7 @@ export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({
   onSave,
   onDiscard,
 }) => {
-  const totalFound = Object.values(preview.breakdown).reduce((sum, db) => sum + db.count, 0);
-  const alreadyInProject = preview.results.filter((r) => r.alreadyInProject).length;
+  const counts = searchCounts(preview);
   const [detailsItem, setDetailsItem] = useState<SearchPreviewItem | null>(null);
 
   return createPortal(
@@ -133,11 +152,7 @@ export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({
           <X size={24} />
         </button>
         <SummaryHeader />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-          <StatBox label="Total Encontrado" value={totalFound} />
-          <StatBox label="Sem Duplicatas" value={preview.results.length} color="var(--color-primary)" />
-          <StatBox label="Já no Projeto" value={alreadyInProject} />
-        </div>
+        <SummaryCounts counts={counts} />
         <SearchBreakdownList breakdown={preview.breakdown} />
         <SearchPreviewList results={preview.results} onOpenDetails={setDetailsItem} />
         {saveError && (
@@ -145,7 +160,7 @@ export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({
             {saveError}
           </p>
         )}
-        <SummaryActions isSaving={isSaving} onSave={onSave} onDiscard={onDiscard} />
+        <SummaryActions isSaving={isSaving} onSave={onSave} onDiscard={onDiscard} added={counts.added} />
       </div>
       <ArticleDetailsModal
         isOpen={detailsItem !== null}

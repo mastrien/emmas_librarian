@@ -3,6 +3,7 @@ import { QueryTranslator } from './QueryTranslator';
 import { ApiIntegrator } from './ApiIntegrator';
 import { NormalizedArticle } from './types';
 import { PendingSearchStore } from './PendingSearchStore';
+import { doiKey } from '../utils/doi';
 import type {
   QuerySort,
   SavedSearchSummary,
@@ -91,6 +92,7 @@ export class SearchOrchestrator {
 
   /**
    * Saves a previewed search: one history entry plus its articles (duplicates merge into existing ones).
+   * savedCount is how many articles were new to the project.
    *
    * @example await orchestrator.savePreview(previewId); // { savedCount: 12, breakdown }
    */
@@ -102,9 +104,9 @@ export class SearchOrchestrator {
       );
     }
     // Removed only after it is written, so a failed save can be retried from the same results.
-    this.persist(search);
+    const savedCount = this.persist(search);
     this.pending.discard(previewId);
-    return { savedCount: search.articles.length, breakdown: search.breakdown };
+    return { savedCount, breakdown: search.breakdown };
   }
 
   /** Drops a previewed search without touching the project. */
@@ -146,13 +148,17 @@ export class SearchOrchestrator {
     return integrators;
   }
 
-  private persist(search: PendingSearch): void {
+  /** Writes the history entry and the articles; returns how many were new to the project. */
+  private persist(search: PendingSearch): number {
     const { projectId, queryMap, unifiedQuery, breakdown, sortBy, limit, articles, queryState } = search;
+    // Results already in the project only get their source list merged, so they do not count as
+    // saved by this search (and "Desfazer Busca" does not remove them).
+    const addedCount = articles.filter((a) => !this.db.findDuplicateArticle(projectId, a.doi, a.title)).length;
     const searchId = this.db.saveSearchHistory(
       projectId,
       unifiedQuery,
       queryMap,
-      articles.length,
+      addedCount,
       breakdown,
       sortBy,
       limit,
@@ -171,6 +177,7 @@ export class SearchOrchestrator {
         search_id: searchId,
       });
     }
+    return addedCount;
   }
 
   normalizeTitle(title: string): string {
@@ -190,7 +197,7 @@ export class SearchOrchestrator {
     seenDoi: Map<string, number>,
     seenTitle: Map<string, number>,
   ): number | undefined {
-    const doi = item.doi;
+    const doi = doiKey(item.doi);
     const title = this.normalizeTitle(item.title || '');
     if (doi && seenDoi.has(doi)) {
       return seenDoi.get(doi);
@@ -214,13 +221,24 @@ export class SearchOrchestrator {
       if (!existing.source_databases.includes(newSource)) {
         existing.source_databases.push(newSource);
       }
+      // A match by title may bring a DOI (or a differently written title) that later results use.
+      this.rememberKeys(item, idx, seenDoi, seenTitle);
       return;
     }
-    const newIdx = deduplicated.length;
     deduplicated.push(item);
-    if (item.doi) seenDoi.set(item.doi, newIdx);
+    this.rememberKeys(item, deduplicated.length - 1, seenDoi, seenTitle);
+  }
+
+  private rememberKeys(
+    item: NormalizedArticle,
+    idx: number,
+    seenDoi: Map<string, number>,
+    seenTitle: Map<string, number>,
+  ): void {
+    const doi = doiKey(item.doi);
+    if (doi && !seenDoi.has(doi)) seenDoi.set(doi, idx);
     const title = this.normalizeTitle(item.title || '');
-    if (title) seenTitle.set(title, newIdx);
+    if (title && !seenTitle.has(title)) seenTitle.set(title, idx);
   }
 
   private deduplicate(results: NormalizedArticle[]): NormalizedArticle[] {

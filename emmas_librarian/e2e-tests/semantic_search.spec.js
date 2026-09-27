@@ -38,7 +38,7 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
     await expect(resultRow).toHaveCount(0);
 
     await runSearch(window, 'aprendizado de maquina');
-    await review.getByRole('button', { name: /Salvar no projeto/ }).click();
+    await review.getByRole('button', { name: /Salvar .*no projeto/ }).click();
 
     await expect(resultRow).toBeVisible({ timeout: 10000 });
     await expect(resultRow).toContainText('Author E2E');
