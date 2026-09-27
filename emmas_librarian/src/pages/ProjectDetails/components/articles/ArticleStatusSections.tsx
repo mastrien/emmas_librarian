@@ -129,6 +129,7 @@ interface ArticleAccordionProps {
 const ArticleAccordion: React.FC<ArticleAccordionProps> = ({ label, color, isOpen, onToggle, action, children }) => (
   <details
     className="custom-accordion"
+    open={isOpen}
     onToggle={(e) => onToggle((e.target as HTMLDetailsElement).open)}
     style={{
       marginBottom: '1rem',
