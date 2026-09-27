@@ -3,6 +3,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { app } from 'electron';
 import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import { localIsoDate } from '../../../src/utils/localDate';
 
 export interface StoredPdf {
   destPath: string;
@@ -63,7 +64,7 @@ function copyIntoLibrary(sourceFilePath: string, pdfsDir: string): { destPath: s
 function timestampedFilename(sourceFilePath: string): string {
   const originalName = path.basename(sourceFilePath).replace(/[^a-zA-Z0-9._-]/g, '_');
   const now = new Date();
-  const dateStamp = now.toISOString().slice(0, 10);
+  const dateStamp = localIsoDate(now);
   const timeStamp = now.toTimeString().slice(0, 8).replace(/:/g, '');
   return `${dateStamp}_${timeStamp}_${originalName}`;
 }

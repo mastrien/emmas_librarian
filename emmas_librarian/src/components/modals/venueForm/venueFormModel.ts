@@ -1,4 +1,5 @@
 import type { ScientificVenue, ScientificMilestone, VenueCategory, MilestoneFieldType } from '../../../types';
+import { localIsoDate } from '../../../utils/localDate';
 
 export type VenuePayload = Omit<ScientificVenue, 'id' | 'created_at'>;
 
@@ -30,7 +31,7 @@ export const EMPTY_VENUE_DETAILS: VenueDetails = {
 };
 
 /** Today as YYYY-MM-DD (UTC), the fallback date for new milestones. */
-export const todayIso = (): string => new Date().toISOString().split('T')[0];
+export const todayIso = (): string => localIsoDate();
 
 /**
  * The form values for an existing venue.

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronRight } from 'lucide-react';
 import { ScientificVenue, ScientificMilestone, MilestoneStatus } from '../../types';
+import { localIsoDate } from '../../utils/localDate';
 
 interface DeadlineBannerProps {
   venues: ScientificVenue[];
@@ -36,7 +37,7 @@ export const DeadlineBanner: React.FC<DeadlineBannerProps> = ({ venues, onToggle
     onToggleMilestoneStatus(milestoneId, nextStatus);
   };
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localIsoDate();
   const todayMs = new Date(todayStr).getTime();
 
   const deadlineItems: DeadlineItem[] = [];

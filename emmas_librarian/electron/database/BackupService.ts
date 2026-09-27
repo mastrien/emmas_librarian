@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DatabaseAdapter } from './DatabaseAdapter';
 import { mergeBackupProjects, type StorageDirs } from './backup/backupMerge';
 import { restartApp } from '../restartApp';
+import { localIsoDate } from '../../src/utils/localDate';
 
 const BACKUP_FILTERS = [{ name: "Emma's Librarian Backup", extensions: ['emmabak'] }];
 const STORAGE_FOLDERS = ['storage/pdfs', 'storage/project_documents'];
@@ -62,7 +63,7 @@ export class BackupService {
     if (process.env.E2E_MOCK_SAVE_FILE_PATH) return process.env.E2E_MOCK_SAVE_FILE_PATH;
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: 'Exportar Backup Completo',
-      defaultPath: `backup_${new Date().toISOString().split('T')[0]}.emmabak`,
+      defaultPath: `backup_${localIsoDate()}.emmabak`,
       filters: BACKUP_FILTERS,
     });
     return canceled || !filePath ? null : filePath;

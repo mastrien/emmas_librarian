@@ -4,12 +4,14 @@ import { DiarySection } from '../common/DiarySection';
 import { ServicesProvider } from '../../contexts/ServicesContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import type { DiaryEntry } from '../../types';
+import { localIsoDate } from '../../utils/localDate';
 
 vi.mock('@mdxeditor/editor', async () => (await import('./fakes/FakeMdxEditor')).fakeMdxEditorModule);
 vi.mock('@mdxeditor/editor/style.css', () => ({}));
 
 const PROJECT_ID = 1;
-const TODAY = new Date().toISOString().split('T')[0];
+// The diary names pages after the local day (see localIsoDate), not the UTC one.
+const TODAY = localIsoDate();
 const PAST = '2026-03-05';
 const OTHER = '2026-03-04';
 
