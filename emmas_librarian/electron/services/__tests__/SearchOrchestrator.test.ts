@@ -93,11 +93,44 @@ describe('SearchOrchestrator', () => {
           doi: '10.123/abc',
           sourceDatabases: ['OpenAlex', 'Crossref'],
           alreadyInProject: false,
+          details: {},
         },
       ]);
       expect(preview.breakdown).toEqual({ openalex: { count: 1 }, crossref: { count: 1 } });
       expect(db.getArticlesByProject(projectId)).toHaveLength(0);
       expect(db.getSearchHistory(projectId)).toHaveLength(0);
+    });
+
+    it('carries the full metadata of each result for the details dialog, and saves the same values', async () => {
+      api.results.openalex = [
+        {
+          ...found('10.1/rich', 'Rico em metadados', 'OpenAlex'),
+          abstract: 'Resumo do artigo.',
+          journal: 'Revista X',
+          authorKeywords: 'ontologia; clima',
+          citationCount: 42,
+          is_oa: 1,
+        },
+      ];
+
+      const preview = await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q');
+      orchestrator.savePreview(preview.previewId);
+
+      expect(preview.results[0].details).toMatchObject({
+        abstract: 'Resumo do artigo.',
+        journal: 'Revista X',
+        author_keywords: 'ontologia; clima',
+        citation_count: 42,
+        is_oa: 1,
+      });
+      // SQLite returns null for the fields the API left empty, so compare the ones it filled.
+      expect(db.getArticlesByProject(projectId)[0]).toMatchObject({
+        abstract: 'Resumo do artigo.',
+        journal: 'Revista X',
+        author_keywords: 'ontologia; clima',
+        citation_count: 42,
+        is_oa: 1,
+      });
     });
 
     it('flags results that are already in the project', async () => {

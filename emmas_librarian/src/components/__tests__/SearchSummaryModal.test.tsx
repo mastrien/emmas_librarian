@@ -18,8 +18,9 @@ const preview: SearchPreview = {
       doi: '10.1/a',
       sourceDatabases: ['OpenAlex', 'Web of Science'],
       alreadyInProject: false,
+      details: { abstract: 'Um estudo sobre revisão sistemática.', journal: 'Revista de Computação' },
     },
-    { title: 'Artigo antigo', sourceDatabases: ['OpenAlex'], alreadyInProject: true },
+    { title: 'Artigo antigo', sourceDatabases: ['OpenAlex'], alreadyInProject: true, details: {} },
   ],
 };
 
@@ -52,6 +53,28 @@ describe('SearchSummaryModal', () => {
     expect(items[0]).toHaveTextContent('Ana Lima · 2024 · OpenAlex, Web of Science');
     expect(within(items[0]).queryByText('Já no projeto')).not.toBeInTheDocument();
     expect(within(items[1]).getByText('Já no projeto')).toBeInTheDocument();
+  });
+
+  it('opens the metadata of a result from its title, without PDF or project-origin sections', () => {
+    renderModal();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Aprendizado de máquina na revisão' }));
+
+    expect(screen.getByText('Um estudo sobre revisão sistemática.')).toBeInTheDocument();
+    expect(screen.getByText('Revista de Computação')).toBeInTheDocument();
+    expect(screen.queryByText('ORIGEM NO PROJETO')).not.toBeInTheDocument();
+    expect(screen.queryByText('ARQUIVO PDF')).not.toBeInTheDocument();
+  });
+
+  it('closes the metadata and keeps the review open', () => {
+    const { onDiscard } = renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Aprendizado de máquina na revisão' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
+
+    expect(screen.queryByText('Um estudo sobre revisão sistemática.')).not.toBeInTheDocument();
+    expect(screen.getByText('Busca Concluída!')).toBeInTheDocument();
+    expect(onDiscard).not.toHaveBeenCalled();
   });
 
   it('says so when the search found nothing', () => {

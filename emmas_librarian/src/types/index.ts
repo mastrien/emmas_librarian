@@ -319,6 +319,25 @@ export interface TrashItem {
 
 export type SearchBreakdown = Record<string, { count: number; error?: string }>;
 
+/** Metadata of a search result beyond the list columns, for the details dialog. */
+export type SearchPreviewDetails = Pick<
+  Article,
+  | 'abstract'
+  | 'author_keywords'
+  | 'index_keywords'
+  | 'journal'
+  | 'volume'
+  | 'issue'
+  | 'pages'
+  | 'affiliations'
+  | 'references_list'
+  | 'document_type'
+  | 'publisher'
+  | 'is_oa'
+  | 'issn'
+  | 'citation_count'
+>;
+
 /** One result of a search the user has not saved yet (what the review list shows). */
 export interface SearchPreviewItem {
   title: string;
@@ -327,6 +346,7 @@ export interface SearchPreviewItem {
   doi?: string;
   sourceDatabases: string[];
   alreadyInProject: boolean;
+  details: SearchPreviewDetails;
 }
 
 /** Results held in the main process until the user saves or discards them. */

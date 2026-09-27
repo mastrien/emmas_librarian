@@ -25,6 +25,12 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
       'Aprendizado de Maquina E2E',
       { timeout: 10000 },
     );
+    // A title opens that result's metadata without leaving the review.
+    await review.getByRole('button', { name: 'Aprendizado de Maquina E2E' }).click();
+    await expect(window.getByText('10.1234/e2e-mock-doi')).toBeVisible();
+    await window.getByRole('button', { name: 'Fechar', exact: true }).click();
+    await expect(window.getByText('10.1234/e2e-mock-doi')).toBeHidden();
+
     await review.getByRole('button', { name: /Descartar/ }).click();
     await expect(review).toBeHidden();
     await window.click('text="Voltar para o Projeto"');

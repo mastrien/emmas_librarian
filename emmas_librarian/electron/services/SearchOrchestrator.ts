@@ -3,7 +3,33 @@ import { QueryTranslator } from './QueryTranslator';
 import { ApiIntegrator } from './ApiIntegrator';
 import { NormalizedArticle } from './types';
 import { PendingSearchStore } from './PendingSearchStore';
-import type { QuerySort, SavedSearchSummary, SearchBreakdown, SearchPreview } from '../../src/types';
+import type {
+  QuerySort,
+  SavedSearchSummary,
+  SearchBreakdown,
+  SearchPreview,
+  SearchPreviewDetails,
+} from '../../src/types';
+
+// NormalizedArticle (API shape) → article columns; shared by the review dialog and the save.
+function previewDetails(article: NormalizedArticle): SearchPreviewDetails {
+  return {
+    abstract: article.abstract,
+    author_keywords: article.authorKeywords,
+    index_keywords: article.indexKeywords,
+    journal: article.journal,
+    volume: article.volume,
+    issue: article.issue,
+    pages: article.pages,
+    affiliations: article.affiliations,
+    references_list: article.references,
+    document_type: article.documentType,
+    publisher: article.publisher,
+    is_oa: article.is_oa,
+    issn: article.issn,
+    citation_count: article.citationCount,
+  };
+}
 
 /** A search that ran but is not saved: everything needed to persist it later, exactly as found. */
 interface PendingSearch {
@@ -58,6 +84,7 @@ export class SearchOrchestrator {
       doi: a.doi,
       sourceDatabases: a.source_databases,
       alreadyInProject: !!this.db.findDuplicateArticle(projectId, a.doi, a.title),
+      details: previewDetails(a),
     }));
     return { previewId, breakdown, results };
   }
@@ -137,24 +164,11 @@ export class SearchOrchestrator {
         title: article.title,
         authors: article.authors,
         year: article.year,
-        abstract: article.abstract,
-        author_keywords: article.authorKeywords,
-        index_keywords: article.indexKeywords,
-        journal: article.journal,
-        volume: article.volume,
-        issue: article.issue,
-        pages: article.pages,
-        affiliations: article.affiliations,
-        references_list: article.references,
-        document_type: article.documentType,
-        issn: article.issn,
-        citation_count: article.citationCount,
+        ...previewDetails(article),
         source_query: JSON.stringify(queryMap),
         source_databases: JSON.stringify(article.source_databases),
         csl_json: JSON.stringify(article.csl_json),
         search_id: searchId,
-        is_oa: article.is_oa,
-        publisher: article.publisher,
       });
     }
   }

@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle, Loader2, Save, Trash2, X } from 'lucide-react';
-import type { SearchPreview } from '../../types';
+import type { SearchPreview, SearchPreviewItem } from '../../types';
+import { ArticleDetailsModal } from './ArticleDetailsModal';
+import { previewItemToArticle } from './searchSummary/previewItemToArticle';
 import { SearchBreakdownList } from './searchSummary/SearchBreakdownList';
 import { SearchPreviewList } from './searchSummary/SearchPreviewList';
 
@@ -82,6 +84,7 @@ export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({
 }) => {
   const totalFound = Object.values(preview.breakdown).reduce((sum, db) => sum + db.count, 0);
   const alreadyInProject = preview.results.filter((r) => r.alreadyInProject).length;
+  const [detailsItem, setDetailsItem] = useState<SearchPreviewItem | null>(null);
 
   return createPortal(
     <div
@@ -136,7 +139,7 @@ export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({
           <StatBox label="Já no Projeto" value={alreadyInProject} />
         </div>
         <SearchBreakdownList breakdown={preview.breakdown} />
-        <SearchPreviewList results={preview.results} />
+        <SearchPreviewList results={preview.results} onOpenDetails={setDetailsItem} />
         {saveError && (
           <p role="alert" style={{ color: 'var(--color-danger)', margin: '0 0 1rem 0' }}>
             {saveError}
@@ -144,6 +147,12 @@ export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({
         )}
         <SummaryActions isSaving={isSaving} onSave={onSave} onDiscard={onDiscard} />
       </div>
+      <ArticleDetailsModal
+        isOpen={detailsItem !== null}
+        onClose={() => setDetailsItem(null)}
+        article={detailsItem ? previewItemToArticle(detailsItem) : null}
+        isSearchResult
+      />
     </div>,
     document.body,
   );
