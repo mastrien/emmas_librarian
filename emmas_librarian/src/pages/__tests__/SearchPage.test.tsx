@@ -4,6 +4,7 @@ import { SearchPage } from '../SearchPage';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ServicesProvider } from '../../contexts/ServicesContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
+import type { SearchHistoryItem } from '../../types';
 
 const mockNavigate = vi.fn();
 
@@ -73,10 +74,10 @@ describe('SearchPage', () => {
     });
   });
 
-  const renderPage = (projectId = '1') => {
+  const renderPage = (projectId = '1', query = '') => {
     return render(
       <ServicesProvider apiService={fakeService}>
-        <MemoryRouter initialEntries={[`/projects/${projectId}/search`]}>
+        <MemoryRouter initialEntries={[`/projects/${projectId}/search${query}`]}>
           <Routes>
             <Route path="/projects/:id/search" element={<SearchPage />} />
           </Routes>
@@ -403,7 +404,19 @@ describe('SearchPage', () => {
         50,
         'citations',
         '(Todos contém "")',
+        expect.any(String),
       );
+      // The builder state goes along so the search can be reopened from the history.
+      const queryState = JSON.parse(fakeService.previewSearch.mock.calls[0][5] as string);
+      expect(queryState).toEqual({
+        ast: {
+          type: 'group',
+          logicalOperator: 'AND',
+          children: [{ type: 'rule', field: 'all', operator: 'contains', value: '' }],
+        },
+        selectedDbs: expect.arrayContaining(['openalex', 'crossref', 'scopus']),
+        customQueries: { crossref: 'custom-crossref' },
+      });
     });
 
     it('describes a single rule without parentheses', async () => {
@@ -463,6 +476,75 @@ describe('SearchPage', () => {
       renderPage();
 
       await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/'));
+    });
+  });
+
+  describe('new search from a history entry (?from=)', () => {
+    const historyEntry = (overrides: Partial<SearchHistoryItem>): SearchHistoryItem => ({
+      id: 7,
+      unified_query: 'q',
+      translated_queries: '{}',
+      total_results: 3,
+      results_breakdown: '{}',
+      created_at: '2026-09-27',
+      ...overrides,
+    });
+    const search = async () => {
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /Fazer Busca/i }));
+      });
+    };
+
+    it('loads the tree, bases, custom query, sort and limit of that search', async () => {
+      fakeService.getSearchHistory.mockResolvedValue([
+        historyEntry({
+          query_state: JSON.stringify({
+            ast: { type: 'rule', field: 'title', operator: 'contains', value: 'ontologia' },
+            selectedDbs: ['openalex'],
+            customQueries: { openalex: 'CUSTOM-OPENALEX' },
+          }),
+          sort_by: 'date',
+          limit_val: 25,
+        }),
+      ]);
+
+      renderPage('1', '?from=7');
+      expect(await screen.findByRole('status')).toHaveTextContent('Busca #7 carregada do histórico');
+      await search();
+
+      expect(fakeService.getSearchHistory).toHaveBeenCalledWith(1);
+      expect(fakeService.previewSearch).toHaveBeenCalledWith(
+        1,
+        { openalex: 'CUSTOM-OPENALEX' },
+        25,
+        'date',
+        'Título contém "ontologia"',
+        expect.any(String),
+      );
+    });
+
+    it('explains that an older search came back as custom queries', async () => {
+      fakeService.getSearchHistory.mockResolvedValue([
+        historyEntry({ translated_queries: JSON.stringify({ crossref: 'query=old' }) }),
+      ]);
+
+      renderPage('1', '?from=7');
+      expect(await screen.findByRole('status')).toHaveTextContent('veio como query customizada');
+      await search();
+
+      expect(fakeService.previewSearch.mock.calls[0][1]).toEqual({ crossref: 'query=old' });
+    });
+
+    it('starts a blank search when the entry is not a database search', async () => {
+      fakeService.getSearchHistory.mockResolvedValue([
+        historyEntry({ translated_queries: JSON.stringify({ import: 'Origem: Projeto ID 2' }) }),
+      ]);
+
+      renderPage('1', '?from=7');
+      await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
+
+      await waitFor(() => expect(fakeService.getSearchHistory).toHaveBeenCalled());
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
   });
 });

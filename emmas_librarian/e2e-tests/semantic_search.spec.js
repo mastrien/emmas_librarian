@@ -37,6 +37,15 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
     await expect(resultRow).toBeVisible({ timeout: 10000 });
     await expect(resultRow).toContainText('Author E2E');
     await expect(resultRow).toContainText('2026');
+
+    // The saved search can be reopened in the query builder from the history.
+    await window.getByTestId('tab-history').click();
+    await window
+      .getByRole('link', { name: /Nova busca a partir desta/ })
+      .first()
+      .click();
+    await expect(window.getByRole('status')).toContainText('carregada do histórico');
+    await expect(window.locator('input[placeholder="Termo de busca..."]')).toHaveValue('aprendizado de maquina');
   } finally {
     await electronApp.close();
   }

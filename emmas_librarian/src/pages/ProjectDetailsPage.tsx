@@ -168,6 +168,7 @@ export const ProjectDetailsPage: React.FC = () => {
           history={data.history}
           embedded={true}
           onRevertSearch={actions.revertSearch}
+          projectId={projectId ?? undefined}
         />
       )}
 

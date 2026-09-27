@@ -290,3 +290,21 @@ describe('migration failures are logged and do not prevent opening the database'
     adapter.close();
   });
 });
+
+describe('search_history.query_state migration', () => {
+  it('adds the column to a library created before it existed, keeping the old rows', () => {
+    seed((raw) => {
+      raw.prepare("INSERT INTO projects (id, name) VALUES (1, 'P')").run();
+      raw
+        .prepare(
+          "INSERT INTO search_history (project_id, unified_query, translated_queries, results_breakdown) VALUES (1, 'q', '{}', '{}')",
+        )
+        .run();
+      raw.exec('ALTER TABLE search_history DROP COLUMN query_state');
+    });
+
+    const rows = reopen((raw) => raw.prepare('SELECT unified_query, query_state FROM search_history').all());
+
+    expect(rows).toEqual([{ unified_query: 'q', query_state: null }]);
+  });
+});

@@ -12,6 +12,8 @@ interface PendingSearch {
   limit: number;
   sortBy: QuerySort;
   unifiedQuery: string;
+  // JSON of the query builder state, saved so the search can be reopened in the builder.
+  queryState?: string;
   breakdown: SearchBreakdown;
   articles: NormalizedArticle[];
 }
@@ -36,9 +38,19 @@ export class SearchOrchestrator {
     limit: number,
     sortBy: QuerySort,
     unifiedQuery: string,
+    queryState?: string,
   ): Promise<SearchPreview> {
     const { articles, breakdown } = await this.fetchDeduplicated(queryMap, limit, sortBy);
-    const previewId = this.pending.put({ projectId, queryMap, limit, sortBy, unifiedQuery, breakdown, articles });
+    const previewId = this.pending.put({
+      projectId,
+      queryMap,
+      limit,
+      sortBy,
+      unifiedQuery,
+      queryState,
+      breakdown,
+      articles,
+    });
     const results = articles.map((a) => ({
       title: a.title,
       authors: a.authors,
@@ -108,7 +120,7 @@ export class SearchOrchestrator {
   }
 
   private persist(search: PendingSearch): void {
-    const { projectId, queryMap, unifiedQuery, breakdown, sortBy, limit, articles } = search;
+    const { projectId, queryMap, unifiedQuery, breakdown, sortBy, limit, articles, queryState } = search;
     const searchId = this.db.saveSearchHistory(
       projectId,
       unifiedQuery,
@@ -117,6 +129,7 @@ export class SearchOrchestrator {
       breakdown,
       sortBy,
       limit,
+      queryState,
     );
     for (const article of articles) {
       this.db.saveArticle(projectId, {

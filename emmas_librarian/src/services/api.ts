@@ -73,7 +73,9 @@ export const projectService: IProjectService = {
     limit: number,
     sortBy: string,
     unifiedQuery: string,
-  ): Promise<SearchPreview> => safeInvoke(IpcChannel.SEARCH_PREVIEW, projectId, queryMap, limit, sortBy, unifiedQuery),
+    queryState?: string,
+  ): Promise<SearchPreview> =>
+    safeInvoke(IpcChannel.SEARCH_PREVIEW, projectId, queryMap, limit, sortBy, unifiedQuery, queryState),
 
   saveSearchPreview: (previewId: string): Promise<SavedSearchSummary> =>
     safeInvoke(IpcChannel.SEARCH_SAVE_PREVIEW, previewId),

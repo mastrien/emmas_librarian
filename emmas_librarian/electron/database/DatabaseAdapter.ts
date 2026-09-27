@@ -239,6 +239,7 @@ export class DatabaseAdapter {
     breakdown: Record<string, unknown>,
     sortBy?: string,
     limitVal?: number,
+    queryState?: string,
   ): number {
     return this.historyRepo.saveSearchHistory(
       projectId,
@@ -248,6 +249,7 @@ export class DatabaseAdapter {
       breakdown,
       sortBy,
       limitVal,
+      queryState,
     );
   }
   public getSearchHistory(projectId: number): unknown[] {

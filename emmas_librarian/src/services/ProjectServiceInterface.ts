@@ -96,6 +96,7 @@ export interface IProjectService {
     limit: number,
     sortBy: string,
     unifiedQuery: string,
+    queryState?: string,
   ): Promise<SearchPreview>;
   saveSearchPreview(previewId: string): Promise<SavedSearchSummary>;
   discardSearchPreview(previewId: string): Promise<void>;

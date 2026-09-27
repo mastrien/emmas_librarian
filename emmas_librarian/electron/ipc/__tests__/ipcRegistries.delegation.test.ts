@@ -88,10 +88,10 @@ const cases: DelegationCase[] = [
   viaDb(IpcChannel.TRASH_EMPTY, 'emptyTrash', []),
   {
     channel: IpcChannel.SEARCH_PREVIEW,
-    args: [1, { openalex: 'q' }, 50, 'date', 'uq'],
+    args: [1, { openalex: 'q' }, 50, 'date', 'uq', '{"ast":{}}'],
     target: () => harness.orchestrator,
     method: 'preview',
-    forwarded: [1, { openalex: 'q' }, 50, 'date', 'uq'],
+    forwarded: [1, { openalex: 'q' }, 50, 'date', 'uq', '{"ast":{}}'],
     outcome: 'passthrough',
   },
   {

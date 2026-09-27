@@ -167,6 +167,16 @@ describe('SearchOrchestrator', () => {
       expect(article.search_id).toBe(history.id);
     });
 
+    it('stores the query builder state with the history entry', async () => {
+      const state = '{"ast":{"type":"rule"},"selectedDbs":["openalex"],"customQueries":{}}';
+      const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q', state);
+
+      orchestrator.savePreview(previewId);
+
+      const [history] = db.getSearchHistory(projectId) as { query_state: string | null }[];
+      expect(history.query_state).toBe(state);
+    });
+
     it('does not duplicate articles when the same search is saved twice', async () => {
       api.results.openalex = [found('10.5555/dup', 'Same Search Article', 'OpenAlex')];
 

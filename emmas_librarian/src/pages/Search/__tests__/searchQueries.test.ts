@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { buildFinalQueries, defaultDatabases, describeQueryTree } from '../searchQueries';
-import type { DatabaseTranslationMap, QueryASTNode } from '../../../types';
+import {
+  EMPTY_QUERY,
+  buildFinalQueries,
+  defaultDatabases,
+  describeQueryTree,
+  restoreSearch,
+  usableDatabases,
+} from '../searchQueries';
+import type { DatabaseTranslationMap, QueryASTNode, SearchHistoryItem } from '../../../types';
 
 describe('describeQueryTree', () => {
   it('describes a rule in Portuguese', () => {
@@ -62,5 +69,68 @@ describe('buildFinalQueries', () => {
 
   it('ignores an empty custom query', () => {
     expect(buildFinalQueries(['openalex'], { openalex: '' }, translations)).toEqual({ queries: { openalex: 'oa' } });
+  });
+});
+
+describe('restoreSearch', () => {
+  const historyEntry = (overrides: Partial<SearchHistoryItem>): SearchHistoryItem => ({
+    id: 1,
+    unified_query: 'q',
+    translated_queries: '{}',
+    total_results: 0,
+    results_breakdown: '{}',
+    created_at: '2026-09-27',
+    ...overrides,
+  });
+  const titleRule: QueryASTNode = { type: 'rule', field: 'title', operator: 'contains', value: 'ontologia' };
+
+  it('brings back the builder tree, bases, custom queries, sort and limit of a saved search', () => {
+    const state = { ast: titleRule, selectedDbs: ['openalex', 'scopus'], customQueries: { scopus: 'TITLE(x)' } };
+
+    const restored = restoreSearch(
+      historyEntry({ query_state: JSON.stringify(state), sort_by: 'citations', limit_val: 25 }),
+    );
+
+    expect(restored).toEqual({ state, sortBy: 'citations', limit: 25, isLegacy: false });
+  });
+
+  it('turns each base query of an older search into a custom query, with an empty builder', () => {
+    const restored = restoreSearch(
+      historyEntry({
+        translated_queries: JSON.stringify({ openalex: 'title.search:x', wos: 'TI=x' }),
+        sort_by: 'date',
+      }),
+    );
+
+    expect(restored).toEqual({
+      state: {
+        ast: EMPTY_QUERY,
+        selectedDbs: ['openalex', 'wos'],
+        customQueries: { openalex: 'title.search:x', wos: 'TI=x' },
+      },
+      sortBy: 'date',
+      limit: undefined,
+      isLegacy: true,
+    });
+  });
+
+  it.each([
+    ['an import from another project', JSON.stringify({ import: 'Origem: Projeto ID 2' })],
+    ['a manual addition', '{}'],
+    ['a corrupted entry', '{not json'],
+  ])('returns null for %s', (_label, translated) => {
+    expect(restoreSearch(historyEntry({ translated_queries: translated }))).toBeNull();
+  });
+
+  it('ignores an unknown sort order', () => {
+    const restored = restoreSearch(historyEntry({ translated_queries: '{"openalex":"x"}', sort_by: 'popularity' }));
+
+    expect(restored?.sortBy).toBeUndefined();
+  });
+});
+
+describe('usableDatabases', () => {
+  it('keeps free bases and keyed bases that have a key', () => {
+    expect(usableDatabases(['openalex', 'scopus', 'wos'], { scopus: 'k', wos: '' })).toEqual(['openalex', 'scopus']);
   });
 });

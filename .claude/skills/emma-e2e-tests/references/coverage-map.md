@@ -5,7 +5,7 @@ Update this table when you add or extend a spec.
 | Spec | Flow | Key assertions |
 |---|---|---|
 | `pdf_import.spec.js` (F-04) | Batch PDF import | alert text, row, stored copy in app storage |
-| `semantic_search.spec.js` (F-05) | Bibliographic search (mocked E2eMockApiIntegrator): review, discard, search again, save | result listed in the review dialog; discard leaves the project empty; saved row author/year |
+| `semantic_search.spec.js` (F-05) | Bibliographic search (mocked E2eMockApiIntegrator): review, discard, search again, save, reopen from history | result listed in the review dialog; discard leaves the project empty; saved row author/year; "Nova busca a partir desta" brings the term back |
 | `export.spec.js` (F-06) | Manual article + CSV export | exact header, single row |
 | `questionnaire.spec.js` (F-07) | AI investigation + question set + history | catalog, completion, history details |
 | `ai_config.spec.js` (F-08) | OpenAI key settings | saved + persisted across navigation |

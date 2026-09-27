@@ -35,8 +35,15 @@ export function registerSearchHandlers(ipc: IpcRegistrar, db: DatabaseAdapter, o
   handle(
     ipc,
     IpcChannel.SEARCH_PREVIEW,
-    (_e, projectId: number, queryMap: Record<string, string>, limit: number, sortBy: QuerySort, unifiedQuery: string) =>
-      orchestrator.preview(projectId, queryMap, limit, sortBy, unifiedQuery),
+    (
+      _e,
+      projectId: number,
+      queryMap: Record<string, string>,
+      limit: number,
+      sortBy: QuerySort,
+      unifiedQuery: string,
+      queryState?: string,
+    ) => orchestrator.preview(projectId, queryMap, limit, sortBy, unifiedQuery, queryState),
   );
   handle(ipc, IpcChannel.SEARCH_SAVE_PREVIEW, (_e, previewId: string) => orchestrator.savePreview(previewId));
   handle(ipc, IpcChannel.SEARCH_DISCARD_PREVIEW, (_e, previewId: string) => orchestrator.discardPreview(previewId));

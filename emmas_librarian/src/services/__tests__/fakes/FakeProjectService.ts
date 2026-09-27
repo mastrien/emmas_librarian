@@ -83,6 +83,7 @@ export class FakeProjectService implements IProjectService {
       _limit: number,
       _sortBy: string,
       _unifiedQuery: string,
+      _queryState?: string,
     ): Promise<SearchPreview> => ({ previewId: 'preview-1', breakdown: {}, results: [] }),
   );
   saveSearchPreview = vi.fn(

@@ -350,6 +350,15 @@ export interface SearchHistoryItem {
   created_at: string;
   sort_by?: string;
   limit_val?: number;
+  /** JSON of SearchQueryState; null for searches made before it was stored, imports and manual additions. */
+  query_state?: string | null;
+}
+
+/** What the search page needs to rebuild a past search in the query builder. */
+export interface SearchQueryState {
+  ast: QueryASTNode;
+  selectedDbs: string[];
+  customQueries: Record<string, string>;
 }
 
 export interface SearchHistoryRecord {
