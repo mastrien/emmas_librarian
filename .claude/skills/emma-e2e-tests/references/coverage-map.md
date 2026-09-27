@@ -18,6 +18,7 @@ Update this table when you add or extend a spec.
 | `reader.spec.js` | Reader: render/paginate/zoom, in-PDF search, highlight with note, standalone annotation, ABNT citation from metadata | page input, results on page 3, persisted after reopening, citation text, saved title |
 | `diary.spec.js` | Diary: autosave + reload, version history restore, delete page | content after reload, restored version, empty state |
 | `agenda.spec.js` | Agenda event with custom milestone, views, dashboard banner | card, milestone list, banner |
+| `article_table_layout.spec.js` | Project article table with extreme content (unbreakable URL title, 18 authors) at 900/1000/1200px, filters sidebar open and closed | table never wider than its container (no horizontal scroll) |
 | `mass_investigation.spec.js` | Regression: article checkbox state across re-renders | checkbox stays unchecked |
 | `playwright_e2e.test.js` | Manual article, details, mocked search | details show authors, result row |
 

@@ -647,6 +647,7 @@ tr:focus-within .row-actions__shortcuts {
   vertical-align: top;
 }
 .article-title {
+  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -676,7 +677,7 @@ tr:focus-within .row-actions__shortcuts {
 }
 .article-meta__doi {
   white-space: normal;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 .article-meta__oa {
   color: var(--color-success);
@@ -698,6 +699,7 @@ tr:focus-within .row-actions__shortcuts {
   white-space: normal;
 }
 .author-list__names {
+  overflow-wrap: anywhere;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -718,8 +720,18 @@ tr:focus-within .row-actions__shortcuts {
   background: var(--color-primary);
   color: #fff;
 }
-.articles-inline-authors {
+.articles-inline-authors,
+.articles-inline-bases {
   display: none;
+}
+.articles-inline-bases {
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+/* Text that hides visually on narrow tables but keeps the control's accessible name. */
+.label-when-wide {
+  display: inline;
 }
 @container articles (max-width: 900px) {
   .articles-col-authors {
@@ -730,5 +742,29 @@ tr:focus-within .row-actions__shortcuts {
   }
   .article-title {
     -webkit-line-clamp: 2;
+  }
+}
+/* Narrower still (small window, sidebar open): the actions lose their fixed slots and the DOI keeps
+   only its icon, so the table never needs a horizontal scroll. */
+@container articles (max-width: 720px) {
+  .row-actions__slot-doi,
+  .row-actions__slot-primary {
+    width: auto;
+  }
+  .label-when-wide {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+@container articles (max-width: 640px) {
+  .articles-col-bases {
+    display: none;
+  }
+  .articles-inline-bases {
+    display: flex;
   }
 }

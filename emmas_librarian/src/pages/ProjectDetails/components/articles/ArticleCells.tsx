@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, GraduationCap, Unlock } from 'lucide-react';
 import type { Article } from '../../../../types';
 import { splitAuthorNames } from '../../../../utils/authors';
+import { SourceDatabaseBadges } from '../../../../components/common/SourceDatabaseBadges';
 
 const VISIBLE_AUTHORS = 3;
 const META_ICON = 13;
@@ -72,8 +73,8 @@ export const AuthorList: React.FC<AuthorListProps> = ({ authors, layout }) => {
 };
 
 /**
- * The ARTIGO cell: title (clamped; the full text is in the tooltip and in the details), the authors when
- * the table is too narrow for their own column, and the metadata line.
+ * The ARTIGO cell: title (clamped; the full text is in the tooltip and in the details), the metadata line,
+ * and the authors and bases when the table is too narrow for their own columns.
  *
  * @example <ArticleSummary article={article} onOpenDetails={showDetails} />
  */
@@ -96,5 +97,8 @@ export const ArticleSummary: React.FC<{ article: Article; onOpenDetails: (articl
       <AuthorList authors={article.authors} layout="inline" />
     </div>
     <ArticleMetaLine article={article} />
+    <div className="articles-inline-bases">
+      <SourceDatabaseBadges sourceDatabases={article.source_databases} />
+    </div>
   </>
 );

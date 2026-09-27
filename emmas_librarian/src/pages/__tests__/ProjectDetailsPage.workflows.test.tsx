@@ -196,7 +196,8 @@ describe('ProjectDetailsPage article forms', () => {
   it('treats a legacy bare source value as a single source instead of crashing the page', async () => {
     await renderProjectPage(givenProject([article({ id: 8, title: 'Legado', source_databases: 'Manual' })]));
 
-    expect(within(mainTable()).getByText('⚠️ Manual')).toBeInTheDocument();
+    // One badge in the BASES column and one in the article cell for narrow tables (CSS picks which shows).
+    expect(within(mainTable()).getAllByText('⚠️ Manual')).toHaveLength(2);
     fireEvent.click(within(mainTable()).getByRole('button', { name: 'Mais ações' }));
     expect(screen.getByRole('menuitem', { name: 'Editar Metadados' })).toBeInTheDocument();
   });

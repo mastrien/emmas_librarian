@@ -66,7 +66,7 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
           <tr style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
             <HeaderCell>ARTIGO</HeaderCell>
             <HeaderCell className="articles-col-authors">AUTORES</HeaderCell>
-            <HeaderCell>BASES</HeaderCell>
+            <HeaderCell className="articles-col-bases">BASES</HeaderCell>
             <HeaderCell align="right">AÇÕES</HeaderCell>
           </tr>
         </thead>
@@ -81,13 +81,13 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
               onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-main)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
-              <td style={{ ...cellStyle, minWidth: '220px' }}>
+              <td style={cellStyle}>
                 <ArticleSummary article={article} onOpenDetails={setSelectedArticleForDetails} />
               </td>
               <td className="articles-col-authors" style={{ ...cellStyle, maxWidth: '220px', fontSize: '0.9rem' }}>
                 <AuthorList authors={article.authors} layout="column" />
               </td>
-              <td style={{ ...cellStyle, minWidth: '130px' }}>
+              <td className="articles-col-bases" style={cellStyle}>
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                   <SourceDatabaseBadges
                     sourceDatabases={article.source_databases}

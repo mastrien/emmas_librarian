@@ -88,7 +88,10 @@ describe('ProjectArticlesList', () => {
   it('renders manual tag', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1', source_databases: '["Manual"]' }];
     renderComponent({ paginatedArticles });
-    expect(screen.getByText('⚠️ Manual')).toBeInTheDocument();
+    // The bases also render inside the article cell for narrow tables (hidden by a container query jsdom
+    // does not apply), so look in the BASES column.
+    const basesCell = within(screen.getAllByRole('row')[1]).getAllByRole('cell')[2];
+    expect(within(basesCell).getByText('⚠️ Manual')).toBeInTheDocument();
   });
 
   it('handles unlink pdf click when file exists', () => {

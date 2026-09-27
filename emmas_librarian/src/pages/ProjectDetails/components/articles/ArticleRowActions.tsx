@@ -114,7 +114,7 @@ const DoiButton: React.FC<{ doi?: string }> = ({ doi }) =>
       className="btn-ghost"
       title="Abrir pelo DOI no navegador"
     >
-      <ExternalLink size={ICON} /> DOI
+      <ExternalLink size={ICON} /> <span className="label-when-wide">DOI</span>
     </a>
   ) : null;
 
