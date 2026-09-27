@@ -74,49 +74,6 @@ describe('HIGHLIGHTS_CREATE', () => {
   });
 });
 
-describe('SEARCH_EXECUTE in E2E mock mode', () => {
-  beforeEach(() => {
-    vi.stubEnv('E2E_MOCK_SEARCH', 'true');
-    db.saveSearchHistory.mockReturnValue(5);
-    db.getArticlesByProject.mockReturnValue([{ id: 99 }]);
-  });
-
-  it('persists one canned article instead of calling the search APIs', async () => {
-    const result = await invoke(IpcChannel.SEARCH_EXECUTE, 1, { openalex: 'ml' }, 10, 'date', 'machine learning');
-
-    expect(result).toEqual({ savedCount: 1, breakdown: { openalex: { count: 1 } }, articles: [{ id: 99 }] });
-    expect(harness.orchestrator.searchAndPersist).not.toHaveBeenCalled();
-    expect(db.saveSearchHistory).toHaveBeenCalledWith(1, 'machine learning', { openalex: 'ml' }, 1, {
-      openalex: { count: 1 },
-    });
-    expect(db.saveArticle).toHaveBeenCalledWith(1, {
-      doi: '10.1234/e2e-mock-doi',
-      title: 'Aprendizado de Maquina E2E',
-      authors: 'Author E2E',
-      year: 2026,
-      source_query: '{"openalex":"ml"}',
-      source_databases: '["OpenAlex"]',
-      csl_json: '{}',
-      search_id: 5,
-    });
-  });
-
-  it('labels the history entry when the query is empty', async () => {
-    await invoke(IpcChannel.SEARCH_EXECUTE, 1, {}, 10, 'date', '');
-
-    expect(db.saveSearchHistory).toHaveBeenCalledWith(1, 'E2E mock query', {}, 1, { openalex: { count: 1 } });
-  });
-
-  it('only activates for the exact value "true"', async () => {
-    vi.stubEnv('E2E_MOCK_SEARCH', '1');
-
-    await invoke(IpcChannel.SEARCH_EXECUTE, 1, {}, 10, 'date', 'q');
-
-    expect(harness.orchestrator.searchAndPersist).toHaveBeenCalled();
-    expect(db.saveArticle).not.toHaveBeenCalled();
-  });
-});
-
 describe('ARTICLES_IMPORT_FROM_PROJECT', () => {
   it('records the import in the destination history and copies the articles', async () => {
     db.getProject.mockReturnValue({ id: 2, name: 'Fonte' });

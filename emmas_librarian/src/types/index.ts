@@ -152,7 +152,9 @@ export enum IpcChannel {
   PROJECTS_GET_SEARCH_HISTORY = 'projects:getSearchHistory',
   PROJECTS_GET_WRITING_PAD = 'projects:getWritingPad',
   PROJECTS_UPDATE_WRITING_PAD = 'projects:updateWritingPad',
-  SEARCH_EXECUTE = 'search:execute',
+  SEARCH_PREVIEW = 'search:preview',
+  SEARCH_SAVE_PREVIEW = 'search:savePreview',
+  SEARCH_DISCARD_PREVIEW = 'search:discardPreview',
   SEARCH_TRANSLATE_QUERY = 'search:translateQuery',
   SEARCH_REVERT = 'search:revert',
   ARTICLES_GET_BY_PROJECT = 'articles:getByProject',
@@ -313,6 +315,30 @@ export interface TrashItem {
   name?: string;
   type: 'project' | 'article' | 'annotation';
   deleted_at: string;
+}
+
+export type SearchBreakdown = Record<string, { count: number; error?: string }>;
+
+/** One result of a search the user has not saved yet (what the review list shows). */
+export interface SearchPreviewItem {
+  title: string;
+  authors?: string;
+  year?: number;
+  doi?: string;
+  sourceDatabases: string[];
+  alreadyInProject: boolean;
+}
+
+/** Results held in the main process until the user saves or discards them. */
+export interface SearchPreview {
+  previewId: string;
+  breakdown: SearchBreakdown;
+  results: SearchPreviewItem[];
+}
+
+export interface SavedSearchSummary {
+  savedCount: number;
+  breakdown: SearchBreakdown;
 }
 
 export interface SearchHistoryItem {

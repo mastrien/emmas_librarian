@@ -30,13 +30,21 @@ vi.mock('../../components/common/QueryBuilder', () => ({
 }));
 
 vi.mock('../../components/modals/SearchSummaryModal', () => ({
-  SearchSummaryModal: ({ isOpen, onClose }: any) =>
-    isOpen ? (
-      <div data-testid="mock-summary-modal">
-        Summary Modal
-        <button onClick={onClose}>Close Summary</button>
-      </div>
-    ) : null,
+  SearchSummaryModal: ({
+    onSave,
+    onDiscard,
+    saveError,
+  }: {
+    onSave: () => void;
+    onDiscard: () => void;
+    saveError?: string | null;
+  }) => (
+    <div data-testid="mock-summary-modal">
+      Summary Modal {saveError}
+      <button onClick={onSave}>Save Results</button>
+      <button onClick={onDiscard}>Discard Results</button>
+    </div>
+  ),
 }));
 
 describe('SearchPage', () => {
@@ -58,9 +66,10 @@ describe('SearchPage', () => {
       scopus: { isValid: true, query: 'scopus-query', warning: 'Aviso scopus' },
       wos: { isValid: false, query: '', error: 'Erro de sintaxe wos' },
     });
-    fakeService.searchAndPersist.mockResolvedValue({
-      savedCount: 10,
+    fakeService.previewSearch.mockResolvedValue({
+      previewId: 'preview-1',
       breakdown: { openalex: { count: 10 } },
+      results: [],
     });
   });
 
@@ -164,35 +173,64 @@ describe('SearchPage', () => {
     expect(screen.queryByPlaceholderText(/Digite a query exata/)).not.toBeInTheDocument();
   });
 
-  it('performs search successfully', async () => {
+  const runSearchWithWos = async () => {
     renderPage();
-
-    await waitFor(() => {
-      expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
-    });
-
-    const wosBtn = screen.getByRole('button', { name: /Web of Science/i });
+    await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
     await act(async () => {
-      fireEvent.click(wosBtn);
+      fireEvent.click(screen.getByRole('button', { name: /Web of Science/i }));
     });
-
-    const searchBtn = screen.getByRole('button', { name: /Fazer Busca/i });
     await act(async () => {
-      fireEvent.click(searchBtn);
+      fireEvent.click(screen.getByRole('button', { name: /Fazer Busca/i }));
     });
+  };
 
-    expect(fakeService.searchAndPersist).toHaveBeenCalled();
+  it('shows the results for review without saving them', async () => {
+    await runSearchWithWos();
+
+    expect(fakeService.previewSearch).toHaveBeenCalled();
     expect(screen.getByTestId('mock-summary-modal')).toBeInTheDocument();
+    expect(fakeService.saveSearchPreview).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
 
-    const closeBtn = screen.getByText('Close Summary');
+  it('saves the reviewed results and goes back to the project', async () => {
+    await runSearchWithWos();
+
     await act(async () => {
-      fireEvent.click(closeBtn);
+      fireEvent.click(screen.getByText('Save Results'));
     });
+
+    expect(fakeService.saveSearchPreview).toHaveBeenCalledWith('preview-1');
     expect(mockNavigate).toHaveBeenCalledWith('/projects/1');
   });
 
+  it('discards the results and stays on the search page to refine the query', async () => {
+    await runSearchWithWos();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Discard Results'));
+    });
+
+    expect(fakeService.discardSearchPreview).toHaveBeenCalledWith('preview-1');
+    expect(screen.queryByTestId('mock-summary-modal')).not.toBeInTheDocument();
+    expect(fakeService.saveSearchPreview).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('keeps the review open and explains when saving fails', async () => {
+    fakeService.saveSearchPreview.mockRejectedValue(new Error('disco cheio'));
+    await runSearchWithWos();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Save Results'));
+    });
+
+    expect(screen.getByTestId('mock-summary-modal')).toHaveTextContent('disco cheio');
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it('handles search error', async () => {
-    fakeService.searchAndPersist.mockRejectedValue(new Error('Search failed horribly'));
+    fakeService.previewSearch.mockRejectedValue(new Error('Search failed horribly'));
     renderPage();
 
     await waitFor(() => {
@@ -225,7 +263,7 @@ describe('SearchPage', () => {
     });
 
     expect(screen.getByText(/A busca automática falhou ou é incompatível/)).toBeInTheDocument();
-    expect(fakeService.searchAndPersist).not.toHaveBeenCalled();
+    expect(fakeService.previewSearch).not.toHaveBeenCalled();
   });
 
   it('handles empty database selection', async () => {
@@ -249,7 +287,7 @@ describe('SearchPage', () => {
   });
 
   it('handles search error of string type', async () => {
-    fakeService.searchAndPersist.mockRejectedValue('String error message');
+    fakeService.previewSearch.mockRejectedValue('String error message');
     renderPage();
     await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
 
@@ -267,7 +305,7 @@ describe('SearchPage', () => {
   });
 
   it('handles search error of object type with error property', async () => {
-    fakeService.searchAndPersist.mockRejectedValue({ error: 'Object error property' });
+    fakeService.previewSearch.mockRejectedValue({ error: 'Object error property' });
     renderPage();
     await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
 
@@ -285,7 +323,7 @@ describe('SearchPage', () => {
   });
 
   it('handles search error of unknown object type', async () => {
-    fakeService.searchAndPersist.mockRejectedValue({ unknown: 'data' });
+    fakeService.previewSearch.mockRejectedValue({ unknown: 'data' });
     renderPage();
     await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
 
@@ -359,7 +397,7 @@ describe('SearchPage', () => {
       fireEvent.click(screen.getByRole('button', { name: /Fazer Busca/ }));
 
       await screen.findByTestId('mock-summary-modal');
-      expect(fakeService.searchAndPersist).toHaveBeenCalledWith(
+      expect(fakeService.previewSearch).toHaveBeenCalledWith(
         1,
         { openalex: 'openalex-query', crossref: 'custom-crossref', scopus: 'scopus-query' },
         50,
@@ -377,7 +415,7 @@ describe('SearchPage', () => {
       fireEvent.click(screen.getByRole('button', { name: /Fazer Busca/ }));
 
       await screen.findByTestId('mock-summary-modal');
-      expect(fakeService.searchAndPersist.mock.calls[0][4]).toBe('Título contém "test"');
+      expect(fakeService.previewSearch.mock.calls[0][4]).toBe('Título contém "test"');
     });
 
     it('warns about the Crossref and Scopus caps for large limits', async () => {

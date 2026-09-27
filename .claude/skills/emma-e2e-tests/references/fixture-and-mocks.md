@@ -36,7 +36,7 @@ await openReader(window);                                // details → "Visuali
 | `E2E_MOCK_OPEN_MULTIPLE_FILES` | `;`-separated paths returned by the multi-file dialog (batch PDF import) |
 | `E2E_MOCK_SAVE_FILE_PATH` | Target of save dialogs: CSV/XLSX/text exports and "Criar Backup Completo" |
 | `E2E_MOCK_BACKUP_FILE` | `.emmabak` chosen by "Restaurar e Sobrescrever" / "Importar e Mesclar" |
-| `E2E_MOCK_SEARCH=true` | Bibliographic search returns one fixed article ("Aprendizado de Maquina E2E") |
+| `E2E_MOCK_SEARCH=true` | Bibliographic search uses `electron/services/E2eMockApiIntegrator.ts`: OpenAlex returns one fixed article ("Aprendizado de Maquina E2E"), other bases none. The review dialog appears; click "Salvar no projeto" to persist |
 | `E2E_MOCK_AI_EXTRACTION=true` | Mass AI extraction returns a canned answer (shape differs from `RAGExtractionResult`; the UI answer is not asserted yet) |
 
 ## Restore flows (relaunch on the same data)

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { QueryBuilder } from '../components/common/QueryBuilder';
 import { useProjectService } from '../contexts/ServicesContext';
-import { Project, QueryASTNode, DatabaseTranslationMap, QuerySort } from '../types';
+import { Project, QueryASTNode, DatabaseTranslationMap, QuerySort, SearchPreview } from '../types';
 import { Search, Loader2, ArrowLeft } from 'lucide-react';
 import { SearchSummaryModal } from '../components/modals/SearchSummaryModal';
 import { useDebounce } from '../hooks/useDebounce';
@@ -19,11 +19,6 @@ import { QueryTranslationCard } from './Search/QueryTranslationCard';
 import { SearchOptionsCard } from './Search/SearchOptionsCard';
 import { ApiKeyRequiredDialog } from './Search/ApiKeyRequiredDialog';
 
-type SearchSummary = {
-  savedCount: number;
-  breakdown: Record<string, { count: number; error?: string }>;
-};
-
 const INITIAL_QUERY: QueryASTNode = {
   type: 'group',
   logicalOperator: 'AND',
@@ -35,7 +30,8 @@ const TRANSLATION_DEBOUNCE_MS = 600;
 const sectionLabelStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--text-heading)', fontSize: '1.1rem' };
 
 /**
- * Builds a boolean query, shows its translation per database and runs the search into the project.
+ * Builds a boolean query, shows its translation per database, runs the search and lets the user
+ * review the results before saving them into the project (or discarding them to refine the query).
  *
  * Usage:
  *   <Route path="/projects/:id/search" element={<SearchPage />} />
@@ -54,7 +50,9 @@ export const SearchPage: React.FC = () => {
   const [selectedDbs, setSelectedDbs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<SearchSummary | null>(null);
+  const [preview, setPreview] = useState<SearchPreview | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<SearchApiKeys>({ scopus: '', wos: '' });
   const [missingKeyDb, setMissingKeyDb] = useState<string | null>(null);
 
@@ -94,13 +92,31 @@ export const SearchPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      setSummary(await projectService.searchAndPersist(projectId, queries, limit, sortBy, describeQueryTree(ast)));
+      setPreview(await projectService.previewSearch(projectId, queries, limit, sortBy, describeQueryTree(ast)));
     } catch (err: unknown) {
       console.error('Search error:', err);
       setError(describeError(err, 'Erro ao realizar busca'));
     } finally {
       setLoading(false);
     }
+  };
+
+  const saveResults = async (previewId: string) => {
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await projectService.saveSearchPreview(previewId);
+      navigate(`/projects/${id}`);
+    } catch (err: unknown) {
+      setSaveError(describeError(err, 'Erro ao salvar os resultados da busca'));
+      setIsSaving(false);
+    }
+  };
+
+  const discardResults = (previewId: string) => {
+    setPreview(null);
+    setSaveError(null);
+    projectService.discardSearchPreview(previewId).catch((err: unknown) => console.error('Discard error:', err));
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -212,7 +228,15 @@ export const SearchPage: React.FC = () => {
         </button>
       </form>
 
-      {summary && <SearchSummaryModal isOpen onClose={() => navigate(`/projects/${id}`)} summary={summary} />}
+      {preview && (
+        <SearchSummaryModal
+          preview={preview}
+          isSaving={isSaving}
+          saveError={saveError}
+          onSave={() => saveResults(preview.previewId)}
+          onDiscard={() => discardResults(preview.previewId)}
+        />
+      )}
 
       {missingKeyDb && (
         <ApiKeyRequiredDialog
