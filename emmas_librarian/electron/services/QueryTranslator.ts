@@ -202,7 +202,10 @@ export class QueryTranslator {
     } else {
       const groupNode = node as QueryGroupNode;
       if (groupNode.logicalOperator === 'OR') {
-        throw new Error('Crossref não suporta operador OR lógico entre campos diferentes.');
+        // Crossref has no boolean syntax at all, so OR fails even when every term targets one field.
+        throw new Error(
+          `Crossref não suporta o operador OR (grupo com ${groupNode.children.length} termos). Use apenas AND: o Crossref combina todos os termos.`,
+        );
       }
 
       for (const child of groupNode.children) {
