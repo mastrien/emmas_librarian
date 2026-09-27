@@ -15,6 +15,11 @@ const rowTitles = () =>
     .filter((text) => text.includes('Artigo') || text.includes('Paper'));
 
 const inRow = (title: string) => within(within(mainTable()).getByText(title).closest('tr') as HTMLElement);
+// Unlink, edit and cite live in each row's "⋯" menu, which opens in a portal.
+const chooseFromRowMenu = (title: string, item: string) => {
+  fireEvent.click(inRow(title).getByRole('button', { name: 'Mais ações' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: item }));
+};
 
 describe('ProjectDetailsPage filters', () => {
   const articles = [
@@ -200,7 +205,7 @@ describe('ProjectDetailsPage PDF links', () => {
     const service = givenProject(withPdf);
     await renderProjectPage(service);
 
-    fireEvent.click(inRow('Artigo com PDF').getByTitle('Desvincular PDF'));
+    chooseFromRowMenu('Artigo com PDF', 'Desvincular PDF');
 
     await waitFor(() => expect(service.unlinkPdf).toHaveBeenCalledWith(1));
     await waitFor(() => expect(service.getArticles).toHaveBeenCalledTimes(2));
@@ -211,7 +216,7 @@ describe('ProjectDetailsPage PDF links', () => {
     const service = givenProject(withPdf);
     await renderProjectPage(service);
 
-    fireEvent.click(inRow('Artigo com PDF').getByTitle('Desvincular PDF'));
+    chooseFromRowMenu('Artigo com PDF', 'Desvincular PDF');
 
     expect(service.unlinkPdf).not.toHaveBeenCalled();
   });
@@ -222,7 +227,7 @@ describe('ProjectDetailsPage PDF links', () => {
     service.unlinkPdf.mockRejectedValue(new Error('EBUSY'));
     await renderProjectPage(service);
 
-    fireEvent.click(inRow('Artigo com PDF').getByTitle('Desvincular PDF'));
+    chooseFromRowMenu('Artigo com PDF', 'Desvincular PDF');
 
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao desvincular o PDF'));
   });

@@ -1,19 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import {
-  Calendar,
-  FileText,
-  Upload,
-  Edit2,
-  Archive,
-  CopyPlus,
-  ExternalLink,
-  X as XIcon,
-  CheckCircle,
-  History,
-} from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Article } from '../../../types';
 import { SourceDatabaseBadges } from '../../../components/common/SourceDatabaseBadges';
+import { ArticleRowActions, type ArticleRowHandlers } from './articles/ArticleRowActions';
 
 interface ProjectArticlesListProps {
   paginatedArticles: Article[];
@@ -36,6 +25,15 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
   setArchivingId,
   setCitationArticle,
 }) => {
+  const rowHandlers: ArticleRowHandlers = {
+    onUpload: handleUploadClick,
+    onUnlink: handleUnlinkClick,
+    onStatusChange: handleStatusChange,
+    onEdit: setEditingArticle,
+    onArchive: setArchivingId,
+    onCite: setCitationArticle,
+  };
+
   return (
     <div className="card" style={{ overflowX: 'auto', border: 'none', marginBottom: '2rem' }}>
       <table data-testid="main-articles-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -77,6 +75,7 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
                 color: 'var(--text-muted)',
                 fontWeight: 600,
                 fontSize: '0.875rem',
+                textAlign: 'right',
               }}
             >
               AÇÕES
@@ -180,108 +179,8 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
                   )}
                 </div>
               </td>
-              <td style={{ padding: '1.25rem 1.5rem' }}>
-                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                  {article.local_file_path ? (
-                    <>
-                      <Link
-                        to={`/articles/${article.id}`}
-                        className="btn-primary"
-                        style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                      >
-                        <FileText size={14} /> Ler
-                      </Link>
-                      <button
-                        onClick={() => handleUnlinkClick(article.id)}
-                        className="btn-secondary"
-                        style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: 'var(--color-danger)' }}
-                        title="Desvincular PDF"
-                      >
-                        <XIcon size={14} />
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => handleUploadClick(article.id)}
-                      className="btn-secondary"
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                      title="Vincular PDF"
-                    >
-                      <Upload size={14} /> PDF
-                    </button>
-                  )}
-
-                  {article.status === 'read' ? (
-                    <button
-                      onClick={() => handleStatusChange(article.id, 'new')}
-                      className="btn-secondary"
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                      title="Desmarcar como Lido"
-                    >
-                      <CheckCircle size={14} /> Desmarcar
-                    </button>
-                  ) : article.status !== 'archived' ? (
-                    <button
-                      onClick={() => handleStatusChange(article.id, 'read')}
-                      className="btn-secondary"
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                      title="Marcar como Lido"
-                    >
-                      <CheckCircle size={14} /> Lido
-                    </button>
-                  ) : null}
-
-                  <button
-                    onClick={() => setEditingArticle(article)}
-                    className="btn-secondary"
-                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                    title="Editar Metadados"
-                  >
-                    <Edit2 size={14} /> Editar
-                  </button>
-
-                  {article.status === 'archived' ? (
-                    <button
-                      onClick={() => handleStatusChange(article.id, 'new')}
-                      className="btn-secondary"
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                      title="Restaurar Artigo"
-                    >
-                      <History size={14} /> Restaurar
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setArchivingId(article.id)}
-                      className="btn-secondary"
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', color: 'var(--color-danger)' }}
-                      title="Arquivar"
-                    >
-                      <Archive size={14} /> Arquivar
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => setCitationArticle(article)}
-                    className="btn-secondary"
-                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                    title="Gerar Citação"
-                  >
-                    <CopyPlus size={14} /> Citar
-                  </button>
-
-                  {article.doi && (
-                    <a
-                      href={`https://doi.org/${article.doi}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn-secondary"
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', textDecoration: 'none' }}
-                      title="Abrir no Navegador"
-                    >
-                      <ExternalLink size={14} /> Buscar por DOI
-                    </a>
-                  )}
-                </div>
+              <td style={{ padding: '1rem 1.25rem', verticalAlign: 'top' }}>
+                <ArticleRowActions article={article} handlers={rowHandlers} />
               </td>
             </tr>
           ))}

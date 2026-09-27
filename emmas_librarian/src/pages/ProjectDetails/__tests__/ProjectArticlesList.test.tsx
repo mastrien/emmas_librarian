@@ -27,6 +27,12 @@ describe('ProjectArticlesList', () => {
     );
   };
 
+  // Unlink, edit and cite live in the row's "⋯" menu.
+  const chooseFromRowMenu = (item: string) => {
+    fireEvent.click(screen.getByRole('button', { name: 'Mais ações' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: item }));
+  };
+
   it('renders empty state when no articles', () => {
     renderComponent();
     expect(screen.getByText('Nenhum artigo ativo na biblioteca.')).toBeInTheDocument();
@@ -80,11 +86,7 @@ describe('ProjectArticlesList', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1', local_file_path: '/path.pdf' }];
     renderComponent({ paginatedArticles });
 
-    // Find button by title or content
-    const unlinkBtn = screen.getByTitle('Desvincular PDF');
-    act(() => {
-      fireEvent.click(unlinkBtn);
-    });
+    chooseFromRowMenu('Desvincular PDF');
 
     expect(defaultProps.handleUnlinkClick).toHaveBeenCalledWith(1);
   });
@@ -144,10 +146,7 @@ describe('ProjectArticlesList', () => {
     const paginatedArticles = [{ id: 1, title: 'Search Result', status: 'new', source_databases: '["Scopus"]' }];
     renderComponent({ paginatedArticles });
 
-    const editBtn = screen.getByTitle('Editar Metadados');
-    act(() => {
-      fireEvent.click(editBtn);
-    });
+    chooseFromRowMenu('Editar Metadados');
 
     expect(defaultProps.setEditingArticle).toHaveBeenCalledWith(paginatedArticles[0]);
   });
@@ -156,10 +155,7 @@ describe('ProjectArticlesList', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1', status: 'new' }];
     renderComponent({ paginatedArticles });
 
-    const citeBtn = screen.getByTitle('Gerar Citação');
-    act(() => {
-      fireEvent.click(citeBtn);
-    });
+    chooseFromRowMenu('Gerar Citação');
 
     expect(defaultProps.setCitationArticle).toHaveBeenCalledWith(paginatedArticles[0]);
   });

@@ -142,11 +142,13 @@ describe('ProjectArticlesTab list actions', () => {
     });
     const row = (title: string) => within(within(mainList()).getByText(title).closest('tr') as HTMLElement);
 
-    fireEvent.click(row('Com PDF').getByTitle('Desvincular PDF'));
+    fireEvent.click(row('Com PDF').getByRole('button', { name: 'Mais ações' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Desvincular PDF' }));
     fireEvent.click(row('Sem PDF').getByTitle('Vincular PDF'));
     fireEvent.click(row('Sem PDF').getByTitle('Marcar como Lido'));
     fireEvent.click(row('Sem PDF').getByTitle('Arquivar'));
-    fireEvent.click(row('Sem PDF').getByTitle('Editar Metadados'));
+    fireEvent.click(row('Sem PDF').getByRole('button', { name: 'Mais ações' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Editar Metadados' }));
 
     expect(onUnlinkPdf).toHaveBeenCalledWith(4);
     expect(onAttachPdf).toHaveBeenCalledWith(5);
