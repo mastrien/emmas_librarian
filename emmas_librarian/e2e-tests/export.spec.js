@@ -47,7 +47,7 @@ test('F-06 Export bibliographic references to CSV', async () => {
     }
 
     const [header, ...rows] = content.trim().split('\n');
-    expect(header).toBe('id,doi,title,authors,year,source,status');
+    expect(header).toBe('id,doi,title,authors,year,source,status,archive_note');
     expect(rows).toHaveLength(1);
     expect(rows[0]).toContain('"Export E2E Test Article"');
     expect(rows[0]).toContain('"Emma Watson"');

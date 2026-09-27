@@ -65,7 +65,7 @@ describe('ExportService', () => {
       expect(lines.length).toBe(3); // Header + 2 data rows
 
       // Check headers
-      expect(lines[0]).toBe('id,doi,title,authors,year,source,status');
+      expect(lines[0]).toBe('id,doi,title,authors,year,source,status,archive_note');
 
       // Check row 1
       const row1 = lines[1];
@@ -90,7 +90,7 @@ describe('ExportService', () => {
 
     it('handles empty articles list gracefully', () => {
       const csv = exportService.exportToCsv([]);
-      expect(csv).toBe('id,doi,title,authors,year,source,status');
+      expect(csv).toBe('id,doi,title,authors,year,source,status,archive_note');
     });
 
     it('escapes double quotes in CSV fields', () => {
@@ -353,7 +353,7 @@ describe('ExportService', () => {
 
       const workbook = xlsx.read(buffer, { type: 'buffer' });
       const rows = xlsx.utils.sheet_to_json<unknown[]>(workbook.Sheets['Artigos'], { header: 1 });
-      expect(rows[0]).toEqual(['id', 'doi', 'title', 'authors', 'year', 'source', 'status', 'Método']);
+      expect(rows[0]).toEqual(['id', 'doi', 'title', 'authors', 'year', 'source', 'status', 'archive_note', 'Método']);
       expect(rows[1]).toEqual([
         1,
         'https://doi.org/10.1000/xyz123',
@@ -362,9 +362,43 @@ describe('ExportService', () => {
         2024,
         'OpenAlex',
         'new',
+        '',
         'Survey "x"',
       ]);
-      expect(rows[2][7]).toBe('');
+      expect(rows[2][8]).toBe('');
+    });
+  });
+
+  // Systematic reviews report why each excluded study was archived (PRISMA), so the reason must reach the export.
+  describe('archive reason column', () => {
+    const archived: Article = {
+      ...mockArticles[1],
+      status: 'archived',
+      archive_note: 'Fora do escopo: "estudo animal"',
+    };
+
+    it('writes the archive reason after the status in the CSV, quoted', () => {
+      const [, row] = exportService.exportToCsv([archived]).split('\n');
+
+      expect(row).toBe(
+        '2,10.1111/xyz456,"Another Simple Paper","OnlyAuthor",2023,"Scopus",archived,"Fora do escopo: ""estudo animal"""',
+      );
+    });
+
+    it('writes the archive reason after the status in the XLSX', () => {
+      const workbook = xlsx.read(exportService.exportToXlsx([archived]), { type: 'buffer' });
+
+      const rows = xlsx.utils.sheet_to_json<unknown[]>(workbook.Sheets['Artigos'], { header: 1 });
+      expect(rows[1]).toEqual([
+        2,
+        '10.1111/xyz456',
+        'Another Simple Paper',
+        'OnlyAuthor',
+        2023,
+        'Scopus',
+        'archived',
+        'Fora do escopo: "estudo animal"',
+      ]);
     });
   });
 });

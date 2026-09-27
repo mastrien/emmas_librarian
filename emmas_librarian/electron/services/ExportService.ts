@@ -1,82 +1,79 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Article } from '../../src/types';
+import { Article, ProjectCategory } from '../../src/types';
 import * as xlsx from 'xlsx';
+
+type ExportCategory = Pick<ProjectCategory, 'id' | 'name'>;
+// getAllProjectArticleCategories rows carry article_id even though the shared ArticleCategory type omits it.
+type ExportCategoryValue = { article_id?: number; category_id: number; value?: string };
+type CellValue = string | number;
+
+interface TabularColumn {
+  header: string;
+  value: (article: Article) => CellValue;
+  // CSV only: free-text columns are always quoted, as the first export did; ids/doi/year/status are not.
+  quoted: boolean;
+}
+
+// archive_note sits right after status: systematic reviews report why each excluded study was archived.
+const BASE_COLUMNS: TabularColumn[] = [
+  { header: 'id', value: (a) => a.id, quoted: false },
+  { header: 'doi', value: (a) => a.doi || '', quoted: false },
+  { header: 'title', value: (a) => a.title || '', quoted: true },
+  { header: 'authors', value: (a) => a.authors || '', quoted: true },
+  { header: 'year', value: (a) => a.year || '', quoted: false },
+  { header: 'source', value: (a) => a.source_databases || '', quoted: true },
+  { header: 'status', value: (a) => a.status, quoted: false },
+  { header: 'archive_note', value: (a) => a.archive_note || '', quoted: true },
+];
+
+function tabularColumns(categories: ExportCategory[], values: ExportCategoryValue[]): TabularColumn[] {
+  const categoryColumns = categories.map((cat) => ({
+    header: cat.name,
+    value: (a: Article) => values.find((v) => v.article_id === a.id && v.category_id === cat.id)?.value || '',
+    quoted: true,
+  }));
+  return [...BASE_COLUMNS, ...categoryColumns];
+}
+
+function quoteCsv(value: CellValue): string {
+  return `"${String(value).replace(/"/g, '""')}"`;
+}
 
 export class ExportService {
   /**
-   * Formats a list of articles as standard CSV content.
+   * Formats a list of articles as standard CSV content, one column per project category.
+   *
+   * @example exportService.exportToCsv(articles, categories, values).split('\n')[0] // 'id,doi,...,archive_note,Método'
    */
-  public exportToCsv(articles: Article[], projectCategories: any[] = [], articleCategories: any[] = []): string {
-    const header = [
-      'id',
-      'doi',
-      'title',
-      'authors',
-      'year',
-      'source',
-      'status',
-      ...projectCategories.map((c) => c.name),
-    ];
-
-    const rows = articles.map((a) => {
-      const row = [
-        a.id,
-        a.doi || '',
-        `"${(a.title || '').replace(/"/g, '""')}"`,
-        `"${(a.authors || '').replace(/"/g, '""')}"`,
-        a.year || '',
-        `"${(a.source_databases || '').replace(/"/g, '""')}"`,
-        a.status,
-      ];
-
-      // Add category values for this article
-      projectCategories.forEach((cat) => {
-        const articleCat = articleCategories.find((ac) => ac.article_id === a.id && ac.category_id === cat.id);
-        const val = articleCat ? articleCat.value : '';
-        row.push(`"${(val || '').replace(/"/g, '""')}"`);
-      });
-
-      return row;
-    });
-
-    return [header.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  public exportToCsv(
+    articles: Article[],
+    projectCategories: ExportCategory[] = [],
+    articleCategories: ExportCategoryValue[] = [],
+  ): string {
+    const columns = tabularColumns(projectCategories, articleCategories);
+    const rows = articles.map((a) =>
+      columns.map((col) => (col.quoted ? quoteCsv(col.value(a)) : String(col.value(a)))).join(','),
+    );
+    return [columns.map((col) => col.header).join(','), ...rows].join('\n');
   }
 
   /**
-   * Generates a Buffer containing the XLSX file data.
+   * Generates a Buffer containing the XLSX file data (sheet "Artigos", same columns as the CSV).
+   *
+   * @example fs.writeFileSync('out.xlsx', exportService.exportToXlsx(articles, categories, values));
    */
-  public exportToXlsx(articles: Article[], projectCategories: any[] = [], articleCategories: any[] = []): Buffer {
-    const header = [
-      'id',
-      'doi',
-      'title',
-      'authors',
-      'year',
-      'source',
-      'status',
-      ...projectCategories.map((c) => c.name),
+  public exportToXlsx(
+    articles: Article[],
+    projectCategories: ExportCategory[] = [],
+    articleCategories: ExportCategoryValue[] = [],
+  ): Buffer {
+    const columns = tabularColumns(projectCategories, articleCategories);
+    const worksheetData = [
+      columns.map((col) => col.header),
+      ...articles.map((a) => columns.map((col) => col.value(a))),
     ];
-
-    const rows = articles.map((a) => {
-      const row = [a.id, a.doi || '', a.title || '', a.authors || '', a.year || '', a.source_databases || '', a.status];
-
-      // Add category values for this article
-      projectCategories.forEach((cat) => {
-        const articleCat = articleCategories.find((ac) => ac.article_id === a.id && ac.category_id === cat.id);
-        const val = articleCat ? articleCat.value : '';
-        row.push(val || '');
-      });
-
-      return row;
-    });
-
-    const worksheetData = [header, ...rows];
-    const worksheet = xlsx.utils.aoa_to_sheet(worksheetData);
     const workbook = xlsx.utils.book_new();
-    xlsx.utils.book_append_sheet(workbook, worksheet, 'Artigos');
-
-    const excelBuffer = xlsx.write(workbook, { bookType: 'xlsx', type: 'buffer' });
-    return excelBuffer;
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.aoa_to_sheet(worksheetData), 'Artigos');
+    return xlsx.write(workbook, { bookType: 'xlsx', type: 'buffer' });
   }
 
   /**
