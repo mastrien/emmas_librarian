@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NormalizedArticle } from './types';
 
+// 1/0 when the base said whether the article is open access, undefined when it did not
+// (Crossref and WoS never say; OpenAlex and Scopus sometimes omit the field).
+function openAccessFlag(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined;
+  return value === true || value === 1 || value === '1' || value === 'true' ? 1 : 0;
+}
+
 export class ApiIntegrator {
   private OPENALEX_URL = 'https://api.openalex.org/works';
   private CROSSREF_URL = 'https://api.crossref.org/works';
@@ -248,7 +255,7 @@ export class ApiIntegrator {
     const issn = raw.primary_location?.source?.issn_l;
     const citationCount = raw.cited_by_count;
 
-    const isOa = raw.open_access?.is_oa ? 1 : 0;
+    const isOa = openAccessFlag(raw.open_access?.is_oa);
     const publisher =
       raw.primary_location?.source?.host_organization_name || raw.primary_location?.source?.publisher || undefined;
 
@@ -378,8 +385,7 @@ export class ApiIntegrator {
     const citationCount = citedByRaw != null ? parseInt(citedByRaw, 10) : undefined;
     const issn = raw['prism:issn'] || undefined;
 
-    const isOa =
-      raw.openaccess === '1' || raw.openaccess === 1 || raw.openaccess === 'true' || raw.openaccess === true ? 1 : 0;
+    const isOa = openAccessFlag(raw.openaccess);
 
     const cslJson = {
       id: doi || raw['dc:identifier'],

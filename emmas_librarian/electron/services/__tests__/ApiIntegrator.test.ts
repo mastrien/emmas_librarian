@@ -1,3 +1,4 @@
+import type { NormalizedArticle } from '../types';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ApiIntegrator } from '../ApiIntegrator';
 
@@ -638,6 +639,16 @@ describe('ApiIntegrator', () => {
       expect((api as any).normalizeScopus(rawScopusOa1).year).toBeNaN();
       expect((api as any).normalizeScopus(rawScopusOaTrue).is_oa).toBe(1);
       expect((api as any).normalizeScopus(rawScopusOaTrue).year).toBeUndefined();
+      // Typed view of the private normalizers, so these checks add no `any`.
+      const normalizers = api as unknown as Record<
+        'normalizeScopus' | 'normalizeOpenAlex',
+        (raw: object) => NormalizedArticle
+      >;
+      expect(normalizers.normalizeScopus({ openaccess: '0' }).is_oa).toBe(0);
+
+      // A base that did not say whether the article is open access leaves it unknown, not closed
+      expect(normalizers.normalizeScopus({}).is_oa).toBeUndefined();
+      expect(normalizers.normalizeOpenAlex({ authorships: [] }).is_oa).toBeUndefined();
 
       // WoS citation counts
       const rawWos1 = { uid: 'WOS:1', citations: { length: 5 } };

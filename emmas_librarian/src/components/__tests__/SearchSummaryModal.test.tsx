@@ -48,9 +48,12 @@ describe('SearchSummaryModal', () => {
   it('shows the per-database outcome, including failures', () => {
     renderModal();
 
-    expect(screen.getByText('Web of Science')).toBeInTheDocument();
-    expect(screen.getByText('Falha')).toBeInTheDocument();
-    expect(screen.getByText('API Timeout')).toBeInTheDocument();
+    const byBase = within(screen.getByRole('region', { name: 'Resultados por base' }));
+    expect(byBase.getByText('OpenAlex')).toBeInTheDocument();
+    expect(byBase.getByText('Web of Science')).toBeInTheDocument();
+    expect(byBase.getByText('Crossref')).toBeInTheDocument();
+    expect(byBase.getByText('Falha')).toBeInTheDocument();
+    expect(byBase.getByText('API Timeout')).toBeInTheDocument();
   });
 
   it.each([
