@@ -258,7 +258,11 @@ textarea {
 }
 
 .fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  /* No `forwards` fill: a transform kept after the animation (even translateY(0) or none, which Chrome
+     interpolates to an identity matrix) makes the element, e.g. <main>, the containing block of its
+     position: fixed children, and overlays opened inside it rendered off-screen. The end frame equals
+     the base style, so dropping the fill changes nothing visually. */
+  animation: fadeIn 0.4s ease-out;
 }
 
 @keyframes fadeIn {

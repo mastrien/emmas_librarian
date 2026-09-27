@@ -14,7 +14,7 @@ Update this table when you add or extend a spec.
 | `categories.spec.js` (F-11) | Create text/list/boolean categories, classify in the reader, Categories tab, CSV | values after reload, CSV columns |
 | `backup_restore.spec.js` (F-12) | "Restaurar e Sobrescrever" | library equals backup, PDF deleted from disk comes back and opens |
 | `backup_restore.spec.js` (F-13) | "Importar e Mesclar" into another library | project + PDF merged, second merge imports nothing |
-| `sharing_and_pdf_library.spec.js` (F-15/16) | Import from other project; PDF library reuse | history ID; "Utilizado em 1/2 artigos" |
+| `sharing_and_pdf_library.spec.js` (F-15/16) | Import from other project; PDF library reuse; "Vincular" dialog | history ID; "Utilizado em 1/2 artigos"; link overlay covers the whole window (fixed-overlay regression) |
 | `reader.spec.js` | Reader: render/paginate/zoom, in-PDF search, highlight with note, standalone annotation, ABNT citation from metadata | page input, results on page 3, persisted after reopening, citation text, saved title |
 | `diary.spec.js` | Diary: autosave + reload, version history restore, delete page | content after reload, restored version, empty state |
 | `agenda.spec.js` | Agenda event with custom milestone, views, dashboard banner | card, milestone list, banner |
