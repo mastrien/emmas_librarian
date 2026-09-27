@@ -24,7 +24,6 @@ interface ProjectArticlesListProps {
   setEditingArticle: (article: Article) => void;
   setArchivingId: (id: number) => void;
   setCitationArticle: (article: Article) => void;
-  isArticleManual: (article: Article) => boolean;
 }
 
 export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
@@ -36,7 +35,6 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
   setEditingArticle,
   setArchivingId,
   setCitationArticle,
-  isArticleManual,
 }) => {
   return (
     <div className="card" style={{ overflowX: 'auto', border: 'none', marginBottom: '2rem' }}>
@@ -233,16 +231,14 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
                     </button>
                   ) : null}
 
-                  {isArticleManual(article) && (
-                    <button
-                      onClick={() => setEditingArticle(article)}
-                      className="btn-secondary"
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
-                      title="Editar Metadados"
-                    >
-                      <Edit2 size={14} /> Editar
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setEditingArticle(article)}
+                    className="btn-secondary"
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                    title="Editar Metadados"
+                  >
+                    <Edit2 size={14} /> Editar
+                  </button>
 
                   {article.status === 'archived' ? (
                     <button

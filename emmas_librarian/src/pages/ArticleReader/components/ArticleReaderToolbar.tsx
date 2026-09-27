@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Edit2, CopyPlus, Loader2, Upload, ZoomOut, ZoomIn, X as XIcon } from 'lucide-react';
 import { HelpButton } from '../../../components/common/HelpButton';
 import type { Article } from '../../../types';
-import { isManualArticle } from '../../../utils/sourceDatabases';
 
 interface ArticleReaderToolbarProps {
   article: Article;
@@ -71,22 +70,20 @@ export const ArticleReaderToolbar: React.FC<ArticleReaderToolbarProps> = ({
         >
           {article.title}
         </h2>
-        {isManualArticle(article) && (
-          <button
-            onClick={() => setIsEditingMetadata(true)}
-            className="btn-secondary"
-            style={{
-              padding: '0.3rem 0.6rem',
-              fontSize: '0.8rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.3rem',
-            }}
-            title="Editar Metadados"
-          >
-            <Edit2 size={14} /> Editar Metadados
-          </button>
-        )}
+        <button
+          onClick={() => setIsEditingMetadata(true)}
+          className="btn-secondary"
+          style={{
+            padding: '0.3rem 0.6rem',
+            fontSize: '0.8rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.3rem',
+          }}
+          title="Editar Metadados"
+        >
+          <Edit2 size={14} /> Editar Metadados
+        </button>
         <button
           onClick={() => setIsCitationModalOpen(true)}
           className="btn-secondary"

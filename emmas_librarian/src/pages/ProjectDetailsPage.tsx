@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useGlobalError } from '../contexts/GlobalErrorContext';
 import type { Article } from '../types';
-import { isManualArticle } from '../utils/sourceDatabases';
 import { useProjectData } from './ProjectDetails/hooks/useProjectData';
 import { useProjectFiltering } from './ProjectDetails/hooks/useProjectFiltering';
 import { useProjectModals } from './ProjectDetails/hooks/useProjectModals';
@@ -142,7 +141,6 @@ export const ProjectDetailsPage: React.FC = () => {
           onStatusChange={actions.changeStatus}
           onUnlinkPdf={actions.unlinkPdf}
           onAttachPdf={actions.attachPdf}
-          isArticleManual={isManualArticle}
         />
       )}
       {activeTab === 'overview' && (

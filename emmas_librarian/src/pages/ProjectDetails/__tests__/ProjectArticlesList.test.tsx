@@ -13,7 +13,6 @@ describe('ProjectArticlesList', () => {
     setEditingArticle: vi.fn(),
     setArchivingId: vi.fn(),
     setCitationArticle: vi.fn(),
-    isArticleManual: vi.fn().mockReturnValue(false),
   };
 
   beforeEach(() => {
@@ -141,10 +140,9 @@ describe('ProjectArticlesList', () => {
     expect(defaultProps.setArchivingId).toHaveBeenCalledWith(1);
   });
 
-  it('handles edit for manual articles', () => {
-    const isArticleManual = vi.fn().mockReturnValue(true);
-    const paginatedArticles = [{ id: 1, title: 'Manual Article', status: 'new' }];
-    renderComponent({ paginatedArticles, isArticleManual });
+  it('offers metadata editing for every article, not only manual ones', () => {
+    const paginatedArticles = [{ id: 1, title: 'Search Result', status: 'new', source_databases: '["Scopus"]' }];
+    renderComponent({ paginatedArticles });
 
     const editBtn = screen.getByTitle('Editar Metadados');
     act(() => {

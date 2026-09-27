@@ -195,10 +195,22 @@ describe('ProjectDetailsPage article forms', () => {
     expect(within(mainTable()).getByTitle('Editar Metadados')).toBeInTheDocument();
   });
 
-  it('only offers editing for manual articles', async () => {
-    await renderProjectPage(givenProject([article({ id: 8, title: 'Importado', source_databases: '["Scopus"]' })]));
+  // Search results can come back with incomplete metadata too, so editing is not limited to manual articles.
+  it('edits the metadata of an article that came from a search', async () => {
+    const service = givenProject([article({ id: 9, title: 'Importado', source_databases: '["Scopus"]' })]);
+    await renderProjectPage(service);
 
-    expect(within(mainTable()).queryByTitle('Editar Metadados')).not.toBeInTheDocument();
+    fireEvent.click(within(mainTable()).getByTitle('Editar Metadados'));
+    fireEvent.change(screen.getByDisplayValue('Importado'), { target: { value: 'Importado corrigido' } });
+    fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
+
+    await waitFor(() =>
+      expect(service.updateArticleMetadata).toHaveBeenCalledWith(
+        9,
+        expect.objectContaining({ title: 'Importado corrigido' }),
+      ),
+    );
+    await waitFor(() => expect(service.getArticles).toHaveBeenCalledTimes(2));
   });
 });
 

@@ -18,7 +18,6 @@ interface ProjectArticlesTabProps {
   onStatusChange: (articleId: number, status: ArticleStatus) => void;
   onUnlinkPdf: (articleId: number) => void;
   onAttachPdf: (articleId: number) => void;
-  isArticleManual: (article: Article) => boolean;
 }
 
 /**
@@ -80,7 +79,6 @@ const PaginatedArticles: React.FC<ProjectArticlesTabProps> = ({
   onStatusChange,
   onUnlinkPdf,
   onAttachPdf,
-  isArticleManual,
 }) => {
   const { activeArticles, itemsPerPage, currentPage, totalPages, setCurrentPage } = filtering;
   const isPaginated = activeArticles.length > itemsPerPage;
@@ -104,7 +102,6 @@ const PaginatedArticles: React.FC<ProjectArticlesTabProps> = ({
         setEditingArticle={modals.setEditingArticle}
         setArchivingId={modals.setArchivingId}
         setCitationArticle={modals.setCitationArticle}
-        isArticleManual={isArticleManual}
       />
       {isPaginated && (
         <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
