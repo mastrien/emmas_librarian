@@ -54,6 +54,7 @@ export const AiSkillCard: React.FC<AiSkillCardProps> = ({ config, suggestions, o
       <div>
         <label style={smallLabelStyle}>Provedor</label>
         <select
+          aria-label={`Provedor: ${SKILL_TITLES[config.skill]}`}
           value={config.provider}
           onChange={(e) => onUpdate(config.skill, 'provider', e.target.value)}
           className="input-field"
@@ -70,6 +71,7 @@ export const AiSkillCard: React.FC<AiSkillCardProps> = ({ config, suggestions, o
         <label style={smallLabelStyle}>Modelo</label>
         <input
           type="text"
+          aria-label={`Modelo: ${SKILL_TITLES[config.skill]}`}
           value={config.model_name}
           onChange={(e) => onUpdate(config.skill, 'model_name', e.target.value)}
           className="input-field"

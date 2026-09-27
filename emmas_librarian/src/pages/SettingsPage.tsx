@@ -8,6 +8,7 @@ import { ApiKeysSettings } from './Settings/components/ApiKeysSettings';
 import { AiSettings } from './Settings/components/AiSettings';
 import { BackupSettings } from './Settings/components/BackupSettings';
 import { TrashSettings } from './Settings/components/TrashSettings';
+import { modelSuggestions, suggestedModelFor } from './Settings/aiModelSuggestions';
 
 export const SettingsPage: React.FC = () => {
   const projectService = useProjectService();
@@ -133,42 +134,13 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  const getModelSuggestions = (skill: AISkill, provider: AIProvider): string[] => {
-    if (skill === 'embeddings') {
-      if (provider === 'local' || provider === 'llama_cpp') return ['all-MiniLM-L6-v2'];
-      if (provider === 'gemini') return ['text-embedding-004'];
-      if (provider === 'openai') return ['text-embedding-3-small', 'text-embedding-3-large'];
-      if (provider === 'ollama') return ['nomic-embed-text', 'all-minilm'];
-      return [];
-    }
-    if (provider === 'gemini') return ['gemini-2.5-flash', 'gemini-1.5-pro'];
-    if (provider === 'openai') return ['gpt-4o-mini', 'gpt-4o'];
-    if (provider === 'ollama_cloud') return ['gpt-oss:120b-cloud', 'gpt-oss:120b', 'deepseek-v4-pro', 'qwen3.5:397b'];
-    if (provider === 'ollama') return ['llama3', 'llama3.1:70b', 'mistral'];
-    if (provider === 'anthropic') return ['claude-3-5-sonnet-20240620', 'claude-3-haiku-20240307'];
-    return [];
-  };
-
   const handleUpdateAiConfig = (skill: AISkill, field: 'provider' | 'model_name', value: string) => {
     setAiConfigs((prev) =>
       prev.map((c) => {
         if (c.skill !== skill) return c;
         if (field === 'provider') {
           const newProvider = value as AIProvider;
-          let suggestedModel = c.model_name;
-
-          if (skill === 'embeddings') {
-            if (newProvider === 'local' || newProvider === 'llama_cpp') suggestedModel = 'all-MiniLM-L6-v2';
-            else if (newProvider === 'gemini') suggestedModel = 'text-embedding-004';
-            else if (newProvider === 'openai') suggestedModel = 'text-embedding-3-small';
-            else if (newProvider === 'ollama') suggestedModel = 'nomic-embed-text';
-          } else {
-            if (newProvider === 'gemini') suggestedModel = 'gemini-2.5-flash';
-            else if (newProvider === 'openai') suggestedModel = 'gpt-4o-mini';
-            else if (newProvider === 'ollama_cloud') suggestedModel = 'gpt-oss:120b-cloud';
-            else if (newProvider === 'ollama') suggestedModel = 'llama3';
-            else if (newProvider === 'anthropic') suggestedModel = 'claude-3-5-sonnet-20240620';
-          }
+          const suggestedModel = suggestedModelFor(skill, newProvider, c.model_name);
           return { ...c, provider: newProvider, model_name: suggestedModel };
         }
         return { ...c, [field]: value };
@@ -320,7 +292,7 @@ export const SettingsPage: React.FC = () => {
           setOllamaCloudKey={setOllamaCloudKey}
           aiConfigs={aiConfigs}
           handleUpdateAiConfig={handleUpdateAiConfig}
-          getModelSuggestions={getModelSuggestions}
+          getModelSuggestions={modelSuggestions}
           ragChunkSize={ragChunkSize}
           setRagChunkSize={setRagChunkSize}
           ragChunkOverlap={ragChunkOverlap}

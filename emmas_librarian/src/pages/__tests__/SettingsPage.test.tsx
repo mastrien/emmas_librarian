@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { SettingsPage } from '../SettingsPage';
 
@@ -30,5 +30,21 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('heading', { name: 'Configurações' })).toBeInTheDocument();
     expect(await screen.findByText("Emma's Librarian v1.2.3")).toBeInTheDocument();
     expect(screen.getByDisplayValue('scopus-123')).toBeInTheDocument();
+  });
+
+  it('pre-fills a current Claude model when a skill switches to Anthropic', async () => {
+    fakeService.getAiModelConfigs.mockResolvedValue([
+      { id: 1, skill: 'summary', provider: 'gemini', model_name: 'gemini-2.5-flash', updated_at: '2026-09-26' },
+    ]);
+    render(
+      <BrowserRouter>
+        <SettingsPage />
+      </BrowserRouter>,
+    );
+    const provider = await screen.findByRole('combobox', { name: 'Provedor: 📝 Geração de Resumos' });
+
+    fireEvent.change(provider, { target: { value: 'anthropic' } });
+
+    expect(screen.getByRole('textbox', { name: 'Modelo: 📝 Geração de Resumos' })).toHaveValue('claude-sonnet-5');
   });
 });
