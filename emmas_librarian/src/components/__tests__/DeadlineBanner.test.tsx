@@ -57,3 +57,22 @@ describe('DeadlineBanner (TDD)', () => {
     expect(mockOnToggleStatus).toHaveBeenCalledWith(101, 'completed');
   });
 });
+
+describe('DeadlineBanner call link', () => {
+  it('links each deadline to its event call page when the event has a URL', () => {
+    const venue = { ...MOCK_VENUES[0], url: 'https://sbbd.org.br/2026/chamada' };
+
+    render(<DeadlineBanner venues={[venue]} onToggleMilestoneStatus={vi.fn()} onOpenAgenda={vi.fn()} />);
+
+    expect(screen.getByRole('link', { name: 'Abrir URL do Evento' })).toHaveAttribute(
+      'href',
+      'https://sbbd.org.br/2026/chamada',
+    );
+  });
+
+  it('shows no link for an event without a URL', () => {
+    render(<DeadlineBanner venues={MOCK_VENUES} onToggleMilestoneStatus={vi.fn()} onOpenAgenda={vi.fn()} />);
+
+    expect(screen.queryByRole('link', { name: 'Abrir URL do Evento' })).not.toBeInTheDocument();
+  });
+});
