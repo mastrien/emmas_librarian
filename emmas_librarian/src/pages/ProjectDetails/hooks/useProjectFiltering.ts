@@ -1,17 +1,8 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Article } from '../../../types';
 import { useSessionState } from '../../../hooks/useSessionState';
 import { parseSourceDatabases } from '../../../utils/sourceDatabases';
-
-// Author and index keywords are stored as semicolon-separated strings.
-function articleKeywords(article: Article): string[] {
-  return [article.author_keywords, article.index_keywords].flatMap((field) =>
-    (field ?? '')
-      .split(';')
-      .map((k) => k.trim())
-      .filter(Boolean),
-  );
-}
+import { articleKeywords, countWith, matchesFilters, type ArticleFilterCriteria } from './articleFilters';
 
 /**
  * Per-project view state kept for the app session, so filters, page and open sections survive a
@@ -77,75 +68,56 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
   const [isReadArticlesOpen, setIsReadArticlesOpen] = useProjectViewState(projectId, 'readOpen', false);
   const [isArchivedArticlesOpen, setIsArchivedArticlesOpen] = useProjectViewState(projectId, 'archivedOpen', false);
 
-  const activeArticles = useMemo(() => {
-    const filtered = articles.filter((a) => {
-      const matchesSearch =
-        (a.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (a.authors || '').toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesPdf = !onlyWithPdf || !!a.local_file_path;
-      const matchesOpenAccess = !onlyOpenAccess || a.is_oa === 1;
-      return matchesSearch && matchesPdf && matchesOpenAccess;
-    });
+  const criteria: ArticleFilterCriteria = useMemo(
+    () => ({
+      searchTerm,
+      onlyWithPdf,
+      onlyOpenAccess,
+      statusFilter,
+      databases: selectedDatabases,
+      docType: selectedDocType,
+      keyword: selectedKeyword,
+    }),
+    [searchTerm, onlyWithPdf, onlyOpenAccess, statusFilter, selectedDatabases, selectedDocType, selectedKeyword],
+  );
 
-    const sorted = [...filtered].sort((a, b) => {
-      switch (sortOrder) {
-        case 'year-desc':
-          return (parseInt(b.year?.toString() || '0') || 0) - (parseInt(a.year?.toString() || '0') || 0);
-        case 'year-asc':
-          return (parseInt(a.year?.toString() || '0') || 0) - (parseInt(b.year?.toString() || '0') || 0);
-        case 'title-asc':
-          return (a.title || '').localeCompare(b.title || '');
-        case 'title-desc':
-          return (b.title || '').localeCompare(a.title || '');
-        case 'added-desc':
-          return (b.id || 0) - (a.id || 0);
-        case 'added-asc':
-          return (a.id || 0) - (b.id || 0);
-        case 'citations-desc':
-          return (b.citation_count || 0) - (a.citation_count || 0);
-        case 'citations-asc':
-          return (a.citation_count || 0) - (b.citation_count || 0);
-        default:
-          return 0;
-      }
-    });
+  // Applies a whole set of filters at once (a chip removed, "Limpar filtros") and goes back to page 1.
+  const applyCriteria = useCallback(
+    (next: ArticleFilterCriteria) => {
+      setSearchTerm(next.searchTerm);
+      setOnlyWithPdf(next.onlyWithPdf);
+      setOnlyOpenAccess(next.onlyOpenAccess);
+      setStatusFilter(next.statusFilter);
+      setSelectedDatabases(next.databases);
+      setSelectedDocType(next.docType);
+      setSelectedKeyword(next.keyword);
+      setCurrentPage(1);
+    },
+    [
+      setSearchTerm,
+      setOnlyWithPdf,
+      setOnlyOpenAccess,
+      setStatusFilter,
+      setSelectedDatabases,
+      setSelectedDocType,
+      setSelectedKeyword,
+      setCurrentPage,
+    ],
+  );
 
-    return sorted.filter((a) => {
-      if (statusFilter === 'new') {
-        if (a.status !== 'new' && !!a.status) return false;
-      } else if (statusFilter === 'read') {
-        if (a.status !== 'read') return false;
-      } else if (statusFilter === 'archived') {
-        if (a.status !== 'archived') return false;
-      }
+  const countFor = useCallback(
+    (patch: Partial<ArticleFilterCriteria>) => countWith(articles, criteria, patch),
+    [articles, criteria],
+  );
 
-      if (selectedDatabases.length > 0) {
-        const articleBases = parseSourceDatabases(a.source_databases);
-        if (!selectedDatabases.some((db) => articleBases.includes(db))) return false;
-      }
-
-      if (selectedDocType) {
-        if (a.document_type !== selectedDocType) return false;
-      }
-
-      if (selectedKeyword) {
-        const keywords = articleKeywords(a).map((k) => k.toLowerCase());
-        if (!keywords.includes(selectedKeyword.toLowerCase())) return false;
-      }
-
-      return true;
-    });
-  }, [
-    articles,
-    searchTerm,
-    onlyWithPdf,
-    onlyOpenAccess,
-    statusFilter,
-    selectedDatabases,
-    selectedDocType,
-    selectedKeyword,
-    sortOrder,
-  ]);
+  const activeArticles = useMemo(
+    () =>
+      sortArticles(
+        articles.filter((a) => matchesFilters(a, criteria)),
+        sortOrder,
+      ),
+    [articles, criteria, sortOrder],
+  );
 
   const readArticles = useMemo(() => articles.filter((a) => a.status === 'read'), [articles]);
   const archivedArticles = useMemo(() => articles.filter((a) => a.status === 'archived'), [articles]);
@@ -158,6 +130,9 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
   }, [activeArticles, currentPage, itemsPerPage]);
 
   return {
+    criteria,
+    applyCriteria,
+    countFor,
     itemsPerPage,
     searchTerm,
     setSearchTerm,
@@ -194,3 +169,19 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
 };
 
 export type ProjectFiltering = ReturnType<typeof useProjectFiltering>;
+
+function sortArticles(articles: Article[], sortOrder: string): Article[] {
+  const year = (a: Article) => parseInt(a.year?.toString() || '0') || 0;
+  const compare: Record<string, (a: Article, b: Article) => number> = {
+    'year-desc': (a, b) => year(b) - year(a),
+    'year-asc': (a, b) => year(a) - year(b),
+    'title-asc': (a, b) => (a.title || '').localeCompare(b.title || ''),
+    'title-desc': (a, b) => (b.title || '').localeCompare(a.title || ''),
+    'added-desc': (a, b) => (b.id || 0) - (a.id || 0),
+    'added-asc': (a, b) => (a.id || 0) - (b.id || 0),
+    'citations-desc': (a, b) => (b.citation_count || 0) - (a.citation_count || 0),
+    'citations-asc': (a, b) => (a.citation_count || 0) - (b.citation_count || 0),
+  };
+  const byOrder = compare[sortOrder];
+  return byOrder ? [...articles].sort(byOrder) : articles;
+}
