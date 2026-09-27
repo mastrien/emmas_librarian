@@ -7,6 +7,7 @@ import { extractTextWithCoordinates } from './PdfExtractor';
 import { AppError } from '../ipc/errorHandler';
 import { parseAndRepairJson } from './llm/jsonRepair';
 import { OllamaCloudGateway } from './llm/OllamaCloudGateway';
+import { AnthropicGateway } from './llm/AnthropicGateway';
 
 export class AIService {
   private db: DatabaseAdapter;
@@ -40,6 +41,7 @@ export class AIService {
     ollamaCloud: string | null;
     ollamaCloudUrl: string | null;
     ollamaCloudModel?: string | null;
+    anthropic: string | null;
   } {
     let cloudUrl = this.db.getSetting('ollama_cloud_base_url') || 'https://ollama.com/v1';
     if (cloudUrl.includes('api.ollama.cloud')) {
@@ -54,6 +56,7 @@ export class AIService {
       ollamaCloud: this.db.getSetting('api_key_ollama_cloud') || this.db.getSetting('ollama_cloud_api_key') || null,
       ollamaCloudUrl: cloudUrl,
       ollamaCloudModel: this.db.getSetting('ollama_cloud_model') || null,
+      anthropic: this.db.getSetting('api_key_anthropic') || null,
     };
   }
 
@@ -168,7 +171,7 @@ export class AIService {
           return await this.callGemini(prompt, keys.gemini, config.model_name);
         } else if (config.provider === 'ollama') {
           if (!keys.ollama) throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'URL do Ollama não configurada.');
-          return await this.callOllama(prompt, keys.ollama, config.model_name || keys.ollamaModel || 'llama3');
+          return await this.callOllama(prompt, keys.ollama, config.model_name || keys.ollamaModel || 'llama3.1');
         } else if (config.provider === 'ollama_cloud') {
           if (!keys.ollamaCloudUrl) {
             throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'URL do Ollama Cloud não configurada.');
@@ -178,6 +181,12 @@ export class AIService {
           }
           const gateway = new OllamaCloudGateway(keys.ollamaCloudUrl, keys.ollamaCloud);
           return await gateway.complete(prompt, config.model_name || keys.ollamaCloudModel || 'llama3.1:70b');
+        } else if (config.provider === 'anthropic') {
+          // Settings saved the key and offered Claude, but this branch was missing, so choosing
+          // Anthropic always failed with "Provedor configurado é inválido".
+          if (!keys.anthropic)
+            throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'Chave da Anthropic não configurada.');
+          return await new AnthropicGateway(keys.anthropic).complete(prompt, config.model_name);
         } else {
           throw new AppError('ERR_MODEL_NOT_DEFINED', 'USER_ERROR', 'Provedor configurado é inválido.');
         }
@@ -189,7 +198,7 @@ export class AIService {
       } else if (keys.gemini) {
         return await this.callGemini(prompt, keys.gemini);
       } else if (keys.ollama) {
-        return await this.callOllama(prompt, keys.ollama, keys.ollamaModel || 'llama3');
+        return await this.callOllama(prompt, keys.ollama, keys.ollamaModel || 'llama3.1');
       } else if (keys.ollamaCloudUrl && keys.ollamaCloud) {
         const gateway = new OllamaCloudGateway(keys.ollamaCloudUrl, keys.ollamaCloud);
         return await gateway.complete(prompt, keys.ollamaCloudModel || 'llama3.1:70b');

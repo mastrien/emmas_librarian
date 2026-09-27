@@ -307,6 +307,45 @@ describe('AIService', () => {
     );
   });
 
+  // The tutorial tells users to `ollama pull llama3.1`; a plain `llama3` fallback would 404 for them.
+  it('falls back to llama3.1 when only a local Ollama URL is set and no model is chosen', async () => {
+    dbMock.getSetting = vi.fn((key: string) => (key === 'api_key_ollama' ? 'http://127.0.0.1:11434/v1' : null));
+    mockGetConfig.mockReturnValueOnce(undefined);
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: '{"generalSummary": "ok", "sectionSummary": ""}' } }] }),
+    });
+
+    await aiService.generateSummary(1, 'fake/path.pdf');
+
+    const [, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string).model).toBe('llama3.1');
+  });
+
+  it('calls the Anthropic Messages API with the configured Claude model', async () => {
+    dbMock.getSetting = vi.fn((key: string) => (key === 'api_key_anthropic' ? 'sk-ant-test' : null));
+    mockGetConfig.mockReturnValueOnce({ provider: 'anthropic', model_name: 'claude-sonnet-5' });
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ content: [{ text: '{"generalSummary": "Claude Summary", "sectionSummary": ""}' }] }),
+    });
+
+    const summary = await aiService.generateSummary(1, 'fake/path.pdf');
+
+    const [url, init] = vi.mocked(global.fetch).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.anthropic.com/v1/messages');
+    expect((init.headers as Record<string, string>)['x-api-key']).toBe('sk-ant-test');
+    expect(JSON.parse(init.body as string).model).toBe('claude-sonnet-5');
+    expect(summary.generalSummary).toBe('Claude Summary');
+  });
+
+  it('asks for the Anthropic key when Claude is configured without one', async () => {
+    dbMock.getSetting = vi.fn(() => null);
+    mockGetConfig.mockReturnValueOnce({ provider: 'anthropic', model_name: 'claude-sonnet-5' });
+
+    await expect(aiService.generateSummary(1, 'fake/path.pdf')).rejects.toThrow('Chave da Anthropic não configurada');
+  });
+
   it('should throw QUOTA_EXCEEDED when API returns 429', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
