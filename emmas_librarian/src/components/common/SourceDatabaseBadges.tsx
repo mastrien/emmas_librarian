@@ -41,6 +41,7 @@ const SourceBadge: React.FC<{ source: string }> = ({ source }) => {
         fontSize: '0.75rem',
         fontWeight: 600,
         color: isManual ? 'var(--color-danger)' : 'var(--color-primary)',
+        whiteSpace: 'nowrap',
       }}
       title={isManual ? MANUAL_WARNING : undefined}
     >

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectArticlesList } from '../components/ProjectArticlesList';
 import { MemoryRouter } from 'react-router-dom';
@@ -55,13 +55,22 @@ describe('ProjectArticlesList', () => {
     ];
     renderComponent({ paginatedArticles });
 
-    expect(screen.getByText('Article 1')).toBeInTheDocument();
-    expect(screen.getByText('DOI: 10.123/1')).toBeInTheDocument();
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('2021')).toBeInTheDocument();
-    expect(screen.getByText('🎓 5 citações')).toBeInTheDocument();
-    expect(screen.getByText('Scopus')).toBeInTheDocument();
-    expect(screen.getByText('🔓 Acesso Aberto')).toBeInTheDocument();
+    const [articleCell, authorsCell, basesCell] = within(screen.getAllByRole('row')[1]).getAllByRole('cell');
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
+      'ARTIGO',
+      'AUTORES',
+      'BASES',
+      'AÇÕES',
+    ]);
+    expect(within(articleCell).getByText('Article 1')).toBeInTheDocument();
+    // Year, DOI, citations and open access describe the article, so they sit under its title.
+    expect(within(articleCell).getByText('DOI 10.123/1')).toBeInTheDocument();
+    expect(within(articleCell).getByText('2021')).toBeInTheDocument();
+    expect(within(articleCell).getByText('5 citações')).toBeInTheDocument();
+    expect(within(articleCell).getByText('Acesso aberto')).toBeInTheDocument();
+    expect(authorsCell).toHaveTextContent(/^John Doe$/);
+    expect(within(basesCell).getByText('Scopus')).toBeInTheDocument();
+    expect(within(basesCell).queryByText(/Acesso/)).not.toBeInTheDocument();
   });
 
   it('handles click on article title', () => {

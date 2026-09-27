@@ -44,6 +44,13 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
     await expect(resultRow).toContainText('Author E2E');
     await expect(resultRow).toContainText('2026');
 
+    // The table follows its own width: with the filters sidebar open (the default) there is no room
+    // for an authors column, so the authors move into the article cell; closing the sidebar brings it back.
+    const authorsHeader = window.getByRole('columnheader', { name: 'AUTORES' });
+    await expect(authorsHeader).toBeHidden();
+    await window.getByRole('button', { name: 'Filtros' }).click();
+    await expect(authorsHeader).toBeVisible();
+
     // The saved search can be reopened in the query builder from the history.
     await window.getByTestId('tab-history').click();
     await window

@@ -1,4 +1,5 @@
 import Cite from 'citation-js';
+import { splitAuthorNames } from '../utils/authors';
 import abntCsl from '../assets/csl/abnt.csl?raw';
 import ptBrLocale from '../assets/csl/locales-pt-BR.xml?raw';
 
@@ -16,29 +17,7 @@ export type CitationOutputFormat = 'text' | 'html' | 'bibtex';
 export function parseAuthors(authorsStr: string): any[] {
   if (!authorsStr) return [];
 
-  let rawAuthors: string[] = [];
-  if (authorsStr.includes(';')) {
-    rawAuthors = authorsStr.split(';');
-  } else if (authorsStr.includes(',')) {
-    const parts = authorsStr.split(',');
-    if (parts.length === 2) {
-      // Exactly one comma. Could be "Family, Given" (1 author) or "Author A, Author B" (2 authors)
-      const part1 = parts[0].trim();
-      const part2 = parts[1].trim();
-      const part1HasSpace = part1.includes(' ');
-      const part2HasSpace = part2.includes(' ');
-
-      if (part1HasSpace && part2HasSpace) {
-        rawAuthors = [part1, part2];
-      } else {
-        rawAuthors = [authorsStr];
-      }
-    } else {
-      rawAuthors = parts;
-    }
-  } else {
-    rawAuthors = [authorsStr];
-  }
+  const rawAuthors = splitAuthorNames(authorsStr);
 
   return rawAuthors
     .map((authorStr) => {
