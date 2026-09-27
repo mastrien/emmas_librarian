@@ -5,6 +5,11 @@ const { launchApp, getFirstWindow, createProject, clickAddArticlesOption } = req
 const URL_TITLE =
   'Dataset https://zenodo.org/records/1234567/files/precipitation_reanalysis_southamerica_1979-2023_daily.nc';
 const EIGHTEEN_AUTHORS = Array.from({ length: 18 }, (_, i) => `Autor${i + 1}, A.`).join('; ');
+// Few authors but long names, comma-separated as OpenAlex sends them: the one-line author list used to
+// set the column's minimum width (the example project from the author overflowed by up to 233px).
+const LONG_NAMES =
+  'Joaquim Eduardo Albuquerque-Siqueira, Maria Fernanda Carvalho-Nogueira, Carlos Eduardo Robles-Mendonça, ' +
+  'Beatriz Helena Vasconcelos-Pimentel, Ricardo Augusto Figueiredo-Lacerda';
 
 async function addManualArticle(window, title, authors) {
   await clickAddArticlesOption(window, 'Artigo Manual');
@@ -35,9 +40,10 @@ test('the article table never needs a horizontal scroll, with the filters sideba
     await createProject(window, 'Layout da tabela ' + Date.now());
     await addManualArticle(window, URL_TITLE, EIGHTEEN_AUTHORS);
     await addManualArticle(window, 'Artigo curto', 'Silva, A.');
+    await addManualArticle(window, 'Soft sensor para fermentação em escala industrial', LONG_NAMES);
     await expect(window.getByTestId('main-articles-table').getByText(/zenodo/)).toBeVisible();
 
-    for (const width of [900, 1000, 1200]) {
+    for (const width of [900, 1000, 1200, 1366]) {
       await electronApp.evaluate(({ BrowserWindow }, w) => BrowserWindow.getAllWindows()[0].setSize(w, 850), width);
       for (const open of [true, false]) {
         await setSidebar(window, open);
