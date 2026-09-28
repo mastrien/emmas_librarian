@@ -1,6 +1,9 @@
-import type { NormalizedArticle } from '../types';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ApiIntegrator } from '../ApiIntegrator';
+import { normalizeOpenAlex } from '../searchApis/openAlex';
+import { normalizeCrossref } from '../searchApis/crossref';
+import { normalizeScopus } from '../searchApis/scopus';
+import { normalizeWoS } from '../searchApis/wos';
 
 describe('ApiIntegrator', () => {
   let api: ApiIntegrator;
@@ -553,7 +556,7 @@ describe('ApiIntegrator', () => {
         authorships: [{ author: { display_name: 'SingleName' } }, { author: null }],
         keywords: ['DirectKeywordString'],
       };
-      const normalizedAlex = (api as any).normalizeOpenAlex(rawOpenAlex);
+      const normalizedAlex = normalizeOpenAlex(rawOpenAlex);
       expect(normalizedAlex.doi).toBe('10.1000/xyz');
       expect(normalizedAlex.authors).toBe('SingleName');
       expect(normalizedAlex.authorKeywords).toBe('DirectKeywordString');
@@ -567,7 +570,7 @@ describe('ApiIntegrator', () => {
         ],
         abstract: 'Abstract with no HTML tags',
       };
-      const normalizedCrossref = (api as any).normalizeCrossref(rawCrossref);
+      const normalizedCrossref = normalizeCrossref(rawCrossref);
       expect(normalizedCrossref.year).toBeUndefined();
       expect(normalizedCrossref.authors).toBe('John Doe, Alice');
       expect(normalizedCrossref.abstract).toBe('Abstract with no HTML tags');
@@ -577,7 +580,7 @@ describe('ApiIntegrator', () => {
         'dc:creator': 'Creator Name',
         'prism:coverDate': '2026-06-03',
       };
-      const normalizedScopus = (api as any).normalizeScopus(rawScopus);
+      const normalizedScopus = normalizeScopus(rawScopus);
       expect(normalizedScopus.authors).toBe('Creator Name');
       expect(normalizedScopus.year).toBe(2026);
     });
@@ -616,7 +619,7 @@ describe('ApiIntegrator', () => {
         authorships: [{ author: { display_name: 'John Middle Doe' } }, { author: { display_name: 'Single' } }],
         open_access: { is_oa: false },
       };
-      const normAlex = (api as any).normalizeOpenAlex(rawAlex);
+      const normAlex = normalizeOpenAlex(rawAlex);
       expect(normAlex.doi).toBe('10.1234/direct-doi');
       expect(normAlex.authors).toBe('John Middle Doe, Single');
       expect(normAlex.is_oa).toBe(0);
@@ -627,7 +630,7 @@ describe('ApiIntegrator', () => {
         author: [{ given: 'Bob' }],
         reference: [{ DOI: '10.1000/ref' }, { unstructured: '' }, {}],
       };
-      const normCross = (api as any).normalizeCrossref(rawCross);
+      const normCross = normalizeCrossref(rawCross);
       expect(normCross.year).toBeUndefined();
       expect(normCross.authors).toBe('Bob');
       expect(normCross.references).toBe('10.1000/ref');
@@ -635,26 +638,21 @@ describe('ApiIntegrator', () => {
       // Scopus openaccess formats and date fallbacks
       const rawScopusOa1 = { openaccess: '1', 'prism:coverDate': 'invalid-date' };
       const rawScopusOaTrue = { openaccess: true, 'prism:coverDate': '' };
-      expect((api as any).normalizeScopus(rawScopusOa1).is_oa).toBe(1);
-      expect((api as any).normalizeScopus(rawScopusOa1).year).toBeNaN();
-      expect((api as any).normalizeScopus(rawScopusOaTrue).is_oa).toBe(1);
-      expect((api as any).normalizeScopus(rawScopusOaTrue).year).toBeUndefined();
-      // Typed view of the private normalizers, so these checks add no `any`.
-      const normalizers = api as unknown as Record<
-        'normalizeScopus' | 'normalizeOpenAlex',
-        (raw: object) => NormalizedArticle
-      >;
-      expect(normalizers.normalizeScopus({ openaccess: '0' }).is_oa).toBe(0);
+      expect(normalizeScopus(rawScopusOa1).is_oa).toBe(1);
+      expect(normalizeScopus(rawScopusOa1).year).toBeNaN();
+      expect(normalizeScopus(rawScopusOaTrue).is_oa).toBe(1);
+      expect(normalizeScopus(rawScopusOaTrue).year).toBeUndefined();
+      expect(normalizeScopus({ openaccess: '0' }).is_oa).toBe(0);
 
       // A base that did not say whether the article is open access leaves it unknown, not closed
-      expect(normalizers.normalizeScopus({}).is_oa).toBeUndefined();
-      expect(normalizers.normalizeOpenAlex({ authorships: [] }).is_oa).toBeUndefined();
+      expect(normalizeScopus({}).is_oa).toBeUndefined();
+      expect(normalizeOpenAlex({ authorships: [] }).is_oa).toBeUndefined();
 
       // WoS citation counts
       const rawWos1 = { uid: 'WOS:1', citations: { length: 5 } };
       const rawWos2 = { uid: 'WOS:2', citationCount: 10 };
-      expect((api as any).normalizeWoS(rawWos1).citationCount).toBe(5);
-      expect((api as any).normalizeWoS(rawWos2).citationCount).toBe(10);
+      expect(normalizeWoS(rawWos1).citationCount).toBe(5);
+      expect(normalizeWoS(rawWos2).citationCount).toBe(10);
     });
 
     it('covers searchWoS JSON structure variations and error formats', async () => {
