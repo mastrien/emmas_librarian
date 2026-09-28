@@ -6,13 +6,15 @@ Update this table when you add or extend a spec.
 |---|---|---|
 | `pdf_import.spec.js` (F-04) | Batch PDF import | alert text, row, stored copy in app storage |
 | `semantic_search.spec.js` (F-05) | Bibliographic search (mocked E2eMockApiIntegrator): review, discard, search again, save, reopen from history | result listed in the review dialog; discard leaves the project empty; saved row author/year; a result title opens its metadata; "Nova busca a partir desta" brings the term back; AUTORES column hidden with the filters sidebar open and shown when closed (container query) |
-| `export.spec.js` (F-06) | Manual article + CSV export | exact header, single row |
+| `export.spec.js` (F-06) | Manual article with accents, exported to CSV, XLSX and Biblioshiny | confirmation alert per export; CSV starts with a BOM, exact header, one row; XLSX sheet "Artigos" row; Biblioshiny 45 columns |
 | `questionnaire.spec.js` (F-07) | AI investigation + question set + history | catalog, completion, history details |
 | `ai_config.spec.js` (F-08) | OpenAI key settings | saved + persisted across navigation |
+| `project_sharing.spec.js` (F-17) | "Pacote .emmapcarc" export, sender's data deleted, Dashboard "Importar" in another installation | export alert with the path; "(Importado)" project with the article; its PDF opens |
 | `backup.spec.js` (F-09) | Full backup creation | alert, real `.emmabak` with emma.db + metadata |
 | `error_flows.spec.js` (F-10) | Duplicate project name | error, stays on form, no second project |
 | `categories.spec.js` (F-11) | Create text/list/boolean categories, classify in the reader, Categories tab, CSV | values after reload, CSV columns |
 | `backup_restore.spec.js` (F-12) | "Restaurar e Sobrescrever" | library equals backup, PDF deleted from disk comes back and opens |
+| `backup_restore.spec.js` (F-14) | "Restaurar e Sobrescrever" into another data folder (old one deleted) | restored PDF still opens in the reader (paths rebased to this userData) |
 | `backup_restore.spec.js` (F-13) | "Importar e Mesclar" into another library | project + PDF merged, second merge imports nothing |
 | `sharing_and_pdf_library.spec.js` (F-15/16) | Import from other project; PDF library reuse; "Vincular" dialog | history ID; "Utilizado em 1/2 artigos"; link overlay covers the whole window (fixed-overlay regression) |
 | `reader.spec.js` | Reader: render/paginate/zoom, in-PDF search, highlight with note, standalone annotation, ABNT citation from metadata | page input, results on page 3, persisted after reopening, citation text, saved title |
