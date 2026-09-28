@@ -11,6 +11,7 @@ import { DashboardClock } from './Dashboard/components/DashboardClock';
 import { DashboardDragDropOverlay } from './Dashboard/components/DashboardDragDropOverlay';
 import { DashboardProjectsList } from './Dashboard/components/DashboardProjectsList';
 import { DashboardGlobalStats } from './Dashboard/components/DashboardGlobalStats';
+import { droppedFilePath } from '../utils/droppedFilePath';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -154,8 +155,7 @@ export const DashboardPage: React.FC = () => {
 
     for (const file of files) {
       try {
-        const pathToImport = (file as any).path || file.name;
-        const newId = await projectService.importProject(pathToImport);
+        const newId = await projectService.importProject(droppedFilePath(file));
         if (newId) {
           window.location.href = `#/projects/${newId}`;
           break;

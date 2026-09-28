@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useProjectService } from '../../../contexts/ServicesContext';
+import { droppedFilePath } from '../../../utils/droppedFilePath';
 
 interface PdfImportOptions {
   projectId: number | null;
@@ -58,15 +59,9 @@ export function useProjectPdfImport({ projectId, onImported, isDropBlocked }: Pd
       e.preventDefault();
       setIsDragging(false);
       const pdfs = Array.from(e.dataTransfer.files).filter((f) => f.name.toLowerCase().endsWith('.pdf'));
-      await importPaths(pdfs.map(resolveFilePath));
+      await importPaths(pdfs.map(droppedFilePath));
     },
   };
 
   return { isDragging, importFromDialog, dropZone };
-}
-
-// Electron's sandboxed renderer exposes file paths only through the preload bridge.
-function resolveFilePath(file: File): string {
-  if (window.electronAPI?.getPathForFile) return window.electronAPI.getPathForFile(file);
-  return (file as File & { path?: string }).path || file.name;
 }
