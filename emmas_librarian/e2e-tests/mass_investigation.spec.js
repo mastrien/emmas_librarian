@@ -40,7 +40,7 @@ test('Massive Investigation Modal - Checkbox state persists across re-renders', 
     await massiveInvBtn.click();
 
     // Scope all interactions to the modal container to avoid matching
-    // page-level checkboxes (e.g. "Apenas com PDF vinculado" filter)
+    // page-level checkboxes (e.g. the "Com PDF" filter in the sidebar)
     const modal = window.locator('[data-testid="ai-extraction-modal"]');
     await expect(modal).toBeVisible({ timeout: 5000 });
 

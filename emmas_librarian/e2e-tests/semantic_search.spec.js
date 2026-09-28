@@ -48,7 +48,7 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
     // for an authors column, so the authors move into the article cell; closing the sidebar brings it back.
     const authorsHeader = window.getByRole('columnheader', { name: 'AUTORES' });
     await expect(authorsHeader).toBeHidden();
-    await window.getByRole('button', { name: 'Filtros' }).click();
+    await window.getByRole('button', { name: /^Filtros/ }).click();
     await expect(authorsHeader).toBeVisible();
 
     // The saved search can be reopened in the query builder from the history.
