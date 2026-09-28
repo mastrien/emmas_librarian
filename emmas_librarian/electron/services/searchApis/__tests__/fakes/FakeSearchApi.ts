@@ -24,7 +24,7 @@ const HOSTS: Record<string, Base> = {
 };
 
 export class FakeSearchApi {
-  readonly requests: { base: Base; url: URL }[] = [];
+  readonly requests: { base: Base; url: URL; headers: Record<string, string> }[] = [];
   private readonly failures = new Map<string, ScriptedFailure>();
 
   constructor(private readonly totals: Partial<Record<Base, number>>) {}
@@ -39,11 +39,11 @@ export class FakeSearchApi {
     return this.requests.filter((r) => r.base === base).map((r) => r.url);
   }
 
-  fetch = async (input: string): Promise<Response> => {
+  fetch = async (input: string, init?: { headers?: Record<string, string> }): Promise<Response> => {
     const url = new URL(input);
     const base = HOSTS[url.host];
     const index = this.urlsOf(base).length;
-    this.requests.push({ base, url });
+    this.requests.push({ base, url, headers: init?.headers ?? {} });
     const failure = this.failures.get(`${base}:${index}`);
     if (failure) return errorResponse(failure);
     return jsonResponse(this.page(base, url));

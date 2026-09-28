@@ -36,25 +36,38 @@ const SORT_PARAM: Record<SortBy, string> = {
 
 /**
  * Searches OpenAlex with a translated filter, following its cursor page by page up to `limit`
- * (never more than SEARCH_LIMITS.openalex.max).
+ * (never more than SEARCH_LIMITS.openalex.max). The optional free API key raises the daily budget 10x.
  *
  * Usage:
  *   const { articles, warning } = await searchOpenAlex('title_and_abstract.search:"machine learning"', 'relevance', 300);
  */
-export function searchOpenAlex(filterStr: string, sortBy: SortBy, limit: number = 50): Promise<PagedResult> {
+export function searchOpenAlex(
+  filterStr: string,
+  sortBy: SortBy,
+  limit: number = 50,
+  apiKey: string = '',
+): Promise<PagedResult> {
   return logAndRethrow('OpenAlex', () =>
     collectPages({
       baseName: 'OpenAlex',
       limit: Math.min(limit, SEARCH_LIMITS.openalex.max),
       pageSize: PAGE_SIZE,
       firstCursor: '*',
-      fetchPage: (cursor, size) => fetchOpenAlexPage(filterStr, sortBy, cursor, size),
+      fetchPage: (cursor, size) => fetchOpenAlexPage({ filterStr, sortBy, apiKey }, cursor, size),
     }),
   );
 }
 
-async function fetchOpenAlexPage(filterStr: string, sortBy: SortBy, cursor: PageCursor, size: number): Promise<Page> {
-  const response = await fetch(openAlexUrl(filterStr, sortBy, cursor, size));
+interface OpenAlexQuery {
+  filterStr: string;
+  sortBy: SortBy;
+  apiKey: string;
+}
+
+// The key goes as a bearer token (OpenAlex also accepts ?api_key=) so it stays out of URLs and logs.
+async function fetchOpenAlexPage(query: OpenAlexQuery, cursor: PageCursor, size: number): Promise<Page> {
+  const init = query.apiKey ? { headers: { Authorization: `Bearer ${query.apiKey}` } } : undefined;
+  const response = await fetch(openAlexUrl(query, cursor, size), init);
   if (response.ok) {
     const data = await response.json();
     const works = (data.results || []) as OpenAlexWork[];
@@ -65,7 +78,7 @@ async function fetchOpenAlexPage(filterStr: string, sortBy: SortBy, cursor: Page
   throw new Error(errorData.message || `Erro ${response.status} no OpenAlex`);
 }
 
-function openAlexUrl(filterStr: string, sortBy: SortBy, cursor: PageCursor, size: number): string {
+function openAlexUrl({ filterStr, sortBy }: OpenAlexQuery, cursor: PageCursor, size: number): string {
   const url = new URL(OPENALEX_URL);
   // The translator may hand over "filter=..."; OpenAlex wants just the value.
   const cleanFilter = filterStr.includes('filter=') ? filterStr.split('filter=').pop()! : filterStr;

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { SettingsPage } from '../SettingsPage';
 
@@ -30,6 +30,24 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('heading', { name: 'Configurações' })).toBeInTheDocument();
     expect(await screen.findByText("Emma's Librarian v1.2.3")).toBeInTheDocument();
     expect(screen.getByDisplayValue('scopus-123')).toBeInTheDocument();
+  });
+
+  it('loads and saves the optional OpenAlex key with the other search keys', async () => {
+    fakeService.getSetting.mockImplementation(async (key: string) =>
+      key === 'openalex_api_key' ? 'openalex-123' : null,
+    );
+    render(
+      <BrowserRouter>
+        <SettingsPage />
+      </BrowserRouter>,
+    );
+    const field = await screen.findByLabelText(/OpenAlex API Key/);
+    await waitFor(() => expect(field).toHaveValue('openalex-123'));
+
+    fireEvent.change(field, { target: { value: 'openalex-456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar Chaves' }));
+
+    await waitFor(() => expect(fakeService.setSetting).toHaveBeenCalledWith('openalex_api_key', 'openalex-456'));
   });
 
   it('pre-fills a current Claude model when a skill switches to Anthropic', async () => {

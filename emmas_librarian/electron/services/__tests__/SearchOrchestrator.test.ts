@@ -219,6 +219,17 @@ describe('SearchOrchestrator', () => {
       expect(preview.results.map((r) => r.title).sort()).toEqual(['A', 'W']);
     });
 
+    it('passes the stored OpenAlex key, and none when it is not set', async () => {
+      await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q');
+      db.setSetting('openalex_api_key', 'openalex-secret-key');
+      await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q');
+
+      expect(api.calls.map((c) => c.args)).toEqual([
+        ['q', 'relevance', 50, ''],
+        ['q', 'relevance', 50, 'openalex-secret-key'],
+      ]);
+    });
+
     it('passes the stored Scopus and WoS keys to their APIs', async () => {
       db.setSetting('scopus_api_key', 'scopus-secret-key');
       db.setSetting('wos_api_key', 'wos-secret-key');

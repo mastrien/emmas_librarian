@@ -15,8 +15,8 @@ import { searchWoS } from './searchApis/wos';
  *   const articles = await new ApiIntegrator().searchCrossref('query.bibliographic=x', 'relevance', 50);
  */
 export class ApiIntegrator {
-  searchOpenAlex(filterStr: string, sortBy: SortBy, limit: number = 50): Promise<PagedResult> {
-    return searchOpenAlex(filterStr, sortBy, limit);
+  searchOpenAlex(filterStr: string, sortBy: SortBy, limit: number = 50, apiKey: string = ''): Promise<PagedResult> {
+    return searchOpenAlex(filterStr, sortBy, limit, apiKey);
   }
 
   searchCrossref(queryStr: string, sortBy: SortBy, limit: number = 50): Promise<PagedResult> {

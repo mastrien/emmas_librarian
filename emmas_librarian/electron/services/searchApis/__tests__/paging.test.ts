@@ -42,6 +42,18 @@ describe('OpenAlex paging', () => {
     expect(api.urlsOf('openalex')).toHaveLength(2);
   });
 
+  // The free key raises the daily budget 10x; as a header it stays out of URLs and logs.
+  it('sends the API key as a bearer token only when there is one', async () => {
+    const api = new FakeSearchApi({ openalex: 10 });
+    vi.stubGlobal('fetch', api.fetch);
+
+    await searchOpenAlex('q', 'relevance', 10, 'chave-openalex');
+    await searchOpenAlex('q', 'relevance', 10);
+
+    expect(api.requests.map((r) => r.headers.Authorization)).toEqual(['Bearer chave-openalex', undefined]);
+    expect(api.urlsOf('openalex').every((u) => !u.search.includes('chave-openalex'))).toBe(true);
+  });
+
   it('never asks for more than its ceiling of 10,000 results', async () => {
     const api = new FakeSearchApi({ openalex: 50000 });
     vi.stubGlobal('fetch', api.fetch);

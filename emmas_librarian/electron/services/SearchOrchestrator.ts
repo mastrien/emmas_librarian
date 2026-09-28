@@ -138,9 +138,13 @@ export class SearchOrchestrator {
   private activeIntegrators(queryMap: Record<string, string>, limit: number, sortBy: QuerySort) {
     const scopusKey = this.db.getSetting('scopus_api_key') || '';
     const wosKey = this.db.getSetting('wos_api_key') || '';
+    const openAlexKey = this.db.getSetting('openalex_api_key') || '';
     const integrators: { name: string; promise: Promise<PagedResult> }[] = [];
     if (queryMap.openalex)
-      integrators.push({ name: 'openalex', promise: this.api.searchOpenAlex(queryMap.openalex, sortBy, limit) });
+      integrators.push({
+        name: 'openalex',
+        promise: this.api.searchOpenAlex(queryMap.openalex, sortBy, limit, openAlexKey),
+      });
     if (queryMap.crossref)
       integrators.push({ name: 'crossref', promise: this.api.searchCrossref(queryMap.crossref, sortBy, limit) });
     if (queryMap.scopus)
