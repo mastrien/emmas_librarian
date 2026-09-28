@@ -102,6 +102,9 @@ export const projectService: IProjectService = {
     await safeInvoke(IpcChannel.ARTICLES_UPDATE_STATUS, articleId, status, note);
   },
 
+  updateArticlesStatus: (articleIds: number[], status: 'new' | 'read' | 'archived', note?: string): Promise<number> =>
+    safeInvoke(IpcChannel.ARTICLES_UPDATE_STATUS_MANY, articleIds, status, note),
+
   async updateArticleMetadata(articleId: number, data: Partial<Article>): Promise<void> {
     await safeInvoke(IpcChannel.ARTICLES_UPDATE_METADATA, articleId, data);
   },

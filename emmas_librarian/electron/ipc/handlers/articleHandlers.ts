@@ -21,6 +21,9 @@ export function registerArticleHandlers(ipc: IpcRegistrar, db: DatabaseAdapter):
   handle(ipc, IpcChannel.ARTICLES_UPDATE_STATUS, (_e, id: number, status: Article['status'], note?: string) =>
     db.updateArticleStatus(id, status, note),
   );
+  handle(ipc, IpcChannel.ARTICLES_UPDATE_STATUS_MANY, (_e, ids: number[], status: Article['status'], note?: string) =>
+    db.updateArticlesStatus(ids, status, note),
+  );
   handle(ipc, IpcChannel.ARTICLES_UPDATE_METADATA, (_e, id: number, data: Partial<ArticleInput>) =>
     db.updateArticleMetadata(id, data),
   );

@@ -106,6 +106,8 @@ export interface IProjectService {
   getArticles(projectId: number): Promise<Article[]>;
   getArticle(articleId: number): Promise<Article>;
   updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', note?: string): Promise<void>;
+  /** Multi-select: one status (and, when archiving, one shared reason) for many articles. Returns how many changed. */
+  updateArticlesStatus(articleIds: number[], status: 'new' | 'read' | 'archived', note?: string): Promise<number>;
   updateArticleMetadata(articleId: number, data: Partial<Article>): Promise<void>;
   createManualArticle(projectId: number, data: Partial<Article>, sourceFilePath?: string): Promise<number>;
   createArticlesFromPdfs(projectId: number, filePaths: string[]): Promise<number>;

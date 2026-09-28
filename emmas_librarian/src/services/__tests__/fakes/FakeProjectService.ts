@@ -108,6 +108,10 @@ export class FakeProjectService implements IProjectService {
   updateArticleStatus = vi.fn(
     async (_articleId: number, _status: 'new' | 'read' | 'archived', _note?: string): Promise<void> => undefined,
   );
+  updateArticlesStatus = vi.fn(
+    async (articleIds: number[], _status: 'new' | 'read' | 'archived', _note?: string): Promise<number> =>
+      articleIds.length,
+  );
 
   updateArticleMetadata = vi.fn(async (_articleId: number, _data: Partial<Article>): Promise<void> => undefined);
 
