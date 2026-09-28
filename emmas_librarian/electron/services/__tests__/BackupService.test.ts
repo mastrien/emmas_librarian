@@ -108,6 +108,18 @@ describe('BackupService.runAutoBackup', () => {
     fs.writeFileSync(copy, gunzipSync(fs.readFileSync(file!)));
     expect(projectNamesIn(copy)).toEqual(['Tese']);
   });
+
+  // In WAL mode the latest writes live in emma.db-wal until a checkpoint; copying emma.db alone lost them
+  // (a fresh library's backup had no tables at all).
+  it('includes changes that are still only in the write-ahead log', async () => {
+    addProject('Recente');
+
+    const file = await service().runAutoBackup();
+
+    const copy = path.join(workDir, 'copy.db');
+    fs.writeFileSync(copy, gunzipSync(fs.readFileSync(file!)));
+    expect(projectNamesIn(copy)).toEqual(['Recente']);
+  });
 });
 
 describe('BackupService.rotateBackups (grandfather-father-son)', () => {

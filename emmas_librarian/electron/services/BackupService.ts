@@ -1,13 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from 'fs';
 import path from 'path';
 import { gzipSync, gunzipSync } from 'zlib';
 import { restartApp } from '../restartApp';
 import { localIsoDate } from '../../src/utils/localDate';
+import type { DatabaseAdapter } from '../database/DatabaseAdapter';
 
+/** The part of the app database the automatic backups use. */
+export type AutoBackupDatabase = Pick<DatabaseAdapter, 'getSetting' | 'checkIntegrity' | 'checkpoint' | 'close'>;
+
+/**
+ * Daily gzip copies of emma.db (grandfather-father-son rotation), listed and restored from Settings.
+ *
+ * Usage:
+ *   const backups = new BackupService(db, dbPath, path.join(userData, 'backups'));
+ *   await backups.runAutoBackup();
+ */
 export class BackupService {
   constructor(
-    private dbAdapter: any,
+    private dbAdapter: AutoBackupDatabase,
     private dbPath: string,
     private backupsDir: string,
   ) {}
@@ -40,7 +50,8 @@ export class BackupService {
       throw new Error('Database integrity check failed');
     }
 
-    // Read active db file and compress it
+    // WAL mode keeps the latest writes in emma.db-wal; flush them so the copy is complete.
+    this.dbAdapter.checkpoint();
     const dbData = fs.readFileSync(this.dbPath);
     const compressed = gzipSync(dbData);
 
@@ -134,7 +145,7 @@ export class BackupService {
       if (!keep.has(b.filename)) {
         try {
           fs.unlinkSync(path.join(this.backupsDir, b.filename));
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error(`Failed to delete rotated backup ${b.filename}:`, err);
         }
       }
