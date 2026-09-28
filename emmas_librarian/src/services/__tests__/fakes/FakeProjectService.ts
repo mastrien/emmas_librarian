@@ -293,7 +293,7 @@ export class FakeProjectService implements IProjectService {
 
   restoreBackupOverride = vi.fn(async (): Promise<boolean> => false);
 
-  restoreBackupMerge = vi.fn(async (): Promise<number> => 0);
+  restoreBackupMerge = vi.fn(async (): Promise<number | null> => 0);
 
   listAutoBackups = vi.fn(async (): Promise<AutoBackupEntry[]> => []);
 

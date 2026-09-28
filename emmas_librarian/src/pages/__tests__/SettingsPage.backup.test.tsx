@@ -75,6 +75,21 @@ describe('SettingsPage backups', () => {
       await waitFor(() => expect(fakeService.restoreAutoBackup).toHaveBeenCalledWith('emma_backup_2026-09-28.db.gz'));
     });
 
+    // Automatic backups hold only the database: the warning must not promise (or threaten) the PDFs.
+    it('warns that only the database goes back to the backup date', async () => {
+      fakeService.listAutoBackups.mockResolvedValue([
+        { filename: 'emma_backup_2026-09-28.db.gz', date: '2026-09-28', sizeBytes: 2048 },
+      ]);
+      await renderPage();
+      const row = (await screen.findByText('2026-09-28')).closest('div')!.parentElement!;
+
+      fireEvent.click(within(row).getByRole('button', { name: /Restaurar/ }));
+
+      const warning = vi.mocked(window.confirm).mock.calls[0][0];
+      expect(warning).toContain('Os PDFs e documentos guardados não são alterados');
+      expect(warning).not.toContain('PDFs, etc');
+    });
+
     it('does not restore an automatic backup when the warning is declined', async () => {
       fakeService.listAutoBackups.mockResolvedValue([
         { filename: 'emma_backup_2026-09-28.db.gz', date: '2026-09-28', sizeBytes: 2048 },
@@ -183,6 +198,28 @@ describe('SettingsPage backups', () => {
       await waitFor(() =>
         expect(window.alert).toHaveBeenCalledWith('2 projetos novos foram importados e mesclados com sucesso!'),
       );
+    });
+
+    it('uses the singular for a single merged project', async () => {
+      fakeService.restoreBackupMerge.mockResolvedValue(1);
+      await renderPage();
+
+      click('Importar e Mesclar');
+
+      await waitFor(() =>
+        expect(window.alert).toHaveBeenCalledWith('1 projeto novo foi importado e mesclado com sucesso!'),
+      );
+    });
+
+    // Cancelling the file dialog used to return 0 too, so it announced "Nenhum projeto novo encontrado".
+    it('stays quiet when the file dialog is cancelled', async () => {
+      fakeService.restoreBackupMerge.mockResolvedValue(null);
+      await renderPage();
+
+      click('Importar e Mesclar');
+
+      await waitFor(() => expect(fakeService.restoreBackupMerge).toHaveBeenCalled());
+      expect(window.alert).not.toHaveBeenCalled();
     });
 
     it('says when every project of the backup already exists', async () => {

@@ -150,10 +150,13 @@ export class BackupService {
     }
   }
 
-  /** Imports the backup's projects whose names are not in use yet. Returns how many were imported. */
-  public async restoreBackupMerge(providedPath?: string): Promise<number> {
+  /**
+   * Imports the backup's projects whose names are not in use yet. Returns how many were imported, or null when
+   * the file dialog was cancelled (so the UI does not report "no new project" for a cancel).
+   */
+  public async restoreBackupMerge(providedPath?: string): Promise<number | null> {
     const importPath = await this.pickBackupFile('Importar e Mesclar Backup', providedPath);
-    if (!importPath) return 0;
+    if (!importPath) return null;
     const tempDir = userDataPath('temp_restore_' + uuidv4());
     let backupDb: DatabaseAdapter | null = null;
     try {

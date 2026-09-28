@@ -301,6 +301,12 @@ describe('BackupService.restoreBackupOverride on another computer', () => {
 });
 
 describe('BackupService.restoreBackupMerge file choice', () => {
+  it('returns null, not 0, when the file dialog is cancelled', async () => {
+    openFile(undefined);
+
+    expect(await new BackupService(active).restoreBackupMerge()).toBeNull();
+  });
+
   it('uses E2E_MOCK_BACKUP_FILE instead of the open dialog', async () => {
     vi.stubEnv('E2E_MOCK_BACKUP_FILE', backupOf('Do E2E'));
 

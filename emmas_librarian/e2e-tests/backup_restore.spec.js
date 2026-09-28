@@ -101,7 +101,7 @@ test.describe('Full backup restore', () => {
         await navigateTo(window, 'Configurações');
 
         expect(await clickAndReadAlert(window, 'Importar e Mesclar')).toBe(
-          '1 projetos novos foram importados e mesclados com sucesso!',
+          '1 projeto novo foi importado e mesclado com sucesso!',
         );
         await navigateTo(window, 'Projetos');
         await expect(window.getByText('Projeto Local', { exact: true })).toBeVisible();
