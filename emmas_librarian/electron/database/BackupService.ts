@@ -1,4 +1,4 @@
-import AdmZip from 'adm-zip';
+import AdmZip, { type IZipEntry } from 'adm-zip';
 import fs from 'fs';
 import path from 'path';
 import { dialog, app } from 'electron';
@@ -116,10 +116,12 @@ export class BackupService {
     try {
       const zip = new AdmZip(importPath);
       const dbData = readBackupDatabase(zip);
+      // Checked before anything is touched, so a tampered archive leaves the library as it was.
+      const storedFiles = storageEntries(zip, app.getPath('userData'));
       this.dbAdapter.checkpoint();
       this.dbAdapter.close();
       this.overwriteDatabase(dbData);
-      this.extractStorage(zip);
+      writeStoredFiles(storedFiles);
       this.rebaseRestoredPaths();
       restartApp();
       return true;
@@ -148,16 +150,6 @@ export class BackupService {
     }
   }
 
-  private extractStorage(zip: AdmZip): void {
-    const baseDir = app.getPath('userData');
-    for (const entry of zip.getEntries()) {
-      if (entry.isDirectory || !STORAGE_FOLDERS.some((folder) => entry.entryName.startsWith(`${folder}/`))) continue;
-      const dest = path.join(baseDir, entry.entryName);
-      ensureDir(path.dirname(dest));
-      fs.writeFileSync(dest, entry.getData());
-    }
-  }
-
   /** Imports the backup's projects whose names are not in use yet. Returns how many were imported. */
   public async restoreBackupMerge(providedPath?: string): Promise<number> {
     const importPath = await this.pickBackupFile('Importar e Mesclar Backup', providedPath);
@@ -181,6 +173,37 @@ export class BackupService {
       closeQuietly(backupDb);
       removeQuietly(tempDir);
     }
+  }
+}
+
+interface StoredFileEntry {
+  entry: IZipEntry;
+  dest: string;
+}
+
+/** The archive's PDFs and documents with where each one goes under `baseDir`. */
+function storageEntries(zip: AdmZip, baseDir: string): StoredFileEntry[] {
+  return zip
+    .getEntries()
+    .filter((entry) => !entry.isDirectory && STORAGE_FOLDERS.some((f) => entry.entryName.startsWith(`${f}/`)))
+    .map((entry) => ({ entry, dest: destinationInside(baseDir, entry.entryName) }));
+}
+
+// "Zip slip": AdmZip keeps "../" in names read from archives made by other tools; path.join would follow it.
+function destinationInside(baseDir: string, entryName: string): string {
+  const dest = path.resolve(baseDir, entryName);
+  const inside = STORAGE_FOLDERS.some((f) => dest.startsWith(path.resolve(baseDir, f) + path.sep));
+  if (inside) return dest;
+  throw new Error(
+    `[ERR_INVALID_BACKUP] Arquivo de backup inválido: a entrada "${entryName}" sai das pastas de armazenamento. ` +
+      `Expected shape: caminhos dentro de ${STORAGE_FOLDERS.join(' ou ')}.`,
+  );
+}
+
+function writeStoredFiles(files: StoredFileEntry[]): void {
+  for (const { entry, dest } of files) {
+    ensureDir(path.dirname(dest));
+    fs.writeFileSync(dest, entry.getData());
   }
 }
 

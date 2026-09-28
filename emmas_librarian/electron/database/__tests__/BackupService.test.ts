@@ -225,6 +225,28 @@ describe('BackupService.restoreBackupOverride', () => {
   });
 });
 
+describe('BackupService.restoreBackupOverride with a tampered archive', () => {
+  // AdmZip strips "../" when writing, but keeps it when reading an archive made by another tool ("zip slip").
+  function backupEscapingStorage(): string {
+    const clean = backupOf('Malicioso', { 'storage/pdfs/QQ/QQ/QQ/fora.txt': 'invasor' });
+    const tampered = fs.readFileSync(clean).toString('latin1').split('QQ').join('..');
+    fs.writeFileSync(clean, Buffer.from(tampered, 'latin1'));
+    return clean;
+  }
+
+  it('refuses an entry that escapes the storage folders and leaves the library untouched', async () => {
+    run("INSERT INTO projects (name) VALUES ('Atual')");
+
+    await expect(new BackupService(active).restoreBackupOverride(backupEscapingStorage())).rejects.toThrow(
+      'storage/pdfs/../../../fora.txt',
+    );
+
+    expect(fs.existsSync(path.join(workDir, 'fora.txt'))).toBe(false);
+    expect(active.getDB().prepare('SELECT name FROM projects').all()).toEqual([{ name: 'Atual' }]);
+    expect(app.exit).not.toHaveBeenCalled();
+  });
+});
+
 describe('BackupService.restoreBackupOverride on another computer', () => {
   // The database stores absolute paths (C:/Users/<name>/AppData/.../storage/pdfs/x.pdf). Restoring on another
   // machine or user account put the files in this userData folder but left every link pointing at the old one.

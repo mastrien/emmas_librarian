@@ -197,6 +197,16 @@ describe('BackupService.restoreAutoBackup', () => {
     expect(electronApp.exit).toHaveBeenCalledWith(0);
   });
 
+  // The name comes from the renderer over IPC; only files listed by listAutoBackups may be restored.
+  it('refuses a name that is not an automatic backup file', () => {
+    fs.writeFileSync(path.join(workDir, 'outro.db.gz'), gzipSync(Buffer.from('x')));
+
+    expect(() => service().restoreAutoBackup('../outro.db.gz')).toThrow('../outro.db.gz');
+
+    expect(adapter.getSetting('enable_auto_backups')).toBeNull();
+    expect(electronApp.exit).not.toHaveBeenCalled();
+  });
+
   it('reports the missing backup by name and keeps the database open', () => {
     expect(() => service().restoreAutoBackup('emma_backup_1999-01-01.db.gz')).toThrow(
       'Backup file emma_backup_1999-01-01.db.gz not found',
