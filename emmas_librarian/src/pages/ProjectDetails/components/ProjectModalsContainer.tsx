@@ -78,8 +78,12 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
   return (
     <>
       <ArchiveModal
-        isOpen={modals.archivingId !== null}
-        onClose={() => modals.setArchivingId(null)}
+        isOpen={modals.archivingId !== null || modals.archivingIds !== null}
+        count={modals.archivingIds?.length ?? 1}
+        onClose={() => {
+          modals.setArchivingId(null);
+          modals.setArchivingIds(null);
+        }}
         onSubmit={handleArchiveSubmit}
       />
 
@@ -245,8 +249,11 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
       {modals.isMassCitationModalOpen && (
         <MassCitationModal
           isOpen={modals.isMassCitationModalOpen}
-          onClose={() => modals.setIsMassCitationModalOpen(false)}
-          articles={readArticles}
+          onClose={() => {
+            modals.setIsMassCitationModalOpen(false);
+            modals.setMassCitationArticles(null);
+          }}
+          articles={modals.massCitationArticles ?? readArticles}
           onArticlesUpdated={fetchData}
         />
       )}

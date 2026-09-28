@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectModalsContainer } from '../components/ProjectModalsContainer';
 import { MemoryRouter } from 'react-router-dom';
+import type { Article } from '../../../types';
 
 // Mock all modals
 vi.mock('../../../components/modals/ArchiveModal', () => ({
@@ -127,6 +128,10 @@ describe('ProjectModalsContainer', () => {
   const defaultModalsState = {
     archivingId: null,
     setArchivingId: vi.fn(),
+    archivingIds: null as number[] | null,
+    setArchivingIds: vi.fn(),
+    massCitationArticles: null as Article[] | null,
+    setMassCitationArticles: vi.fn(),
     isCategoriesModalOpen: false,
     setIsCategoriesModalOpen: vi.fn(),
     editingArticle: null,

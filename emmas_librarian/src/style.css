@@ -775,3 +775,429 @@ tr:focus-within .row-actions__shortcuts {
     display: flex;
   }
 }
+
+/* ---------- Articles tab: filter bar, filter panel, result line, multi-select ---------- */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+.filter-bar__search {
+  flex: 1;
+  min-width: 160px;
+  position: relative;
+}
+.filter-bar__search svg {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.filter-bar__search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 0.75rem 0 2.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 0.92rem;
+}
+.filter-bar__search input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+.filter-bar__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 38px;
+  padding: 0 0.3rem 0 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.filter-bar__sort:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+.filter-bar__sort select {
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.btn-ghost.is-on {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.filter-count {
+  min-width: 1.2rem;
+  height: 1.2rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: inline-grid;
+  place-items: center;
+}
+
+.filters-panel {
+  width: 260px;
+  flex-shrink: 0;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+.filters-panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--text-heading);
+}
+.filters-panel fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.filters-panel legend,
+.filters-panel__label {
+  display: block;
+  padding: 0;
+  margin-bottom: 0.45rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.14rem 0;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.filter-option.is-empty,
+.keyword-chip.is-empty {
+  opacity: 0.5;
+}
+.opt-count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.keyword-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.keyword-chip {
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.76rem;
+  padding: 0.15rem 0.55rem;
+  cursor: pointer;
+}
+.keyword-chip.is-on {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.keyword-chip .opt-count {
+  margin-left: 0.3rem;
+  font-size: 0.7rem;
+  color: inherit;
+  opacity: 0.75;
+}
+
+.result-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 38px;
+  margin-bottom: 0.75rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+.result-line__total {
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.filter-chips {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow: hidden;
+}
+.filter-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 28px;
+  padding: 0 0.3rem 0 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.filter-chip button {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+}
+.filter-chip button:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+.link-button {
+  flex: none;
+  border: none;
+  background: none;
+  padding: 0.2rem 0.3rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.link-button:hover {
+  text-decoration: underline;
+}
+/* Invisible copy of the chips, measured to decide how many fit on one line. */
+.filter-chips__measure {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  display: flex;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+.result-line__pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.batch-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  margin-bottom: 0.75rem;
+  padding: 0.35rem 0.5rem 0.35rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: #fff;
+}
+.batch-bar__count {
+  font-weight: 700;
+  margin-right: auto;
+}
+.batch-bar button {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.7rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.batch-bar button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.26);
+}
+.batch-bar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.articles-table tr.is-selected td {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+/* Custom checkbox, radio and select inside the articles tab. The native inputs stay, so keyboard,
+   focus and screen readers work as before; only the look changes. */
+.custom-controls input[type='checkbox'],
+.custom-controls input[type='radio'] {
+  appearance: none;
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  border: 1.5px solid color-mix(in srgb, var(--text-muted) 55%, transparent);
+  border-radius: 5px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+.custom-controls input[type='radio'] {
+  border-radius: 50%;
+}
+.custom-controls input[type='checkbox']::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  transform: scale(0);
+  transition: transform 120ms ease;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+.custom-controls input[type='radio']::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  transform: scale(0);
+  transition: transform 120ms ease;
+}
+.custom-controls input[type='checkbox']:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.custom-controls input[type='radio']:checked {
+  border-color: var(--color-primary);
+}
+.custom-controls input:checked::before {
+  transform: scale(1);
+}
+.custom-controls input[type='checkbox']:hover,
+.custom-controls input[type='radio']:hover {
+  border-color: var(--color-primary);
+}
+.custom-controls input[type='checkbox']:focus-visible,
+.custom-controls input[type='radio']:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+/* Customizable <select> (Chromium 135+; Electron 41 ships Chromium 146). In base-select mode the
+   button's content sits at the top, so it is centred explicitly. */
+.custom-controls select,
+.custom-controls select::picker(select) {
+  appearance: base-select;
+}
+.custom-controls select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  line-height: 1.2;
+}
+.filters-panel select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 0.88rem;
+}
+.filter-bar__sort select {
+  padding: 0 0.35rem;
+}
+.custom-controls select::picker-icon {
+  content: '';
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  color: var(--text-muted);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  transition: rotate 150ms ease;
+}
+.custom-controls select:open::picker-icon {
+  rotate: 180deg;
+}
+.custom-controls select::picker(select) {
+  margin-top: 4px;
+  padding: 0.35rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-lg);
+}
+.custom-controls option {
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+.custom-controls option:hover,
+.custom-controls option:focus-visible {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  outline: none;
+}
+.custom-controls option:checked {
+  color: var(--color-primary);
+  font-weight: 600;
+  background: transparent;
+}
+.custom-controls option::checkmark {
+  color: var(--color-primary);
+}
+
+/* Read by screen readers, invisible on screen. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

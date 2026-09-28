@@ -36,4 +36,18 @@ describe('ArchiveModal', () => {
 
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('says the one reason applies to every selected article when archiving many', () => {
+    const onSubmit = vi.fn();
+    render(<ArchiveModal isOpen onClose={vi.fn()} onSubmit={onSubmit} count={3} />);
+
+    expect(screen.getByRole('heading', { name: 'Arquivar 3 artigos' })).toBeInTheDocument();
+    expect(screen.getByText(/vale para todos os 3 artigos/)).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText('Por que estes artigos não são relevantes?'), {
+      target: { value: 'fora do escopo' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Arquivar 3' }));
+
+    expect(onSubmit).toHaveBeenCalledWith('fora do escopo');
+  });
 });
