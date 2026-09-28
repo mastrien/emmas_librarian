@@ -148,6 +148,20 @@ export class ArticleRepository {
     stmt.run(status, archiveNote || null, articleId);
   }
 
+  /**
+   * Same as updateArticleStatus for many articles, in one transaction (multi-select on the project page).
+   * Archiving many at once stores one shared reason on each of them. Returns how many rows changed.
+   *
+   * @example repo.updateArticlesStatus([3, 4], 'archived', 'fora do escopo'); // 2
+   */
+  public updateArticlesStatus(articleIds: number[], status: 'new' | 'read' | 'archived', archiveNote?: string): number {
+    const stmt = this.db.prepare('UPDATE articles SET status = ?, archive_note = ? WHERE id = ?');
+    const updateAll = this.db.transaction((ids: number[]) =>
+      ids.reduce((changed, id) => changed + stmt.run(status, archiveNote || null, id).changes, 0),
+    );
+    return updateAll(articleIds);
+  }
+
   public updateArticleMetadata(articleId: number, data: Partial<ArticleInput>): void {
     const fields: string[] = [];
     const values: unknown[] = [];

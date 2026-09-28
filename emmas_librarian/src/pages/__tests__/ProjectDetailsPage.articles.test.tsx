@@ -30,32 +30,35 @@ describe('ProjectDetailsPage filters', () => {
   it('filters by title or author as the user types', async () => {
     await renderProjectPage(givenProject(articles));
 
-    fireEvent.change(screen.getByPlaceholderText('Filtrar por título ou autor...'), { target: { value: 'bruno' } });
+    fireEvent.change(screen.getByPlaceholderText('Buscar por título ou autor'), { target: { value: 'bruno' } });
 
     expect(within(mainTable()).queryByText('Paper about genes')).not.toBeInTheDocument();
     expect(within(mainTable()).getByText('Paper about proteins')).toBeInTheDocument();
   });
 
-  it.each([['Apenas com PDF vinculado'], ['Apenas Acesso Aberto']])('narrows the list with "%s"', async (label) => {
-    await renderProjectPage(givenProject(articles));
+  it.each([['Com PDF'], ['Acesso aberto']])(
+    'narrows the list with "%s" and shows it as a removable chip',
+    async (label) => {
+      await renderProjectPage(givenProject(articles));
 
-    fireEvent.click(screen.getByLabelText(label));
+      fireEvent.click(screen.getByRole('checkbox', { name: new RegExp(`^${label},`) }));
 
-    expect(within(mainTable()).getByText('Paper about genes')).toBeInTheDocument();
-    expect(within(mainTable()).queryByText('Paper about proteins')).not.toBeInTheDocument();
-    // getComputedStyle cannot resolve var(); read the inline declaration instead.
-    expect((screen.getByLabelText(label).closest('label') as HTMLElement).style.border).toBe(
-      '1px solid var(--color-primary)',
-    );
-  });
+      expect(within(mainTable()).getByText('Paper about genes')).toBeInTheDocument();
+      expect(within(mainTable()).queryByText('Paper about proteins')).not.toBeInTheDocument();
+      expect(screen.getByText('1 de 2 artigos')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: `Remover filtro ${label}` }));
+      expect(within(mainTable()).getByText('Paper about proteins')).toBeInTheDocument();
+    },
+  );
 
   it('reorders the list', async () => {
     await renderProjectPage(givenProject(articles));
 
-    fireEvent.change(screen.getByRole('combobox', { name: '' }), { target: { value: 'year-asc' } });
+    fireEvent.change(screen.getByRole('combobox', { name: /Ordenar/ }), { target: { value: 'year-asc' } });
     expect(rowTitles()[0]).toContain('Paper about genes');
 
-    fireEvent.change(screen.getByDisplayValue('Mais Antigos (Ano)'), { target: { value: 'year-desc' } });
+    fireEvent.change(screen.getByDisplayValue('Mais antigos'), { target: { value: 'year-desc' } });
     expect(rowTitles()[0]).toContain('Paper about proteins');
   });
 
@@ -76,30 +79,30 @@ describe('ProjectDetailsPage filters', () => {
     expect(listed('Paper One')).toBeInTheDocument();
     expect(listed('Paper Two')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByLabelText('Lidos'));
+    fireEvent.click(screen.getByRole('radio', { name: /^Lidos,/ }));
     expect(listed('Paper One')).not.toBeInTheDocument();
     expect(listed('Paper Two')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByLabelText('Todos'));
-    fireEvent.click(screen.getByLabelText(/OpenAlex/));
+    fireEvent.click(screen.getByRole('radio', { name: /^Todos,/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /^OpenAlex,/ }));
     expect(listed('Paper One')).toBeInTheDocument();
     expect(listed('Paper Two')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByLabelText(/OpenAlex/));
-    fireEvent.click(screen.getByText('SQL'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /^OpenAlex,/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^SQL,/ }));
     expect(listed('Paper One')).not.toBeInTheDocument();
     expect(listed('Paper Two')).toBeInTheDocument();
   });
 
   it('hides and shows the filter sidebar', async () => {
     await renderProjectPage(givenProject(articles));
-    expect(screen.getByLabelText('Todos')).toBeInTheDocument();
+    expect(screen.getByRole('complementary', { name: 'Filtros' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Filtros/ }));
-    expect(screen.queryByLabelText('Todos')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Filtros/ }));
+    expect(screen.queryByRole('complementary', { name: 'Filtros' })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Filtros/ }));
-    expect(screen.getByLabelText('Todos')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Filtros/ }));
+    expect(screen.getByRole('complementary', { name: 'Filtros' })).toBeInTheDocument();
   });
 });
 
@@ -194,6 +197,62 @@ describe('ProjectDetailsPage status changes from the main list', () => {
 
     await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao atualizar status do artigo: locked'));
     expect(screen.queryByText('Artigos Lidos (1)')).not.toBeInTheDocument();
+  });
+});
+
+describe('ProjectDetailsPage multi-select', () => {
+  const articles = [
+    article({ id: 1, title: 'Artigo um' }),
+    article({ id: 2, title: 'Artigo dois' }),
+    article({ id: 3, title: 'Artigo três' }),
+  ];
+  const selectArticles = (...titles: string[]) => {
+    fireEvent.click(screen.getByRole('button', { name: 'Selecionar' }));
+    titles.forEach((t) => fireEvent.click(screen.getByRole('checkbox', { name: `Selecionar "${t}"` })));
+  };
+  const bar = () => within(screen.getByRole('region', { name: 'Ações para os artigos selecionados' }));
+
+  it('archives the selected articles with one shared reason in a single call', async () => {
+    const service = givenProject(articles);
+    await renderProjectPage(service);
+    selectArticles('Artigo um', 'Artigo três');
+
+    fireEvent.click(bar().getByRole('button', { name: /Arquivar/ }));
+    fireEvent.change(screen.getByPlaceholderText('Por que estes artigos não são relevantes?'), {
+      target: { value: 'fora do escopo' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Arquivar 2' }));
+
+    // The ids follow the list order, which depends on the saved sort; only which ones matters.
+    await waitFor(() => expect(service.updateArticlesStatus).toHaveBeenCalledTimes(1));
+    const [ids, status, reason] = service.updateArticlesStatus.mock.calls[0];
+    expect([[...ids].sort(), status, reason]).toEqual([[1, 3], 'archived', 'fora do escopo']);
+    expect(within(mainTable()).queryByText('Artigo um')).not.toBeInTheDocument();
+    expect(within(mainTable()).getByText('Artigo dois')).toBeInTheDocument();
+    expect(bar().getByText('Nenhum selecionado')).toBeInTheDocument();
+  });
+
+  it('marks the selected articles as read', async () => {
+    const service = givenProject(articles);
+    await renderProjectPage(service);
+    selectArticles('Artigo dois');
+
+    fireEvent.click(bar().getByRole('button', { name: /Marcar como lido/ }));
+
+    await waitFor(() => expect(service.updateArticlesStatus).toHaveBeenCalledWith([2], 'read', undefined));
+    await waitFor(() => expect(within(mainTable()).queryByText('Artigo dois')).not.toBeInTheDocument());
+  });
+
+  it('alerts and keeps the articles when the batch update fails', async () => {
+    const service = givenProject(articles);
+    service.updateArticlesStatus.mockRejectedValue(new Error('SQLITE_BUSY'));
+    await renderProjectPage(service);
+    selectArticles('Artigo dois');
+
+    fireEvent.click(bar().getByRole('button', { name: /Marcar como lido/ }));
+
+    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao atualizar status dos artigos: SQLITE_BUSY'));
+    expect(within(mainTable()).getByText('Artigo dois')).toBeInTheDocument();
   });
 });
 

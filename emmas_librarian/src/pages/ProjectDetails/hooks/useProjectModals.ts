@@ -11,6 +11,10 @@ export const useProjectModals = () => {
   const [isMassCitationModalOpen, setIsMassCitationModalOpen] = useState(false);
 
   const [archivingId, setArchivingId] = useState<number | null>(null);
+  // Multi-select: the articles "Arquivar…" applies one reason to; null when archiving a single article.
+  const [archivingIds, setArchivingIds] = useState<number[] | null>(null);
+  // Multi-select: the articles for "Citar em massa"; null means the read articles (the accordion's button).
+  const [massCitationArticles, setMassCitationArticles] = useState<Article[] | null>(null);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [citationArticle, setCitationArticle] = useState<Article | null>(null);
   const [selectedArticleForDetails, setSelectedArticleForDetails] = useState<Article | null>(null);
@@ -36,6 +40,10 @@ export const useProjectModals = () => {
 
     archivingId,
     setArchivingId,
+    archivingIds,
+    setArchivingIds,
+    massCitationArticles,
+    setMassCitationArticles,
     editingArticle,
     setEditingArticle,
     citationArticle,

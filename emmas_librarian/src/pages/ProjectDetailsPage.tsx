@@ -139,6 +139,7 @@ export const ProjectDetailsPage: React.FC = () => {
           isSidebarOpen={isSidebarOpen}
           onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
           onStatusChange={actions.changeStatus}
+          onStatusChangeMany={actions.changeStatusMany}
           onUnlinkPdf={actions.unlinkPdf}
           onAttachPdf={actions.attachPdf}
         />

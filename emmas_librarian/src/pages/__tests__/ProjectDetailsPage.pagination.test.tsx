@@ -27,58 +27,62 @@ describe('ProjectDetailsPage pagination', () => {
   it('shows the first 50 active articles with the bottom controls', async () => {
     await renderProjectPage(givenProject(many));
 
-    expect(screen.getByText('Mostrando 1-50 de 60 artigos')).toBeInTheDocument();
+    expect(screen.getByText('60 artigos')).toBeInTheDocument();
     expect(visibleTitles()).toHaveLength(50);
-    expect(screen.getByRole('button', { name: /Anterior/ })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /Próxima/ })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /^Anterior$/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^Próxima$/ })).toBeEnabled();
     expect(screen.getAllByText('1 / 2')).toHaveLength(2);
   });
 
   it('moves between pages with the bottom controls', async () => {
     await renderProjectPage(givenProject(many));
 
-    fireEvent.click(screen.getByRole('button', { name: /Próxima/ }));
-    expect(screen.getByText('Mostrando 51-60 de 60 artigos')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Próxima$/ }));
+    expect(screen.getAllByText('2 / 2')).toHaveLength(2);
     expect(visibleTitles()).toHaveLength(10);
-    expect(screen.getByRole('button', { name: /Próxima/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^Próxima$/ })).toBeDisabled();
 
-    fireEvent.click(screen.getByRole('button', { name: /Anterior/ }));
-    expect(screen.getByText('Mostrando 1-50 de 60 artigos')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Anterior$/ }));
+    expect(screen.getAllByText('1 / 2')).toHaveLength(2);
   });
 
   it('moves between pages with the compact top controls', async () => {
     await renderProjectPage(givenProject(many));
-    const top = () => within(screen.getByText(/^Mostrando/).nextElementSibling as HTMLElement).getAllByRole('button');
+    const previousTop = () => screen.getByRole('button', { name: 'Página anterior' });
+    const nextTop = () => screen.getByRole('button', { name: 'Próxima página' });
 
-    expect(top()[0]).toBeDisabled();
-    fireEvent.click(top()[1]);
-    expect(screen.getByText('Mostrando 51-60 de 60 artigos')).toBeInTheDocument();
-    expect(top()[1]).toBeDisabled();
-    fireEvent.click(top()[0]);
-    expect(screen.getByText('Mostrando 1-50 de 60 artigos')).toBeInTheDocument();
+    expect(previousTop()).toBeDisabled();
+    fireEvent.click(nextTop());
+    expect(screen.getAllByText('2 / 2')).toHaveLength(2);
+    expect(nextTop()).toBeDisabled();
+    fireEvent.click(previousTop());
+    expect(screen.getAllByText('1 / 2')).toHaveLength(2);
   });
 
   it.each([
     [
       'searching',
       () =>
-        fireEvent.change(screen.getByPlaceholderText('Filtrar por título ou autor...'), {
+        fireEvent.change(screen.getByPlaceholderText('Buscar por título ou autor'), {
           target: { value: 'Artigo' },
         }),
     ],
-    ['toggling the PDF filter', () => fireEvent.click(screen.getByLabelText('Apenas com PDF vinculado'))],
-    ['toggling the open access filter', () => fireEvent.click(screen.getByLabelText('Apenas Acesso Aberto'))],
+    ['toggling the PDF filter', () => fireEvent.click(screen.getByRole('checkbox', { name: /^Com PDF,/ }))],
+    [
+      'toggling the open access filter',
+      () => fireEvent.click(screen.getByRole('checkbox', { name: /^Acesso aberto,/ })),
+    ],
     [
       'changing the sort order',
-      () => fireEvent.change(screen.getByRole('combobox'), { target: { value: 'title-desc' } }),
+      () => fireEvent.change(screen.getByRole('combobox', { name: /Ordenar/ }), { target: { value: 'title-desc' } }),
     ],
   ])('returns to page 1 after %s', async (_label, change) => {
     await renderProjectPage(givenProject(many));
-    fireEvent.click(screen.getByRole('button', { name: /Próxima/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Próxima$/ }));
 
     change();
 
-    expect(screen.queryByText('Mostrando 51-60 de 60 artigos')).not.toBeInTheDocument();
+    expect(screen.queryByText('2 / 2')).not.toBeInTheDocument();
   });
 
   it('counts only active articles, not read or archived ones', async () => {
@@ -86,7 +90,7 @@ describe('ProjectDetailsPage pagination', () => {
 
     await renderProjectPage(givenProject(mixed));
 
-    expect(screen.queryByText(/^Mostrando/)).not.toBeInTheDocument();
+    expect(screen.getByText('50 artigos')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Próxima/ })).not.toBeInTheDocument();
   });
 });

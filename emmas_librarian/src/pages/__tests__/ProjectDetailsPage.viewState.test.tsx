@@ -46,7 +46,7 @@ describe('ProjectDetailsPage view state', () => {
         article({ id: 3, title: 'Gama arquivado', status: 'archived' }),
       ]),
     );
-    fireEvent.change(screen.getByPlaceholderText('Filtrar por título ou autor...'), { target: { value: 'Alfa' } });
+    fireEvent.change(screen.getByPlaceholderText('Buscar por título ou autor'), { target: { value: 'Alfa' } });
     expand(accordion(/Artigos Lidos/));
     expand(accordion(/Artigos Arquivados/));
 
@@ -54,7 +54,7 @@ describe('ProjectDetailsPage view state', () => {
     fireEvent.click(await screen.findByRole('link', { name: 'Voltar ao projeto' }));
     await screen.findByTestId('project-details-container');
 
-    expect(screen.getByPlaceholderText('Filtrar por título ou autor...')).toHaveValue('Alfa');
+    expect(screen.getByPlaceholderText('Buscar por título ou autor')).toHaveValue('Alfa');
     expect(accordion(/Artigos Lidos/).open).toBe(true);
     expect(accordion(/Artigos Arquivados/).open).toBe(true);
   });
@@ -64,6 +64,6 @@ describe('ProjectDetailsPage view state', () => {
 
     await renderPageWithReader(givenProject([article({ id: 1, title: 'Alfa novo' })]));
 
-    expect(screen.getByPlaceholderText('Filtrar por título ou autor...')).toHaveValue('');
+    expect(screen.getByPlaceholderText('Buscar por título ou autor')).toHaveValue('');
   });
 });

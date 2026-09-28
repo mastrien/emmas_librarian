@@ -5,9 +5,11 @@ interface ArchiveModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (note: string) => void;
+  // Multi-select: how many articles the one reason will be saved on (default 1).
+  count?: number;
 }
 
-export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onSubmit }) => {
+export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onSubmit, count = 1 }) => {
   const [note, setNote] = useState('');
 
   if (!isOpen) return null;
@@ -28,7 +30,14 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onS
       }}
     >
       <div className="card fade-in" style={{ padding: '2rem', width: '400px', background: 'var(--bg-main)' }}>
-        <h3 style={{ margin: '0 0 1rem 0' }}>Motivo do Arquivamento (Opcional)</h3>
+        <h3 style={{ margin: '0 0 1rem 0' }}>
+          {count > 1 ? `Arquivar ${count} artigos` : 'Motivo do Arquivamento (Opcional)'}
+        </h3>
+        {count > 1 && (
+          <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+            O motivo (opcional) vale para todos os {count} artigos e aparece na exportação.
+          </p>
+        )}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -39,7 +48,9 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onS
             autoFocus
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Por que este artigo não é relevante?"
+            placeholder={
+              count > 1 ? 'Por que estes artigos não são relevantes?' : 'Por que este artigo não é relevante?'
+            }
             style={{
               width: '100%',
               height: '100px',
@@ -63,7 +74,7 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onS
               className="btn-primary"
               style={{ background: 'var(--color-danger)', color: '#ffffff' }}
             >
-              Confirmar Arquivamento
+              {count > 1 ? `Arquivar ${count}` : 'Confirmar Arquivamento'}
             </button>
           </div>
         </form>

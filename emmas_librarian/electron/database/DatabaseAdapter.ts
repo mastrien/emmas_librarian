@@ -154,6 +154,9 @@ export class DatabaseAdapter {
   updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', archiveNote?: string): void {
     return this.articleRepo.updateArticleStatus(articleId, status, archiveNote);
   }
+  updateArticlesStatus(articleIds: number[], status: 'new' | 'read' | 'archived', archiveNote?: string): number {
+    return this.articleRepo.updateArticlesStatus(articleIds, status, archiveNote);
+  }
   updateArticleMetadata(articleId: number, data: Partial<ArticleInput>): void {
     return this.articleRepo.updateArticleMetadata(articleId, data);
   }

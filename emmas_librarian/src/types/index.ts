@@ -160,6 +160,7 @@ export enum IpcChannel {
   ARTICLES_GET_BY_PROJECT = 'articles:getByProject',
   ARTICLES_GET_ONE = 'articles:getOne',
   ARTICLES_UPDATE_STATUS = 'articles:updateStatus',
+  ARTICLES_UPDATE_STATUS_MANY = 'articles:updateStatusMany',
   HIGHLIGHTS_GET = 'highlights:get',
   HIGHLIGHTS_CREATE = 'highlights:create',
   HIGHLIGHTS_DELETE = 'highlights:delete',

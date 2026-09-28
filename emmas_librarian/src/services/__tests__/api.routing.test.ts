@@ -121,6 +121,12 @@ const routes: RouteCase[] = [
     args: [2, 'read', 'n'],
   },
   {
+    method: 'updateArticlesStatus',
+    call: () => api.updateArticlesStatus([2, 3], 'archived', 'n'),
+    channel: IpcChannel.ARTICLES_UPDATE_STATUS_MANY,
+    args: [[2, 3], 'archived', 'n'],
+  },
+  {
     method: 'updateArticleMetadata',
     call: () => api.updateArticleMetadata(2, { title: 'T' }),
     channel: IpcChannel.ARTICLES_UPDATE_METADATA,

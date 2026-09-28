@@ -39,6 +39,20 @@ export function useProjectActions(options: ProjectActionsOptions) {
     [projectService, setArticles],
   );
 
+  // Multi-select: one request for all, then the same local update as changeStatus.
+  const changeStatusMany = useCallback(
+    async (articleIds: number[], status: ArticleStatus, note?: string) => {
+      try {
+        await projectService.updateArticlesStatus(articleIds, status, note);
+        const ids = new Set(articleIds);
+        setArticles((prev) => prev.map((a) => (ids.has(a.id) ? { ...a, status, archive_note: note } : a)));
+      } catch (e) {
+        alert(`Erro ao atualizar status dos artigos: ${(e as Error).message}`);
+      }
+    },
+    [projectService, setArticles],
+  );
+
   const unlinkPdf = useCallback(
     async (articleId: number) => {
       const confirmed = window.confirm(
@@ -68,6 +82,11 @@ export function useProjectActions(options: ProjectActionsOptions) {
     });
 
   const archive = (note: string) => {
+    if (modals.archivingIds) {
+      changeStatusMany(modals.archivingIds, 'archived', note);
+      modals.setArchivingIds(null);
+      return;
+    }
     if (!modals.archivingId) return;
     changeStatus(modals.archivingId, 'archived', note);
     modals.setArchivingId(null);
@@ -87,6 +106,7 @@ export function useProjectActions(options: ProjectActionsOptions) {
 
   return {
     changeStatus,
+    changeStatusMany,
     unlinkPdf,
     attachPdf,
     revertSearch,

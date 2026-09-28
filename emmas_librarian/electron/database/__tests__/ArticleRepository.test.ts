@@ -181,6 +181,36 @@ describe('ArticleRepository', () => {
       expect(article?.archive_note).toBe('note');
     });
 
+    it('archives several articles at once with one shared reason', () => {
+      const ids = [repo.saveArticle(projectId, { title: 'A' }), repo.saveArticle(projectId, { title: 'B' })];
+      const untouched = repo.saveArticle(projectId, { title: 'C' });
+
+      const changed = repo.updateArticlesStatus(ids, 'archived', 'fora do escopo');
+
+      expect(changed).toBe(2);
+      expect(ids.map((id) => [repo.getArticle(id)?.status, repo.getArticle(id)?.archive_note])).toEqual([
+        ['archived', 'fora do escopo'],
+        ['archived', 'fora do escopo'],
+      ]);
+      expect(repo.getArticle(untouched)?.status).toBe('new');
+    });
+
+    it('marks several articles as read and clears an old archive reason, like the single update', () => {
+      const ids = [repo.saveArticle(projectId, { title: 'A' }), repo.saveArticle(projectId, { title: 'B' })];
+      repo.updateArticlesStatus(ids, 'archived', 'engano');
+
+      repo.updateArticlesStatus(ids, 'read');
+
+      expect(ids.map((id) => [repo.getArticle(id)?.status, repo.getArticle(id)?.archive_note])).toEqual([
+        ['read', null],
+        ['read', null],
+      ]);
+    });
+
+    it('does nothing for an empty selection', () => {
+      expect(repo.updateArticlesStatus([], 'read')).toBe(0);
+    });
+
     it('should update article metadata', () => {
       const id = repo.saveArticle(projectId, { title: 'Test' } as any);
       repo.updateArticleMetadata(id, { title: 'New Title', year: 2023, unknown: 'ignore' } as any);
