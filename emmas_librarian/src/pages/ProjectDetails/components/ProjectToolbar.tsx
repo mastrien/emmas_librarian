@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Project, ProjectDocument } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
+import { exportWithFeedback } from '../../../utils/exportWithFeedback';
 
 interface ProjectToolbarProps {
   project: Project;
@@ -184,7 +185,7 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
                 className="menu-dropdown-item"
                 onClick={() => {
                   setIsExportMenuOpen(false);
-                  projectService.exportBiblioshiny(project.id);
+                  return exportWithFeedback(() => projectService.exportBiblioshiny(project.id), 'CSV do Biblioshiny');
                 }}
               >
                 <Download size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Biblioshiny
@@ -192,9 +193,9 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
 
               <button
                 className="menu-dropdown-item"
-                onClick={async () => {
+                onClick={() => {
                   setIsExportMenuOpen(false);
-                  await projectService.exportProject(project.id);
+                  return exportWithFeedback(() => projectService.exportProject(project.id), 'Pacote .emmapcarc');
                 }}
               >
                 <Download size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Pacote .emmapcarc (com
