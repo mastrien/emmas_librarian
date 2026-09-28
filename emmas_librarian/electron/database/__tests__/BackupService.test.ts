@@ -228,8 +228,14 @@ describe('BackupService.restoreBackupOverride', () => {
 describe('BackupService.restoreBackupOverride with a tampered archive', () => {
   // AdmZip strips "../" when writing, but keeps it when reading an archive made by another tool ("zip slip").
   function backupEscapingStorage(): string {
+    // Rename by the whole entry name (same length): replacing a short marker also hit bytes of the compressed
+    // emma.db at random and corrupted it.
     const clean = backupOf('Malicioso', { 'storage/pdfs/QQ/QQ/QQ/fora.txt': 'invasor' });
-    const tampered = fs.readFileSync(clean).toString('latin1').split('QQ').join('..');
+    const tampered = fs
+      .readFileSync(clean)
+      .toString('latin1')
+      .split('storage/pdfs/QQ/QQ/QQ/fora.txt')
+      .join('storage/pdfs/../../../fora.txt');
     fs.writeFileSync(clean, Buffer.from(tampered, 'latin1'));
     return clean;
   }
