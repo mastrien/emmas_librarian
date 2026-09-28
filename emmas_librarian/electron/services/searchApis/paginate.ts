@@ -7,11 +7,18 @@ export interface Page {
   articles: NormalizedArticle[];
   /** Null when the base says there is nothing after this page. */
   next: PageCursor | null;
+  /** How many results the base has for the query, when it says. */
+  total?: number;
 }
 
-/** What one base returned for a search; `warning` says why it stopped before the limit, if it did. */
+/**
+ * What one base returned for a search, with what the search history records about it: how many results
+ * the base had (`available`), how many requests it cost, and why it stopped early (`warning`), if it did.
+ */
 export interface PagedResult {
   articles: NormalizedArticle[];
+  requests: number;
+  available?: number;
   warning?: string;
 }
 
@@ -57,35 +64,35 @@ export async function collectPages(plan: PagingPlan): Promise<PagedResult> {
   const sleep = plan.sleep ?? realSleep;
   // One size for every page: page-number bases (WoS) compute offsets from it.
   const size = Math.min(plan.pageSize, plan.limit);
-  const articles: NormalizedArticle[] = [];
+  const result: PagedResult = { articles: [], requests: 0 };
+  const fetchPage = (cursor: PageCursor) => {
+    result.requests++;
+    return plan.fetchPage(cursor, size);
+  };
   let cursor: PageCursor | null = plan.firstCursor;
-  while (cursor !== null && articles.length < plan.limit) {
-    if (articles.length > 0 && plan.delayMs) await sleep(plan.delayMs);
+  while (cursor !== null && result.articles.length < plan.limit) {
+    if (result.articles.length > 0 && plan.delayMs) await sleep(plan.delayMs);
     let page: Page;
     try {
-      page = await fetchWithOneRetry(plan, cursor, size, sleep);
+      page = await fetchWithOneRetry(() => fetchPage(cursor!), sleep);
     } catch (err) {
-      if (articles.length === 0) throw err;
-      return { articles, warning: stoppedWarning(plan, articles.length, err) };
+      if (result.articles.length === 0) throw err;
+      return { ...result, warning: stoppedWarning(plan, result.articles.length, err) };
     }
-    articles.push(...page.articles);
+    result.available ??= page.total;
+    result.articles.push(...page.articles);
     cursor = page.articles.length < size ? null : page.next;
   }
-  return { articles: articles.slice(0, plan.limit) };
+  return { ...result, articles: result.articles.slice(0, plan.limit) };
 }
 
-async function fetchWithOneRetry(
-  plan: PagingPlan,
-  cursor: PageCursor,
-  size: number,
-  sleep: (ms: number) => Promise<void>,
-): Promise<Page> {
+async function fetchWithOneRetry(fetchPage: () => Promise<Page>, sleep: (ms: number) => Promise<void>): Promise<Page> {
   try {
-    return await plan.fetchPage(cursor, size);
+    return await fetchPage();
   } catch (err) {
     if (!(err instanceof RateLimitedError)) throw err;
     await sleep(Math.min(err.retryAfterMs, MAX_RETRY_WAIT_MS));
-    return plan.fetchPage(cursor, size);
+    return fetchPage();
   }
 }
 

@@ -213,7 +213,7 @@ describe('ApiIntegrator', () => {
   describe('searchScopus', () => {
     it('returns empty array if no apiKey is provided', async () => {
       const result = await api.searchScopus('query', '', 'relevance', 10);
-      expect(result).toEqual({ articles: [] });
+      expect(result).toEqual({ articles: [], requests: 0 });
       expect(fetch).not.toHaveBeenCalled();
     });
 
@@ -290,7 +290,7 @@ describe('ApiIntegrator', () => {
   describe('searchWoS', () => {
     it('returns empty array if no apiKey is provided', async () => {
       const result = await api.searchWoS('query', '', 'relevance', 10);
-      expect(result).toEqual({ articles: [] });
+      expect(result).toEqual({ articles: [], requests: 0 });
       expect(fetch).not.toHaveBeenCalled();
     });
 
@@ -475,8 +475,8 @@ describe('ApiIntegrator', () => {
 
   describe('ApiIntegrator fallback branches and edge cases', () => {
     it('returns empty array when api keys are missing for Scopus or WoS', async () => {
-      expect(await api.searchScopus('query', '', 'relevance')).toEqual({ articles: [] });
-      expect(await api.searchWoS('query', '', 'relevance')).toEqual({ articles: [] });
+      expect(await api.searchScopus('query', '', 'relevance')).toEqual({ articles: [], requests: 0 });
+      expect(await api.searchWoS('query', '', 'relevance')).toEqual({ articles: [], requests: 0 });
     });
 
     it('covers searchOpenAlex sort and filter branches', async () => {

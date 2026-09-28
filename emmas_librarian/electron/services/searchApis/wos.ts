@@ -47,7 +47,7 @@ export async function searchWoS(
   limit: number = 50,
   sleep?: (ms: number) => Promise<void>,
 ): Promise<PagedResult> {
-  if (!apiKey) return { articles: [] };
+  if (!apiKey) return { articles: [], requests: 0 };
   return logAndRethrow('WoS', () =>
     collectPages({
       baseName: 'Web of Science',
@@ -73,8 +73,9 @@ async function fetchWosPage(query: WosQuery, page: number, size: number): Promis
   });
   if (response.ok) {
     const data = await response.json();
-    const total = Number(data.metadata?.total ?? Infinity);
-    return { articles: ((data.hits || []) as WosHit[]).map(normalizeWoS), next: page * size < total ? page + 1 : null };
+    const total: number | undefined = data.metadata?.total;
+    const next = total === undefined || page * size < total ? page + 1 : null;
+    return { articles: ((data.hits || []) as WosHit[]).map(normalizeWoS), next, total };
   }
   if (response.status === 401) throw new Error('Chave de API inválida ou expirada');
   if (response.status === 429) throw rateLimited('Web of Science', response);

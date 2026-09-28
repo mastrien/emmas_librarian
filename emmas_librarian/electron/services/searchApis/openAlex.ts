@@ -71,7 +71,7 @@ async function fetchOpenAlexPage(query: OpenAlexQuery, cursor: PageCursor, size:
   if (response.ok) {
     const data = await response.json();
     const works = (data.results || []) as OpenAlexWork[];
-    return { articles: works.map(normalizeOpenAlex), next: data.meta?.next_cursor ?? null };
+    return { articles: works.map(normalizeOpenAlex), next: data.meta?.next_cursor ?? null, total: data.meta?.count };
   }
   if (response.status === 429) throw rateLimited('OpenAlex', response);
   const errorData = await response.json().catch(() => ({}));

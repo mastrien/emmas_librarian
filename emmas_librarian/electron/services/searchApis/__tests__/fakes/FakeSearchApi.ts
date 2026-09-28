@@ -54,10 +54,12 @@ export class FakeSearchApi {
     if (base === 'openalex')
       return this.cursorPage(url, 'per_page', total, (items, next) => ({
         results: items,
-        meta: { next_cursor: next },
+        meta: { next_cursor: next, count: total },
       }));
     if (base === 'crossref')
-      return this.cursorPage(url, 'rows', total, (items, next) => ({ message: { items, 'next-cursor': next } }));
+      return this.cursorPage(url, 'rows', total, (items, next) => ({
+        message: { items, 'next-cursor': next, 'total-results': total },
+      }));
     if (base === 'scopus') {
       const start = Number(url.searchParams.get('start'));
       const entry = records(start, Number(url.searchParams.get('count')), total, (n) => ({

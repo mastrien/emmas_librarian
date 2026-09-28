@@ -81,7 +81,7 @@ describe('collectPages', () => {
   });
 
   it('stops when the base says there is no next page', async () => {
-    const pages = [{ articles: [article(1), article(2)], next: null }];
+    const pages = [{ articles: [article(1), article(2)], next: null, total: 2 }];
 
     const { articles } = await collectPages({
       baseName: 'Teste',
@@ -129,6 +129,36 @@ describe('collectPages', () => {
 
     expect(articles).toHaveLength(100);
     expect(warning).toContain('parou em 100 de 300 resultados (Erro 429 no Teste (limite de requisições))');
+  });
+
+  // The search history records what each base cost and how much it had, for traceability.
+  it('counts every request, retries included, and keeps the total the base reported', async () => {
+    const api = new ScriptedPages(1000).failOn(1, new RateLimitedError('Erro 429', 0));
+    const withTotal = async (cursor: PageCursor, size: number) => ({
+      ...(await api.fetchPage(cursor, size)),
+      total: 1000,
+    });
+
+    const result = await collectPages({
+      baseName: 'Teste',
+      limit: 200,
+      pageSize: 100,
+      firstCursor: 0,
+      fetchPage: withTotal,
+      sleep: api.sleep,
+    });
+
+    expect(result.requests).toBe(3);
+    expect(result.available).toBe(1000);
+  });
+
+  it('reports the requests made before a later page failed', async () => {
+    const api = new ScriptedPages(1000).failOn(2, new Error('Erro 500'));
+
+    const { requests, warning } = await run(api, 300, 100);
+
+    expect(requests).toBe(3);
+    expect(warning).toContain('parou em 200 de 300');
   });
 
   it('pauses between pages, not before the first one', async () => {

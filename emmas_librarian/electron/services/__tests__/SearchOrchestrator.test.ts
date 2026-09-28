@@ -47,7 +47,7 @@ class FakeApiIntegrator extends ApiIntegrator {
     // Fresh copies: the orchestrator merges source lists in place while deduplicating.
     const articles = result.map((a) => ({ ...a, source_databases: [...a.source_databases] }));
     const warning = this.warnings[database];
-    return warning ? { articles, warning } : { articles };
+    return warning ? { articles, requests: 1, warning } : { articles, requests: 1 };
   }
 }
 

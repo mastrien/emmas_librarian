@@ -21,9 +21,10 @@ describe('OpenAlex paging', () => {
     const api = new FakeSearchApi({ openalex: 1000 });
     vi.stubGlobal('fetch', api.fetch);
 
-    const { articles, warning } = await searchOpenAlex('q', 'relevance', 250);
+    const { articles, warning, available, requests } = await searchOpenAlex('q', 'relevance', 250);
 
     expect(articles).toHaveLength(250);
+    expect({ available, requests }).toEqual({ available: 1000, requests: 3 });
     expect(api.urlsOf('openalex').map((u) => [param(u, 'cursor'), param(u, 'per_page')])).toEqual([
       ['*', '100'],
       ['c100', '100'],
@@ -70,9 +71,10 @@ describe('Crossref paging', () => {
     const api = new FakeSearchApi({ crossref: 5000 });
     vi.stubGlobal('fetch', api.fetch);
 
-    const { articles } = await searchCrossref('query.bibliographic=x', 'date', 2500);
+    const { articles, available } = await searchCrossref('query.bibliographic=x', 'date', 2500);
 
     expect(articles).toHaveLength(2500);
+    expect(available).toBe(5000);
     expect(api.urlsOf('crossref').map((u) => [param(u, 'cursor'), param(u, 'rows')])).toEqual([
       ['*', '1000'],
       ['c1000', '1000'],
@@ -87,9 +89,10 @@ describe('Scopus paging', () => {
     const api = new FakeSearchApi({ scopus: 400 });
     vi.stubGlobal('fetch', api.fetch);
 
-    const { articles } = await searchScopus('TITLE(x)', 'key', 'relevance', 1000);
+    const { articles, available } = await searchScopus('TITLE(x)', 'key', 'relevance', 1000);
 
     expect(articles).toHaveLength(400);
+    expect(available).toBe(400);
     expect(api.urlsOf('scopus').map((u) => [param(u, 'start'), param(u, 'count')])).toEqual([
       ['0', '200'],
       ['200', '200'],
@@ -159,9 +162,10 @@ describe('Web of Science paging', () => {
     const api = new FakeSearchApi({ wos: 75 });
     vi.stubGlobal('fetch', api.fetch);
 
-    const { articles } = await searchWoS('TS=x', 'key', 'relevance', 500, sleep);
+    const { articles, available } = await searchWoS('TS=x', 'key', 'relevance', 500, sleep);
 
     expect(articles).toHaveLength(75);
+    expect(available).toBe(75);
     expect(api.urlsOf('wos')).toHaveLength(2);
   });
 });

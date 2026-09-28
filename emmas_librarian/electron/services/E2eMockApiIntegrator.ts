@@ -20,19 +20,23 @@ const E2E_ARTICLE: NormalizedArticle = {
  */
 export class E2eMockApiIntegrator extends ApiIntegrator {
   override async searchOpenAlex(): Promise<PagedResult> {
-    return { articles: [{ ...E2E_ARTICLE, source_databases: [...E2E_ARTICLE.source_databases] }] };
+    return {
+      articles: [{ ...E2E_ARTICLE, source_databases: [...E2E_ARTICLE.source_databases] }],
+      requests: 1,
+      available: 1,
+    };
   }
 
   override async searchCrossref(): Promise<PagedResult> {
-    return { articles: [] };
+    return { articles: [], requests: 0 };
   }
 
   override async searchScopus(): Promise<PagedResult> {
-    return { articles: [] };
+    return { articles: [], requests: 0 };
   }
 
   override async searchWoS(): Promise<PagedResult> {
-    return { articles: [] };
+    return { articles: [], requests: 0 };
   }
 }
 

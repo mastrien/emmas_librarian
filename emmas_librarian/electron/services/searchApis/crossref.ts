@@ -50,7 +50,11 @@ async function fetchCrossrefPage(queryStr: string, sortBy: SortBy, cursor: PageC
   if (response.ok) {
     const data = await response.json();
     const items = (data.message?.items || []) as CrossrefWork[];
-    return { articles: items.map(normalizeCrossref), next: data.message?.['next-cursor'] ?? null };
+    return {
+      articles: items.map(normalizeCrossref),
+      next: data.message?.['next-cursor'] ?? null,
+      total: data.message?.['total-results'],
+    };
   }
   if (response.status === 429) throw rateLimited('Crossref', response);
   const errorData = await response.json().catch(() => ({}));

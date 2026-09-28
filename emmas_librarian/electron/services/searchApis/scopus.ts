@@ -42,7 +42,7 @@ export async function searchScopus(
   sortBy: SortBy,
   limit: number = 50,
 ): Promise<PagedResult> {
-  if (!apiKey) return { articles: [] };
+  if (!apiKey) return { articles: [], requests: 0 };
   return logAndRethrow('Scopus', () =>
     collectPages({
       baseName: 'Scopus',
@@ -66,9 +66,11 @@ async function fetchScopusPage(query: ScopusQuery, start: number, size: number):
   });
   if (response.ok) {
     const results = (await response.json())['search-results'];
-    const total = Number(results?.['opensearch:totalResults'] ?? Infinity);
+    const reported = results?.['opensearch:totalResults'];
+    const total = reported == null ? undefined : Number(reported);
     const entries = (results?.entry || []) as ScopusEntry[];
-    return { articles: entries.map(normalizeScopus), next: start + size < total ? start + size : null };
+    const next = total === undefined || start + size < total ? start + size : null;
+    return { articles: entries.map(normalizeScopus), next, total };
   }
   if (response.status === 401) throw new Error('Chave de API inválida ou expirada');
   if (response.status === 429) throw rateLimited('Scopus', response);
