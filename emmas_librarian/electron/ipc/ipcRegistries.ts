@@ -5,7 +5,7 @@ import { ScientificVenueRepository } from '../database/ScientificVenueRepository
 import { SyncService } from '../database/SyncService';
 import { SearchOrchestrator } from '../services/SearchOrchestrator';
 import { QueryTranslator } from '../services/QueryTranslator';
-import { ApiIntegrator } from '../services/ApiIntegrator';
+import { apiIntegratorFor } from '../services/E2eMockApiIntegrator';
 import { ExportService } from '../services/ExportService';
 import { AIService } from '../services/AIService';
 import { BackupService } from '../services/BackupService';
@@ -38,7 +38,8 @@ export function setupIpcRegistries(): void {
   const backupService = new BackupService(db, dbPath, path.join(userData, 'backups'));
   scheduleStartupBackup(backupService);
 
-  const orchestrator = new SearchOrchestrator(db, new QueryTranslator(), new ApiIntegrator());
+  // E2E runs must not hit the real bibliographic APIs.
+  const orchestrator = new SearchOrchestrator(db, new QueryTranslator(), apiIntegratorFor(process.env));
   setupAiIpcHandlers(db, new AIService(db));
 
   registerWindowHandlers(ipcMain);

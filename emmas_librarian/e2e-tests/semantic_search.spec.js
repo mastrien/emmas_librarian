@@ -16,18 +16,49 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
   try {
     const projectName = 'Semantic Search Project ' + Date.now();
     await createProject(window, projectName);
-    await runSearch(window, 'aprendizado de maquina');
-
-    // The summary reports what the (mocked) search saved before leaving the search page.
-    const summaryBtn = window.locator('button:has-text("Ver Artigos do Projeto")');
-    await summaryBtn.waitFor({ state: 'visible', timeout: 10000 });
-    await expect(window.locator('text=Salvos no Projeto').locator('..')).toContainText('1');
-    await summaryBtn.click();
-
     const resultRow = window.locator('tr', { hasText: 'Aprendizado de Maquina E2E' });
+    const review = window.getByRole('dialog', { name: 'Busca Concluída' });
+
+    // Nothing is saved until the user chooses: discarding leaves the project untouched.
+    await runSearch(window, 'aprendizado de maquina');
+    await expect(review.getByRole('list', { name: 'Artigos encontrados' })).toContainText(
+      'Aprendizado de Maquina E2E',
+      { timeout: 10000 },
+    );
+    // A title opens that result's metadata without leaving the review.
+    await review.getByRole('button', { name: 'Aprendizado de Maquina E2E' }).click();
+    await expect(window.getByText('10.1234/e2e-mock-doi')).toBeVisible();
+    await window.getByRole('button', { name: 'Fechar', exact: true }).click();
+    await expect(window.getByText('10.1234/e2e-mock-doi')).toBeHidden();
+
+    await review.getByRole('button', { name: /Descartar/ }).click();
+    await expect(review).toBeHidden();
+    await window.click('text="Voltar para o Projeto"');
+    await expect(window.getByText('Nova busca')).toBeVisible();
+    await expect(resultRow).toHaveCount(0);
+
+    await runSearch(window, 'aprendizado de maquina');
+    await review.getByRole('button', { name: /Salvar .*no projeto/ }).click();
+
     await expect(resultRow).toBeVisible({ timeout: 10000 });
     await expect(resultRow).toContainText('Author E2E');
     await expect(resultRow).toContainText('2026');
+
+    // The table follows its own width: with the filters sidebar open (the default) there is no room
+    // for an authors column, so the authors move into the article cell; closing the sidebar brings it back.
+    const authorsHeader = window.getByRole('columnheader', { name: 'AUTORES' });
+    await expect(authorsHeader).toBeHidden();
+    await window.getByRole('button', { name: 'Filtros' }).click();
+    await expect(authorsHeader).toBeVisible();
+
+    // The saved search can be reopened in the query builder from the history.
+    await window.getByTestId('tab-history').click();
+    await window
+      .getByRole('link', { name: /Nova busca a partir desta/ })
+      .first()
+      .click();
+    await expect(window.getByRole('status')).toContainText('carregada do histórico');
+    await expect(window.locator('input[placeholder="Termo de busca..."]')).toHaveValue('aprendizado de maquina');
   } finally {
     await electronApp.close();
   }

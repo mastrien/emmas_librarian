@@ -12,6 +12,8 @@ import {
   type QueryASTNode,
   type DatabaseTranslationMap,
   type SearchHistoryItem,
+  type SearchPreview,
+  type SavedSearchSummary,
   AIModelConfig,
   AISkill,
   AIProvider,
@@ -65,14 +67,21 @@ export const projectService: IProjectService = {
     await safeInvoke(IpcChannel.SEARCH_REVERT, searchId);
   },
 
-  async searchAndPersist(
+  previewSearch: (
     projectId: number,
     queryMap: Record<string, string>,
     limit: number,
     sortBy: string,
     unifiedQuery: string,
-  ): Promise<{ savedCount: number; breakdown: Record<string, { count: number; error?: string }> }> {
-    return safeInvoke(IpcChannel.SEARCH_EXECUTE, projectId, queryMap, limit, sortBy, unifiedQuery);
+    queryState?: string,
+  ): Promise<SearchPreview> =>
+    safeInvoke(IpcChannel.SEARCH_PREVIEW, projectId, queryMap, limit, sortBy, unifiedQuery, queryState),
+
+  saveSearchPreview: (previewId: string): Promise<SavedSearchSummary> =>
+    safeInvoke(IpcChannel.SEARCH_SAVE_PREVIEW, previewId),
+
+  async discardSearchPreview(previewId: string): Promise<void> {
+    await safeInvoke(IpcChannel.SEARCH_DISCARD_PREVIEW, previewId);
   },
 
   translateQuery: (ast: QueryASTNode): Promise<DatabaseTranslationMap> =>

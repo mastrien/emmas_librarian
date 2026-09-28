@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { SearchHistoryModal } from '../modals/SearchHistoryModal';
 
 describe('SearchHistoryModal', () => {
@@ -66,5 +67,37 @@ describe('SearchHistoryModal', () => {
     // No close button in embedded mode
     expect(screen.queryByRole('button', { name: 'X' })).toBeNull();
     expect(screen.getAllByText('machine learning OR artificial intelligence')[0]).toBeInTheDocument();
+  });
+
+  describe('"Nova busca a partir desta"', () => {
+    const importEntry = {
+      ...mockHistory[0],
+      id: 2,
+      unified_query: "Importação de artigos do projeto 'Fonte'",
+      translated_queries: JSON.stringify({ import: 'Origem: Projeto ID 3' }),
+    };
+
+    it('links a database search to the search page preloaded with it', () => {
+      render(
+        <MemoryRouter>
+          <SearchHistoryModal isOpen onClose={vi.fn()} history={mockHistory} embedded projectId={4} />
+        </MemoryRouter>,
+      );
+
+      expect(screen.getByRole('link', { name: /Nova busca a partir desta/ })).toHaveAttribute(
+        'href',
+        '/projects/4/search?from=1',
+      );
+    });
+
+    it('is not offered for an import from another project', () => {
+      render(
+        <MemoryRouter>
+          <SearchHistoryModal isOpen onClose={vi.fn()} history={[importEntry]} embedded projectId={4} />
+        </MemoryRouter>,
+      );
+
+      expect(screen.queryByRole('link', { name: /Nova busca a partir desta/ })).not.toBeInTheDocument();
+    });
   });
 });

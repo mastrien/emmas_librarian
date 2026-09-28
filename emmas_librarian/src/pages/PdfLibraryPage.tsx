@@ -455,6 +455,9 @@ export const PdfLibraryPage: React.FC = () => {
       {/* Link Modal */}
       {isLinkModalOpen && selectedPdf && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Vincular PDF a um Artigo"
           style={{
             position: 'fixed',
             inset: 0,

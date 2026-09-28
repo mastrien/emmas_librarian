@@ -183,7 +183,9 @@ textarea {
   border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
-  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
   box-shadow: var(--shadow-md);
 }
 
@@ -258,7 +260,11 @@ textarea {
 }
 
 .fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  /* No `forwards` fill: a transform kept after the animation (even translateY(0) or none, which Chrome
+     interpolates to an identity matrix) makes the element, e.g. <main>, the containing block of its
+     position: fixed children, and overlays opened inside it rendered off-screen. The end frame equals
+     the base style, so dropping the fill changes nothing visually. */
+  animation: fadeIn 0.4s ease-out;
 }
 
 @keyframes fadeIn {
@@ -490,4 +496,282 @@ textarea {
 }
 .custom-accordion > summary::-webkit-details-marker {
   display: none;
+}
+
+/* Article table row actions (ArticleRowActions): quiet controls, shortcuts revealed on hover/focus. */
+.row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+.row-actions__line {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
+.row-actions__slot-doi {
+  width: 64px;
+  display: flex;
+}
+.row-actions__slot-primary {
+  width: 124px;
+  display: flex;
+}
+.row-actions__shortcuts {
+  opacity: 0;
+  transform: translateX(4px);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
+  pointer-events: none;
+}
+tr:hover .row-actions__shortcuts,
+tr:focus-within .row-actions__shortcuts {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+/* No hover on touch screens: keep the shortcuts visible. */
+@media (hover: none) {
+  .row-actions__shortcuts {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+
+.btn-ghost {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.6rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+.btn-ghost:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+.btn-ghost:focus-visible,
+.row-menu__item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+.btn-ghost--accent {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.btn-ghost--danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+}
+.btn-ghost--icon {
+  width: 32px;
+  padding: 0;
+  justify-content: center;
+}
+
+.row-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 220px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem;
+}
+.row-menu__group + .row-menu__group {
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.3rem;
+  padding-top: 0.3rem;
+}
+.row-menu__label {
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0.3rem 0.6rem 0.15rem;
+}
+.row-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.86rem;
+  color: var(--text-main);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+}
+.row-menu__item:hover,
+.row-menu__item:focus {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+.row-menu__item--danger {
+  color: var(--color-danger);
+}
+.row-menu__item--danger:hover,
+.row-menu__item--danger:focus {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+}
+
+/* Project article table columns. The layout follows the table's own width: with the filters sidebar
+   open the table loses ~312px, so the authors move from their column into the article cell. */
+.articles-table-container {
+  container-type: inline-size;
+  container-name: articles;
+}
+.articles-table td {
+  vertical-align: top;
+}
+.article-title {
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-weight: 600;
+  color: var(--color-primary);
+  line-height: 1.4;
+  cursor: pointer;
+}
+.article-title:hover {
+  text-decoration: underline;
+}
+.article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.article-meta__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+.article-meta__doi {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.article-meta__oa {
+  color: var(--color-success);
+  font-weight: 600;
+}
+.author-list {
+  font-weight: 500;
+}
+.author-list--inline {
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+.author-list--inline.is-expanded {
+  display: block;
+  white-space: normal;
+}
+.author-list__names {
+  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.author-list__more {
+  border: none;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.05rem 0.45rem;
+  margin-left: 0.25rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.author-list__more:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+.articles-inline-authors,
+.articles-inline-bases {
+  display: none;
+}
+/* The one-line author list must not widen the cell: long names (e.g. three 25-character names) would
+   otherwise set the column's minimum width before the ellipsis applies. width 0 + min-width 100% makes it
+   fill the cell without adding to the cell's min-content. */
+.articles-inline-authors {
+  width: 0;
+  min-width: 100%;
+}
+.articles-inline-bases {
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+/* Text that hides visually on narrow tables but keeps the control's accessible name. */
+.label-when-wide {
+  display: inline;
+}
+@container articles (max-width: 900px) {
+  .articles-col-authors {
+    display: none;
+  }
+  .articles-inline-authors {
+    display: block;
+  }
+  .article-title {
+    -webkit-line-clamp: 2;
+  }
+}
+/* Narrower still (small window, sidebar open): the actions lose their fixed slots and the DOI keeps
+   only its icon, so the table never needs a horizontal scroll. */
+@container articles (max-width: 720px) {
+  .row-actions__slot-doi,
+  .row-actions__slot-primary {
+    width: auto;
+  }
+  .label-when-wide {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+@container articles (max-width: 640px) {
+  .articles-col-bases {
+    display: none;
+  }
+  .articles-inline-bases {
+    display: flex;
+  }
 }

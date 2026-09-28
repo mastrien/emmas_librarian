@@ -18,10 +18,11 @@ export class HistoryRepository {
     breakdown: Record<string, unknown>,
     sortBy?: string,
     limitVal?: number,
+    queryState?: string,
   ): number {
     const stmt = this.db.prepare(`
-      INSERT INTO search_history (project_id, unified_query, translated_queries, total_results, results_breakdown, sort_by, limit_val, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO search_history (project_id, unified_query, translated_queries, total_results, results_breakdown, sort_by, limit_val, query_state, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const info = stmt.run(
       projectId,
@@ -31,6 +32,7 @@ export class HistoryRepository {
       JSON.stringify(breakdown),
       sortBy || null,
       limitVal ?? null,
+      queryState ?? null,
       new Date().toISOString(),
     );
     return info.lastInsertRowid as number;

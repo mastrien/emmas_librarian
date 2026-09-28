@@ -2,6 +2,7 @@ import type { Database } from 'better-sqlite3';
 import fs from 'fs';
 import { Article } from '../../src/types';
 import { ArticleInput } from './DatabaseAdapter';
+import { doiKey } from '../utils/doi';
 
 export class ArticleRepository {
   private db: Database;
@@ -12,11 +13,13 @@ export class ArticleRepository {
 
   // --- Articles ---
   public findDuplicateArticle(projectId: number, doi: string | null | undefined, title: string): Article | undefined {
-    if (doi && doi.trim() !== '') {
+    const key = doiKey(doi);
+    if (key) {
+      // Case-insensitive: the same DOI arrives as 10.1016/J.X from one base and 10.1016/j.x from another.
       const stmtDoi = this.db.prepare(
-        'SELECT * FROM articles WHERE project_id = ? AND doi = ? AND deleted_at IS NULL LIMIT 1',
+        'SELECT * FROM articles WHERE project_id = ? AND LOWER(TRIM(doi)) = ? AND deleted_at IS NULL LIMIT 1',
       );
-      const existingByDoi = stmtDoi.get(projectId, doi.trim()) as Article | undefined;
+      const existingByDoi = stmtDoi.get(projectId, key) as Article | undefined;
       if (existingByDoi) return existingByDoi;
     }
 

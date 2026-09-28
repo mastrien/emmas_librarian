@@ -1,17 +1,11 @@
 import React from 'react';
-import { X, Calendar, Search, Database, ChevronRight, RotateCcw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { X, Calendar, Search, Database, ChevronRight, RotateCcw, Pencil } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import type { SearchHistoryItem } from '../../types';
+import { restoreSearch } from '../../pages/Search/searchQueries';
 
-interface HistoryItem {
-  id: number;
-  unified_query: string;
-  translated_queries: string;
-  total_results: number;
-  results_breakdown: string;
-  created_at: string;
-  sort_by?: string;
-  limit_val?: number;
-}
+type HistoryItem = SearchHistoryItem;
 
 interface Props {
   isOpen: boolean;
@@ -19,12 +13,36 @@ interface Props {
   history: HistoryItem[];
   embedded?: boolean;
   onRevertSearch?: (searchId: number) => void;
+  // Enables "Nova busca a partir desta", which opens the search page preloaded with that search.
+  projectId?: number;
 }
 
-const HistoryContent: React.FC<{ history: HistoryItem[]; onRevertSearch?: (searchId: number) => void }> = ({
-  history,
-  onRevertSearch,
-}) => (
+type HistoryContentProps = Pick<Props, 'history' | 'onRevertSearch' | 'projectId'>;
+
+// Only database searches can be rebuilt; imports and manual additions have no query to reuse.
+const NewSearchFromLink: React.FC<{ projectId: number; item: HistoryItem }> = ({ projectId, item }) =>
+  restoreSearch(item) ? (
+    <Link
+      to={`/projects/${projectId}/search?from=${item.id}`}
+      title="Abrir o construtor de busca com esta query"
+      style={{
+        background: 'rgba(79, 70, 229, 0.1)',
+        color: 'var(--color-primary)',
+        padding: '0.2rem 0.6rem',
+        borderRadius: 'var(--radius-md)',
+        fontSize: '0.8rem',
+        fontWeight: 600,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.3rem',
+        textDecoration: 'none',
+      }}
+    >
+      <Pencil size={12} /> Nova busca a partir desta
+    </Link>
+  ) : null;
+
+const HistoryContent: React.FC<HistoryContentProps> = ({ history, onRevertSearch, projectId }) => (
   <div style={{ flex: 1, overflowY: 'auto', paddingRight: '1rem' }}>
     {history.length === 0 ? (
       <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -105,6 +123,7 @@ const HistoryContent: React.FC<{ history: HistoryItem[]; onRevertSearch?: (searc
                   )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {projectId !== undefined && <NewSearchFromLink projectId={projectId} item={item} />}
                   {onRevertSearch && (
                     <button
                       onClick={() => {
@@ -264,7 +283,14 @@ const HistoryContent: React.FC<{ history: HistoryItem[]; onRevertSearch?: (searc
   </div>
 );
 
-export const SearchHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, embedded, onRevertSearch }) => {
+export const SearchHistoryModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  history,
+  embedded,
+  onRevertSearch,
+  projectId,
+}) => {
   if (!isOpen) return null;
 
   // Embedded mode: render inline without portal
@@ -285,7 +311,7 @@ export const SearchHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, 
           </h2>
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>Registro de todas as buscas realizadas neste projeto.</p>
         </div>
-        <HistoryContent history={history} onRevertSearch={onRevertSearch} />
+        <HistoryContent history={history} onRevertSearch={onRevertSearch} projectId={projectId} />
       </div>
     );
   }
@@ -347,7 +373,7 @@ export const SearchHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, 
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>Registro de todas as buscas realizadas neste projeto.</p>
         </div>
 
-        <HistoryContent history={history} onRevertSearch={onRevertSearch} />
+        <HistoryContent history={history} onRevertSearch={onRevertSearch} projectId={projectId} />
       </div>
     </div>,
     document.body,

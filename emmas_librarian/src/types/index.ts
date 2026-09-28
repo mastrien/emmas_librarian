@@ -152,7 +152,9 @@ export enum IpcChannel {
   PROJECTS_GET_SEARCH_HISTORY = 'projects:getSearchHistory',
   PROJECTS_GET_WRITING_PAD = 'projects:getWritingPad',
   PROJECTS_UPDATE_WRITING_PAD = 'projects:updateWritingPad',
-  SEARCH_EXECUTE = 'search:execute',
+  SEARCH_PREVIEW = 'search:preview',
+  SEARCH_SAVE_PREVIEW = 'search:savePreview',
+  SEARCH_DISCARD_PREVIEW = 'search:discardPreview',
   SEARCH_TRANSLATE_QUERY = 'search:translateQuery',
   SEARCH_REVERT = 'search:revert',
   ARTICLES_GET_BY_PROJECT = 'articles:getByProject',
@@ -315,6 +317,50 @@ export interface TrashItem {
   deleted_at: string;
 }
 
+export type SearchBreakdown = Record<string, { count: number; error?: string }>;
+
+/** Metadata of a search result beyond the list columns, for the details dialog. */
+export type SearchPreviewDetails = Pick<
+  Article,
+  | 'abstract'
+  | 'author_keywords'
+  | 'index_keywords'
+  | 'journal'
+  | 'volume'
+  | 'issue'
+  | 'pages'
+  | 'affiliations'
+  | 'references_list'
+  | 'document_type'
+  | 'publisher'
+  | 'is_oa'
+  | 'issn'
+  | 'citation_count'
+>;
+
+/** One result of a search the user has not saved yet (what the review list shows). */
+export interface SearchPreviewItem {
+  title: string;
+  authors?: string;
+  year?: number;
+  doi?: string;
+  sourceDatabases: string[];
+  alreadyInProject: boolean;
+  details: SearchPreviewDetails;
+}
+
+/** Results held in the main process until the user saves or discards them. */
+export interface SearchPreview {
+  previewId: string;
+  breakdown: SearchBreakdown;
+  results: SearchPreviewItem[];
+}
+
+export interface SavedSearchSummary {
+  savedCount: number;
+  breakdown: SearchBreakdown;
+}
+
 export interface SearchHistoryItem {
   id: number;
   unified_query: string;
@@ -324,6 +370,15 @@ export interface SearchHistoryItem {
   created_at: string;
   sort_by?: string;
   limit_val?: number;
+  /** JSON of SearchQueryState; null for searches made before it was stored, imports and manual additions. */
+  query_state?: string | null;
+}
+
+/** What the search page needs to rebuild a past search in the query builder. */
+export interface SearchQueryState {
+  ast: QueryASTNode;
+  selectedDbs: string[];
+  customQueries: Record<string, string>;
 }
 
 export interface SearchHistoryRecord {

@@ -41,6 +41,8 @@ const COLUMN_MIGRATIONS = [
   )`,
   'ALTER TABLE search_history ADD COLUMN sort_by TEXT',
   'ALTER TABLE search_history ADD COLUMN limit_val INTEGER',
+  // Query builder state (JSON), so a past search can be reopened in the builder.
+  'ALTER TABLE search_history ADD COLUMN query_state TEXT',
   'ALTER TABLE project_documents ADD COLUMN position INTEGER DEFAULT 0',
   'ALTER TABLE project_documents ADD COLUMN category TEXT DEFAULT NULL',
 ];

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
 
 // Suites that opt into `@vitest-environment node` (e.g. real zip/SQLite round trips) have no window.
 if (typeof window !== 'undefined') {
@@ -16,3 +16,8 @@ if (typeof window !== 'undefined') {
 if (typeof global.URL.createObjectURL === 'undefined') {
   global.URL.createObjectURL = vi.fn(() => 'blob:mock');
 }
+
+// Pages keep view state in sessionStorage (useSessionState); clear it so no test sees another's filters.
+afterEach(() => {
+  if (typeof window !== 'undefined') window.sessionStorage.clear();
+});

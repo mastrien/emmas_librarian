@@ -2,108 +2,182 @@ import { DatabaseAdapter } from '../database/DatabaseAdapter';
 import { QueryTranslator } from './QueryTranslator';
 import { ApiIntegrator } from './ApiIntegrator';
 import { NormalizedArticle } from './types';
-import { Article } from '../../src/types';
+import { PendingSearchStore } from './PendingSearchStore';
+import { doiKey } from '../utils/doi';
+import type {
+  QuerySort,
+  SavedSearchSummary,
+  SearchBreakdown,
+  SearchPreview,
+  SearchPreviewDetails,
+} from '../../src/types';
+
+// NormalizedArticle (API shape) → article columns; shared by the review dialog and the save.
+function previewDetails(article: NormalizedArticle): SearchPreviewDetails {
+  return {
+    abstract: article.abstract,
+    author_keywords: article.authorKeywords,
+    index_keywords: article.indexKeywords,
+    journal: article.journal,
+    volume: article.volume,
+    issue: article.issue,
+    pages: article.pages,
+    affiliations: article.affiliations,
+    references_list: article.references,
+    document_type: article.documentType,
+    publisher: article.publisher,
+    is_oa: article.is_oa,
+    issn: article.issn,
+    citation_count: article.citationCount,
+  };
+}
+
+/** A search that ran but is not saved: everything needed to persist it later, exactly as found. */
+interface PendingSearch {
+  projectId: number;
+  queryMap: Record<string, string>;
+  limit: number;
+  sortBy: QuerySort;
+  unifiedQuery: string;
+  // JSON of the query builder state, saved so the search can be reopened in the builder.
+  queryState?: string;
+  breakdown: SearchBreakdown;
+  articles: NormalizedArticle[];
+}
 
 export class SearchOrchestrator {
   constructor(
     private db: DatabaseAdapter,
     private translator: QueryTranslator,
     private api: ApiIntegrator,
+    private pending: PendingSearchStore<PendingSearch> = new PendingSearchStore(),
   ) {}
 
-  public async searchAndPersist(
+  /**
+   * Runs the search on every database in `queryMap` and keeps the deduplicated results in memory,
+   * so the user can review them before anything is written to the project.
+   *
+   * @example const { previewId, results } = await orchestrator.preview(1, { openalex: 'title.search:x' }, 50, 'relevance', 'x');
+   */
+  public async preview(
     projectId: number,
     queryMap: Record<string, string>,
     limit: number,
-    sortBy: 'relevance' | 'citations' | 'date',
+    sortBy: QuerySort,
     unifiedQuery: string,
-  ): Promise<{
-    savedCount: number;
-    articles: Article[];
-    breakdown: Record<string, { count: number; error?: string }>;
-  }> {
-    // Fetch API keys from settings
-    const scopusKey = this.db.getSetting('scopus_api_key') || '';
-    const wosKey = this.db.getSetting('wos_api_key') || '';
+    queryState?: string,
+  ): Promise<SearchPreview> {
+    const { articles, breakdown } = await this.fetchDeduplicated(queryMap, limit, sortBy);
+    const previewId = this.pending.put({
+      projectId,
+      queryMap,
+      limit,
+      sortBy,
+      unifiedQuery,
+      queryState,
+      breakdown,
+      articles,
+    });
+    const results = articles.map((a) => ({
+      title: a.title,
+      authors: a.authors,
+      year: a.year,
+      doi: a.doi,
+      sourceDatabases: a.source_databases,
+      alreadyInProject: !!this.db.findDuplicateArticle(projectId, a.doi, a.title),
+      details: previewDetails(a),
+    }));
+    return { previewId, breakdown, results };
+  }
 
-    const activeIntegrators: { name: string; promise: Promise<NormalizedArticle[]> }[] = [];
+  /**
+   * Saves a previewed search: one history entry plus its articles (duplicates merge into existing ones).
+   * savedCount is how many articles were new to the project.
+   *
+   * @example await orchestrator.savePreview(previewId); // { savedCount: 12, breakdown }
+   */
+  public savePreview(previewId: string): SavedSearchSummary {
+    const search = this.pending.get(previewId);
+    if (!search) {
+      throw new Error(
+        `Busca não encontrada para salvar. Offending value: previewId=${previewId}. Expected shape: ID de uma busca feita nesta sessão e ainda não salva nem descartada.`,
+      );
+    }
+    // Removed only after it is written, so a failed save can be retried from the same results.
+    const savedCount = this.persist(search);
+    this.pending.discard(previewId);
+    return { savedCount, breakdown: search.breakdown };
+  }
 
-    // Select integrators based on the queryMap provided by the frontend.
-    // If a database is missing in the map, it means the user deactivated it.
-    // limit is applied per-database (each base fetches up to 'limit' articles)
-    if (queryMap.openalex)
-      activeIntegrators.push({ name: 'openalex', promise: this.api.searchOpenAlex(queryMap.openalex, sortBy, limit) });
-    if (queryMap.crossref)
-      activeIntegrators.push({ name: 'crossref', promise: this.api.searchCrossref(queryMap.crossref, sortBy, limit) });
-    if (queryMap.scopus)
-      activeIntegrators.push({
-        name: 'scopus',
-        promise: this.api.searchScopus(queryMap.scopus, scopusKey, sortBy, limit),
-      });
-    if (queryMap.wos)
-      activeIntegrators.push({ name: 'wos', promise: this.api.searchWoS(queryMap.wos, wosKey, sortBy, limit) });
+  /** Drops a previewed search without touching the project. */
+  public discardPreview(previewId: string): void {
+    this.pending.discard(previewId);
+  }
 
-    const breakdown: Record<string, { count: number; error?: string }> = {};
-    const resultsArray = await Promise.all(
-      activeIntegrators.map((ai) =>
-        ai.promise
+  private async fetchDeduplicated(queryMap: Record<string, string>, limit: number, sortBy: QuerySort) {
+    const breakdown: SearchBreakdown = {};
+    const perDatabase = await Promise.all(
+      this.activeIntegrators(queryMap, limit, sortBy).map(({ name, promise }) =>
+        promise
           .then((res) => {
-            breakdown[ai.name] = { count: res.length };
+            breakdown[name] = { count: res.length };
             return res;
           })
           .catch((err) => {
-            breakdown[ai.name] = { count: 0, error: err.message || 'Erro desconhecido' };
-            return [];
+            breakdown[name] = { count: 0, error: err.message || 'Erro desconhecido' };
+            return [] as NormalizedArticle[];
           }),
       ),
     );
+    return { articles: this.deduplicate(perDatabase.flat()), breakdown };
+  }
 
-    const combinedResults = resultsArray.flat();
+  // A database missing from queryMap was deactivated by the user; limit applies per database.
+  private activeIntegrators(queryMap: Record<string, string>, limit: number, sortBy: QuerySort) {
+    const scopusKey = this.db.getSetting('scopus_api_key') || '';
+    const wosKey = this.db.getSetting('wos_api_key') || '';
+    const integrators: { name: string; promise: Promise<NormalizedArticle[]> }[] = [];
+    if (queryMap.openalex)
+      integrators.push({ name: 'openalex', promise: this.api.searchOpenAlex(queryMap.openalex, sortBy, limit) });
+    if (queryMap.crossref)
+      integrators.push({ name: 'crossref', promise: this.api.searchCrossref(queryMap.crossref, sortBy, limit) });
+    if (queryMap.scopus)
+      integrators.push({ name: 'scopus', promise: this.api.searchScopus(queryMap.scopus, scopusKey, sortBy, limit) });
+    if (queryMap.wos)
+      integrators.push({ name: 'wos', promise: this.api.searchWoS(queryMap.wos, wosKey, sortBy, limit) });
+    return integrators;
+  }
 
-    const deduplicated = this.deduplicate(combinedResults);
-
-    // Save to history first to get searchId
+  /** Writes the history entry and the articles; returns how many were new to the project. */
+  private persist(search: PendingSearch): number {
+    const { projectId, queryMap, unifiedQuery, breakdown, sortBy, limit, articles, queryState } = search;
+    // Results already in the project only get their source list merged, so they do not count as
+    // saved by this search (and "Desfazer Busca" does not remove them).
+    const addedCount = articles.filter((a) => !this.db.findDuplicateArticle(projectId, a.doi, a.title)).length;
     const searchId = this.db.saveSearchHistory(
       projectId,
       unifiedQuery,
       queryMap,
-      deduplicated.length,
+      addedCount,
       breakdown,
       sortBy,
       limit,
+      queryState,
     );
-
-    let savedCount = 0;
-    for (const article of deduplicated) {
+    for (const article of articles) {
       this.db.saveArticle(projectId, {
         doi: article.doi,
         title: article.title,
         authors: article.authors,
         year: article.year,
-        abstract: article.abstract,
-        author_keywords: article.authorKeywords,
-        index_keywords: article.indexKeywords,
-        journal: article.journal,
-        volume: article.volume,
-        issue: article.issue,
-        pages: article.pages,
-        affiliations: article.affiliations,
-        references_list: article.references,
-        document_type: article.documentType,
-        issn: article.issn,
-        citation_count: article.citationCount,
+        ...previewDetails(article),
         source_query: JSON.stringify(queryMap),
         source_databases: JSON.stringify(article.source_databases),
         csl_json: JSON.stringify(article.csl_json),
         search_id: searchId,
-        is_oa: article.is_oa,
-        publisher: article.publisher,
       });
-      savedCount++;
     }
-
-    const projectArticles = this.db.getArticlesByProject(projectId);
-    return { savedCount, articles: projectArticles, breakdown };
+    return addedCount;
   }
 
   normalizeTitle(title: string): string {
@@ -123,7 +197,7 @@ export class SearchOrchestrator {
     seenDoi: Map<string, number>,
     seenTitle: Map<string, number>,
   ): number | undefined {
-    const doi = item.doi;
+    const doi = doiKey(item.doi);
     const title = this.normalizeTitle(item.title || '');
     if (doi && seenDoi.has(doi)) {
       return seenDoi.get(doi);
@@ -147,13 +221,24 @@ export class SearchOrchestrator {
       if (!existing.source_databases.includes(newSource)) {
         existing.source_databases.push(newSource);
       }
+      // A match by title may bring a DOI (or a differently written title) that later results use.
+      this.rememberKeys(item, idx, seenDoi, seenTitle);
       return;
     }
-    const newIdx = deduplicated.length;
     deduplicated.push(item);
-    if (item.doi) seenDoi.set(item.doi, newIdx);
+    this.rememberKeys(item, deduplicated.length - 1, seenDoi, seenTitle);
+  }
+
+  private rememberKeys(
+    item: NormalizedArticle,
+    idx: number,
+    seenDoi: Map<string, number>,
+    seenTitle: Map<string, number>,
+  ): void {
+    const doi = doiKey(item.doi);
+    if (doi && !seenDoi.has(doi)) seenDoi.set(doi, idx);
     const title = this.normalizeTitle(item.title || '');
-    if (title) seenTitle.set(title, newIdx);
+    if (title && !seenTitle.has(title)) seenTitle.set(title, idx);
   }
 
   private deduplicate(results: NormalizedArticle[]): NormalizedArticle[] {

@@ -3,9 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useGlobalError } from '../contexts/GlobalErrorContext';
 import type { Article } from '../types';
-import { isManualArticle } from '../utils/sourceDatabases';
 import { useProjectData } from './ProjectDetails/hooks/useProjectData';
-import { useProjectFiltering } from './ProjectDetails/hooks/useProjectFiltering';
+import { useProjectFiltering, useProjectViewState } from './ProjectDetails/hooks/useProjectFiltering';
 import { useProjectModals } from './ProjectDetails/hooks/useProjectModals';
 import { useProjectActions } from './ProjectDetails/hooks/useProjectActions';
 import { useProjectPdfImport } from './ProjectDetails/hooks/useProjectPdfImport';
@@ -37,7 +36,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const projectId = id ? parseInt(id) : null;
   const { showError } = useGlobalError();
   const modals = useProjectModals();
-  const [activeTab, setActiveTab] = useState<ProjectTabId>('articles');
+  const [activeTab, setActiveTab] = useProjectViewState<ProjectTabId>(projectId, 'activeTab', 'articles');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showKeyAlert, setShowKeyAlert] = useState(false);
   const addMenu = useHoverMenu();
@@ -47,7 +46,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const refreshSelectedArticle = (loaded: Article[]) =>
     modals.setSelectedArticleForDetails((prev) => (prev ? loaded.find((a) => a.id === prev.id) || prev : null));
   const data = useProjectData(projectId, refreshSelectedArticle);
-  const filtering = useProjectFiltering(data.articles, ARTICLES_PER_PAGE);
+  const filtering = useProjectFiltering(data.articles, ARTICLES_PER_PAGE, projectId);
   const actions = useProjectActions({ projectId, ...data, modals });
   const pdfImport = useProjectPdfImport({
     projectId,
@@ -142,7 +141,6 @@ export const ProjectDetailsPage: React.FC = () => {
           onStatusChange={actions.changeStatus}
           onUnlinkPdf={actions.unlinkPdf}
           onAttachPdf={actions.attachPdf}
-          isArticleManual={isManualArticle}
         />
       )}
       {activeTab === 'overview' && (
@@ -170,6 +168,7 @@ export const ProjectDetailsPage: React.FC = () => {
           history={data.history}
           embedded={true}
           onRevertSearch={actions.revertSearch}
+          projectId={projectId ?? undefined}
         />
       )}
 

@@ -66,10 +66,12 @@ describe('ArticleDetailsModal metadata', () => {
     expect(valueUnder('CITAÇÕES')).toHaveTextContent('🎓 0');
   });
 
-  it('shows closed access, no DOI and no ISSN when absent', () => {
+  // Crossref and WoS do not report open access; showing "Fechado" there would be a guess.
+  it('shows no access pill, no DOI and no ISSN when the source did not report them', () => {
     renderArticle({});
 
-    expect(screen.getByText('Acesso Fechado')).toBeInTheDocument();
+    expect(screen.queryByText('Acesso Fechado')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acesso Aberto')).not.toBeInTheDocument();
     expect(valueUnder('DOI')).toHaveTextContent('N/A');
     expect(screen.queryByText('ISSN')).not.toBeInTheDocument();
   });

@@ -13,7 +13,7 @@ export class OllamaGateway implements LLMProviderGateway {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: model || 'llama3',
+        model: model || 'llama3.1',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
       }),

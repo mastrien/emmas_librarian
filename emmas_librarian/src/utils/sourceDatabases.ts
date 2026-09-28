@@ -17,13 +17,3 @@ export function parseSourceDatabases(raw: unknown): string[] {
     return [raw];
   }
 }
-
-/**
- * Whether the article was typed in by hand (its metadata may be incomplete or wrong).
- *
- * Usage:
- *   if (isManualArticle(article)) showEditButton();
- */
-export function isManualArticle(article: { source_databases?: unknown }): boolean {
-  return parseSourceDatabases(article.source_databases).includes(MANUAL_SOURCE);
-}

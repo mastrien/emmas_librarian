@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Article } from '../../../types';
+import { useSessionState } from '../../../hooks/useSessionState';
 import { parseSourceDatabases } from '../../../utils/sourceDatabases';
 
 // Author and index keywords are stored as semicolon-separated strings.
@@ -12,14 +13,28 @@ function articleKeywords(article: Article): string[] {
   );
 }
 
-export const useProjectFiltering = (articles: Article[], itemsPerPage: number) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [onlyWithPdf, setOnlyWithPdf] = useState(false);
-  const [onlyOpenAccess, setOnlyOpenAccess] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'new' | 'read' | 'archived' | 'all'>('new');
-  const [selectedDatabases, setSelectedDatabases] = useState<string[]>([]);
-  const [selectedDocType, setSelectedDocType] = useState<string>('');
-  const [selectedKeyword, setSelectedKeyword] = useState<string>('');
+/**
+ * Per-project view state kept for the app session, so filters, page and open sections survive a
+ * trip to the PDF reader (a user asked for it: coming back used to reset everything).
+ *
+ * @example const [page, setPage] = useProjectViewState(7, 'currentPage', 1);
+ */
+export function useProjectViewState<T>(projectId: number | null, name: string, initial: T) {
+  return useSessionState(`project.${projectId ?? 'none'}.view.${name}`, initial);
+}
+
+export const useProjectFiltering = (articles: Article[], itemsPerPage: number, projectId: number | null = null) => {
+  const [searchTerm, setSearchTerm] = useProjectViewState(projectId, 'searchTerm', '');
+  const [onlyWithPdf, setOnlyWithPdf] = useProjectViewState(projectId, 'onlyWithPdf', false);
+  const [onlyOpenAccess, setOnlyOpenAccess] = useProjectViewState(projectId, 'onlyOpenAccess', false);
+  const [statusFilter, setStatusFilter] = useProjectViewState<'new' | 'read' | 'archived' | 'all'>(
+    projectId,
+    'statusFilter',
+    'new',
+  );
+  const [selectedDatabases, setSelectedDatabases] = useProjectViewState<string[]>(projectId, 'databases', []);
+  const [selectedDocType, setSelectedDocType] = useProjectViewState(projectId, 'docType', '');
+  const [selectedKeyword, setSelectedKeyword] = useProjectViewState(projectId, 'keyword', '');
 
   const [sortOrder, setSortOrder] = useState(() => {
     return localStorage.getItem('emmas_librarian_sort_order') || 'added-desc';
@@ -58,9 +73,9 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number) =
     return Array.from(types);
   }, [articles]);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isReadArticlesOpen, setIsReadArticlesOpen] = useState(false);
-  const [isArchivedArticlesOpen, setIsArchivedArticlesOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useProjectViewState(projectId, 'currentPage', 1);
+  const [isReadArticlesOpen, setIsReadArticlesOpen] = useProjectViewState(projectId, 'readOpen', false);
+  const [isArchivedArticlesOpen, setIsArchivedArticlesOpen] = useProjectViewState(projectId, 'archivedOpen', false);
 
   const activeArticles = useMemo(() => {
     const filtered = articles.filter((a) => {

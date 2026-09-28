@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BackupService } from '../services/BackupService';
 import fs from 'fs';
 import path from 'path';
@@ -53,6 +53,13 @@ describe('BackupService', () => {
     vi.mocked(fs.readdirSync).mockReturnValue([]);
   });
 
+  const originalTz = process.env.TZ;
+
+  afterEach(() => {
+    vi.useRealTimers();
+    process.env.TZ = originalTz;
+  });
+
   it('skips auto backup if disabled in settings', async () => {
     mockdbAdapter.getSetting.mockReturnValueOnce('false');
     const manager = new BackupService(mockdbAdapter, dbPath, backupsDir);
@@ -62,12 +69,28 @@ describe('BackupService', () => {
   });
 
   it('skips auto backup if backup already exists for today', async () => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    vi.mocked(fs.readdirSync).mockReturnValue([`emma_backup_${todayStr}.db.gz` as unknown]);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 26, 10, 0));
+    vi.mocked(fs.readdirSync).mockReturnValue(['emma_backup_2026-09-26.db.gz' as unknown]);
     const manager = new BackupService(mockdbAdapter, dbPath, backupsDir);
     const result = await manager.runAutoBackup();
     expect(result).toBeNull();
     expect(mockdbAdapter.checkIntegrity).not.toHaveBeenCalled();
+  });
+
+  // At 22:00 in UTC-3 the UTC date is already the 27th; the backup name must use the local day.
+  it('names the auto backup after the local day late in the evening', async () => {
+    process.env.TZ = 'America/Sao_Paulo';
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 26, 22, 0));
+    const manager = new BackupService(mockdbAdapter, dbPath, backupsDir);
+
+    await manager.runAutoBackup();
+
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      path.join(backupsDir, 'emma_backup_2026-09-26.db.gz'),
+      expect.anything(),
+    );
   });
 
   it('throws error or returns null and skips backup if database is corrupted', async () => {

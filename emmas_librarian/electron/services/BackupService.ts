@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { gzipSync, gunzipSync } from 'zlib';
 import { restartApp } from '../restartApp';
+import { localIsoDate } from '../../src/utils/localDate';
 
 export class BackupService {
   constructor(
@@ -23,7 +24,7 @@ export class BackupService {
     }
 
     // Check if backup already exists for today (local time YYYY-MM-DD)
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = localIsoDate();
     const files = fs.readdirSync(this.backupsDir);
     const hasTodayBackup = files.some(
       (f) => f.startsWith('emma_backup_') && f.includes(todayStr) && f.endsWith('.db.gz'),
@@ -151,7 +152,7 @@ export class BackupService {
       const stat = fs.statSync(filePath);
 
       const match = filename.match(/emma_backup_(\d{4}-\d{2}-\d{2})/);
-      const dateStr = match ? match[1] : new Date(stat.mtime).toISOString().split('T')[0];
+      const dateStr = match ? match[1] : localIsoDate(new Date(stat.mtime));
 
       return {
         filename,

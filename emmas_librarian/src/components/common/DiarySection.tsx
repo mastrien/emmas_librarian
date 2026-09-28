@@ -6,6 +6,7 @@ import { DiaryTimeline } from './diary/DiaryTimeline';
 import { DiaryPageToolbar } from './diary/DiaryPageToolbar';
 import { DiaryEditor, DiaryEmptyState } from './diary/DiaryEditor';
 import { DeleteDiaryPageDialog, DiaryHistoryDialog, type DiaryVersion } from './diary/DiaryDialogs';
+import { localIsoDate } from '../../utils/localDate';
 
 interface DiarySectionProps {
   projectId: number;
@@ -35,7 +36,7 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
   // The editor can emit a late onChange for the previous page right after switching dates.
   const currentEditDateRef = useRef<string | null>(null);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localIsoDate();
 
   const loadEntries = useCallback(async () => {
     const data = await projectService.getDiaryEntries(projectId);

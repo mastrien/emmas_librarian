@@ -36,8 +36,19 @@ const closeButtonStyle: React.CSSProperties = {
  * Usage:
  *   <ArticleDetailsHeader article={article} onClose={close} />
  */
+// Only what the source reported: is_oa is null for Crossref/WoS and manual articles.
+const AccessPill: React.FC<{ isOa?: number | null }> = ({ isOa }) => {
+  if (isOa !== 0 && isOa !== 1) return null;
+  const open = isOa === 1;
+  return (
+    <span style={accessPillStyle(open)}>
+      {open ? <Unlock size={12} /> : <Lock size={12} />}
+      {open ? 'Acesso Aberto' : 'Acesso Fechado'}
+    </span>
+  );
+};
+
 export const ArticleDetailsHeader: React.FC<{ article: Article; onClose: () => void }> = ({ article, onClose }) => {
-  const isOa = article.is_oa === 1;
   return (
     <div
       style={{
@@ -64,10 +75,7 @@ export const ArticleDetailsHeader: React.FC<{ article: Article; onClose: () => v
               {db}
             </span>
           ))}
-          <span style={accessPillStyle(isOa)}>
-            {isOa ? <Unlock size={12} /> : <Lock size={12} />}
-            {isOa ? 'Acesso Aberto' : 'Acesso Fechado'}
-          </span>
+          <AccessPill isOa={article.is_oa} />
         </div>
         <h2 style={{ margin: 0, color: 'var(--text-heading)', fontSize: '1.5rem', lineHeight: '1.3' }}>
           {article.title}

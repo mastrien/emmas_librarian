@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { QueryBuilder } from '../components/common/QueryBuilder';
 import { useProjectService } from '../contexts/ServicesContext';
-import { Project, QueryASTNode, DatabaseTranslationMap, QuerySort } from '../types';
+import { Project, QueryASTNode, DatabaseTranslationMap, QuerySort, SearchPreview } from '../types';
 import { Search, Loader2, ArrowLeft } from 'lucide-react';
 import { SearchSummaryModal } from '../components/modals/SearchSummaryModal';
 import { useDebounce } from '../hooks/useDebounce';
 import { describeError } from '../utils/describeError';
 import {
+  EMPTY_QUERY,
   SEARCH_DATABASES,
   buildFinalQueries,
   defaultDatabases,
   describeQueryTree,
+  restoreSearch,
+  usableDatabases,
+  type RestoredSearch,
   type SearchApiKeys,
 } from './Search/searchQueries';
 import { DatabaseSelector } from './Search/DatabaseSelector';
@@ -19,33 +23,43 @@ import { QueryTranslationCard } from './Search/QueryTranslationCard';
 import { SearchOptionsCard } from './Search/SearchOptionsCard';
 import { ApiKeyRequiredDialog } from './Search/ApiKeyRequiredDialog';
 
-type SearchSummary = {
-  savedCount: number;
-  breakdown: Record<string, { count: number; error?: string }>;
-};
-
-const INITIAL_QUERY: QueryASTNode = {
-  type: 'group',
-  logicalOperator: 'AND',
-  children: [{ type: 'rule', field: 'all', operator: 'contains', value: '' }],
-};
-
 const TRANSLATION_DEBOUNCE_MS = 600;
 
 const sectionLabelStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--text-heading)', fontSize: '1.1rem' };
 
 /**
- * Builds a boolean query, shows its translation per database and runs the search into the project.
+ * Builds a boolean query, shows its translation per database, runs the search and lets the user
+ * review the results before saving them into the project (or discarding them to refine the query).
  *
  * Usage:
  *   <Route path="/projects/:id/search" element={<SearchPage />} />
  */
+const RestoredSearchNotice: React.FC<{ searchId: number; isLegacy: boolean }> = ({ searchId, isLegacy }) => (
+  <div
+    role="status"
+    style={{
+      marginBottom: '2rem',
+      padding: '1rem 1.25rem',
+      borderRadius: 'var(--radius-md)',
+      border: '1px solid var(--color-primary)',
+      background: 'rgba(79, 70, 229, 0.08)',
+    }}
+  >
+    Busca #{searchId} carregada do histórico. Ajuste o que quiser e clique em <strong>Fazer Busca</strong>.
+    {isLegacy &&
+      ' Essa busca é de antes do construtor visual ser salvo junto, então a query de cada base veio como query customizada.'}
+  </div>
+);
+
 export const SearchPage: React.FC = () => {
   const projectService = useProjectService();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  // ?from=<history id>: "Nova busca a partir desta" in the search history.
+  const fromSearchId = Number(useSearchParams()[0].get('from')) || null;
+  const [restoredFrom, setRestoredFrom] = useState<{ id: number; isLegacy: boolean } | null>(null);
   const [project, setProject] = useState<Project | null>(null);
-  const [ast, setAst] = useState<QueryASTNode>(INITIAL_QUERY);
+  const [ast, setAst] = useState<QueryASTNode>(EMPTY_QUERY);
   const debouncedAst = useDebounce(ast, TRANSLATION_DEBOUNCE_MS);
   const [translations, setTranslations] = useState<DatabaseTranslationMap>({});
   const [customQueries, setCustomQueries] = useState<Record<string, string>>({});
@@ -54,9 +68,20 @@ export const SearchPage: React.FC = () => {
   const [selectedDbs, setSelectedDbs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<SearchSummary | null>(null);
+  const [preview, setPreview] = useState<SearchPreview | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<SearchApiKeys>({ scopus: '', wos: '' });
   const [missingKeyDb, setMissingKeyDb] = useState<string | null>(null);
+
+  const applyRestoredSearch = (searchId: number, restored: RestoredSearch, keys: SearchApiKeys) => {
+    setAst(restored.state.ast);
+    setSelectedDbs(usableDatabases(restored.state.selectedDbs, keys));
+    setCustomQueries(restored.state.customQueries);
+    if (restored.sortBy) setSortBy(restored.sortBy);
+    if (restored.limit) setLimit(restored.limit);
+    setRestoredFrom({ id: searchId, isLegacy: restored.isLegacy });
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -64,14 +89,19 @@ export const SearchPage: React.FC = () => {
       .getProject(parseInt(id))
       .then(setProject)
       .catch(() => navigate('/'));
-    Promise.all([projectService.getSetting('scopus_api_key'), projectService.getSetting('wos_api_key')]).then(
-      ([scopus, wos]) => {
-        const keys = { scopus: scopus || '', wos: wos || '' };
-        setApiKeys(keys);
-        setSelectedDbs(defaultDatabases(keys));
-      },
-    );
-  }, [id, navigate]);
+    Promise.all([
+      projectService.getSetting('scopus_api_key'),
+      projectService.getSetting('wos_api_key'),
+      fromSearchId ? projectService.getSearchHistory(parseInt(id)) : Promise.resolve([]),
+    ]).then(([scopus, wos, history]) => {
+      const keys = { scopus: scopus || '', wos: wos || '' };
+      setApiKeys(keys);
+      const entry = history.find((h) => h.id === fromSearchId);
+      const restored = entry ? restoreSearch(entry) : null;
+      if (entry && restored) applyRestoredSearch(entry.id, restored, keys);
+      else setSelectedDbs(defaultDatabases(keys));
+    });
+  }, [id, navigate, fromSearchId]);
 
   useEffect(() => {
     projectService.translateQuery(debouncedAst).then(setTranslations);
@@ -94,13 +124,34 @@ export const SearchPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      setSummary(await projectService.searchAndPersist(projectId, queries, limit, sortBy, describeQueryTree(ast)));
+      const queryState = JSON.stringify({ ast, selectedDbs, customQueries });
+      setPreview(
+        await projectService.previewSearch(projectId, queries, limit, sortBy, describeQueryTree(ast), queryState),
+      );
     } catch (err: unknown) {
       console.error('Search error:', err);
       setError(describeError(err, 'Erro ao realizar busca'));
     } finally {
       setLoading(false);
     }
+  };
+
+  const saveResults = async (previewId: string) => {
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await projectService.saveSearchPreview(previewId);
+      navigate(`/projects/${id}`);
+    } catch (err: unknown) {
+      setSaveError(describeError(err, 'Erro ao salvar os resultados da busca'));
+      setIsSaving(false);
+    }
+  };
+
+  const discardResults = (previewId: string) => {
+    setPreview(null);
+    setSaveError(null);
+    projectService.discardSearchPreview(previewId).catch((err: unknown) => console.error('Discard error:', err));
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -136,6 +187,8 @@ export const SearchPage: React.FC = () => {
         <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>Fazer Nova Busca</h1>
         <p style={{ margin: 0, color: 'var(--text-muted)' }}>Projeto: {project.name}</p>
       </div>
+
+      {restoredFrom && <RestoredSearchNotice searchId={restoredFrom.id} isLegacy={restoredFrom.isLegacy} />}
 
       <form onSubmit={handleSearch} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <DatabaseSelector selected={selectedDbs} onToggle={toggleDb} />
@@ -212,7 +265,15 @@ export const SearchPage: React.FC = () => {
         </button>
       </form>
 
-      {summary && <SearchSummaryModal isOpen onClose={() => navigate(`/projects/${id}`)} summary={summary} />}
+      {preview && (
+        <SearchSummaryModal
+          preview={preview}
+          isSaving={isSaving}
+          saveError={saveError}
+          onSave={() => saveResults(preview.previewId)}
+          onDiscard={() => discardResults(preview.previewId)}
+        />
+      )}
 
       {missingKeyDb && (
         <ApiKeyRequiredDialog

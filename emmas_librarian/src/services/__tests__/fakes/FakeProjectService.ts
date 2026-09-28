@@ -1,5 +1,7 @@
 import type {
   SearchHistoryItem,
+  SearchPreview,
+  SavedSearchSummary,
   ProjectCategory,
   ArticleCategory,
   AIModelConfig,
@@ -14,7 +16,6 @@ import type {
   QuestionSetInput,
   ExtractedMetadata,
   AutoBackupEntry,
-  SearchPersistResult,
   ExtractionAnswer,
   ArticleSummary,
 } from '../../ProjectServiceInterface';
@@ -75,15 +76,20 @@ export class FakeProjectService implements IProjectService {
 
   revertSearch = vi.fn(async (_searchId: number): Promise<void> => undefined);
 
-  searchAndPersist = vi.fn(
+  previewSearch = vi.fn(
     async (
       _projectId: number,
       _queryMap: Record<string, string>,
       _limit: number,
       _sortBy: string,
       _unifiedQuery: string,
-    ): Promise<SearchPersistResult> => ({ savedCount: 0, breakdown: {} }),
+      _queryState?: string,
+    ): Promise<SearchPreview> => ({ previewId: 'preview-1', breakdown: {}, results: [] }),
   );
+  saveSearchPreview = vi.fn(
+    async (_previewId: string): Promise<SavedSearchSummary> => ({ savedCount: 0, breakdown: {} }),
+  );
+  discardSearchPreview = vi.fn(async (_previewId: string): Promise<void> => undefined);
 
   translateQuery = vi.fn(async (_ast: QueryASTNode): Promise<DatabaseTranslationMap> => ({}));
 

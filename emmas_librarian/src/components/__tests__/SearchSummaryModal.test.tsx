@@ -1,42 +1,138 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { SearchSummaryModal } from '../modals/SearchSummaryModal';
+import type { SearchPreview } from '../../types';
+
+const preview: SearchPreview = {
+  previewId: 'preview-1',
+  breakdown: {
+    openalex: { count: 3 },
+    wos: { count: 2 },
+    crossref: { count: 0, error: 'API Timeout' },
+  },
+  results: [
+    {
+      title: 'Aprendizado de máquina na revisão',
+      authors: 'Ana Lima',
+      year: 2024,
+      doi: '10.1/a',
+      sourceDatabases: ['OpenAlex', 'Web of Science'],
+      alreadyInProject: false,
+      details: { abstract: 'Um estudo sobre revisão sistemática.', journal: 'Revista de Computação' },
+    },
+    { title: 'Artigo antigo', sourceDatabases: ['OpenAlex'], alreadyInProject: true, details: {} },
+  ],
+};
+
+const renderModal = (overrides: Partial<React.ComponentProps<typeof SearchSummaryModal>> = {}) => {
+  const props = { preview, isSaving: false, onSave: vi.fn(), onDiscard: vi.fn(), ...overrides };
+  render(<SearchSummaryModal {...props} />);
+  return props;
+};
 
 describe('SearchSummaryModal', () => {
-  const mockSummary = {
-    savedCount: 4,
-    breakdown: {
-      openalex: { count: 3 },
-      wos: { count: 2 },
-      crossref: { count: 0, error: 'API Timeout' },
-    },
-  };
+  const stat = (label: string) =>
+    within(screen.getByRole('group', { name: 'Contagem da busca' })).getByText(label).parentElement!;
 
-  it('does not render when isOpen is false', () => {
-    const { container } = render(<SearchSummaryModal isOpen={false} onClose={vi.fn()} summary={mockSummary} />);
-    expect(container.innerHTML).toBe('');
+  it('breaks the total down so that found - repeated - already in project = new', () => {
+    renderModal();
+
+    expect(screen.getByText(/Nada foi salvo ainda/)).toBeInTheDocument();
+    expect(within(stat('Encontrados')).getByText('5')).toBeInTheDocument();
+    expect(within(stat('Repetidos')).getByText('3')).toBeInTheDocument();
+    expect(within(stat('Já no projeto')).getByText('1')).toBeInTheDocument();
+    expect(within(stat('Novos')).getByText('1')).toBeInTheDocument();
+    expect(screen.getByText(/Novos são os que entram no projeto ao salvar/)).toBeInTheDocument();
   });
 
-  it('renders summary counts and breakdown with errors', () => {
-    const onClose = vi.fn();
-    render(<SearchSummaryModal isOpen={true} onClose={onClose} summary={mockSummary} />);
+  it('shows the per-database outcome, including failures', () => {
+    renderModal();
 
+    const byBase = within(screen.getByRole('region', { name: 'Resultados por base' }));
+    expect(byBase.getByText('OpenAlex')).toBeInTheDocument();
+    expect(byBase.getByText('Web of Science')).toBeInTheDocument();
+    expect(byBase.getByText('Crossref')).toBeInTheDocument();
+    expect(byBase.getByText('Falha')).toBeInTheDocument();
+    expect(byBase.getByText('API Timeout')).toBeInTheDocument();
+  });
+
+  it.each([
+    [[false], 'Salvar 1 novo no projeto'],
+    [[false, false], 'Salvar 2 novos no projeto'],
+    [[true], 'Salvar no projeto (nenhum artigo novo)'],
+  ])('says how many articles saving will add (%j already in project)', (flags, label) => {
+    const results = flags.map((alreadyInProject, i) => ({
+      title: `Artigo ${i}`,
+      sourceDatabases: ['OpenAlex'],
+      alreadyInProject,
+      details: {},
+    }));
+
+    renderModal({ preview: { ...preview, results } });
+
+    expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+  });
+
+  it('lists every result with its authors, year and sources, flagging the ones already in the project', () => {
+    renderModal();
+
+    const items = within(screen.getByRole('list', { name: 'Artigos encontrados' })).getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent('Aprendizado de máquina na revisão');
+    expect(items[0]).toHaveTextContent('Ana Lima · 2024 · OpenAlex, Web of Science');
+    expect(within(items[0]).queryByText('Já no projeto')).not.toBeInTheDocument();
+    expect(within(items[1]).getByText('Já no projeto')).toBeInTheDocument();
+  });
+
+  it('opens the metadata of a result from its title, without PDF or project-origin sections', () => {
+    renderModal();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Aprendizado de máquina na revisão' }));
+
+    expect(screen.getByText('Um estudo sobre revisão sistemática.')).toBeInTheDocument();
+    expect(screen.getByText('Revista de Computação')).toBeInTheDocument();
+    expect(screen.queryByText('ORIGEM NO PROJETO')).not.toBeInTheDocument();
+    expect(screen.queryByText('ARQUIVO PDF')).not.toBeInTheDocument();
+  });
+
+  it('closes the metadata and keeps the review open', () => {
+    const { onDiscard } = renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Aprendizado de máquina na revisão' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
+
+    expect(screen.queryByText('Um estudo sobre revisão sistemática.')).not.toBeInTheDocument();
     expect(screen.getByText('Busca Concluída!')).toBeInTheDocument();
-    expect(screen.getByText('Total Encontrado')).toBeInTheDocument();
-    expect(screen.getByText('5')).toBeInTheDocument(); // total found is 3 + 2 + 0 = 5
-    expect(screen.getByText('Salvos no Projeto')).toBeInTheDocument();
-    expect(screen.getByText('4')).toBeInTheDocument(); // savedCount is 4
+    expect(onDiscard).not.toHaveBeenCalled();
+  });
 
-    // Breakdown checks
-    expect(screen.getByText('openalex')).toBeInTheDocument();
-    expect(screen.getByText('Web of Science')).toBeInTheDocument(); // wos maps to Web of Science
-    expect(screen.getByText('crossref')).toBeInTheDocument();
-    expect(screen.getByText('Falha')).toBeInTheDocument();
-    expect(screen.getByText('API Timeout')).toBeInTheDocument();
+  it('says so when the search found nothing', () => {
+    renderModal({ preview: { ...preview, results: [] } });
 
-    // Buttons
-    const viewArticlesBtn = screen.getByText('Ver Artigos do Projeto');
-    fireEvent.click(viewArticlesBtn);
-    expect(onClose).toHaveBeenCalled();
+    expect(screen.getByText('Nenhum artigo encontrado com essa busca.')).toBeInTheDocument();
+  });
+
+  it('saves with "Salvar no projeto" and discards with "Descartar" or the close button', () => {
+    const { onSave, onDiscard } = renderModal();
+
+    fireEvent.click(screen.getByRole('button', { name: /Salvar .*no projeto/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Descartar/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar e descartar' }));
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onDiscard).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows a save error inside the dialog', () => {
+    renderModal({ saveError: 'disco cheio' });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('disco cheio');
+  });
+
+  it('disables the choices while saving', () => {
+    renderModal({ isSaving: true });
+
+    expect(screen.getByRole('button', { name: /Salvar .*no projeto/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Descartar/ })).toBeDisabled();
   });
 });

@@ -78,7 +78,7 @@ test('F-11 Create categories, classify an article in the reader and export the v
       .poll(() => (fs.existsSync(csvPath) ? fs.readFileSync(csvPath, 'utf8') : ''), { timeout: 10000 })
       .toContain('Survey online');
     const [header, row] = fs.readFileSync(csvPath, 'utf8').trim().split('\n');
-    expect(header).toBe('id,doi,title,authors,year,source,status,Metodologia,Tipo de estudo,Revisado');
+    expect(header).toBe('id,doi,title,authors,year,source,status,archive_note,Metodologia,Tipo de estudo,Revisado');
     expect(row).toContain('"Survey online","Quantitativa","true"');
   } finally {
     await electronApp.close();

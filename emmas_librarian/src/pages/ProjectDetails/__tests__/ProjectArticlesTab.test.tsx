@@ -31,11 +31,10 @@ function modalsDouble(): ProjectModals {
 interface HarnessProps {
   articles: Article[];
   isSidebarOpen?: boolean;
-  isArticleManual?: (article: Article) => boolean;
   pageSize?: number;
 }
 
-function renderTab({ articles, isSidebarOpen = true, isArticleManual = () => false, pageSize = 50 }: HarnessProps) {
+function renderTab({ articles, isSidebarOpen = true, pageSize = 50 }: HarnessProps) {
   const handlers = {
     modals: modalsDouble(),
     onToggleSidebar: vi.fn(),
@@ -46,14 +45,7 @@ function renderTab({ articles, isSidebarOpen = true, isArticleManual = () => fal
   // Uses the real filtering hook so the tab is exercised with the state shape the page gives it.
   function Harness() {
     const filtering = useProjectFiltering(articles, pageSize);
-    return (
-      <ProjectArticlesTab
-        filtering={filtering}
-        isSidebarOpen={isSidebarOpen}
-        isArticleManual={isArticleManual}
-        {...handlers}
-      />
-    );
+    return <ProjectArticlesTab filtering={filtering} isSidebarOpen={isSidebarOpen} {...handlers} />;
   }
   render(
     <MemoryRouter>
@@ -147,15 +139,16 @@ describe('ProjectArticlesTab list actions', () => {
     const withoutPdf = article(5, { title: 'Sem PDF' });
     const { modals, onStatusChange, onUnlinkPdf, onAttachPdf } = renderTab({
       articles: [withPdf, withoutPdf],
-      isArticleManual: () => true,
     });
     const row = (title: string) => within(within(mainList()).getByText(title).closest('tr') as HTMLElement);
 
-    fireEvent.click(row('Com PDF').getByTitle('Desvincular PDF'));
+    fireEvent.click(row('Com PDF').getByRole('button', { name: 'Mais ações' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Desvincular PDF' }));
     fireEvent.click(row('Sem PDF').getByTitle('Vincular PDF'));
     fireEvent.click(row('Sem PDF').getByTitle('Marcar como Lido'));
     fireEvent.click(row('Sem PDF').getByTitle('Arquivar'));
-    fireEvent.click(row('Sem PDF').getByTitle('Editar Metadados'));
+    fireEvent.click(row('Sem PDF').getByRole('button', { name: 'Mais ações' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Editar Metadados' }));
 
     expect(onUnlinkPdf).toHaveBeenCalledWith(4);
     expect(onAttachPdf).toHaveBeenCalledWith(5);

@@ -24,9 +24,9 @@ async function flow3QueryBuilderSearch(window, searchTerm) {
   await window.fill('input[placeholder="Termo de busca..."]', searchTerm);
   await window.click('button:has-text("Fazer Busca")');
 
-  const summaryBtn = window.locator('button:has-text("Ver Artigos do Projeto")');
-  await summaryBtn.waitFor({ state: 'visible', timeout: 10000 });
-  await summaryBtn.click();
+  const saveBtn = window.getByRole('button', { name: /Salvar .*no projeto/ });
+  await saveBtn.waitFor({ state: 'visible', timeout: 10000 });
+  await saveBtn.click();
 
   const resultRow = window.locator('table >> text=Aprendizado de Maquina E2E');
   await expect(resultRow).toBeVisible({ timeout: 10000 });

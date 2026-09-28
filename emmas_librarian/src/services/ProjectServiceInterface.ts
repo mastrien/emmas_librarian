@@ -9,6 +9,8 @@
  *   const svc: IProjectService = new FakeService(); // test double
  */
 import type {
+  SearchPreview,
+  SavedSearchSummary,
   Project,
   Article,
   Highlight,
@@ -54,11 +56,6 @@ export interface AutoBackupEntry {
 }
 
 /** Shape of a search-and-persist result. */
-export interface SearchPersistResult {
-  savedCount: number;
-  breakdown: Record<string, { count: number; error?: string }>;
-}
-
 /** Shape of a massive-extraction answer row. */
 export interface ExtractionAnswer {
   question: string;
@@ -92,13 +89,17 @@ export interface IProjectService {
   // ── Search ────────────────────────────────────────────────────────
   getSearchHistory(projectId: number): Promise<SearchHistoryItem[]>;
   revertSearch(searchId: number): Promise<void>;
-  searchAndPersist(
+  /** Runs the search without saving; results wait in the main process for save/discard. */
+  previewSearch(
     projectId: number,
     queryMap: Record<string, string>,
     limit: number,
     sortBy: string,
     unifiedQuery: string,
-  ): Promise<SearchPersistResult>;
+    queryState?: string,
+  ): Promise<SearchPreview>;
+  saveSearchPreview(previewId: string): Promise<SavedSearchSummary>;
+  discardSearchPreview(previewId: string): Promise<void>;
   translateQuery(ast: QueryASTNode): Promise<DatabaseTranslationMap>;
 
   // ── Articles ──────────────────────────────────────────────────────

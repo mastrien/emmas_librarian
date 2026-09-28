@@ -1,24 +1,115 @@
-import React from 'react';
-import { CheckCircle, Database, LayoutList, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { CheckCircle, Loader2, Save, Trash2, X } from 'lucide-react';
+import type { SearchPreview, SearchPreviewItem } from '../../types';
+import { ArticleDetailsModal } from './ArticleDetailsModal';
+import { previewItemToArticle } from './searchSummary/previewItemToArticle';
+import { saveButtonLabel, searchCounts, type SearchCounts } from './searchSummary/searchCounts';
+import { SearchBreakdownList } from './searchSummary/SearchBreakdownList';
+import { SearchPreviewList } from './searchSummary/SearchPreviewList';
 
 interface SearchSummaryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  summary: {
-    savedCount: number;
-    breakdown: Record<string, { count: number; error?: string }>;
-  };
+  preview: SearchPreview;
+  isSaving: boolean;
+  // Shown inside the dialog: the page behind it is covered by the overlay.
+  saveError?: string | null;
+  onSave: () => void;
+  onDiscard: () => void;
 }
 
-import { createPortal } from 'react-dom';
+const statBoxStyle: React.CSSProperties = {
+  background: 'var(--bg-main)',
+  padding: '1rem',
+  borderRadius: 'var(--radius-lg)',
+  textAlign: 'center',
+};
 
-export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({ isOpen, onClose, summary }) => {
-  if (!isOpen) return null;
+const StatBox: React.FC<{ label: string; value: number; color?: string }> = ({ label, value, color }) => (
+  <div style={statBoxStyle}>
+    <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.4rem' }}>{label}</div>
+    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: color ?? 'var(--text-heading)' }}>{value}</div>
+  </div>
+);
 
-  const totalFound = Object.values(summary.breakdown).reduce((a, b) => a + b.count, 0);
+// The four numbers read as a subtraction, so the user sees where each found article went.
+const SummaryCounts: React.FC<{ counts: SearchCounts }> = ({ counts }) => (
+  <div style={{ marginBottom: '1.5rem' }}>
+    <div
+      role="group"
+      aria-label="Contagem da busca"
+      style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}
+    >
+      <StatBox label="Encontrados" value={counts.found} />
+      <StatBox label="Repetidos" value={counts.repeated} />
+      <StatBox label="Já no projeto" value={counts.alreadyInProject} />
+      <StatBox label="Novos" value={counts.added} color="var(--color-primary)" />
+    </div>
+    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.6rem 0 0 0' }}>
+      Encontrados soma o que cada base devolveu. Repetidos são as cópias do mesmo artigo vindas de mais de uma base
+      (mesmo DOI ou mesmo título). Novos são os que entram no projeto ao salvar; os que já estão nele só ganham a base
+      nova na lista de origem.
+    </p>
+  </div>
+);
+
+const SummaryHeader: React.FC = () => (
+  <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+    <div
+      style={{
+        background: 'var(--color-success)',
+        color: 'white',
+        width: '56px',
+        height: '56px',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '0 auto 1rem',
+      }}
+    >
+      <CheckCircle size={34} />
+    </div>
+    <h2 style={{ fontSize: '1.8rem', margin: '0 0 0.5rem 0' }}>Busca Concluída!</h2>
+    <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+      Nada foi salvo ainda. Revise os resultados e escolha se eles entram no projeto.
+    </p>
+  </div>
+);
+
+type SummaryActionsProps = Omit<SearchSummaryModalProps, 'preview' | 'saveError'> & { added: number };
+
+const SummaryActions: React.FC<SummaryActionsProps> = ({ isSaving, onSave, onDiscard, added }) => (
+  <div style={{ display: 'flex', gap: '1rem' }}>
+    <button onClick={onDiscard} disabled={isSaving} className="btn-secondary" style={{ flex: 1, padding: '1rem' }}>
+      <Trash2 size={18} /> Descartar
+    </button>
+    <button onClick={onSave} disabled={isSaving} className="btn-primary" style={{ flex: 2, padding: '1rem' }}>
+      {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {saveButtonLabel(added)}
+    </button>
+  </div>
+);
+
+/**
+ * Results of a search that is not saved yet: counts, per-database outcome and the article list,
+ * with the choice to save them into the project or discard them and refine the query.
+ *
+ * @example <SearchSummaryModal preview={preview} isSaving={false} onSave={save} onDiscard={discard} />
+ */
+export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({
+  preview,
+  isSaving,
+  saveError,
+  onSave,
+  onDiscard,
+}) => {
+  const counts = searchCounts(preview);
+  const [detailsItem, setDetailsItem] = useState<SearchPreviewItem | null>(null);
 
   return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Busca Concluída"
       style={{
         position: 'fixed',
         inset: 0,
@@ -34,15 +125,20 @@ export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({ isOpen, 
         className="card fade-in"
         style={{
           width: '100%',
-          maxWidth: '500px',
+          maxWidth: '680px',
+          maxHeight: '92vh',
+          overflowY: 'auto',
           background: 'var(--bg-surface)',
-          padding: '2.5rem',
+          padding: '2rem 2.5rem',
           position: 'relative',
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
         }}
       >
+        {/* Closing is the same as discarding: nothing half-saved is left behind. */}
         <button
-          onClick={onClose}
+          onClick={onDiscard}
+          disabled={isSaving}
+          aria-label="Fechar e descartar"
           style={{
             position: 'absolute',
             top: '1.5rem',
@@ -55,104 +151,23 @@ export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({ isOpen, 
         >
           <X size={24} />
         </button>
-
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div
-            style={{
-              background: 'var(--color-success)',
-              color: 'white',
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.5rem',
-            }}
-          >
-            <CheckCircle size={40} />
-          </div>
-          <h2 style={{ fontSize: '1.8rem', margin: '0 0 0.5rem 0' }}>Busca Concluída!</h2>
-          <p style={{ color: 'var(--text-muted)', margin: 0 }}>A extração de dados foi finalizada com sucesso.</p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-          <div
-            style={{
-              background: 'var(--bg-main)',
-              padding: '1.2rem',
-              borderRadius: 'var(--radius-lg)',
-              textAlign: 'center',
-            }}
-          >
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-              Total Encontrado
-            </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-heading)' }}>{totalFound}</div>
-          </div>
-          <div
-            style={{
-              background: 'var(--bg-main)',
-              padding: '1.2rem',
-              borderRadius: 'var(--radius-lg)',
-              textAlign: 'center',
-            }}
-          >
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-              Salvos no Projeto
-            </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-primary)' }}>
-              {summary.savedCount}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '2rem' }}>
-          <h3
-            style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            <Database size={18} /> Resultados por Base
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {Object.entries(summary.breakdown).map(([db, data]) => (
-              <div
-                key={db}
-                style={{
-                  padding: '0.8rem 1rem',
-                  background: 'var(--bg-main)',
-                  borderRadius: 'var(--radius-md)',
-                  border: `1px solid ${data.error ? 'var(--color-danger)' : 'var(--border-color)'}`,
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ textTransform: 'capitalize', fontWeight: 600 }}>
-                    {db === 'wos' ? 'Web of Science' : db}
-                  </span>
-                  <span style={{ fontWeight: 700, color: data.error ? 'var(--color-danger)' : 'var(--text-heading)' }}>
-                    {data.error ? 'Falha' : data.count}
-                  </span>
-                </div>
-                {data.error && (
-                  <div
-                    style={{
-                      fontSize: '0.75rem',
-                      color: 'var(--color-danger)',
-                      marginTop: '0.25rem',
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    {data.error}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <button onClick={onClose} className="btn-primary" style={{ width: '100%', padding: '1rem' }}>
-          <LayoutList size={20} /> Ver Artigos do Projeto
-        </button>
+        <SummaryHeader />
+        <SummaryCounts counts={counts} />
+        <SearchBreakdownList breakdown={preview.breakdown} />
+        <SearchPreviewList results={preview.results} onOpenDetails={setDetailsItem} />
+        {saveError && (
+          <p role="alert" style={{ color: 'var(--color-danger)', margin: '0 0 1rem 0' }}>
+            {saveError}
+          </p>
+        )}
+        <SummaryActions isSaving={isSaving} onSave={onSave} onDiscard={onDiscard} added={counts.added} />
       </div>
+      <ArticleDetailsModal
+        isOpen={detailsItem !== null}
+        onClose={() => setDetailsItem(null)}
+        article={detailsItem ? previewItemToArticle(detailsItem) : null}
+        isSearchResult
+      />
     </div>,
     document.body,
   );

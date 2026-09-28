@@ -33,6 +33,24 @@ describe('QueryTranslator', () => {
     expect(result.crossref.isValid).toBe(false);
   });
 
+  it('explains that Crossref rejects OR even when every term targets the same field', () => {
+    const ast: QueryASTNode = {
+      type: 'group',
+      logicalOperator: 'OR',
+      children: [
+        { type: 'rule', field: 'title', operator: 'contains', value: 'a' },
+        { type: 'rule', field: 'title', operator: 'contains', value: 'b' },
+      ],
+    };
+
+    const result = queryTranslator.translate(ast);
+
+    expect(result.crossref.isValid).toBe(false);
+    expect(result.crossref.error).toBe(
+      'Crossref não suporta o operador OR (grupo com 2 termos). Use apenas AND: o Crossref combina todos os termos.',
+    );
+  });
+
   it('translates exact and not_contains operators correctly', () => {
     const ast: QueryASTNode = {
       type: 'group',

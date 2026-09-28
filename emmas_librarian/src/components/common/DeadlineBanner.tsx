@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronRight, ExternalLink } from 'lucide-react';
 import { ScientificVenue, ScientificMilestone, MilestoneStatus } from '../../types';
+import { localIsoDate } from '../../utils/localDate';
 
 interface DeadlineBannerProps {
   venues: ScientificVenue[];
@@ -14,6 +15,36 @@ interface DeadlineItem {
   effectiveDate: string;
   daysDiff: number;
 }
+
+// The call link lives on the event; showing it next to each deadline saves a trip to the Agenda.
+const VenueTag: React.FC<{ venue: ScientificVenue }> = ({ venue }) => (
+  <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: 0 }}>
+    <span
+      style={{
+        fontSize: '0.7rem',
+        fontWeight: 700,
+        padding: '0.15rem 0.4rem',
+        borderRadius: '4px',
+        backgroundColor: venue.color ? `${venue.color}22` : 'rgba(59, 130, 246, 0.15)',
+        color: venue.color || '#3b82f6',
+      }}
+    >
+      {venue.acronym || venue.title}
+    </span>
+    {venue.url && (
+      <a
+        href={venue.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Abrir URL do Evento"
+        aria-label="Abrir URL do Evento"
+        style={{ color: 'var(--text-muted)', display: 'flex' }}
+      >
+        <ExternalLink size={13} />
+      </a>
+    )}
+  </span>
+);
 
 export const DeadlineBanner: React.FC<DeadlineBannerProps> = ({ venues, onToggleMilestoneStatus, onOpenAgenda }) => {
   const [localVenues, setLocalVenues] = useState<ScientificVenue[]>(venues);
@@ -36,7 +67,7 @@ export const DeadlineBanner: React.FC<DeadlineBannerProps> = ({ venues, onToggle
     onToggleMilestoneStatus(milestoneId, nextStatus);
   };
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localIsoDate();
   const todayMs = new Date(todayStr).getTime();
 
   const deadlineItems: DeadlineItem[] = [];
@@ -175,18 +206,7 @@ export const DeadlineBanner: React.FC<DeadlineBannerProps> = ({ venues, onToggle
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem' }}>
-                <span
-                  style={{
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                    padding: '0.15rem 0.4rem',
-                    borderRadius: '4px',
-                    backgroundColor: venue.color ? `${venue.color}22` : 'rgba(59, 130, 246, 0.15)',
-                    color: venue.color || '#3b82f6',
-                  }}
-                >
-                  {venue.acronym || venue.title}
-                </span>
+                <VenueTag venue={venue} />
 
                 <span
                   style={{

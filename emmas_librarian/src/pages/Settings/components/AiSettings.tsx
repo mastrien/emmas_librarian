@@ -97,7 +97,7 @@ const ProviderKeys: React.FC<AiSettingsProps> = (props) => (
       value={props.anthropicKey}
       onChange={props.setAnthropicKey}
       placeholder="sk-ant-..."
-      title="Ex: claude-3-5-sonnet-20240620"
+      title="Ex: claude-sonnet-5"
     />
     <KeyField
       label={

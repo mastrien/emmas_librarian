@@ -1,4 +1,12 @@
-import type { DatabaseTranslationMap, QueryASTNode, QueryField, QueryOperator } from '../../types';
+import type {
+  DatabaseTranslationMap,
+  QueryASTNode,
+  QueryField,
+  QueryOperator,
+  QuerySort,
+  SearchHistoryItem,
+  SearchQueryState,
+} from '../../types';
 
 export const SEARCH_DATABASES = [
   { id: 'openalex', label: 'OpenAlex' },
@@ -6,6 +14,13 @@ export const SEARCH_DATABASES = [
   { id: 'scopus', label: 'Scopus' },
   { id: 'wos', label: 'Web of Science' },
 ];
+
+/** The builder's starting tree: one empty "Todos contém" rule. */
+export const EMPTY_QUERY: QueryASTNode = {
+  type: 'group',
+  logicalOperator: 'AND',
+  children: [{ type: 'rule', field: 'all', operator: 'contains', value: '' }],
+};
 
 export interface SearchApiKeys {
   scopus: string;
@@ -71,4 +86,65 @@ export function buildFinalQueries(
     else return { invalidDatabase: dbId };
   }
   return { queries };
+}
+
+/** A past search, ready to load into the search page. */
+export interface RestoredSearch {
+  state: SearchQueryState;
+  sortBy?: QuerySort;
+  limit?: number;
+  // Searches saved before the builder state was stored only have the query sent to each base.
+  isLegacy: boolean;
+}
+
+const SEARCH_DATABASE_IDS = new Set(SEARCH_DATABASES.map((d) => d.id));
+const QUERY_SORTS: ReadonlySet<string> = new Set<QuerySort>(['relevance', 'citations', 'date']);
+
+function parseJsonObject(raw: string | null | undefined): Record<string, unknown> | null {
+  try {
+    const parsed: unknown = raw ? JSON.parse(raw) : null;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Old entries: each base's query becomes a custom query, and the builder starts empty.
+function legacyQueryState(item: SearchHistoryItem): SearchQueryState | null {
+  const translated = parseJsonObject(item.translated_queries) ?? {};
+  const customQueries = Object.fromEntries(
+    Object.entries(translated).filter(([db, q]) => SEARCH_DATABASE_IDS.has(db) && typeof q === 'string' && q),
+  ) as Record<string, string>;
+  const selectedDbs = Object.keys(customQueries);
+  return selectedDbs.length ? { ast: EMPTY_QUERY, selectedDbs, customQueries } : null;
+}
+
+/**
+ * Rebuilds the search page state from a history entry; null for entries that were not a
+ * database search (imports, manual additions, batch PDF imports).
+ *
+ * Usage:
+ *   const restored = restoreSearch(historyItem);
+ *   if (restored) { setAst(restored.state.ast); setSelectedDbs(restored.state.selectedDbs); }
+ */
+export function restoreSearch(item: SearchHistoryItem): RestoredSearch | null {
+  const stored = parseJsonObject(item.query_state) as SearchQueryState | null;
+  const state = stored ?? legacyQueryState(item);
+  if (!state) return null;
+  return {
+    state,
+    sortBy: item.sort_by && QUERY_SORTS.has(item.sort_by) ? (item.sort_by as QuerySort) : undefined,
+    limit: item.limit_val ?? undefined,
+    isLegacy: !stored,
+  };
+}
+
+/**
+ * Drops keyed bases (Scopus, WoS) that have no API key now, e.g. when reopening an old search.
+ *
+ * Usage:
+ *   usableDatabases(['openalex', 'scopus'], { scopus: '', wos: '' }); // ['openalex']
+ */
+export function usableDatabases(dbs: string[], keys: SearchApiKeys): string[] {
+  return dbs.filter((db) => !KEYED_DATABASES.includes(db as keyof SearchApiKeys) || keys[db as keyof SearchApiKeys]);
 }

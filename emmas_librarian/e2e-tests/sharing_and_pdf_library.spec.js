@@ -124,6 +124,17 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
     await expect(pdfRow).toBeVisible({ timeout: 10000 });
     await expect(pdfRow.locator('text=Utilizado em 1 artigo')).toBeVisible({ timeout: 10000 });
 
+    // The link dialog's overlay must cover the whole window. A transform left on <main> by the
+    // fade-in animation used to make <main> its containing block, pushing the dialog off-screen.
+    await pdfRow.getByTitle('Vincular a outro Artigo').click();
+    const linkDialog = window.getByRole('dialog', { name: 'Vincular PDF a um Artigo' });
+    await expect(linkDialog).toBeVisible();
+    const overlayBox = await linkDialog.boundingBox();
+    const viewport = await window.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }));
+    expect(overlayBox).toEqual({ x: 0, y: 0, width: viewport.width, height: viewport.height });
+    await linkDialog.getByRole('button', { name: 'Cancelar' }).click();
+    await expect(linkDialog).toBeHidden();
+
     // 3. Create Project B and reuse the same PDF
     await navigateTo(window, 'Projetos');
     await window.waitForSelector('text="Novo Projeto"');

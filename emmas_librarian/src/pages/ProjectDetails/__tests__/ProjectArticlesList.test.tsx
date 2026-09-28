@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectArticlesList } from '../components/ProjectArticlesList';
 import { MemoryRouter } from 'react-router-dom';
@@ -13,7 +13,6 @@ describe('ProjectArticlesList', () => {
     setEditingArticle: vi.fn(),
     setArchivingId: vi.fn(),
     setCitationArticle: vi.fn(),
-    isArticleManual: vi.fn().mockReturnValue(false),
   };
 
   beforeEach(() => {
@@ -26,6 +25,12 @@ describe('ProjectArticlesList', () => {
         <ProjectArticlesList {...defaultProps} {...props} />
       </MemoryRouter>,
     );
+  };
+
+  // Unlink, edit and cite live in the row's "⋯" menu.
+  const chooseFromRowMenu = (item: string) => {
+    fireEvent.click(screen.getByRole('button', { name: 'Mais ações' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: item }));
   };
 
   it('renders empty state when no articles', () => {
@@ -50,13 +55,22 @@ describe('ProjectArticlesList', () => {
     ];
     renderComponent({ paginatedArticles });
 
-    expect(screen.getByText('Article 1')).toBeInTheDocument();
-    expect(screen.getByText('DOI: 10.123/1')).toBeInTheDocument();
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('2021')).toBeInTheDocument();
-    expect(screen.getByText('🎓 5 citações')).toBeInTheDocument();
-    expect(screen.getByText('Scopus')).toBeInTheDocument();
-    expect(screen.getByText('🔓 Acesso Aberto')).toBeInTheDocument();
+    const [articleCell, authorsCell, basesCell] = within(screen.getAllByRole('row')[1]).getAllByRole('cell');
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
+      'ARTIGO',
+      'AUTORES',
+      'BASES',
+      'AÇÕES',
+    ]);
+    expect(within(articleCell).getByText('Article 1')).toBeInTheDocument();
+    // Year, DOI, citations and open access describe the article, so they sit under its title.
+    expect(within(articleCell).getByText('DOI 10.123/1')).toBeInTheDocument();
+    expect(within(articleCell).getByText('2021')).toBeInTheDocument();
+    expect(within(articleCell).getByText('5 citações')).toBeInTheDocument();
+    expect(within(articleCell).getByText('Acesso aberto')).toBeInTheDocument();
+    expect(authorsCell).toHaveTextContent(/^John Doe$/);
+    expect(within(basesCell).getByText('Scopus')).toBeInTheDocument();
+    expect(within(basesCell).queryByText(/Acesso/)).not.toBeInTheDocument();
   });
 
   it('handles click on article title', () => {
@@ -74,18 +88,17 @@ describe('ProjectArticlesList', () => {
   it('renders manual tag', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1', source_databases: '["Manual"]' }];
     renderComponent({ paginatedArticles });
-    expect(screen.getByText('⚠️ Manual')).toBeInTheDocument();
+    // The bases also render inside the article cell for narrow tables (hidden by a container query jsdom
+    // does not apply), so look in the BASES column.
+    const basesCell = within(screen.getAllByRole('row')[1]).getAllByRole('cell')[2];
+    expect(within(basesCell).getByText('⚠️ Manual')).toBeInTheDocument();
   });
 
   it('handles unlink pdf click when file exists', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1', local_file_path: '/path.pdf' }];
     renderComponent({ paginatedArticles });
 
-    // Find button by title or content
-    const unlinkBtn = screen.getByTitle('Desvincular PDF');
-    act(() => {
-      fireEvent.click(unlinkBtn);
-    });
+    chooseFromRowMenu('Desvincular PDF');
 
     expect(defaultProps.handleUnlinkClick).toHaveBeenCalledWith(1);
   });
@@ -141,15 +154,11 @@ describe('ProjectArticlesList', () => {
     expect(defaultProps.setArchivingId).toHaveBeenCalledWith(1);
   });
 
-  it('handles edit for manual articles', () => {
-    const isArticleManual = vi.fn().mockReturnValue(true);
-    const paginatedArticles = [{ id: 1, title: 'Manual Article', status: 'new' }];
-    renderComponent({ paginatedArticles, isArticleManual });
+  it('offers metadata editing for every article, not only manual ones', () => {
+    const paginatedArticles = [{ id: 1, title: 'Search Result', status: 'new', source_databases: '["Scopus"]' }];
+    renderComponent({ paginatedArticles });
 
-    const editBtn = screen.getByTitle('Editar Metadados');
-    act(() => {
-      fireEvent.click(editBtn);
-    });
+    chooseFromRowMenu('Editar Metadados');
 
     expect(defaultProps.setEditingArticle).toHaveBeenCalledWith(paginatedArticles[0]);
   });
@@ -158,10 +167,7 @@ describe('ProjectArticlesList', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1', status: 'new' }];
     renderComponent({ paginatedArticles });
 
-    const citeBtn = screen.getByTitle('Gerar Citação');
-    act(() => {
-      fireEvent.click(citeBtn);
-    });
+    chooseFromRowMenu('Gerar Citação');
 
     expect(defaultProps.setCitationArticle).toHaveBeenCalledWith(paginatedArticles[0]);
   });

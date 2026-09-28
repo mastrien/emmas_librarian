@@ -15,6 +15,8 @@ interface ArticleDetailsModalProps {
   onNavigateToSearch?: (searchId: number) => void;
   onArticleUpdated?: () => void;
   onAttachPdf?: (article: Article) => void;
+  // A search result not saved yet: it has no project origin and no PDF to open or attach.
+  isSearchResult?: boolean;
 }
 
 const overlayStyle: React.CSSProperties = {
@@ -58,6 +60,7 @@ export const ArticleDetailsModal: React.FC<ArticleDetailsModalProps> = ({
   onNavigateToSearch,
   onArticleUpdated,
   onAttachPdf,
+  isSearchResult = false,
 }) => {
   if (!isOpen || !article) return null;
 
@@ -77,17 +80,21 @@ export const ArticleDetailsModal: React.FC<ArticleDetailsModalProps> = ({
           <ArticleDetailsHeader article={article} onClose={onClose} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'visible' }}>
             <ArticleMetadataGrid article={article} />
-            <ArticleOriginSection
-              searchId={article.search_id}
-              history={history}
-              onNavigateToSearch={onNavigateToSearch}
-            />
-            <ArticlePdfSection
-              article={article}
-              onClose={onClose}
-              onArticleUpdated={onArticleUpdated}
-              onAttachPdf={onAttachPdf}
-            />
+            {!isSearchResult && (
+              <>
+                <ArticleOriginSection
+                  searchId={article.search_id}
+                  history={history}
+                  onNavigateToSearch={onNavigateToSearch}
+                />
+                <ArticlePdfSection
+                  article={article}
+                  onClose={onClose}
+                  onArticleUpdated={onArticleUpdated}
+                  onAttachPdf={onAttachPdf}
+                />
+              </>
+            )}
             <ArticleTextSections article={article} />
           </div>
         </div>

@@ -72,6 +72,14 @@ describe('ArticleDetailsModal', () => {
     expect(container.firstChild).toBeNull();
   });
 
+  it('shows only the metadata of an unsaved search result: no project origin and no PDF actions', () => {
+    renderModal({ isSearchResult: true });
+
+    expect(screen.getByText(mockArticle.title)).toBeInTheDocument();
+    expect(screen.queryByText('ORIGEM NO PROJETO')).not.toBeInTheDocument();
+    expect(screen.queryByText('ARQUIVO PDF')).not.toBeInTheDocument();
+  });
+
   it('renders article details correctly', () => {
     renderModal();
     expect(screen.getByText('Test Article')).toBeInTheDocument();

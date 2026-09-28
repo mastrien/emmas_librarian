@@ -46,11 +46,21 @@ describe('HistoryRepository', () => {
       expect(history[0].limit_val).toBe(50);
     });
 
+    it('keeps the query builder state so the search can be rebuilt later', () => {
+      const state = JSON.stringify({ ast: { type: 'rule' }, selectedDbs: ['openalex'], customQueries: {} });
+
+      repo.saveSearchHistory(projectId, 'q', { openalex: 'x' }, 1, {}, 'date', 50, state);
+
+      const [entry] = repo.getSearchHistory(projectId) as { query_state: string | null }[];
+      expect(entry.query_state).toBe(state);
+    });
+
     it('should handle optional sort_by and limitVal', () => {
       repo.saveSearchHistory(projectId, 'test query 2', {}, 0, {});
       const history = repo.getSearchHistory(projectId) as any[];
       expect(history[0].sort_by).toBeNull();
       expect(history[0].limit_val).toBeNull();
+      expect(history[0].query_state).toBeNull();
     });
 
     it('should revert search and delete related data', () => {

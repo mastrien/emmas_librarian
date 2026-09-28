@@ -13,6 +13,11 @@ afterEach(() => vi.restoreAllMocks());
 const openAddMenu = () => fireEvent.click(screen.getByRole('button', { name: /Adicionar Artigos/ }));
 const container = () => screen.getByTestId('project-details-container');
 const pdf = (name: string) => new File(['%PDF'], name, { type: 'application/pdf' });
+// "Editar Metadados" lives in the row's "⋯" menu.
+const openEditMetadata = () => {
+  fireEvent.click(within(mainTable()).getByRole('button', { name: 'Mais ações' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Editar Metadados' }));
+};
 
 function dropFiles(files: File[]): void {
   const drop = createEvent.drop(container());
@@ -175,7 +180,7 @@ describe('ProjectDetailsPage article forms', () => {
     const service = givenProject([article({ id: 8, title: 'Avulso', source_databases: '["Manual"]' })]);
     await renderProjectPage(service);
 
-    fireEvent.click(within(mainTable()).getByTitle('Editar Metadados'));
+    openEditMetadata();
     fireEvent.change(screen.getByDisplayValue('Avulso'), { target: { value: 'Avulso revisado' } });
     fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
 
@@ -191,14 +196,28 @@ describe('ProjectDetailsPage article forms', () => {
   it('treats a legacy bare source value as a single source instead of crashing the page', async () => {
     await renderProjectPage(givenProject([article({ id: 8, title: 'Legado', source_databases: 'Manual' })]));
 
-    expect(within(mainTable()).getByText('⚠️ Manual')).toBeInTheDocument();
-    expect(within(mainTable()).getByTitle('Editar Metadados')).toBeInTheDocument();
+    // One badge in the BASES column and one in the article cell for narrow tables (CSS picks which shows).
+    expect(within(mainTable()).getAllByText('⚠️ Manual')).toHaveLength(2);
+    fireEvent.click(within(mainTable()).getByRole('button', { name: 'Mais ações' }));
+    expect(screen.getByRole('menuitem', { name: 'Editar Metadados' })).toBeInTheDocument();
   });
 
-  it('only offers editing for manual articles', async () => {
-    await renderProjectPage(givenProject([article({ id: 8, title: 'Importado', source_databases: '["Scopus"]' })]));
+  // Search results can come back with incomplete metadata too, so editing is not limited to manual articles.
+  it('edits the metadata of an article that came from a search', async () => {
+    const service = givenProject([article({ id: 9, title: 'Importado', source_databases: '["Scopus"]' })]);
+    await renderProjectPage(service);
 
-    expect(within(mainTable()).queryByTitle('Editar Metadados')).not.toBeInTheDocument();
+    openEditMetadata();
+    fireEvent.change(screen.getByDisplayValue('Importado'), { target: { value: 'Importado corrigido' } });
+    fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
+
+    await waitFor(() =>
+      expect(service.updateArticleMetadata).toHaveBeenCalledWith(
+        9,
+        expect.objectContaining({ title: 'Importado corrigido' }),
+      ),
+    );
+    await waitFor(() => expect(service.getArticles).toHaveBeenCalledTimes(2));
   });
 });
 

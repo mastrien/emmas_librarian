@@ -79,6 +79,15 @@ describe('ArticleReaderPage', () => {
     expect(await screen.findByTestId('pdf-highlighter')).toBeInTheDocument();
   });
 
+  it('offers metadata editing for an article that came from a search', async () => {
+    fakeService.getArticle.mockResolvedValue(article({ source_databases: '["Scopus"]' }));
+
+    renderReader();
+
+    expect(await screen.findByRole('button', { name: /Editar Metadados/ })).toBeInTheDocument();
+    expect(await screen.findByTestId('pdf-highlighter')).toBeInTheDocument();
+  });
+
   it('shows the cached AI summary in the "Insights IA" tab without generating a new one', async () => {
     fakeService.getArticle.mockResolvedValue(
       article({
