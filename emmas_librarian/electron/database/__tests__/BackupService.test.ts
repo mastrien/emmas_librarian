@@ -225,6 +225,59 @@ describe('BackupService.restoreBackupOverride', () => {
   });
 });
 
+describe('BackupService.restoreBackupOverride on another computer', () => {
+  // The database stores absolute paths (C:/Users/<name>/AppData/.../storage/pdfs/x.pdf). Restoring on another
+  // machine or user account put the files in this userData folder but left every link pointing at the old one.
+  it('points restored PDFs, documents and the PDF library at this installation', async () => {
+    const oldUserData = electron.userData;
+    const pdf = writeStoredFile('pdfs', 'a.pdf', 'PDF-A');
+    const doc = writeStoredFile('project_documents', 'd.pdf', 'DOC-D');
+    const project = run("INSERT INTO projects (name) VALUES ('Tese')");
+    run("INSERT INTO articles (project_id, title, local_file_path) VALUES (?, 'A', ?)", project, pdf);
+    run("INSERT INTO project_documents (project_id, title, local_file_path) VALUES (?, 'Edital', ?)", project, doc);
+    run("INSERT INTO pdf_files (file_path, file_hash, filename, file_size) VALUES (?, 'h1', 'a.pdf', 5)", pdf);
+    const backup = path.join(workDir, 'outro-pc.emmabak');
+    vi.stubEnv('E2E_MOCK_SAVE_FILE_PATH', backup);
+    await new BackupService(active).exportBackup();
+    active.close();
+    fs.rmSync(oldUserData, { recursive: true, force: true });
+    electron.userData = path.join(workDir, 'novo-pc');
+    fs.mkdirSync(electron.userData);
+    active = new DatabaseAdapter(userPath('emma.db'));
+
+    await new BackupService(active).restoreBackupOverride(backup);
+
+    const restored = new Database(userPath('emma.db'), { readonly: true });
+    const paths = [
+      restored.prepare('SELECT local_file_path AS p FROM articles').get(),
+      restored.prepare('SELECT local_file_path AS p FROM project_documents').get(),
+      restored.prepare('SELECT file_path AS p FROM pdf_files').get(),
+    ].map((row) => (row as { p: string }).p);
+    restored.close();
+    expect(paths).toEqual([
+      userPath('storage', 'pdfs', 'a.pdf'),
+      userPath('storage', 'project_documents', 'd.pdf'),
+      userPath('storage', 'pdfs', 'a.pdf'),
+    ]);
+    expect(fs.readFileSync(paths[0], 'utf8')).toBe('PDF-A');
+  });
+
+  it('keeps links to files that are neither in the backup nor in this storage', async () => {
+    const outside = path.join(workDir, 'fora.pdf');
+    const project = run("INSERT INTO projects (name) VALUES ('Tese')");
+    run("INSERT INTO articles (project_id, title, local_file_path) VALUES (?, 'A', ?)", project, outside);
+    const backup = path.join(workDir, 'b.emmabak');
+    vi.stubEnv('E2E_MOCK_SAVE_FILE_PATH', backup);
+    await new BackupService(active).exportBackup();
+
+    await new BackupService(active).restoreBackupOverride(backup);
+
+    const restored = new Database(userPath('emma.db'), { readonly: true });
+    expect(restored.prepare('SELECT local_file_path FROM articles').get()).toEqual({ local_file_path: outside });
+    restored.close();
+  });
+});
+
 describe('BackupService.restoreBackupMerge file choice', () => {
   it('uses E2E_MOCK_BACKUP_FILE instead of the open dialog', async () => {
     vi.stubEnv('E2E_MOCK_BACKUP_FILE', backupOf('Do E2E'));

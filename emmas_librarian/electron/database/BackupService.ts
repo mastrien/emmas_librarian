@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DatabaseAdapter } from './DatabaseAdapter';
 import { writeArchive } from './backup/archiveFile';
 import { mergeBackupProjects, type StorageDirs } from './backup/backupMerge';
+import { rebaseStoredPaths } from './backup/storedPaths';
 import { restartApp } from '../restartApp';
 import { localIsoDate } from '../../src/utils/localDate';
 
@@ -119,6 +120,7 @@ export class BackupService {
       this.dbAdapter.close();
       this.overwriteDatabase(dbData);
       this.extractStorage(zip);
+      this.rebaseRestoredPaths();
       restartApp();
       return true;
     } catch (err) {
@@ -134,6 +136,16 @@ export class BackupService {
       if (fs.existsSync(sidecar)) fs.unlinkSync(sidecar);
     }
     fs.writeFileSync(dbPath, dbData);
+  }
+
+  // The restored database may come from another computer: point its file links at this userData folder.
+  private rebaseRestoredPaths(): void {
+    const restored = this.openBackupDatabase(userDataPath('emma.db'));
+    try {
+      rebaseStoredPaths(restored.getDB(), storageDirs());
+    } finally {
+      restored.close();
+    }
   }
 
   private extractStorage(zip: AdmZip): void {
