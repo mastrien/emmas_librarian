@@ -58,6 +58,8 @@ beforeEach(() => {
 
 afterEach(() => {
   adapter.close();
+  vi.unstubAllEnvs();
+  vi.clearAllMocks();
   vi.restoreAllMocks();
   fs.rmSync(workDir, { recursive: true, force: true });
 });
@@ -204,6 +206,21 @@ describe('ProjectSyncService file choice', () => {
     const projectId = Number(await service.importProject());
 
     expect(one('SELECT name FROM projects WHERE id = ?', projectId).name).toBe('Escolhido (Importado)');
+  });
+
+  // Playwright cannot answer native dialogs; E2E runs name the files through the environment instead.
+  it('uses the E2E paths instead of the save and open dialogs', async () => {
+    const projectId = seedFullProject(db(), { pdfPath: writeFile('a.pdf', 'PDF'), docPath: writeFile('d.pdf', 'DOC') });
+    const e2ePath = path.join(workDir, 'e2e.emmapcarc');
+    vi.stubEnv('E2E_MOCK_SAVE_FILE_PATH', e2ePath);
+    vi.stubEnv('E2E_MOCK_PROJECT_FILE', e2ePath);
+
+    expect(await service.exportProject(projectId)).toBe(e2ePath);
+    const imported = Number(await service.importProject());
+
+    expect(dialog.showSaveDialog).not.toHaveBeenCalled();
+    expect(dialog.showOpenDialog).not.toHaveBeenCalled();
+    expect(one('SELECT name FROM projects WHERE id = ?', imported).name).toBe('Tese (Importado)');
   });
 
   it('leaves no partial project behind when a row cannot be inserted', async () => {
