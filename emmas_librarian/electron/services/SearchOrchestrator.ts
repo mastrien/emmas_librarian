@@ -2,6 +2,7 @@ import { DatabaseAdapter } from '../database/DatabaseAdapter';
 import { QueryTranslator } from './QueryTranslator';
 import { ApiIntegrator } from './ApiIntegrator';
 import { NormalizedArticle } from './types';
+import type { PagedResult } from './searchApis/paginate';
 import { PendingSearchStore } from './PendingSearchStore';
 import { doiKey } from '../utils/doi';
 import type {
@@ -119,9 +120,10 @@ export class SearchOrchestrator {
     const perDatabase = await Promise.all(
       this.activeIntegrators(queryMap, limit, sortBy).map(({ name, promise }) =>
         promise
-          .then((res) => {
-            breakdown[name] = { count: res.length };
-            return res;
+          .then(({ articles, warning }) => {
+            // A base stopped mid-search keeps what arrived; the warning tells the user why it is short.
+            breakdown[name] = warning ? { count: articles.length, warning } : { count: articles.length };
+            return articles;
           })
           .catch((err) => {
             breakdown[name] = { count: 0, error: err.message || 'Erro desconhecido' };
@@ -136,7 +138,7 @@ export class SearchOrchestrator {
   private activeIntegrators(queryMap: Record<string, string>, limit: number, sortBy: QuerySort) {
     const scopusKey = this.db.getSetting('scopus_api_key') || '';
     const wosKey = this.db.getSetting('wos_api_key') || '';
-    const integrators: { name: string; promise: Promise<NormalizedArticle[]> }[] = [];
+    const integrators: { name: string; promise: Promise<PagedResult> }[] = [];
     if (queryMap.openalex)
       integrators.push({ name: 'openalex', promise: this.api.searchOpenAlex(queryMap.openalex, sortBy, limit) });
     if (queryMap.crossref)

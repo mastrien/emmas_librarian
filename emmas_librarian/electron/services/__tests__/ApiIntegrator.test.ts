@@ -61,7 +61,7 @@ describe('ApiIntegrator', () => {
         json: async () => mockResult,
       } as any);
 
-      const articles = await api.searchOpenAlex('filter=title.search:test', 'citations', 10);
+      const { articles } = await api.searchOpenAlex('filter=title.search:test', 'citations', 10);
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
@@ -138,7 +138,7 @@ describe('ApiIntegrator', () => {
         json: async () => mockResult,
       } as any);
 
-      const articles = await api.searchCrossref('query=test', 'date', 20);
+      const { articles } = await api.searchCrossref('query=test', 'date', 20);
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
@@ -197,7 +197,7 @@ describe('ApiIntegrator', () => {
       } as any);
 
       // Call without explicit limit, should default to 50
-      const articles = await api.searchCrossref('query=test', 'relevance');
+      const { articles } = await api.searchCrossref('query=test', 'relevance');
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
@@ -213,7 +213,7 @@ describe('ApiIntegrator', () => {
   describe('searchScopus', () => {
     it('returns empty array if no apiKey is provided', async () => {
       const result = await api.searchScopus('query', '', 'relevance', 10);
-      expect(result).toEqual([]);
+      expect(result).toEqual({ articles: [] });
       expect(fetch).not.toHaveBeenCalled();
     });
 
@@ -245,7 +245,7 @@ describe('ApiIntegrator', () => {
         json: async () => mockResult,
       } as any);
 
-      const articles = await api.searchScopus('TITLE("test")', 'scopus_key', 'citations', 50);
+      const { articles } = await api.searchScopus('TITLE("test")', 'scopus_key', 'citations', 50);
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const [urlCall, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
@@ -290,7 +290,7 @@ describe('ApiIntegrator', () => {
   describe('searchWoS', () => {
     it('returns empty array if no apiKey is provided', async () => {
       const result = await api.searchWoS('query', '', 'relevance', 10);
-      expect(result).toEqual([]);
+      expect(result).toEqual({ articles: [] });
       expect(fetch).not.toHaveBeenCalled();
     });
 
@@ -326,7 +326,7 @@ describe('ApiIntegrator', () => {
         json: async () => mockResult,
       } as any);
 
-      const articles = await api.searchWoS('TS=test', 'wos_key', 'date', 15);
+      const { articles } = await api.searchWoS('TS=test', 'wos_key', 'date', 15);
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const [urlCall, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
@@ -409,7 +409,7 @@ describe('ApiIntegrator', () => {
       } as any);
 
       // Call without explicit limit, should default to 50
-      const articles = await api.searchWoS('TS=test', 'wos_key', 'relevance');
+      const { articles } = await api.searchWoS('TS=test', 'wos_key', 'relevance');
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
@@ -475,8 +475,8 @@ describe('ApiIntegrator', () => {
 
   describe('ApiIntegrator fallback branches and edge cases', () => {
     it('returns empty array when api keys are missing for Scopus or WoS', async () => {
-      expect(await api.searchScopus('query', '', 'relevance')).toEqual([]);
-      expect(await api.searchWoS('query', '', 'relevance')).toEqual([]);
+      expect(await api.searchScopus('query', '', 'relevance')).toEqual({ articles: [] });
+      expect(await api.searchWoS('query', '', 'relevance')).toEqual({ articles: [] });
     });
 
     it('covers searchOpenAlex sort and filter branches', async () => {
@@ -585,28 +585,28 @@ describe('ApiIntegrator', () => {
       expect(normalizedScopus.year).toBe(2026);
     });
 
-    it('handles maximum limits via Math.min correctly for all APIs', async () => {
+    it('asks each base for pages no larger than its page size', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
         json: async () => ({ results: [], message: { items: [] }, 'search-results': { entry: [] }, hits: [] }),
       } as any);
 
-      // OpenAlex limit > 200
+      // OpenAlex: 100 per page (per_page=200 is deprecated)
       await api.searchOpenAlex('test', 'relevance', 300);
       let urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
-      expect(urlCall).toContain('per_page=200');
+      expect(urlCall).toContain('per_page=100');
 
-      // Crossref limit > 1000
+      // Crossref: 1,000 per page
       await api.searchCrossref('query=test', 'relevance', 1500);
       urlCall = vi.mocked(fetch).mock.calls[1][0] as string;
       expect(urlCall).toContain('rows=1000');
 
-      // Scopus limit > 200
+      // Scopus: 200 per page
       await api.searchScopus('q', 'key', 'relevance', 300);
       urlCall = vi.mocked(fetch).mock.calls[2][0] as string;
       expect(urlCall).toContain('count=200');
 
-      // WoS limit > 50
+      // WoS: 50 per page
       await api.searchWoS('q', 'key', 'relevance', 100);
       urlCall = vi.mocked(fetch).mock.calls[3][0] as string;
       expect(urlCall).toContain('limit=50');

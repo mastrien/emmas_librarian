@@ -318,7 +318,8 @@ export interface TrashItem {
   deleted_at: string;
 }
 
-export type SearchBreakdown = Record<string, { count: number; error?: string }>;
+/** Per base: how many results came, the error when the base failed, or a warning when it stopped early. */
+export type SearchBreakdown = Record<string, { count: number; error?: string; warning?: string }>;
 
 /** Metadata of a search result beyond the list columns, for the details dialog. */
 export type SearchPreviewDetails = Pick<

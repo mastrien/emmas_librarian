@@ -1,7 +1,11 @@
 import type { NormalizedArticle } from '../types';
+import { SEARCH_LIMITS } from '../../../src/utils/searchLimits';
+import { collectPages, rateLimited, type Page, type PageCursor, type PagedResult } from './paginate';
 import { logAndRethrow, type SortBy } from './shared';
 
 const CROSSREF_URL = 'https://api.crossref.org/works';
+// Crossref serves up to 1,000 rows per request; deeper results come through its cursor.
+const PAGE_SIZE = 1000;
 
 /** The fields of a Crossref work that the app reads. */
 export interface CrossrefWork {
@@ -23,27 +27,41 @@ export interface CrossrefWork {
 }
 
 /**
- * Searches Crossref with a translated query string ("query.bibliographic=...&filter=...").
+ * Searches Crossref with a translated query string ("query.bibliographic=...&filter=..."), following its
+ * cursor up to `limit` (never more than SEARCH_LIMITS.crossref.max).
  *
  * Usage:
- *   await searchCrossref('query.bibliographic=machine+learning', 'date', 100);
+ *   const { articles } = await searchCrossref('query.bibliographic=machine+learning', 'date', 100);
  */
-export function searchCrossref(queryStr: string, sortBy: SortBy, limit: number = 50): Promise<NormalizedArticle[]> {
-  return logAndRethrow('Crossref', async () => {
-    const response = await fetch(crossrefUrl(queryStr, sortBy, limit));
-    if (response.ok) {
-      const data = await response.json();
-      return ((data.message?.items || []) as CrossrefWork[]).map(normalizeCrossref);
-    }
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Erro ${response.status} no Crossref`);
-  });
+export function searchCrossref(queryStr: string, sortBy: SortBy, limit: number = 50): Promise<PagedResult> {
+  return logAndRethrow('Crossref', () =>
+    collectPages({
+      baseName: 'Crossref',
+      limit: Math.min(limit, SEARCH_LIMITS.crossref.max),
+      pageSize: PAGE_SIZE,
+      firstCursor: '*',
+      fetchPage: (cursor, size) => fetchCrossrefPage(queryStr, sortBy, cursor, size),
+    }),
+  );
 }
 
-function crossrefUrl(queryStr: string, sortBy: SortBy, limit: number): string {
+async function fetchCrossrefPage(queryStr: string, sortBy: SortBy, cursor: PageCursor, size: number): Promise<Page> {
+  const response = await fetch(crossrefUrl(queryStr, sortBy, cursor, size));
+  if (response.ok) {
+    const data = await response.json();
+    const items = (data.message?.items || []) as CrossrefWork[];
+    return { articles: items.map(normalizeCrossref), next: data.message?.['next-cursor'] ?? null };
+  }
+  if (response.status === 429) throw rateLimited('Crossref', response);
+  const errorData = await response.json().catch(() => ({}));
+  throw new Error(errorData.message || `Erro ${response.status} no Crossref`);
+}
+
+function crossrefUrl(queryStr: string, sortBy: SortBy, cursor: PageCursor, size: number): string {
   const url = new URL(CROSSREF_URL);
   const params = new URLSearchParams(queryStr);
-  params.set('rows', String(Math.min(limit, 1000))); // Crossref max is 1000
+  params.set('rows', String(size));
+  params.set('cursor', String(cursor));
   if (sortBy === 'citations') {
     params.set('sort', 'is-referenced-by-count');
     params.set('order', 'desc');

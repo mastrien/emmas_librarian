@@ -1,7 +1,11 @@
 import type { NormalizedArticle } from '../types';
+import { SEARCH_LIMITS } from '../../../src/utils/searchLimits';
+import { collectPages, rateLimited, type Page, type PageCursor, type PagedResult } from './paginate';
 import { logAndRethrow, openAccessFlag, type SortBy } from './shared';
 
 const OPENALEX_URL = 'https://api.openalex.org/works';
+// per_page=100 is the documented maximum; 200 still works but is deprecated and "will be removed".
+const PAGE_SIZE = 100;
 
 /** The fields of an OpenAlex work that the app reads. */
 export interface OpenAlexWork {
@@ -31,30 +35,44 @@ const SORT_PARAM: Record<SortBy, string> = {
 };
 
 /**
- * Searches OpenAlex with a translated filter.
+ * Searches OpenAlex with a translated filter, following its cursor page by page up to `limit`
+ * (never more than SEARCH_LIMITS.openalex.max).
  *
  * Usage:
- *   await searchOpenAlex('title_and_abstract.search:"machine learning"', 'relevance', 50);
+ *   const { articles, warning } = await searchOpenAlex('title_and_abstract.search:"machine learning"', 'relevance', 300);
  */
-export function searchOpenAlex(filterStr: string, sortBy: SortBy, limit: number = 50): Promise<NormalizedArticle[]> {
-  return logAndRethrow('OpenAlex', async () => {
-    const response = await fetch(openAlexUrl(filterStr, sortBy, limit));
-    if (response.ok) {
-      const data = await response.json();
-      return ((data.results || []) as OpenAlexWork[]).map(normalizeOpenAlex);
-    }
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Erro ${response.status} no OpenAlex`);
-  });
+export function searchOpenAlex(filterStr: string, sortBy: SortBy, limit: number = 50): Promise<PagedResult> {
+  return logAndRethrow('OpenAlex', () =>
+    collectPages({
+      baseName: 'OpenAlex',
+      limit: Math.min(limit, SEARCH_LIMITS.openalex.max),
+      pageSize: PAGE_SIZE,
+      firstCursor: '*',
+      fetchPage: (cursor, size) => fetchOpenAlexPage(filterStr, sortBy, cursor, size),
+    }),
+  );
 }
 
-function openAlexUrl(filterStr: string, sortBy: SortBy, limit: number): string {
+async function fetchOpenAlexPage(filterStr: string, sortBy: SortBy, cursor: PageCursor, size: number): Promise<Page> {
+  const response = await fetch(openAlexUrl(filterStr, sortBy, cursor, size));
+  if (response.ok) {
+    const data = await response.json();
+    const works = (data.results || []) as OpenAlexWork[];
+    return { articles: works.map(normalizeOpenAlex), next: data.meta?.next_cursor ?? null };
+  }
+  if (response.status === 429) throw rateLimited('OpenAlex', response);
+  const errorData = await response.json().catch(() => ({}));
+  throw new Error(errorData.message || `Erro ${response.status} no OpenAlex`);
+}
+
+function openAlexUrl(filterStr: string, sortBy: SortBy, cursor: PageCursor, size: number): string {
   const url = new URL(OPENALEX_URL);
   // The translator may hand over "filter=..."; OpenAlex wants just the value.
   const cleanFilter = filterStr.includes('filter=') ? filterStr.split('filter=').pop()! : filterStr;
   if (cleanFilter) url.searchParams.append('filter', cleanFilter);
-  url.searchParams.append('per_page', String(Math.min(limit, 200))); // OpenAlex max is 200
+  url.searchParams.append('per_page', String(size));
   url.searchParams.append('sort', SORT_PARAM[sortBy] ?? SORT_PARAM.relevance);
+  url.searchParams.append('cursor', String(cursor));
   return url.toString();
 }
 

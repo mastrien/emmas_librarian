@@ -1,7 +1,12 @@
 import type { NormalizedArticle } from '../types';
+import { SEARCH_LIMITS } from '../../../src/utils/searchLimits';
+import { collectPages, rateLimited, type Page, type PagedResult } from './paginate';
 import { logAndRethrow, type SortBy } from './shared';
 
 const WOS_URL = 'https://api.clarivate.com/apis/wos-starter/v1/documents';
+// The Starter API serves 50 per page; the free trial allows 1 request per second (and 50 per day).
+const PAGE_SIZE = 50;
+const PAGE_INTERVAL_MS = 1100;
 
 /** The fields of a Web of Science Starter hit that the app reads. */
 export interface WosHit {
@@ -29,37 +34,59 @@ export interface WosHit {
 const SORT_PARAM: Record<SortBy, string> = { citations: 'TC+D', date: 'PY+D', relevance: 'RS+D' };
 
 /**
- * Searches the Web of Science Starter API; without an API key it returns nothing.
+ * Searches the Web of Science Starter API page by page, about one request per second, up to `limit`
+ * (never more than SEARCH_LIMITS.wos.max); without an API key it returns nothing.
  *
  * Usage:
- *   await searchWoS('TS=("machine learning")', apiKey, 'citations', 50);
+ *   const { articles } = await searchWoS('TS=("machine learning")', apiKey, 'citations', 150);
  */
 export async function searchWoS(
   queryStr: string,
   apiKey: string,
   sortBy: SortBy,
   limit: number = 50,
-): Promise<NormalizedArticle[]> {
-  if (!apiKey) return [];
-  return logAndRethrow('WoS', async () => {
-    const response = await fetch(wosUrl(queryStr, sortBy, limit), {
-      headers: { 'X-ApiKey': apiKey, Accept: 'application/json' },
-    });
-    if (response.ok) {
-      const data = await response.json();
-      return ((data.hits || []) as WosHit[]).map(normalizeWoS);
-    }
-    if (response.status === 401) throw new Error('Chave de API inválida ou expirada');
-    throw new Error(wosErrorMessage(response.status, await response.text().catch(() => '')));
-  });
+  sleep?: (ms: number) => Promise<void>,
+): Promise<PagedResult> {
+  if (!apiKey) return { articles: [] };
+  return logAndRethrow('WoS', () =>
+    collectPages({
+      baseName: 'Web of Science',
+      limit: Math.min(limit, SEARCH_LIMITS.wos.max),
+      pageSize: PAGE_SIZE,
+      firstCursor: 1,
+      fetchPage: (page, size) => fetchWosPage({ queryStr, apiKey, sortBy }, Number(page), size),
+      delayMs: PAGE_INTERVAL_MS,
+      sleep,
+    }),
+  );
 }
 
-function wosUrl(queryStr: string, sortBy: SortBy, limit: number): string {
+interface WosQuery {
+  queryStr: string;
+  apiKey: string;
+  sortBy: SortBy;
+}
+
+async function fetchWosPage(query: WosQuery, page: number, size: number): Promise<Page> {
+  const response = await fetch(wosUrl(query, page, size), {
+    headers: { 'X-ApiKey': query.apiKey, Accept: 'application/json' },
+  });
+  if (response.ok) {
+    const data = await response.json();
+    const total = Number(data.metadata?.total ?? Infinity);
+    return { articles: ((data.hits || []) as WosHit[]).map(normalizeWoS), next: page * size < total ? page + 1 : null };
+  }
+  if (response.status === 401) throw new Error('Chave de API inválida ou expirada');
+  if (response.status === 429) throw rateLimited('Web of Science', response);
+  throw new Error(wosErrorMessage(response.status, await response.text().catch(() => '')));
+}
+
+function wosUrl({ queryStr, sortBy }: WosQuery, page: number, size: number): string {
   const url = new URL(WOS_URL);
   url.searchParams.append('db', 'WOS');
   url.searchParams.append('q', queryStr);
-  url.searchParams.append('limit', String(Math.min(limit, 50)));
-  url.searchParams.append('page', '1');
+  url.searchParams.append('limit', String(size));
+  url.searchParams.append('page', String(page));
   url.searchParams.append('sortField', SORT_PARAM[sortBy] ?? SORT_PARAM.relevance);
   return url.toString();
 }

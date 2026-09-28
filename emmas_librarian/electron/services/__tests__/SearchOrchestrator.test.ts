@@ -4,6 +4,7 @@ import { QueryTranslator } from '../QueryTranslator';
 import { ApiIntegrator } from '../ApiIntegrator';
 import { NormalizedArticle } from '../types';
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import type { PagedResult } from '../searchApis/paginate';
 
 // Settings are encrypted with safeStorage; a reversible fake keeps the real SettingsRepository path.
 vi.mock('electron', () => ({
@@ -19,30 +20,34 @@ type DatabaseName = 'openalex' | 'crossref' | 'scopus' | 'wos';
 /** Stands in for the network: each database returns canned articles and records what it was asked. */
 class FakeApiIntegrator extends ApiIntegrator {
   readonly results: Partial<Record<DatabaseName, NormalizedArticle[] | Error>> = {};
+  /** A base that stopped mid-search: its articles are kept and this explains why there are fewer. */
+  readonly warnings: Partial<Record<DatabaseName, string>> = {};
   readonly calls: { database: DatabaseName; args: unknown[] }[] = [];
 
-  override async searchOpenAlex(...args: unknown[]): Promise<NormalizedArticle[]> {
+  override async searchOpenAlex(...args: unknown[]): Promise<PagedResult> {
     return this.answer('openalex', args);
   }
 
-  override async searchCrossref(...args: unknown[]): Promise<NormalizedArticle[]> {
+  override async searchCrossref(...args: unknown[]): Promise<PagedResult> {
     return this.answer('crossref', args);
   }
 
-  override async searchScopus(...args: unknown[]): Promise<NormalizedArticle[]> {
+  override async searchScopus(...args: unknown[]): Promise<PagedResult> {
     return this.answer('scopus', args);
   }
 
-  override async searchWoS(...args: unknown[]): Promise<NormalizedArticle[]> {
+  override async searchWoS(...args: unknown[]): Promise<PagedResult> {
     return this.answer('wos', args);
   }
 
-  private answer(database: DatabaseName, args: unknown[]): NormalizedArticle[] {
+  private answer(database: DatabaseName, args: unknown[]): PagedResult {
     this.calls.push({ database, args });
     const result = this.results[database] ?? [];
     if (result instanceof Error) throw result;
     // Fresh copies: the orchestrator merges source lists in place while deduplicating.
-    return result.map((a) => ({ ...a, source_databases: [...a.source_databases] }));
+    const articles = result.map((a) => ({ ...a, source_databases: [...a.source_databases] }));
+    const warning = this.warnings[database];
+    return warning ? { articles, warning } : { articles };
   }
 }
 
@@ -198,6 +203,20 @@ describe('SearchOrchestrator', () => {
 
       expect(preview.breakdown.crossref).toEqual({ count: 0, error: 'HTTP 503' });
       expect(preview.results).toHaveLength(1);
+    });
+
+    it('keeps what a base returned before stopping and carries its warning to the summary', async () => {
+      api.results.wos = [found('10.1/w', 'W', 'Web of Science')];
+      api.warnings.wos = 'Web of Science: a busca parou em 1 de 100 resultados (Erro 429).';
+      api.results.openalex = [found('10.1/a', 'A', 'OpenAlex')];
+
+      const preview = await orchestrator.preview(projectId, { openalex: 'q', wos: 'q' }, 100, 'relevance', 'q');
+
+      expect(preview.breakdown).toEqual({
+        openalex: { count: 1 },
+        wos: { count: 1, warning: 'Web of Science: a busca parou em 1 de 100 resultados (Erro 429).' },
+      });
+      expect(preview.results.map((r) => r.title).sort()).toEqual(['A', 'W']);
     });
 
     it('passes the stored Scopus and WoS keys to their APIs', async () => {
