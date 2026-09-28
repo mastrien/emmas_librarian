@@ -148,6 +148,13 @@ describe('ProjectSyncService importing hand-made or older files', () => {
     await expect(service.importProject(electron.savePath)).rejects.toThrow('não contém project.json');
   });
 
+  it('reports a target that cannot be written instead of announcing the export', async () => {
+    fs.mkdirSync(electron.savePath);
+    const projectId = seedFullProject(db(), { pdfPath: writeFile('a.pdf', 'PDF'), docPath: writeFile('d.pdf', 'DOC') });
+
+    await expect(service.exportProject(projectId)).rejects.toThrow();
+  });
+
   it('reports the missing project id on export', async () => {
     await expect(service.exportProject(404)).rejects.toThrow('Projeto não encontrado (id 404)');
   });

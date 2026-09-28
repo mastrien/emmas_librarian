@@ -4,6 +4,7 @@ import path from 'path';
 import { dialog, app } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import { DatabaseAdapter } from './DatabaseAdapter';
+import { writeArchive } from './backup/archiveFile';
 import { mergeBackupProjects, type StorageDirs } from './backup/backupMerge';
 import { restartApp } from '../restartApp';
 import { localIsoDate } from '../../src/utils/localDate';
@@ -50,7 +51,7 @@ export class BackupService {
     const filePath = await this.chooseBackupPath();
     if (!filePath) return null;
     try {
-      this.buildBackupZip().writeZip(filePath);
+      writeArchive(this.buildBackupZip(), filePath);
       return filePath;
     } catch (err) {
       console.error('Erro ao exportar backup:', err);

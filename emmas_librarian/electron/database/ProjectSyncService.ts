@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { dialog, app } from 'electron';
 import { DatabaseAdapter } from './DatabaseAdapter';
+import { writeArchive } from './backup/archiveFile';
 import { readProjectRows, type ProjectRows } from './backup/projectRows';
 import { insertProjectRows } from './backup/projectImport';
 
@@ -46,7 +47,7 @@ export class ProjectSyncService {
       zip.addFile('project.json', Buffer.from(JSON.stringify(rows, null, 2), 'utf-8'));
       addStoredFiles(zip, rows.articles, PDF_FOLDER);
       addStoredFiles(zip, rows.projectDocs, DOCUMENT_FOLDER);
-      zip.writeZip(filePath);
+      writeArchive(zip, filePath);
       return filePath;
     } catch (err) {
       console.error('Erro ao exportar:', err);

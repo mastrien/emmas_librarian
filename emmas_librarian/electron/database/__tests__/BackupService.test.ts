@@ -146,6 +146,15 @@ describe('BackupService.exportBackup', () => {
     expect(dialog.showSaveDialog).not.toHaveBeenCalled();
     expect(new AdmZip(target()).getEntry('emma.db')).not.toBeNull();
   });
+  // AdmZip.writeZip returns silently when the target is a folder, so the app announced a backup it never wrote.
+  it('reports a target that cannot be written (a folder with that name)', async () => {
+    fs.mkdirSync(target());
+    saveTo(target());
+
+    await expect(new BackupService(active).exportBackup()).rejects.toThrow();
+
+    expect(console.error).toHaveBeenCalledWith('Erro ao exportar backup:', expect.any(Error));
+  });
 });
 
 describe('BackupService.restoreBackupOverride', () => {
