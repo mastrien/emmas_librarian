@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ProjectToolbar } from '../components/ProjectToolbar';
 import { MemoryRouter } from 'react-router-dom';
 import { projectService } from '../../../services/api';
@@ -114,6 +114,52 @@ describe('ProjectToolbar', () => {
       fireEvent.click(packageBtn);
     });
     expect(projectService.exportProject).toHaveBeenCalledWith(1);
+  });
+
+  // Both menu items used to fire and forget: no confirmation of where the file went, errors swallowed.
+  describe.each([
+    { item: 'Pacote .emmapcarc (com PDFs)', method: 'exportProject' as const, kind: 'Pacote .emmapcarc' },
+    { item: 'Biblioshiny', method: 'exportBiblioshiny' as const, kind: 'CSV do Biblioshiny' },
+  ])('export menu: $item', ({ item, method, kind }) => {
+    let alertSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      alertSpy.mockRestore();
+    });
+
+    it('tells where the file was saved', async () => {
+      vi.mocked(projectService[method]).mockResolvedValueOnce('C:\\Exportados\\tese.file');
+      renderComponent({ isExportMenuOpen: true });
+
+      fireEvent.click(screen.getByText(item));
+
+      await waitFor(() =>
+        expect(alertSpy).toHaveBeenCalledWith(`${kind} exportado com sucesso para: C:\\Exportados\\tese.file`),
+      );
+    });
+
+    it('reports a failed export', async () => {
+      vi.mocked(projectService[method]).mockRejectedValueOnce(new Error('disco cheio'));
+      renderComponent({ isExportMenuOpen: true });
+
+      fireEvent.click(screen.getByText(item));
+
+      await waitFor(() => expect(alertSpy).toHaveBeenCalledWith(`Erro ao exportar ${kind}: disco cheio`));
+    });
+
+    it('stays quiet when the save dialog is cancelled', async () => {
+      vi.mocked(projectService[method]).mockResolvedValueOnce(null);
+      renderComponent({ isExportMenuOpen: true });
+
+      fireEvent.click(screen.getByText(item));
+
+      await waitFor(() => expect(projectService[method]).toHaveBeenCalledWith(1));
+      expect(alertSpy).not.toHaveBeenCalled();
+    });
   });
 
   it('handles Criar categorias click', () => {

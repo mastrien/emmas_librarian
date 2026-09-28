@@ -2,6 +2,7 @@ import React from 'react';
 import { Tags, Download } from 'lucide-react';
 import { Project, Article } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
+import { exportWithFeedback } from '../../../utils/exportWithFeedback';
 
 interface ProjectCategoriesTabProps {
   project: Project;
@@ -27,27 +28,13 @@ export const ProjectCategoriesTab: React.FC<ProjectCategoriesTabProps> = ({
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button
             className="btn-secondary"
-            onClick={async () => {
-              try {
-                const savedPath = await projectService.exportCsv(project.id);
-                if (savedPath) alert('CSV exportado com sucesso para: ' + savedPath);
-              } catch (err: any) {
-                alert('Erro ao exportar CSV: ' + err.message);
-              }
-            }}
+            onClick={() => exportWithFeedback(() => projectService.exportCsv(project.id), 'CSV')}
           >
             <Download size={18} /> Exportar CSV
           </button>
           <button
             className="btn-secondary"
-            onClick={async () => {
-              try {
-                const savedPath = await projectService.exportXlsx(project.id);
-                if (savedPath) alert('XLSX exportado com sucesso para: ' + savedPath);
-              } catch (err: any) {
-                alert('Erro ao exportar XLSX: ' + err.message);
-              }
-            }}
+            onClick={() => exportWithFeedback(() => projectService.exportXlsx(project.id), 'XLSX')}
           >
             <Download size={18} /> Exportar XLSX
           </button>

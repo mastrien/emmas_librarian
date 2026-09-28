@@ -18,6 +18,7 @@ vi.mock('electron', () => ({
   },
 }));
 
+import { dialog } from 'electron';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 import { ProjectSyncService } from '../ProjectSyncService';
 
@@ -57,6 +58,8 @@ beforeEach(() => {
 
 afterEach(() => {
   adapter.close();
+  vi.unstubAllEnvs();
+  vi.clearAllMocks();
   vi.restoreAllMocks();
   fs.rmSync(workDir, { recursive: true, force: true });
 });
@@ -106,16 +109,19 @@ describe('ProjectSyncService export → import round trip', () => {
   });
 });
 
+/** The smallest project.json older versions wrote: no category options, notes or question sets. */
+const MINIMAL_PROJECT = {
+  project: { id: 1, name: 'Velho' },
+  articles: [{ id: 5, title: 'A', local_file_path: '/gone/a.pdf', created_at: 'x', updated_at: 'y' }],
+  searchHistory: [],
+  projectDocs: [{ id: 2, title: 'Link', url: 'http://x', local_file_path: null }],
+  massiveInvs: [{ id: 3, questions: '[]', articles_ids: 'not json' }],
+  projCategories: [],
+  articleCategories: [{ article_id: 99, category_id: 98, value: 'orphan' }],
+};
+
 describe('ProjectSyncService importing hand-made or older files', () => {
-  const minimal = {
-    project: { id: 1, name: 'Velho' },
-    articles: [{ id: 5, title: 'A', local_file_path: '/gone/a.pdf', created_at: 'x', updated_at: 'y' }],
-    searchHistory: [],
-    projectDocs: [{ id: 2, title: 'Link', url: 'http://x', local_file_path: null }],
-    massiveInvs: [{ id: 3, questions: '[]', articles_ids: 'not json' }],
-    projCategories: [],
-    articleCategories: [{ article_id: 99, category_id: 98, value: 'orphan' }],
-  };
+  const minimal = MINIMAL_PROJECT;
 
   it('imports a file without the lists added in later versions and ignores unknown columns', async () => {
     const projectId = Number(await service.importProject(writeProjectFile(minimal)));
@@ -144,7 +150,86 @@ describe('ProjectSyncService importing hand-made or older files', () => {
     await expect(service.importProject(electron.savePath)).rejects.toThrow('não contém project.json');
   });
 
+  it('reports a target that cannot be written instead of announcing the export', async () => {
+    fs.mkdirSync(electron.savePath);
+    const projectId = seedFullProject(db(), { pdfPath: writeFile('a.pdf', 'PDF'), docPath: writeFile('d.pdf', 'DOC') });
+
+    await expect(service.exportProject(projectId)).rejects.toThrow();
+  });
+
   it('reports the missing project id on export', async () => {
     await expect(service.exportProject(404)).rejects.toThrow('Projeto não encontrado (id 404)');
+  });
+});
+
+describe('ProjectSyncService file choice', () => {
+  const pickProjectFile = (filePath: string | undefined) =>
+    vi
+      .mocked(dialog.showOpenDialog)
+      .mockResolvedValueOnce({ canceled: !filePath, filePaths: filePath ? [filePath] : [] });
+
+  it('writes nothing when the export dialog is cancelled', async () => {
+    vi.mocked(dialog.showSaveDialog).mockResolvedValueOnce({ canceled: true, filePath: '' });
+    const projectId = seedFullProject(db(), { pdfPath: writeFile('a.pdf', 'PDF'), docPath: writeFile('d.pdf', 'DOC') });
+
+    expect(await service.exportProject(projectId)).toBeNull();
+
+    expect(fs.existsSync(electron.savePath)).toBe(false);
+  });
+
+  it('suggests a file named after the project id', async () => {
+    vi.mocked(dialog.showSaveDialog).mockResolvedValueOnce({ canceled: true, filePath: '' });
+
+    await service.exportProject(7);
+
+    expect(vi.mocked(dialog.showSaveDialog).mock.calls[0][0].defaultPath).toBe('projeto_7.emmapcarc');
+  });
+
+  it('exports a project whose PDF is no longer on disk, without the file', async () => {
+    const projectId = seedFullProject(db(), {
+      pdfPath: path.join(workDir, 'sumiu.pdf'),
+      docPath: writeFile('d.pdf', 'DOC'),
+    });
+
+    await service.exportProject(projectId);
+
+    const names = new AdmZip(electron.savePath).getEntries().map((e) => e.entryName);
+    expect(names.sort()).toEqual(['docs/d.pdf', 'project.json']);
+  });
+
+  it('imports the file chosen in the open dialog and nothing when it is cancelled', async () => {
+    const file = writeProjectFile({ ...MINIMAL_PROJECT, project: { id: 1, name: 'Escolhido' } });
+    pickProjectFile(undefined);
+    pickProjectFile(file);
+
+    expect(await service.importProject()).toBeNull();
+    const projectId = Number(await service.importProject());
+
+    expect(one('SELECT name FROM projects WHERE id = ?', projectId).name).toBe('Escolhido (Importado)');
+  });
+
+  // Playwright cannot answer native dialogs; E2E runs name the files through the environment instead.
+  it('uses the E2E paths instead of the save and open dialogs', async () => {
+    const projectId = seedFullProject(db(), { pdfPath: writeFile('a.pdf', 'PDF'), docPath: writeFile('d.pdf', 'DOC') });
+    const e2ePath = path.join(workDir, 'e2e.emmapcarc');
+    vi.stubEnv('E2E_MOCK_SAVE_FILE_PATH', e2ePath);
+    vi.stubEnv('E2E_MOCK_PROJECT_FILE', e2ePath);
+
+    expect(await service.exportProject(projectId)).toBe(e2ePath);
+    const imported = Number(await service.importProject());
+
+    expect(dialog.showSaveDialog).not.toHaveBeenCalled();
+    expect(dialog.showOpenDialog).not.toHaveBeenCalled();
+    expect(one('SELECT name FROM projects WHERE id = ?', imported).name).toBe('Tese (Importado)');
+  });
+
+  it('leaves no partial project behind when a row cannot be inserted', async () => {
+    // question_sets.questions is NOT NULL: the last table imported fails after every other row went in.
+    const file = writeProjectFile({ ...MINIMAL_PROJECT, questionSets: [{ id: 1, name: 'Sem perguntas' }] });
+
+    await expect(service.importProject(file)).rejects.toThrow(/NOT NULL/);
+
+    expect(db().prepare('SELECT name FROM projects').all()).toEqual([]);
+    expect(db().prepare('SELECT title FROM articles').all()).toEqual([]);
   });
 });

@@ -27,7 +27,7 @@ export class SyncService {
     return this.backupSync.restoreBackupOverride(providedPath);
   }
 
-  public async restoreBackupMerge(providedPath?: string): Promise<number> {
+  public async restoreBackupMerge(providedPath?: string): Promise<number | null> {
     return this.backupSync.restoreBackupMerge(providedPath);
   }
 }

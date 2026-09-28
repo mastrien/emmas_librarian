@@ -82,6 +82,42 @@ test.describe('Full backup restore', () => {
     }
   });
 
+  // The database stores absolute PDF paths; restoring in another data folder (another computer or user account)
+  // used to leave every PDF link pointing at the old folder.
+  test('F-14 "Restaurar e Sobrescrever" on another computer keeps the stored PDFs readable', async () => {
+    const ws = workspace();
+    const fixture = copyFixturePdf();
+    const env = {
+      E2E_MOCK_OPEN_MULTIPLE_FILES: fixture.pdfPath,
+      E2E_MOCK_SAVE_FILE_PATH: ws.backup,
+      E2E_MOCK_BACKUP_FILE: ws.backup,
+    };
+    try {
+      const oldComputer = ws.dir('pc-antigo');
+      const source = await createLibraryAndBackup(env, oldComputer, 'Projeto do PC Antigo');
+      await source.app.close();
+      fs.rmSync(oldComputer, { recursive: true, force: true });
+
+      const newComputer = ws.dir('pc-novo');
+      const app = await launchApp(env, { userDataDir: newComputer });
+      const window = await getFirstWindow(app);
+      await navigateTo(window, 'Configurações');
+      const exited = app.waitForEvent('close');
+      await window.getByRole('button', { name: 'Restaurar e Sobrescrever' }).click();
+      await exited;
+
+      const relaunched = await launchApp(env, { userDataDir: newComputer });
+      try {
+        await expectProjectWithReadablePdf(await getFirstWindow(relaunched), 'Projeto do PC Antigo');
+      } finally {
+        await relaunched.close();
+      }
+    } finally {
+      fixture.cleanup();
+      ws.cleanup();
+    }
+  });
+
   test('F-13 "Importar e Mesclar" adds the backup projects to another library once', async () => {
     const ws = workspace();
     const fixture = copyFixturePdf();
@@ -101,7 +137,7 @@ test.describe('Full backup restore', () => {
         await navigateTo(window, 'Configurações');
 
         expect(await clickAndReadAlert(window, 'Importar e Mesclar')).toBe(
-          '1 projetos novos foram importados e mesclados com sucesso!',
+          '1 projeto novo foi importado e mesclado com sucesso!',
         );
         await navigateTo(window, 'Projetos');
         await expect(window.getByText('Projeto Local', { exact: true })).toBeVisible();

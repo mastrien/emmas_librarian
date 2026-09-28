@@ -192,7 +192,8 @@ export interface IProjectService {
   // ── Backups ───────────────────────────────────────────────────────
   exportBackup(): Promise<string | null>;
   restoreBackupOverride(): Promise<boolean>;
-  restoreBackupMerge(): Promise<number>;
+  /** How many projects were merged; null when the file dialog was cancelled. */
+  restoreBackupMerge(): Promise<number | null>;
   listAutoBackups(): Promise<AutoBackupEntry[]>;
   restoreAutoBackup(filename: string): Promise<boolean>;
   getAppVersion(): Promise<string>;

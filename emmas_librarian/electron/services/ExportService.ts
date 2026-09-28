@@ -34,15 +34,18 @@ function tabularColumns(categories: ExportCategory[], values: ExportCategoryValu
   return [...BASE_COLUMNS, ...categoryColumns];
 }
 
+// Excel on Windows reads a UTF-8 CSV without a byte order mark as ANSI and garbles accents ("MÃ©todo").
+const UTF8_BOM = '﻿';
+
 function quoteCsv(value: CellValue): string {
   return `"${String(value).replace(/"/g, '""')}"`;
 }
 
 export class ExportService {
   /**
-   * Formats a list of articles as standard CSV content, one column per project category.
+   * Formats a list of articles as standard CSV content (UTF-8 with BOM), one column per project category.
    *
-   * @example exportService.exportToCsv(articles, categories, values).split('\n')[0] // 'id,doi,...,archive_note,Método'
+   * @example exportService.exportToCsv(articles, categories, values).slice(1).split('\n')[0] // 'id,doi,...,Método'
    */
   public exportToCsv(
     articles: Article[],
@@ -53,7 +56,7 @@ export class ExportService {
     const rows = articles.map((a) =>
       columns.map((col) => (col.quoted ? quoteCsv(col.value(a)) : String(col.value(a)))).join(','),
     );
-    return [columns.map((col) => col.header).join(','), ...rows].join('\n');
+    return UTF8_BOM + [columns.map((col) => col.header).join(','), ...rows].join('\n');
   }
 
   /**
@@ -181,8 +184,7 @@ export class ExportService {
       ].join(',');
     });
 
-    const bom = '\uFEFF';
-    return bom + [headers.map((h) => this.escCsv(h)).join(','), ...rows].join('\r\n');
+    return UTF8_BOM + [headers.map((h) => this.escCsv(h)).join(','), ...rows].join('\r\n');
   }
 
   // --- Helper Methods ---

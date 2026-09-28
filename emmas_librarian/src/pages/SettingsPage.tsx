@@ -196,7 +196,7 @@ export const SettingsPage: React.FC = () => {
   const handleRestoreAutoBackup = async (filename: string) => {
     if (
       confirm(
-        `ATENÇÃO: Isso irá SOBRESCREVER todos os dados atuais (projetos, artigos, PDFs, etc) com o conteúdo do backup automático "${filename}". Todos os dados atuais não salvos em backups serão PERDIDOS permanentemente. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?`,
+        `ATENÇÃO: Isso irá SOBRESCREVER o banco de dados atual (projetos, artigos, anotações, diário) com o backup automático "${filename}". Tudo o que foi feito depois dessa data será PERDIDO permanentemente. Os PDFs e documentos guardados não são alterados. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?`,
       )
     ) {
       try {
@@ -244,7 +244,9 @@ export const SettingsPage: React.FC = () => {
   const handleRestoreBackupMerge = async () => {
     try {
       const count = await projectService.restoreBackupMerge();
-      if (count > 0) {
+      if (count === 1) {
+        alert('1 projeto novo foi importado e mesclado com sucesso!');
+      } else if (count !== null && count > 1) {
         alert(`${count} projetos novos foram importados e mesclados com sucesso!`);
       } else if (count === 0) {
         alert(

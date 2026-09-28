@@ -256,7 +256,7 @@ export const projectService: IProjectService = {
 
   restoreBackupOverride: (): Promise<boolean> => safeInvoke(IpcChannel.BACKUP_RESTORE_OVERRIDE),
 
-  restoreBackupMerge: (): Promise<number> => safeInvoke(IpcChannel.BACKUP_RESTORE_MERGE),
+  restoreBackupMerge: (): Promise<number | null> => safeInvoke(IpcChannel.BACKUP_RESTORE_MERGE),
 
   async listAutoBackups(): Promise<{ filename: string; date: string; sizeBytes: number }[]> {
     return safeInvoke(IpcChannel.BACKUP_LIST_AUTO);
