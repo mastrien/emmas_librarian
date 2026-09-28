@@ -9,9 +9,9 @@ describe('droppedFilePath', () => {
   });
 
   it('asks the preload bridge for the path of the file', () => {
-    vi.mocked(window.electronAPI.getPathForFile).mockReturnValueOnce('C:\Downloads\tese.emmapcarc');
+    vi.mocked(window.electronAPI.getPathForFile).mockReturnValueOnce('C:\\Downloads\\tese.emmapcarc');
 
-    expect(droppedFilePath(new File([''], 'tese.emmapcarc'))).toBe('C:\Downloads\tese.emmapcarc');
+    expect(droppedFilePath(new File([''], 'tese.emmapcarc'))).toBe('C:\\Downloads\\tese.emmapcarc');
   });
 
   it('falls back to File.path, then to the bare name, without the bridge', () => {
