@@ -38,6 +38,10 @@ export class E2eMockApiIntegrator extends ApiIntegrator {
   override async searchWoS(): Promise<PagedResult> {
     return { articles: [], requests: 0 };
   }
+
+  override async searchEuropePmc(): Promise<PagedResult> {
+    return { articles: [], requests: 0 };
+  }
 }
 
 /**

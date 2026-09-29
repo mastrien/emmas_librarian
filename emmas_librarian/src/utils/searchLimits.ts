@@ -1,5 +1,5 @@
 /** The bibliographic bases the search can query, by the keys used in query maps and breakdowns. */
-export type SearchBaseId = 'openalex' | 'crossref' | 'scopus' | 'wos';
+export type SearchBaseId = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc';
 
 interface BaseLimit {
   /** The most results the app asks of the base in one search. */
@@ -22,6 +22,8 @@ export const SEARCH_LIMITS: Record<SearchBaseId, BaseLimit> = {
   crossref: { max: 10000, pageSize: 1000, pageIntervalMs: 0 },
   scopus: { max: 5000, pageSize: 200, pageIntervalMs: 0 },
   wos: { max: 2500, pageSize: 50, pageIntervalMs: 1100 },
+  // Europe PMC: 1,000 per page with cursorMark, 10 requests per second, no key.
+  europepmc: { max: 10000, pageSize: 1000, pageIntervalMs: 0 },
 };
 
 /** Pre-filled common limit for a new search. */

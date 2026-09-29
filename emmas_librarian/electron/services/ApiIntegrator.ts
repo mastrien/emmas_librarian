@@ -4,6 +4,7 @@ import { searchOpenAlex } from './searchApis/openAlex';
 import { searchCrossref } from './searchApis/crossref';
 import { searchScopus } from './searchApis/scopus';
 import { searchWoS } from './searchApis/wos';
+import { searchEuropePmc } from './searchApis/europePmc';
 
 /**
  * One entry point per bibliographic base, each returning normalized articles (paged up to the limit,
@@ -29,5 +30,9 @@ export class ApiIntegrator {
 
   searchWoS(queryStr: string, apiKey: string, sortBy: SortBy, limit: number = 50): Promise<PagedResult> {
     return searchWoS(queryStr, apiKey, sortBy, limit);
+  }
+
+  searchEuropePmc(query: string, sortBy: SortBy, limit: number = 50): Promise<PagedResult> {
+    return searchEuropePmc(query, sortBy, limit);
   }
 }

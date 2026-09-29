@@ -1,14 +1,14 @@
 /**
- * Named fake of the four bibliographic APIs for paging tests. It holds `total` results per base and answers
- * each base's own paging protocol from the request URL: OpenAlex and Crossref cursors, the Scopus `start`
- * offset and the WoS page number. `failOn` scripts an HTTP error for one request of a base.
+ * Named fake of the bibliographic APIs for paging tests. It holds `total` results per base and answers
+ * each base's own paging protocol from the request URL: OpenAlex, Crossref and Europe PMC cursors, the
+ * Scopus `start` offset and the WoS page number. `failOn` scripts an HTTP error for one request of a base.
  *
  * Usage:
  *   const api = new FakeSearchApi({ openalex: 250 });
  *   vi.stubGlobal('fetch', api.fetch);
  *   await searchOpenAlex('q', 'relevance', 250); // three requests: cursor *, c100, c200
  */
-type Base = 'openalex' | 'crossref' | 'scopus' | 'wos';
+type Base = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc';
 
 interface ScriptedFailure {
   status: number;
@@ -21,6 +21,7 @@ const HOSTS: Record<string, Base> = {
   'api.crossref.org': 'crossref',
   'api.elsevier.com': 'scopus',
   'api.clarivate.com': 'wos',
+  'www.ebi.ac.uk': 'europepmc',
 };
 
 export class FakeSearchApi {
@@ -56,6 +57,7 @@ export class FakeSearchApi {
         results: items,
         meta: { next_cursor: next, count: total },
       }));
+    if (base === 'europepmc') return this.europePmcPage(url, total);
     if (base === 'crossref')
       return this.cursorPage(url, 'rows', total, (items, next) => ({
         message: { items, 'next-cursor': next, 'total-results': total },
@@ -70,6 +72,16 @@ export class FakeSearchApi {
     const size = Number(url.searchParams.get('limit'));
     const start = (Number(url.searchParams.get('page')) - 1) * size;
     return { metadata: { total }, hits: records(start, size, total, (n) => ({ uid: `WOS:${n}`, title: `WoS ${n}` })) };
+  }
+
+  // Europe PMC answers the last page with the same cursorMark it was asked for.
+  private europePmcPage(url: URL, total: number) {
+    const cursor = url.searchParams.get('cursorMark') ?? '*';
+    const start = cursor === '*' ? 0 : Number(cursor.slice(1));
+    const size = Number(url.searchParams.get('pageSize'));
+    const result = records(start, size, total, (n) => ({ id: String(n), title: `Europe PMC ${n}.`, doi: `10.2/${n}` }));
+    const nextCursorMark = start + size < total ? `c${start + size}` : cursor;
+    return { hitCount: total, nextCursorMark, resultList: { result } };
   }
 
   // Cursor "*" is the start; the next cursor encodes the offset ("c200"), null after the last result.

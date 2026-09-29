@@ -4,6 +4,7 @@ import { searchOpenAlex } from '../openAlex';
 import { searchCrossref } from '../crossref';
 import { searchScopus } from '../scopus';
 import { searchWoS } from '../wos';
+import { searchEuropePmc } from '../europePmc';
 
 const param = (url: URL, name: string) => url.searchParams.get(name);
 
@@ -81,6 +82,42 @@ describe('Crossref paging', () => {
       ['c2000', '1000'],
     ]);
     expect(param(api.urlsOf('crossref')[0], 'query.bibliographic')).toBe('x');
+  });
+});
+
+describe('Europe PMC paging', () => {
+  it('follows cursorMark 1,000 at a time and stops when the base repeats the cursor', async () => {
+    const api = new FakeSearchApi({ europepmc: 1500 });
+    vi.stubGlobal('fetch', api.fetch);
+
+    const { articles, available, requests } = await searchEuropePmc('TITLE:(x)', 'relevance', 5000);
+
+    expect({ count: articles.length, available, requests }).toEqual({ count: 1500, available: 1500, requests: 2 });
+    expect(api.urlsOf('europepmc').map((u) => [param(u, 'cursorMark'), param(u, 'pageSize')])).toEqual([
+      ['*', '1000'],
+      ['c1000', '1000'],
+    ]);
+  });
+
+  it('asks for the core record in JSON, sorted as the user chose', async () => {
+    const api = new FakeSearchApi({ europepmc: 10 });
+    vi.stubGlobal('fetch', api.fetch);
+
+    await searchEuropePmc('TITLE:(x)', 'citations', 10);
+    await searchEuropePmc('TITLE:(x)', 'date', 10);
+    await searchEuropePmc('TITLE:(x)', 'relevance', 10);
+
+    const [cited, recent, relevant] = api.urlsOf('europepmc');
+    expect([param(cited, 'query'), param(cited, 'format'), param(cited, 'resultType')]).toEqual([
+      'TITLE:(x)',
+      'json',
+      'core',
+    ]);
+    expect([param(cited, 'sort'), param(recent, 'sort'), param(relevant, 'sort')]).toEqual([
+      'CITED desc',
+      'P_PDATE_D desc',
+      null,
+    ]);
   });
 });
 

@@ -145,4 +145,20 @@ describe('QueryTranslator', () => {
     expect(res.openalex.isValid).toBe(false);
     expect(res.crossref.isValid).toBe(false);
   });
+
+  it('also translates the tree for Europe PMC', () => {
+    const ast = {
+      type: 'group' as const,
+      logicalOperator: 'AND' as const,
+      children: [
+        { type: 'rule' as const, field: 'title' as const, operator: 'contains' as const, value: 'diabetes' },
+        { type: 'rule' as const, field: 'authors' as const, operator: 'not_contains' as const, value: 'smith' },
+      ],
+    };
+
+    expect(queryTranslator.translate(ast).europepmc).toEqual({
+      query: '(TITLE:(diabetes)) AND NOT AUTH:(smith)',
+      isValid: true,
+    });
+  });
 });

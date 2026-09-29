@@ -8,6 +8,9 @@ import {
   QueryField,
 } from '../types';
 
+import { translateWith } from './queryDialects/shared';
+import { toEuropePmcQuery } from './queryDialects/europePmc';
+
 export class QueryTranslator {
   public translate(ast: QueryASTNode): DatabaseTranslationMap {
     return {
@@ -15,6 +18,7 @@ export class QueryTranslator {
       wos: this.translateToWoS(ast),
       openalex: this.translateToOpenAlex(ast),
       crossref: this.translateToCrossref(ast),
+      europepmc: translateWith(toEuropePmcQuery, ast),
     };
   }
 
