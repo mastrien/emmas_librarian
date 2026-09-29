@@ -4,8 +4,6 @@ import { collectPages, rateLimited, type Page, type PagedResult } from './pagina
 import { logAndRethrow, openAccessFlag, type SortBy } from './shared';
 
 const SCOPUS_URL = 'https://api.elsevier.com/content/search/scopus';
-// 200 per request in the STANDARD view; the `start` offset reaches 5,000 results in total.
-const PAGE_SIZE = 200;
 
 /** The fields of a Scopus search entry that the app reads. */
 export interface ScopusEntry {
@@ -47,7 +45,7 @@ export async function searchScopus(
     collectPages({
       baseName: 'Scopus',
       limit: Math.min(limit, SEARCH_LIMITS.scopus.max),
-      pageSize: PAGE_SIZE,
+      pageSize: SEARCH_LIMITS.scopus.pageSize,
       firstCursor: 0,
       fetchPage: (start, size) => fetchScopusPage({ queryStr, apiKey, sortBy }, Number(start), size),
     }),

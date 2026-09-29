@@ -4,9 +4,6 @@ import { collectPages, rateLimited, type Page, type PagedResult } from './pagina
 import { logAndRethrow, type SortBy } from './shared';
 
 const WOS_URL = 'https://api.clarivate.com/apis/wos-starter/v1/documents';
-// The Starter API serves 50 per page; the free trial allows 1 request per second (and 50 per day).
-const PAGE_SIZE = 50;
-const PAGE_INTERVAL_MS = 1100;
 
 /** The fields of a Web of Science Starter hit that the app reads. */
 export interface WosHit {
@@ -52,10 +49,10 @@ export async function searchWoS(
     collectPages({
       baseName: 'Web of Science',
       limit: Math.min(limit, SEARCH_LIMITS.wos.max),
-      pageSize: PAGE_SIZE,
+      pageSize: SEARCH_LIMITS.wos.pageSize,
       firstCursor: 1,
       fetchPage: (page, size) => fetchWosPage({ queryStr, apiKey, sortBy }, Number(page), size),
-      delayMs: PAGE_INTERVAL_MS,
+      delayMs: SEARCH_LIMITS.wos.pageIntervalMs,
       sleep,
     }),
   );

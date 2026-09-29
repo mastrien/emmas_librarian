@@ -1,17 +1,27 @@
 /** The bibliographic bases the search can query, by the keys used in query maps and breakdowns. */
 export type SearchBaseId = 'openalex' | 'crossref' | 'scopus' | 'wos';
 
+interface BaseLimit {
+  /** The most results the app asks of the base in one search. */
+  max: number;
+  /** Results per request, the largest the API serves. */
+  pageSize: number;
+  /** Pause between requests, for bases with a per-second quota. */
+  pageIntervalMs: number;
+}
+
 /**
- * The most results the app asks of each base in one search. Scopus stops at 5,000 (its `start` offset
- * limit); WoS 2,500 is 50 pages of 50, the whole daily quota of the free trial plan; OpenAlex and Crossref
- * publish no ceiling, so 10,000 keeps a search within their daily budgets (see
+ * How each base is paged. Ceilings: Scopus stops at 5,000 (its `start` offset limit); WoS 2,500 is 50 pages
+ * of 50, the whole daily quota of the free trial plan; OpenAlex and Crossref publish no ceiling, so 10,000
+ * keeps a search within their daily budgets. Page sizes: OpenAlex 100 (200 is deprecated), Crossref 1,000,
+ * Scopus 200 (STANDARD view), WoS 50, one request per second on the free trial (see
  * docs/pesquisas/2026-09-27_paginacao_apis_busca.md).
  */
-export const SEARCH_LIMITS: Record<SearchBaseId, { max: number }> = {
-  openalex: { max: 10000 },
-  crossref: { max: 10000 },
-  scopus: { max: 5000 },
-  wos: { max: 2500 },
+export const SEARCH_LIMITS: Record<SearchBaseId, BaseLimit> = {
+  openalex: { max: 10000, pageSize: 100, pageIntervalMs: 0 },
+  crossref: { max: 10000, pageSize: 1000, pageIntervalMs: 0 },
+  scopus: { max: 5000, pageSize: 200, pageIntervalMs: 0 },
+  wos: { max: 2500, pageSize: 50, pageIntervalMs: 1100 },
 };
 
 /** Pre-filled common limit for a new search. */
@@ -42,6 +52,18 @@ export const isSearchBase = (id: string): id is SearchBaseId => Object.hasOwn(SE
  */
 export function defaultSearchLimits(): SearchLimits {
   return { common: DEFAULT_SEARCH_LIMIT, perBase: {} };
+}
+
+/**
+ * What asking a base for `limit` results costs at most: requests, and the seconds spent waiting between them.
+ *
+ * Usage:
+ *   searchCost('wos', 1000); // { requests: 20, seconds: 21 }
+ */
+export function searchCost(base: SearchBaseId, limit: number): { requests: number; seconds: number } {
+  const { pageSize, pageIntervalMs } = SEARCH_LIMITS[base];
+  const requests = Math.max(1, Math.ceil(limit / pageSize));
+  return { requests, seconds: Math.round(((requests - 1) * pageIntervalMs) / 1000) };
 }
 
 /**

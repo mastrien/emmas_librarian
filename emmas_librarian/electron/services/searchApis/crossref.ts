@@ -4,8 +4,6 @@ import { collectPages, rateLimited, type Page, type PageCursor, type PagedResult
 import { logAndRethrow, type SortBy } from './shared';
 
 const CROSSREF_URL = 'https://api.crossref.org/works';
-// Crossref serves up to 1,000 rows per request; deeper results come through its cursor.
-const PAGE_SIZE = 1000;
 
 /** The fields of a Crossref work that the app reads. */
 export interface CrossrefWork {
@@ -38,7 +36,7 @@ export function searchCrossref(queryStr: string, sortBy: SortBy, limit: number =
     collectPages({
       baseName: 'Crossref',
       limit: Math.min(limit, SEARCH_LIMITS.crossref.max),
-      pageSize: PAGE_SIZE,
+      pageSize: SEARCH_LIMITS.crossref.pageSize,
       firstCursor: '*',
       fetchPage: (cursor, size) => fetchCrossrefPage(queryStr, sortBy, cursor, size),
     }),

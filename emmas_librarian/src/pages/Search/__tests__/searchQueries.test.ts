@@ -84,14 +84,28 @@ describe('restoreSearch', () => {
   });
   const titleRule: QueryASTNode = { type: 'rule', field: 'title', operator: 'contains', value: 'ontologia' };
 
-  it('brings back the builder tree, bases, custom queries, sort and limit of a saved search', () => {
-    const state = { ast: titleRule, selectedDbs: ['openalex', 'scopus'], customQueries: { scopus: 'TITLE(x)' } };
+  it('brings back the builder tree, bases, custom queries, sort and limits of a saved search', () => {
+    const state = {
+      ast: titleRule,
+      selectedDbs: ['openalex', 'wos'],
+      customQueries: { wos: 'TI=x' },
+      limits: { common: 2000, perBase: { wos: 500 } },
+    };
 
     const restored = restoreSearch(
-      historyEntry({ query_state: JSON.stringify(state), sort_by: 'citations', limit_val: 25 }),
+      historyEntry({ query_state: JSON.stringify(state), sort_by: 'citations', limit_val: 2000 }),
     );
 
-    expect(restored).toEqual({ state, sortBy: 'citations', limit: 25, isLegacy: false });
+    expect(restored).toEqual({ state, sortBy: 'citations', limits: state.limits, isLegacy: false });
+  });
+
+  // Before pagination one limit applied to every base: it becomes the common value.
+  it('turns the single limit of a search saved before pagination into the common value', () => {
+    const state = { ast: titleRule, selectedDbs: ['openalex'], customQueries: {} };
+
+    const restored = restoreSearch(historyEntry({ query_state: JSON.stringify(state), limit_val: 25 }));
+
+    expect(restored?.limits).toEqual({ common: 25, perBase: {} });
   });
 
   it('turns each base query of an older search into a custom query, with an empty builder', () => {
@@ -109,7 +123,7 @@ describe('restoreSearch', () => {
         customQueries: { openalex: 'title.search:x', wos: 'TI=x' },
       },
       sortBy: 'date',
-      limit: undefined,
+      limits: undefined,
       isLegacy: true,
     });
   });

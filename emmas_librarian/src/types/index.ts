@@ -1,3 +1,4 @@
+import type { SearchLimits } from '../utils/searchLimits';
 export type AISkill = 'metadata' | 'summary' | 'extraction' | 'embeddings';
 export type AIProvider = 'openai' | 'gemini' | 'anthropic' | 'ollama' | 'ollama_cloud' | 'llama_cpp' | 'local';
 
@@ -397,6 +398,8 @@ export interface SearchQueryState {
   ast: QueryASTNode;
   selectedDbs: string[];
   customQueries: Record<string, string>;
+  /** Common limit and per-base adjustments; missing in searches saved before pagination. */
+  limits?: SearchLimits;
 }
 
 export interface SearchHistoryRecord {

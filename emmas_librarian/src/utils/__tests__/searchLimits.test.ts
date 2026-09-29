@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { defaultSearchLimits, effectiveLimit, limitProblems, validateSearchLimits } from '../searchLimits';
+import { defaultSearchLimits, effectiveLimit, limitProblems, searchCost, validateSearchLimits } from '../searchLimits';
 
 describe('effectiveLimit', () => {
   it('uses the per-base adjustment when there is one, the common value otherwise', () => {
@@ -7,6 +7,14 @@ describe('effectiveLimit', () => {
 
     expect(effectiveLimit(limits, 'wos')).toBe(500);
     expect(effectiveLimit(limits, 'openalex')).toBe(1000);
+  });
+});
+
+describe('searchCost', () => {
+  it('counts one request per page and the pauses the base needs between them', () => {
+    expect(searchCost('openalex', 250)).toEqual({ requests: 3, seconds: 0 });
+    expect(searchCost('crossref', 1000)).toEqual({ requests: 1, seconds: 0 });
+    expect(searchCost('wos', 1000)).toEqual({ requests: 20, seconds: 21 });
   });
 });
 

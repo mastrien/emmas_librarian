@@ -4,8 +4,6 @@ import { collectPages, rateLimited, type Page, type PageCursor, type PagedResult
 import { logAndRethrow, openAccessFlag, type SortBy } from './shared';
 
 const OPENALEX_URL = 'https://api.openalex.org/works';
-// per_page=100 is the documented maximum; 200 still works but is deprecated and "will be removed".
-const PAGE_SIZE = 100;
 
 /** The fields of an OpenAlex work that the app reads. */
 export interface OpenAlexWork {
@@ -51,7 +49,7 @@ export function searchOpenAlex(
     collectPages({
       baseName: 'OpenAlex',
       limit: Math.min(limit, SEARCH_LIMITS.openalex.max),
-      pageSize: PAGE_SIZE,
+      pageSize: SEARCH_LIMITS.openalex.pageSize,
       firstCursor: '*',
       fetchPage: (cursor, size) => fetchOpenAlexPage({ filterStr, sortBy, apiKey }, cursor, size),
     }),
