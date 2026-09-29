@@ -6,6 +6,7 @@ import {
   describeQueryTree,
   restoreSearch,
   usableDatabases,
+  loadSearchApiKeys,
 } from '../searchQueries';
 import type { DatabaseTranslationMap, QueryASTNode, SearchHistoryItem } from '../../../types';
 
@@ -39,9 +40,9 @@ describe('describeQueryTree', () => {
 
 describe('defaultDatabases', () => {
   it.each([
-    [{ scopus: '', wos: '' }, ['openalex', 'crossref']],
-    [{ scopus: 'k', wos: '' }, ['openalex', 'crossref', 'scopus']],
-    [{ scopus: 'k', wos: 'k' }, ['openalex', 'crossref', 'scopus', 'wos']],
+    [{ scopus: '', wos: '', ieee: '' }, ['openalex', 'crossref']],
+    [{ scopus: 'k', wos: '', ieee: '' }, ['openalex', 'crossref', 'scopus']],
+    [{ scopus: 'k', wos: 'k', ieee: 'k' }, ['openalex', 'crossref', 'scopus', 'wos', 'ieee']],
   ])('selects the free bases plus keyed ones with a key (%o)', (keys, expected) => {
     expect(defaultDatabases(keys)).toEqual(expected);
   });
@@ -145,6 +146,19 @@ describe('restoreSearch', () => {
 
 describe('usableDatabases', () => {
   it('keeps free bases and keyed bases that have a key', () => {
-    expect(usableDatabases(['openalex', 'scopus', 'wos'], { scopus: 'k', wos: '' })).toEqual(['openalex', 'scopus']);
+    expect(usableDatabases(['openalex', 'scopus', 'wos', 'ieee'], { scopus: 'k', wos: '', ieee: '' })).toEqual([
+      'openalex',
+      'scopus',
+    ]);
+  });
+});
+
+describe('loadSearchApiKeys', () => {
+  it('reads the key setting of every keyed base, empty when missing', async () => {
+    const stored: Record<string, string> = { scopus_api_key: 's', ieee_api_key: 'i' };
+
+    const keys = await loadSearchApiKeys(async (key) => stored[key] ?? null);
+
+    expect(keys).toEqual({ scopus: 's', wos: '', ieee: 'i' });
   });
 });

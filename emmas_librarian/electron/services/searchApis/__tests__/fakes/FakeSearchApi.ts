@@ -8,12 +8,14 @@
  *   vi.stubGlobal('fetch', api.fetch);
  *   await searchOpenAlex('q', 'relevance', 250); // three requests: cursor *, c100, c200
  */
-type Base = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc' | 'arxiv';
+type Base = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc' | 'arxiv' | 'ieee';
 
 interface ScriptedFailure {
   status: number;
   body?: string;
   retryAfter?: string;
+  /** Extra response headers, e.g. IEEE's X-Error-Detail-Header. */
+  headers?: Record<string, string>;
 }
 
 const HOSTS: Record<string, Base> = {
@@ -23,6 +25,7 @@ const HOSTS: Record<string, Base> = {
   'api.clarivate.com': 'wos',
   'www.ebi.ac.uk': 'europepmc',
   'export.arxiv.org': 'arxiv',
+  'ieeexploreapi.ieee.org': 'ieee',
 };
 
 export class FakeSearchApi {
@@ -60,6 +63,14 @@ export class FakeSearchApi {
         meta: { next_cursor: next, count: total },
       }));
     if (base === 'europepmc') return this.europePmcPage(url, total);
+    if (base === 'ieee') {
+      // start_record counts from 1.
+      const start = Number(url.searchParams.get('start_record')) - 1;
+      const articles = records(start, Number(url.searchParams.get('max_records')), total, (n) => ({
+        title: `IEEE ${n}`,
+      }));
+      return { total_records: total, articles };
+    }
     if (base === 'crossref')
       return this.cursorPage(url, 'rows', total, (items, next) => ({
         message: { items, 'next-cursor': next, 'total-results': total },
@@ -127,8 +138,8 @@ function textResponse(body: string): Response {
   return { ok: true, status: 200, text: async () => body, headers: new Headers() } as unknown as Response;
 }
 
-function errorResponse({ status, body = '{}', retryAfter }: ScriptedFailure): Response {
-  const headers = new Headers(retryAfter ? { 'Retry-After': retryAfter } : {});
+function errorResponse({ status, body = '{}', retryAfter, headers: extra = {} }: ScriptedFailure): Response {
+  const headers = new Headers({ ...extra, ...(retryAfter ? { 'Retry-After': retryAfter } : {}) });
   return {
     ok: false,
     status,

@@ -18,6 +18,8 @@ import {
   usableDatabases,
   type RestoredSearch,
   type SearchApiKeys,
+  isKeyedDatabase,
+  loadSearchApiKeys,
 } from './Search/searchQueries';
 import { DatabaseSelector } from './Search/DatabaseSelector';
 import { QueryTranslationCard } from './Search/QueryTranslationCard';
@@ -72,7 +74,7 @@ export const SearchPage: React.FC = () => {
   const [preview, setPreview] = useState<SearchPreview | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [apiKeys, setApiKeys] = useState<SearchApiKeys>({ scopus: '', wos: '' });
+  const [apiKeys, setApiKeys] = useState<SearchApiKeys>({ scopus: '', wos: '', ieee: '' });
   const [missingKeyDb, setMissingKeyDb] = useState<string | null>(null);
 
   const applyRestoredSearch = (searchId: number, restored: RestoredSearch, keys: SearchApiKeys) => {
@@ -91,11 +93,9 @@ export const SearchPage: React.FC = () => {
       .then(setProject)
       .catch(() => navigate('/'));
     Promise.all([
-      projectService.getSetting('scopus_api_key'),
-      projectService.getSetting('wos_api_key'),
+      loadSearchApiKeys((key) => projectService.getSetting(key)),
       fromSearchId ? projectService.getSearchHistory(parseInt(id)) : Promise.resolve([]),
-    ]).then(([scopus, wos, history]) => {
-      const keys = { scopus: scopus || '', wos: wos || '' };
+    ]).then(([keys, history]) => {
       setApiKeys(keys);
       const entry = history.find((h) => h.id === fromSearchId);
       const restored = entry ? restoreSearch(entry) : null;
@@ -109,7 +109,7 @@ export const SearchPage: React.FC = () => {
   }, [debouncedAst]);
 
   const toggleDb = (dbId: string) => {
-    if ((dbId === 'scopus' || dbId === 'wos') && !apiKeys[dbId]) return setMissingKeyDb(dbId);
+    if (isKeyedDatabase(dbId) && !apiKeys[dbId]) return setMissingKeyDb(dbId);
     setSelectedDbs((prev) => (prev.includes(dbId) ? prev.filter((db) => db !== dbId) : [...prev, dbId]));
   };
 

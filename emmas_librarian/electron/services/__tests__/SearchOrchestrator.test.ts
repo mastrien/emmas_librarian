@@ -16,7 +16,7 @@ vi.mock('electron', () => ({
   },
 }));
 
-type DatabaseName = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc' | 'arxiv';
+type DatabaseName = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc' | 'arxiv' | 'ieee';
 
 /** Stands in for the network: each database returns canned articles and records what it was asked. */
 class FakeApiIntegrator extends ApiIntegrator {
@@ -49,6 +49,10 @@ class FakeApiIntegrator extends ApiIntegrator {
 
   override async searchArxiv(...args: unknown[]): Promise<PagedResult> {
     return this.answer('arxiv', args);
+  }
+
+  override async searchIeee(...args: unknown[]): Promise<PagedResult> {
+    return this.answer('ieee', args);
   }
 
   private answer(database: DatabaseName, args: unknown[]): PagedResult {
@@ -305,6 +309,16 @@ describe('SearchOrchestrator', () => {
       await orchestrator.preview(projectId, { arxiv: 'ti:x' }, limits(1000, { arxiv: 200 }), 'relevance', 'q');
 
       expect(api.calls).toEqual([{ database: 'arxiv', args: ['ti:x', 'relevance', 200] }]);
+    });
+
+    it('passes the stored IEEE Xplore key to its API', async () => {
+      db.setSetting('ieee_api_key', 'ieee-secret-key');
+
+      await orchestrator.preview(projectId, { ieee: '("Abstract":grid)' }, limits(400), 'relevance', 'q');
+
+      expect(api.calls).toEqual([
+        { database: 'ieee', args: ['("Abstract":grid)', 'ieee-secret-key', 'relevance', 400] },
+      ]);
     });
 
     it('passes the stored OpenAlex key, and none when it is not set', async () => {

@@ -6,6 +6,7 @@ import { searchScopus } from '../scopus';
 import { searchWoS } from '../wos';
 import { searchEuropePmc } from '../europePmc';
 import { searchArxiv } from '../arxiv';
+import { searchIeee } from '../ieee';
 
 const param = (url: URL, name: string) => url.searchParams.get(name);
 
@@ -171,6 +172,62 @@ describe('arXiv paging', () => {
     expect(articles).toHaveLength(1500);
     expect(warning).toBeUndefined();
     expect(pauses).toEqual([3000, 3000]);
+  });
+});
+
+describe('IEEE Xplore paging', () => {
+  const noWait = async () => undefined;
+
+  it('asks 200 records at a time from start_record 1, with the key, until the total', async () => {
+    const api = new FakeSearchApi({ ieee: 450 });
+    vi.stubGlobal('fetch', api.fetch);
+
+    const { articles, available, requests } = await searchIeee('("Abstract":grid)', 'chave', 'relevance', 1000, noWait);
+
+    expect({ count: articles.length, available, requests }).toEqual({ count: 450, available: 450, requests: 3 });
+    expect(api.urlsOf('ieee').map((u) => [param(u, 'start_record'), param(u, 'max_records')])).toEqual([
+      ['1', '200'],
+      ['201', '200'],
+      ['401', '200'],
+    ]);
+    expect([param(api.urlsOf('ieee')[0], 'querytext'), param(api.urlsOf('ieee')[0], 'apikey')]).toEqual([
+      '("Abstract":grid)',
+      'chave',
+    ]);
+  });
+
+  it('never goes past its ceiling of 2,000 records (10 calls of the daily quota)', async () => {
+    const api = new FakeSearchApi({ ieee: 9000 });
+    vi.stubGlobal('fetch', api.fetch);
+
+    const { articles, requests } = await searchIeee('q', 'chave', 'relevance', 5000, noWait);
+
+    expect({ count: articles.length, requests }).toEqual({ count: 2000, requests: 10 });
+  });
+
+  // The API sorts only by article number or title; the history records that the order is the base's own.
+  it('says when it cannot sort by date or citations', async () => {
+    const api = new FakeSearchApi({ ieee: 5 });
+    vi.stubGlobal('fetch', api.fetch);
+
+    const { warning } = await searchIeee('q', 'chave', 'date', 5, noWait);
+
+    expect(param(api.urlsOf('ieee')[0], 'sort_field')).toBeNull();
+    expect(warning).toBe('A API da IEEE Xplore não ordena por data; os resultados vieram na ordem padrão da base.');
+  });
+
+  it.each([
+    [{}, 'Chave de API inválida ou expirada'],
+    [{ 'X-Error-Detail-Header': 'Account Over Queries Per Day Limit' }, 'Cota diária da API da IEEE Xplore atingida'],
+  ])('tells a bad key from an exhausted daily quota (%o)', async (headers, message) => {
+    const api = new FakeSearchApi({ ieee: 5 }).failOn('ieee', 0, { status: 403, headers });
+    vi.stubGlobal('fetch', api.fetch);
+
+    await expect(searchIeee('q', 'chave', 'relevance', 5, noWait)).rejects.toThrow(message);
+  });
+
+  it('returns nothing without a key', async () => {
+    expect(await searchIeee('q', '', 'relevance', 5, noWait)).toEqual({ articles: [], requests: 0 });
   });
 });
 

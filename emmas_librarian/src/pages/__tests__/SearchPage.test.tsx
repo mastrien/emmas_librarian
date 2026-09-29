@@ -121,6 +121,17 @@ describe('SearchPage', () => {
     expect(screen.queryByText('Chave de API Necessária')).not.toBeInTheDocument();
   });
 
+  it('asks for the IEEE Xplore key before selecting it, naming the base', async () => {
+    fakeService.getSetting.mockResolvedValue(null);
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: /IEEE Xplore/ }));
+
+    expect(screen.getByText('Chave de API Necessária')).toBeInTheDocument();
+    expect(screen.getByText('IEEE Xplore', { selector: 'strong' })).toBeInTheDocument();
+  });
+
   it('navigates to settings from key alert', async () => {
     fakeService.getSetting.mockResolvedValue(null);
     renderPage();

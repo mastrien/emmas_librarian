@@ -6,6 +6,7 @@ import { searchScopus } from './searchApis/scopus';
 import { searchWoS } from './searchApis/wos';
 import { searchEuropePmc } from './searchApis/europePmc';
 import { searchArxiv } from './searchApis/arxiv';
+import { searchIeee } from './searchApis/ieee';
 
 /**
  * One entry point per bibliographic base, each returning normalized articles (paged up to the limit,
@@ -39,5 +40,9 @@ export class ApiIntegrator {
 
   searchArxiv(query: string, sortBy: SortBy, limit: number = 50): Promise<PagedResult> {
     return searchArxiv(query, sortBy, limit);
+  }
+
+  searchIeee(query: string, apiKey: string, sortBy: SortBy, limit: number = 50): Promise<PagedResult> {
+    return searchIeee(query, apiKey, sortBy, limit);
   }
 }
