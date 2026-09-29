@@ -21,6 +21,7 @@ import {
 import { parseIpcError } from '../utils/AppError';
 import type { IProjectService } from './ProjectServiceInterface';
 import type { SearchLimits } from '../utils/searchLimits';
+import type { OpenAccessOutcome } from '../types';
 
 // Highlights are stored with a numeric id and JSON-encoded position; the UI works with string ids and objects.
 interface HighlightRow {
@@ -191,6 +192,9 @@ export const projectService: IProjectService = {
   async unlinkPdf(articleId: number): Promise<void> {
     await safeInvoke(IpcChannel.PDF_UNLINK, articleId);
   },
+
+  fetchOpenAccessPdf: (articleId: number): Promise<OpenAccessOutcome> =>
+    safeInvoke(IpcChannel.PDF_FETCH_OPEN_ACCESS, articleId),
 
   createManualArticle: (projectId: number, data: Partial<Article>, sourceFilePath?: string): Promise<number> =>
     safeInvoke(IpcChannel.ARTICLES_CREATE_MANUAL, projectId, data, sourceFilePath),

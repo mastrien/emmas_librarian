@@ -182,6 +182,12 @@ const routes: RouteCase[] = [
   { method: 'uploadPdf', call: () => api.uploadPdf(2, '/a.pdf'), channel: IpcChannel.PDF_UPLOAD, args: [2, '/a.pdf'] },
   { method: 'unlinkPdf', call: () => api.unlinkPdf(2), channel: IpcChannel.PDF_UNLINK, args: [2] },
   {
+    method: 'fetchOpenAccessPdf',
+    call: () => api.fetchOpenAccessPdf(4),
+    channel: IpcChannel.PDF_FETCH_OPEN_ACCESS,
+    args: [4],
+  },
+  {
     method: 'createManualArticle',
     call: () => api.createManualArticle(1, { title: 'T' }, '/a.pdf'),
     channel: IpcChannel.ARTICLES_CREATE_MANUAL,
