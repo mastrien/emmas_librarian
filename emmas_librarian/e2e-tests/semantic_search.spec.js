@@ -16,9 +16,14 @@ async function chooseLimits(window) {
   await expect(window.getByRole('alert')).toContainText('OpenAlex aceita até 10.000 resultados');
   await expect(searchButton).toBeDisabled();
   await common.fill('1500');
+  // A base added with pagination: its translation appears and it takes the common limit.
+  await window.getByRole('button', { name: 'Europe PMC' }).click();
+  await expect(window.getByText('(aprendizado de maquina)', { exact: true })).toBeVisible();
   await window.getByText('Ajustar por base').click();
   await window.getByLabel('Crossref', { exact: true }).fill('300');
-  await expect(window.getByLabel('Resultados pedidos a cada base')).toHaveText('OpenAlex 1.500 · Crossref 300');
+  await expect(window.getByLabel('Resultados pedidos a cada base')).toHaveText(
+    'OpenAlex 1.500 · Crossref 300 · Europe PMC 1.500',
+  );
   await expect(searchButton).toBeEnabled();
 }
 
@@ -53,6 +58,7 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
     await expect(resultRow).toHaveCount(0);
 
     await runSearch(window, 'aprendizado de maquina', () => chooseLimits(window));
+    await expect(review.getByRole('region', { name: 'Resultados por base' })).toContainText('Europe PMC');
     await review.getByRole('button', { name: /Salvar .*no projeto/ }).click();
 
     await expect(resultRow).toBeVisible({ timeout: 10000 });

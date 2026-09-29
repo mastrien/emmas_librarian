@@ -16,6 +16,11 @@ const group = (logicalOperator: 'AND' | 'OR', ...children: QueryASTNode[]): Quer
 });
 
 describe('toEuropePmcQuery', () => {
+  // The builder's root is a group; with one rule, the query shown on the search page stays clean.
+  it('translates a group with a single term without extra parentheses', () => {
+    expect(toEuropePmcQuery(group('AND', rule('title', 'contains', 'diabetes')))).toBe('TITLE:(diabetes)');
+  });
+
   it('maps fields and operators: words, phrase, exclusion', () => {
     expect(toEuropePmcQuery(rule('title', 'contains', 'machine learning'))).toBe('TITLE:(machine learning)');
     expect(toEuropePmcQuery(rule('abstract', 'exact', 'deep learning'))).toBe('ABSTRACT:"deep learning"');

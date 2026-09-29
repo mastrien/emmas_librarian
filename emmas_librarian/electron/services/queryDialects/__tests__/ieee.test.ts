@@ -16,6 +16,11 @@ const group = (logicalOperator: 'AND' | 'OR', ...children: QueryASTNode[]): Quer
 });
 
 describe('toIeeeQuery', () => {
+  // The builder's root is a group; with one rule, the query shown on the search page stays clean.
+  it('translates a group with a single term without extra parentheses', () => {
+    expect(toIeeeQuery(group('AND', rule('title', 'contains', 'diabetes')))).toBe('("Document Title":diabetes)');
+  });
+
   it('maps fields to IEEE data fields, requires every word of "contém" and quotes "exato"', () => {
     expect(toIeeeQuery(rule('title', 'exact', 'smart grid'))).toBe('("Document Title":"smart grid")');
     expect(toIeeeQuery(rule('abstract', 'contains', 'power flow'))).toBe('(("Abstract":power) AND ("Abstract":flow))');

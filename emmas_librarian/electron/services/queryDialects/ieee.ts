@@ -33,6 +33,9 @@ function andGroup(children: QueryASTNode[]): string {
 
 function groupQuery(group: QueryGroupNode): string {
   if (group.children.length === 0) throw new Error('IEEE Xplore: o grupo está vazio.');
+  // One term needs no parentheses: the builder's root group often holds a single rule.
+  const [only] = group.children;
+  if (group.children.length === 1 && !isExclusion(only)) return toIeeeQuery(only);
   if (group.logicalOperator === 'AND') return andGroup(group.children);
   if (group.children.some(isExclusion)) {
     throw new Error('IEEE Xplore não aceita "não contém" dentro de um grupo OU. Use o termo num grupo E.');

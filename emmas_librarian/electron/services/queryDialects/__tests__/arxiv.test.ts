@@ -16,6 +16,11 @@ const group = (logicalOperator: 'AND' | 'OR', ...children: QueryASTNode[]): Quer
 });
 
 describe('toArxivQuery', () => {
+  // The builder's root is a group; with one rule, the query shown on the search page stays clean.
+  it('translates a group with a single term without extra parentheses', () => {
+    expect(toArxivQuery(group('AND', rule('title', 'contains', 'diabetes')))).toBe('ti:diabetes');
+  });
+
   it('maps fields, requires every word of "contém" and quotes "exato"', () => {
     expect(toArxivQuery(rule('title', 'contains', 'machine learning'))).toBe('(ti:machine AND ti:learning)');
     expect(toArxivQuery(rule('abstract', 'exact', 'insulin resistance'))).toBe('abs:"insulin resistance"');
