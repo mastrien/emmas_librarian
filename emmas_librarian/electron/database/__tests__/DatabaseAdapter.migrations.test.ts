@@ -308,3 +308,21 @@ describe('search_history.query_state migration', () => {
     expect(rows).toEqual([{ unified_query: 'q', query_state: null }]);
   });
 });
+
+describe('search_history.unique_results migration', () => {
+  it('adds the column to a library created before it existed, leaving old searches without the count', () => {
+    seed((raw) => {
+      raw.prepare("INSERT INTO projects (id, name) VALUES (1, 'P')").run();
+      raw
+        .prepare(
+          "INSERT INTO search_history (project_id, unified_query, translated_queries, results_breakdown) VALUES (1, 'q', '{}', '{}')",
+        )
+        .run();
+      raw.exec('ALTER TABLE search_history DROP COLUMN unique_results');
+    });
+
+    const rows = reopen((raw) => raw.prepare('SELECT unified_query, unique_results FROM search_history').all());
+
+    expect(rows).toEqual([{ unified_query: 'q', unique_results: null }]);
+  });
+});

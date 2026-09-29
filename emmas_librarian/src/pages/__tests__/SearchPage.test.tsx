@@ -401,7 +401,7 @@ describe('SearchPage', () => {
       expect(fakeService.previewSearch).toHaveBeenCalledWith(
         1,
         { openalex: 'openalex-query', crossref: 'custom-crossref', scopus: 'scopus-query' },
-        50,
+        { common: 50, perBase: {} },
         'citations',
         '(Todos contém "")',
         expect.any(String),
@@ -516,7 +516,7 @@ describe('SearchPage', () => {
       expect(fakeService.previewSearch).toHaveBeenCalledWith(
         1,
         { openalex: 'CUSTOM-OPENALEX' },
-        25,
+        { common: 25, perBase: {} },
         'date',
         'Título contém "ontologia"',
         expect.any(String),

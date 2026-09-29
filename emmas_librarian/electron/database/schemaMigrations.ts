@@ -43,6 +43,8 @@ const COLUMN_MIGRATIONS = [
   'ALTER TABLE search_history ADD COLUMN limit_val INTEGER',
   // Query builder state (JSON), so a past search can be reopened in the builder.
   'ALTER TABLE search_history ADD COLUMN query_state TEXT',
+  // Distinct results across the bases before saving: the deduplication step a review reports.
+  'ALTER TABLE search_history ADD COLUMN unique_results INTEGER',
   'ALTER TABLE project_documents ADD COLUMN position INTEGER DEFAULT 0',
   'ALTER TABLE project_documents ADD COLUMN category TEXT DEFAULT NULL',
 ];

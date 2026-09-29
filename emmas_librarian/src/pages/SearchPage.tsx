@@ -126,7 +126,14 @@ export const SearchPage: React.FC = () => {
     try {
       const queryState = JSON.stringify({ ast, selectedDbs, customQueries });
       setPreview(
-        await projectService.previewSearch(projectId, queries, limit, sortBy, describeQueryTree(ast), queryState),
+        await projectService.previewSearch(
+          projectId,
+          queries,
+          { common: limit, perBase: {} },
+          sortBy,
+          describeQueryTree(ast),
+          queryState,
+        ),
       );
     } catch (err: unknown) {
       console.error('Search error:', err);

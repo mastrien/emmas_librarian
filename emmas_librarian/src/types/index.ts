@@ -318,8 +318,21 @@ export interface TrashItem {
   deleted_at: string;
 }
 
-/** Per base: how many results came, the error when the base failed, or a warning when it stopped early. */
-export type SearchBreakdown = Record<string, { count: number; error?: string; warning?: string }>;
+/**
+ * What one base did in a search, as the history records it: results received (`count`), the limit asked
+ * (`requested`), how many the base had for the query (`available`, when it says), requests made, and why it
+ * failed (`error`) or stopped early (`warning`). Searches made before pagination only have count/error.
+ */
+export interface SearchBaseOutcome {
+  count: number;
+  requested?: number;
+  available?: number;
+  requests?: number;
+  error?: string;
+  warning?: string;
+}
+
+export type SearchBreakdown = Record<string, SearchBaseOutcome>;
 
 /** Metadata of a search result beyond the list columns, for the details dialog. */
 export type SearchPreviewDetails = Pick<
@@ -371,9 +384,12 @@ export interface SearchHistoryItem {
   results_breakdown: string;
   created_at: string;
   sort_by?: string;
+  /** The common limit; per-base adjustments are in query_state.limits and each base's `requested`. */
   limit_val?: number;
   /** JSON of SearchQueryState; null for searches made before it was stored, imports and manual additions. */
   query_state?: string | null;
+  /** Distinct results across the bases before saving (null before it was recorded). */
+  unique_results?: number | null;
 }
 
 /** What the search page needs to rebuild a past search in the query builder. */

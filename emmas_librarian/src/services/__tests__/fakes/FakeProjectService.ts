@@ -1,3 +1,4 @@
+import type { SearchLimits } from '../../../utils/searchLimits';
 import type {
   SearchHistoryItem,
   SearchPreview,
@@ -80,7 +81,7 @@ export class FakeProjectService implements IProjectService {
     async (
       _projectId: number,
       _queryMap: Record<string, string>,
-      _limit: number,
+      _limits: SearchLimits,
       _sortBy: string,
       _unifiedQuery: string,
       _queryState?: string,

@@ -82,9 +82,9 @@ const routes: RouteCase[] = [
   { method: 'revertSearch', call: () => api.revertSearch(9), channel: IpcChannel.SEARCH_REVERT, args: [9] },
   {
     method: 'previewSearch',
-    call: () => api.previewSearch(1, { a: 'q' }, 50, 'date', 'uq', '{"ast":{}}'),
+    call: () => api.previewSearch(1, { a: 'q' }, { common: 50, perBase: { wos: 20 } }, 'date', 'uq', '{"ast":{}}'),
     channel: IpcChannel.SEARCH_PREVIEW,
-    args: [1, { a: 'q' }, 50, 'date', 'uq', '{"ast":{}}'],
+    args: [1, { a: 'q' }, { common: 50, perBase: { wos: 20 } }, 'date', 'uq', '{"ast":{}}'],
   },
   {
     method: 'saveSearchPreview',

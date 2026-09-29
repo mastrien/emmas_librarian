@@ -20,6 +20,7 @@ import {
 } from '../types';
 import { parseIpcError } from '../utils/AppError';
 import type { IProjectService } from './ProjectServiceInterface';
+import type { SearchLimits } from '../utils/searchLimits';
 
 // Highlights are stored with a numeric id and JSON-encoded position; the UI works with string ids and objects.
 interface HighlightRow {
@@ -70,12 +71,12 @@ export const projectService: IProjectService = {
   previewSearch: (
     projectId: number,
     queryMap: Record<string, string>,
-    limit: number,
+    limits: SearchLimits,
     sortBy: string,
     unifiedQuery: string,
     queryState?: string,
   ): Promise<SearchPreview> =>
-    safeInvoke(IpcChannel.SEARCH_PREVIEW, projectId, queryMap, limit, sortBy, unifiedQuery, queryState),
+    safeInvoke(IpcChannel.SEARCH_PREVIEW, projectId, queryMap, limits, sortBy, unifiedQuery, queryState),
 
   saveSearchPreview: (previewId: string): Promise<SavedSearchSummary> =>
     safeInvoke(IpcChannel.SEARCH_SAVE_PREVIEW, previewId),
