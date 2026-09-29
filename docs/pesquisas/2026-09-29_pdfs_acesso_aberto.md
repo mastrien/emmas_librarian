@@ -1,0 +1,65 @@
+# Download de PDFs de acesso aberto
+
+Data: 2026-09-29. Tudo abaixo foi testado com requisições reais, pedindo só os primeiros bytes e sem salvar nada.
+
+## O problema: o link da editora quase nunca entrega o PDF a um programa
+
+| Link testado | Resposta |
+|---|---|
+| NEJM (`nejm.org/doi/pdf/...`), apontado pela OpenAlex como PDF aberto | Página "Just a moment..." (Cloudflare), não PDF |
+| Diabetes Care (`diabetesjournals.org/.../*.pdf`) | A mesma página do Cloudflare |
+| PubMed Central direto (`pmc.ncbi.nlm.nih.gov/articles/PMC.../pdf/...`) | Página HTML, não PDF |
+| Europe PMC (`europepmc.org/articles/PMC...?pdf=render`) | Página do Cloudflare |
+| Repositório institucional (UCL Discovery) | PDF (`%PDF-1.3`) |
+| arXiv (`arxiv.org/pdf/<id>`) | PDF (`%PDF-1.7`) |
+| **Bucket do PMC na AWS** (`pmc-oa-opendata.s3.amazonaws.com/PMC<id>.<versão>/PMC<id>.<versão>.pdf`) | PDF (`%PDF-1.7`, `%PDF-1.3`) |
+
+Consequências:
+
+- Conferir sempre os bytes `%PDF-` antes de salvar. O `content-type` e a extensão `.pdf` não bastam.
+- Tentar as cópias em repositório antes do link da editora.
+- Quando a única cópia aberta está atrás de um bloqueio, dizer isso e oferecer a página para baixar no
+  navegador, em vez de salvar HTML como se fosse PDF.
+
+## O serviço antigo do PMC foi aposentado
+
+O `oa.fcgi` (PMC OA Web Service) responde 404 desde o fim de agosto de 2026. O substituto é o
+[PMC Cloud Service](https://pmc.ncbi.nlm.nih.gov/tools/cloud/): um bucket público na AWS com os arquivos de cada
+artigo do subconjunto de acesso aberto (JSON, XML, texto e PDF). Fonte:
+[NCBI Insights, 2026-02-12](https://ncbiinsights.ncbi.nlm.nih.gov/2026/02/12/pmc-article-dataset-distribution-services/).
+
+- Organização: `PMC<id>.<versão>/PMC<id>.<versão>.pdf`.
+- Versão: listar `?list-type=2&prefix=PMC<id>.&delimiter=/` e usar a maior.
+- Nem todo artigo com PMCID está no bucket: só os do subconjunto de acesso aberto.
+
+## Onde achar as cópias: uma consulta à OpenAlex por DOI
+
+`GET https://api.openalex.org/works/doi:<doi>?select=ids,locations,open_access` traz:
+
+- `locations[]`, cada uma com `is_oa`, `pdf_url`, `landing_page_url` e `source.type` (`journal` ou
+  `repository`);
+- o PMCID em `ids.pmcid` ou, quando falta ali, no `landing_page_url` da cópia no PubMed Central
+  (`/pmc/articles/3006051` → `PMC3006051`).
+
+O Unpaywall hoje é construído sobre a OpenAlex e pede o e-mail do usuário a cada consulta. Por isso fica de fora:
+a OpenAlex já traz as mesmas cópias.
+
+## Ordem de tentativa
+
+1. arXiv, quando o DOI é do arXiv (`10.48550/arXiv.<id>`) ou há uma cópia no arXiv: `arxiv.org/pdf/<id>`.
+2. Bucket do PMC, quando há PMCID.
+3. Cópias em repositório (`source.type = repository`) com `pdf_url`.
+4. Link da editora (`journal`) com `pdf_url`, por último.
+
+A primeira que entregar `%PDF-` é salva pela biblioteca de PDFs (deduplicada por hash) e vinculada ao artigo.
+
+## Resultado por artigo
+
+| Resultado | Quando |
+|---|---|
+| Baixado | Uma cópia entregou o PDF (e diz de onde veio). |
+| Bloqueado | Existem cópias abertas, mas nenhuma entregou PDF; oferece abrir a página no navegador. |
+| Sem cópia aberta | A OpenAlex não conhece cópia aberta. |
+| Sem DOI | Não há como procurar (a não ser um preprint do arXiv, que tem identificador próprio). |
+| Já tem PDF | Nada a fazer. |
+| Falha | Erro de rede ou da OpenAlex. |
