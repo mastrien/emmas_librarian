@@ -37,7 +37,7 @@ export default defineConfig({
       thresholds: {
         lines: 92,
         branches: 91,
-        functions: 88,
+        functions: 89,
         statements: 92,
         'electron/**/*': {
           lines: 95,

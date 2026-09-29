@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ApiIntegrator } from '../ApiIntegrator';
+import { FakeSearchApi } from '../searchApis/__tests__/fakes/FakeSearchApi';
 import { normalizeOpenAlex } from '../searchApis/openAlex';
 import { normalizeCrossref } from '../searchApis/crossref';
 import { normalizeScopus } from '../searchApis/scopus';
@@ -673,5 +674,29 @@ describe('ApiIntegrator', () => {
         'Erro 400 no Web of Science - Not a JSON text',
       );
     });
+  });
+});
+
+describe('ApiIntegrator bases added with pagination', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('sends Europe PMC, arXiv and IEEE Xplore searches to their own APIs', async () => {
+    const fake = new FakeSearchApi({ europepmc: 3, arxiv: 2, ieee: 1 });
+    vi.stubGlobal('fetch', fake.fetch);
+    const api = new ApiIntegrator();
+
+    const [europePmc, arxiv, ieee] = await Promise.all([
+      api.searchEuropePmc('TITLE:(x)', 'relevance', 10),
+      api.searchArxiv('ti:x', 'date', 10),
+      api.searchIeee('("Abstract":x)', 'chave', 'relevance', 10),
+    ]);
+
+    expect([europePmc.articles.length, arxiv.articles.length, ieee.articles.length]).toEqual([3, 2, 1]);
+    expect([fake.urlsOf('europepmc'), fake.urlsOf('arxiv'), fake.urlsOf('ieee')].map((u) => u.length)).toEqual([
+      1, 1, 1,
+    ]);
   });
 });

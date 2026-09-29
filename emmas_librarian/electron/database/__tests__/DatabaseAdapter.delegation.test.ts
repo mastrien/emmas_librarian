@@ -9,6 +9,7 @@ type RepoName = 'projectRepo' | 'articleRepo' | 'articleCategoryRepo' | 'pdfLibr
 /** [adapter method, repository it must forward to, arguments]. */
 const DELEGATIONS: [keyof DatabaseAdapter, RepoName, unknown[]][] = [
   ['updateProjectWritingPad', 'projectRepo', [1, 'pad']],
+  ['updateArticlesStatus', 'articleRepo', [[1, 2], 'archived', 'fora do escopo']],
   ['getProjectWritingPad', 'projectRepo', [1]],
   ['updateProject', 'projectRepo', [1, 'Nome']],
   ['getArticleCategories', 'articleCategoryRepo', [2]],

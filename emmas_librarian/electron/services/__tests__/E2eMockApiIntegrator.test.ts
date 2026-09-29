@@ -24,6 +24,20 @@ describe('E2eMockApiIntegrator', () => {
   });
 });
 
+describe('E2eMockApiIntegrator bases added with pagination', () => {
+  it('finds nothing on Europe PMC, arXiv and IEEE Xplore, so E2E searches never reach them', async () => {
+    const api = new E2eMockApiIntegrator();
+
+    const results = await Promise.all([api.searchEuropePmc(), api.searchArxiv(), api.searchIeee()]);
+
+    expect(results).toEqual([
+      { articles: [], requests: 0 },
+      { articles: [], requests: 0 },
+      { articles: [], requests: 0 },
+    ]);
+  });
+});
+
 describe('apiIntegratorFor', () => {
   it('uses the canned integrator only when E2E_MOCK_SEARCH is exactly "true"', () => {
     expect(apiIntegratorFor({ E2E_MOCK_SEARCH: 'true' })).toBeInstanceOf(E2eMockApiIntegrator);
