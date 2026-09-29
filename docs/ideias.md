@@ -55,3 +55,11 @@ Pode ser lento.
 
 Aberto em 2026-09-28. O CSV exportado usa vírgula, mas o Excel em português espera `;` ao abrir o arquivo com
 duplo clique. Decisão de produto: trocar, oferecer as duas opções ou deixar como está (já tem BOM para os acentos).
+
+## Mais fontes
+
+Testar viabilidade de permitir o usuário configurar fontes customizadas na plataforma dentre um grupo pré-definido de fontes (que deve incluir Lexend e uma fonte serifada)
+
+## Loading customizado
+
+Desenvolver um loading customizado que lembre a logo do sistema, similar a um giroscópio que gira enquanto o loading está em andamento. Testar vários com testes A/B avaliando design e desempenho da animação (ou então fazer de outra forma que não uma animação, se for mais eficiente)
