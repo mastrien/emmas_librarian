@@ -15,6 +15,7 @@ export const SEARCH_DATABASES = [
   { id: 'scopus', label: 'Scopus' },
   { id: 'wos', label: 'Web of Science' },
   { id: 'europepmc', label: 'Europe PMC' },
+  { id: 'arxiv', label: 'arXiv' },
 ];
 
 /** The builder's starting tree: one empty "Todos contém" rule. */

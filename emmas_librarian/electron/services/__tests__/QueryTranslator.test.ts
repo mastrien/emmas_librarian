@@ -146,7 +146,7 @@ describe('QueryTranslator', () => {
     expect(res.crossref.isValid).toBe(false);
   });
 
-  it('also translates the tree for Europe PMC', () => {
+  it('also translates the tree for Europe PMC and arXiv', () => {
     const ast = {
       type: 'group' as const,
       logicalOperator: 'AND' as const,
@@ -160,5 +160,6 @@ describe('QueryTranslator', () => {
       query: '(TITLE:(diabetes)) AND NOT AUTH:(smith)',
       isValid: true,
     });
+    expect(queryTranslator.translate(ast).arxiv).toEqual({ query: '(ti:diabetes) ANDNOT au:smith', isValid: true });
   });
 });

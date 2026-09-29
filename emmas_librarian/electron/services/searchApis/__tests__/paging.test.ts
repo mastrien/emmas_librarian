@@ -5,6 +5,7 @@ import { searchCrossref } from '../crossref';
 import { searchScopus } from '../scopus';
 import { searchWoS } from '../wos';
 import { searchEuropePmc } from '../europePmc';
+import { searchArxiv } from '../arxiv';
 
 const param = (url: URL, name: string) => url.searchParams.get(name);
 
@@ -118,6 +119,58 @@ describe('Europe PMC paging', () => {
       'P_PDATE_D desc',
       null,
     ]);
+  });
+});
+
+describe('arXiv paging', () => {
+  const pauses: number[] = [];
+  const sleep = async (ms: number) => {
+    pauses.push(ms);
+  };
+
+  beforeEach(() => {
+    pauses.length = 0;
+  });
+
+  it('moves the start offset 1,000 at a time, one request every 3 s, and reads the Atom totals', async () => {
+    const api = new FakeSearchApi({ arxiv: 2500 });
+    vi.stubGlobal('fetch', api.fetch);
+
+    const { articles, available, requests } = await searchArxiv('ti:x', 'date', 5000, sleep);
+
+    expect({ count: articles.length, available, requests }).toEqual({ count: 2500, available: 2500, requests: 3 });
+    expect(api.urlsOf('arxiv').map((u) => [param(u, 'start'), param(u, 'max_results')])).toEqual([
+      ['0', '1000'],
+      ['1000', '1000'],
+      ['2000', '1000'],
+    ]);
+    expect(pauses).toEqual([3000, 3000]);
+    expect([param(api.urlsOf('arxiv')[0], 'sortBy'), param(api.urlsOf('arxiv')[0], 'sortOrder')]).toEqual([
+      'submittedDate',
+      'descending',
+    ]);
+  });
+
+  // arXiv has no citation counts: the search runs by relevance and the history records why.
+  it('falls back to relevance for "Mais citados" and says so in the warning', async () => {
+    const api = new FakeSearchApi({ arxiv: 5 });
+    vi.stubGlobal('fetch', api.fetch);
+
+    const { warning } = await searchArxiv('ti:x', 'citations', 5, sleep);
+
+    expect(param(api.urlsOf('arxiv')[0], 'sortBy')).toBe('relevance');
+    expect(warning).toBe('O arXiv não ordena por citações; os resultados vieram por relevância.');
+  });
+
+  it('waits and retries once when arXiv says the requests came too fast', async () => {
+    const api = new FakeSearchApi({ arxiv: 1500 }).failOn('arxiv', 1, { status: 429, retryAfter: '3' });
+    vi.stubGlobal('fetch', api.fetch);
+
+    const { articles, warning } = await searchArxiv('ti:x', 'relevance', 1500, sleep);
+
+    expect(articles).toHaveLength(1500);
+    expect(warning).toBeUndefined();
+    expect(pauses).toEqual([3000, 3000]);
   });
 });
 

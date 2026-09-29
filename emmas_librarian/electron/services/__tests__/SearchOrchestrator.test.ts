@@ -16,7 +16,7 @@ vi.mock('electron', () => ({
   },
 }));
 
-type DatabaseName = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc';
+type DatabaseName = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc' | 'arxiv';
 
 /** Stands in for the network: each database returns canned articles and records what it was asked. */
 class FakeApiIntegrator extends ApiIntegrator {
@@ -45,6 +45,10 @@ class FakeApiIntegrator extends ApiIntegrator {
 
   override async searchEuropePmc(...args: unknown[]): Promise<PagedResult> {
     return this.answer('europepmc', args);
+  }
+
+  override async searchArxiv(...args: unknown[]): Promise<PagedResult> {
+    return this.answer('arxiv', args);
   }
 
   private answer(database: DatabaseName, args: unknown[]): PagedResult {
@@ -295,6 +299,12 @@ describe('SearchOrchestrator', () => {
 
       expect(api.calls.find((c) => c.database === 'europepmc')?.args).toEqual(['TITLE:(exercise)', 'date', 300]);
       expect(preview.results.map((r) => r.sourceDatabases)).toEqual([['OpenAlex', 'Europe PMC']]);
+    });
+
+    it('searches arXiv with its query, the sort and its limit', async () => {
+      await orchestrator.preview(projectId, { arxiv: 'ti:x' }, limits(1000, { arxiv: 200 }), 'relevance', 'q');
+
+      expect(api.calls).toEqual([{ database: 'arxiv', args: ['ti:x', 'relevance', 200] }]);
     });
 
     it('passes the stored OpenAlex key, and none when it is not set', async () => {

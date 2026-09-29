@@ -10,6 +10,7 @@ import {
 
 import { translateWith } from './queryDialects/shared';
 import { toEuropePmcQuery } from './queryDialects/europePmc';
+import { toArxivQuery } from './queryDialects/arxiv';
 
 export class QueryTranslator {
   public translate(ast: QueryASTNode): DatabaseTranslationMap {
@@ -19,6 +20,7 @@ export class QueryTranslator {
       openalex: this.translateToOpenAlex(ast),
       crossref: this.translateToCrossref(ast),
       europepmc: translateWith(toEuropePmcQuery, ast),
+      arxiv: translateWith(toArxivQuery, ast),
     };
   }
 

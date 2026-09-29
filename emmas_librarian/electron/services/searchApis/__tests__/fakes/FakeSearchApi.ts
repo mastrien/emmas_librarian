@@ -1,14 +1,14 @@
 /**
  * Named fake of the bibliographic APIs for paging tests. It holds `total` results per base and answers
  * each base's own paging protocol from the request URL: OpenAlex, Crossref and Europe PMC cursors, the
- * Scopus `start` offset and the WoS page number. `failOn` scripts an HTTP error for one request of a base.
+ * Scopus and arXiv `start` offsets and the WoS page number. arXiv answers in Atom XML, the others in JSON. `failOn` scripts an HTTP error for one request of a base.
  *
  * Usage:
  *   const api = new FakeSearchApi({ openalex: 250 });
  *   vi.stubGlobal('fetch', api.fetch);
  *   await searchOpenAlex('q', 'relevance', 250); // three requests: cursor *, c100, c200
  */
-type Base = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc';
+type Base = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc' | 'arxiv';
 
 interface ScriptedFailure {
   status: number;
@@ -22,6 +22,7 @@ const HOSTS: Record<string, Base> = {
   'api.elsevier.com': 'scopus',
   'api.clarivate.com': 'wos',
   'www.ebi.ac.uk': 'europepmc',
+  'export.arxiv.org': 'arxiv',
 };
 
 export class FakeSearchApi {
@@ -47,6 +48,7 @@ export class FakeSearchApi {
     this.requests.push({ base, url, headers: init?.headers ?? {} });
     const failure = this.failures.get(`${base}:${index}`);
     if (failure) return errorResponse(failure);
+    if (base === 'arxiv') return textResponse(this.arxivFeed(url));
     return jsonResponse(this.page(base, url));
   };
 
@@ -72,6 +74,20 @@ export class FakeSearchApi {
     const size = Number(url.searchParams.get('limit'));
     const start = (Number(url.searchParams.get('page')) - 1) * size;
     return { metadata: { total }, hits: records(start, size, total, (n) => ({ uid: `WOS:${n}`, title: `WoS ${n}` })) };
+  }
+
+  private arxivFeed(url: URL): string {
+    const total = this.totals.arxiv ?? 0;
+    const start = Number(url.searchParams.get('start'));
+    const entries = records(
+      start,
+      Number(url.searchParams.get('max_results')),
+      total,
+      (n) =>
+        `<entry><id>http://arxiv.org/abs/2601.${String(n).padStart(5, '0')}v1</id><title>arXiv ${n}</title>` +
+        `<summary>S</summary><published>2026-01-01T00:00:00Z</published><author><name>A ${n}</name></author></entry>`,
+    );
+    return `<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"><opensearch:totalResults>${total}</opensearch:totalResults>${entries.join('')}</feed>`;
   }
 
   // Europe PMC answers the last page with the same cursorMark it was asked for.
@@ -105,6 +121,10 @@ function records<T>(start: number, size: number, total: number, make: (n: number
 
 function jsonResponse(body: object): Response {
   return { ok: true, status: 200, json: async () => body, headers: new Headers() } as unknown as Response;
+}
+
+function textResponse(body: string): Response {
+  return { ok: true, status: 200, text: async () => body, headers: new Headers() } as unknown as Response;
 }
 
 function errorResponse({ status, body = '{}', retryAfter }: ScriptedFailure): Response {

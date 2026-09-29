@@ -164,6 +164,7 @@ export class SearchOrchestrator {
       scopus: (q, l) => this.api.searchScopus(q, key('scopus_api_key'), sortBy, l),
       wos: (q, l) => this.api.searchWoS(q, key('wos_api_key'), sortBy, l),
       europepmc: (q, l) => this.api.searchEuropePmc(q, sortBy, l),
+      arxiv: (q, l) => this.api.searchArxiv(q, sortBy, l),
     };
     return (Object.keys(runners) as SearchBaseId[])
       .filter((base) => queryMap[base])
