@@ -79,3 +79,24 @@ Fontes: [Europe PMC para desenvolvedores](https://europepmc.org/developers),
 4. **Semantic Scholar** como base multidisciplinar extra, e **CORE** por último, por causa do limite apertado.
 
 O PubMed direto fica redundante com o Europe PMC.
+
+## O que foi implementado (2026-09-28)
+
+Branch `feat/more-search-bases`. O autor escolheu Europe PMC, arXiv e IEEE, nessa ordem; Semantic Scholar e CORE
+ficam para outro momento.
+
+| Base | Chave | Por página | Teto por busca | Ordenação | Conferido na API real |
+|---|---|---|---|---|---|
+| Europe PMC | Nenhuma | 1.000 (`cursorMark`) | 10.000 | relevância, `CITED desc`, `P_PDATE_D desc` | Sim: sintaxe, as duas ordenações e os campos |
+| arXiv | Nenhuma | 1.000 (`start`), 3 s entre páginas | 10.000 | relevância, `submittedDate`; "Mais citados" usa relevância e avisa | Sim: as três formas de consulta que o dialeto gera |
+| IEEE Xplore | Obrigatória | 200 (`start_record`), 0,5 s entre chamadas | 2.000 | ordem padrão; data e citações avisam que não há | **Não**: falta uma chave |
+
+- Cada base tem um dialeto próprio em `electron/services/queryDialects/`. "Não contém" vira `NOT` ou `ANDNOT`
+  depois dos outros termos de um grupo E. As três bases recusam "não contém" dentro de um grupo OU, com o motivo.
+- Achado na conferência do Europe PMC: autores coletivos (grupos de pesquisa de ensaios clínicos) vêm em
+  `collectiveName`; o normalizador passou a guardá-los.
+- arXiv: o DOI é o da revista quando o preprint foi publicado; senão, o DOI DataCite `10.48550/arXiv.<id>`, o
+  mesmo que a OpenAlex usa, para as duplicatas se juntarem.
+- **Pendente (IEEE):** com uma chave, conferir que a API aceita a forma de campo `("Document Title":termo)` dentro
+  de `querytext`. A documentação só mostra os operadores. Conferir também a cota real do plano.
+- As bases novas não entram marcadas por padrão numa busca nova; o usuário escolhe.
