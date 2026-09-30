@@ -4,7 +4,7 @@ import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import { handle, type IpcRegistrar } from './handle';
 import { savePdfBytesToStorage, savePdfToStorage } from './pdfStorage';
 import { OpenAccessService } from '../../services/openAccess/OpenAccessService';
-import { fetchHttpClient } from '../../services/openAccess/httpClient';
+import { openAccessHttpClientFor } from '../../services/openAccess/e2eMockHttpClient';
 
 /**
  * Article PDFs and the global PDF library (upload, read, link, unlink, delete).
@@ -17,7 +17,7 @@ export function registerPdfHandlers(
   db: DatabaseAdapter,
   openAccess: Pick<OpenAccessService, 'fetchForArticle'> = new OpenAccessService({
     db,
-    http: fetchHttpClient,
+    http: openAccessHttpClientFor(process.env),
     storePdf: (bytes, name) => savePdfBytesToStorage(db, bytes, name),
   }),
 ): void {

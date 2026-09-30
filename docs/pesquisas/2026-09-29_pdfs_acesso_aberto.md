@@ -63,3 +63,19 @@ A primeira que entregar `%PDF-` é salva pela biblioteca de PDFs (deduplicada po
 | Sem DOI | Não há como procurar (a não ser um preprint do arXiv, que tem identificador próprio). |
 | Já tem PDF | Nada a fazer. |
 | Falha | Erro de rede ou da OpenAlex. |
+
+## O que foi implementado (2026-09-29)
+
+Interface escolhida no mock-up https://claude.ai/artifact/Y1nEikQgAkkwGGBcJhkd1r: **B + V1**.
+
+- **Por artigo (B):** "Vincular PDF" abre um menu com "Do computador…" e "Buscar PDF aberto". Durante a busca o
+  botão mostra "Buscando PDF…". O resultado fica numa linha abaixo das ações, com "Abrir a página" quando a cópia
+  está bloqueada.
+- **Na seleção (V1):** "Baixar PDFs abertos" baixa um artigo por vez. O andamento ("Baixando 3 de 12…" e uma barra)
+  fica dentro da barra da seleção, com "Cancelar". No fim, um relatório agrupa: baixados, precisam de você
+  (bloqueados, com o link), falharam, sem cópia aberta ou sem DOI, já tinham PDF.
+- A lista de artigos recarrega uma vez, depois dos downloads, para a tabela não pular enquanto a pessoa lê.
+- O autor preferiu V1 ao V2 (janela com a lista ao vivo) porque, em seleções grandes, a lista mudando o tempo todo
+  atrapalha a leitura.
+- "Da biblioteca de PDFs…", que aparecia no mock-up, não entrou: a linha ainda não tem um seletor da biblioteca.
+

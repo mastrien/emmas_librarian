@@ -15,6 +15,7 @@ const article = (overrides: Partial<Article> = {}): Article => ({
 function renderActions(overrides: Partial<Article> = {}) {
   const handlers: ArticleRowHandlers = {
     onUpload: vi.fn(),
+    onFindOpenAccess: vi.fn(),
     onUnlink: vi.fn(),
     onStatusChange: vi.fn(),
     onEdit: vi.fn(),
@@ -48,12 +49,17 @@ describe('ArticleRowActions main line', () => {
     expect(screen.getByRole('link', { name: 'Ler' })).toHaveAttribute('href', '/articles/7');
   });
 
-  it('offers to attach a PDF when there is none', () => {
+  // "Vincular PDF" offers both ways to get the PDF (option B of the open access mock-up).
+  it('offers to attach a PDF from the computer or to look for an open access copy', () => {
     const { handlers } = renderActions();
 
     fireEvent.click(screen.getByRole('button', { name: 'Vincular PDF' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Do computador…' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Vincular PDF' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Buscar PDF aberto' }));
 
     expect(handlers.onUpload).toHaveBeenCalledWith(7);
+    expect(handlers.onFindOpenAccess).toHaveBeenCalledWith(7);
   });
 
   it('keeps the DOI button always visible, pointing to doi.org', () => {

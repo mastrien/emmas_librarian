@@ -5,6 +5,9 @@ import { ProjectArticlesTab } from '../components/ProjectArticlesTab';
 import { useProjectFiltering } from '../hooks/useProjectFiltering';
 import type { ProjectModals } from '../hooks/useProjectModals';
 import type { Article } from '../../../types';
+import { useOpenAccessPdfs } from '../hooks/useOpenAccessPdfs';
+import { ServicesProvider } from '../../../contexts/ServicesContext';
+import { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
 
 const article = (id: number, overrides: Partial<Article> = {}): Article =>
   ({
@@ -45,17 +48,24 @@ function renderTab({ articles, isSidebarOpen = true, pageSize = 50 }: HarnessPro
     onUnlinkPdf: vi.fn(),
     onAttachPdf: vi.fn(),
   };
-  // Uses the real filtering hook so the tab is exercised with the state shape the page gives it.
+  const service = FakeProjectService.create();
+  const reload = vi.fn(async () => undefined);
+  // Uses the real filtering and open access hooks so the tab gets the state shape the page gives it.
   function Harness() {
     const filtering = useProjectFiltering(articles, pageSize);
-    return <ProjectArticlesTab filtering={filtering} isSidebarOpen={isSidebarOpen} {...handlers} />;
+    const openAccess = useOpenAccessPdfs(reload);
+    return (
+      <ProjectArticlesTab filtering={filtering} isSidebarOpen={isSidebarOpen} openAccess={openAccess} {...handlers} />
+    );
   }
   render(
-    <MemoryRouter>
-      <Harness />
-    </MemoryRouter>,
+    <ServicesProvider apiService={service}>
+      <MemoryRouter>
+        <Harness />
+      </MemoryRouter>
+    </ServicesProvider>,
   );
-  return handlers;
+  return { ...handlers, service, reload };
 }
 
 const mainList = () => screen.getByTestId('main-articles-table');
@@ -147,7 +157,8 @@ describe('ProjectArticlesTab list actions', () => {
 
     fireEvent.click(row('Com PDF').getByRole('button', { name: 'Mais ações' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Desvincular PDF' }));
-    fireEvent.click(row('Sem PDF').getByTitle('Vincular PDF'));
+    fireEvent.click(row('Sem PDF').getByRole('button', { name: 'Vincular PDF' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Do computador…' }));
     fireEvent.click(row('Sem PDF').getByTitle('Marcar como Lido'));
     fireEvent.click(row('Sem PDF').getByTitle('Arquivar'));
     fireEvent.click(row('Sem PDF').getByRole('button', { name: 'Mais ações' }));
@@ -304,5 +315,94 @@ describe('ProjectArticlesTab multi-select', () => {
     expect(modals.setArchivingIds).toHaveBeenCalledWith([2, 1]);
     expect(modals.setMassCitationArticles).toHaveBeenCalledWith([articles[1], articles[0]]);
     expect(modals.setIsMassCitationModalOpen).toHaveBeenCalledWith(true);
+  });
+});
+
+describe('ProjectArticlesTab open access PDFs', () => {
+  const findOpenCopy = (title: string) => {
+    const row = within(within(mainList()).getByText(title).closest('tr') as HTMLElement);
+    fireEvent.click(row.getByRole('button', { name: 'Vincular PDF' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Buscar PDF aberto' }));
+    return row;
+  };
+
+  it('shows a blocked copy on the row, with the page to download in the browser', async () => {
+    const { service } = renderTab({ articles: [article(1, { doi: '10.1056/x' })] });
+    service.fetchOpenAccessPdf.mockResolvedValue({ status: 'blocked', landingPages: ['https://doi.org/10.1056/x'] });
+
+    const row = findOpenCopy('Artigo 1');
+
+    expect(await row.findByRole('status')).toHaveTextContent(
+      'Há cópia aberta, mas o site bloqueia o download automático.',
+    );
+    expect(row.getByRole('link', { name: 'Abrir a página' })).toHaveAttribute('href', 'https://doi.org/10.1056/x');
+    expect(service.fetchOpenAccessPdf).toHaveBeenCalledWith(1);
+  });
+
+  it('says it is searching, then reloads the articles when the PDF came in', async () => {
+    const { service, reload } = renderTab({ articles: [article(1)] });
+    let answer: (o: { status: 'downloaded'; source: string }) => void = () => undefined;
+    service.fetchOpenAccessPdf.mockReturnValue(new Promise((resolve) => (answer = resolve)));
+
+    const row = findOpenCopy('Artigo 1');
+    expect(row.getByRole('button', { name: /Buscando PDF/ })).toBeDisabled();
+    answer({ status: 'downloaded', source: 'PubMed Central' });
+
+    expect(await row.findByText('PDF baixado. Fonte: PubMed Central.')).toBeInTheDocument();
+    expect(reload).toHaveBeenCalled();
+  });
+
+  it('downloads a selection one article at a time and ends with a report of what needs the user', async () => {
+    const { service, reload } = renderTab({ articles: [article(1), article(2), article(3)] });
+    service.fetchOpenAccessPdf
+      .mockResolvedValueOnce({ status: 'already' })
+      .mockResolvedValueOnce({ status: 'blocked', landingPages: ['https://doi.org/b'] })
+      .mockResolvedValueOnce({ status: 'downloaded', source: 'arXiv' });
+    fireEvent.click(screen.getByRole('button', { name: 'Selecionar' }));
+    const bar = within(screen.getByRole('region', { name: 'Ações para os artigos selecionados' }));
+    fireEvent.click(bar.getByRole('button', { name: 'Selecionar todos' }));
+
+    fireEvent.click(bar.getByRole('button', { name: /Baixar PDFs abertos/ }));
+
+    const report = within(await screen.findByRole('dialog', { name: /PDFs abertos: 1 de 3 baixados/ }));
+    expect(report.getAllByRole('heading', { level: 4 }).map((h) => h.textContent)).toEqual([
+      'Baixados (1)',
+      'Precisam de você (1)',
+      'Já tinham PDF (1)',
+    ]);
+    expect(report.getByRole('link', { name: 'Abrir a página' })).toHaveAttribute('href', 'https://doi.org/b');
+    expect(service.fetchOpenAccessPdf.mock.calls.map((c) => c[0]).sort()).toEqual([1, 2, 3]);
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the progress in the bar and stops after the current article when cancelled', async () => {
+    const { service, reload } = renderTab({ articles: [article(1), article(2), article(3)] });
+    let answer: (o: { status: 'not-open' }) => void = () => undefined;
+    service.fetchOpenAccessPdf.mockImplementation(() => new Promise((resolve) => (answer = resolve)));
+    fireEvent.click(screen.getByRole('button', { name: 'Selecionar' }));
+    const bar = within(screen.getByRole('region', { name: 'Ações para os artigos selecionados' }));
+    fireEvent.click(bar.getByRole('button', { name: 'Selecionar todos' }));
+    fireEvent.click(bar.getByRole('button', { name: /Baixar PDFs abertos/ }));
+
+    expect(bar.getByRole('status')).toHaveTextContent('Baixando 1 de 3…');
+    fireEvent.click(bar.getByRole('button', { name: 'Cancelar' }));
+    answer({ status: 'not-open' });
+
+    expect(await screen.findByRole('dialog', { name: /cancelado; 2 não tentados/ })).toBeInTheDocument();
+    expect(service.fetchOpenAccessPdf).toHaveBeenCalledTimes(1);
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('closes the report', async () => {
+    const { service } = renderTab({ articles: [article(1)] });
+    service.fetchOpenAccessPdf.mockResolvedValue({ status: 'no-doi' });
+    fireEvent.click(screen.getByRole('button', { name: 'Selecionar' }));
+    const bar = within(screen.getByRole('region', { name: 'Ações para os artigos selecionados' }));
+    fireEvent.click(bar.getByRole('button', { name: 'Selecionar todos' }));
+    fireEvent.click(bar.getByRole('button', { name: /Baixar PDFs abertos/ }));
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Fechar' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

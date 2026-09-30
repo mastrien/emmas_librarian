@@ -10,6 +10,7 @@ Update this table when you add or extend a spec.
 | `questionnaire.spec.js` (F-07) | AI investigation + question set + history | catalog, completion, history details |
 | `ai_config.spec.js` (F-08) | OpenAI key settings | saved + persisted across navigation |
 | `project_sharing.spec.js` (F-17) | "Pacote .emmapcarc" export, sender's data deleted, Dashboard "Importar" in another installation | export alert with the path; "(Importado)" project with the article; its PDF opens |
+| `open_access.spec.js` (F-18) | "Vincular PDF" → "Buscar PDF aberto" on a manual article with DOI (mocked lookup), then a selection batch | row says "PDF baixado. Fonte: Repositório E2E." and shows "Ler"; report "0 de 2 baixados" grouped (no DOI, already had PDF); the reader opens the downloaded PDF |
 | `backup.spec.js` (F-09) | Full backup creation | alert, real `.emmabak` with emma.db + metadata |
 | `error_flows.spec.js` (F-10) | Duplicate project name | error, stays on form, no second project |
 | `categories.spec.js` (F-11) | Create text/list/boolean categories, classify in the reader, Categories tab, CSV | values after reload, CSV columns |

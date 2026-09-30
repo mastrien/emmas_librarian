@@ -23,6 +23,8 @@ escrito uma vez só. Ainda não se sabe quais bases o público mais usa.
   - Cada base nova precisa de um dialeto no `QueryTranslator` (é o custo principal), de conversão dos dados,
     de deduplicação, de UI e de texto no tutorial.
 - **Onde entra na UI:** "Baixar PDFs de acesso aberto" na barra da seleção múltipla da tabela de artigos.
+- **Feito (2026-09-29):** Europe PMC, arXiv e IEEE Xplore (PR #11) e o download de PDFs abertos (branch
+  `feat/open-access-pdfs`). Semantic Scholar e CORE continuam para outro momento.
 
 ## Tarefas longas em segundo plano
 
