@@ -53,12 +53,31 @@ a OpenAlex já traz as mesmas cópias.
 
 A primeira que entregar `%PDF-` é salva pela biblioteca de PDFs (deduplicada por hash) e vinculada ao artigo.
 
+## Quando a OpenAlex só conhece a página do artigo (2026-09-30)
+
+Na captura de telas do tutorial, 7 de 8 artigos marcados como acesso aberto no projeto de exemplo voltaram como
+"bloqueados". Nenhum estava bloqueado de fato: a OpenAlex não tinha `pdf_url` para eles, só a página do artigo
+(comum em acesso aberto dourado). A página, porém, declara o PDF na meta tag `citation_pdf_url` (padrão Highwire,
+que as editoras usam para o Google Scholar). Testado com o user agent do app:
+
+| DOI | Página | `citation_pdf_url` | PDF |
+|---|---|---|---|
+| 10.5194/gmd-19-5207-2026 | Copernicus (200) | sim | `%PDF-`, 11,6 MB |
+| 10.5194/wcd-7-787-2026 | Copernicus (200) | sim | `%PDF-`, 13,2 MB |
+| 10.54302/mausam.v77i2.6571 | OJS da MAUSAM (200) | sim | `%PDF-`, 1,3 MB |
+| 10.3390/rs18111786, cli14070146, atmos17050458 | MDPI (403) | página não abre | bloqueado de verdade |
+| 10.1016/j.ejrh.2026.103561 | Elsevier (redirecionamento por script) | não | sem link |
+
+Com isso, depois das cópias diretas, o serviço abre cada página de cópia aberta, lê a `citation_pdf_url` e tenta
+esse link (`landingPagePdf.ts`). A mensagem de quem sobra passou de "o site bloqueia o download automático" (falso
+na maioria dos casos) para "o download automático não funcionou".
+
 ## Resultado por artigo
 
 | Resultado | Quando |
 |---|---|
 | Baixado | Uma cópia entregou o PDF (e diz de onde veio). |
-| Bloqueado | Existem cópias abertas, mas nenhuma entregou PDF; oferece abrir a página no navegador. |
+| Bloqueado | Existem cópias abertas, mas nenhuma entregou PDF (nem o link da página do artigo); oferece abrir a página no navegador. |
 | Sem cópia aberta | A OpenAlex não conhece cópia aberta. |
 | Sem DOI | Não há como procurar (a não ser um preprint do arXiv, que tem identificador próprio). |
 | Já tem PDF | Nada a fazer. |

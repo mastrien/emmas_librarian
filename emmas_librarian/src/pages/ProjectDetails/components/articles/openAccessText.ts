@@ -23,7 +23,7 @@ export function openAccessMessage(outcome: OpenAccessOutcome): OpenAccessMessage
     case 'blocked':
       return {
         tone: 'warning',
-        text: 'Há cópia aberta, mas o site bloqueia o download automático.',
+        text: 'Há cópia aberta, mas o download automático não funcionou.',
         page: outcome.landingPages[0],
       };
     case 'not-open':
