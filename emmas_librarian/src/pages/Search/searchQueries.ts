@@ -91,14 +91,17 @@ export function describeQueryTree(node: QueryASTNode): string {
   return `(${node.children.map(describeQueryTree).join(` ${node.logicalOperator} `)})`;
 }
 
+const isExperimental = (db: string): boolean => SEARCH_DATABASES.some((d) => d.id === db && d.experimental);
+
 /**
- * The free bases plus every keyed base that has a key, selected when the page opens.
+ * The free bases plus every keyed base that has a key, selected when the page opens. Experimental bases
+ * are left for the user to pick, so a search never goes to one without them seeing the warning.
  *
  * Usage:
- *   setSelectedDbs(defaultDatabases({ scopus: 'k', wos: '' })); // ['openalex', 'crossref', 'scopus']
+ *   setSelectedDbs(defaultDatabases({ scopus: 'k', wos: '', ieee: 'k' })); // ['openalex', 'crossref', 'scopus']
  */
 export function defaultDatabases(keys: SearchApiKeys): string[] {
-  return ['openalex', 'crossref', ...KEYED_DATABASES.filter((db) => keys[db])];
+  return ['openalex', 'crossref', ...KEYED_DATABASES.filter((db) => keys[db] && !isExperimental(db))];
 }
 
 export type FinalQueries = { queries: Record<string, string> } | { invalidDatabase: string };

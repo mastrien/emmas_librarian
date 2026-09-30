@@ -59,4 +59,10 @@ describe('validateSearchLimits', () => {
       /Limites de busca inválidos\. Offending value: 50\. Expected shape: \{ common: number/,
     );
   });
+
+  it('lists every base in the expected shape of a malformed payload', () => {
+    expect(() => validateSearchLimits(null, ['openalex'])).toThrow(
+      'perBase: { openalex?: number, crossref?: number, scopus?: number, wos?: number, europepmc?: number, arxiv?: number, ieee?: number } }',
+    );
+  });
 });
