@@ -2,9 +2,9 @@ import fs from 'fs';
 import { IpcChannel } from '../../types';
 import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import { handle, type IpcRegistrar } from './handle';
-import { savePdfBytesToStorage, savePdfToStorage } from './pdfStorage';
-import { OpenAccessService } from '../../services/openAccess/OpenAccessService';
-import { openAccessHttpClientFor } from '../../services/openAccess/e2eMockHttpClient';
+import { savePdfToStorage } from './pdfStorage';
+import type { OpenAccessService } from '../../services/openAccess/OpenAccessService';
+import { openAccessServiceFor } from '../../services/openAccess/openAccessServiceFor';
 
 /**
  * Article PDFs and the global PDF library (upload, read, link, unlink, delete).
@@ -15,11 +15,7 @@ import { openAccessHttpClientFor } from '../../services/openAccess/e2eMockHttpCl
 export function registerPdfHandlers(
   ipc: IpcRegistrar,
   db: DatabaseAdapter,
-  openAccess: Pick<OpenAccessService, 'fetchForArticle'> = new OpenAccessService({
-    db,
-    http: openAccessHttpClientFor(process.env),
-    storePdf: (bytes, name) => savePdfBytesToStorage(db, bytes, name),
-  }),
+  openAccess: Pick<OpenAccessService, 'fetchForArticle'> = openAccessServiceFor(db, process.env),
 ): void {
   handle(ipc, IpcChannel.PDF_UPLOAD, (_e, articleId: number, sourceFilePath: string) => {
     const { destPath } = savePdfToStorage(db, sourceFilePath);

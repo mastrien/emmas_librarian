@@ -35,7 +35,9 @@ describe('E2eMockHttpClient', () => {
   });
 
   it('answers 404 to anything else', async () => {
-    expect((await new E2eMockHttpClient(pdfPath).get('https://example.org/x')).status).toBe(404);
+    const response = await new E2eMockHttpClient(pdfPath).get('https://example.org/x');
+
+    expect([response.status, await response.text()]).toEqual([404, 'not found']);
   });
 });
 
