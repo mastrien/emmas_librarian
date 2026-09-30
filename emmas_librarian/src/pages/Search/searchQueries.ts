@@ -9,15 +9,27 @@ import type {
 } from '../../types';
 import type { SearchLimits } from '../../utils/searchLimits';
 
-export const SEARCH_DATABASES = [
+export interface SearchDatabaseOption {
+  id: string;
+  label: string;
+  /** Integrated but never run against the real API; the UI says so wherever the base can be picked. */
+  experimental?: boolean;
+}
+
+export const SEARCH_DATABASES: ReadonlyArray<SearchDatabaseOption> = [
   { id: 'openalex', label: 'OpenAlex' },
   { id: 'crossref', label: 'Crossref' },
   { id: 'scopus', label: 'Scopus' },
   { id: 'wos', label: 'Web of Science' },
   { id: 'europepmc', label: 'Europe PMC' },
   { id: 'arxiv', label: 'arXiv' },
-  { id: 'ieee', label: 'IEEE Xplore' },
+  // No IEEE key yet: the field syntax and the daily quota come from the docs only (docs/pesquisas/2026-09-28_novas_bases_busca.md).
+  { id: 'ieee', label: 'IEEE Xplore', experimental: true },
 ];
+
+/** Why a base is marked experimental, shown on the search page and next to its key in the settings. */
+export const IEEE_EXPERIMENTAL_NOTE =
+  'A IEEE Xplore está em fase experimental: a integração ainda não foi testada com uma chave real, então a busca pode falhar ou trazer resultados diferentes do site da IEEE.';
 
 /** The builder's starting tree: one empty "Todos contém" rule. */
 export const EMPTY_QUERY: QueryASTNode = {
