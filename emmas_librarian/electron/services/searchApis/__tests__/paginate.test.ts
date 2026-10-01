@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { NormalizedArticle } from '../../types';
-import { collectPages, RateLimitedError, retryAfterMs, type Page, type PageCursor } from '../paginate';
+import { collectPages, RateLimitedError, retryAfterMs, withNote, type Page, type PageCursor } from '../paginate';
 
 const article = (n: number): NormalizedArticle => ({ title: `A${n}`, source_databases: ['Teste'], csl_json: {} });
 
@@ -167,6 +167,16 @@ describe('collectPages', () => {
     await run(api, 150, 50, 1000);
 
     expect(api.pauses).toEqual([1000, 1000]);
+  });
+});
+
+describe('withNote', () => {
+  it('adds a note after any stop warning, and leaves the result alone without one', () => {
+    const result = { articles: [], requests: 1 };
+
+    expect(withNote(result, 'Ordem padrão.')).toEqual({ articles: [], requests: 1, warning: 'Ordem padrão.' });
+    expect(withNote({ ...result, warning: 'Parou.' }, 'Ordem padrão.').warning).toBe('Parou. Ordem padrão.');
+    expect(withNote(result)).toBe(result);
   });
 });
 

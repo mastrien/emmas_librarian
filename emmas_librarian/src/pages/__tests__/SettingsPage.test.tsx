@@ -50,6 +50,19 @@ describe('SettingsPage', () => {
     await waitFor(() => expect(fakeService.setSetting).toHaveBeenCalledWith('openalex_api_key', 'openalex-456'));
   });
 
+  it('saves the IEEE Xplore key with the other search keys', async () => {
+    render(
+      <BrowserRouter>
+        <SettingsPage />
+      </BrowserRouter>,
+    );
+
+    fireEvent.change(await screen.findByLabelText('IEEE Xplore API Key'), { target: { value: 'ieee-789' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar Chaves' }));
+
+    await waitFor(() => expect(fakeService.setSetting).toHaveBeenCalledWith('ieee_api_key', 'ieee-789'));
+  });
+
   it('pre-fills a current Claude model when a skill switches to Anthropic', async () => {
     fakeService.getAiModelConfigs.mockResolvedValue([
       { id: 1, skill: 'summary', provider: 'gemini', model_name: 'gemini-2.5-flash', updated_at: '2026-09-26' },

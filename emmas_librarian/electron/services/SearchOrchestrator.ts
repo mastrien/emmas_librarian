@@ -157,28 +157,19 @@ export class SearchOrchestrator {
 
   // A database missing from queryMap was deactivated by the user; each one gets its own limit.
   private activeIntegrators(queryMap: Record<string, string>, limits: BaseLimits, sortBy: QuerySort) {
-    const scopusKey = this.db.getSetting('scopus_api_key') || '';
-    const wosKey = this.db.getSetting('wos_api_key') || '';
-    const openAlexKey = this.db.getSetting('openalex_api_key') || '';
-    const integrators: { name: SearchBaseId; promise: Promise<PagedResult> }[] = [];
-    if (queryMap.openalex)
-      integrators.push({
-        name: 'openalex',
-        promise: this.api.searchOpenAlex(queryMap.openalex, sortBy, limits.openalex, openAlexKey),
-      });
-    if (queryMap.crossref)
-      integrators.push({
-        name: 'crossref',
-        promise: this.api.searchCrossref(queryMap.crossref, sortBy, limits.crossref),
-      });
-    if (queryMap.scopus)
-      integrators.push({
-        name: 'scopus',
-        promise: this.api.searchScopus(queryMap.scopus, scopusKey, sortBy, limits.scopus),
-      });
-    if (queryMap.wos)
-      integrators.push({ name: 'wos', promise: this.api.searchWoS(queryMap.wos, wosKey, sortBy, limits.wos) });
-    return integrators;
+    const key = (setting: string) => this.db.getSetting(setting) || '';
+    const runners: Record<SearchBaseId, (query: string, limit?: number) => Promise<PagedResult>> = {
+      openalex: (q, l) => this.api.searchOpenAlex(q, sortBy, l, key('openalex_api_key')),
+      crossref: (q, l) => this.api.searchCrossref(q, sortBy, l),
+      scopus: (q, l) => this.api.searchScopus(q, key('scopus_api_key'), sortBy, l),
+      wos: (q, l) => this.api.searchWoS(q, key('wos_api_key'), sortBy, l),
+      europepmc: (q, l) => this.api.searchEuropePmc(q, sortBy, l),
+      arxiv: (q, l) => this.api.searchArxiv(q, sortBy, l),
+      ieee: (q, l) => this.api.searchIeee(q, key('ieee_api_key'), sortBy, l),
+    };
+    return (Object.keys(runners) as SearchBaseId[])
+      .filter((base) => queryMap[base])
+      .map((base) => ({ name: base, promise: runners[base](queryMap[base], limits[base]) }));
   }
 
   /** Writes the history entry and the articles; returns how many were new to the project. */

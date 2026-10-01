@@ -15,6 +15,7 @@ export const SettingsPage: React.FC = () => {
   const [scopusKey, setScopusKey] = useState('');
   const [wosKey, setWosKey] = useState('');
   const [openAlexKey, setOpenAlexKey] = useState('');
+  const [ieeeKey, setIeeeKey] = useState('');
 
   const [openaiKey, setOpenaiKey] = useState('');
   const [anthropicKey, setAnthropicKey] = useState('');
@@ -51,6 +52,7 @@ export const SettingsPage: React.FC = () => {
       const sKey = await projectService.getSetting('scopus_api_key');
       const wKey = await projectService.getSetting('wos_api_key');
       const oaKey = await projectService.getSetting('openalex_api_key');
+      const ieKey = await projectService.getSetting('ieee_api_key');
       const oKey = await projectService.getSetting('api_key_openai');
       const aKey = await projectService.getSetting('api_key_anthropic');
       const gKey = await projectService.getSetting('api_key_gemini');
@@ -67,6 +69,7 @@ export const SettingsPage: React.FC = () => {
       if (sKey) setScopusKey(sKey);
       if (wKey) setWosKey(wKey);
       if (oaKey) setOpenAlexKey(oaKey);
+      if (ieKey) setIeeeKey(ieKey);
       if (oKey) setOpenaiKey(oKey);
       if (aKey) setAnthropicKey(aKey);
       if (gKey) setGeminiKey(gKey);
@@ -109,6 +112,7 @@ export const SettingsPage: React.FC = () => {
     await projectService.setSetting('scopus_api_key', scopusKey);
     await projectService.setSetting('wos_api_key', wosKey);
     await projectService.setSetting('openalex_api_key', openAlexKey);
+    await projectService.setSetting('ieee_api_key', ieeeKey);
     await projectService.setSetting('api_key_openai', openaiKey);
     await projectService.setSetting('api_key_anthropic', anthropicKey);
     await projectService.setSetting('api_key_gemini', geminiKey);
@@ -290,6 +294,8 @@ export const SettingsPage: React.FC = () => {
           setWosKey={setWosKey}
           openAlexKey={openAlexKey}
           setOpenAlexKey={setOpenAlexKey}
+          ieeeKey={ieeeKey}
+          setIeeeKey={setIeeeKey}
         />
 
         <AiSettings

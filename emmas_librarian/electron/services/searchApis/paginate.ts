@@ -102,6 +102,17 @@ function stoppedWarning(plan: PagingPlan, received: number, err: unknown): strin
 }
 
 /**
+ * Adds a note to a base's result warning, e.g. that it could not sort as asked; keeps any stop warning.
+ *
+ * Usage:
+ *   withNote(result, 'O arXiv não ordena por citações; os resultados vieram por relevância.');
+ */
+export function withNote(result: PagedResult, note?: string): PagedResult {
+  if (!note) return result;
+  return { ...result, warning: result.warning ? `${result.warning} ${note}` : note };
+}
+
+/**
  * The error for a 429 answer, carrying how long the base asked to wait.
  *
  * Usage:

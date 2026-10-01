@@ -16,7 +16,7 @@ vi.mock('electron', () => ({
   },
 }));
 
-type DatabaseName = 'openalex' | 'crossref' | 'scopus' | 'wos';
+type DatabaseName = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc' | 'arxiv' | 'ieee';
 
 /** Stands in for the network: each database returns canned articles and records what it was asked. */
 class FakeApiIntegrator extends ApiIntegrator {
@@ -41,6 +41,18 @@ class FakeApiIntegrator extends ApiIntegrator {
 
   override async searchWoS(...args: unknown[]): Promise<PagedResult> {
     return this.answer('wos', args);
+  }
+
+  override async searchEuropePmc(...args: unknown[]): Promise<PagedResult> {
+    return this.answer('europepmc', args);
+  }
+
+  override async searchArxiv(...args: unknown[]): Promise<PagedResult> {
+    return this.answer('arxiv', args);
+  }
+
+  override async searchIeee(...args: unknown[]): Promise<PagedResult> {
+    return this.answer('ieee', args);
   }
 
   private answer(database: DatabaseName, args: unknown[]): PagedResult {
@@ -275,6 +287,38 @@ describe('SearchOrchestrator', () => {
       const preview = await orchestrator.preview(projectId, { openalex: 'q' }, limits(1), 'relevance', 'q');
 
       expect(preview.breakdown.openalex).toEqual({ count: 1, requested: 1, requests: 1, available: 5321 });
+    });
+
+    it('searches Europe PMC with its query, the sort and its limit, and merges its results with the others', async () => {
+      api.results.europepmc = [found('10.1/A', 'Exercise and diabetes', 'Europe PMC')];
+      api.results.openalex = [found('10.1/a', 'Exercise and diabetes', 'OpenAlex')];
+
+      const preview = await orchestrator.preview(
+        projectId,
+        { openalex: 'q', europepmc: 'TITLE:(exercise)' },
+        limits(1000, { europepmc: 300 }),
+        'date',
+        'q',
+      );
+
+      expect(api.calls.find((c) => c.database === 'europepmc')?.args).toEqual(['TITLE:(exercise)', 'date', 300]);
+      expect(preview.results.map((r) => r.sourceDatabases)).toEqual([['OpenAlex', 'Europe PMC']]);
+    });
+
+    it('searches arXiv with its query, the sort and its limit', async () => {
+      await orchestrator.preview(projectId, { arxiv: 'ti:x' }, limits(1000, { arxiv: 200 }), 'relevance', 'q');
+
+      expect(api.calls).toEqual([{ database: 'arxiv', args: ['ti:x', 'relevance', 200] }]);
+    });
+
+    it('passes the stored IEEE Xplore key to its API', async () => {
+      db.setSetting('ieee_api_key', 'ieee-secret-key');
+
+      await orchestrator.preview(projectId, { ieee: '("Abstract":grid)' }, limits(400), 'relevance', 'q');
+
+      expect(api.calls).toEqual([
+        { database: 'ieee', args: ['("Abstract":grid)', 'ieee-secret-key', 'relevance', 400] },
+      ]);
     });
 
     it('passes the stored OpenAlex key, and none when it is not set', async () => {

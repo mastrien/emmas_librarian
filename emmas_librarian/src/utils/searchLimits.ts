@@ -1,5 +1,5 @@
 /** The bibliographic bases the search can query, by the keys used in query maps and breakdowns. */
-export type SearchBaseId = 'openalex' | 'crossref' | 'scopus' | 'wos';
+export type SearchBaseId = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc' | 'arxiv' | 'ieee';
 
 interface BaseLimit {
   /** The most results the app asks of the base in one search. */
@@ -22,6 +22,12 @@ export const SEARCH_LIMITS: Record<SearchBaseId, BaseLimit> = {
   crossref: { max: 10000, pageSize: 1000, pageIntervalMs: 0 },
   scopus: { max: 5000, pageSize: 200, pageIntervalMs: 0 },
   wos: { max: 2500, pageSize: 50, pageIntervalMs: 1100 },
+  // Europe PMC: 1,000 per page with cursorMark, 10 requests per second, no key.
+  europepmc: { max: 10000, pageSize: 1000, pageIntervalMs: 0 },
+  // arXiv: its terms of use ask for one request every 3 s; 1,000 per page keeps a large search to a few pages.
+  arxiv: { max: 10000, pageSize: 1000, pageIntervalMs: 3000 },
+  // IEEE Xplore: 200 per call; the free plan allows about 200 calls a day, so a search stops at 10 calls.
+  ieee: { max: 2000, pageSize: 200, pageIntervalMs: 500 },
 };
 
 /** Pre-filled common limit for a new search. */

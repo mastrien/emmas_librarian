@@ -8,6 +8,8 @@ interface ApiKeysSettingsProps {
   setWosKey: (v: string) => void;
   openAlexKey: string;
   setOpenAlexKey: (v: string) => void;
+  ieeeKey: string;
+  setIeeeKey: (v: string) => void;
 }
 
 interface ApiKeyFieldProps {
@@ -85,8 +87,8 @@ export const ApiKeysSettings: React.FC<ApiKeysSettingsProps> = (props) => {
         Chaves de API
       </h2>
       <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-        Insira suas chaves de API para habilitar buscas no Scopus e Web of Science. As chaves são armazenadas localmente
-        no seu banco de dados.
+        Insira suas chaves de API para habilitar buscas no Scopus, na Web of Science e na IEEE Xplore. As chaves são
+        armazenadas localmente no seu banco de dados.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -108,6 +110,13 @@ export const ApiKeysSettings: React.FC<ApiKeysSettingsProps> = (props) => {
           value={props.openAlexKey}
           onChange={props.setOpenAlexKey}
           hint="A OpenAlex funciona sem chave. Com a chave gratuita, o limite diário de buscas fica 10 vezes maior."
+        />
+        <ApiKeyField
+          label="IEEE Xplore API Key"
+          placeholder="Insira sua chave IEEE..."
+          value={props.ieeeKey}
+          onChange={props.setIeeeKey}
+          hint="Gratuita, com cadastro em developer.ieee.org. A IEEE aprova cada chave manualmente."
         />
       </div>
     </div>

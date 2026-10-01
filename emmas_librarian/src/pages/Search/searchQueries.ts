@@ -14,6 +14,9 @@ export const SEARCH_DATABASES = [
   { id: 'crossref', label: 'Crossref' },
   { id: 'scopus', label: 'Scopus' },
   { id: 'wos', label: 'Web of Science' },
+  { id: 'europepmc', label: 'Europe PMC' },
+  { id: 'arxiv', label: 'arXiv' },
+  { id: 'ieee', label: 'IEEE Xplore' },
 ];
 
 /** The builder's starting tree: one empty "Todos contém" rule. */
@@ -26,10 +29,32 @@ export const EMPTY_QUERY: QueryASTNode = {
 export interface SearchApiKeys {
   scopus: string;
   wos: string;
+  ieee: string;
 }
 
 /** Bases that need a configured API key before they can be selected. */
-export const KEYED_DATABASES: ReadonlyArray<keyof SearchApiKeys> = ['scopus', 'wos'];
+export const KEYED_DATABASES: ReadonlyArray<keyof SearchApiKeys> = ['scopus', 'wos', 'ieee'];
+
+/** The setting that holds each keyed base's API key. */
+export const API_KEY_SETTINGS: Record<keyof SearchApiKeys, string> = {
+  scopus: 'scopus_api_key',
+  wos: 'wos_api_key',
+  ieee: 'ieee_api_key',
+};
+
+export const isKeyedDatabase = (db: string): db is keyof SearchApiKeys =>
+  (KEYED_DATABASES as readonly string[]).includes(db);
+
+/**
+ * Reads the API key of every keyed base; a base without a key gets ''.
+ *
+ * Usage:
+ *   const keys = await loadSearchApiKeys((key) => projectService.getSetting(key)); // { scopus: 'k', wos: '', ieee: '' }
+ */
+export async function loadSearchApiKeys(getSetting: (key: string) => Promise<string | null>): Promise<SearchApiKeys> {
+  const values = await Promise.all(KEYED_DATABASES.map((db) => getSetting(API_KEY_SETTINGS[db])));
+  return Object.fromEntries(KEYED_DATABASES.map((db, i) => [db, values[i] || ''])) as unknown as SearchApiKeys;
+}
 
 const FIELD_NAMES: Record<QueryField, string> = {
   all: 'Todos',
