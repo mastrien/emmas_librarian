@@ -4,6 +4,7 @@ import type { StoredPdf } from '../../ipc/handlers/pdfStorage';
 import { doiKey } from '../../utils/doi';
 import type { HttpClient } from './httpClient';
 import { findOpenCopies, type OpenCopy } from './openCopies';
+import { pdfLinkFromLandingPage } from './landingPagePdf';
 import { downloadPdf } from './pdfDownload';
 
 type ArticleStore = Pick<DatabaseAdapter, 'getArticle' | 'linkPdfToArticle' | 'getSetting'>;
@@ -53,7 +54,25 @@ export class OpenAccessService {
     for (const copy of copies) {
       if (await this.tryCopy(articleId, doi, copy)) return { status: 'downloaded', source: copy.source };
     }
+    const fromPage = await this.tryLandingPages(articleId, doi, landingPages, copies);
+    if (fromPage) return { status: 'downloaded', source: fromPage };
     return { status: 'blocked', landingPages: landingPages.length ? landingPages : copies.map((c) => c.url) };
+  }
+
+  // Last resort: the PDF link the article page declares; returns the site it came from, or null.
+  private async tryLandingPages(
+    articleId: number,
+    doi: string,
+    pages: string[],
+    tried: OpenCopy[],
+  ): Promise<string | null> {
+    for (const page of pages) {
+      const url = await pdfLinkFromLandingPage(page, this.deps.http).catch(() => null);
+      if (!url || tried.some((c) => c.url === url)) continue;
+      const source = new URL(url).hostname;
+      if (await this.tryCopy(articleId, doi, { url, source, kind: 'publisher' })) return source;
+    }
+    return null;
   }
 
   // A copy that fails (network, bot check, too large) only means the next one is tried.

@@ -333,7 +333,7 @@ describe('ProjectArticlesTab open access PDFs', () => {
     const row = findOpenCopy('Artigo 1');
 
     expect(await row.findByRole('status')).toHaveTextContent(
-      'Há cópia aberta, mas o site bloqueia o download automático.',
+      'Há cópia aberta, mas o download automático não funcionou.',
     );
     expect(row.getByRole('link', { name: 'Abrir a página' })).toHaveAttribute('href', 'https://doi.org/10.1056/x');
     expect(service.fetchOpenAccessPdf).toHaveBeenCalledWith(1);

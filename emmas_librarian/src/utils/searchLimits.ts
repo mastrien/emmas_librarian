@@ -98,6 +98,11 @@ export function limitProblems(limits: SearchLimits, bases: string[]): SearchLimi
   });
 }
 
+// Built from SEARCH_LIMITS so the message lists every base, including the ones added later.
+const PER_BASE_SHAPE = Object.keys(SEARCH_LIMITS)
+  .map((base) => `${base}?: number`)
+  .join(', ');
+
 /**
  * Checks limits received over IPC and returns the limit of each chosen base; throws on anything the
  * search page would have blocked, so a value above a ceiling never reaches an API.
@@ -110,7 +115,7 @@ export function validateSearchLimits(limits: unknown, bases: string[]): Partial<
   if (!shape || typeof shape !== 'object' || typeof shape.common !== 'number' || typeof shape.perBase !== 'object') {
     throw new Error(
       `[ERR_INVALID_SEARCH_LIMIT] Limites de busca inválidos. Offending value: ${JSON.stringify(limits)}. ` +
-        'Expected shape: { common: number, perBase: { openalex?: number, crossref?: number, scopus?: number, wos?: number } }.',
+        `Expected shape: { common: number, perBase: { ${PER_BASE_SHAPE} } }.`,
     );
   }
   const problems = limitProblems(shape, bases);

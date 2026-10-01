@@ -108,6 +108,33 @@ describe('OpenAccessService.fetchForArticle', () => {
     expect(db.getArticle(articleId)!.local_file_path).toBeFalsy();
   });
 
+  // Gold open access (Copernicus, OJS journals): OpenAlex knows only the article page, which declares the PDF.
+  it('downloads the PDF an article page declares when OpenAlex has no PDF link', async () => {
+    const page = 'https://doi.org/10.5194/gmd-19-5207-2026';
+    const pdf = 'https://gmd.copernicus.org/articles/19/5207/2026/gmd-19-5207-2026.pdf';
+    web
+      .onOpenAlexWork(
+        DOI,
+        workWith({ is_oa: true, pdf_url: null, landing_page_url: page, source: { type: 'journal' } }),
+      )
+      .on(page, `<html><head><meta name="citation_pdf_url" content="${pdf}"></head></html>`)
+      .on(pdf, PDF_BYTES);
+    const articleId = addArticle(DOI);
+
+    expect(await service().fetchForArticle(articleId)).toEqual({ status: 'downloaded', source: 'gmd.copernicus.org' });
+    expect(fs.readFileSync(db.getArticle(articleId)!.local_file_path!)).toEqual(PDF_BYTES);
+  });
+
+  it('does not ask twice for a PDF link the page repeats from the copies already tried', async () => {
+    web
+      .onOpenAlexWork(DOI, workWith(publisher))
+      .on(PUBLISHER_PDF, BOT_CHECK_HTML)
+      .on(`https://doi.org/${DOI}`, `<meta name="citation_pdf_url" content="${PUBLISHER_PDF}">`);
+
+    expect((await service().fetchForArticle(addArticle(DOI))).status).toBe('blocked');
+    expect(web.requested.filter((r) => r.url === PUBLISHER_PDF)).toHaveLength(1);
+  });
+
   it('distinguishes no open copy, no DOI and an article that already has a PDF', async () => {
     web.onOpenAlexWork(
       DOI,

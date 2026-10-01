@@ -57,10 +57,22 @@ describe('SettingsPage', () => {
       </BrowserRouter>,
     );
 
-    fireEvent.change(await screen.findByLabelText('IEEE Xplore API Key'), { target: { value: 'ieee-789' } });
+    fireEvent.change(await screen.findByLabelText('IEEE Xplore API Key (experimental)'), {
+      target: { value: 'ieee-789' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar Chaves' }));
 
     await waitFor(() => expect(fakeService.setSetting).toHaveBeenCalledWith('ieee_api_key', 'ieee-789'));
+  });
+
+  it('warns next to the IEEE Xplore key that the integration is experimental', async () => {
+    render(
+      <BrowserRouter>
+        <SettingsPage />
+      </BrowserRouter>,
+    );
+
+    expect(await screen.findByText(/IEEE Xplore está em fase experimental/)).toBeInTheDocument();
   });
 
   it('pre-fills a current Claude model when a skill switches to Anthropic', async () => {

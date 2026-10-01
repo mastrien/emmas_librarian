@@ -1,5 +1,6 @@
 import React, { useId } from 'react';
 import { Key } from 'lucide-react';
+import { IEEE_EXPERIMENTAL_NOTE } from '../../Search/searchQueries';
 
 interface ApiKeysSettingsProps {
   scopusKey: string;
@@ -112,11 +113,11 @@ export const ApiKeysSettings: React.FC<ApiKeysSettingsProps> = (props) => {
           hint="A OpenAlex funciona sem chave. Com a chave gratuita, o limite diário de buscas fica 10 vezes maior."
         />
         <ApiKeyField
-          label="IEEE Xplore API Key"
+          label="IEEE Xplore API Key (experimental)"
           placeholder="Insira sua chave IEEE..."
           value={props.ieeeKey}
           onChange={props.setIeeeKey}
-          hint="Gratuita, com cadastro em developer.ieee.org. A IEEE aprova cada chave manualmente."
+          hint={`Gratuita, com cadastro em developer.ieee.org. A IEEE aprova cada chave manualmente. ${IEEE_EXPERIMENTAL_NOTE}`}
         />
       </div>
     </div>

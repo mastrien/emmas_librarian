@@ -61,7 +61,7 @@
                 <p>Boas vindas! Antes de entrar nas telas e nos botões, vale a pena contar um pouco de onde o <strong>Emma's Librarian</strong> veio, porque isso explica bastante coisa sobre o jeito que ele funciona. Mas se você já sabe do que se trata e só quer instalar, pode <a href="#como-instalar">pular direto para a instalação</a>.</p>
 
                 <h3>Como tudo começou</h3>
-                <p>O Emma's Librarian começou como um projeto pequeno, com um objetivo bem específico: fazer uma busca estruturada em várias bases acadêmicas de uma vez só (hoje são OpenAlex, Crossref, Scopus e Web of Science) e exportar o resultado num formato que ferramentas já consolidadas na literatura, como o <a href="https://www.bibliometrix.org/" target="_blank" rel="noopener noreferrer"><em>bibliometrix</em></a>, conseguissem ler. A ideia nunca foi refazer a análise bibliométrica, afinal o bibliometrix já faz isso muito bem, e sim facilitar a parte chata de buscar e juntar os dados de lugares diferentes, cada um com a sua sintaxe de busca e a sua interface.</p>
+                <p>O Emma's Librarian começou como um projeto pequeno, com um objetivo bem específico: fazer uma busca estruturada em várias bases acadêmicas de uma vez só (hoje são sete: OpenAlex, Crossref, Scopus, Web of Science, Europe PMC, arXiv e IEEE Xplore) e exportar o resultado num formato que ferramentas já consolidadas na literatura, como o <a href="https://www.bibliometrix.org/" target="_blank" rel="noopener noreferrer"><em>bibliometrix</em></a>, conseguissem ler. A ideia nunca foi refazer a análise bibliométrica, afinal o bibliometrix já faz isso muito bem, e sim facilitar a parte chata de buscar e juntar os dados de lugares diferentes, cada um com a sua sintaxe de busca e a sua interface.</p>
                 <blockquote>
                     <p><strong>Você sabe o que é o bibliometrix?</strong></p>
                     <p>O bibliometrix é um pacote da linguagem R, criado por Massimo Aria e Corrado Cuccurullo, feito pra análise bibliométrica e cientométrica, isto é, estudar a produção científica de uma área a partir dos dados das próprias publicações (autores, periódicos, ano, citações, palavras-chave). Ele vem com o <em>biblioshiny</em>, uma interface gráfica que abre no navegador, então dá pra usar sem escrever nenhuma linha de código em R.</p>
@@ -73,6 +73,7 @@
                     <li>acompanhar os prazos de cada projeto;</li>
                     <li>guardar os links que você mais usa (o link da reunião do grupo, a pasta compartilhada, o documento do artigo que está sendo escrito) pra ter tudo à mão durante a escrita e as reuniões;</li>
                     <li>manter um diário de pesquisa em cada projeto;</li>
+                    <li>baixar de uma vez os PDFs dos artigos que são de acesso aberto;</li>
                     <li>ler e anotar os artigos dentro da própria plataforma;</li>
                     <li>categorizar os artigos com critérios definidos por você e exportar essa categorização como planilha;</li>
                     <li>fazer uma <strong>investigação massiva</strong>, que é fazer várias perguntas para vários artigos de uma vez.</li>
@@ -173,7 +174,7 @@
                     <li><strong>Progresso Geral</strong>, com o total de artigos ativos, lidos e arquivados;</li>
                     <li><strong>Arquivos Físicos</strong>, que mostra quantos artigos têm PDF vinculado e quantos ainda estão sem.</li>
                 </ul>
-                <p>Esse segundo é um bom lembrete. Se muitos artigos estão sem PDF, a leitura dentro da plataforma e a investigação massiva ficam limitadas, porque as duas dependem do arquivo. Como conseguir e vincular os PDFs é assunto de outros capítulos.</p>
+                <p>Esse segundo é um bom lembrete. Se muitos artigos estão sem PDF, a leitura dentro da plataforma e a investigação massiva ficam limitadas, porque as duas dependem do arquivo. Como vincular os PDFs, e como baixar de uma vez os que são de acesso aberto, é assunto do <a href="#leitor-pdf">Capítulo 4</a>.</p>
                 <img class="tutorial-img" src="assets/tutoriais/cap1-dashboard-baixo.png" alt="Gráficos Progresso Geral e Arquivos Físicos no fim do dashboard" width="1424" height="892" loading="lazy">
 
                 <p>Por agora é isso. Você já conhece o dashboard e tem um projeto criado, mas um projeto vazio não serve pra muita coisa, né? No próximo capítulo vamos enchê-lo de artigos.</p>
@@ -189,16 +190,31 @@
                 <h2>Capítulo 2 - Busca Federada (APIs)</h2>
                 <p>Se você já fez uma revisão de literatura, provavelmente já passou por isso: a mesma busca precisa ser feita na Scopus, na Web of Science, no OpenAlex... e cada base tem a sua própria sintaxe. Na Scopus você escreve <code>TITLE("rainfall")</code>, na Web of Science é <code>TI="rainfall"</code>, e no OpenAlex é outra coisa completamente diferente. Além de dar trabalho, isso abre espaço pra erro, porque é fácil esquecer um parêntese numa base e fazer, sem perceber, uma busca diferente da outra.</p>
                 <p>A busca federada resolve isso: você monta a busca <strong>uma vez só</strong>, num construtor visual, e o Emma's Librarian traduz pra sintaxe de cada base e busca em todas ao mesmo tempo. E, como você vai ver, ele mostra exatamente o que está sendo enviado pra cada uma.</p>
-                <p>Se você só veio aqui pra saber como gerar a chave de API da Scopus ou da Web of Science, pode <a href="#chaves-api">pular direto para essa parte</a>.</p>
+                <p>Se você só veio aqui pra saber como gerar a chave de API da Scopus, da Web of Science, da OpenAlex ou da IEEE Xplore, pode <a href="#chaves-api">pular direto para essa parte</a>.</p>
 
                 <h3>Onde fica a busca</h3>
                 <p>Quando você entra num projeto, aparece uma tela com bastante coisa: o nome do projeto (que dá pra editar ali mesmo), o botão de apagar o projeto, os metadados, os botões das funcionalidades, o acesso rápido, algumas abas e a lista de artigos com os filtros. Cada uma dessas partes vai aparecer com calma nos próximos capítulos. Por agora, o que interessa é o botão <strong>Nova busca</strong>, que leva pra tela <strong>Fazer Nova Busca</strong>.</p>
                 <img class="tutorial-img" src="assets/tutoriais/cap2-projeto.png" alt="Página de um projeto com o botão Nova busca" width="1424" height="892" loading="lazy">
 
                 <h3>Escolhendo as bases</h3>
-                <p>A primeira parte da tela é <strong>Bases de Dados Alvo</strong>, onde você escolhe em quais bases quer buscar. Hoje são quatro: OpenAlex, Crossref, Scopus e Web of Science.</p>
-                <p>OpenAlex e Crossref são abertas, então já vêm marcadas e funcionam sem configurar nada. Scopus e Web of Science são mais restritas: pra usar, você precisa de uma chave de API gerada na plataforma delas. Se tentar marcar uma dessas sem ter cadastrado a chave, aparece o aviso <strong>Chave de API Necessária</strong>, com um botão que leva direto pras Configurações. Como gerar essas chaves é assunto de uma <a href="#chaves-api">seção mais abaixo</a>.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-busca-topo.png" alt="Tela Fazer Nova Busca com as bases de dados alvo" width="1424" height="892" loading="lazy">
+                <p>A primeira parte da tela é <strong>Bases de Dados Alvo</strong>, onde você escolhe em quais bases quer buscar. Hoje são sete, e elas não cobrem as mesmas áreas:</p>
+                <div class="table-wrap"><table class="tutorial-table"><caption>As bases de dados da busca</caption>
+                    <tr><th>Base</th><th>O que cobre</th><th>Precisa de chave?</th><th>Vem marcada?</th></tr>
+                    <tr><td><a href="https://openalex.org/" target="_blank" rel="noopener noreferrer">OpenAlex</a></td><td>Todas as áreas</td><td>Não (a chave é opcional)</td><td>Sim</td></tr>
+                    <tr><td><a href="https://www.crossref.org/" target="_blank" rel="noopener noreferrer">Crossref</a></td><td>Todas as áreas, a partir dos registros de DOI que as editoras fazem</td><td>Não</td><td>Sim</td></tr>
+                    <tr><td><a href="https://www.scopus.com/" target="_blank" rel="noopener noreferrer">Scopus</a></td><td>Todas as áreas</td><td>Sim</td><td>Quando a chave está cadastrada</td></tr>
+                    <tr><td><a href="https://www.webofscience.com/" target="_blank" rel="noopener noreferrer">Web of Science</a></td><td>Todas as áreas</td><td>Sim</td><td>Quando a chave está cadastrada</td></tr>
+                    <tr><td><a href="https://europepmc.org/" target="_blank" rel="noopener noreferrer">Europe PMC</a></td><td>Saúde e ciências da vida: PubMed/MEDLINE, PubMed Central e <em>preprints</em></td><td>Não</td><td>Não</td></tr>
+                    <tr><td><a href="https://arxiv.org/" target="_blank" rel="noopener noreferrer">arXiv</a></td><td><em>Preprints</em> de física, computação, matemática e áreas próximas</td><td>Não</td><td>Não</td></tr>
+                    <tr><td><a href="https://ieeexplore.ieee.org/" target="_blank" rel="noopener noreferrer">IEEE Xplore</a> (experimental)</td><td>Engenharia e computação: periódicos, congressos e normas da IEEE</td><td>Sim</td><td>Não</td></tr>
+                </table></div>
+                <p>OpenAlex e Crossref são abertas e cobrem todas as áreas, então já vêm marcadas e funcionam sem configurar nada. Europe PMC e arXiv também são abertas, mas cobrem áreas específicas, então ficam desmarcadas: marque quando a sua pesquisa for de uma dessas áreas. Scopus, Web of Science e IEEE Xplore são mais restritas: pra usar, você precisa de uma chave de API gerada na plataforma delas. Se tentar marcar uma dessas sem ter cadastrado a chave, aparece o aviso <strong>Chave de API Necessária</strong>, com um botão que leva direto pras Configurações. Como gerar essas chaves é assunto de uma <a href="#chaves-api">seção mais abaixo</a>.</p>
+                <blockquote>
+                    <p><strong>E a Cochrane?</strong></p>
+                    <p>A <a href="https://www.cochranelibrary.com/" target="_blank" rel="noopener noreferrer">Cochrane Library</a> não tem uma API pública de busca: a API que ela documenta serve pra quem escreve revisões dentro da própria Cochrane. Só que as revisões sistemáticas da Cochrane são indexadas no MEDLINE, então aparecem nas buscas do Europe PMC (e também na OpenAlex e na Crossref, com DOIs que começam com <code>10.1002/14651858</code>).</p>
+                </blockquote>
+                <p>A IEEE Xplore aparece com a etiqueta <strong>Experimental</strong>. A integração foi escrita seguindo a documentação da IEEE, mas ainda não foi testada com uma chave real, porque eu ainda não consegui a minha (a IEEE aprova cada chave manualmente). Ou seja, a sintaxe da busca e o limite diário podem não funcionar do jeito que a documentação diz. Quando você marca a IEEE Xplore, esse aviso aparece logo abaixo das bases, e ela nunca vem marcada sozinha, mesmo com a chave cadastrada.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap2-busca-topo.png" alt="Bases de Dados Alvo com as sete bases, a IEEE Xplore marcada como experimental e o aviso logo abaixo" width="1424" height="892" loading="lazy">
 
                 <h3>Montando a busca no construtor visual</h3>
                 <p>A segunda parte é o <strong>Construtor Visual (Árvore Lógica)</strong>. A busca é montada com <strong>regras</strong>, e cada regra tem três partes:</p>
@@ -219,24 +235,42 @@
                     <li>Scopus: <code>(ALL("machine learning")) AND ((TITLE("precipitation forecast")) OR (TITLE("rainfall prediction")))</code></li>
                     <li>Web of Science: <code>(TS="machine learning") AND ((TI="precipitation forecast") OR (TI="rainfall prediction"))</code></li>
                     <li>OpenAlex: <code>default.search:machine learning,title.search:precipitation forecast|rainfall prediction</code></li>
+                    <li>Europe PMC: <code>((machine learning)) AND ((TITLE:(precipitation forecast)) OR (TITLE:(rainfall prediction)))</code></li>
+                    <li>arXiv: <code>((all:machine AND all:learning)) AND (((ti:precipitation AND ti:forecast)) OR ((ti:rainfall AND ti:prediction)))</code></li>
+                    <li>IEEE Xplore: <code>((("All Metadata":machine) AND ("All Metadata":learning))) AND (((("Document Title":precipitation) AND ("Document Title":forecast))) OR ((("Document Title":rainfall) AND ("Document Title":prediction))))</code></li>
                 </ul>
+                <p>Repare que no arXiv e na IEEE Xplore o "machine learning" virou duas palavras ligadas por AND. É assim que o operador <strong>Contém</strong> funciona nessas duas bases: o artigo precisa ter as duas palavras, mas não necessariamente uma do lado da outra. Se você quer a expressão exata, use o operador <strong>Exato</strong>, que vira a frase entre aspas (<code>ti:"rainfall prediction"</code>, no arXiv). E o arXiv tem uma limitação própria: ele não tem um "OU NÃO", então uma regra Não Contém precisa ficar num grupo <strong>E</strong>, junto com outra regra. Se não ficar, o cartão do arXiv avisa.</p>
                 <p>Por que mostrar isso? Porque numa revisão sistemática você precisa relatar a string de busca exata que usou em cada base, e também porque dá pra conferir se a tradução ficou do jeito que você queria, em vez de confiar às cegas.</p>
-                <p>Na imagem só aparecem OpenAlex e Crossref porque o cartão de tradução só aparece pras bases marcadas, e ali a Scopus e a Web of Science estavam sem chave.</p>
+                <p>Nas imagens não aparecem Scopus e Web of Science porque o cartão de tradução só aparece pras bases marcadas, e ali as duas estavam sem chave.</p>
                 <p>E a Crossref? Pois é, ela não apareceu na lista porque a API da Crossref não aceita operadores lógicos como OU e NÃO. Nesse caso, o cartão dela mostra um aviso de <strong>Incompatibilidade de Sintaxe</strong> explicando o motivo, e se você tentar buscar assim mesmo, o sistema pede pra você escrever uma busca manual pra ela ou desmarcar a base. Buscas só com <strong>E</strong> funcionam normalmente na Crossref.</p>
                 <p>Se precisar de algo que o construtor não oferece (um filtro de ano específico da Scopus, por exemplo), cada cartão tem o botão <strong>Substituir por Query Customizada</strong>. Ele abre um campo já preenchido com a tradução automática, e você só ajusta o que precisar. Se mudar de ideia, o botão <strong>Restaurar Tradução Automática</strong> desfaz tudo.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-traducao.png" alt="Cartões de tradução do OpenAlex e da Crossref, com o aviso de incompatibilidade" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-traducao.png" alt="Cartões de tradução da OpenAlex, da Crossref, com o aviso de incompatibilidade, e do Europe PMC" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-traducao-2.png" alt="Cartões de tradução do arXiv e da IEEE Xplore" width="1424" height="892" loading="lazy">
 
                 <h3>Ordenação, quantidade e a busca em si</h3>
-                <p>Por último, você escolhe o <strong>Critério de Ordenação</strong> (Mais Relevantes, Mais Citados ou Mais Recentes) e a <strong>Quantidade Máxima (por base)</strong>, que começa em 50.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-opcoes.png" alt="Critério de ordenação e quantidade máxima por base" width="1424" height="892" loading="lazy">
-                <p>Atenção ao "por base": com as quatro bases marcadas e o limite em 50, a busca pode trazer até 200 resultados. Cada API também tem o seu próprio teto, e a tela avisa quando você passa dele:</p>
-                <ul>
-                    <li>Crossref: até 1.000 resultados;</li>
-                    <li>OpenAlex e Web of Science: até 100.000;</li>
-                    <li>Scopus: entre 200 e 5.000, dependendo da assinatura da sua instituição. Acima de 200, a Scopus pode recusar a busca com o erro "Exceeds maximum".</li>
-                </ul>
+                <p>Por último, você escolhe o <strong>Critério de Ordenação</strong> (Mais Relevantes, Mais Citados ou Mais Recentes) e o <strong>Máximo de resultados por base</strong>, que começa em 1.000.</p>
+                <p>Atenção ao "por base": com quatro bases marcadas e o máximo em 1.000, a busca pode trazer até 4.000 resultados. Logo abaixo do campo aparece uma linha com quanto cada base vai receber, e em <strong>Ajustar por base</strong> você muda o valor de uma base sem mexer nas outras. Um campo de ajuste vazio segue o valor comum, que é o que o "1000 (comum)" dentro dele quer dizer. Na imagem, por exemplo, o arXiv foi ajustado pra 200 e as outras bases seguem os 1.000.</p>
+                <p>Nem toda base ordena do mesmo jeito. O arXiv não ordena por citações, e a API da IEEE Xplore não ordena nem por data nem por citações. Nesses casos a busca acontece assim mesmo, por relevância no arXiv e na ordem padrão da base na IEEE, e o resumo do fim da busca avisa.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap2-opcoes.png" alt="Critério de ordenação e máximo de resultados por base, com Ajustar por base aberto e um valor acima do teto da IEEE Xplore" width="1424" height="892" loading="lazy">
+
+                <h4>Por que cada base tem um teto?</h4>
+                <p>Nenhuma API entrega milhares de resultados de uma vez. Elas entregam em páginas, e o Emma's Librarian pede uma página atrás da outra até chegar no número que você escolheu. Cada página é uma <strong>requisição</strong>, e as bases limitam quantas requisições você pode fazer por segundo ou por dia. Por isso, em Ajustar por base, do lado de cada base aparecem o teto dela, quantas requisições a busca vai custar e, quando a base pede uma pausa entre as páginas, quanto tempo isso leva. Na imagem, os 1.000 resultados da OpenAlex custam 10 requisições (ela manda 100 por página), enquanto os mesmos 1.000 do Europe PMC custam uma só.</p>
+                <div class="table-wrap"><table class="tutorial-table"><caption>Teto de cada base e o motivo</caption>
+                    <tr><th>Base</th><th>Teto</th><th>Resultados por requisição</th><th>Por que esse teto</th></tr>
+                    <tr><td>OpenAlex</td><td>10.000</td><td>100</td><td>A OpenAlex não publica um limite; 10.000 mantém a busca dentro da cota diária.</td></tr>
+                    <tr><td>Crossref</td><td>10.000</td><td>1.000</td><td>Também não publica um limite; vale o mesmo valor da OpenAlex.</td></tr>
+                    <tr><td>Scopus</td><td>5.000</td><td>200</td><td>A partir daí a API da Scopus para de paginar.</td></tr>
+                    <tr><td>Web of Science</td><td>2.500</td><td>50</td><td>2.500 resultados são 50 requisições, a cota diária inteira do plano Free Trial. A base aceita uma requisição por segundo.</td></tr>
+                    <tr><td>Europe PMC</td><td>10.000</td><td>1.000</td><td>Não pede chave e tem um limite folgado (10 requisições por segundo).</td></tr>
+                    <tr><td>arXiv</td><td>10.000</td><td>1.000</td><td>Os termos de uso do arXiv pedem uma requisição a cada 3 segundos.</td></tr>
+                    <tr><td>IEEE Xplore</td><td>2.000</td><td>200</td><td>O plano gratuito permite cerca de 200 requisições por dia, segundo fontes de terceiros (ainda sem confirmar, veja o aviso de experimental).</td></tr>
+                </table></div>
+                <p>Se você pedir mais do que o teto, a tela avisa em vermelho, como em "IEEE Xplore aceita até 2.000 resultados (você pediu 3.000).", e a busca não acontece até você corrigir. Por que bloquear, em vez de buscar só até o teto? Porque aí você ia achar que a busca foi de um jeito quando, na verdade, foi de outro. E é essa busca, com esses números, que fica registrada no histórico e vai parar na metodologia do seu trabalho.</p>
                 <p>Agora é só clicar em <strong>Fazer Busca</strong>. Dependendo da quantidade, isso pode levar alguns minutos, porque além de buscar, o sistema extrai e organiza os metadados de cada artigo.</p>
-                <p>Quando termina, aparece a janela <strong>Busca Concluída!</strong>. Nesse momento ainda nada foi salvo no projeto. A janela mostra quatro números que funcionam como uma conta: <strong>Encontrados</strong> (a soma do que cada base devolveu), menos os <strong>Repetidos</strong> (o mesmo artigo vindo de mais de uma base), menos os que estão <strong>Já no projeto</strong>, dá os <strong>Novos</strong>, que são os que entram no projeto quando você salvar. Abaixo vêm quantos resultados cada base trouxe e a lista dos artigos encontrados (título, autores, ano e bases). Clicando no título de um artigo, abre a janela com os metadados dele (resumo, revista, citações), pra você conferir um resultado específico antes de decidir. Se alguma base falhou (uma chave expirada, por exemplo), ela aparece como <strong>Falha</strong> com a mensagem de erro, e as outras seguem normalmente.</p>
+                <p>Quando termina, aparece a janela <strong>Busca Concluída!</strong>. Nesse momento ainda nada foi salvo no projeto. A janela mostra quatro números que funcionam como uma conta: <strong>Encontrados</strong> (a soma do que cada base devolveu), menos os <strong>Repetidos</strong> (o mesmo artigo vindo de mais de uma base), menos os que estão <strong>Já no projeto</strong>, dá os <strong>Novos</strong>, que são os que entram no projeto quando você salvar. Abaixo vêm quantos resultados cada base trouxe (quando a base tinha mais do que você pediu, aparece algo como "100 de 1.668 na base") e a lista dos artigos encontrados (título, autores, ano e bases). Clicando no título de um artigo, abre a janela com os metadados dele (resumo, revista, citações), pra você conferir um resultado específico antes de decidir. Se alguma base falhou (uma chave expirada, por exemplo), ela aparece como <strong>Falha</strong> com a mensagem de erro, e as outras seguem normalmente.</p>
+                <p>E se a base cair no meio da busca, depois de algumas páginas? Aí o que já tinha chegado fica, e a base aparece em amarelo com o aviso de onde a busca parou (por exemplo, "a busca parou em 400 de 1.000 resultados"). É no mesmo lugar que aparecem os avisos de ordenação do arXiv e da IEEE Xplore.</p>
+                <p>A imagem abaixo é de uma busca real no projeto de exemplo, com OpenAlex, Europe PMC e arXiv e o máximo em 100. A OpenAlex tinha 1.668 resultados e mandou os 100 pedidos, o Europe PMC tinha só 42, e o arXiv respondeu com o erro 429, que é o jeito de uma API dizer "requisições demais, tente mais tarde". As outras duas bases seguiram normalmente, e dos 142 encontrados, 7 eram repetidos.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap2-busca-concluida.png" alt="Janela Busca Concluída com os totais, os resultados por base e o arXiv marcado como falha" width="1424" height="892" loading="lazy">
                 <p>Com a lista na frente, você decide. Se os artigos fazem sentido, clique no botão de salvar (ele diz quantos entram, por exemplo <strong>Salvar 12 novos no projeto</strong>) e o sistema volta pra página do projeto com eles na lista. Se a busca veio ruim (muito ampla, ou trazendo artigos de outra área), clique em <strong>Descartar</strong>: a janela fecha, o projeto fica do jeito que estava e a busca continua montada na tela, pronta pra você ajustar e tentar de novo. Fechar a janela no X também descarta.</p>
                 <blockquote>
                     <p><strong>Como o sistema sabe que é o mesmo artigo?</strong></p>
@@ -244,17 +278,17 @@
                 </blockquote>
 
                 <h3>O histórico de buscas</h3>
-                <p>Toda busca salva fica registrada na aba <strong>Histórico</strong> da página do projeto (as descartadas não entram). Cada registro guarda a data e a hora, a ordenação, o limite usado, quantos artigos foram salvos, a busca descrita em português (a <strong>Query Unificada</strong>), quantos resultados vieram de cada base e as queries traduzidas que foram de fato enviadas.</p>
+                <p>Toda busca salva fica registrada na aba <strong>Histórico</strong> da página do projeto (as descartadas não entram). Cada registro guarda a data e a hora, a ordenação, o limite usado (o valor comum e os ajustes, como "100 por base (arXiv 200)"), quantos artigos foram salvos, a busca descrita em português (a <strong>Query Unificada</strong>) e as queries traduzidas que foram de fato enviadas. Em <strong>Resultados por Base</strong> ficam quantos resultados vieram de cada base e quantos ela tinha, as falhas e os avisos, quantos resultados únicos sobraram entre as bases e quantas requisições cada base gastou.</p>
                 <p>Isso é bem útil na hora de escrever a metodologia de um artigo ou relatório, porque você não precisa lembrar (nem ter anotado) qual string usou, em qual base, em que dia e com quantos resultados. Está tudo ali.</p>
                 <p>Cada registro também tem o botão <strong>Desfazer Busca</strong>, que remove do projeto todos os artigos que aquela busca trouxe. Cuidado que essa remoção é permanente, então o sistema pede confirmação antes.</p>
                 <p>E se você quiser uma busca parecida com uma que já fez, mudando só um termo ou uma base? O botão <strong>Nova busca a partir desta</strong> abre a tela de busca com tudo daquela busca já preenchido: o construtor visual, as bases marcadas, as queries customizadas, a ordenação e a quantidade. Você ajusta o que quiser e clica em <strong>Fazer Busca</strong>, e a busca antiga continua no histórico do jeito que estava. Buscas feitas antes da versão que trouxe esse botão não guardavam o construtor visual, então nelas a query de cada base volta como query customizada (a tela avisa quando isso acontece). O botão não aparece nos registros de importação de outro projeto nem nos de artigo manual, porque neles não existe uma busca pra reaproveitar.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-historico.png" alt="Aba Histórico com o registro de uma busca" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-historico.png" alt="Aba Histórico com o registro da busca, o limite com o ajuste do arXiv, os resultados por base, a falha do arXiv e as requisições" width="1424" height="892" loading="lazy">
 
-                <h3 id="chaves-api">Gerando as chaves de API da Scopus e da Web of Science</h3>
-                <p>As chaves ficam em <strong>Configurações</strong> (no menu de três pontinhos), na seção <strong>Chaves de API</strong>, nos campos <strong>Scopus API Key</strong> e <strong>Web of Science API Key</strong>. Elas ficam salvas só no seu computador.</p>
+                <h3 id="chaves-api">Gerando as chaves de API</h3>
+                <p>As chaves ficam em <strong>Configurações</strong> (no menu de três pontinhos), na seção <strong>Chaves de API</strong>, nos campos <strong>Scopus API Key</strong>, <strong>Web of Science API Key</strong>, <strong>OpenAlex API Key (opcional)</strong> e <strong>IEEE Xplore API Key (experimental)</strong>. Elas ficam salvas só no seu computador.</p>
                 <p>A chave é gerada no site de cada empresa, e esse processo muda de tempos em tempos, então vou deixar o caminho geral e os links oficiais.</p>
 
-                <p><strong>Scopus (Elsevier)</strong></p>
+                <h4>Scopus (Elsevier)</h4>
                 <ol>
                     <li>Acesse o <a href="https://dev.elsevier.com/" target="_blank" rel="noopener noreferrer">Elsevier Developer Portal</a> e entre na página de <a href="https://dev.elsevier.com/apikey/manage" target="_blank" rel="noopener noreferrer">gerenciamento de chaves</a>.</li>
                     <li>Faça login com uma conta Elsevier (a mesma usada na Scopus ou no ScienceDirect) ou crie uma.</li>
@@ -263,7 +297,7 @@
                 </ol>
                 <p>Um detalhe importante: segundo a própria Elsevier, o acesso completo à API só é liberado pra pesquisadores de instituições que assinam a Scopus. Em geral, isso significa que a busca funciona quando você está conectado à rede da sua universidade (ou à VPN dela). Os limites de uso estão na página de <a href="https://dev.elsevier.com/api_key_settings.html" target="_blank" rel="noopener noreferrer">configurações de chave</a> (hoje, 20.000 requisições por semana).</p>
 
-                <p><strong>Web of Science (Clarivate)</strong></p>
+                <h4>Web of Science (Clarivate)</h4>
                 <p>O Emma's Librarian usa a <strong>Web of Science Starter API</strong>, então é pra ela que você precisa da chave.</p>
                 <ol>
                     <li>Acesse o <a href="https://developer.clarivate.com/" target="_blank" rel="noopener noreferrer">Clarivate Developer Portal</a> e crie uma conta (ou entre com a que você já tem).</li>
@@ -272,18 +306,32 @@
                     <li>Espere a aprovação da Clarivate. Quando sair, a chave aparece na página da sua aplicação. Copie e cole no campo <strong>Web of Science API Key</strong>.</li>
                 </ol>
                 <p>Se quiser um passo a passo com imagens, o pessoal do CELUS tem um <a href="https://www.celus.net/support/generating-an-api-key-on-clarivate-developer-portal-web-of-science" target="_blank" rel="noopener noreferrer">guia bem detalhado</a> desse processo.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-chaves-api.png" alt="Campos de chave de API da Scopus e da Web of Science nas Configurações" width="1424" height="892" loading="lazy">
+
+                <h4>OpenAlex (opcional)</h4>
+                <p>A OpenAlex funciona sem chave. A chave gratuita só aumenta a cota diária: sem ela, dá pra fazer cerca de 100 requisições de busca por dia; com ela, cerca de 1.000. Como cada requisição traz 100 resultados, uma busca de 1.000 resultados na OpenAlex gasta 10 requisições, então quem faz várias buscas grandes no mesmo dia chega no limite rápido. Pra ter a chave, crie uma conta no <a href="https://openalex.org/" target="_blank" rel="noopener noreferrer">site da OpenAlex</a> e siga a <a href="https://help.openalex.org/api/authentication/" target="_blank" rel="noopener noreferrer">documentação de autenticação</a>. Depois, cole no campo <strong>OpenAlex API Key (opcional)</strong>. A mesma chave é usada na busca de PDFs abertos, do <a href="#leitor-pdf">Capítulo 4</a>.</p>
+
+                <h4>IEEE Xplore (experimental)</h4>
+                <ol>
+                    <li>Crie uma conta no <a href="https://developer.ieee.org/" target="_blank" rel="noopener noreferrer">IEEE Developer Portal</a>.</li>
+                    <li>Registre uma aplicação pedindo acesso à <strong>Metadata Search API</strong> (a <a href="https://developer.ieee.org/docs" target="_blank" rel="noopener noreferrer">documentação</a> lista as APIs disponíveis).</li>
+                    <li>Espere a aprovação, que a IEEE faz manualmente. Quando sair, copie a chave e cole no campo <strong>IEEE Xplore API Key (experimental)</strong>.</li>
+                </ol>
+                <p>O campo repete o aviso da tela de busca: como a integração ainda não foi testada com uma chave real, a busca na IEEE Xplore pode falhar ou trazer resultados diferentes dos do site da IEEE.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap2-chaves-api.png" alt="Campos de chave de API da Scopus, da Web of Science, da OpenAlex e da IEEE Xplore nas Configurações, com o aviso de experimental" width="1424" height="892" loading="lazy">
 
                 <h3>Os resultados</h3>
-                <p>Fechando o resumo, você volta pra página do projeto, e os artigos encontrados aparecem na lista logo abaixo. Com dezenas de artigos na tela, você vai querer filtrar, e pra isso tem algumas ferramentas:</p>
+                <p>Fechando o resumo, você volta pra página do projeto, e os artigos encontrados aparecem na lista. Com dezenas (ou centenas) de artigos na tela, você vai querer filtrar. Acima da lista ficam três coisas: o botão <strong>Filtros</strong>, o campo <strong>Buscar por título ou autor</strong> e o <strong>Ordenar</strong>, que ordena pela data em que o artigo foi adicionado, pelo ano, pelo título ou pelo número de citações.</p>
+                <p>O botão Filtros abre e fecha o painel ao lado da lista, que tem:</p>
                 <ul>
-                    <li>o campo <strong>Filtrar por título ou autor...</strong>;</li>
-                    <li>as opções <strong>Apenas com PDF vinculado</strong> e <strong>Apenas Acesso Aberto</strong>;</li>
-                    <li>um painel lateral de filtros, com o status do artigo (Não Lidos, Lidos, Arquivados ou Todos), as bases de dados de onde ele veio, o tipo de documento e uma nuvem de palavras-chave;</li>
-                    <li>a ordenação, que pode ser por ano, título, data em que foi adicionado ou número de citações, em ordem crescente ou decrescente.</li>
+                    <li><strong>STATUS</strong>: Não lidos, Lidos, Arquivados ou Todos;</li>
+                    <li><strong>DISPONIBILIDADE</strong>: Com PDF e Acesso aberto;</li>
+                    <li><strong>BASES DE DADOS</strong>: de onde o artigo veio;</li>
+                    <li><strong>TIPO DE DOCUMENTO</strong>: artigo, capítulo, anais de congresso...;</li>
+                    <li><strong>PALAVRAS-CHAVE</strong>, numa nuvem com as que mais aparecem.</li>
                 </ul>
-                <p>O filtro de bases, por exemplo, é útil pra ver o que só uma base trouxe. E a opção Apenas Acesso Aberto ajuda a começar a leitura pelos artigos que você consegue baixar sem depender da assinatura da instituição.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-resultados.png" alt="Lista de artigos do projeto com o painel Filtros Rápidos" width="1424" height="892" loading="lazy">
+                <p>Do lado de cada opção aparece quantos artigos sobrariam se você escolhesse ela, já contando os outros filtros ativos, e as opções que deixariam a lista vazia ficam apagadas (na imagem, Arquivados, com 0). Assim você sabe o resultado antes de clicar. Os filtros ativos aparecem como etiquetas na linha logo acima da tabela, cada uma com um X pra remover, e o <strong>Limpar</strong> tira todos de uma vez. Na mesma linha fica a contagem: com o filtro Com PDF, o projeto de exemplo mostra "10 de 89 artigos", ou seja, dos 89 artigos não lidos, só 10 têm PDF.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap2-resultados.png" alt="Lista de artigos do projeto com o painel Filtros aberto, o filtro Com PDF ativo e a contagem 10 de 89 artigos" width="1424" height="892" loading="lazy">
+                <p>O filtro de bases é útil pra ver o que só uma base trouxe. E o Acesso aberto ajuda a começar a leitura pelos artigos que você consegue baixar sem depender da assinatura da instituição. Ele também é o ponto de partida do download automático de PDFs, no <a href="#leitor-pdf">Capítulo 4</a>.</p>
 
                 <p>Pronto, o projeto de exemplo já tem os seus 96 artigos. Só que ninguém lê 96 artigos com a mesma atenção, e é aí que entra a triagem: decidir o que fica, o que sai e organizar o que ficou. Esse é o assunto do próximo capítulo.</p>
 
@@ -340,6 +388,18 @@
                 <p>Mas por que registrar o motivo? Porque numa revisão sistemática você precisa relatar quantos artigos foram excluídos e por quê (fora do tema, só o resumo disponível, estudo de outra região, duplicado com outro artigo...). Se você anota o motivo na hora, não precisa reler nada lá no final pra lembrar por que tirou aquele artigo. O motivo fica visível na seção <strong>Artigos Arquivados</strong>, junto com o botão <strong>Restaurar</strong>, caso você mude de ideia. O motivo também vai na coluna <code>archive_note</code> quando você exporta os artigos em CSV ou XLSX, então a contagem por motivo pra revisão sai direto da planilha.</p>
                 <img class="tutorial-img" src="assets/tutoriais/cap3-arquivados.png" alt="Seção Artigos Arquivados mostrando o motivo do arquivamento" width="1424" height="892" loading="lazy">
 
+                <h3>Vários artigos de uma vez</h3>
+                <p>Marcar como lido ou arquivar um por um funciona, mas tem horas em que a decisão é a mesma pra vários artigos: os 15 que vieram de uma área que não tem nada a ver com a sua pesquisa, ou os 8 que você leu no fim de semana. Pra isso, clique em <strong>Selecionar</strong>, na linha acima da tabela. Cada artigo ganha uma caixinha, e no lugar dessa linha aparece uma barra com quantos artigos estão selecionados e o que dá pra fazer com eles:</p>
+                <ul>
+                    <li><strong>Selecionar todos</strong> marca todos os artigos da página (e vira <strong>Desmarcar todos</strong>);</li>
+                    <li><strong>Marcar como lido</strong>;</li>
+                    <li><strong>Arquivar…</strong>, que abre a mesma janela do motivo, só que o motivo vale pra todos os selecionados e aparece na exportação de cada um;</li>
+                    <li><strong>Citar em massa</strong>, que gera as referências de todos de uma vez;</li>
+                    <li><strong>Baixar PDFs abertos</strong>, que é assunto do <a href="#leitor-pdf">Capítulo 4</a>.</li>
+                </ul>
+                <p>O X no fim da barra sai da seleção.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap3-selecao.png" alt="Lista de artigos no modo de seleção, com três artigos marcados e a barra de ações" width="1424" height="892" loading="lazy">
+
                 <p>No próximo capítulo, o leitor de PDF, que tem bem mais coisa além do botão Categorizar.</p>
 
                 <!-- PENDENTE: seções da versão antiga, ainda sem explicação do autor. Decidir em que capítulo entram.
@@ -361,14 +421,48 @@
                 <p>Ler artigo acadêmico costuma ser uma bagunça de janelas: o PDF aberto num programa, as anotações em outro, a planilha de categorias em outro, e o gerenciador de referências pra copiar a citação. O leitor do Emma's Librarian junta essas coisas numa tela só, e tudo o que você marca ali fica ligado ao artigo, dentro do projeto.</p>
 
                 <h3>Primeiro, o PDF</h3>
-                <p>A busca traz os metadados dos artigos (título, autores, resumo...), mas não o arquivo em si. Então, antes de ler, você precisa anexar o PDF ao artigo. Na lista de artigos do projeto, os que ainda não têm arquivo mostram o botão <strong>Vincular PDF</strong>. Clicando nele, abre a janela <strong>Anexar PDF ao Artigo</strong>, com duas opções:</p>
+                <p>A busca traz os metadados dos artigos (título, autores, resumo...), mas não o arquivo em si. Então, antes de ler, você precisa anexar o PDF ao artigo. Na lista de artigos do projeto, os que ainda não têm arquivo mostram o botão <strong>Vincular PDF</strong>. Ele abre um menu com dois caminhos: <strong>Do computador…</strong>, pra quando você já tem o arquivo, e <strong>Buscar PDF aberto</strong>, pra quando o artigo é de acesso aberto e o sistema pode baixar por você (esse fica pra <a href="#pdfs-abertos">seção seguinte</a>).</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap4-vincular-menu.png" alt="Menu Vincular PDF aberto em um artigo, com as opções Do computador e Buscar PDF aberto" width="1424" height="892" loading="lazy">
+                <p>O Do computador… abre a janela <strong>Anexar PDF ao Artigo</strong>, com duas opções:</p>
                 <ul>
                     <li><strong>Upload do Computador</strong>, pra escolher um arquivo que você baixou;</li>
                     <li><strong>Selecionar da Biblioteca</strong>, pra reaproveitar um PDF que já está salvo no Emma's Librarian (isso é assunto do <a href="#biblioteca-pdfs">Capítulo 6</a>).</li>
                 </ul>
                 <img class="tutorial-img" src="assets/tutoriais/cap4-anexar-pdf.png" alt="Janela Anexar PDF ao Artigo com as opções Upload do Computador e Selecionar da Biblioteca" width="1424" height="892" loading="lazy">
-                <p>E se você ainda não tem o PDF? O botão <strong>DOI</strong>, na mesma linha, abre a página do artigo no navegador, que normalmente é o caminho mais curto pra baixar o arquivo (quando ele é de acesso aberto ou quando a sua instituição tem acesso).</p>
+                <p>E se você ainda não tem o PDF e o artigo não é de acesso aberto? O botão <strong>DOI</strong>, na mesma linha, abre a página do artigo no navegador, que normalmente é o caminho mais curto pra baixar o arquivo quando a sua instituição tem acesso.</p>
                 <p>Com o PDF anexado, aparece o botão <strong>Ler</strong>, que abre o leitor. Pra desvincular o PDF do artigo, use <strong>Desvincular PDF</strong> no menu <strong>⋯</strong> da linha.</p>
+
+                <h3 id="pdfs-abertos">Baixando os PDFs de acesso aberto</h3>
+                <p>Boa parte do que uma busca traz é de acesso aberto. No projeto de exemplo, dos 89 artigos não lidos, 45 estão marcados como Acesso aberto. Baixar cada um pelo navegador, renomear e vincular dá trabalho, e é isso que o <strong>Buscar PDF aberto</strong> faz por você.</p>
+                <p>Quando você clica nele, o sistema pergunta à OpenAlex, pelo DOI do artigo, onde existem cópias abertas dele, e tenta baixar nesta ordem:</p>
+                <ol>
+                    <li>o arXiv, quando o artigo é um <em>preprint</em> de lá;</li>
+                    <li>o PubMed Central, quando o artigo está no conjunto de acesso aberto dele;</li>
+                    <li>repositórios, institucionais ou temáticos;</li>
+                    <li>o site da editora;</li>
+                    <li>por último, o link do PDF que a página do artigo declara. A maioria das editoras deixa esse link no código da página pro Google Acadêmico encontrar, e é com ele que os artigos da Copernicus e de muitos periódicos menores são baixados.</li>
+                </ol>
+                <p>Por que a editora fica quase no fim? Porque muitas editoras protegem os sites contra programas: o link do PDF responde com uma página de verificação em vez do arquivo. Por isso, antes de salvar, o sistema confere se o que chegou é mesmo um PDF, e se não for, passa pra próxima cópia. O PDF baixado vai pra Biblioteca de PDFs (<a href="#biblioteca-pdfs">Capítulo 6</a>) e fica vinculado ao artigo, do mesmo jeito que um upload.</p>
+                <p>Enquanto procura, o botão vira <strong>Buscando PDF…</strong>, e no fim o resultado aparece numa linha embaixo das ações do artigo:</p>
+                <div class="table-wrap"><table class="tutorial-table"><caption>O que cada resultado quer dizer</caption>
+                    <tr><th>Mensagem</th><th>O que quer dizer</th></tr>
+                    <tr><td>PDF baixado. Fonte: arXiv.</td><td>Deu certo, e a fonte diz de qual cópia o arquivo veio.</td></tr>
+                    <tr><td>Há cópia aberta, mas o download automático não funcionou.</td><td>Existe cópia aberta, mas nenhuma entregou o PDF a um programa. O link <strong>Abrir a página</strong> abre o artigo no navegador, onde você baixa à mão.</td></tr>
+                    <tr><td>Nenhuma cópia aberta conhecida.</td><td>A OpenAlex não conhece cópia aberta. O artigo pode ser fechado, ou a cópia pode existir sem a OpenAlex saber.</td></tr>
+                    <tr><td>Sem DOI para procurar a cópia aberta.</td><td>Sem DOI não tem como consultar a OpenAlex. Acontece principalmente com artigos manuais.</td></tr>
+                    <tr><td>O artigo já tem PDF.</td><td>Nada a fazer.</td></tr>
+                    <tr><td>Não foi possível procurar: ...</td><td>Erro de rede ou da OpenAlex. Vale tentar de novo mais tarde.</td></tr>
+                </table></div>
+
+                <h4>Vários artigos de uma vez</h4>
+                <p>Com a seleção mostrada no <a href="#gestao-artigos">Capítulo 3</a>, o botão <strong>Baixar PDFs abertos</strong> faz isso pra todos os artigos selecionados, um de cada vez. O andamento ("Baixando 1 de 8…" e uma barra) fica dentro da própria barra da seleção, junto com um <strong>Cancelar</strong>, e a lista só atualiza no fim, pra não ficar pulando enquanto você lê.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap4-baixando.png" alt="Barra da seleção com oito artigos e o andamento Baixando 1 de 8" width="1424" height="892" loading="lazy">
+                <p>No fim aparece um relatório agrupado em <strong>Baixados</strong>, <strong>Precisam de você</strong> (com o link Abrir a página de cada um), <strong>Falharam</strong>, <strong>Sem cópia aberta ou sem DOI</strong> e <strong>Já tinham PDF</strong>.</p>
+                <p>No projeto de exemplo, filtrei por Acesso aberto e selecionei 8 artigos sem PDF. Foram 4 baixados (dois da Copernicus, um do periódico MAUSAM e um do Research Square) e 4 em Precisam de você: 3 da MDPI, cujo site bloqueia programas, e 1 da Elsevier, cuja página não entrega o link do PDF. Pra esses 4, o Abrir a página leva direto ao artigo no navegador.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap4-relatorio.png" alt="Relatório PDFs abertos: 4 de 8 baixados, com os baixados e os que precisam de você" width="1424" height="892" loading="lazy">
+                <blockquote>
+                    <p>Observação: pra procurar, o sistema manda o DOI do artigo pra OpenAlex e baixa o arquivo direto do site da cópia. E "acesso aberto" aqui é o que a OpenAlex sabe sobre o artigo: se a cópia foi publicada há pouco tempo, ela pode ainda não aparecer.</p>
+                </blockquote>
 
                 <h3>As ferramentas do leitor</h3>
                 <p>O leitor tem três partes: a barra de cima, o PDF no meio e uma barra lateral à direita, com três abas. Vamos passar por cada ferramenta.</p>
@@ -544,10 +638,10 @@
                 <h3>Reaproveitando um PDF em vários projetos</h3>
                 <p>Vamos supor que o artigo "The ERA5 global reanalysis" esteja no projeto de previsão de precipitação, com PDF, e que ele apareça numa busca de outro projeto. Em vez de baixar e anexar o arquivo de novo, você tem dois caminhos:</p>
                 <ul>
-                    <li>no artigo do projeto novo, clique em <strong>PDF</strong> e escolha <strong>Selecionar da Biblioteca</strong>;</li>
+                    <li>no artigo do projeto novo, clique em <strong>Vincular PDF</strong>, depois em <strong>Do computador…</strong>, e escolha <strong>Selecionar da Biblioteca</strong>;</li>
                     <li>ou, na biblioteca, clique em <strong>Vincular a outro Artigo</strong> na linha do PDF e escolha o artigo.</li>
                 </ul>
-                <p>E se você não lembrar e fizer o upload do mesmo arquivo de novo? Tudo bem, o sistema reconhece o arquivo pelo conteúdo, e não pelo nome, então ele não guarda uma segunda cópia. Por isso a descrição da tela fala em deduplicar "de forma transparente": acontece sem você precisar fazer nada.</p>
+                <p>E se você não lembrar e fizer o upload do mesmo arquivo de novo? Tudo bem, o sistema reconhece o arquivo pelo conteúdo, e não pelo nome, então ele não guarda uma segunda cópia. Por isso a descrição da tela fala em deduplicar "de forma transparente": acontece sem você precisar fazer nada. O mesmo vale pros PDFs baixados pelo Buscar PDF aberto, do <a href="#pdfs-abertos">Capítulo 4</a>: se o arquivo já está na biblioteca, ele é reaproveitado.</p>
                 <blockquote>
                     <p>Observação: cuidado ao excluir um PDF que está sendo usado por mais de um artigo. O sistema avisa, mas vale saber o que acontece: o arquivo é apagado do disco e, junto com ele, os destaques, as anotações e os dados da IA ligados a ele, em todos os projetos que o usam.</p>
                 </blockquote>

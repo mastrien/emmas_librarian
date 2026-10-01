@@ -42,9 +42,13 @@ describe('defaultDatabases', () => {
   it.each([
     [{ scopus: '', wos: '', ieee: '' }, ['openalex', 'crossref']],
     [{ scopus: 'k', wos: '', ieee: '' }, ['openalex', 'crossref', 'scopus']],
-    [{ scopus: 'k', wos: 'k', ieee: 'k' }, ['openalex', 'crossref', 'scopus', 'wos', 'ieee']],
+    [{ scopus: 'k', wos: 'k', ieee: '' }, ['openalex', 'crossref', 'scopus', 'wos']],
   ])('selects the free bases plus keyed ones with a key (%o)', (keys, expected) => {
     expect(defaultDatabases(keys)).toEqual(expected);
+  });
+
+  it('leaves the experimental IEEE Xplore unselected even with a key', () => {
+    expect(defaultDatabases({ scopus: '', wos: '', ieee: 'k' })).toEqual(['openalex', 'crossref']);
   });
 });
 
