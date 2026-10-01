@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS search_history (
     sort_by TEXT,
     limit_val INTEGER,
     query_state TEXT,
+    unique_results INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );

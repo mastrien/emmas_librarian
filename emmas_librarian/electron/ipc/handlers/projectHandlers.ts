@@ -4,6 +4,7 @@ import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import type { SearchOrchestrator } from '../../services/SearchOrchestrator';
 import { AppError } from '../errorHandler';
 import { handle, type IpcRegistrar } from './handle';
+import type { SearchLimits } from '../../../src/utils/searchLimits';
 
 /**
  * Projects CRUD, writing pad and search history.
@@ -39,11 +40,11 @@ export function registerSearchHandlers(ipc: IpcRegistrar, db: DatabaseAdapter, o
       _e,
       projectId: number,
       queryMap: Record<string, string>,
-      limit: number,
+      limits: SearchLimits,
       sortBy: QuerySort,
       unifiedQuery: string,
       queryState?: string,
-    ) => orchestrator.preview(projectId, queryMap, limit, sortBy, unifiedQuery, queryState),
+    ) => orchestrator.preview(projectId, queryMap, limits, sortBy, unifiedQuery, queryState),
   );
   handle(ipc, IpcChannel.SEARCH_SAVE_PREVIEW, (_e, previewId: string) => orchestrator.savePreview(previewId));
   handle(ipc, IpcChannel.SEARCH_DISCARD_PREVIEW, (_e, previewId: string) => orchestrator.discardPreview(previewId));

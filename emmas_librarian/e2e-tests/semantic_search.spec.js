@@ -1,10 +1,25 @@
 const { test, expect } = require('@playwright/test');
 const { launchApp, getFirstWindow, createProject } = require('./helpers');
 
-async function runSearch(window, term) {
+async function runSearch(window, term, setLimits = async () => {}) {
   await window.click('text="Nova busca"');
   await window.fill('input[placeholder="Termo de busca..."]', term);
+  await setLimits();
   await window.click('button:has-text("Fazer Busca")');
+}
+
+// A limit above a base's ceiling blocks the search; then a common value with one per-base adjustment.
+async function chooseLimits(window) {
+  const common = window.getByLabel('Máximo de resultados por base');
+  const searchButton = window.getByRole('button', { name: /Fazer Busca/ });
+  await common.fill('20000');
+  await expect(window.getByRole('alert')).toContainText('OpenAlex aceita até 10.000 resultados');
+  await expect(searchButton).toBeDisabled();
+  await common.fill('1500');
+  await window.getByText('Ajustar por base').click();
+  await window.getByLabel('Crossref', { exact: true }).fill('300');
+  await expect(window.getByLabel('Resultados pedidos a cada base')).toHaveText('OpenAlex 1.500 · Crossref 300');
+  await expect(searchButton).toBeEnabled();
 }
 
 test('F-05 Semantic / relevance search via QueryBuilder', async () => {
@@ -37,7 +52,7 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
     await expect(window.getByText('Nova busca')).toBeVisible();
     await expect(resultRow).toHaveCount(0);
 
-    await runSearch(window, 'aprendizado de maquina');
+    await runSearch(window, 'aprendizado de maquina', () => chooseLimits(window));
     await review.getByRole('button', { name: /Salvar .*no projeto/ }).click();
 
     await expect(resultRow).toBeVisible({ timeout: 10000 });
@@ -51,14 +66,20 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
     await window.getByRole('button', { name: /^Filtros/ }).click();
     await expect(authorsHeader).toBeVisible();
 
-    // The saved search can be reopened in the query builder from the history.
+    // The history records what was asked of each base and what came back (traceability).
     await window.getByTestId('tab-history').click();
+    await expect(window.getByText('1.500 por base (Crossref 300)')).toBeVisible();
+    await expect(window.getByText('Únicos entre as bases: 1')).toBeVisible();
+
+    // The saved search can be reopened in the query builder from the history, limits included.
     await window
       .getByRole('link', { name: /Nova busca a partir desta/ })
       .first()
       .click();
     await expect(window.getByRole('status')).toContainText('carregada do histórico');
     await expect(window.locator('input[placeholder="Termo de busca..."]')).toHaveValue('aprendizado de maquina');
+    await expect(window.getByLabel('Máximo de resultados por base')).toHaveValue('1500');
+    await expect(window.getByLabel('Crossref', { exact: true })).toHaveValue('300');
   } finally {
     await electronApp.close();
   }

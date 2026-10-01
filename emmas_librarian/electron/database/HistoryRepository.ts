@@ -2,6 +2,14 @@ import type { Database } from 'better-sqlite3';
 import { DiaryEntry } from '../../src/types';
 import fs from 'fs';
 
+/** What only a database search records beyond the query and its per-base breakdown. */
+export interface SearchRunDetails {
+  sortBy?: string;
+  limitVal?: number;
+  queryState?: string;
+  uniqueResults?: number;
+}
+
 export class HistoryRepository {
   private db: Database;
 
@@ -10,19 +18,24 @@ export class HistoryRepository {
   }
 
   // --- Search History ---
+  /**
+   * Records a search (or an import that adds articles) and returns its id. `details` holds what only a
+   * database search has: its sort, common limit, builder state and distinct results before saving.
+   *
+   * Usage:
+   *   repo.saveSearchHistory(1, 'x', { openalex: 'q' }, 12, breakdown, { sortBy: 'date', limitVal: 1000, uniqueResults: 40 });
+   */
   public saveSearchHistory(
     projectId: number,
     unifiedQuery: string,
     translatedQueries: Record<string, string>,
     totalResults: number,
     breakdown: Record<string, unknown>,
-    sortBy?: string,
-    limitVal?: number,
-    queryState?: string,
+    details: SearchRunDetails = {},
   ): number {
     const stmt = this.db.prepare(`
-      INSERT INTO search_history (project_id, unified_query, translated_queries, total_results, results_breakdown, sort_by, limit_val, query_state, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO search_history (project_id, unified_query, translated_queries, total_results, results_breakdown, sort_by, limit_val, query_state, unique_results, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const info = stmt.run(
       projectId,
@@ -30,9 +43,10 @@ export class HistoryRepository {
       JSON.stringify(translatedQueries),
       totalResults,
       JSON.stringify(breakdown),
-      sortBy || null,
-      limitVal ?? null,
-      queryState ?? null,
+      details.sortBy || null,
+      details.limitVal ?? null,
+      details.queryState ?? null,
+      details.uniqueResults ?? null,
       new Date().toISOString(),
     );
     return info.lastInsertRowid as number;

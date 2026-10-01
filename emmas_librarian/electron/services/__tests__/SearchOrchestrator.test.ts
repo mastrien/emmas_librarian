@@ -4,6 +4,8 @@ import { QueryTranslator } from '../QueryTranslator';
 import { ApiIntegrator } from '../ApiIntegrator';
 import { NormalizedArticle } from '../types';
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import type { PagedResult } from '../searchApis/paginate';
+import type { SearchLimits } from '../../../src/utils/searchLimits';
 
 // Settings are encrypted with safeStorage; a reversible fake keeps the real SettingsRepository path.
 vi.mock('electron', () => ({
@@ -19,32 +21,46 @@ type DatabaseName = 'openalex' | 'crossref' | 'scopus' | 'wos';
 /** Stands in for the network: each database returns canned articles and records what it was asked. */
 class FakeApiIntegrator extends ApiIntegrator {
   readonly results: Partial<Record<DatabaseName, NormalizedArticle[] | Error>> = {};
+  /** A base that stopped mid-search: its articles are kept and this explains why there are fewer. */
+  readonly warnings: Partial<Record<DatabaseName, string>> = {};
+  /** How many results the base says it has, when the test wants it reported. */
+  readonly available: Partial<Record<DatabaseName, number>> = {};
   readonly calls: { database: DatabaseName; args: unknown[] }[] = [];
 
-  override async searchOpenAlex(...args: unknown[]): Promise<NormalizedArticle[]> {
+  override async searchOpenAlex(...args: unknown[]): Promise<PagedResult> {
     return this.answer('openalex', args);
   }
 
-  override async searchCrossref(...args: unknown[]): Promise<NormalizedArticle[]> {
+  override async searchCrossref(...args: unknown[]): Promise<PagedResult> {
     return this.answer('crossref', args);
   }
 
-  override async searchScopus(...args: unknown[]): Promise<NormalizedArticle[]> {
+  override async searchScopus(...args: unknown[]): Promise<PagedResult> {
     return this.answer('scopus', args);
   }
 
-  override async searchWoS(...args: unknown[]): Promise<NormalizedArticle[]> {
+  override async searchWoS(...args: unknown[]): Promise<PagedResult> {
     return this.answer('wos', args);
   }
 
-  private answer(database: DatabaseName, args: unknown[]): NormalizedArticle[] {
+  private answer(database: DatabaseName, args: unknown[]): PagedResult {
     this.calls.push({ database, args });
     const result = this.results[database] ?? [];
     if (result instanceof Error) throw result;
     // Fresh copies: the orchestrator merges source lists in place while deduplicating.
-    return result.map((a) => ({ ...a, source_databases: [...a.source_databases] }));
+    const articles = result.map((a) => ({ ...a, source_databases: [...a.source_databases] }));
+    const warning = this.warnings[database];
+    const available = this.available[database];
+    return {
+      articles,
+      requests: 1,
+      ...(available !== undefined && { available }),
+      ...(warning && { warning }),
+    };
   }
 }
+
+const limits = (common: number, perBase: SearchLimits['perBase'] = {}): SearchLimits => ({ common, perBase });
 
 const found = (doi: string, title: string, source: string): NormalizedArticle => ({
   doi,
@@ -80,7 +96,7 @@ describe('SearchOrchestrator', () => {
       const preview = await orchestrator.preview(
         projectId,
         { openalex: 'filter=title.search:test', crossref: 'query=test' },
-        100,
+        limits(100),
         'relevance',
         'title contains "test"',
       );
@@ -96,7 +112,10 @@ describe('SearchOrchestrator', () => {
           details: {},
         },
       ]);
-      expect(preview.breakdown).toEqual({ openalex: { count: 1 }, crossref: { count: 1 } });
+      expect(preview.breakdown).toEqual({
+        openalex: { count: 1, requested: 100, requests: 1 },
+        crossref: { count: 1, requested: 100, requests: 1 },
+      });
       expect(db.getArticlesByProject(projectId)).toHaveLength(0);
       expect(db.getSearchHistory(projectId)).toHaveLength(0);
     });
@@ -113,7 +132,7 @@ describe('SearchOrchestrator', () => {
         },
       ];
 
-      const preview = await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q');
+      const preview = await orchestrator.preview(projectId, { openalex: 'q' }, limits(50), 'relevance', 'q');
       orchestrator.savePreview(preview.previewId);
 
       expect(preview.results[0].details).toMatchObject({
@@ -148,7 +167,13 @@ describe('SearchOrchestrator', () => {
       ];
       api.results.scopus = [found('10.1016/J.ENV.2024', 'Soil Moisture: a review', 'Scopus')];
 
-      const preview = await orchestrator.preview(projectId, { openalex: 'q', scopus: 'q' }, 50, 'relevance', 'q');
+      const preview = await orchestrator.preview(
+        projectId,
+        { openalex: 'q', scopus: 'q' },
+        limits(50),
+        'relevance',
+        'q',
+      );
 
       expect(preview.results.map((r) => [r.doi, r.sourceDatabases, r.alreadyInProject])).toEqual([
         ['10.1016/j.env.2024', ['OpenAlex', 'Scopus'], false],
@@ -164,7 +189,7 @@ describe('SearchOrchestrator', () => {
       const preview = await orchestrator.preview(
         projectId,
         { openalex: 'q', crossref: 'q', scopus: 'q' },
-        50,
+        limits(50),
         'relevance',
         'q',
       );
@@ -182,7 +207,7 @@ describe('SearchOrchestrator', () => {
       });
       api.results.openalex = [found('10.1/old', 'Old', 'OpenAlex'), found('10.1/new', 'New', 'OpenAlex')];
 
-      const preview = await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q');
+      const preview = await orchestrator.preview(projectId, { openalex: 'q' }, limits(50), 'relevance', 'q');
 
       expect(preview.results.map((r) => [r.doi, r.alreadyInProject])).toEqual([
         ['10.1/old', true],
@@ -194,17 +219,80 @@ describe('SearchOrchestrator', () => {
       api.results.openalex = [found('10.1/a', 'A', 'OpenAlex')];
       api.results.crossref = new Error('HTTP 503');
 
-      const preview = await orchestrator.preview(projectId, { openalex: 'q', crossref: 'q' }, 50, 'relevance', 'q');
+      const preview = await orchestrator.preview(
+        projectId,
+        { openalex: 'q', crossref: 'q' },
+        limits(50),
+        'relevance',
+        'q',
+      );
 
-      expect(preview.breakdown.crossref).toEqual({ count: 0, error: 'HTTP 503' });
+      expect(preview.breakdown.crossref).toEqual({ count: 0, requested: 50, error: 'HTTP 503' });
       expect(preview.results).toHaveLength(1);
+    });
+
+    it('keeps what a base returned before stopping and carries its warning to the summary', async () => {
+      api.results.wos = [found('10.1/w', 'W', 'Web of Science')];
+      api.warnings.wos = 'Web of Science: a busca parou em 1 de 100 resultados (Erro 429).';
+      api.results.openalex = [found('10.1/a', 'A', 'OpenAlex')];
+
+      const preview = await orchestrator.preview(projectId, { openalex: 'q', wos: 'q' }, limits(100), 'relevance', 'q');
+
+      expect(preview.breakdown).toEqual({
+        openalex: { count: 1, requested: 100, requests: 1 },
+        wos: {
+          count: 1,
+          requested: 100,
+          requests: 1,
+          warning: 'Web of Science: a busca parou em 1 de 100 resultados (Erro 429).',
+        },
+      });
+      expect(preview.results.map((r) => r.title).sort()).toEqual(['A', 'W']);
+    });
+
+    it('asks each base for its own limit: the adjustment, or the common value', async () => {
+      await orchestrator.preview(projectId, { openalex: 'q', wos: 'q' }, limits(1000, { wos: 500 }), 'relevance', 'q');
+
+      expect(api.calls.map((c) => [c.database, c.args[c.database === 'wos' ? 3 : 2]])).toEqual([
+        ['openalex', 1000],
+        ['wos', 500],
+      ]);
+    });
+
+    it('refuses a limit above a base ceiling before asking any base', async () => {
+      await expect(
+        orchestrator.preview(projectId, { openalex: 'q', wos: 'q' }, limits(3000), 'relevance', 'q'),
+      ).rejects.toThrow('Offending value: wos=3000. Expected shape: wos: inteiro de 1 a 2500.');
+
+      expect(api.calls).toEqual([]);
+    });
+
+    // A review reports how many records each base identified, not only how many were retrieved.
+    it('records how many results each base had for the query', async () => {
+      api.results.openalex = [found('10.1/a', 'A', 'OpenAlex')];
+      api.available.openalex = 5321;
+
+      const preview = await orchestrator.preview(projectId, { openalex: 'q' }, limits(1), 'relevance', 'q');
+
+      expect(preview.breakdown.openalex).toEqual({ count: 1, requested: 1, requests: 1, available: 5321 });
+    });
+
+    it('passes the stored OpenAlex key, and none when it is not set', async () => {
+      await orchestrator.preview(projectId, { openalex: 'q' }, limits(50), 'relevance', 'q');
+      db.setSetting('openalex_api_key', 'openalex-secret-key');
+      await orchestrator.preview(projectId, { openalex: 'q' }, limits(50), 'relevance', 'q');
+
+      expect(api.calls.map((c) => c.args)).toEqual([
+        ['q', 'relevance', 50, ''],
+        ['q', 'relevance', 50, 'openalex-secret-key'],
+      ]);
     });
 
     it('passes the stored Scopus and WoS keys to their APIs', async () => {
       db.setSetting('scopus_api_key', 'scopus-secret-key');
       db.setSetting('wos_api_key', 'wos-secret-key');
 
-      await orchestrator.preview(projectId, { scopus: 'title("test")', wos: 'TS=test' }, 50, 'relevance', 'q');
+      await orchestrator.preview(projectId, { scopus: 'title("test")', wos: 'TS=test' }, limits(50), 'relevance', 'q');
 
       expect(api.calls).toEqual([
         { database: 'scopus', args: ['title("test")', 'scopus-secret-key', 'relevance', 50] },
@@ -220,28 +308,43 @@ describe('SearchOrchestrator', () => {
       const { previewId } = await orchestrator.preview(
         projectId,
         { openalex: 'q', crossref: 'q' },
-        100,
+        limits(100),
         'citations',
         'title contains "test"',
       );
 
       const summary = orchestrator.savePreview(previewId);
 
-      expect(summary).toEqual({ savedCount: 1, breakdown: { openalex: { count: 1 }, crossref: { count: 1 } } });
+      expect(summary).toEqual({
+        savedCount: 1,
+        breakdown: {
+          openalex: { count: 1, requested: 100, requests: 1 },
+          crossref: { count: 1, requested: 100, requests: 1 },
+        },
+      });
       const [article] = db.getArticlesByProject(projectId);
       expect(article.source_databases).toBe('["OpenAlex","Crossref"]');
       const [history] = db.getSearchHistory(projectId);
-      expect([history.unified_query, history.sort_by, history.limit_val]).toEqual([
+      // Both bases found the same article: one distinct result before saving.
+      expect([history.unified_query, history.sort_by, history.limit_val, history.unique_results]).toEqual([
         'title contains "test"',
         'citations',
         100,
+        1,
       ]);
       expect(article.search_id).toBe(history.id);
     });
 
     it('stores the query builder state with the history entry', async () => {
       const state = '{"ast":{"type":"rule"},"selectedDbs":["openalex"],"customQueries":{}}';
-      const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q', state);
+      const { previewId } = await orchestrator.preview(
+        projectId,
+        { openalex: 'q' },
+        limits(50),
+        'relevance',
+        'q',
+        state,
+      );
 
       orchestrator.savePreview(previewId);
 
@@ -259,7 +362,7 @@ describe('SearchOrchestrator', () => {
         csl_json: '{}',
       });
       api.results.openalex = [found('10.1/old', 'Old', 'OpenAlex'), found('10.1/new', 'New', 'OpenAlex')];
-      const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q');
+      const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, limits(50), 'relevance', 'q');
 
       const summary = orchestrator.savePreview(previewId);
 
@@ -271,7 +374,7 @@ describe('SearchOrchestrator', () => {
       api.results.openalex = [found('10.5555/dup', 'Same Search Article', 'OpenAlex')];
 
       for (let run = 0; run < 2; run++) {
-        const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, 100, 'relevance', 'q');
+        const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, limits(100), 'relevance', 'q');
         orchestrator.savePreview(previewId);
       }
 
@@ -279,7 +382,7 @@ describe('SearchOrchestrator', () => {
     });
 
     it('refuses a preview that was already saved, naming the offending id', async () => {
-      const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q');
+      const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, limits(50), 'relevance', 'q');
       orchestrator.savePreview(previewId);
 
       expect(() => orchestrator.savePreview(previewId)).toThrow(`previewId=${previewId}`);
@@ -288,7 +391,7 @@ describe('SearchOrchestrator', () => {
 
   it('keeps the results for another try when saving fails', async () => {
     api.results.openalex = [found('10.1/a', 'A', 'OpenAlex')];
-    const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q');
+    const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, limits(50), 'relevance', 'q');
     const saveHistory = vi.spyOn(db, 'saveSearchHistory').mockImplementationOnce(() => {
       throw new Error('SQLITE_BUSY');
     });
@@ -302,7 +405,7 @@ describe('SearchOrchestrator', () => {
   describe('discardPreview', () => {
     it('leaves the project untouched and makes the preview unsavable', async () => {
       api.results.openalex = [found('10.1/a', 'A', 'OpenAlex')];
-      const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, 50, 'relevance', 'q');
+      const { previewId } = await orchestrator.preview(projectId, { openalex: 'q' }, limits(50), 'relevance', 'q');
 
       orchestrator.discardPreview(previewId);
 

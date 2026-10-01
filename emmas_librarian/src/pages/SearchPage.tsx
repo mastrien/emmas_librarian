@@ -7,6 +7,7 @@ import { Search, Loader2, ArrowLeft } from 'lucide-react';
 import { SearchSummaryModal } from '../components/modals/SearchSummaryModal';
 import { useDebounce } from '../hooks/useDebounce';
 import { describeError } from '../utils/describeError';
+import { defaultSearchLimits, limitProblems, type SearchLimits } from '../utils/searchLimits';
 import {
   EMPTY_QUERY,
   SEARCH_DATABASES,
@@ -63,7 +64,7 @@ export const SearchPage: React.FC = () => {
   const debouncedAst = useDebounce(ast, TRANSLATION_DEBOUNCE_MS);
   const [translations, setTranslations] = useState<DatabaseTranslationMap>({});
   const [customQueries, setCustomQueries] = useState<Record<string, string>>({});
-  const [limit, setLimit] = useState(50);
+  const [limits, setLimits] = useState<SearchLimits>(defaultSearchLimits);
   const [sortBy, setSortBy] = useState<QuerySort>('relevance');
   const [selectedDbs, setSelectedDbs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -79,7 +80,7 @@ export const SearchPage: React.FC = () => {
     setSelectedDbs(usableDatabases(restored.state.selectedDbs, keys));
     setCustomQueries(restored.state.customQueries);
     if (restored.sortBy) setSortBy(restored.sortBy);
-    if (restored.limit) setLimit(restored.limit);
+    if (restored.limits) setLimits(restored.limits);
     setRestoredFrom({ id: searchId, isLegacy: restored.isLegacy });
   };
 
@@ -124,9 +125,9 @@ export const SearchPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const queryState = JSON.stringify({ ast, selectedDbs, customQueries });
+      const queryState = JSON.stringify({ ast, selectedDbs, customQueries, limits });
       setPreview(
-        await projectService.previewSearch(projectId, queries, limit, sortBy, describeQueryTree(ast), queryState),
+        await projectService.previewSearch(projectId, queries, limits, sortBy, describeQueryTree(ast), queryState),
       );
     } catch (err: unknown) {
       console.error('Search error:', err);
@@ -154,9 +155,12 @@ export const SearchPage: React.FC = () => {
     projectService.discardSearchPreview(previewId).catch((err: unknown) => console.error('Discard error:', err));
   };
 
+  // A limit above a base's ceiling blocks the search, so it never runs differently from what the page shows.
+  const limitsBlocked = limitProblems(limits, selectedDbs).length > 0;
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id || selectedDbs.length === 0) return;
+    if (!id || selectedDbs.length === 0 || limitsBlocked) return;
     const result = buildFinalQueries(selectedDbs, customQueries, translations);
     if ('invalidDatabase' in result) {
       return setError(
@@ -228,10 +232,10 @@ export const SearchPage: React.FC = () => {
 
         <SearchOptionsCard
           sortBy={sortBy}
-          limit={limit}
+          limits={limits}
           selected={selectedDbs}
           onSortByChange={setSortBy}
-          onLimitChange={setLimit}
+          onLimitsChange={setLimits}
         />
 
         {error && (
@@ -250,7 +254,7 @@ export const SearchPage: React.FC = () => {
 
         <button
           type="submit"
-          disabled={loading || selectedDbs.length === 0}
+          disabled={loading || selectedDbs.length === 0 || limitsBlocked}
           className="btn-primary"
           style={{
             width: '100%',

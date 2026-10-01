@@ -7,6 +7,7 @@ import type {
   SearchHistoryItem,
   SearchQueryState,
 } from '../../types';
+import type { SearchLimits } from '../../utils/searchLimits';
 
 export const SEARCH_DATABASES = [
   { id: 'openalex', label: 'OpenAlex' },
@@ -92,7 +93,7 @@ export function buildFinalQueries(
 export interface RestoredSearch {
   state: SearchQueryState;
   sortBy?: QuerySort;
-  limit?: number;
+  limits?: SearchLimits;
   // Searches saved before the builder state was stored only have the query sent to each base.
   isLegacy: boolean;
 }
@@ -119,6 +120,15 @@ function legacyQueryState(item: SearchHistoryItem): SearchQueryState | null {
   return selectedDbs.length ? { ast: EMPTY_QUERY, selectedDbs, customQueries } : null;
 }
 
+// Searches saved before pagination only have limit_val, the one limit then shared by every base.
+function restoredLimits(state: SearchQueryState, item: SearchHistoryItem): SearchLimits | undefined {
+  const saved = state.limits;
+  if (saved && typeof saved.common === 'number' && saved.perBase && typeof saved.perBase === 'object') {
+    return { common: saved.common, perBase: { ...saved.perBase } };
+  }
+  return item.limit_val ? { common: item.limit_val, perBase: {} } : undefined;
+}
+
 /**
  * Rebuilds the search page state from a history entry; null for entries that were not a
  * database search (imports, manual additions, batch PDF imports).
@@ -134,7 +144,7 @@ export function restoreSearch(item: SearchHistoryItem): RestoredSearch | null {
   return {
     state,
     sortBy: item.sort_by && QUERY_SORTS.has(item.sort_by) ? (item.sort_by as QuerySort) : undefined,
-    limit: item.limit_val ?? undefined,
+    limits: restoredLimits(state, item),
     isLegacy: !stored,
   };
 }

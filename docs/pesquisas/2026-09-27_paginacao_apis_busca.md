@@ -86,3 +86,27 @@ aceita até 100.000, mas na prática:
 
 Ordem sugerida: 1 com testes da paginação por base (fake de `fetch` com páginas), depois 2 e 3,
 e por último 4 e 5.
+
+## O que foi implementado (2026-09-28)
+
+Branch `feat/search-pagination`. Decisões do autor em https://claude.ai/artifact/VKtAbGQgpzAhyPCHgnEmRq.
+
+- **Paginação por base** (`electron/services/searchApis/`), com um paginador comum (`paginate.ts`):
+
+  | Base | Por página | Como avança | Teto por busca |
+  |---|---|---|---|
+  | OpenAlex | 100 | cursor | 10.000 |
+  | Crossref | 1.000 | cursor | 10.000 |
+  | Scopus | 200 | `start` | 5.000 |
+  | WoS | 50 | página, 1,1 s entre requisições | 2.500 |
+
+  Tetos e tamanhos de página ficam em `src/utils/searchLimits.ts`, usado pela tela e pelo processo principal.
+- **Limite na tela** (proposta C): um valor comum (1.000) e "Ajustar por base". **Acima do teto a busca é
+  bloqueada**, nunca cortada em silêncio; o processo principal valida de novo.
+- **429**: espera o `Retry-After` (até 5 s) e tenta de novo uma vez.
+- **Falhas**: base que falha na primeira página falha sozinha; interrompida no meio, guarda o que veio e avisa no
+  resumo (aviso V1, na linha da base).
+- **Chave da OpenAlex** opcional em Configurações, enviada como `Authorization: Bearer`.
+- **Rastreabilidade no histórico**: por base, `requested` (limite pedido), `available` (quantos a base tinha),
+  `requests` (custo), `warning`/`error`; na busca, `unique_results` (únicos entre as bases antes de salvar), o
+  limite comum em `limit_val` e os ajustes em `query_state.limits`.

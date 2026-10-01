@@ -8,6 +8,7 @@
  *   const svc: IProjectService = projectService;   // real
  *   const svc: IProjectService = new FakeService(); // test double
  */
+import type { SearchLimits } from '../utils/searchLimits';
 import type {
   SearchPreview,
   SavedSearchSummary,
@@ -93,7 +94,7 @@ export interface IProjectService {
   previewSearch(
     projectId: number,
     queryMap: Record<string, string>,
-    limit: number,
+    limits: SearchLimits,
     sortBy: string,
     unifiedQuery: string,
     queryState?: string,
