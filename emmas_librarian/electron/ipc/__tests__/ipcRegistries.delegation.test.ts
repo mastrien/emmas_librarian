@@ -51,6 +51,7 @@ const cases: DelegationCase[] = [
   viaDb(IpcChannel.ARTICLES_GET_BY_PROJECT, 'getArticlesByProject', [1]),
   viaDb(IpcChannel.ARTICLES_GET_ONE, 'getArticle', [2]),
   viaDb(IpcChannel.ARTICLES_UPDATE_STATUS, 'updateArticleStatus', [2, 'read', 'nota']),
+  viaDb(IpcChannel.ARTICLES_UPDATE_STATUS_MANY, 'updateArticlesStatus', [[2, 3], 'archived', 'fora do escopo']),
   viaDb(IpcChannel.ARTICLES_UPDATE_METADATA, 'updateArticleMetadata', [2, { title: 'T' }]),
   viaDb(IpcChannel.SETTINGS_GET, 'getSetting', ['theme']),
   viaDb(IpcChannel.SETTINGS_SET, 'setSetting', ['theme', 'dark']),

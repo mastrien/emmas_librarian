@@ -3,6 +3,8 @@ import { IpcChannel } from '../../types';
 import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import { handle, type IpcRegistrar } from './handle';
 import { savePdfToStorage } from './pdfStorage';
+import type { OpenAccessService } from '../../services/openAccess/OpenAccessService';
+import { openAccessServiceFor } from '../../services/openAccess/openAccessServiceFor';
 
 /**
  * Article PDFs and the global PDF library (upload, read, link, unlink, delete).
@@ -10,7 +12,11 @@ import { savePdfToStorage } from './pdfStorage';
  * Usage:
  *   registerPdfHandlers(ipcMain, db);
  */
-export function registerPdfHandlers(ipc: IpcRegistrar, db: DatabaseAdapter): void {
+export function registerPdfHandlers(
+  ipc: IpcRegistrar,
+  db: DatabaseAdapter,
+  openAccess: Pick<OpenAccessService, 'fetchForArticle'> = openAccessServiceFor(db, process.env),
+): void {
   handle(ipc, IpcChannel.PDF_UPLOAD, (_e, articleId: number, sourceFilePath: string) => {
     const { destPath } = savePdfToStorage(db, sourceFilePath);
     db.linkPdfToArticle(articleId, destPath);
@@ -18,6 +24,7 @@ export function registerPdfHandlers(ipc: IpcRegistrar, db: DatabaseAdapter): voi
   });
   handle(ipc, IpcChannel.PDF_GET, (_e, articleId: number) => readArticlePdf(db, articleId));
   handle(ipc, IpcChannel.PDF_UNLINK, (_e, articleId: number) => unlinkArticlePdf(db, articleId));
+  handle(ipc, IpcChannel.PDF_FETCH_OPEN_ACCESS, (_e, articleId: number) => openAccess.fetchForArticle(articleId));
 
   handle(ipc, IpcChannel.PDF_LIBRARY_LIST, () => db.getStoredPdfs());
   handle(ipc, IpcChannel.PDF_LIBRARY_DELETE, (_e, filePath: string) => {

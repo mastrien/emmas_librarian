@@ -20,6 +20,8 @@ import {
 } from '../types';
 import { parseIpcError } from '../utils/AppError';
 import type { IProjectService } from './ProjectServiceInterface';
+import type { SearchLimits } from '../utils/searchLimits';
+import type { OpenAccessOutcome } from '../types';
 
 // Highlights are stored with a numeric id and JSON-encoded position; the UI works with string ids and objects.
 interface HighlightRow {
@@ -70,12 +72,12 @@ export const projectService: IProjectService = {
   previewSearch: (
     projectId: number,
     queryMap: Record<string, string>,
-    limit: number,
+    limits: SearchLimits,
     sortBy: string,
     unifiedQuery: string,
     queryState?: string,
   ): Promise<SearchPreview> =>
-    safeInvoke(IpcChannel.SEARCH_PREVIEW, projectId, queryMap, limit, sortBy, unifiedQuery, queryState),
+    safeInvoke(IpcChannel.SEARCH_PREVIEW, projectId, queryMap, limits, sortBy, unifiedQuery, queryState),
 
   saveSearchPreview: (previewId: string): Promise<SavedSearchSummary> =>
     safeInvoke(IpcChannel.SEARCH_SAVE_PREVIEW, previewId),
@@ -101,6 +103,9 @@ export const projectService: IProjectService = {
   async updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', note?: string): Promise<void> {
     await safeInvoke(IpcChannel.ARTICLES_UPDATE_STATUS, articleId, status, note);
   },
+
+  updateArticlesStatus: (articleIds: number[], status: 'new' | 'read' | 'archived', note?: string): Promise<number> =>
+    safeInvoke(IpcChannel.ARTICLES_UPDATE_STATUS_MANY, articleIds, status, note),
 
   async updateArticleMetadata(articleId: number, data: Partial<Article>): Promise<void> {
     await safeInvoke(IpcChannel.ARTICLES_UPDATE_METADATA, articleId, data);
@@ -188,6 +193,9 @@ export const projectService: IProjectService = {
     await safeInvoke(IpcChannel.PDF_UNLINK, articleId);
   },
 
+  fetchOpenAccessPdf: (articleId: number): Promise<OpenAccessOutcome> =>
+    safeInvoke(IpcChannel.PDF_FETCH_OPEN_ACCESS, articleId),
+
   createManualArticle: (projectId: number, data: Partial<Article>, sourceFilePath?: string): Promise<number> =>
     safeInvoke(IpcChannel.ARTICLES_CREATE_MANUAL, projectId, data, sourceFilePath),
 
@@ -253,7 +261,7 @@ export const projectService: IProjectService = {
 
   restoreBackupOverride: (): Promise<boolean> => safeInvoke(IpcChannel.BACKUP_RESTORE_OVERRIDE),
 
-  restoreBackupMerge: (): Promise<number> => safeInvoke(IpcChannel.BACKUP_RESTORE_MERGE),
+  restoreBackupMerge: (): Promise<number | null> => safeInvoke(IpcChannel.BACKUP_RESTORE_MERGE),
 
   async listAutoBackups(): Promise<{ filename: string; date: string; sizeBytes: number }[]> {
     return safeInvoke(IpcChannel.BACKUP_LIST_AUTO);

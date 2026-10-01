@@ -1,3 +1,5 @@
+import type { SearchLimits } from '../../../utils/searchLimits';
+import type { OpenAccessOutcome } from '../../../types';
 import type {
   SearchHistoryItem,
   SearchPreview,
@@ -80,7 +82,7 @@ export class FakeProjectService implements IProjectService {
     async (
       _projectId: number,
       _queryMap: Record<string, string>,
-      _limit: number,
+      _limits: SearchLimits,
       _sortBy: string,
       _unifiedQuery: string,
       _queryState?: string,
@@ -107,6 +109,10 @@ export class FakeProjectService implements IProjectService {
 
   updateArticleStatus = vi.fn(
     async (_articleId: number, _status: 'new' | 'read' | 'archived', _note?: string): Promise<void> => undefined,
+  );
+  updateArticlesStatus = vi.fn(
+    async (articleIds: number[], _status: 'new' | 'read' | 'archived', _note?: string): Promise<number> =>
+      articleIds.length,
   );
 
   updateArticleMetadata = vi.fn(async (_articleId: number, _data: Partial<Article>): Promise<void> => undefined);
@@ -173,6 +179,8 @@ export class FakeProjectService implements IProjectService {
   uploadPdf = vi.fn(async (_articleId: number, _filePath: string): Promise<string> => '');
 
   unlinkPdf = vi.fn(async (_articleId: number): Promise<void> => undefined);
+
+  fetchOpenAccessPdf = vi.fn(async (_articleId: number): Promise<OpenAccessOutcome> => ({ status: 'not-open' }));
 
   getPdfBuffer = vi.fn(async (_articleId: number): Promise<ArrayBuffer> => new ArrayBuffer(0));
 
@@ -289,7 +297,7 @@ export class FakeProjectService implements IProjectService {
 
   restoreBackupOverride = vi.fn(async (): Promise<boolean> => false);
 
-  restoreBackupMerge = vi.fn(async (): Promise<number> => 0);
+  restoreBackupMerge = vi.fn(async (): Promise<number | null> => 0);
 
   listAutoBackups = vi.fn(async (): Promise<AutoBackupEntry[]> => []);
 

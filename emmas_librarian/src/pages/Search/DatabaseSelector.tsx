@@ -1,5 +1,5 @@
 import React from 'react';
-import { SEARCH_DATABASES } from './searchQueries';
+import { IEEE_EXPERIMENTAL_NOTE, SEARCH_DATABASES } from './searchQueries';
 
 interface DatabaseSelectorProps {
   selected: string[];
@@ -27,6 +27,17 @@ const dotStyle = (isSelected: boolean): React.CSSProperties => ({
   background: isSelected ? 'var(--color-primary)' : 'var(--border-color)',
 });
 
+const experimentalTagStyle: React.CSSProperties = {
+  fontSize: '0.7rem',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  padding: '0.1rem 0.45rem',
+  borderRadius: 'var(--radius-sm)',
+  color: 'var(--color-warning)',
+  border: '1px solid var(--color-warning)',
+};
+
 /**
  * Toggle chips for the bibliographic databases to search.
  *
@@ -50,13 +61,26 @@ export const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({ selected, on
       {SEARCH_DATABASES.map((db) => {
         const isSelected = selected.includes(db.id);
         return (
-          <button key={db.id} type="button" onClick={() => onToggle(db.id)} style={chipStyle(isSelected)}>
+          <button
+            key={db.id}
+            type="button"
+            onClick={() => onToggle(db.id)}
+            style={chipStyle(isSelected)}
+            // The tag is its own span; without this, Chromium reads the name as "IEEE XploreExperimental".
+            aria-label={db.experimental ? `${db.label} (experimental)` : undefined}
+          >
             <div style={dotStyle(isSelected)}></div>
             {db.label}
+            {db.experimental && <span style={experimentalTagStyle}>Experimental</span>}
           </button>
         );
       })}
     </div>
+    {selected.includes('ieee') && (
+      <p role="note" style={{ color: 'var(--color-warning)', fontSize: '0.9rem', marginTop: '1rem' }}>
+        {IEEE_EXPERIMENTAL_NOTE}
+      </p>
+    )}
     {selected.length === 0 && (
       <p style={{ color: 'var(--color-danger)', fontSize: '0.9rem', marginTop: '1rem' }}>
         Selecione pelo menos uma base.

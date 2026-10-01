@@ -121,6 +121,17 @@ describe('SearchPage', () => {
     expect(screen.queryByText('Chave de API Necessária')).not.toBeInTheDocument();
   });
 
+  it('asks for the IEEE Xplore key before selecting it, naming the base', async () => {
+    fakeService.getSetting.mockResolvedValue(null);
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: /IEEE Xplore/ }));
+
+    expect(screen.getByText('Chave de API Necessária')).toBeInTheDocument();
+    expect(screen.getByText('IEEE Xplore', { selector: 'strong' })).toBeInTheDocument();
+  });
+
   it('navigates to settings from key alert', async () => {
     fakeService.getSetting.mockResolvedValue(null);
     renderPage();
@@ -341,27 +352,6 @@ describe('SearchPage', () => {
     expect(screen.getByText('{"unknown":"data"}')).toBeInTheDocument();
   });
 
-  it('handles limit input changes and NaN fallback', async () => {
-    renderPage();
-    await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
-
-    // We can't query by label easily because the input doesn't have an associated id/htmlFor,
-    // but we can find the input by value "50" since it's the limit input.
-    const limitInput = screen.getByDisplayValue('50');
-
-    // Change to valid number
-    await act(async () => {
-      fireEvent.change(limitInput, { target: { value: '100' } });
-    });
-    expect(limitInput).toHaveValue(100);
-
-    // Change to empty string to trigger NaN -> 50 fallback
-    await act(async () => {
-      fireEvent.change(limitInput, { target: { value: '' } });
-    });
-    expect(limitInput).toHaveValue(50);
-  });
-
   it('renders nothing and loads no project when the route has no id', async () => {
     // The live query translation is irrelevant without a project; keep it pending so it cannot update after the test.
     fakeService.translateQuery.mockReturnValue(new Promise(() => undefined));
@@ -401,7 +391,7 @@ describe('SearchPage', () => {
       expect(fakeService.previewSearch).toHaveBeenCalledWith(
         1,
         { openalex: 'openalex-query', crossref: 'custom-crossref', scopus: 'scopus-query' },
-        50,
+        { common: 1000, perBase: {} },
         'citations',
         '(Todos contém "")',
         expect.any(String),
@@ -416,6 +406,7 @@ describe('SearchPage', () => {
         },
         selectedDbs: expect.arrayContaining(['openalex', 'crossref', 'scopus']),
         customQueries: { crossref: 'custom-crossref' },
+        limits: { common: 1000, perBase: {} },
       });
     });
 
@@ -431,28 +422,51 @@ describe('SearchPage', () => {
       expect(fakeService.previewSearch.mock.calls[0][4]).toBe('Título contém "test"');
     });
 
-    it('warns about the Crossref and Scopus caps for large limits', async () => {
+    const commonLimit = () => screen.getByLabelText('Máximo de resultados por base');
+    const searchButton = () => screen.getByRole('button', { name: /Fazer Busca/ });
+
+    // Above a ceiling the search is blocked, never silently cut: the user sees exactly what will run.
+    it('blocks the search while the common value passes a chosen base ceiling', async () => {
       renderPage();
       await ready();
 
-      fireEvent.change(screen.getByDisplayValue('50'), { target: { value: '2000' } });
+      fireEvent.change(commonLimit(), { target: { value: '3000' } });
 
-      expect(screen.getByText('Atenção: A base Crossref será limitada a 1.000 resultados.')).toBeInTheDocument();
-      expect(
-        screen.getByText(/Aviso: A base Scopus pode retornar erro \(Exceeds maximum\) para limites > 200/),
-      ).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Web of Science aceita até 2.500 resultados. Diminua o valor comum ou ajuste Web of Science em "Ajustar por base".',
+      );
+      expect(searchButton()).toBeDisabled();
+
+      deselect(/Web of Science/);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(searchButton()).toBeEnabled();
     });
 
-    it('shows no cap warnings when those bases are not selected', async () => {
+    it('sends a per-base adjustment and shows what each base will use', async () => {
       renderPage();
       await ready();
-      deselect(/Crossref/);
-      deselect(/Scopus/);
+      deselect(/Web of Science/);
+      fireEvent.change(commonLimit(), { target: { value: '6000' } });
+      fireEvent.click(screen.getByText('Ajustar por base'));
 
-      fireEvent.change(screen.getByDisplayValue('50'), { target: { value: '2000' } });
+      fireEvent.change(screen.getByLabelText('Scopus'), { target: { value: '500' } });
 
-      expect(screen.queryByText(/Atenção: A base Crossref/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/Aviso: A base Scopus/)).not.toBeInTheDocument();
+      expect(screen.getByLabelText('Resultados pedidos a cada base')).toHaveTextContent(
+        'OpenAlex 6.000 · Crossref 6.000 · Scopus 500',
+      );
+      fireEvent.click(searchButton());
+      await screen.findByTestId('mock-summary-modal');
+      expect(fakeService.previewSearch.mock.calls[0][2]).toEqual({ common: 6000, perBase: { scopus: 500 } });
+    });
+
+    it('blocks an empty or zero limit instead of guessing one', async () => {
+      renderPage();
+      await ready();
+
+      fireEvent.change(commonLimit(), { target: { value: '' } });
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Use um número inteiro a partir de 1 para OpenAlex.');
+      expect(searchButton()).toBeDisabled();
     });
 
     it('shows a translating state until the translation arrives', async () => {
@@ -516,7 +530,7 @@ describe('SearchPage', () => {
       expect(fakeService.previewSearch).toHaveBeenCalledWith(
         1,
         { openalex: 'CUSTOM-OPENALEX' },
-        25,
+        { common: 25, perBase: {} },
         'date',
         'Título contém "ontologia"',
         expect.any(String),

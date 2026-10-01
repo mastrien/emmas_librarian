@@ -261,6 +261,24 @@ describe('DashboardPage', () => {
     });
   });
 
+  // Electron 32+ removed File.path; the dropped file's path comes only from the preload's getPathForFile.
+  it('imports a dropped project by the path the preload resolves, not by its bare name', async () => {
+    fakeService.getProjects.mockResolvedValue([]);
+    fakeService.getScientificVenues.mockResolvedValue([]);
+    fakeService.importProject.mockResolvedValue(77);
+    vi.mocked(window.electronAPI.getPathForFile).mockReturnValueOnce('C:\\Downloads\\tese.emmapcarc');
+    const { container } = renderDashboard();
+    await waitFor(() => {
+      expect(screen.queryByTestId('dashboard-loading-skeleton')).not.toBeInTheDocument();
+    });
+
+    fireEvent.drop(container.firstChild as Element, {
+      dataTransfer: { files: [new File([''], 'tese.emmapcarc')] },
+    });
+
+    await waitFor(() => expect(fakeService.importProject).toHaveBeenCalledWith('C:\\Downloads\\tese.emmapcarc'));
+  });
+
   it('handles drag and drop ignore non emmapcarc files', async () => {
     fakeService.getProjects.mockResolvedValue([]);
     fakeService.getScientificVenues.mockResolvedValue([]);

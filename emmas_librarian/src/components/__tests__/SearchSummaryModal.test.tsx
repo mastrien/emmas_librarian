@@ -56,6 +56,26 @@ describe('SearchSummaryModal', () => {
     expect(byBase.getByText('API Timeout')).toBeInTheDocument();
   });
 
+  // A base that stopped mid-search keeps what arrived; the reason shows on its line (option V1 of the mock-up).
+  it('explains on its line why a base stopped early and how many the base had', () => {
+    const warning =
+      'Web of Science: a busca parou em 150 de 500 resultados (Erro 429). Os resultados recebidos foram mantidos.';
+    renderModal({
+      preview: {
+        ...preview,
+        breakdown: {
+          openalex: { count: 1000, requested: 1000, available: 5321, requests: 10 },
+          wos: { count: 150, requested: 500, available: 900, requests: 4, warning },
+        },
+      },
+    });
+
+    const byBase = within(screen.getByRole('region', { name: 'Resultados por base' }));
+    expect(byBase.getByText('1.000 de 5.321 na base')).toBeInTheDocument();
+    expect(byBase.getByText('150 de 900 na base')).toBeInTheDocument();
+    expect(byBase.getByText(warning)).toBeInTheDocument();
+  });
+
   it.each([
     [[false], 'Salvar 1 novo no projeto'],
     [[false, false], 'Salvar 2 novos no projeto'],

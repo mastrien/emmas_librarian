@@ -61,36 +61,24 @@ describe('ExportService', () => {
     it('correctly exports a list of articles as standard CSV content', () => {
       const csv = exportService.exportToCsv(mockArticles);
 
-      const lines = csv.split('\n');
-      expect(lines.length).toBe(3); // Header + 2 data rows
+      expect(csv.slice(1).split('\n')).toEqual([
+        'id,doi,title,authors,year,source,status,archive_note',
+        '1,https://doi.org/10.1000/xyz123,"A Beautiful Paper on AI","Doe, John; Smith, Jane J.; Silva AB",2024,"OpenAlex",new,""',
+        '2,10.1111/xyz456,"Another Simple Paper","OnlyAuthor",2023,"Scopus",read,""',
+      ]);
+    });
 
-      // Check headers
-      expect(lines[0]).toBe('id,doi,title,authors,year,source,status,archive_note');
+    // Without a byte order mark, Excel on Windows opens UTF-8 as ANSI and shows "MÃ©todo" for "Método".
+    it('starts with a UTF-8 byte order mark so Excel reads accented text', () => {
+      const csv = exportService.exportToCsv(mockArticles, [{ id: 1, name: 'Método' }], []);
 
-      // Check row 1
-      const row1 = lines[1];
-      expect(row1).toContain('1');
-      expect(row1).toContain('https://doi.org/10.1000/xyz123');
-      expect(row1).toContain('"A Beautiful Paper on AI"');
-      expect(row1).toContain('"Doe, John; Smith, Jane J.; Silva AB"');
-      expect(row1).toContain('2024');
-      expect(row1).toContain('"OpenAlex"');
-      expect(row1).toContain('new');
-
-      // Check row 2
-      const row2 = lines[2];
-      expect(row2).toContain('2');
-      expect(row2).toContain('10.1111/xyz456');
-      expect(row2).toContain('"Another Simple Paper"');
-      expect(row2).toContain('"OnlyAuthor"');
-      expect(row2).toContain('2023');
-      expect(row2).toContain('"Scopus"');
-      expect(row2).toContain('read');
+      expect(csv.charCodeAt(0)).toBe(0xfeff);
+      expect(csv.slice(1).split('\n')[0]).toBe('id,doi,title,authors,year,source,status,archive_note,Método');
     });
 
     it('handles empty articles list gracefully', () => {
       const csv = exportService.exportToCsv([]);
-      expect(csv).toBe('id,doi,title,authors,year,source,status,archive_note');
+      expect(csv).toBe('﻿id,doi,title,authors,year,source,status,archive_note');
     });
 
     it('escapes double quotes in CSV fields', () => {

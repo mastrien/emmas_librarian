@@ -1,13 +1,25 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from 'fs';
 import path from 'path';
 import { gzipSync, gunzipSync } from 'zlib';
 import { restartApp } from '../restartApp';
 import { localIsoDate } from '../../src/utils/localDate';
+import type { DatabaseAdapter } from '../database/DatabaseAdapter';
 
+const isAutoBackupFile = (name: string): boolean => name.startsWith('emma_backup_') && name.endsWith('.db.gz');
+
+/** The part of the app database the automatic backups use. */
+export type AutoBackupDatabase = Pick<DatabaseAdapter, 'getSetting' | 'checkIntegrity' | 'checkpoint' | 'close'>;
+
+/**
+ * Daily gzip copies of emma.db (grandfather-father-son rotation), listed and restored from Settings.
+ *
+ * Usage:
+ *   const backups = new BackupService(db, dbPath, path.join(userData, 'backups'));
+ *   await backups.runAutoBackup();
+ */
 export class BackupService {
   constructor(
-    private dbAdapter: any,
+    private dbAdapter: AutoBackupDatabase,
     private dbPath: string,
     private backupsDir: string,
   ) {}
@@ -26,9 +38,7 @@ export class BackupService {
     // Check if backup already exists for today (local time YYYY-MM-DD)
     const todayStr = localIsoDate();
     const files = fs.readdirSync(this.backupsDir);
-    const hasTodayBackup = files.some(
-      (f) => f.startsWith('emma_backup_') && f.includes(todayStr) && f.endsWith('.db.gz'),
-    );
+    const hasTodayBackup = files.some((f) => isAutoBackupFile(f) && f.includes(todayStr));
 
     if (hasTodayBackup) {
       return null;
@@ -40,7 +50,8 @@ export class BackupService {
       throw new Error('Database integrity check failed');
     }
 
-    // Read active db file and compress it
+    // WAL mode keeps the latest writes in emma.db-wal; flush them so the copy is complete.
+    this.dbAdapter.checkpoint();
     const dbData = fs.readFileSync(this.dbPath);
     const compressed = gzipSync(dbData);
 
@@ -55,7 +66,7 @@ export class BackupService {
     if (!fs.existsSync(this.backupsDir)) return;
 
     const files = fs.readdirSync(this.backupsDir);
-    const backupFiles = files.filter((f) => f.startsWith('emma_backup_') && f.endsWith('.db.gz'));
+    const backupFiles = files.filter(isAutoBackupFile);
 
     interface BackupFileInfo {
       filename: string;
@@ -134,7 +145,7 @@ export class BackupService {
       if (!keep.has(b.filename)) {
         try {
           fs.unlinkSync(path.join(this.backupsDir, b.filename));
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error(`Failed to delete rotated backup ${b.filename}:`, err);
         }
       }
@@ -145,7 +156,7 @@ export class BackupService {
     if (!fs.existsSync(this.backupsDir)) return [];
 
     const files = fs.readdirSync(this.backupsDir);
-    const backupFiles = files.filter((f) => f.startsWith('emma_backup_') && f.endsWith('.db.gz'));
+    const backupFiles = files.filter(isAutoBackupFile);
 
     const list = backupFiles.map((filename) => {
       const filePath = path.join(this.backupsDir, filename);
@@ -166,6 +177,12 @@ export class BackupService {
   }
 
   public restoreAutoBackup(filename: string): boolean {
+    // The name arrives from the renderer over IPC: only a file of the backups folder may replace the database.
+    if (path.basename(filename) !== filename || !isAutoBackupFile(filename)) {
+      throw new Error(
+        `[ERR_INVALID_BACKUP] Nome de backup automático inválido: "${filename}". Expected shape: emma_backup_AAAA-MM-DD.db.gz.`,
+      );
+    }
     const backupFilePath = path.join(this.backupsDir, filename);
     if (!fs.existsSync(backupFilePath)) {
       throw new Error(`Backup file ${filename} not found`);

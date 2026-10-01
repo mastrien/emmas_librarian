@@ -33,7 +33,17 @@ describe('HistoryRepository', () => {
 
   describe('Search History', () => {
     it('should save and get search history', () => {
-      const id = repo.saveSearchHistory(projectId, 'test query', { pubmed: 'test' }, 10, { pubmed: 10 }, 'date', 50);
+      const id = repo.saveSearchHistory(
+        projectId,
+        'test query',
+        { pubmed: 'test' },
+        10,
+        { pubmed: 10 },
+        {
+          sortBy: 'date',
+          limitVal: 50,
+        },
+      );
       expect(id).toBeGreaterThan(0);
 
       const history = repo.getSearchHistory(projectId) as any[];
@@ -49,7 +59,14 @@ describe('HistoryRepository', () => {
     it('keeps the query builder state so the search can be rebuilt later', () => {
       const state = JSON.stringify({ ast: { type: 'rule' }, selectedDbs: ['openalex'], customQueries: {} });
 
-      repo.saveSearchHistory(projectId, 'q', { openalex: 'x' }, 1, {}, 'date', 50, state);
+      repo.saveSearchHistory(
+        projectId,
+        'q',
+        { openalex: 'x' },
+        1,
+        {},
+        { sortBy: 'date', limitVal: 50, queryState: state },
+      );
 
       const [entry] = repo.getSearchHistory(projectId) as { query_state: string | null }[];
       expect(entry.query_state).toBe(state);

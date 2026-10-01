@@ -8,6 +8,8 @@
  *   const svc: IProjectService = projectService;   // real
  *   const svc: IProjectService = new FakeService(); // test double
  */
+import type { SearchLimits } from '../utils/searchLimits';
+import type { OpenAccessOutcome } from '../types';
 import type {
   SearchPreview,
   SavedSearchSummary,
@@ -93,7 +95,7 @@ export interface IProjectService {
   previewSearch(
     projectId: number,
     queryMap: Record<string, string>,
-    limit: number,
+    limits: SearchLimits,
     sortBy: string,
     unifiedQuery: string,
     queryState?: string,
@@ -106,6 +108,8 @@ export interface IProjectService {
   getArticles(projectId: number): Promise<Article[]>;
   getArticle(articleId: number): Promise<Article>;
   updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', note?: string): Promise<void>;
+  /** Multi-select: one status (and, when archiving, one shared reason) for many articles. Returns how many changed. */
+  updateArticlesStatus(articleIds: number[], status: 'new' | 'read' | 'archived', note?: string): Promise<number>;
   updateArticleMetadata(articleId: number, data: Partial<Article>): Promise<void>;
   createManualArticle(projectId: number, data: Partial<Article>, sourceFilePath?: string): Promise<number>;
   createArticlesFromPdfs(projectId: number, filePaths: string[]): Promise<number>;
@@ -145,6 +149,8 @@ export interface IProjectService {
   saveExportedFile(content: string, defaultPath: string): Promise<boolean>;
   uploadPdf(articleId: number, filePath: string): Promise<string>;
   unlinkPdf(articleId: number): Promise<void>;
+  /** Looks for an open access copy of the article and links it; says what happened. */
+  fetchOpenAccessPdf(articleId: number): Promise<OpenAccessOutcome>;
   getPdfBuffer(articleId: number): Promise<ArrayBuffer>;
   getStoredPdfs(): Promise<any[]>;
   deletePdfLibraryRecord(filePath: string): Promise<number[]>;
@@ -190,7 +196,8 @@ export interface IProjectService {
   // ── Backups ───────────────────────────────────────────────────────
   exportBackup(): Promise<string | null>;
   restoreBackupOverride(): Promise<boolean>;
-  restoreBackupMerge(): Promise<number>;
+  /** How many projects were merged; null when the file dialog was cancelled. */
+  restoreBackupMerge(): Promise<number | null>;
   listAutoBackups(): Promise<AutoBackupEntry[]>;
   restoreAutoBackup(filename: string): Promise<boolean>;
   getAppVersion(): Promise<string>;

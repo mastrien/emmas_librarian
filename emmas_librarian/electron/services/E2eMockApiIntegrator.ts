@@ -1,5 +1,6 @@
 import { ApiIntegrator } from './ApiIntegrator';
 import type { NormalizedArticle } from './types';
+import type { PagedResult } from './searchApis/paginate';
 
 // The one article every E2E search "finds"; e2e-tests/semantic_search.spec.js asserts on it.
 const E2E_ARTICLE: NormalizedArticle = {
@@ -18,20 +19,36 @@ const E2E_ARTICLE: NormalizedArticle = {
  * @example new SearchOrchestrator(db, new QueryTranslator(), new E2eMockApiIntegrator());
  */
 export class E2eMockApiIntegrator extends ApiIntegrator {
-  override async searchOpenAlex(): Promise<NormalizedArticle[]> {
-    return [{ ...E2E_ARTICLE, source_databases: [...E2E_ARTICLE.source_databases] }];
+  override async searchOpenAlex(): Promise<PagedResult> {
+    return {
+      articles: [{ ...E2E_ARTICLE, source_databases: [...E2E_ARTICLE.source_databases] }],
+      requests: 1,
+      available: 1,
+    };
   }
 
-  override async searchCrossref(): Promise<NormalizedArticle[]> {
-    return [];
+  override async searchCrossref(): Promise<PagedResult> {
+    return { articles: [], requests: 0 };
   }
 
-  override async searchScopus(): Promise<NormalizedArticle[]> {
-    return [];
+  override async searchScopus(): Promise<PagedResult> {
+    return { articles: [], requests: 0 };
   }
 
-  override async searchWoS(): Promise<NormalizedArticle[]> {
-    return [];
+  override async searchWoS(): Promise<PagedResult> {
+    return { articles: [], requests: 0 };
+  }
+
+  override async searchEuropePmc(): Promise<PagedResult> {
+    return { articles: [], requests: 0 };
+  }
+
+  override async searchArxiv(): Promise<PagedResult> {
+    return { articles: [], requests: 0 };
+  }
+
+  override async searchIeee(): Promise<PagedResult> {
+    return { articles: [], requests: 0 };
   }
 }
 

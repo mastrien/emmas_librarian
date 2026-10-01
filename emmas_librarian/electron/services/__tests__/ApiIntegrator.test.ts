@@ -1,6 +1,10 @@
-import type { NormalizedArticle } from '../types';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ApiIntegrator } from '../ApiIntegrator';
+import { FakeSearchApi } from '../searchApis/__tests__/fakes/FakeSearchApi';
+import { normalizeOpenAlex } from '../searchApis/openAlex';
+import { normalizeCrossref } from '../searchApis/crossref';
+import { normalizeScopus } from '../searchApis/scopus';
+import { normalizeWoS } from '../searchApis/wos';
 
 describe('ApiIntegrator', () => {
   let api: ApiIntegrator;
@@ -58,7 +62,7 @@ describe('ApiIntegrator', () => {
         json: async () => mockResult,
       } as any);
 
-      const articles = await api.searchOpenAlex('filter=title.search:test', 'citations', 10);
+      const { articles } = await api.searchOpenAlex('filter=title.search:test', 'citations', 10);
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
@@ -135,7 +139,7 @@ describe('ApiIntegrator', () => {
         json: async () => mockResult,
       } as any);
 
-      const articles = await api.searchCrossref('query=test', 'date', 20);
+      const { articles } = await api.searchCrossref('query=test', 'date', 20);
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
@@ -194,7 +198,7 @@ describe('ApiIntegrator', () => {
       } as any);
 
       // Call without explicit limit, should default to 50
-      const articles = await api.searchCrossref('query=test', 'relevance');
+      const { articles } = await api.searchCrossref('query=test', 'relevance');
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
@@ -210,7 +214,7 @@ describe('ApiIntegrator', () => {
   describe('searchScopus', () => {
     it('returns empty array if no apiKey is provided', async () => {
       const result = await api.searchScopus('query', '', 'relevance', 10);
-      expect(result).toEqual([]);
+      expect(result).toEqual({ articles: [], requests: 0 });
       expect(fetch).not.toHaveBeenCalled();
     });
 
@@ -242,7 +246,7 @@ describe('ApiIntegrator', () => {
         json: async () => mockResult,
       } as any);
 
-      const articles = await api.searchScopus('TITLE("test")', 'scopus_key', 'citations', 50);
+      const { articles } = await api.searchScopus('TITLE("test")', 'scopus_key', 'citations', 50);
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const [urlCall, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
@@ -287,7 +291,7 @@ describe('ApiIntegrator', () => {
   describe('searchWoS', () => {
     it('returns empty array if no apiKey is provided', async () => {
       const result = await api.searchWoS('query', '', 'relevance', 10);
-      expect(result).toEqual([]);
+      expect(result).toEqual({ articles: [], requests: 0 });
       expect(fetch).not.toHaveBeenCalled();
     });
 
@@ -323,7 +327,7 @@ describe('ApiIntegrator', () => {
         json: async () => mockResult,
       } as any);
 
-      const articles = await api.searchWoS('TS=test', 'wos_key', 'date', 15);
+      const { articles } = await api.searchWoS('TS=test', 'wos_key', 'date', 15);
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const [urlCall, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
@@ -406,7 +410,7 @@ describe('ApiIntegrator', () => {
       } as any);
 
       // Call without explicit limit, should default to 50
-      const articles = await api.searchWoS('TS=test', 'wos_key', 'relevance');
+      const { articles } = await api.searchWoS('TS=test', 'wos_key', 'relevance');
 
       expect(fetch).toHaveBeenCalledTimes(1);
       const urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
@@ -472,8 +476,8 @@ describe('ApiIntegrator', () => {
 
   describe('ApiIntegrator fallback branches and edge cases', () => {
     it('returns empty array when api keys are missing for Scopus or WoS', async () => {
-      expect(await api.searchScopus('query', '', 'relevance')).toEqual([]);
-      expect(await api.searchWoS('query', '', 'relevance')).toEqual([]);
+      expect(await api.searchScopus('query', '', 'relevance')).toEqual({ articles: [], requests: 0 });
+      expect(await api.searchWoS('query', '', 'relevance')).toEqual({ articles: [], requests: 0 });
     });
 
     it('covers searchOpenAlex sort and filter branches', async () => {
@@ -553,7 +557,7 @@ describe('ApiIntegrator', () => {
         authorships: [{ author: { display_name: 'SingleName' } }, { author: null }],
         keywords: ['DirectKeywordString'],
       };
-      const normalizedAlex = (api as any).normalizeOpenAlex(rawOpenAlex);
+      const normalizedAlex = normalizeOpenAlex(rawOpenAlex);
       expect(normalizedAlex.doi).toBe('10.1000/xyz');
       expect(normalizedAlex.authors).toBe('SingleName');
       expect(normalizedAlex.authorKeywords).toBe('DirectKeywordString');
@@ -567,7 +571,7 @@ describe('ApiIntegrator', () => {
         ],
         abstract: 'Abstract with no HTML tags',
       };
-      const normalizedCrossref = (api as any).normalizeCrossref(rawCrossref);
+      const normalizedCrossref = normalizeCrossref(rawCrossref);
       expect(normalizedCrossref.year).toBeUndefined();
       expect(normalizedCrossref.authors).toBe('John Doe, Alice');
       expect(normalizedCrossref.abstract).toBe('Abstract with no HTML tags');
@@ -577,33 +581,33 @@ describe('ApiIntegrator', () => {
         'dc:creator': 'Creator Name',
         'prism:coverDate': '2026-06-03',
       };
-      const normalizedScopus = (api as any).normalizeScopus(rawScopus);
+      const normalizedScopus = normalizeScopus(rawScopus);
       expect(normalizedScopus.authors).toBe('Creator Name');
       expect(normalizedScopus.year).toBe(2026);
     });
 
-    it('handles maximum limits via Math.min correctly for all APIs', async () => {
+    it('asks each base for pages no larger than its page size', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
         json: async () => ({ results: [], message: { items: [] }, 'search-results': { entry: [] }, hits: [] }),
       } as any);
 
-      // OpenAlex limit > 200
+      // OpenAlex: 100 per page (per_page=200 is deprecated)
       await api.searchOpenAlex('test', 'relevance', 300);
       let urlCall = vi.mocked(fetch).mock.calls[0][0] as string;
-      expect(urlCall).toContain('per_page=200');
+      expect(urlCall).toContain('per_page=100');
 
-      // Crossref limit > 1000
+      // Crossref: 1,000 per page
       await api.searchCrossref('query=test', 'relevance', 1500);
       urlCall = vi.mocked(fetch).mock.calls[1][0] as string;
       expect(urlCall).toContain('rows=1000');
 
-      // Scopus limit > 200
+      // Scopus: 200 per page
       await api.searchScopus('q', 'key', 'relevance', 300);
       urlCall = vi.mocked(fetch).mock.calls[2][0] as string;
       expect(urlCall).toContain('count=200');
 
-      // WoS limit > 50
+      // WoS: 50 per page
       await api.searchWoS('q', 'key', 'relevance', 100);
       urlCall = vi.mocked(fetch).mock.calls[3][0] as string;
       expect(urlCall).toContain('limit=50');
@@ -616,7 +620,7 @@ describe('ApiIntegrator', () => {
         authorships: [{ author: { display_name: 'John Middle Doe' } }, { author: { display_name: 'Single' } }],
         open_access: { is_oa: false },
       };
-      const normAlex = (api as any).normalizeOpenAlex(rawAlex);
+      const normAlex = normalizeOpenAlex(rawAlex);
       expect(normAlex.doi).toBe('10.1234/direct-doi');
       expect(normAlex.authors).toBe('John Middle Doe, Single');
       expect(normAlex.is_oa).toBe(0);
@@ -627,7 +631,7 @@ describe('ApiIntegrator', () => {
         author: [{ given: 'Bob' }],
         reference: [{ DOI: '10.1000/ref' }, { unstructured: '' }, {}],
       };
-      const normCross = (api as any).normalizeCrossref(rawCross);
+      const normCross = normalizeCrossref(rawCross);
       expect(normCross.year).toBeUndefined();
       expect(normCross.authors).toBe('Bob');
       expect(normCross.references).toBe('10.1000/ref');
@@ -635,26 +639,21 @@ describe('ApiIntegrator', () => {
       // Scopus openaccess formats and date fallbacks
       const rawScopusOa1 = { openaccess: '1', 'prism:coverDate': 'invalid-date' };
       const rawScopusOaTrue = { openaccess: true, 'prism:coverDate': '' };
-      expect((api as any).normalizeScopus(rawScopusOa1).is_oa).toBe(1);
-      expect((api as any).normalizeScopus(rawScopusOa1).year).toBeNaN();
-      expect((api as any).normalizeScopus(rawScopusOaTrue).is_oa).toBe(1);
-      expect((api as any).normalizeScopus(rawScopusOaTrue).year).toBeUndefined();
-      // Typed view of the private normalizers, so these checks add no `any`.
-      const normalizers = api as unknown as Record<
-        'normalizeScopus' | 'normalizeOpenAlex',
-        (raw: object) => NormalizedArticle
-      >;
-      expect(normalizers.normalizeScopus({ openaccess: '0' }).is_oa).toBe(0);
+      expect(normalizeScopus(rawScopusOa1).is_oa).toBe(1);
+      expect(normalizeScopus(rawScopusOa1).year).toBeNaN();
+      expect(normalizeScopus(rawScopusOaTrue).is_oa).toBe(1);
+      expect(normalizeScopus(rawScopusOaTrue).year).toBeUndefined();
+      expect(normalizeScopus({ openaccess: '0' }).is_oa).toBe(0);
 
       // A base that did not say whether the article is open access leaves it unknown, not closed
-      expect(normalizers.normalizeScopus({}).is_oa).toBeUndefined();
-      expect(normalizers.normalizeOpenAlex({ authorships: [] }).is_oa).toBeUndefined();
+      expect(normalizeScopus({}).is_oa).toBeUndefined();
+      expect(normalizeOpenAlex({ authorships: [] }).is_oa).toBeUndefined();
 
       // WoS citation counts
       const rawWos1 = { uid: 'WOS:1', citations: { length: 5 } };
       const rawWos2 = { uid: 'WOS:2', citationCount: 10 };
-      expect((api as any).normalizeWoS(rawWos1).citationCount).toBe(5);
-      expect((api as any).normalizeWoS(rawWos2).citationCount).toBe(10);
+      expect(normalizeWoS(rawWos1).citationCount).toBe(5);
+      expect(normalizeWoS(rawWos2).citationCount).toBe(10);
     });
 
     it('covers searchWoS JSON structure variations and error formats', async () => {
@@ -675,5 +674,29 @@ describe('ApiIntegrator', () => {
         'Erro 400 no Web of Science - Not a JSON text',
       );
     });
+  });
+});
+
+describe('ApiIntegrator bases added with pagination', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('sends Europe PMC, arXiv and IEEE Xplore searches to their own APIs', async () => {
+    const fake = new FakeSearchApi({ europepmc: 3, arxiv: 2, ieee: 1 });
+    vi.stubGlobal('fetch', fake.fetch);
+    const api = new ApiIntegrator();
+
+    const [europePmc, arxiv, ieee] = await Promise.all([
+      api.searchEuropePmc('TITLE:(x)', 'relevance', 10),
+      api.searchArxiv('ti:x', 'date', 10),
+      api.searchIeee('("Abstract":x)', 'chave', 'relevance', 10),
+    ]);
+
+    expect([europePmc.articles.length, arxiv.articles.length, ieee.articles.length]).toEqual([3, 2, 1]);
+    expect([fake.urlsOf('europepmc'), fake.urlsOf('arxiv'), fake.urlsOf('ieee')].map((u) => u.length)).toEqual([
+      1, 1, 1,
+    ]);
   });
 });

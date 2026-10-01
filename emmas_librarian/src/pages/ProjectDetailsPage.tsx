@@ -21,6 +21,7 @@ import { ProjectModalsContainer } from './ProjectDetails/components/ProjectModal
 import { PdfDropOverlay } from './ProjectDetails/components/PdfDropOverlay';
 import { DiarySection } from '../components/common/DiarySection';
 import { SearchHistoryModal } from '../components/modals/SearchHistoryModal';
+import { useOpenAccessPdfs } from './ProjectDetails/hooks/useOpenAccessPdfs';
 
 const ARTICLES_PER_PAGE = 50;
 
@@ -46,6 +47,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const refreshSelectedArticle = (loaded: Article[]) =>
     modals.setSelectedArticleForDetails((prev) => (prev ? loaded.find((a) => a.id === prev.id) || prev : null));
   const data = useProjectData(projectId, refreshSelectedArticle);
+  const openAccess = useOpenAccessPdfs(data.reload);
   const filtering = useProjectFiltering(data.articles, ARTICLES_PER_PAGE, projectId);
   const actions = useProjectActions({ projectId, ...data, modals });
   const pdfImport = useProjectPdfImport({
@@ -139,8 +141,10 @@ export const ProjectDetailsPage: React.FC = () => {
           isSidebarOpen={isSidebarOpen}
           onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
           onStatusChange={actions.changeStatus}
+          onStatusChangeMany={actions.changeStatusMany}
           onUnlinkPdf={actions.unlinkPdf}
           onAttachPdf={actions.attachPdf}
+          openAccess={openAccess}
         />
       )}
       {activeTab === 'overview' && (

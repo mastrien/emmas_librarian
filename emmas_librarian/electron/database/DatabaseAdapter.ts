@@ -5,7 +5,7 @@ import { SettingsRepository } from './SettingsRepository';
 import { ArticleRepository } from './ArticleRepository';
 import { ArticleCategoryRepository } from './ArticleCategoryRepository';
 import { PdfLibraryRepository } from './PdfLibraryRepository';
-import { HistoryRepository } from './HistoryRepository';
+import { HistoryRepository, type SearchRunDetails } from './HistoryRepository';
 import { DocumentRepository } from './DocumentRepository';
 import { AnnotationRepository } from './AnnotationRepository';
 import { TrashRepository } from './TrashRepository';
@@ -154,6 +154,9 @@ export class DatabaseAdapter {
   updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', archiveNote?: string): void {
     return this.articleRepo.updateArticleStatus(articleId, status, archiveNote);
   }
+  updateArticlesStatus(articleIds: number[], status: 'new' | 'read' | 'archived', archiveNote?: string): number {
+    return this.articleRepo.updateArticlesStatus(articleIds, status, archiveNote);
+  }
   updateArticleMetadata(articleId: number, data: Partial<ArticleInput>): void {
     return this.articleRepo.updateArticleMetadata(articleId, data);
   }
@@ -237,9 +240,7 @@ export class DatabaseAdapter {
     translatedQueries: Record<string, string>,
     totalResults: number,
     breakdown: Record<string, unknown>,
-    sortBy?: string,
-    limitVal?: number,
-    queryState?: string,
+    details: SearchRunDetails = {},
   ): number {
     return this.historyRepo.saveSearchHistory(
       projectId,
@@ -247,9 +248,7 @@ export class DatabaseAdapter {
       translatedQueries,
       totalResults,
       breakdown,
-      sortBy,
-      limitVal,
-      queryState,
+      details,
     );
   }
   public getSearchHistory(projectId: number): unknown[] {

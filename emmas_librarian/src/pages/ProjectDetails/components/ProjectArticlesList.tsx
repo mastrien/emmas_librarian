@@ -2,6 +2,7 @@ import React from 'react';
 import { Article } from '../../../types';
 import { SourceDatabaseBadges } from '../../../components/common/SourceDatabaseBadges';
 import { ArticleRowActions, type ArticleRowHandlers } from './articles/ArticleRowActions';
+import type { OpenAccessRowState } from './articles/openAccessText';
 import { ArticleSummary, AuthorList } from './articles/ArticleCells';
 
 const cellStyle: React.CSSProperties = { padding: '1.25rem 1.5rem' };
@@ -34,6 +35,15 @@ interface ProjectArticlesListProps {
   setEditingArticle: (article: Article) => void;
   setArchivingId: (id: number) => void;
   setCitationArticle: (article: Article) => void;
+  // Multi-select: when present, each row gets a checkbox.
+  selection?: ArticleSelection;
+  /** Each row's open access PDF search: its state and how to start it. */
+  openAccess: { stateOf: (articleId: number) => OpenAccessRowState | undefined; onFind: (articleId: number) => void };
+}
+
+export interface ArticleSelection {
+  isSelected: (articleId: number) => boolean;
+  onToggle: (articleId: number) => void;
 }
 
 export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
@@ -45,9 +55,12 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
   setEditingArticle,
   setArchivingId,
   setCitationArticle,
+  selection,
+  openAccess,
 }) => {
   const rowHandlers: ArticleRowHandlers = {
     onUpload: handleUploadClick,
+    onFindOpenAccess: openAccess.onFind,
     onUnlink: handleUnlinkClick,
     onStatusChange: handleStatusChange,
     onEdit: setEditingArticle,
@@ -64,6 +77,7 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
       >
         <thead>
           <tr style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
+            {selection && <th style={{ width: '1%' }} aria-label="Seleção" />}
             <HeaderCell>ARTIGO</HeaderCell>
             <HeaderCell className="articles-col-authors">AUTORES</HeaderCell>
             <HeaderCell className="articles-col-bases">BASES</HeaderCell>
@@ -74,6 +88,7 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
           {paginatedArticles.map((article) => (
             <tr
               key={article.id}
+              className={selection?.isSelected(article.id) ? 'is-selected' : undefined}
               style={{
                 borderBottom: '1px solid var(--border-color)',
                 transition: 'background var(--transition-fast)',
@@ -81,6 +96,16 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
               onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-main)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
+              {selection && (
+                <td style={{ ...cellStyle, paddingRight: 0 }}>
+                  <input
+                    type="checkbox"
+                    checked={selection.isSelected(article.id)}
+                    onChange={() => selection.onToggle(article.id)}
+                    aria-label={`Selecionar "${article.title}"`}
+                  />
+                </td>
+              )}
               <td style={cellStyle}>
                 <ArticleSummary article={article} onOpenDetails={setSelectedArticleForDetails} />
               </td>
@@ -96,7 +121,11 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
                 </div>
               </td>
               <td style={{ padding: '1rem 1.25rem', width: '1%' }}>
-                <ArticleRowActions article={article} handlers={rowHandlers} />
+                <ArticleRowActions
+                  article={article}
+                  handlers={rowHandlers}
+                  openAccess={openAccess.stateOf(article.id)}
+                />
               </td>
             </tr>
           ))}

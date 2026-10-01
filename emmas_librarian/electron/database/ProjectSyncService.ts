@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { dialog, app } from 'electron';
 import { DatabaseAdapter } from './DatabaseAdapter';
+import { writeArchive } from './backup/archiveFile';
 import { readProjectRows, type ProjectRows } from './backup/projectRows';
 import { insertProjectRows } from './backup/projectImport';
 
@@ -33,12 +34,8 @@ export class ProjectSyncService {
   constructor(private dbAdapter: DatabaseAdapter) {}
 
   public async exportProject(projectId: number): Promise<string | null> {
-    const { canceled, filePath } = await dialog.showSaveDialog({
-      title: 'Exportar Projeto',
-      defaultPath: `projeto_${projectId}.emmapcarc`,
-      filters: PROJECT_FILTERS,
-    });
-    if (canceled || !filePath) return null;
+    const filePath = await this.chooseExportPath(projectId);
+    if (!filePath) return null;
     try {
       const rows = readProjectRows(this.dbAdapter.getDB(), projectId, { includeGlobalQuestionSets: true });
       if (!rows) throw new Error(`Projeto não encontrado (id ${projectId})`);
@@ -46,7 +43,7 @@ export class ProjectSyncService {
       zip.addFile('project.json', Buffer.from(JSON.stringify(rows, null, 2), 'utf-8'));
       addStoredFiles(zip, rows.articles, PDF_FOLDER);
       addStoredFiles(zip, rows.projectDocs, DOCUMENT_FOLDER);
-      zip.writeZip(filePath);
+      writeArchive(zip, filePath);
       return filePath;
     } catch (err) {
       console.error('Erro ao exportar:', err);
@@ -76,7 +73,20 @@ export class ProjectSyncService {
     }
   }
 
+  // E2E runs cannot answer the native save dialog; they pass the target path like the other export handlers.
+  private async chooseExportPath(projectId: number): Promise<string | null> {
+    if (process.env.E2E_MOCK_SAVE_FILE_PATH) return process.env.E2E_MOCK_SAVE_FILE_PATH;
+    const { canceled, filePath } = await dialog.showSaveDialog({
+      title: 'Exportar Projeto',
+      defaultPath: `projeto_${projectId}.emmapcarc`,
+      filters: PROJECT_FILTERS,
+    });
+    return canceled || !filePath ? null : filePath;
+  }
+
+  // E2E runs cannot answer the native open dialog; they name the .emmapcarc to import instead.
   private async pickProjectFile(): Promise<string | null> {
+    if (process.env.E2E_MOCK_PROJECT_FILE) return process.env.E2E_MOCK_PROJECT_FILE;
     const { canceled, filePaths } = await dialog.showOpenDialog({
       title: 'Importar Projeto',
       filters: PROJECT_FILTERS,

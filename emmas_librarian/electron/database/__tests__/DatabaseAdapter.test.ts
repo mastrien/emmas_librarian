@@ -92,8 +92,7 @@ describe('DatabaseAdapter', () => {
       { openalex: 'test translated query' },
       1,
       { openalex: { count: 1 } },
-      'citations',
-      15,
+      { sortBy: 'citations', limitVal: 15 },
     );
     expect(searchId).toBeGreaterThan(0);
 

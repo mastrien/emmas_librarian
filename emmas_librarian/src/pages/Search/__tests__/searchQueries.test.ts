@@ -6,6 +6,7 @@ import {
   describeQueryTree,
   restoreSearch,
   usableDatabases,
+  loadSearchApiKeys,
 } from '../searchQueries';
 import type { DatabaseTranslationMap, QueryASTNode, SearchHistoryItem } from '../../../types';
 
@@ -39,11 +40,15 @@ describe('describeQueryTree', () => {
 
 describe('defaultDatabases', () => {
   it.each([
-    [{ scopus: '', wos: '' }, ['openalex', 'crossref']],
-    [{ scopus: 'k', wos: '' }, ['openalex', 'crossref', 'scopus']],
-    [{ scopus: 'k', wos: 'k' }, ['openalex', 'crossref', 'scopus', 'wos']],
+    [{ scopus: '', wos: '', ieee: '' }, ['openalex', 'crossref']],
+    [{ scopus: 'k', wos: '', ieee: '' }, ['openalex', 'crossref', 'scopus']],
+    [{ scopus: 'k', wos: 'k', ieee: '' }, ['openalex', 'crossref', 'scopus', 'wos']],
   ])('selects the free bases plus keyed ones with a key (%o)', (keys, expected) => {
     expect(defaultDatabases(keys)).toEqual(expected);
+  });
+
+  it('leaves the experimental IEEE Xplore unselected even with a key', () => {
+    expect(defaultDatabases({ scopus: '', wos: '', ieee: 'k' })).toEqual(['openalex', 'crossref']);
   });
 });
 
@@ -84,14 +89,28 @@ describe('restoreSearch', () => {
   });
   const titleRule: QueryASTNode = { type: 'rule', field: 'title', operator: 'contains', value: 'ontologia' };
 
-  it('brings back the builder tree, bases, custom queries, sort and limit of a saved search', () => {
-    const state = { ast: titleRule, selectedDbs: ['openalex', 'scopus'], customQueries: { scopus: 'TITLE(x)' } };
+  it('brings back the builder tree, bases, custom queries, sort and limits of a saved search', () => {
+    const state = {
+      ast: titleRule,
+      selectedDbs: ['openalex', 'wos'],
+      customQueries: { wos: 'TI=x' },
+      limits: { common: 2000, perBase: { wos: 500 } },
+    };
 
     const restored = restoreSearch(
-      historyEntry({ query_state: JSON.stringify(state), sort_by: 'citations', limit_val: 25 }),
+      historyEntry({ query_state: JSON.stringify(state), sort_by: 'citations', limit_val: 2000 }),
     );
 
-    expect(restored).toEqual({ state, sortBy: 'citations', limit: 25, isLegacy: false });
+    expect(restored).toEqual({ state, sortBy: 'citations', limits: state.limits, isLegacy: false });
+  });
+
+  // Before pagination one limit applied to every base: it becomes the common value.
+  it('turns the single limit of a search saved before pagination into the common value', () => {
+    const state = { ast: titleRule, selectedDbs: ['openalex'], customQueries: {} };
+
+    const restored = restoreSearch(historyEntry({ query_state: JSON.stringify(state), limit_val: 25 }));
+
+    expect(restored?.limits).toEqual({ common: 25, perBase: {} });
   });
 
   it('turns each base query of an older search into a custom query, with an empty builder', () => {
@@ -109,7 +128,7 @@ describe('restoreSearch', () => {
         customQueries: { openalex: 'title.search:x', wos: 'TI=x' },
       },
       sortBy: 'date',
-      limit: undefined,
+      limits: undefined,
       isLegacy: true,
     });
   });
@@ -131,6 +150,19 @@ describe('restoreSearch', () => {
 
 describe('usableDatabases', () => {
   it('keeps free bases and keyed bases that have a key', () => {
-    expect(usableDatabases(['openalex', 'scopus', 'wos'], { scopus: 'k', wos: '' })).toEqual(['openalex', 'scopus']);
+    expect(usableDatabases(['openalex', 'scopus', 'wos', 'ieee'], { scopus: 'k', wos: '', ieee: '' })).toEqual([
+      'openalex',
+      'scopus',
+    ]);
+  });
+});
+
+describe('loadSearchApiKeys', () => {
+  it('reads the key setting of every keyed base, empty when missing', async () => {
+    const stored: Record<string, string> = { scopus_api_key: 's', ieee_api_key: 'i' };
+
+    const keys = await loadSearchApiKeys(async (key) => stored[key] ?? null);
+
+    expect(keys).toEqual({ scopus: 's', wos: '', ieee: 'i' });
   });
 });

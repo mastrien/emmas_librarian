@@ -35,15 +35,15 @@ export default defineConfig({
       ],
       // Ratchet: floor of measured coverage, raised as coverage improves. Never lower it.
       thresholds: {
-        lines: 90,
-        branches: 88,
-        functions: 83,
-        statements: 90,
+        lines: 92,
+        branches: 91,
+        functions: 89,
+        statements: 92,
         'electron/**/*': {
-          lines: 94,
-          branches: 90,
-          functions: 94,
-          statements: 94,
+          lines: 95,
+          branches: 91,
+          functions: 99,
+          statements: 95,
         },
       },
     },

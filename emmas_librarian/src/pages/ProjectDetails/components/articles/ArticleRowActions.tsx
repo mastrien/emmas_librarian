@@ -7,18 +7,23 @@ import {
   Edit2,
   ExternalLink,
   FileText,
+  Globe,
   History,
+  Loader2,
   MoreHorizontal,
   Upload,
   X,
 } from 'lucide-react';
 import type { Article } from '../../../../types';
 import { ArticleRowMenu, type RowMenuGroup } from './ArticleRowMenu';
+import { openAccessMessage, type OpenAccessRowState } from './openAccessText';
 
 type ArticleStatus = 'new' | 'read' | 'archived';
 
 export interface ArticleRowHandlers {
   onUpload: (id: number) => void;
+  /** Looks for an open access copy of the article's PDF and links it. */
+  onFindOpenAccess: (id: number) => void;
   onUnlink: (id: number) => void;
   onStatusChange: (id: number, status: ArticleStatus) => void;
   onEdit: (article: Article) => void;
@@ -94,16 +99,61 @@ function menuGroups(article: Article, h: ArticleRowHandlers): RowMenuGroup[] {
   return groups;
 }
 
-const MainAction: React.FC<{ article: Article; onUpload: (id: number) => void }> = ({ article, onUpload }) =>
-  article.local_file_path ? (
-    <Link to={`/articles/${article.id}`} className="btn-ghost btn-ghost--accent">
-      <FileText size={ICON} /> Ler
-    </Link>
-  ) : (
-    <button type="button" className="btn-ghost" onClick={() => onUpload(article.id)} title="Vincular PDF">
-      <Upload size={ICON} /> Vincular PDF
-    </button>
+// "Vincular PDF" offers the two ways to get the PDF: a file from the computer, or an open access copy.
+const attachGroups = (article: Article, h: ArticleRowHandlers): RowMenuGroup[] => [
+  {
+    label: 'Vincular PDF',
+    items: [
+      { label: 'Do computador…', icon: <Upload size={ICON} />, onSelect: () => h.onUpload(article.id) },
+      { label: 'Buscar PDF aberto', icon: <Globe size={ICON} />, onSelect: () => h.onFindOpenAccess(article.id) },
+    ],
+  },
+];
+
+const AttachPdf: React.FC<{ article: Article; handlers: ArticleRowHandlers; searching: boolean }> = ({
+  article,
+  handlers,
+  searching,
+}) => {
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const close = useCallback(() => setAnchor(null), []);
+  if (searching) {
+    return (
+      <button type="button" className="btn-ghost" disabled>
+        <Loader2 size={ICON} className="animate-spin" /> Buscando PDF…
+      </button>
+    );
+  }
+  return (
+    <>
+      <button
+        type="button"
+        className="btn-ghost"
+        aria-haspopup="menu"
+        aria-expanded={anchor !== null}
+        onClick={(e) => setAnchor(anchor ? null : e.currentTarget)}
+      >
+        <Upload size={ICON} /> Vincular PDF
+      </button>
+      {anchor && <ArticleRowMenu anchor={anchor} groups={attachGroups(article, handlers)} onClose={close} />}
+    </>
   );
+};
+
+const OpenAccessStatus: React.FC<{ state?: OpenAccessRowState }> = ({ state }) => {
+  if (!state || state.status === 'running') return null;
+  const message = openAccessMessage(state);
+  return (
+    <div className={`row-actions__line row-actions__oa row-actions__oa--${message.tone}`} role="status">
+      {message.text}
+      {message.page && (
+        <a href={message.page} target="_blank" rel="noreferrer">
+          Abrir a página
+        </a>
+      )}
+    </div>
+  );
+};
 
 const DoiButton: React.FC<{ doi?: string }> = ({ doi }) =>
   doi ? (
@@ -140,10 +190,11 @@ const Shortcuts: React.FC<{ actions: ToggleAction[] }> = ({ actions }) => (
  *
  * @example <ArticleRowActions article={article} handlers={rowHandlers} />
  */
-export const ArticleRowActions: React.FC<{ article: Article; handlers: ArticleRowHandlers }> = ({
-  article,
-  handlers,
-}) => {
+export const ArticleRowActions: React.FC<{
+  article: Article;
+  handlers: ArticleRowHandlers;
+  openAccess?: OpenAccessRowState;
+}> = ({ article, handlers, openAccess }) => {
   // The "⋯" button the menu is anchored to; null while the menu is closed.
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const closeMenu = useCallback(() => setMenuAnchor(null), []);
@@ -155,7 +206,13 @@ export const ArticleRowActions: React.FC<{ article: Article; handlers: ArticleRo
           <DoiButton doi={article.doi} />
         </span>
         <span className="row-actions__slot-primary">
-          <MainAction article={article} onUpload={handlers.onUpload} />
+          {article.local_file_path ? (
+            <Link to={`/articles/${article.id}`} className="btn-ghost btn-ghost--accent">
+              <FileText size={ICON} /> Ler
+            </Link>
+          ) : (
+            <AttachPdf article={article} handlers={handlers} searching={openAccess?.status === 'running'} />
+          )}
         </span>
         <button
           type="button"
@@ -172,6 +229,7 @@ export const ArticleRowActions: React.FC<{ article: Article; handlers: ArticleRo
           <MoreHorizontal size={16} />
         </button>
       </div>
+      <OpenAccessStatus state={openAccess} />
       <Shortcuts actions={statusActions(article, handlers)} />
       {menuAnchor && <ArticleRowMenu anchor={menuAnchor} groups={menuGroups(article, handlers)} onClose={closeMenu} />}
     </div>

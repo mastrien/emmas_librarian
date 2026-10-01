@@ -1,3 +1,4 @@
+import type { SearchLimits } from '../utils/searchLimits';
 export type AISkill = 'metadata' | 'summary' | 'extraction' | 'embeddings';
 export type AIProvider = 'openai' | 'gemini' | 'anthropic' | 'ollama' | 'ollama_cloud' | 'llama_cpp' | 'local';
 
@@ -160,6 +161,7 @@ export enum IpcChannel {
   ARTICLES_GET_BY_PROJECT = 'articles:getByProject',
   ARTICLES_GET_ONE = 'articles:getOne',
   ARTICLES_UPDATE_STATUS = 'articles:updateStatus',
+  ARTICLES_UPDATE_STATUS_MANY = 'articles:updateStatusMany',
   HIGHLIGHTS_GET = 'highlights:get',
   HIGHLIGHTS_CREATE = 'highlights:create',
   HIGHLIGHTS_DELETE = 'highlights:delete',
@@ -170,6 +172,7 @@ export enum IpcChannel {
   PDF_UPLOAD = 'pdf:upload',
   PDF_GET = 'pdf:get',
   PDF_UNLINK = 'pdf:unlink',
+  PDF_FETCH_OPEN_ACCESS = 'pdf:fetchOpenAccess',
   ARTICLES_CREATE_MANUAL = 'articles:createManual',
   EXPORT_CSV = 'export:csv',
   EXPORT_BIBLIOSHINY = 'export:biblioshiny',
@@ -317,7 +320,34 @@ export interface TrashItem {
   deleted_at: string;
 }
 
-export type SearchBreakdown = Record<string, { count: number; error?: string }>;
+/**
+ * What one base did in a search, as the history records it: results received (`count`), the limit asked
+ * (`requested`), how many the base had for the query (`available`, when it says), requests made, and why it
+ * failed (`error`) or stopped early (`warning`). Searches made before pagination only have count/error.
+ */
+export interface SearchBaseOutcome {
+  count: number;
+  requested?: number;
+  available?: number;
+  requests?: number;
+  error?: string;
+  warning?: string;
+}
+
+export type SearchBreakdown = Record<string, SearchBaseOutcome>;
+
+/**
+ * What happened when the app looked for an open access PDF of one article: downloaded (and from where),
+ * blocked (open copies exist but none handed over a PDF: open the pages in the browser), no open copy,
+ * no DOI to look it up, already had a PDF, or failed (network or OpenAlex error).
+ */
+export type OpenAccessOutcome =
+  | { status: 'downloaded'; source: string }
+  | { status: 'blocked'; landingPages: string[] }
+  | { status: 'not-open' }
+  | { status: 'no-doi' }
+  | { status: 'already' }
+  | { status: 'failed'; error: string };
 
 /** Metadata of a search result beyond the list columns, for the details dialog. */
 export type SearchPreviewDetails = Pick<
@@ -369,9 +399,12 @@ export interface SearchHistoryItem {
   results_breakdown: string;
   created_at: string;
   sort_by?: string;
+  /** The common limit; per-base adjustments are in query_state.limits and each base's `requested`. */
   limit_val?: number;
   /** JSON of SearchQueryState; null for searches made before it was stored, imports and manual additions. */
   query_state?: string | null;
+  /** Distinct results across the bases before saving (null before it was recorded). */
+  unique_results?: number | null;
 }
 
 /** What the search page needs to rebuild a past search in the query builder. */
@@ -379,6 +412,8 @@ export interface SearchQueryState {
   ast: QueryASTNode;
   selectedDbs: string[];
   customQueries: Record<string, string>;
+  /** Common limit and per-base adjustments; missing in searches saved before pagination. */
+  limits?: SearchLimits;
 }
 
 export interface SearchHistoryRecord {

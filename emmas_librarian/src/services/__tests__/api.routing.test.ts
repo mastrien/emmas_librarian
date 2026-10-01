@@ -82,9 +82,9 @@ const routes: RouteCase[] = [
   { method: 'revertSearch', call: () => api.revertSearch(9), channel: IpcChannel.SEARCH_REVERT, args: [9] },
   {
     method: 'previewSearch',
-    call: () => api.previewSearch(1, { a: 'q' }, 50, 'date', 'uq', '{"ast":{}}'),
+    call: () => api.previewSearch(1, { a: 'q' }, { common: 50, perBase: { wos: 20 } }, 'date', 'uq', '{"ast":{}}'),
     channel: IpcChannel.SEARCH_PREVIEW,
-    args: [1, { a: 'q' }, 50, 'date', 'uq', '{"ast":{}}'],
+    args: [1, { a: 'q' }, { common: 50, perBase: { wos: 20 } }, 'date', 'uq', '{"ast":{}}'],
   },
   {
     method: 'saveSearchPreview',
@@ -119,6 +119,12 @@ const routes: RouteCase[] = [
     call: () => api.updateArticleStatus(2, 'read', 'n'),
     channel: IpcChannel.ARTICLES_UPDATE_STATUS,
     args: [2, 'read', 'n'],
+  },
+  {
+    method: 'updateArticlesStatus',
+    call: () => api.updateArticlesStatus([2, 3], 'archived', 'n'),
+    channel: IpcChannel.ARTICLES_UPDATE_STATUS_MANY,
+    args: [[2, 3], 'archived', 'n'],
   },
   {
     method: 'updateArticleMetadata',
@@ -175,6 +181,12 @@ const routes: RouteCase[] = [
   },
   { method: 'uploadPdf', call: () => api.uploadPdf(2, '/a.pdf'), channel: IpcChannel.PDF_UPLOAD, args: [2, '/a.pdf'] },
   { method: 'unlinkPdf', call: () => api.unlinkPdf(2), channel: IpcChannel.PDF_UNLINK, args: [2] },
+  {
+    method: 'fetchOpenAccessPdf',
+    call: () => api.fetchOpenAccessPdf(4),
+    channel: IpcChannel.PDF_FETCH_OPEN_ACCESS,
+    args: [4],
+  },
   {
     method: 'createManualArticle',
     call: () => api.createManualArticle(1, { title: 'T' }, '/a.pdf'),

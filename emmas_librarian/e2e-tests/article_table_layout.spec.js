@@ -19,9 +19,9 @@ async function addManualArticle(window, title, authors) {
 }
 
 async function setSidebar(window, open) {
-  const isOpen = await window.getByText('Filtros Rápidos').isVisible();
-  if (isOpen !== open) await window.getByRole('button', { name: 'Filtros' }).click();
-  await expect(window.getByText('Filtros Rápidos')).toBeVisible({ visible: open });
+  const sidebar = window.getByRole('complementary', { name: 'Filtros' });
+  if ((await sidebar.isVisible()) !== open) await window.getByRole('button', { name: /^Filtros/ }).click();
+  await expect(sidebar).toBeVisible({ visible: open });
 }
 
 // How far the table sticks out of its scroll container (0 or less = no horizontal scroll).

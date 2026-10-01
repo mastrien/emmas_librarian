@@ -2,11 +2,14 @@ import { DatabaseAdapter } from '../database/DatabaseAdapter';
 import { QueryTranslator } from './QueryTranslator';
 import { ApiIntegrator } from './ApiIntegrator';
 import { NormalizedArticle } from './types';
+import type { PagedResult } from './searchApis/paginate';
+import { validateSearchLimits, type SearchBaseId, type SearchLimits } from '../../src/utils/searchLimits';
 import { PendingSearchStore } from './PendingSearchStore';
 import { doiKey } from '../utils/doi';
 import type {
   QuerySort,
   SavedSearchSummary,
+  SearchBaseOutcome,
   SearchBreakdown,
   SearchPreview,
   SearchPreviewDetails,
@@ -36,13 +39,26 @@ function previewDetails(article: NormalizedArticle): SearchPreviewDetails {
 interface PendingSearch {
   projectId: number;
   queryMap: Record<string, string>;
-  limit: number;
+  limits: SearchLimits;
   sortBy: QuerySort;
   unifiedQuery: string;
   // JSON of the query builder state, saved so the search can be reopened in the builder.
   queryState?: string;
   breakdown: SearchBreakdown;
   articles: NormalizedArticle[];
+}
+
+type BaseLimits = Partial<Record<SearchBaseId, number>>;
+
+// Only what the base reported: `available` and `warning` are left out when the base did not give them.
+function baseOutcome({ articles, requests, available, warning }: PagedResult, requested?: number): SearchBaseOutcome {
+  return {
+    count: articles.length,
+    requested,
+    requests,
+    ...(available !== undefined && { available }),
+    ...(warning && { warning }),
+  };
 }
 
 export class SearchOrchestrator {
@@ -57,21 +73,27 @@ export class SearchOrchestrator {
    * Runs the search on every database in `queryMap` and keeps the deduplicated results in memory,
    * so the user can review them before anything is written to the project.
    *
-   * @example const { previewId, results } = await orchestrator.preview(1, { openalex: 'title.search:x' }, 50, 'relevance', 'x');
+   * Limits above a base's ceiling are rejected before any request, as the search page blocks them.
+   *
+   * @example const { previewId, results } = await orchestrator.preview(1, { openalex: 'title.search:x' }, { common: 50, perBase: {} }, 'relevance', 'x');
    */
   public async preview(
     projectId: number,
     queryMap: Record<string, string>,
-    limit: number,
+    limits: SearchLimits,
     sortBy: QuerySort,
     unifiedQuery: string,
     queryState?: string,
   ): Promise<SearchPreview> {
-    const { articles, breakdown } = await this.fetchDeduplicated(queryMap, limit, sortBy);
+    const perBase = validateSearchLimits(
+      limits,
+      Object.keys(queryMap).filter((db) => queryMap[db]),
+    );
+    const { articles, breakdown } = await this.fetchDeduplicated(queryMap, perBase, sortBy);
     const previewId = this.pending.put({
       projectId,
       queryMap,
-      limit,
+      limits,
       sortBy,
       unifiedQuery,
       queryState,
@@ -114,56 +136,54 @@ export class SearchOrchestrator {
     this.pending.discard(previewId);
   }
 
-  private async fetchDeduplicated(queryMap: Record<string, string>, limit: number, sortBy: QuerySort) {
+  private async fetchDeduplicated(queryMap: Record<string, string>, limits: BaseLimits, sortBy: QuerySort) {
     const breakdown: SearchBreakdown = {};
     const perDatabase = await Promise.all(
-      this.activeIntegrators(queryMap, limit, sortBy).map(({ name, promise }) =>
-        promise
-          .then((res) => {
-            breakdown[name] = { count: res.length };
-            return res;
+      this.activeIntegrators(queryMap, limits, sortBy).map(({ name, promise }) => {
+        const requested = limits[name];
+        return promise
+          .then((result) => {
+            breakdown[name] = baseOutcome(result, requested);
+            return result.articles;
           })
           .catch((err) => {
-            breakdown[name] = { count: 0, error: err.message || 'Erro desconhecido' };
+            breakdown[name] = { count: 0, requested, error: err.message || 'Erro desconhecido' };
             return [] as NormalizedArticle[];
-          }),
-      ),
+          });
+      }),
     );
     return { articles: this.deduplicate(perDatabase.flat()), breakdown };
   }
 
-  // A database missing from queryMap was deactivated by the user; limit applies per database.
-  private activeIntegrators(queryMap: Record<string, string>, limit: number, sortBy: QuerySort) {
-    const scopusKey = this.db.getSetting('scopus_api_key') || '';
-    const wosKey = this.db.getSetting('wos_api_key') || '';
-    const integrators: { name: string; promise: Promise<NormalizedArticle[]> }[] = [];
-    if (queryMap.openalex)
-      integrators.push({ name: 'openalex', promise: this.api.searchOpenAlex(queryMap.openalex, sortBy, limit) });
-    if (queryMap.crossref)
-      integrators.push({ name: 'crossref', promise: this.api.searchCrossref(queryMap.crossref, sortBy, limit) });
-    if (queryMap.scopus)
-      integrators.push({ name: 'scopus', promise: this.api.searchScopus(queryMap.scopus, scopusKey, sortBy, limit) });
-    if (queryMap.wos)
-      integrators.push({ name: 'wos', promise: this.api.searchWoS(queryMap.wos, wosKey, sortBy, limit) });
-    return integrators;
+  // A database missing from queryMap was deactivated by the user; each one gets its own limit.
+  private activeIntegrators(queryMap: Record<string, string>, limits: BaseLimits, sortBy: QuerySort) {
+    const key = (setting: string) => this.db.getSetting(setting) || '';
+    const runners: Record<SearchBaseId, (query: string, limit?: number) => Promise<PagedResult>> = {
+      openalex: (q, l) => this.api.searchOpenAlex(q, sortBy, l, key('openalex_api_key')),
+      crossref: (q, l) => this.api.searchCrossref(q, sortBy, l),
+      scopus: (q, l) => this.api.searchScopus(q, key('scopus_api_key'), sortBy, l),
+      wos: (q, l) => this.api.searchWoS(q, key('wos_api_key'), sortBy, l),
+      europepmc: (q, l) => this.api.searchEuropePmc(q, sortBy, l),
+      arxiv: (q, l) => this.api.searchArxiv(q, sortBy, l),
+      ieee: (q, l) => this.api.searchIeee(q, key('ieee_api_key'), sortBy, l),
+    };
+    return (Object.keys(runners) as SearchBaseId[])
+      .filter((base) => queryMap[base])
+      .map((base) => ({ name: base, promise: runners[base](queryMap[base], limits[base]) }));
   }
 
   /** Writes the history entry and the articles; returns how many were new to the project. */
   private persist(search: PendingSearch): number {
-    const { projectId, queryMap, unifiedQuery, breakdown, sortBy, limit, articles, queryState } = search;
+    const { projectId, queryMap, unifiedQuery, breakdown, sortBy, limits, articles, queryState } = search;
     // Results already in the project only get their source list merged, so they do not count as
     // saved by this search (and "Desfazer Busca" does not remove them).
     const addedCount = articles.filter((a) => !this.db.findDuplicateArticle(projectId, a.doi, a.title)).length;
-    const searchId = this.db.saveSearchHistory(
-      projectId,
-      unifiedQuery,
-      queryMap,
-      addedCount,
-      breakdown,
+    const searchId = this.db.saveSearchHistory(projectId, unifiedQuery, queryMap, addedCount, breakdown, {
       sortBy,
-      limit,
+      limitVal: limits.common,
       queryState,
-    );
+      uniqueResults: articles.length,
+    });
     for (const article of articles) {
       this.db.saveArticle(projectId, {
         doi: article.doi,

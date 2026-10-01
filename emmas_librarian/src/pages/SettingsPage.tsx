@@ -14,6 +14,8 @@ export const SettingsPage: React.FC = () => {
   const projectService = useProjectService();
   const [scopusKey, setScopusKey] = useState('');
   const [wosKey, setWosKey] = useState('');
+  const [openAlexKey, setOpenAlexKey] = useState('');
+  const [ieeeKey, setIeeeKey] = useState('');
 
   const [openaiKey, setOpenaiKey] = useState('');
   const [anthropicKey, setAnthropicKey] = useState('');
@@ -49,6 +51,8 @@ export const SettingsPage: React.FC = () => {
 
       const sKey = await projectService.getSetting('scopus_api_key');
       const wKey = await projectService.getSetting('wos_api_key');
+      const oaKey = await projectService.getSetting('openalex_api_key');
+      const ieKey = await projectService.getSetting('ieee_api_key');
       const oKey = await projectService.getSetting('api_key_openai');
       const aKey = await projectService.getSetting('api_key_anthropic');
       const gKey = await projectService.getSetting('api_key_gemini');
@@ -64,6 +68,8 @@ export const SettingsPage: React.FC = () => {
 
       if (sKey) setScopusKey(sKey);
       if (wKey) setWosKey(wKey);
+      if (oaKey) setOpenAlexKey(oaKey);
+      if (ieKey) setIeeeKey(ieKey);
       if (oKey) setOpenaiKey(oKey);
       if (aKey) setAnthropicKey(aKey);
       if (gKey) setGeminiKey(gKey);
@@ -105,6 +111,8 @@ export const SettingsPage: React.FC = () => {
     setSaving(true);
     await projectService.setSetting('scopus_api_key', scopusKey);
     await projectService.setSetting('wos_api_key', wosKey);
+    await projectService.setSetting('openalex_api_key', openAlexKey);
+    await projectService.setSetting('ieee_api_key', ieeeKey);
     await projectService.setSetting('api_key_openai', openaiKey);
     await projectService.setSetting('api_key_anthropic', anthropicKey);
     await projectService.setSetting('api_key_gemini', geminiKey);
@@ -196,7 +204,7 @@ export const SettingsPage: React.FC = () => {
   const handleRestoreAutoBackup = async (filename: string) => {
     if (
       confirm(
-        `ATENÇÃO: Isso irá SOBRESCREVER todos os dados atuais (projetos, artigos, PDFs, etc) com o conteúdo do backup automático "${filename}". Todos os dados atuais não salvos em backups serão PERDIDOS permanentemente. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?`,
+        `ATENÇÃO: Isso irá SOBRESCREVER o banco de dados atual (projetos, artigos, anotações, diário) com o backup automático "${filename}". Tudo o que foi feito depois dessa data será PERDIDO permanentemente. Os PDFs e documentos guardados não são alterados. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?`,
       )
     ) {
       try {
@@ -244,7 +252,9 @@ export const SettingsPage: React.FC = () => {
   const handleRestoreBackupMerge = async () => {
     try {
       const count = await projectService.restoreBackupMerge();
-      if (count > 0) {
+      if (count === 1) {
+        alert('1 projeto novo foi importado e mesclado com sucesso!');
+      } else if (count !== null && count > 1) {
         alert(`${count} projetos novos foram importados e mesclados com sucesso!`);
       } else if (count === 0) {
         alert(
@@ -277,7 +287,16 @@ export const SettingsPage: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <AppearanceSettings />
 
-        <ApiKeysSettings scopusKey={scopusKey} setScopusKey={setScopusKey} wosKey={wosKey} setWosKey={setWosKey} />
+        <ApiKeysSettings
+          scopusKey={scopusKey}
+          setScopusKey={setScopusKey}
+          wosKey={wosKey}
+          setWosKey={setWosKey}
+          openAlexKey={openAlexKey}
+          setOpenAlexKey={setOpenAlexKey}
+          ieeeKey={ieeeKey}
+          setIeeeKey={setIeeeKey}
+        />
 
         <AiSettings
           openaiKey={openaiKey}

@@ -13,10 +13,28 @@ describe('E2eMockApiIntegrator', () => {
       api.searchWoS(),
     ]);
 
-    expect(openalex.map((a) => [a.doi, a.title, a.authors, a.year, a.source_databases])).toEqual([
+    expect(openalex.articles.map((a) => [a.doi, a.title, a.authors, a.year, a.source_databases])).toEqual([
       ['10.1234/e2e-mock-doi', 'Aprendizado de Maquina E2E', 'Author E2E', 2026, ['OpenAlex']],
     ]);
-    expect([crossref, scopus, wos]).toEqual([[], [], []]);
+    expect([crossref, scopus, wos]).toEqual([
+      { articles: [], requests: 0 },
+      { articles: [], requests: 0 },
+      { articles: [], requests: 0 },
+    ]);
+  });
+});
+
+describe('E2eMockApiIntegrator bases added with pagination', () => {
+  it('finds nothing on Europe PMC, arXiv and IEEE Xplore, so E2E searches never reach them', async () => {
+    const api = new E2eMockApiIntegrator();
+
+    const results = await Promise.all([api.searchEuropePmc(), api.searchArxiv(), api.searchIeee()]);
+
+    expect(results).toEqual([
+      { articles: [], requests: 0 },
+      { articles: [], requests: 0 },
+      { articles: [], requests: 0 },
+    ]);
   });
 });
 

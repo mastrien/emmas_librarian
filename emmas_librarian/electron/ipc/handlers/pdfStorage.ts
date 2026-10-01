@@ -41,6 +41,32 @@ export function savePdfToStorage(db: DatabaseAdapter, sourceFilePath: string): S
   return { destPath, hash, filename, size };
 }
 
+/**
+ * Stores downloaded PDF bytes in the global library, reusing a stored copy with the same content hash,
+ * and registers it; `originalName` becomes the (timestamped) file name.
+ *
+ * Usage:
+ *   const { destPath } = savePdfBytesToStorage(db, bytes, '10.2337_dc11-s062.pdf');
+ */
+export function savePdfBytesToStorage(db: DatabaseAdapter, bytes: Buffer, originalName: string): StoredPdf {
+  const hash = crypto.createHash('sha256').update(bytes).digest('hex');
+  const pdfsDir = ensureStorageDir('pdfs');
+  const { destPath, filename } = reuseStoredCopy(db, hash) ?? writeIntoLibrary(bytes, originalName, pdfsDir);
+  db.registerPdfInLibrary(destPath, hash, filename, bytes.length);
+  return { destPath, hash, filename, size: bytes.length };
+}
+
+function writeIntoLibrary(
+  bytes: Buffer,
+  originalName: string,
+  pdfsDir: string,
+): { destPath: string; filename: string } {
+  const filename = timestampedFilename(originalName);
+  const destPath = path.join(pdfsDir, filename);
+  if (!fs.existsSync(destPath)) fs.writeFileSync(destPath, bytes);
+  return { destPath, filename };
+}
+
 function hashFile(filePath: string): string {
   return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
 }

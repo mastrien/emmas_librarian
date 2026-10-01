@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Key } from 'lucide-react';
+import { SEARCH_DATABASES } from './searchQueries';
 
 interface ApiKeyRequiredDialogProps {
   database: string;
@@ -9,7 +10,7 @@ interface ApiKeyRequiredDialogProps {
 }
 
 /**
- * Explains that Scopus / Web of Science need an API key and links to the settings page.
+ * Explains that a keyed base (Scopus, Web of Science, IEEE Xplore) needs an API key and links to the settings page.
  *
  * Usage:
  *   {missingKeyDb && <ApiKeyRequiredDialog database="wos" onCancel={close} onOpenSettings={() => navigate('/settings')} />}
@@ -55,8 +56,8 @@ export const ApiKeyRequiredDialog: React.FC<ApiKeyRequiredDialogProps> = ({ data
         </div>
         <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Chave de API Necessária</h2>
         <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.5' }}>
-          Para realizar buscas na <strong>{database === 'wos' ? 'Web of Science' : 'Scopus'}</strong>, você precisa
-          primeiro configurar sua chave de API nas configurações do sistema.
+          Para realizar buscas na <strong>{SEARCH_DATABASES.find((d) => d.id === database)?.label ?? database}</strong>,
+          você precisa primeiro configurar sua chave de API nas configurações do sistema.
         </p>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={onCancel} className="btn-secondary" style={{ flex: 1 }}>

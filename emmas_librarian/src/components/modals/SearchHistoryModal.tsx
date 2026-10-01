@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { X, Calendar, Search, Database, ChevronRight, RotateCcw, Pencil } from 'lucide-react';
+import { X, Calendar, Search, ChevronRight, RotateCcw, Pencil } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import type { SearchHistoryItem } from '../../types';
+import type { SearchBreakdown, SearchHistoryItem } from '../../types';
 import { restoreSearch } from '../../pages/Search/searchQueries';
+import { HistoryBreakdown } from './searchHistory/HistoryBreakdown';
+import { historyLimitText, parseStoredObject } from './searchHistory/historyDetails';
+import { databaseLabel } from './searchSummary/SearchBreakdownList';
 
 type HistoryItem = SearchHistoryItem;
 
@@ -51,8 +54,9 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ history, onRevertSearch
     ) : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {history.map((item) => {
-          const breakdown = JSON.parse(item.results_breakdown);
-          const translated = JSON.parse(item.translated_queries);
+          const breakdown = parseStoredObject<SearchBreakdown>(item.results_breakdown);
+          const translated = parseStoredObject<Record<string, string>>(item.translated_queries);
+          const limitText = historyLimitText(item);
 
           return (
             <div
@@ -113,11 +117,11 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ history, onRevertSearch
                       </span>
                     </>
                   )}
-                  {item.limit_val !== undefined && item.limit_val !== null && (
+                  {limitText && (
                     <>
                       <span style={{ margin: '0 0.5rem', color: 'var(--border-color)' }}>|</span>
                       <span>
-                        Limite: <strong>{item.limit_val}</strong>
+                        Limite: <strong>{limitText}</strong>
                       </span>
                     </>
                   )}
@@ -205,38 +209,7 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ history, onRevertSearch
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                <div>
-                  <div
-                    style={{
-                      fontWeight: 600,
-                      color: 'var(--text-heading)',
-                      marginBottom: '0.75rem',
-                      fontSize: '0.9rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                    }}
-                  >
-                    <Database size={14} /> Resultados por Base
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {Object.entries(breakdown).map(([db, data]: [string, any]) => (
-                      <div
-                        key={db}
-                        style={{
-                          fontSize: '0.8rem',
-                          padding: '0.3rem 0.6rem',
-                          background: 'var(--bg-surface)',
-                          borderRadius: 'var(--radius-sm)',
-                          border: `1px solid ${data.error ? 'var(--color-danger)' : 'var(--border-color)'}`,
-                        }}
-                      >
-                        <span style={{ textTransform: 'capitalize' }}>{db === 'wos' ? 'Web of Science' : db}</span>:{' '}
-                        <strong>{data.error ? 'Falha' : data.count}</strong>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <HistoryBreakdown breakdown={breakdown} uniqueResults={item.unique_results} />
 
                 <div>
                   <div
@@ -268,7 +241,7 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ history, onRevertSearch
                             wordBreak: 'break-all',
                           }}
                         >
-                          <strong style={{ textTransform: 'capitalize' }}>{db}:</strong> {q as string}
+                          <strong>{databaseLabel(db)}:</strong> {q}
                         </div>
                       ))}
                     </div>
