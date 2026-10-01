@@ -147,7 +147,7 @@ const noteStyle: React.CSSProperties = { margin: '0.5rem 0 0', fontSize: '0.85re
 const summaryStyle: React.CSSProperties = { cursor: 'pointer', color: 'var(--color-primary)', fontWeight: 600 };
 const rowStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '8.5rem 8rem 1fr',
+  gridTemplateColumns: '8.5rem 10rem 1fr',
   gap: '0.75rem',
   alignItems: 'center',
 };

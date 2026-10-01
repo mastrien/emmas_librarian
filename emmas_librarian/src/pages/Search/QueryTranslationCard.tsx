@@ -49,7 +49,7 @@ export const QueryTranslationCard: React.FC<QueryTranslationCardProps> = ({
           alignItems: 'center',
         }}
       >
-        <div style={{ fontWeight: 600, color: 'var(--text-heading)', textTransform: 'capitalize' }}>{databaseName}</div>
+        <div style={{ fontWeight: 600, color: 'var(--text-heading)' }}>{databaseName}</div>
         <button
           type="button"
           onClick={toggleCustom}
