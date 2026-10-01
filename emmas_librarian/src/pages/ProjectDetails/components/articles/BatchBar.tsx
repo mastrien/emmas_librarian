@@ -1,5 +1,5 @@
 import React from 'react';
-import { Archive, CheckCircle, CopyPlus, X } from 'lucide-react';
+import { Archive, CheckCircle, CopyPlus, Globe, X } from 'lucide-react';
 
 interface BatchBarProps {
   selectedCount: number;
@@ -9,7 +9,29 @@ interface BatchBarProps {
   onArchive: () => void;
   onCite: () => void;
   onExit: () => void;
+  onFetchOpenAccess: () => void;
+  onCancelOpenAccess: () => void;
+  /** While open access PDFs are downloading: how many of the selection are done. */
+  openAccessProgress: { done: number; total: number } | null;
 }
+
+// Progress stays inside the bar (option V1 of the mock-up): the table below does not move while it runs.
+const DownloadProgress: React.FC<{ progress: { done: number; total: number }; onCancel: () => void }> = ({
+  progress,
+  onCancel,
+}) => (
+  <>
+    <span className="batch-bar__progress" role="status">
+      Baixando {Math.min(progress.done + 1, progress.total)} de {progress.total}…
+      <span className="batch-bar__meter" aria-hidden="true">
+        <span style={{ width: `${Math.round((progress.done / progress.total) * 100)}%` }} />
+      </span>
+    </span>
+    <button type="button" onClick={onCancel}>
+      Cancelar
+    </button>
+  </>
+);
 
 /**
  * Takes the place of the result line while multi-select is on: how many articles are selected and
@@ -25,8 +47,12 @@ export const BatchBar: React.FC<BatchBarProps> = ({
   onArchive,
   onCite,
   onExit,
+  onFetchOpenAccess,
+  onCancelOpenAccess,
+  openAccessProgress,
 }) => {
   const none = selectedCount === 0;
+  const downloading = openAccessProgress !== null;
   return (
     <div className="batch-bar" role="region" aria-label="Ações para os artigos selecionados">
       <span className="batch-bar__count" aria-live="polite">
@@ -44,6 +70,13 @@ export const BatchBar: React.FC<BatchBarProps> = ({
       <button type="button" onClick={onCite} disabled={none}>
         <CopyPlus size={15} /> Citar em massa
       </button>
+      {downloading ? (
+        <DownloadProgress progress={openAccessProgress} onCancel={onCancelOpenAccess} />
+      ) : (
+        <button type="button" onClick={onFetchOpenAccess} disabled={none}>
+          <Globe size={15} /> Baixar PDFs abertos
+        </button>
+      )}
       <button type="button" onClick={onExit} aria-label="Sair da seleção" title="Sair da seleção">
         <X size={15} />
       </button>

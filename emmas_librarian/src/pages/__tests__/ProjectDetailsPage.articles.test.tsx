@@ -294,7 +294,8 @@ describe('ProjectDetailsPage PDF links', () => {
   it('opens the attach dialog for an article without a PDF', async () => {
     await renderProjectPage(givenProject([article({ id: 4, title: 'Artigo sem PDF' })]));
 
-    fireEvent.click(inRow('Artigo sem PDF').getByTitle('Vincular PDF'));
+    fireEvent.click(inRow('Artigo sem PDF').getByRole('button', { name: 'Vincular PDF' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Do computador…' }));
 
     expect(await screen.findByText('Anexar PDF ao Artigo')).toBeInTheDocument();
     expect(screen.getByText('Artigo sem PDF', { selector: 'strong' })).toBeInTheDocument();

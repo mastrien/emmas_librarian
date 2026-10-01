@@ -172,6 +172,7 @@ export enum IpcChannel {
   PDF_UPLOAD = 'pdf:upload',
   PDF_GET = 'pdf:get',
   PDF_UNLINK = 'pdf:unlink',
+  PDF_FETCH_OPEN_ACCESS = 'pdf:fetchOpenAccess',
   ARTICLES_CREATE_MANUAL = 'articles:createManual',
   EXPORT_CSV = 'export:csv',
   EXPORT_BIBLIOSHINY = 'export:biblioshiny',
@@ -334,6 +335,19 @@ export interface SearchBaseOutcome {
 }
 
 export type SearchBreakdown = Record<string, SearchBaseOutcome>;
+
+/**
+ * What happened when the app looked for an open access PDF of one article: downloaded (and from where),
+ * blocked (open copies exist but none handed over a PDF: open the pages in the browser), no open copy,
+ * no DOI to look it up, already had a PDF, or failed (network or OpenAlex error).
+ */
+export type OpenAccessOutcome =
+  | { status: 'downloaded'; source: string }
+  | { status: 'blocked'; landingPages: string[] }
+  | { status: 'not-open' }
+  | { status: 'no-doi' }
+  | { status: 'already' }
+  | { status: 'failed'; error: string };
 
 /** Metadata of a search result beyond the list columns, for the details dialog. */
 export type SearchPreviewDetails = Pick<

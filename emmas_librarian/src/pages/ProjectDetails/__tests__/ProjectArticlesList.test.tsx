@@ -13,6 +13,7 @@ describe('ProjectArticlesList', () => {
     setEditingArticle: vi.fn(),
     setArchivingId: vi.fn(),
     setCitationArticle: vi.fn(),
+    openAccess: { stateOf: () => undefined, onFind: vi.fn() },
   };
 
   beforeEach(() => {
@@ -107,10 +108,10 @@ describe('ProjectArticlesList', () => {
     const paginatedArticles = [{ id: 1, title: 'Article 1', local_file_path: null }];
     renderComponent({ paginatedArticles });
 
-    const uploadBtn = screen.getByTitle('Vincular PDF');
     act(() => {
-      fireEvent.click(uploadBtn);
+      fireEvent.click(screen.getByRole('button', { name: 'Vincular PDF' }));
     });
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Do computador…' }));
 
     expect(defaultProps.handleUploadClick).toHaveBeenCalledWith(1);
   });

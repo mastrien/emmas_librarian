@@ -10,6 +10,8 @@ import { ResultLine } from './articles/ResultLine';
 import { BatchBar } from './articles/BatchBar';
 import { ReadArticlesSection, ArchivedArticlesSection } from './articles/ArticleStatusSections';
 import { PaginationControls } from './articles/ArticlesPagination';
+import { OpenAccessReport } from './articles/OpenAccessReport';
+import type { OpenAccessPdfs } from '../hooks/useOpenAccessPdfs';
 
 type ArticleStatus = Article['status'];
 
@@ -22,6 +24,7 @@ interface ProjectArticlesTabProps {
   onStatusChangeMany: (articleIds: number[], status: ArticleStatus) => void;
   onUnlinkPdf: (articleId: number) => void;
   onAttachPdf: (articleId: number) => void;
+  openAccess: OpenAccessPdfs;
 }
 
 /**
@@ -121,6 +124,9 @@ const PaginatedArticles: React.FC<ProjectArticlesTabProps> = (props) => {
             modals.setIsMassCitationModalOpen(true);
           }}
           onExit={selection.exit}
+          onFetchOpenAccess={() => props.openAccess.runBatch(selection.selected)}
+          onCancelOpenAccess={props.openAccess.cancel}
+          openAccessProgress={props.openAccess.progress}
         />
       ) : (
         <ResultLine
@@ -146,7 +152,11 @@ const PaginatedArticles: React.FC<ProjectArticlesTabProps> = (props) => {
         setArchivingId={modals.setArchivingId}
         setCitationArticle={modals.setCitationArticle}
         selection={selection.selecting ? { isSelected: selection.isSelected, onToggle: selection.toggle } : undefined}
+        openAccess={{ stateOf: (id) => props.openAccess.rows[id], onFind: props.openAccess.fetchOne }}
       />
+      {props.openAccess.report && (
+        <OpenAccessReport report={props.openAccess.report} onClose={props.openAccess.closeReport} />
+      )}
       {totalPages > 1 && (
         <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
       )}

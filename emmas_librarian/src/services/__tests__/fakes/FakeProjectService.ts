@@ -1,4 +1,5 @@
 import type { SearchLimits } from '../../../utils/searchLimits';
+import type { OpenAccessOutcome } from '../../../types';
 import type {
   SearchHistoryItem,
   SearchPreview,
@@ -178,6 +179,8 @@ export class FakeProjectService implements IProjectService {
   uploadPdf = vi.fn(async (_articleId: number, _filePath: string): Promise<string> => '');
 
   unlinkPdf = vi.fn(async (_articleId: number): Promise<void> => undefined);
+
+  fetchOpenAccessPdf = vi.fn(async (_articleId: number): Promise<OpenAccessOutcome> => ({ status: 'not-open' }));
 
   getPdfBuffer = vi.fn(async (_articleId: number): Promise<ArrayBuffer> => new ArrayBuffer(0));
 

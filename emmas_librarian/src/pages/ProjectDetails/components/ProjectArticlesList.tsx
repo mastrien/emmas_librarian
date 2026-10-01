@@ -2,6 +2,7 @@ import React from 'react';
 import { Article } from '../../../types';
 import { SourceDatabaseBadges } from '../../../components/common/SourceDatabaseBadges';
 import { ArticleRowActions, type ArticleRowHandlers } from './articles/ArticleRowActions';
+import type { OpenAccessRowState } from './articles/openAccessText';
 import { ArticleSummary, AuthorList } from './articles/ArticleCells';
 
 const cellStyle: React.CSSProperties = { padding: '1.25rem 1.5rem' };
@@ -36,6 +37,8 @@ interface ProjectArticlesListProps {
   setCitationArticle: (article: Article) => void;
   // Multi-select: when present, each row gets a checkbox.
   selection?: ArticleSelection;
+  /** Each row's open access PDF search: its state and how to start it. */
+  openAccess: { stateOf: (articleId: number) => OpenAccessRowState | undefined; onFind: (articleId: number) => void };
 }
 
 export interface ArticleSelection {
@@ -53,9 +56,11 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
   setArchivingId,
   setCitationArticle,
   selection,
+  openAccess,
 }) => {
   const rowHandlers: ArticleRowHandlers = {
     onUpload: handleUploadClick,
+    onFindOpenAccess: openAccess.onFind,
     onUnlink: handleUnlinkClick,
     onStatusChange: handleStatusChange,
     onEdit: setEditingArticle,
@@ -116,7 +121,11 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
                 </div>
               </td>
               <td style={{ padding: '1rem 1.25rem', width: '1%' }}>
-                <ArticleRowActions article={article} handlers={rowHandlers} />
+                <ArticleRowActions
+                  article={article}
+                  handlers={rowHandlers}
+                  openAccess={openAccess.stateOf(article.id)}
+                />
               </td>
             </tr>
           ))}
