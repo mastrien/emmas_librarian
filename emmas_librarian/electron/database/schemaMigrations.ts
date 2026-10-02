@@ -135,6 +135,21 @@ const PDF_LIBRARY_TABLE = `
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );`;
 
+const PARTIAL_INDEXES = [
+  'CREATE INDEX IF NOT EXISTS idx_articles_project_id ON articles(project_id) WHERE deleted_at IS NULL',
+  'CREATE INDEX IF NOT EXISTS idx_articles_doi ON articles(doi) WHERE deleted_at IS NULL',
+  'CREATE INDEX IF NOT EXISTS idx_articles_local_file_path ON articles(local_file_path)',
+  'CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(project_id, status) WHERE deleted_at IS NULL',
+  'CREATE INDEX IF NOT EXISTS idx_annotations_article_id ON annotations(article_id) WHERE deleted_at IS NULL',
+  'CREATE INDEX IF NOT EXISTS idx_highlights_article_id ON highlights(article_id)',
+  'CREATE INDEX IF NOT EXISTS idx_pdf_chunks_article_id ON pdf_chunks(article_id)',
+  'CREATE INDEX IF NOT EXISTS idx_pdf_chunks_composite ON pdf_chunks(article_id, chunk_index)',
+  'CREATE INDEX IF NOT EXISTS idx_project_documents_project_id ON project_documents(project_id)',
+  'CREATE INDEX IF NOT EXISTS idx_search_history_project_id ON search_history(project_id)',
+  'CREATE INDEX IF NOT EXISTS idx_project_categories_project_id ON project_categories(project_id)',
+  'CREATE INDEX IF NOT EXISTS idx_massive_investigations_project_id ON massive_investigations(project_id)',
+];
+
 /**
  * Creates the schema and upgrades databases created by older versions. Every step is idempotent;
  * a failing step is logged and skipped so the app still opens.
@@ -143,14 +158,28 @@ const PDF_LIBRARY_TABLE = `
  *   initializeSchema(db, () => pdfLibraryRepo.backfillExistingPdfs());
  */
 export function initializeSchema(db: Database.Database, backfillPdfLibrary: () => void): void {
-  db.exec(readSchemaFile());
+  // If the database already existed from a previous release, column migrations (like deleted_at)
+  // must run before schema.sql creates partial indexes (e.g. WHERE deleted_at IS NULL).
   applyColumnMigrations(db);
+  logFailure('Base schema initialization error', () => db.exec(readSchemaFile()));
+  applyColumnMigrations(db);
+  applyIndexesSafely(db);
   logFailure('Failed to backfill articles is_oa/publisher:', () => backfillOpenAccessAndPublisher(db));
   logFailure('Migration pending_highlights error', () => db.exec(PENDING_HIGHLIGHTS_TABLE));
   logFailure('Migration massive_investigations error', () => db.exec(MASSIVE_INVESTIGATIONS_TABLE));
   logFailure('Migration categories error', () => migrateCategories(db));
   logFailure('Migration sqlite-vec dimensions error', () => migrateVectorTables(db));
   logFailure('Schema migrations error', () => applyLegacyFixes(db, backfillPdfLibrary));
+}
+
+function applyIndexesSafely(db: Database.Database): void {
+  for (const sql of PARTIAL_INDEXES) {
+    try {
+      db.exec(sql);
+    } catch {
+      /* index already exists or table/column not present */
+    }
+  }
 }
 
 // schema.sql sits next to this file in dev/tests but under different roots once compiled.

@@ -326,3 +326,44 @@ describe('search_history.unique_results migration', () => {
     expect(rows).toEqual([{ unified_query: 'q', unique_results: null }]);
   });
 });
+
+describe('legacy database without deleted_at (regression v1.2.0)', () => {
+  it('migrates an older database lacking deleted_at column without failing on partial indexes', () => {
+    withRawDatabase((raw) => {
+      raw.exec(`
+        CREATE TABLE projects (id INTEGER PRIMARY KEY, name TEXT);
+        CREATE TABLE articles (
+          id INTEGER PRIMARY KEY,
+          project_id INTEGER,
+          doi TEXT,
+          title TEXT,
+          source_query TEXT,
+          source_databases TEXT,
+          csl_json TEXT,
+          local_file_path TEXT,
+          status TEXT DEFAULT 'new'
+        );
+        CREATE TABLE annotations (id INTEGER PRIMARY KEY, article_id INTEGER, content_markdown TEXT);
+        CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT);
+      `);
+      raw.prepare("INSERT INTO projects (id, name) VALUES (1, 'Legacy Project')").run();
+      raw
+        .prepare(
+          "INSERT INTO articles (id, project_id, doi, title, source_query, source_databases, csl_json) VALUES (1, 1, '10.1/x', 'Legacy Article', 'q', '[]', '{}')",
+        )
+        .run();
+    });
+
+    const adapter = new DatabaseAdapter(dbPath);
+    try {
+      expect(adapter.checkIntegrity()).toBe(true);
+      expect(adapter.getProject(1)?.name).toBe('Legacy Project');
+      expect(adapter.getArticlesByProject(1)).toHaveLength(1);
+    } finally {
+      adapter.close();
+    }
+
+    const cols = reopen((raw) => (raw.pragma('table_info(articles)') as { name: string }[]).map((c) => c.name));
+    expect(cols).toContain('deleted_at');
+  });
+});

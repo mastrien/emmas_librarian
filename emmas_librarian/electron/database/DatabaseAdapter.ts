@@ -55,35 +55,40 @@ export type HighlightWithComment = Highlight & { comment?: string };
 export class DatabaseAdapter {
   private db: Database.Database;
 
-  public projectRepo: ProjectRepository;
-  public settingsRepo: SettingsRepository;
-  public articleRepo: ArticleRepository;
-  public articleCategoryRepo: ArticleCategoryRepository;
-  public pdfLibraryRepo: PdfLibraryRepository;
-  public historyRepo: HistoryRepository;
-  public documentRepo: DocumentRepository;
-  public annotationRepo: AnnotationRepository;
-  public trashRepo: TrashRepository;
-  public investigationRepo: MassiveInvestigationRepository;
+  public projectRepo!: ProjectRepository;
+  public settingsRepo!: SettingsRepository;
+  public articleRepo!: ArticleRepository;
+  public articleCategoryRepo!: ArticleCategoryRepository;
+  public pdfLibraryRepo!: PdfLibraryRepository;
+  public historyRepo!: HistoryRepository;
+  public documentRepo!: DocumentRepository;
+  public annotationRepo!: AnnotationRepository;
+  public trashRepo!: TrashRepository;
+  public investigationRepo!: MassiveInvestigationRepository;
+  private currentDbPath: string;
 
   constructor(dbPath: string) {
+    this.currentDbPath = dbPath;
     this.db = new Database(dbPath);
     this.loadSqliteVec(this.db);
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
 
-    this.projectRepo = new ProjectRepository(this.db);
-    this.settingsRepo = new SettingsRepository(this.db);
-    this.articleRepo = new ArticleRepository(this.db);
-    this.articleCategoryRepo = new ArticleCategoryRepository(this.db);
-    this.pdfLibraryRepo = new PdfLibraryRepository(this.db);
-    this.historyRepo = new HistoryRepository(this.db);
-    this.documentRepo = new DocumentRepository(this.db);
-    this.annotationRepo = new AnnotationRepository(this.db);
-    this.trashRepo = new TrashRepository(this.db, this.projectRepo);
-    this.investigationRepo = new MassiveInvestigationRepository(this.db);
-
+    this.initRepositories(this.db);
     this.initSchema();
+  }
+
+  private initRepositories(db: Database.Database): void {
+    this.projectRepo = new ProjectRepository(db);
+    this.settingsRepo = new SettingsRepository(db);
+    this.articleRepo = new ArticleRepository(db);
+    this.articleCategoryRepo = new ArticleCategoryRepository(db);
+    this.pdfLibraryRepo = new PdfLibraryRepository(db);
+    this.historyRepo = new HistoryRepository(db);
+    this.documentRepo = new DocumentRepository(db);
+    this.annotationRepo = new AnnotationRepository(db);
+    this.trashRepo = new TrashRepository(db, this.projectRepo);
+    this.investigationRepo = new MassiveInvestigationRepository(db);
   }
 
   private loadSqliteVec(db: Database.Database): void {
@@ -397,7 +402,26 @@ export class DatabaseAdapter {
     this.db.pragma('wal_checkpoint(TRUNCATE)');
   }
 
+  public isOpen(): boolean {
+    return this.db?.open ?? false;
+  }
+
+  public reopen(newPath?: string): void {
+    if (this.db?.open) {
+      this.db.close();
+    }
+    this.currentDbPath = newPath ?? this.currentDbPath;
+    this.db = new Database(this.currentDbPath);
+    this.loadSqliteVec(this.db);
+    this.db.pragma('journal_mode = WAL');
+    this.db.pragma('foreign_keys = ON');
+    this.initRepositories(this.db);
+    this.initSchema();
+  }
+
   public close(): void {
-    this.db.close();
+    if (this.db?.open) {
+      this.db.close();
+    }
   }
 }
