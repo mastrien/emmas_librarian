@@ -47,6 +47,8 @@ const VOID_METHODS = new Set([
   'setArticleCategory',
   'updateQuestionSet',
   'deleteQuestionSet',
+  'downloadUpdate',
+  'installUpdate',
 ]);
 
 // Arguments must reach the main process in this exact order; handlers destructure positionally.
@@ -463,6 +465,36 @@ const routes: RouteCase[] = [
     call: () => api.deleteScientificVenue(3),
     channel: IpcChannel.SCIENTIFIC_VENUE_DELETE,
     args: [3],
+  },
+  {
+    method: 'getUpdateStatus',
+    call: () => api.getUpdateStatus(),
+    channel: IpcChannel.UPDATE_GET_STATUS,
+    args: [],
+  },
+  {
+    method: 'checkForUpdates',
+    call: () => api.checkForUpdates(),
+    channel: IpcChannel.UPDATE_CHECK,
+    args: [],
+  },
+  {
+    method: 'downloadUpdate',
+    call: () => api.downloadUpdate(),
+    channel: IpcChannel.UPDATE_DOWNLOAD,
+    args: [],
+  },
+  {
+    method: 'installUpdate',
+    call: () => api.installUpdate(),
+    channel: IpcChannel.UPDATE_INSTALL,
+    args: [],
+  },
+  {
+    method: 'restoreUpdateSnapshot',
+    call: () => api.restoreUpdateSnapshot('snap.db.gz'),
+    channel: IpcChannel.UPDATE_RESTORE_SNAPSHOT,
+    args: ['snap.db.gz'],
   },
 ];
 

@@ -33,6 +33,9 @@ import type {
   AIProvider,
   ScientificVenue,
   MilestoneStatus,
+  UpdateStatusResponse,
+  UpdateInfoPayload,
+  DownloadProgressPayload,
 } from '../types';
 
 /** Return type for AI-powered metadata extraction. */
@@ -274,4 +277,13 @@ export interface IProjectService {
   updateScientificVenue(id: number, venueData: Omit<ScientificVenue, 'id' | 'created_at'>): Promise<ScientificVenue>;
   deleteScientificVenue(id: number): Promise<boolean>;
   toggleMilestoneStatus(milestoneId: number, status: MilestoneStatus): Promise<boolean>;
+
+  // ── Updates & Contingencies ─────────────────────────────────────────
+  getUpdateStatus(): Promise<UpdateStatusResponse>;
+  checkForUpdates(): Promise<UpdateInfoPayload | null>;
+  downloadUpdate(): Promise<void>;
+  installUpdate(): Promise<void>;
+  restoreUpdateSnapshot(explicitPath?: string): Promise<boolean>;
+  onUpdateStatusChange(callback: (status: UpdateStatusResponse) => void): () => void;
+  onUpdateDownloadProgress(callback: (progress: DownloadProgressPayload) => void): () => void;
 }

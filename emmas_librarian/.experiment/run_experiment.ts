@@ -66,7 +66,9 @@ async function runExperiment() {
   // Clean up temp DB
   dbAdapter.close();
   if (fs.existsSync(tempDbPath)) {
-    try { fs.unlinkSync(tempDbPath); } catch (e) {}
+    try {
+      fs.unlinkSync(tempDbPath);
+    } catch (e) {}
   }
 
   console.log('\n====================================================');
