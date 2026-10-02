@@ -3,6 +3,8 @@ import path from 'path';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import { setupIpcRegistries } from './ipc/ipcRegistries';
+import { UpdateHealthChecker } from './services/UpdateHealthChecker';
+import { RecoveryService } from './services/RecoveryService';
 import { isE2ELaunch, resolveUserDataDir } from './userDataDir';
 
 // Configure logging for auto-updater
@@ -136,12 +138,26 @@ app
   .whenReady()
   .then(() => {
     try {
-      setupIpcRegistries();
+      const { db, safetyService, updateManager } = setupIpcRegistries({ updater: autoUpdater });
+
+      const healthChecker = new UpdateHealthChecker(db, safetyService);
+      const healthResult = healthChecker.runStartupHealthCheck();
+      if (!healthResult.passed) {
+        log.error('Post-update health check failed:', healthResult.error);
+        new RecoveryService(safetyService).handlePostUpdateFailure(
+          healthResult.error || 'Falha na integridade do banco de dados pós-atualização',
+          healthResult.state,
+        );
+        return;
+      }
+
       createWindow();
 
-      // Check for updates after the app is ready and window is created
+      // Check for updates (opt-in metadata query, does not auto-download)
       if (!isDev) {
-        autoUpdater.checkForUpdatesAndNotify();
+        updateManager.checkForUpdates().catch((err: unknown) => {
+          log.warn('Background update check failed:', err);
+        });
       }
     } catch (err: unknown) {
       log.error('Error during app startup:', err);

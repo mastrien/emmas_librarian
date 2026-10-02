@@ -11,6 +11,9 @@ import type {
   AIProvider,
   ScientificVenue,
   MilestoneStatus,
+  UpdateStatusResponse,
+  UpdateInfoPayload,
+  DownloadProgressPayload,
 } from '../../../types';
 import { vi, type Mock } from 'vitest';
 import type {
@@ -419,6 +422,23 @@ export class FakeProjectService implements IProjectService {
   );
   deleteScientificVenue = vi.fn(async (_id: number): Promise<boolean> => true);
   toggleMilestoneStatus = vi.fn(async (_milestoneId: number, _status: MilestoneStatus): Promise<boolean> => true);
+
+  // ── Updates & Contingencies ─────────────────────────────────────────
+  getUpdateStatus = vi.fn(
+    async (): Promise<UpdateStatusResponse> => ({
+      status: 'idle',
+      updateInfo: null,
+      downloadProgress: null,
+      error: null,
+      state: null,
+    }),
+  );
+  checkForUpdates = vi.fn(async (): Promise<UpdateInfoPayload | null> => null);
+  downloadUpdate = vi.fn(async (): Promise<void> => {});
+  installUpdate = vi.fn(async (): Promise<void> => {});
+  restoreUpdateSnapshot = vi.fn(async (_explicitPath?: string): Promise<boolean> => true);
+  onUpdateStatusChange = vi.fn((_callback: (status: UpdateStatusResponse) => void) => () => {});
+  onUpdateDownloadProgress = vi.fn((_callback: (progress: DownloadProgressPayload) => void) => () => {});
 
   // ── Factory & Utilities ─────────────────────────────────────────────
 

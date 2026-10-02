@@ -33,7 +33,7 @@ export const harness = {
   app: { getPath: vi.fn(), getVersion: vi.fn() },
   dialog: { showSaveDialog: vi.fn(), showOpenDialog: vi.fn() },
   shell: { openPath: vi.fn(), openExternal: vi.fn() },
-  windows: { fromWebContents: vi.fn() },
+  windows: { fromWebContents: vi.fn(), getAllWindows: vi.fn().mockReturnValue([]) },
 };
 
 type Constructor = new (...args: unknown[]) => object;

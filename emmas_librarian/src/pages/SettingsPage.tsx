@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
 import { useProjectService } from '../contexts/ServicesContext';
-import type { AIModelConfig, AISkill, AIProvider } from '../types';
+import type { AIModelConfig, AISkill, AIProvider, UpdateStatusResponse } from '../types';
 
 import { AppearanceSettings } from './Settings/components/AppearanceSettings';
 import { ApiKeysSettings } from './Settings/components/ApiKeysSettings';
 import { AiSettings } from './Settings/components/AiSettings';
 import { BackupSettings } from './Settings/components/BackupSettings';
+import { UpdateSettings } from './Settings/components/UpdateSettings';
 import { TrashSettings } from './Settings/components/TrashSettings';
 import { modelSuggestions, suggestedModelFor } from './Settings/aiModelSuggestions';
 
@@ -38,6 +39,25 @@ export const SettingsPage: React.FC = () => {
   const [autoBackups, setAutoBackups] = useState(true);
   const [trashItems, setTrashItems] = useState<any[]>([]);
   const [autoBackupsList, setAutoBackupsList] = useState<{ filename: string; date: string; sizeBytes: number }[]>([]);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatusResponse>({
+    status: 'idle',
+    updateInfo: null,
+    downloadProgress: null,
+    error: null,
+    state: null,
+  });
+
+  useEffect(() => {
+    projectService.getUpdateStatus().then(setUpdateStatus).catch(console.error);
+    const unsubStatus = projectService.onUpdateStatusChange(setUpdateStatus);
+    const unsubProgress = projectService.onUpdateDownloadProgress((progress) => {
+      setUpdateStatus((prev) => ({ ...prev, downloadProgress: progress }));
+    });
+    return () => {
+      unsubStatus();
+      unsubProgress();
+    };
+  }, [projectService]);
 
   useEffect(() => {
     // Load settings from DB
@@ -267,6 +287,27 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleCheckUpdates = async () => {
+    await projectService.checkForUpdates();
+    const status = await projectService.getUpdateStatus();
+    setUpdateStatus(status);
+  };
+
+  const handleDownloadUpdate = async () => {
+    await projectService.downloadUpdate();
+  };
+
+  const handleInstallUpdate = async () => {
+    await projectService.installUpdate();
+  };
+
+  const handleRestoreSnapshot = async () => {
+    if (confirm('Deseja restaurar o banco de dados para o snapshot pré-atualização?')) {
+      await projectService.restoreUpdateSnapshot();
+      alert('Snapshot restaurado com sucesso. Por favor, reinicie a aplicação.');
+    }
+  };
+
   return (
     <div className="fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
@@ -332,6 +373,15 @@ export const SettingsPage: React.FC = () => {
           handleRestoreBackupOverride={handleRestoreBackupOverride}
           handleRestoreBackupMerge={handleRestoreBackupMerge}
           handleRestoreAutoBackup={handleRestoreAutoBackup}
+        />
+
+        <UpdateSettings
+          currentVersion={appVersion}
+          updateStatus={updateStatus}
+          onCheckForUpdates={handleCheckUpdates}
+          onDownloadUpdate={handleDownloadUpdate}
+          onInstallUpdate={handleInstallUpdate}
+          onRestoreSnapshot={handleRestoreSnapshot}
         />
 
         <TrashSettings
