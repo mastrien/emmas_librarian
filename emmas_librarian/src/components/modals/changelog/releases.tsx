@@ -8,6 +8,35 @@ export interface ChangelogRelease {
 /** Release notes shown after an update, newest first. Add new releases at the top. */
 export const CHANGELOG_RELEASES: ChangelogRelease[] = [
   {
+    title: 'Versão 1.2.0 — Open Access, Novas Bases & Filtros',
+    items: [
+      <>
+        <strong>Download de PDFs Open Access:</strong> Localização e download de PDFs em acesso aberto, individualmente
+        por artigo ou em lote para a seleção ativa.
+      </>,
+      <>
+        <strong>Novas Bases de Busca:</strong> Suporte a Europe PMC, arXiv e IEEE Xplore (experimental), com busca
+        paginada e limites independentes por base.
+      </>,
+      <>
+        <strong>Barra Lateral de Filtros & Multi-seleção:</strong> Filtros com contadores dinâmicos, chips visuais na
+        listagem e ações em massa para múltiplos artigos selecionados.
+      </>,
+      <>
+        <strong>Revisão de Resultados de Busca:</strong> Novo modal para inspecionar metadados e escolher quais artigos
+        salvar no projeto antes de confirmar a adição.
+      </>,
+      <>
+        <strong>Edição Universal de Metadados:</strong> Edição de metadados agora disponível para qualquer artigo do
+        acervo, não apenas os manuais.
+      </>,
+      <>
+        <strong>Tutoriais Integrados:</strong> Guia de tutoriais completo com capítulos interativos cobrindo do zero a
+        todas as ferramentas avançadas do aplicativo.
+      </>,
+    ],
+  },
+  {
     title: 'Versão 1.1.23 — Leitura de PDF & Categorias',
     items: [
       <>

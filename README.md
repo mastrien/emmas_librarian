@@ -50,6 +50,15 @@ Se você é um desenvolvedor e deseja rodar o projeto localmente, contribuir com
 
 Acompanhe as últimas novidades, melhorias e correções recentes do **Emma's Librarian**:
 
+### v1.2.0
+- **Download de PDFs Open Access:** Busca e download automático de artigos em acesso aberto, individualmente ou em lote para a seleção de artigos.
+- **Novas Bases Científicas:** Suporte a Europe PMC, arXiv e IEEE Xplore (experimental), com busca paginada e limites independentes por base.
+- **Painel de Filtros e Seleção em Massa:** Barra lateral com contadores dinâmicos, chips de filtros aplicados e ações em lote para múltiplos artigos selecionados.
+- **Revisão de Resultados:** Novo fluxo com modal para inspecionar metadados e escolher artigos antes de salvá-los no projeto.
+- **Edição Universal de Metadados:** Edição de metadados liberada para qualquer artigo da biblioteca.
+- **Tutoriais e Landing Page:** Guia completo de tutoriais (capítulos 0 a 8) e landing page com deploy automatizado no GitHub Pages.
+- **Refatoração e Confiabilidade:** Nova arquitetura modular nos serviços de banco e IPC, correções na integridade de backups e novos testes E2E.
+
 ### v1.1.23
 - **Leitor de PDF:** Tratamento aprimorado de erros e carregamento seguro dos arquivos dos artigos.
 - **Categorias e Lidos:** Correção no salvamento de textos de categorias e exibição consistente de artigos não arquivados.
