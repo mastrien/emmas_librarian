@@ -1,5 +1,4 @@
 import { ipcMain, app } from 'electron';
-import path from 'path';
 import { DatabaseAdapter } from '../database/DatabaseAdapter';
 import { ScientificVenueRepository } from '../database/ScientificVenueRepository';
 import { SyncService } from '../database/SyncService';
@@ -28,12 +27,14 @@ import { registerBackupHandlers, scheduleStartupBackup } from './handlers/backup
 import { registerAgendaHandlers } from './handlers/agendaHandlers';
 import { registerSettingsHandlers } from './handlers/settingsHandlers';
 import { registerUpdateHandlers } from './handlers/updateHandlers';
+import { libraryPaths } from '../startupRecovery';
 
 export interface IpcRegistriesDeps {
   db?: DatabaseAdapter;
   safetyService?: UpdateSafetyService;
   updater?: IAppUpdater;
   updateManager?: UpdateManager;
+  restartApp?: () => void;
 }
 
 export interface IpcRegistriesResult {
@@ -50,14 +51,12 @@ export interface IpcRegistriesResult {
  *   app.whenReady().then(() => { const { db, updateManager, safetyService } = setupIpcRegistries({ updater: autoUpdater }); createWindow(); });
  */
 export function setupIpcRegistries(deps?: IpcRegistriesDeps): IpcRegistriesResult {
-  const userData = app.getPath('userData');
-  const dbPath = path.join(userData, 'emma.db');
+  const { userData, dbPath, backupsDir } = libraryPaths(app.getPath('userData'));
   const db = deps?.db || new DatabaseAdapter(dbPath);
-  const backupService = new BackupService(db, dbPath, path.join(userData, 'backups'));
+  const backupService = new BackupService(db, dbPath, backupsDir);
   scheduleStartupBackup(backupService);
 
-  const safetyService =
-    deps?.safetyService || new UpdateSafetyService(db, dbPath, path.join(userData, 'backups'), userData);
+  const safetyService = deps?.safetyService || new UpdateSafetyService(db, dbPath, backupsDir, userData);
   const updater = deps?.updater || new NoopAppUpdater();
   const updateManager = deps?.updateManager || new UpdateManager(updater, safetyService);
 
@@ -79,7 +78,7 @@ export function setupIpcRegistries(deps?: IpcRegistriesDeps): IpcRegistriesResul
   registerCategoryAndInvestigationHandlers(ipcMain, db);
   registerBackupHandlers(ipcMain, new SyncService(db), backupService);
   registerAgendaHandlers(ipcMain, new ScientificVenueRepository(db.getDB()));
-  registerUpdateHandlers(ipcMain, updateManager, safetyService);
+  registerUpdateHandlers(ipcMain, updateManager, safetyService, deps?.restartApp);
 
   return { db, safetyService, updateManager };
 }

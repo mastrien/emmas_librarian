@@ -2,7 +2,7 @@ import type { DatabaseAdapter } from '../database/DatabaseAdapter';
 import type { UpdateSafetyService } from './UpdateSafetyService';
 import type { HealthCheckResult, UpdateStateRecord } from './UpdateTypes';
 
-export type HealthCheckDatabase = Pick<DatabaseAdapter, 'isOpen' | 'checkIntegrity' | 'getDB'>;
+export type HealthCheckDatabase = Pick<DatabaseAdapter, 'checkIntegrity' | 'getDB'>;
 export type HealthCheckSafetyService = Pick<UpdateSafetyService, 'getUpdateState' | 'saveUpdateState'>;
 
 /**
@@ -31,7 +31,6 @@ export class UpdateHealthChecker {
     }
 
     try {
-      this.verifyDatabaseConnection();
       this.verifyDatabaseIntegrity();
       this.verifyCoreTables();
 
@@ -43,12 +42,6 @@ export class UpdateHealthChecker {
       const failedState: UpdateStateRecord = { ...state, status: 'failed', error: errorMessage };
       this.safetyService.saveUpdateState(failedState);
       return { needed: true, passed: false, error: errorMessage, state: failedState };
-    }
-  }
-
-  private verifyDatabaseConnection(): void {
-    if (!this.db.isOpen()) {
-      throw new Error('[ERR_HEALTH_DB_CLOSED] SQLite connection is closed. Expected open DatabaseAdapter.');
     }
   }
 

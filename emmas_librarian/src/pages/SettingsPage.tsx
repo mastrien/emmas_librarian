@@ -7,7 +7,7 @@ import { AppearanceSettings } from './Settings/components/AppearanceSettings';
 import { ApiKeysSettings } from './Settings/components/ApiKeysSettings';
 import { AiSettings } from './Settings/components/AiSettings';
 import { BackupSettings } from './Settings/components/BackupSettings';
-import { UpdateSettings } from './Settings/components/UpdateSettings';
+import { UpdateSettings, describeSnapshotDate } from './Settings/components/UpdateSettings';
 import { TrashSettings } from './Settings/components/TrashSettings';
 import { modelSuggestions, suggestedModelFor } from './Settings/aiModelSuggestions';
 
@@ -301,11 +301,12 @@ export const SettingsPage: React.FC = () => {
     await projectService.installUpdate();
   };
 
+  // The main process restarts the app after restoring, so nothing runs after the call.
   const handleRestoreSnapshot = async () => {
-    if (confirm('Deseja restaurar o banco de dados para o snapshot pré-atualização?')) {
-      await projectService.restoreUpdateSnapshot();
-      alert('Snapshot restaurado com sucesso. Por favor, reinicie a aplicação.');
-    }
+    const takenAt = describeSnapshotDate(updateStatus.state?.timestamp);
+    const question = `Voltar a biblioteca para como estava em ${takenAt}? O banco atual é guardado em backups/ antes, e o app reinicia.`;
+    if (!confirm(question)) return;
+    await projectService.restoreUpdateSnapshot();
   };
 
   return (

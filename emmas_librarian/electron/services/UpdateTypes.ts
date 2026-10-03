@@ -33,6 +33,14 @@ export interface SnapshotCreationResult {
 }
 
 /**
+ * Result of putting a pre-update snapshot back; preRestoreBackupPath is absent when there was no library to save.
+ */
+export interface SnapshotRestoreResult {
+  restoredFrom: string;
+  preRestoreBackupPath?: string;
+}
+
+/**
  * Result of the startup health check.
  */
 export interface HealthCheckResult {

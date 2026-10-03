@@ -2,12 +2,17 @@ import fs from 'fs';
 import path from 'path';
 import { gzipSync, gunzipSync } from 'zlib';
 import type { DatabaseAdapter } from '../database/DatabaseAdapter';
-import type { SnapshotCreationResult, UpdateStateRecord } from './UpdateTypes';
+import type { SnapshotCreationResult, SnapshotRestoreResult, UpdateStateRecord } from './UpdateTypes';
 
-export type SafetyDatabase = Pick<DatabaseAdapter, 'checkpoint' | 'checkIntegrity' | 'close'>;
+export type SafetyDatabase = Pick<DatabaseAdapter, 'checkpoint' | 'close'>;
+
+// Each snapshot is a full copy of the library; older ones are dropped so updates don't pile them up.
+const PRE_UPDATE_SNAPSHOTS_KEPT = 3;
+const PRE_UPDATE_PREFIX = 'pre_update_';
 
 /**
- * Manages safety net snapshots before app updates and safe database rollback if verification fails.
+ * Manages safety net snapshots before app updates and the rollback to them. Works without an open
+ * database (db = null) so recovery still runs when the new version cannot open the library.
  *
  * Usage:
  *   const safety = new UpdateSafetyService(db, dbPath, backupsDir, userDataDir);
@@ -15,7 +20,7 @@ export type SafetyDatabase = Pick<DatabaseAdapter, 'checkpoint' | 'checkIntegrit
  */
 export class UpdateSafetyService {
   constructor(
-    private readonly dbAdapter: SafetyDatabase,
+    private readonly dbAdapter: SafetyDatabase | null,
     private readonly dbPath: string,
     private readonly backupsDir: string,
     private readonly userDataDir: string,
@@ -48,10 +53,8 @@ export class UpdateSafetyService {
    *   safety.saveUpdateState({ status: 'pending_verification', fromVersion: '1.0.0' });
    */
   public saveUpdateState(state: UpdateStateRecord): void {
-    if (!fs.existsSync(this.userDataDir)) {
-      fs.mkdirSync(this.userDataDir, { recursive: true });
-    }
-    fs.writeFileSync(this.stateFilePath, JSON.stringify(state, null, 2), 'utf-8');
+    fs.mkdirSync(this.userDataDir, { recursive: true });
+    writeFileAtomic(this.stateFilePath, JSON.stringify(state, null, 2));
   }
 
   /**
@@ -73,68 +76,79 @@ export class UpdateSafetyService {
    *   const res = safety.createPreUpdateSnapshot('1.1.0', '1.2.0');
    */
   public createPreUpdateSnapshot(fromVersion: string, targetVersion: string): SnapshotCreationResult {
-    if (!fs.existsSync(this.dbPath)) {
-      throw new Error(`[ERR_DB_MISSING] Database file not found at: "${this.dbPath}". Expected existing SQLite file.`);
+    if (!this.dbAdapter || !fs.existsSync(this.dbPath)) {
+      throw new Error(
+        `[ERR_DB_MISSING] Cannot snapshot "${this.dbPath}": open=${Boolean(this.dbAdapter)}. Expected an open, existing SQLite file.`,
+      );
     }
-
     this.dbAdapter.checkpoint();
-    if (!fs.existsSync(this.backupsDir)) {
-      fs.mkdirSync(this.backupsDir, { recursive: true });
-    }
-
     const timestamp = Date.now();
-    const filename = `pre_update_${fromVersion}_${timestamp}.db.gz`;
-    const snapshotPath = path.join(this.backupsDir, filename);
-
-    const dbData = fs.readFileSync(this.dbPath);
-    const compressed = gzipSync(dbData);
-    fs.writeFileSync(snapshotPath, compressed);
-
-    const state: UpdateStateRecord = {
-      status: 'pending_verification',
-      fromVersion,
-      targetVersion,
-      snapshotPath,
-      timestamp,
-    };
-    this.saveUpdateState(state);
-
+    const snapshotPath = this.writeGzipCopy(this.dbPath, `${PRE_UPDATE_PREFIX}${fromVersion}_${timestamp}.db.gz`);
+    this.saveUpdateState({ status: 'pending_verification', fromVersion, targetVersion, snapshotPath, timestamp });
+    this.prunePreUpdateSnapshots();
     return { snapshotPath, fromVersion, targetVersion, timestamp };
   }
 
   /**
-   * Restores a pre-update snapshot back over the main database, wiping WAL and SHM files.
+   * Puts the recorded pre-update snapshot back as the library. The current database is saved first
+   * (pre_restore_*.db.gz), so a restore never destroys work done after the update.
    *
    * Usage:
-   *   safety.restorePreUpdateSnapshot();
+   *   const { preRestoreBackupPath } = safety.restorePreUpdateSnapshot();
    */
-  public restorePreUpdateSnapshot(explicitPath?: string): boolean {
-    const targetPath = explicitPath || this.getUpdateState()?.snapshotPath;
-    if (!targetPath || !fs.existsSync(targetPath)) {
+  public restorePreUpdateSnapshot(): SnapshotRestoreResult {
+    const state = this.getUpdateState();
+    const snapshotPath = state?.snapshotPath;
+    if (!state || !snapshotPath || !fs.existsSync(snapshotPath)) {
       throw new Error(
-        `[ERR_SNAPSHOT_NOT_FOUND] Snapshot file not found at: "${targetPath}". Expected existing gzipped database copy.`,
+        `[ERR_SNAPSHOT_NOT_FOUND] Snapshot file not found at: "${snapshotPath}". Expected the gzipped copy recorded in update_state.json.`,
       );
     }
-
-    const compressed = fs.readFileSync(targetPath);
-    const decompressed = gunzipSync(compressed);
-
-    this.dbAdapter.close();
+    const snapshot = gunzipSync(fs.readFileSync(snapshotPath));
+    this.dbAdapter?.close();
+    const preRestoreBackupPath = this.backUpCurrentDatabase();
+    writeFileAtomic(this.dbPath, snapshot);
     this.removeWalAndShm();
-    fs.writeFileSync(this.dbPath, decompressed);
+    this.saveUpdateState({ ...state, status: 'failed', rolledBack: true, preRestoreBackupPath });
+    return { restoredFrom: snapshotPath, preRestoreBackupPath };
+  }
 
-    const currentState = this.getUpdateState();
-    if (currentState) {
-      this.saveUpdateState({ ...currentState, status: 'failed', rolledBack: true });
-    }
+  // A database that never opened may still hold committed pages in its WAL, so that is kept too.
+  private backUpCurrentDatabase(): string | undefined {
+    if (!fs.existsSync(this.dbPath)) return undefined;
+    const name = `pre_restore_${Date.now()}.db.gz`;
+    const walPath = `${this.dbPath}-wal`;
+    if (fs.existsSync(walPath)) this.writeGzipCopy(walPath, name.replace('.db.gz', '.db-wal.gz'));
+    return this.writeGzipCopy(this.dbPath, name);
+  }
 
-    return true;
+  private writeGzipCopy(sourcePath: string, filename: string): string {
+    fs.mkdirSync(this.backupsDir, { recursive: true });
+    const target = path.join(this.backupsDir, filename);
+    writeFileAtomic(target, gzipSync(fs.readFileSync(sourcePath)));
+    return target;
+  }
+
+  // Age comes from the timestamp in the name: file mtimes can tie when snapshots are taken close together.
+  private prunePreUpdateSnapshots(): void {
+    const snapshotAge = (name: string) => Number(/_(\d+)\.db\.gz$/.exec(name)?.[1] ?? 0);
+    fs.readdirSync(this.backupsDir)
+      .filter((name) => name.startsWith(PRE_UPDATE_PREFIX))
+      .sort((a, b) => snapshotAge(b) - snapshotAge(a))
+      .slice(PRE_UPDATE_SNAPSHOTS_KEPT)
+      .forEach((name) => fs.unlinkSync(path.join(this.backupsDir, name)));
   }
 
   private removeWalAndShm(): void {
-    const walPath = `${this.dbPath}-wal`;
-    const shmPath = `${this.dbPath}-shm`;
-    if (fs.existsSync(walPath)) fs.unlinkSync(walPath);
-    if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath);
+    for (const sidecar of [`${this.dbPath}-wal`, `${this.dbPath}-shm`]) {
+      if (fs.existsSync(sidecar)) fs.unlinkSync(sidecar);
+    }
   }
+}
+
+// Write next to the target, then rename: a crash mid-write leaves the old file, never half of one.
+function writeFileAtomic(target: string, contents: string | Buffer): void {
+  const temp = `${target}.tmp`;
+  fs.writeFileSync(temp, contents);
+  fs.renameSync(temp, target);
 }

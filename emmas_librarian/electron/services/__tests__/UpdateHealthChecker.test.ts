@@ -3,14 +3,9 @@ import { UpdateHealthChecker, type HealthCheckDatabase, type HealthCheckSafetySe
 import type { UpdateStateRecord } from '../UpdateTypes';
 
 class FakeHealthDatabase implements HealthCheckDatabase {
-  public dbIsOpen = true;
   public integrityResult = true;
   public queriesExecuted: string[] = [];
   public shouldFailQuery = false;
-
-  public isOpen(): boolean {
-    return this.dbIsOpen;
-  }
 
   public checkIntegrity(): boolean {
     return this.integrityResult;
@@ -84,19 +79,6 @@ describe('UpdateHealthChecker', () => {
     expect(fakeDb.queriesExecuted).toContain('SELECT count(*) as count FROM projects;');
     expect(fakeDb.queriesExecuted).toContain('SELECT count(*) as count FROM articles;');
     expect(fakeDb.queriesExecuted).toContain('SELECT count(*) as count FROM settings;');
-  });
-
-  it('fails verification and records failure when db connection is closed', () => {
-    fakeSafety.state = { status: 'pending_verification', fromVersion: '1.1.2', targetVersion: '1.2.0' };
-    fakeDb.dbIsOpen = false;
-
-    const result = checker.runStartupHealthCheck();
-
-    expect(result.needed).toBe(true);
-    expect(result.passed).toBe(false);
-    expect(result.error).toContain('ERR_HEALTH_DB_CLOSED');
-    expect(fakeSafety.state?.status).toBe('failed');
-    expect(fakeSafety.state?.error).toContain('ERR_HEALTH_DB_CLOSED');
   });
 
   it('fails verification when PRAGMA quick_check returns false', () => {

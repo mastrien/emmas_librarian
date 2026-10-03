@@ -16,6 +16,7 @@ const results = [{ question: 'q', answer: 'a', quote: null, status: 'success' as
 const venue = { title: 'Conf', category: 'conference' as const, milestones: [] };
 
 const VOID_METHODS = new Set([
+  'restoreUpdateSnapshot',
   'updateProject',
   'deleteProject',
   'revertSearch',
@@ -492,9 +493,9 @@ const routes: RouteCase[] = [
   },
   {
     method: 'restoreUpdateSnapshot',
-    call: () => api.restoreUpdateSnapshot('snap.db.gz'),
+    call: () => api.restoreUpdateSnapshot(),
     channel: IpcChannel.UPDATE_RESTORE_SNAPSHOT,
-    args: ['snap.db.gz'],
+    args: [],
   },
 ];
 
@@ -529,4 +530,27 @@ describe('api.ts IPC routing', () => {
       expect(await call()).toBeUndefined();
     },
   );
+});
+
+describe('api.ts update events', () => {
+  let bridge: FakeElectronApi;
+
+  beforeEach(() => {
+    bridge = FakeElectronApi.install();
+  });
+
+  it.each([
+    ['onUpdateStatusChange', 'update:status-changed', { status: 'available' }],
+    ['onUpdateDownloadProgress', 'update:download-progress', { percent: 40 }],
+  ] as const)('%s forwards %s events and stops after unsubscribing', (method, channel, payload) => {
+    const received: unknown[] = [];
+    const unsubscribe = api[method]((event: unknown) => received.push(event));
+
+    bridge.emit(channel, payload);
+    unsubscribe();
+    bridge.emit(channel, payload);
+
+    expect(received).toEqual([payload]);
+    expect(bridge.listenerCount(channel)).toBe(0);
+  });
 });

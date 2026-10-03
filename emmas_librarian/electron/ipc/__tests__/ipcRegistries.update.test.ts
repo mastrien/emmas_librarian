@@ -5,6 +5,7 @@ import { resetIpcHarness, invoke } from './fakes/ipcHarness';
 import { FakeAppUpdater } from '../../services/__tests__/fakes/FakeAppUpdater';
 import { UpdateSafetyService } from '../../services/UpdateSafetyService';
 import { UpdateManager } from '../../services/UpdateManager';
+import type { SnapshotRestoreResult } from '../../services/UpdateTypes';
 
 vi.mock('electron', () => import('./fakes/ipcHarness').then((h) => h.electronModule));
 vi.mock('fs', () => import('./fakes/ipcHarness').then((h) => h.fsModule));
@@ -23,34 +24,42 @@ vi.mock('../../services/AIService', () => import('./fakes/ipcHarness').then((h) 
 vi.mock('../../services/BackupService', () => import('./fakes/ipcHarness').then((h) => h.backupServiceModule));
 
 class MockSafetyService implements Partial<UpdateSafetyService> {
-  public restoreCalled = false;
-  public restorePathArg: string | undefined = undefined;
+  public restoreArgs: unknown[][] = [];
 
   public getUpdateState() {
     return null;
   }
 
-  public restorePreUpdateSnapshot(explicitPath?: string): boolean {
-    this.restoreCalled = true;
-    this.restorePathArg = explicitPath;
-    return true;
+  public restorePreUpdateSnapshot(...args: unknown[]): SnapshotRestoreResult {
+    this.restoreArgs.push(args);
+    return { restoredFrom: 'pre_update.db.gz', preRestoreBackupPath: 'pre_restore.db.gz' };
   }
+}
+
+class RestartRecorder {
+  public restarts = 0;
+  public readonly restart = () => {
+    this.restarts += 1;
+  };
 }
 
 describe('Update IPC handlers', () => {
   let fakeUpdater: FakeAppUpdater;
   let mockSafety: MockSafetyService;
   let updateManager: UpdateManager;
+  let restarter: RestartRecorder;
 
   beforeEach(() => {
     resetIpcHarness();
     fakeUpdater = new FakeAppUpdater();
     mockSafety = new MockSafetyService();
+    restarter = new RestartRecorder();
     updateManager = new UpdateManager(fakeUpdater, mockSafety as unknown as UpdateSafetyService);
 
     setupIpcRegistries({
       updateManager,
       safetyService: mockSafety as unknown as UpdateSafetyService,
+      restartApp: restarter.restart,
     });
   });
 
@@ -64,10 +73,11 @@ describe('Update IPC handlers', () => {
     expect(fakeUpdater.checkForUpdatesCalled).toBe(true);
   });
 
-  it('delegates UPDATE_RESTORE_SNAPSHOT to safetyService', async () => {
-    const res = await invoke(IpcChannel.UPDATE_RESTORE_SNAPSHOT, 'custom/snapshot.db.gz');
-    expect(res).toBe(true);
-    expect(mockSafety.restoreCalled).toBe(true);
-    expect(mockSafety.restorePathArg).toBe('custom/snapshot.db.gz');
+  it('restores the recorded snapshot, ignoring any path sent by the renderer, then restarts', async () => {
+    const res = await invoke(IpcChannel.UPDATE_RESTORE_SNAPSHOT, 'C:/somewhere/else.db.gz');
+
+    expect(res).toEqual({ restoredFrom: 'pre_update.db.gz', preRestoreBackupPath: 'pre_restore.db.gz' });
+    expect(mockSafety.restoreArgs).toEqual([[]]);
+    expect(restarter.restarts).toBe(1);
   });
 });

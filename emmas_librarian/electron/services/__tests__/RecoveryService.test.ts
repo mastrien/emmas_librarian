@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { RecoveryService, type RecoverySystemBridge } from '../RecoveryService';
 import type { UpdateSafetyService } from '../UpdateSafetyService';
-import type { UpdateStateRecord } from '../UpdateTypes';
+import type { SnapshotRestoreResult, UpdateStateRecord } from '../UpdateTypes';
+import packageJson from '../../../package.json';
 
 class FakeRecoveryBridge implements RecoverySystemBridge {
   public choiceToReturn = 0;
@@ -32,12 +33,12 @@ class FakeRecoverySafetyService implements Partial<UpdateSafetyService> {
   public restoreCalled = false;
   public shouldFailRestore = false;
 
-  public restorePreUpdateSnapshot(): boolean {
+  public restorePreUpdateSnapshot(): SnapshotRestoreResult {
     this.restoreCalled = true;
     if (this.shouldFailRestore) {
       throw new Error('Disk full');
     }
-    return true;
+    return { restoredFrom: 'C:/backups/pre_update.db.gz', preRestoreBackupPath: 'C:/backups/pre_restore_1.db.gz' };
   }
 }
 
@@ -77,6 +78,7 @@ describe('RecoveryService', () => {
     expect(safety.restoreCalled).toBe(true);
     expect(bridge.messageBoxesShown).toHaveLength(2); // Prompt + Success info
     expect(bridge.messageBoxesShown[1].type).toBe('info');
+    expect(bridge.messageBoxesShown[1].detail).toContain('C:/backups/pre_restore_1.db.gz');
     expect(bridge.quitAppCalled).toBe(true);
   });
 
@@ -99,7 +101,8 @@ describe('RecoveryService', () => {
     recovery.handlePostUpdateFailure('Migration failed', state);
 
     expect(safety.restoreCalled).toBe(false);
-    expect(bridge.openedUrls).toContain('https://github.com/lucasvazq/emmas_librarian/releases/tag/v1.1.2');
+    // The link must point at the repository the app is published from (#16 shipped another owner).
+    expect(bridge.openedUrls).toEqual([`${packageJson.repository}/releases/tag/v1.1.2`]);
   });
 
   it('copies error report to clipboard when user chooses copy (choice 2)', () => {

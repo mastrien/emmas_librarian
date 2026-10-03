@@ -484,6 +484,8 @@ export interface UpdateStateRecord {
   timestamp?: number;
   error?: string;
   rolledBack?: boolean;
+  /** Copy of the library taken right before a rollback replaced it. */
+  preRestoreBackupPath?: string;
 }
 
 export interface UpdateStatusResponse {

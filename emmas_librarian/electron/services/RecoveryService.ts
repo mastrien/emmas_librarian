@@ -2,6 +2,9 @@ import { app, dialog, shell, clipboard } from 'electron';
 import type { UpdateSafetyService } from './UpdateSafetyService';
 import type { UpdateStateRecord } from './UpdateTypes';
 
+// package.json "repository"; a wrong owner here sends users in trouble to a 404.
+const RELEASES_URL = 'https://github.com/mastrien/emmas_librarian/releases';
+
 export interface RecoverySystemBridge {
   showMessageBoxSync(options: Electron.MessageBoxSyncOptions): number;
   openExternal(url: string): Promise<void>;
@@ -81,12 +84,18 @@ export class RecoveryService {
 
   private executeSnapshotRollback(state?: UpdateStateRecord | null): void {
     try {
-      this.safetyService.restorePreUpdateSnapshot();
+      const { preRestoreBackupPath } = this.safetyService.restorePreUpdateSnapshot();
+      const savedCopy = preRestoreBackupPath
+        ? `
+
+O banco de antes da restauração foi guardado em:
+${preRestoreBackupPath}`
+        : '';
       this.bridge.showMessageBoxSync({
         type: 'info',
         title: 'Restauração Concluída',
         message: 'O banco de dados foi restaurado para a versão anterior com sucesso.',
-        detail: `Por favor, execute novamente a versão estável v${state?.fromVersion || 'anterior'}.`,
+        detail: `Por favor, execute novamente a versão estável v${state?.fromVersion || 'anterior'}.${savedCopy}`,
         buttons: ['OK'],
       });
     } catch (err: unknown) {
@@ -102,10 +111,7 @@ export class RecoveryService {
   }
 
   private openReleasesUrl(fromVersion?: string): void {
-    const tag = fromVersion ? `v${fromVersion}` : '';
-    const url = tag
-      ? `https://github.com/lucasvazq/emmas_librarian/releases/tag/${tag}`
-      : 'https://github.com/lucasvazq/emmas_librarian/releases';
+    const url = fromVersion ? `${RELEASES_URL}/tag/v${fromVersion}` : RELEASES_URL;
     this.bridge.openExternal(url).finally(() => this.bridge.quitApp());
   }
 }

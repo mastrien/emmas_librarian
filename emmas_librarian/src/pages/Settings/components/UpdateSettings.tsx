@@ -255,7 +255,12 @@ export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
               Rollback de Emergência
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-              Último snapshot pré-atualização salvo em: <code>{updateStatus.state.snapshotPath}</code>
+              Snapshot de {describeSnapshotDate(updateStatus.state.timestamp)}, salvo em:{' '}
+              <code>{updateStatus.state.snapshotPath}</code>
+            </p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+              Restaurar desfaz o que foi feito depois dessa data. O banco atual é guardado em <code>backups/</code>{' '}
+              antes, e o app reinicia.
             </p>
             <button
               type="button"
@@ -271,3 +276,15 @@ export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
     </div>
   );
 };
+
+/**
+ * When the pre-update snapshot was taken, in the reader's words; the timestamp is missing on states
+ * written by builds that did not record it.
+ *
+ * Usage:
+ *   describeSnapshotDate(state.timestamp); // "03/10/2026, 17:45"
+ */
+export function describeSnapshotDate(timestamp?: number): string {
+  if (!timestamp) return 'antes da última atualização';
+  return new Date(timestamp).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
