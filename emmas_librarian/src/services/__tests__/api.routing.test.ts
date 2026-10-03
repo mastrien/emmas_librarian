@@ -16,6 +16,7 @@ const results = [{ question: 'q', answer: 'a', quote: null, status: 'success' as
 const venue = { title: 'Conf', category: 'conference' as const, milestones: [] };
 
 const VOID_METHODS = new Set([
+  'restoreUpdateSnapshot',
   'updateProject',
   'deleteProject',
   'revertSearch',
@@ -47,6 +48,8 @@ const VOID_METHODS = new Set([
   'setArticleCategory',
   'updateQuestionSet',
   'deleteQuestionSet',
+  'downloadUpdate',
+  'installUpdate',
 ]);
 
 // Arguments must reach the main process in this exact order; handlers destructure positionally.
@@ -464,6 +467,36 @@ const routes: RouteCase[] = [
     channel: IpcChannel.SCIENTIFIC_VENUE_DELETE,
     args: [3],
   },
+  {
+    method: 'getUpdateStatus',
+    call: () => api.getUpdateStatus(),
+    channel: IpcChannel.UPDATE_GET_STATUS,
+    args: [],
+  },
+  {
+    method: 'checkForUpdates',
+    call: () => api.checkForUpdates(),
+    channel: IpcChannel.UPDATE_CHECK,
+    args: [],
+  },
+  {
+    method: 'downloadUpdate',
+    call: () => api.downloadUpdate(),
+    channel: IpcChannel.UPDATE_DOWNLOAD,
+    args: [],
+  },
+  {
+    method: 'installUpdate',
+    call: () => api.installUpdate(),
+    channel: IpcChannel.UPDATE_INSTALL,
+    args: [],
+  },
+  {
+    method: 'restoreUpdateSnapshot',
+    call: () => api.restoreUpdateSnapshot(),
+    channel: IpcChannel.UPDATE_RESTORE_SNAPSHOT,
+    args: [],
+  },
 ];
 
 describe('api.ts IPC routing', () => {
@@ -497,4 +530,27 @@ describe('api.ts IPC routing', () => {
       expect(await call()).toBeUndefined();
     },
   );
+});
+
+describe('api.ts update events', () => {
+  let bridge: FakeElectronApi;
+
+  beforeEach(() => {
+    bridge = FakeElectronApi.install();
+  });
+
+  it.each([
+    ['onUpdateStatusChange', 'update:status-changed', { status: 'available' }],
+    ['onUpdateDownloadProgress', 'update:download-progress', { percent: 40 }],
+  ] as const)('%s forwards %s events and stops after unsubscribing', (method, channel, payload) => {
+    const received: unknown[] = [];
+    const unsubscribe = api[method]((event: unknown) => received.push(event));
+
+    bridge.emit(channel, payload);
+    unsubscribe();
+    bridge.emit(channel, payload);
+
+    expect(received).toEqual([payload]);
+    expect(bridge.listenerCount(channel)).toBe(0);
+  });
 });

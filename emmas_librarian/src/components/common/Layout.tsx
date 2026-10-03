@@ -4,7 +4,9 @@ import { Settings, Sparkles, FileText, MoreVertical, Folder, Calendar } from 'lu
 import { HelpButton } from './HelpButton';
 import { Logo } from './Logo';
 import { ChangelogModal } from '../modals/ChangelogModal';
+import { UpdateNotificationBanner } from './UpdateNotificationBanner';
 import { useProjectService } from '../../contexts/ServicesContext';
+import type { UpdateInfoPayload } from '../../types';
 
 const NativeTitleBar = () => (
   <div
@@ -38,6 +40,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const isReader = location.pathname.startsWith('/articles/');
   const [showChangelog, setShowChangelog] = useState(false);
   const [currentVersion, setCurrentVersion] = useState('');
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfoPayload | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -52,6 +55,27 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       setIsMenuOpen(false);
     }, 200);
   };
+
+  useEffect(() => {
+    projectService
+      .getUpdateStatus()
+      .then((res) => {
+        if (res.status === 'available') {
+          setUpdateInfo(res.updateInfo);
+        }
+      })
+      .catch(console.error);
+
+    const unsub = projectService.onUpdateStatusChange((res) => {
+      if (res.status === 'available') {
+        setUpdateInfo(res.updateInfo);
+      } else {
+        setUpdateInfo(null);
+      }
+    });
+
+    return () => unsub();
+  }, [projectService]);
 
   useEffect(() => {
     const checkVersion = async () => {
@@ -89,6 +113,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
         <NativeTitleBar />
+        <UpdateNotificationBanner
+          updateInfo={updateInfo}
+          onDownload={async () => {
+            await projectService.downloadUpdate();
+          }}
+        />
         <div style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>{children}</div>
         <ChangelogModal isOpen={showChangelog} version={currentVersion} onClose={handleCloseChangelog} />
       </div>
@@ -98,6 +128,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <NativeTitleBar />
+      <UpdateNotificationBanner
+        updateInfo={updateInfo}
+        onDownload={async () => {
+          await projectService.downloadUpdate();
+        }}
+      />
       <header
         className="glass-panel"
         style={{

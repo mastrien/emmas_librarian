@@ -105,8 +105,15 @@ export class DatabaseAdapter {
     return this.db;
   }
 
+  // A failed schema leaves no adapter to close, so the file would stay locked (Windows) for anything
+  // that tries to replace or restore it before the process exits.
   private initSchema() {
-    initializeSchema(this.db, () => this.pdfLibraryRepo.backfillExistingPdfs());
+    try {
+      initializeSchema(this.db, () => this.pdfLibraryRepo.backfillExistingPdfs());
+    } catch (err) {
+      this.db.close();
+      throw err;
+    }
   }
 
   // --- Project ---
