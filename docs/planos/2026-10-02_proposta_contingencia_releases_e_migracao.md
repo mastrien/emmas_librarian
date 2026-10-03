@@ -2,35 +2,46 @@
 
 **Status:** Pendente de aprovação  
 **Data:** 02/10/2026  
-**Contexto:** Investigação pós-falha da release v1.2.0 (incompatibilidade com SQLite em bancos pré-existentes)
+**Contexto:** Investigação pós-falha da release v1.2.0 (falha de inicialização em outra máquina; release removida)
+**Revisado em:** 03/10/2026 — a primeira versão deste diagnóstico atribuía a falha à falta de `deleted_at`, o que os testes abaixo descartaram.
 
 ---
 
 ## 1. Diagnóstico da Falha na v1.2.0
 
-A release v1.2.0 apresentou falha de inicialização em clientes que possuíam bancos de versões anteriores (como v1.1.23). A causa raiz identificada e reproduzida foi:
+### 1.1. O que o log da máquina afetada mostra (`main.log` dela, fora do repositório)
 
-1. **Inversão de ordem em `initializeSchema`:** No refactor de `schemaMigrations.ts`, `db.exec(readSchemaFile())` foi colocado antes de `applyColumnMigrations(db)`.
-2. **Índices parciais em colunas inexistentes:** O arquivo `schema.sql` contém `CREATE INDEX IF NOT EXISTS ... WHERE deleted_at IS NULL;`. Em bases onde a coluna `deleted_at` ainda não havia sido adicionada, o SQLite lançou `SqliteError: no such column: deleted_at`, abortando o startup sem tratamento de erro.
-3. **Módulo nativo `better-sqlite3` fora do `asarUnpack`:** O binário `.node` compactado dentro do `app.asar` pode ser bloqueado por antivírus ou restrições de permissão temporária do Windows.
-4. **Fechamento permanente de conexão em rotinas de restauração:** A chamada de `close()` na instância singleton de banco deixava a aplicação inoperante com a mensagem *"The database connection is not open"* se o processo não encerrasse de imediato.
-5. **Erros de startup silenciosos:** Falhas na inicialização usavam `console.error` em vez de `electron-log`, impossibilitando diagnóstico via arquivo de log em máquinas de produção.
+- A máquina rodou v1.1.12 (jun), v1.1.22 (ago) e v1.1.23 (01/10 21:17), todas abrindo normalmente. O banco dela, portanto, já tinha `deleted_at` (coluna existe desde a v1.1.12).
+- 23:12–23:13: o instalador silencioso da v1.2.0 rodou três vezes (`Auto install update on quit`). As duas reaberturas logo depois ainda eram a v1.1.23 (encontravam a 1.2.0 como novidade): o app foi reaberto enquanto o instalador trabalhava.
+- 23:14, 23:14 e 23:18: só `App starting...`, nada depois. A v1.2.0 falhou antes de `Checking for update`, ou seja, dentro de `setupIpcRegistries()` (abertura do banco e serviços). O erro foi para `console.error` e para a caixa de diálogo, não para o log.
+- 23:19: de volta à v1.1.23, funcionando.
+
+### 1.2. O que foi testado e não reproduziu a falha
+
+- Banco criado pela v1.1.23 aberto pelo `DatabaseAdapter` da v1.2.0: abre.
+- Cadeia da máquina afetada, com dados em todas as áreas: banco criado pela v1.1.12 → aberto pela v1.1.22 → v1.1.23 → v1.2.0: abre, dados preservados.
+- v1.2.0 empacotada localmente (`electron-builder --dir`, asar como em produção) sobre uma cópia de um banco real de longa data (criado em maio) e sobre uma pasta vazia: inicia sem erro.
+- `schema.sql` da v1.1.23 e da v1.2.0 têm os mesmos comandos (a v1.2.0 só tirou blocos duplicados e acrescentou duas colunas em `search_history`). A ordem "schema.sql antes das colunas" é a mesma nas duas versões.
+- A sequência nova do CI de release (`npm test` recompila o better-sqlite3 para Node, depois `rebuild:electron`) deixa o binário do Electron correto ao final, reproduzida localmente.
+- `better-sqlite3` já sai em `app.asar.unpacked` sem entrada própria em `asarUnpack` (electron-builder desempacota `.node` sozinho).
+
+### 1.3. Causa: ainda não identificada
+
+O código de banco da v1.2.0 não quebra com um histórico de versões igual ao da máquina afetada. Sobram causas de ambiente que os testes acima não cobrem: o instalador interrompido pelas reaberturas (instalação com arquivos misturados ou faltando), antivírus sobre os arquivos novos, ou algo específico do banco daquela máquina. O texto da caixa de diálogo, ou uma cópia do `emma.db` daquela máquina, decide entre elas.
+
+### 1.4. Defeito real encontrado no caminho
+
+Um banco aberto pela última vez na v1.1.11 ou anterior (sem `deleted_at`) não abre em nenhuma versão desde a v1.1.20: `schema.sql` cria índices `WHERE deleted_at IS NULL` antes de as colunas serem migradas. Não é o que aconteceu na máquina afetada, mas atinge quem pula direto de uma versão antiga.
 
 ---
 
 ## 2. Correções Técnicas Imediatas (Próxima Release)
 
-1. **Reordenação e Isolamento de Schema:**
-   - Executar migrações incrementais de colunas (`applyColumnMigrations`) antes de qualquer instrução de criação de índices dependentes.
-   - Extrair a criação de índices parciais para uma etapa posterior e protegida contra exceções fatais.
-2. **Empacotamento Nativo Robusto:**
-   - Adicionar `"**/node_modules/better-sqlite3/**/*"` à diretiva `asarUnpack` do `package.json`.
-3. **Observabilidade de Startup:**
-   - Substituir `console.error` por `log.error` no catch do `app.whenReady()` em `main.ts`.
-4. **Resiliência do DatabaseAdapter:**
-   - Proteger o ciclo de vida da conexão contra chamadas residuais pós-fechamento.
-5. **Suite de Regressão de Migração Histórica:**
-   - Testar `new DatabaseAdapter()` contra bancos mockados sem colunas introduzidas em releases passadas.
+1. **Colunas antes do schema:** `applyColumnMigrations` roda antes de `schema.sql` (e de novo depois, para as tabelas que o `schema.sql` acabou de criar sem todas as colunas).
+2. **Falha de schema visível:** `schema.sql` continua fora de `logFailure`; abrir sobre um schema pela metade é pior do que não abrir. O `DatabaseAdapter` fecha a conexão antes de repassar o erro, para não deixar o arquivo travado.
+3. **Observabilidade de startup:** `log.error` no catch do `app.whenReady()` em `main.ts`, para que a próxima falha fique no `main.log`.
+4. **Regressão de migração histórica:** teste com banco sem `deleted_at` e teste de falha do `schema.sql`.
+5. **Antes de relançar:** atualizar de verdade, numa máquina limpa, da v1.1.23 instalada para o instalador novo, reabrindo o app enquanto o instalador roda.
 
 ---
 

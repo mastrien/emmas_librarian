@@ -327,8 +327,9 @@ describe('search_history.unique_results migration', () => {
   });
 });
 
-describe('legacy database without deleted_at (regression v1.2.0)', () => {
-  it('migrates an older database lacking deleted_at column without failing on partial indexes', () => {
+// A database last opened by v1.1.11 or older lacks deleted_at, which schema.sql indexes since v1.1.20.
+describe('database from v1.1.11 or older (no deleted_at)', () => {
+  it('adds deleted_at before schema.sql builds its partial indexes', () => {
     withRawDatabase((raw) => {
       raw.exec(`
         CREATE TABLE projects (id INTEGER PRIMARY KEY, name TEXT);
@@ -365,5 +366,14 @@ describe('legacy database without deleted_at (regression v1.2.0)', () => {
 
     const cols = reopen((raw) => (raw.pragma('table_info(articles)') as { name: string }[]).map((c) => c.name));
     expect(cols).toContain('deleted_at');
+  });
+});
+
+describe('schema.sql failure', () => {
+  it('refuses to open instead of starting on a half-built schema', () => {
+    // articles without doi: no column migration adds it, so idx_articles_doi in schema.sql fails.
+    withRawDatabase((raw) => raw.exec('CREATE TABLE articles (id INTEGER PRIMARY KEY, project_id INTEGER)'));
+
+    expect(() => new DatabaseAdapter(dbPath)).toThrow(/no such column: doi/);
   });
 });
