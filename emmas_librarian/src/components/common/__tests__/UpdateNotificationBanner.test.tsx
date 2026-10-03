@@ -82,4 +82,30 @@ describe('UpdateNotificationBanner Component', () => {
 
     expect(container.firstChild).toBeNull();
   });
+
+  it('lets the person try again when starting the download fails', async () => {
+    const onDownload = vi.fn().mockRejectedValue(new Error('offline'));
+    render(
+      <MemoryRouter>
+        <UpdateNotificationBanner updateInfo={{ version: '1.3.0' }} onDownload={onDownload} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Atualizar' }));
+
+    expect(await screen.findByRole('button', { name: 'Atualizar' })).toBeEnabled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('opens Settings, where the notes are, from "Ver Notas"', () => {
+    render(
+      <MemoryRouter>
+        <UpdateNotificationBanner updateInfo={{ version: '1.3.0', releaseNotes: 'Novidades' }} onDownload={vi.fn()} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver Notas' }));
+
+    expect(mockNavigate).toHaveBeenCalledWith('/settings');
+  });
 });

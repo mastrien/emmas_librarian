@@ -16,14 +16,19 @@ export class FakeAppUpdater extends EventEmitter implements IAppUpdater {
   public downloadUpdateCalled = false;
   public quitAndInstallCalled = false;
   public lastQuitAndInstallArgs: { isSilent?: boolean; isForceRunAfter?: boolean } | null = null;
+  /** Set to make the next check / download reject, as electron-updater does when offline. */
+  public checkFailure: Error | null = null;
+  public downloadFailure: Error | null = null;
 
   public async checkForUpdates(): Promise<unknown> {
     this.checkForUpdatesCalled = true;
+    if (this.checkFailure) throw this.checkFailure;
     return null;
   }
 
   public async downloadUpdate(): Promise<unknown> {
     this.downloadUpdateCalled = true;
+    if (this.downloadFailure) throw this.downloadFailure;
     return null;
   }
 

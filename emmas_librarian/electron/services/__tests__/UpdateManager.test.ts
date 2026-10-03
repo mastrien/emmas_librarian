@@ -120,4 +120,30 @@ describe('UpdateManager', () => {
 
     expect(manager.getStatus()).toMatchObject({ status: 'error', error: 'net::ERR_INTERNET_DISCONNECTED' });
   });
+
+  it('answers null and records the error when the check fails', async () => {
+    fakeUpdater.checkFailure = new Error('getaddrinfo ENOTFOUND github.com');
+
+    const info = await manager.checkForUpdates();
+
+    expect(info).toBeNull();
+    expect(manager.getStatus()).toMatchObject({ status: 'error', error: 'getaddrinfo ENOTFOUND github.com' });
+  });
+
+  it('records and rethrows a failed download', async () => {
+    fakeUpdater.emit('update-available', { version: '1.3.0' });
+    fakeUpdater.downloadFailure = new Error('ECONNRESET');
+
+    await expect(manager.downloadUpdate()).rejects.toThrow('ECONNRESET');
+    expect(manager.getStatus()).toMatchObject({ status: 'error', error: 'ECONNRESET' });
+  });
+
+  it('takes the version from the download when no availability event came first', () => {
+    fakeUpdater.emit('update-downloaded', { version: '1.3.1', releaseDate: '2026-10-03' });
+
+    expect(manager.getStatus()).toMatchObject({
+      status: 'downloaded',
+      updateInfo: { version: '1.3.1', releaseDate: '2026-10-03' },
+    });
+  });
 });

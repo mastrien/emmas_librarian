@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setupIpcRegistries } from '../ipcRegistries';
 import { IpcChannel } from '../../../src/types';
-import { resetIpcHarness, invoke } from './fakes/ipcHarness';
+import { resetIpcHarness, invoke, harness } from './fakes/ipcHarness';
 import { FakeAppUpdater } from '../../services/__tests__/fakes/FakeAppUpdater';
 import { UpdateSafetyService } from '../../services/UpdateSafetyService';
 import { UpdateManager } from '../../services/UpdateManager';
@@ -79,5 +79,39 @@ describe('Update IPC handlers', () => {
     expect(res).toEqual({ restoredFrom: 'pre_update.db.gz', preRestoreBackupPath: 'pre_restore.db.gz' });
     expect(mockSafety.restoreArgs).toEqual([[]]);
     expect(restarter.restarts).toBe(1);
+  });
+
+  describe('events sent to the windows', () => {
+    class FakeWindow {
+      public sent: [string, unknown][] = [];
+      constructor(private readonly destroyed = false) {}
+      public isDestroyed = () => this.destroyed;
+      public webContents = { send: (channel: string, payload: unknown) => this.sent.push([channel, payload]) };
+    }
+
+    it('sends status changes to every open window and skips destroyed ones', () => {
+      const open = new FakeWindow();
+      const closed = new FakeWindow(true);
+      harness.windows.getAllWindows.mockReturnValue([open, closed]);
+
+      fakeUpdater.emit('update-available', { version: '1.3.0' });
+
+      expect(open.sent).toEqual([
+        ['update:status-changed', expect.objectContaining({ status: 'available', updateInfo: { version: '1.3.0' } })],
+      ]);
+      expect(closed.sent).toEqual([]);
+    });
+
+    it('sends download progress', () => {
+      const open = new FakeWindow();
+      harness.windows.getAllWindows.mockReturnValue([open]);
+
+      fakeUpdater.emit('download-progress', { percent: 42, bytesPerSecond: 10, transferred: 42, total: 100 });
+
+      expect(open.sent[0]).toEqual([
+        'update:download-progress',
+        { percent: 42, bytesPerSecond: 10, transferred: 42, total: 100 },
+      ]);
+    });
   });
 });
