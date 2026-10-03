@@ -158,6 +158,28 @@ describe('UpdateSettings Component', () => {
     fireEvent.click(restoreBtn);
     expect(onRestore).toHaveBeenCalledTimes(1);
   });
+
+  it('shows and hides the release notes of an available update', () => {
+    render(
+      <UpdateSettings
+        currentVersion="1.2.0"
+        updateStatus={{
+          ...baseStatus,
+          status: 'available',
+          updateInfo: { version: '1.3.0', releaseNotes: 'Corrige o leitor' },
+        }}
+        onCheckForUpdates={vi.fn()}
+        onDownloadUpdate={vi.fn()}
+        onInstallUpdate={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver notas da versão' }));
+    expect(screen.getByText('Corrige o leitor')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar notas da versão' }));
+    expect(screen.queryByText('Corrige o leitor')).toBeNull();
+  });
 });
 
 describe('describeSnapshotDate', () => {

@@ -32,13 +32,15 @@ class FakeRecoveryBridge implements RecoverySystemBridge {
 class FakeRecoverySafetyService implements Partial<UpdateSafetyService> {
   public restoreCalled = false;
   public shouldFailRestore = false;
+  public libraryExisted = true;
 
   public restorePreUpdateSnapshot(): SnapshotRestoreResult {
     this.restoreCalled = true;
     if (this.shouldFailRestore) {
       throw new Error('Disk full');
     }
-    return { restoredFrom: 'C:/backups/pre_update.db.gz', preRestoreBackupPath: 'C:/backups/pre_restore_1.db.gz' };
+    const preRestoreBackupPath = this.libraryExisted ? 'C:/backups/pre_restore_1.db.gz' : undefined;
+    return { restoredFrom: 'C:/backups/pre_update.db.gz', preRestoreBackupPath };
   }
 }
 
@@ -123,5 +125,14 @@ describe('RecoveryService', () => {
 
     expect(safety.restoreCalled).toBe(false);
     expect(bridge.quitAppCalled).toBe(true);
+  });
+
+  it('does not mention a saved copy when there was no library to save', () => {
+    bridge.choiceToReturn = 0;
+    safety.libraryExisted = false;
+
+    recovery.handlePostUpdateFailure('Corruption error', { status: 'failed', fromVersion: '1.1.2' });
+
+    expect(bridge.messageBoxesShown[1].detail).toBe('Por favor, execute novamente a versão estável v1.1.2.');
   });
 });
