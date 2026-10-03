@@ -1,7 +1,7 @@
 import { act } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { UpdateSettings } from '../UpdateSettings';
+import { UpdateSettings, describeSnapshotDate } from '../UpdateSettings';
 import type { UpdateStatusResponse } from '../../../../types';
 
 describe('UpdateSettings Component', () => {
@@ -152,8 +152,22 @@ describe('UpdateSettings Component', () => {
     );
 
     expect(screen.getByText('Rollback de Emergência')).toBeInTheDocument();
+    expect(screen.getByText(/Snapshot de antes da última atualização/)).toBeInTheDocument();
+    expect(screen.getByText(/Restaurar desfaz o que foi feito depois dessa data/)).toBeInTheDocument();
     const restoreBtn = screen.getByText('Restaurar Dados do Snapshot Pré-Atualização');
     fireEvent.click(restoreBtn);
     expect(onRestore).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('describeSnapshotDate', () => {
+  it('formats the snapshot timestamp in Brazilian date and time', () => {
+    const timestamp = new Date(2026, 9, 3, 17, 45).getTime();
+
+    expect(describeSnapshotDate(timestamp)).toBe('03/10/2026, 17:45');
+  });
+
+  it('falls back to a relative description without a timestamp', () => {
+    expect(describeSnapshotDate(undefined)).toBe('antes da última atualização');
   });
 });

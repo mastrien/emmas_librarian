@@ -283,7 +283,8 @@ export interface IProjectService {
   checkForUpdates(): Promise<UpdateInfoPayload | null>;
   downloadUpdate(): Promise<void>;
   installUpdate(): Promise<void>;
-  restoreUpdateSnapshot(explicitPath?: string): Promise<boolean>;
+  /** Puts the pre-update snapshot back (the current library is saved first) and restarts the app. */
+  restoreUpdateSnapshot(): Promise<void>;
   onUpdateStatusChange(callback: (status: UpdateStatusResponse) => void): () => void;
   onUpdateDownloadProgress(callback: (progress: DownloadProgressPayload) => void): () => void;
 }

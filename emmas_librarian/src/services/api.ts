@@ -454,16 +454,18 @@ export const projectService: IProjectService = {
   async installUpdate(): Promise<void> {
     await safeInvoke(IpcChannel.UPDATE_INSTALL);
   },
-  restoreUpdateSnapshot: (explicitPath?: string): Promise<boolean> =>
-    safeInvoke(IpcChannel.UPDATE_RESTORE_SNAPSHOT, explicitPath),
+  // The app restarts once the snapshot is in place, so this promise usually never settles.
+  async restoreUpdateSnapshot(): Promise<void> {
+    await safeInvoke(IpcChannel.UPDATE_RESTORE_SNAPSHOT);
+  },
   onUpdateStatusChange: (callback: (status: UpdateStatusResponse) => void): (() => void) => {
     if (!window?.electronAPI?.on) return () => {};
-    window.electronAPI.on('update:status-changed', (data: unknown) => callback(data as UpdateStatusResponse));
-    return () => {};
+    return window.electronAPI.on('update:status-changed', (data: unknown) => callback(data as UpdateStatusResponse));
   },
   onUpdateDownloadProgress: (callback: (progress: DownloadProgressPayload) => void): (() => void) => {
     if (!window?.electronAPI?.on) return () => {};
-    window.electronAPI.on('update:download-progress', (data: unknown) => callback(data as DownloadProgressPayload));
-    return () => {};
+    return window.electronAPI.on('update:download-progress', (data: unknown) =>
+      callback(data as DownloadProgressPayload),
+    );
   },
 };

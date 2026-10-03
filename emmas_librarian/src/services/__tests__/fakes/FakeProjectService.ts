@@ -436,7 +436,7 @@ export class FakeProjectService implements IProjectService {
   checkForUpdates = vi.fn(async (): Promise<UpdateInfoPayload | null> => null);
   downloadUpdate = vi.fn(async (): Promise<void> => {});
   installUpdate = vi.fn(async (): Promise<void> => {});
-  restoreUpdateSnapshot = vi.fn(async (_explicitPath?: string): Promise<boolean> => true);
+  restoreUpdateSnapshot = vi.fn(async (): Promise<void> => undefined);
   onUpdateStatusChange = vi.fn((_callback: (status: UpdateStatusResponse) => void) => () => {});
   onUpdateDownloadProgress = vi.fn((_callback: (progress: DownloadProgressPayload) => void) => () => {});
 

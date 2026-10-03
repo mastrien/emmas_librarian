@@ -108,4 +108,16 @@ describe('UpdateManager', () => {
   it('fails prepareAndInstall if update is not downloaded', async () => {
     await expect(manager.prepareAndInstall('1.2.0')).rejects.toThrowError(/ERR_UPDATE_NOT_DOWNLOADED/);
   });
+
+  it('reports that no update is available', () => {
+    fakeUpdater.emit('update-not-available');
+
+    expect(manager.getStatus().status).toBe('not-available');
+  });
+
+  it('records the updater error message', () => {
+    fakeUpdater.emit('error', new Error('net::ERR_INTERNET_DISCONNECTED'));
+
+    expect(manager.getStatus()).toMatchObject({ status: 'error', error: 'net::ERR_INTERNET_DISCONNECTED' });
+  });
 });
