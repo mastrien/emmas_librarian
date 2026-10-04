@@ -22,3 +22,8 @@
 - **Unit tests fail with `NODE_MODULE_VERSION` after an E2E run**: `npm run rebuild:node`.
 - **Mixed line endings / backslashes in scripted edits** (Windows): prefer the Edit tool; heredocs have eaten
   `\n`, `\\` and backticks in this repo.
+- **Every spec fails at once with "page crashed" / "Navigation failed because page crashed"**, in about 1 s,
+  and launching `electron.exe dist-electron/electron/main.js` by hand logs `GPU process exited unexpectedly:
+  exit_code=-2147483645` and `Render process gone`: the shell that starts the run cannot host Chromium's
+  sandbox (seen when the run was started by an agent's shell; `--disable-gpu` alone does not help). Run with
+  `E2E_ELECTRON_ARGS=--no-sandbox`. It is a property of the launching environment, not of the app.

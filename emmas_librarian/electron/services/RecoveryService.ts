@@ -12,8 +12,26 @@ export interface RecoverySystemBridge {
   quitApp(): void;
 }
 
+/**
+ * E2E runs cannot click a native message box: E2E_MOCK_RECOVERY_CHOICE answers it (button index) and the
+ * title (and detail) go to stdout so the spec can tell which box was shown. Undefined outside E2E.
+ *
+ * Usage:
+ *   mockedRecoveryChoice({ title: 'Erro' }, { E2E_MOCK_RECOVERY_CHOICE: '0' }); // 0, logs "[E2E recovery dialog] Erro"
+ */
+export function mockedRecoveryChoice(
+  options: Electron.MessageBoxSyncOptions,
+  env: Record<string, string | undefined>,
+): number | undefined {
+  const choice = env.E2E_MOCK_RECOVERY_CHOICE;
+  if (choice === undefined) return undefined;
+  const detail = options.detail ? ` | ${options.detail.replace(/\s+/g, ' ')}` : '';
+  console.log(`[E2E recovery dialog] ${options.title}${detail}`);
+  return Number(choice);
+}
+
 export const defaultRecoveryBridge: RecoverySystemBridge = {
-  showMessageBoxSync: (options) => dialog.showMessageBoxSync(options),
+  showMessageBoxSync: (options) => mockedRecoveryChoice(options, process.env) ?? dialog.showMessageBoxSync(options),
   openExternal: (url) => shell.openExternal(url),
   writeClipboardText: (text) => clipboard.writeText(text),
   quitApp: () => app.quit(),

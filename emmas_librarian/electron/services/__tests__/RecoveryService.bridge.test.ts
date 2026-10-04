@@ -10,7 +10,7 @@ vi.mock('electron', () => ({
   app: { quit: () => void electronCalls.log.push(['quit']) },
 }));
 
-import { defaultRecoveryBridge } from '../RecoveryService';
+import { defaultRecoveryBridge, mockedRecoveryChoice } from '../RecoveryService';
 
 describe('defaultRecoveryBridge', () => {
   beforeEach(() => {
@@ -30,5 +30,24 @@ describe('defaultRecoveryBridge', () => {
       ['clipboard', 'relatório'],
       ['quit'],
     ]);
+  });
+});
+
+describe('mockedRecoveryChoice', () => {
+  it('answers with the E2E choice and logs the title and detail of the box it replaced', () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    const choice = mockedRecoveryChoice(
+      { title: 'Erro de Atualização', message: 'm', detail: 'Erro: x\n\nEscolha' },
+      { E2E_MOCK_RECOVERY_CHOICE: '3' },
+    );
+
+    expect(choice).toBe(3);
+    expect(log).toHaveBeenCalledWith('[E2E recovery dialog] Erro de Atualização | Erro: x Escolha');
+    log.mockRestore();
+  });
+
+  it('leaves the native box in charge outside E2E', () => {
+    expect(mockedRecoveryChoice({ message: 'm' }, {})).toBeUndefined();
   });
 });
