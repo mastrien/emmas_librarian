@@ -377,3 +377,16 @@ describe('schema.sql failure', () => {
     expect(() => new DatabaseAdapter(dbPath)).toThrow(/no such column: doi/);
   });
 });
+
+describe('a file that is not a database', () => {
+  it('refuses to open and releases the file so a restore can replace it', () => {
+    fs.writeFileSync(dbPath, 'not a sqlite database, written by a failed update');
+
+    expect(() => new DatabaseAdapter(dbPath)).toThrow(/file is not a database/);
+
+    // On Windows a connection left open makes this rename fail with EPERM.
+    const replacement = path.join(workDir, 'restored.db');
+    fs.writeFileSync(replacement, '');
+    expect(() => fs.renameSync(replacement, dbPath)).not.toThrow();
+  });
+});
