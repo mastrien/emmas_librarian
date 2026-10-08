@@ -390,15 +390,24 @@ export class DatabaseAdapter {
   }
 
   // --- Maintenance ---
+  // Full check: reads every page and index. Used where a bad file must never be copied (backups).
   public checkIntegrity(): boolean {
+    return this.runIntegrityPragma('integrity_check');
+  }
+
+  // Cheaper than checkIntegrity (it skips index/content cross-checks), for the check that runs before
+  // the window opens after an update.
+  public checkQuickIntegrity(): boolean {
+    return this.runIntegrityPragma('quick_check');
+  }
+
+  private runIntegrityPragma(pragma: 'integrity_check' | 'quick_check'): boolean {
     try {
-      const result = this.db.pragma('integrity_check') as Record<string, unknown>[];
+      const result = this.db.pragma(pragma) as Record<string, unknown>[];
       if (!result || result.length === 0) return false;
-      const firstRow = result[0];
-      const val = firstRow.integrity_check || firstRow['integrity_check'];
-      return val === 'ok';
+      return result[0][pragma] === 'ok';
     } catch (e) {
-      console.error('Failed to check database integrity:', e);
+      console.error(`Failed to run PRAGMA ${pragma}:`, e);
       return false;
     }
   }

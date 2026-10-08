@@ -7,7 +7,7 @@ class FakeHealthDatabase implements HealthCheckDatabase {
   public queriesExecuted: string[] = [];
   public shouldFailQuery = false;
 
-  public checkIntegrity(): boolean {
+  public checkQuickIntegrity(): boolean {
     return this.integrityResult;
   }
 
