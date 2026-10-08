@@ -2,6 +2,8 @@ name: Investigate v1.2.0 installer
 
 # Experiments only (investigations/2026-10-v120-installer/README.md): they install builds on throwaway
 # runners and record what happens. Runs only on this investigation branch.
+# Round 3: Defender vs the first-run 0xC0000005 (H1), and whether an installer left waiting resumes
+# later (H2). Rounds 1-2 (install-crash-rate.mjs, interrupted-update.mjs) are in the git history.
 on:
   push:
     branches: [investigate/v120-installer]
@@ -15,39 +17,59 @@ env:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        include:
-          - label: current
-            ref: main
-          - label: rebuilt-1.2.0
-            ref: v1.2.0
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.ref }}
+          ref: v1.2.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Build installer
+      - name: Build the v1.2.0 installer
         working-directory: ./emmas_librarian
         run: |
           npm ci
           npm run electron:build -- --publish never
       - uses: actions/upload-artifact@v4
         with:
-          name: installer-${{ matrix.label }}
+          name: installer-rebuilt-1.2.0
           path: emmas_librarian/release/*Setup*.exe
 
-  crash-rate:
+  defender:
+    strategy:
+      fail-fast: false
+      matrix:
+        realtime: [on, off]
+        attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Get the published installer
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash ${{ env.SCRIPTS }}/get-installers.sh
+      - name: First install with real-time protection ${{ matrix.realtime }}
+        run: node defender-first-run.mjs ${{ matrix.realtime }} ${{ matrix.attempt }}
+        working-directory: ${{ env.SCRIPTS }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-defender-${{ matrix.realtime }}-${{ matrix.attempt }}
+          path: ${{ env.SCRIPTS }}/results
+
+  stuck-installer:
     needs: build
     strategy:
       fail-fast: false
       matrix:
-        first: [published-1.1.23, rebuilt-1.2.0, current]
-        attempt: [1, 2, 3, 4, 5, 6]
+        reopen: [2, 3, 4]
+        attempt: [1, 2, 3]
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -57,64 +79,24 @@ jobs:
           node-version: 22
       - uses: actions/download-artifact@v4
         with:
-          name: installer-current
-          path: ${{ runner.temp }}/inst/current
-      - uses: actions/download-artifact@v4
-        with:
           name: installer-rebuilt-1.2.0
           path: ${{ runner.temp }}/inst/rebuilt
-      - name: Get the three installers
+      - name: Get the published installer
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash ${{ env.SCRIPTS }}/get-installers.sh
-      - name: Install, record exit codes and crash events
-        run: node install-crash-rate.mjs ${{ matrix.first }} ${{ matrix.attempt }}
+      - name: Replay the update rounds, never killing an installer
+        run: node stuck-installer.mjs ${{ matrix.reopen }} ${{ matrix.attempt }}
         working-directory: ${{ env.SCRIPTS }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: result-crash-${{ matrix.first }}-${{ matrix.attempt }}
-          path: ${{ env.SCRIPTS }}/results
-
-  interrupted:
-    needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        reopen: [none, 3, 9, 15]
-        attempt: [1, 2]
-    runs-on: windows-latest
-    timeout-minutes: 40
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: actions/download-artifact@v4
-        with:
-          name: installer-current
-          path: ${{ runner.temp }}/inst/current
-      - uses: actions/download-artifact@v4
-        with:
-          name: installer-rebuilt-1.2.0
-          path: ${{ runner.temp }}/inst/rebuilt
-      - name: Get the three installers
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash ${{ env.SCRIPTS }}/get-installers.sh
-      - name: Replay the 2026-10-01 update sequence
-        run: node interrupted-update.mjs ${{ matrix.reopen }} ${{ matrix.attempt }}
-        working-directory: ${{ env.SCRIPTS }}
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: result-interrupted-${{ matrix.reopen }}-${{ matrix.attempt }}
+          name: result-stuck-${{ matrix.reopen }}-${{ matrix.attempt }}
           path: ${{ env.SCRIPTS }}/results
 
   summary:
-    needs: [crash-rate, interrupted]
+    needs: [defender, stuck-installer]
     if: always()
     runs-on: ubuntu-latest
     steps:
