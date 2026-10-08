@@ -131,7 +131,9 @@ export class UpdateManager {
     }
     const targetVersion = this.updateInfo?.version || 'latest';
     this.safetyService.createPreUpdateSnapshot(fromVersion, targetVersion);
-    this.updater.quitAndInstall(false, true);
+    // Silent like the updates before 1.3 (the installer is the assisted kind: not silent, it opens a wizard
+    // with a "Concluir" page), and the app reopens by itself once installed.
+    this.updater.quitAndInstall(true, true);
   }
 
   public getStatus(): UpdateStatusResponse {

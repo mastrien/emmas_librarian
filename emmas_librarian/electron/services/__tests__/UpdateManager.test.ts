@@ -94,7 +94,7 @@ describe('UpdateManager', () => {
     await expect(manager.downloadUpdate()).rejects.toThrowError(/ERR_UPDATE_NOT_AVAILABLE/);
   });
 
-  it('creates pre-update snapshot before triggering quitAndInstall', async () => {
+  it('snapshots the library, then installs silently and reopens the app', async () => {
     fakeUpdater.emit('update-available', { version: '1.3.0' });
     fakeUpdater.emit('update-downloaded', { version: '1.3.0' });
 
@@ -102,7 +102,7 @@ describe('UpdateManager', () => {
 
     expect(fakeSafety.snapshotCalledWith).toEqual({ from: '1.2.0', target: '1.3.0' });
     expect(fakeUpdater.quitAndInstallCalled).toBe(true);
-    expect(fakeUpdater.lastQuitAndInstallArgs).toEqual({ isSilent: false, isForceRunAfter: true });
+    expect(fakeUpdater.lastQuitAndInstallArgs).toEqual({ isSilent: true, isForceRunAfter: true });
   });
 
   it('fails prepareAndInstall if update is not downloaded', async () => {
