@@ -6,6 +6,7 @@ import { FakeAppUpdater } from '../../services/__tests__/fakes/FakeAppUpdater';
 import { UpdateSafetyService } from '../../services/UpdateSafetyService';
 import { UpdateManager } from '../../services/UpdateManager';
 import type { SnapshotRestoreResult } from '../../services/UpdateTypes';
+import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
 
 vi.mock('electron', () => import('./fakes/ipcHarness').then((h) => h.electronModule));
 vi.mock('fs', () => import('./fakes/ipcHarness').then((h) => h.fsModule));
@@ -113,5 +114,38 @@ describe('Update IPC handlers', () => {
         { percent: 42, bytesPerSecond: 10, transferred: 42, total: 100 },
       ]);
     });
+  });
+});
+
+class UpdaterThatCannotStart extends FakeAppUpdater {
+  public on(): never {
+    throw new Error('electron-updater failed to initialise');
+  }
+}
+
+describe('setupIpcRegistries when the startup fails after the library opened', () => {
+  beforeEach(() => resetIpcHarness());
+
+  it('closes the library it opened, so the recovery can replace the file', () => {
+    expect(() => setupIpcRegistries({ updater: new UpdaterThatCannotStart() })).toThrowError(/failed to initialise/);
+
+    expect(harness.db.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves a library it was given to its owner', () => {
+    const given = harness.db as unknown as DatabaseAdapter;
+
+    expect(() => setupIpcRegistries({ db: given, updater: new UpdaterThatCannotStart() })).toThrowError();
+
+    expect(harness.db.close).not.toHaveBeenCalled();
+  });
+
+  it('still reports the startup error when closing the library fails too', () => {
+    harness.db.close.mockImplementation(() => {
+      throw new Error('already closed');
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    expect(() => setupIpcRegistries({ updater: new UpdaterThatCannotStart() })).toThrowError(/failed to initialise/);
   });
 });
