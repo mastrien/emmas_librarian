@@ -7,8 +7,10 @@ import type { SnapshotCreationResult, SnapshotRestoreResult, UpdateStateRecord }
 export type SafetyDatabase = Pick<DatabaseAdapter, 'checkpoint' | 'close'>;
 
 // Each snapshot is a full copy of the library; older ones are dropped so updates don't pile them up.
-const PRE_UPDATE_SNAPSHOTS_KEPT = 3;
+const SNAPSHOTS_KEPT = 3;
 const PRE_UPDATE_PREFIX = 'pre_update_';
+// Copies of the library a restore replaced; every restore leaves one, so they are capped too.
+const PRE_RESTORE_PREFIX = 'pre_restore_';
 
 /**
  * Manages safety net snapshots before app updates and the rollback to them. Works without an open
@@ -85,7 +87,7 @@ export class UpdateSafetyService {
     const timestamp = Date.now();
     const snapshotPath = this.writeGzipCopy(this.dbPath, `${PRE_UPDATE_PREFIX}${fromVersion}_${timestamp}.db.gz`);
     this.saveUpdateState({ status: 'pending_verification', fromVersion, targetVersion, snapshotPath, timestamp });
-    this.prunePreUpdateSnapshots();
+    this.pruneBackups(PRE_UPDATE_PREFIX);
     return { snapshotPath, fromVersion, targetVersion, timestamp };
   }
 
@@ -104,22 +106,38 @@ export class UpdateSafetyService {
         `[ERR_SNAPSHOT_NOT_FOUND] Snapshot file not found at: "${snapshotPath}". Expected the gzipped copy recorded in update_state.json.`,
       );
     }
+    this.assertInsideBackupsDir(snapshotPath);
     const snapshot = gunzipSync(fs.readFileSync(snapshotPath));
-    this.dbAdapter?.close();
+    // Saved while the library is still open: if saving it fails (full disk), nothing has been closed yet.
     const preRestoreBackupPath = this.backUpCurrentDatabase();
+    this.dbAdapter?.close();
     writeFileAtomic(this.dbPath, snapshot);
     this.removeWalAndShm();
     this.saveUpdateState({ ...state, status: 'failed', rolledBack: true, preRestoreBackupPath });
     return { restoredFrom: snapshotPath, preRestoreBackupPath };
   }
 
+  // update_state.json is plain text on disk; only a file this service wrote into backups/ may replace the library.
+  private assertInsideBackupsDir(snapshotPath: string): void {
+    const folder = path.dirname(path.resolve(snapshotPath));
+    if (folder === path.resolve(this.backupsDir)) return;
+    throw new Error(
+      `[ERR_SNAPSHOT_OUTSIDE_BACKUPS] Snapshot "${snapshotPath}" is not inside "${this.backupsDir}". Expected a file written by createPreUpdateSnapshot.`,
+    );
+  }
+
   // A database that never opened may still hold committed pages in its WAL, so that is kept too.
   private backUpCurrentDatabase(): string | undefined {
     if (!fs.existsSync(this.dbPath)) return undefined;
-    const name = `pre_restore_${Date.now()}.db.gz`;
+    this.dbAdapter?.checkpoint();
+    const name = `${PRE_RESTORE_PREFIX}${Date.now()}.db.gz`;
     const walPath = `${this.dbPath}-wal`;
-    if (fs.existsSync(walPath)) this.writeGzipCopy(walPath, name.replace('.db.gz', '.db-wal.gz'));
-    return this.writeGzipCopy(this.dbPath, name);
+    if (fs.existsSync(walPath) && fs.statSync(walPath).size > 0) {
+      this.writeGzipCopy(walPath, name.replace('.db.gz', '.db-wal.gz'));
+    }
+    const backupPath = this.writeGzipCopy(this.dbPath, name);
+    this.pruneBackups(PRE_RESTORE_PREFIX);
+    return backupPath;
   }
 
   private writeGzipCopy(sourcePath: string, filename: string): string {
@@ -130,12 +148,13 @@ export class UpdateSafetyService {
   }
 
   // Age comes from the timestamp in the name: file mtimes can tie when snapshots are taken close together.
-  private prunePreUpdateSnapshots(): void {
-    const snapshotAge = (name: string) => Number(/_(\d+)\.db\.gz$/.exec(name)?.[1] ?? 0);
-    fs.readdirSync(this.backupsDir)
-      .filter((name) => name.startsWith(PRE_UPDATE_PREFIX))
-      .sort((a, b) => snapshotAge(b) - snapshotAge(a))
-      .slice(PRE_UPDATE_SNAPSHOTS_KEPT)
+  // A db file and its -wal companion share a timestamp, so they are kept or dropped together.
+  private pruneBackups(prefix: string): void {
+    const names = fs.readdirSync(this.backupsDir).filter((name) => name.startsWith(prefix));
+    const newestFirst = [...new Set(names.map(backupTimestamp))].sort((a, b) => b - a);
+    const kept = new Set(newestFirst.slice(0, SNAPSHOTS_KEPT));
+    names
+      .filter((name) => !kept.has(backupTimestamp(name)))
       .forEach((name) => fs.unlinkSync(path.join(this.backupsDir, name)));
   }
 
@@ -145,6 +164,8 @@ export class UpdateSafetyService {
     }
   }
 }
+
+const backupTimestamp = (name: string): number => Number(/_(\d+)\.db(?:-wal)?\.gz$/.exec(name)?.[1] ?? 0);
 
 // Write next to the target, then rename: a crash mid-write leaves the old file, never half of one.
 function writeFileAtomic(target: string, contents: string | Buffer): void {
