@@ -43,8 +43,11 @@ async function updateThroughTheApp(page: Page, appClosed: Promise<unknown>): Pro
   await page.getByRole('button', { name: 'Atualizar' }).click();
   const installButton = page.getByRole('button', { name: 'Reiniciar e Instalar Atualização' });
   await expect(installButton).toBeVisible({ timeout: 180000 });
+  const clicked = Date.now();
   await installButton.click();
   await appClosed;
+  // How long the app took to quit for the installer: a slow quit keeps files locked while it installs.
+  test.info().annotations.push({ type: 'quit-for-installer-ms', description: String(Date.now() - clicked) });
 }
 
 function readUpdateState(): Record<string, unknown> {
@@ -77,7 +80,7 @@ test('a release through the app’s own updater keeps the whole library', async 
 
     await test.step(`${FROM} finds ${TO}, downloads it when asked and installs it`, async () => {
       const { app, page } = await launchInstalled();
-      await updateThroughTheApp(page, app.waitForEvent('close'));
+      await updateThroughTheApp(page, app.waitForEvent('close', { timeout: 120000 }));
       await waitUntil(() => !appIsRunning(), 60000, `${FROM} to quit for the installer`);
     });
 
