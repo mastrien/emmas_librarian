@@ -47,7 +47,9 @@ async function updateThroughTheApp(page: Page, appClosed: Promise<unknown>): Pro
   await installButton.click();
   await appClosed;
   // How long the app took to quit for the installer: a slow quit keeps files locked while it installs.
-  test.info().annotations.push({ type: 'quit-for-installer-ms', description: String(Date.now() - clicked) });
+  const quitMs = Date.now() - clicked;
+  test.info().annotations.push({ type: 'quit-for-installer-ms', description: String(quitMs) });
+  console.log(`[release-test] ${FROM} quit for the installer ${quitMs} ms after "Reiniciar e Instalar"`);
 }
 
 function readUpdateState(): Record<string, unknown> {
