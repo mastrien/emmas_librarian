@@ -3,7 +3,7 @@
 // Installers come from env INSTALLER_<LABEL> (published_1_1_23, rebuilt_1_2_0, current).
 import os from 'node:os';
 import path from 'node:path';
-import { crashEvents, installSync, writeResult } from './lib.mjs';
+import { analyzeDumps, crashEvents, enableCrashDumps, installSync, writeResult } from './lib.mjs';
 
 const LABELS = ['published-1.1.23', 'rebuilt-1.2.0', 'current'];
 const installerOf = (label) => process.env[`INSTALLER_${label.replace(/[-.]/g, '_').toUpperCase()}`];
@@ -13,6 +13,8 @@ if (!LABELS.includes(first)) throw new Error(`Unknown first installer "${first}"
 
 // The first run is the one that matters (fresh runner); six more alternate all three installers.
 const order = [first, ...Array.from({ length: 6 }, (_, i) => LABELS[i % LABELS.length])];
+const dumps = path.join(process.env.RUNNER_TEMP ?? os.tmpdir(), 'dumps');
+enableCrashDumps(dumps);
 const since = new Date();
 const runs = order.map((label, i) => {
   const dir = path.join(os.tmpdir(), 'crash-rate', `${i}-${label}`);
@@ -28,4 +30,5 @@ writeResult(`crash-rate-${first}-${attempt}`, {
   runner: os.release(),
   runs,
   crashEvents: crashEvents(since),
+  dumps: analyzeDumps(dumps),
 });

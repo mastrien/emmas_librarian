@@ -5,9 +5,11 @@
 import os from 'node:os';
 import path from 'node:path';
 import {
+  analyzeDumps,
   appLogTail,
   crashEvents,
   diffManifests,
+  enableCrashDumps,
   exeVersion,
   installAsync,
   installSync,
@@ -28,6 +30,8 @@ const MAX_CYCLES = 3;
 
 const root = path.join(os.tmpdir(), 'interrupted');
 const appDir = path.join(root, 'app');
+const dumps = path.join(process.env.RUNNER_TEMP ?? os.tmpdir(), 'dumps');
+enableCrashDumps(dumps);
 const since = new Date();
 
 // A clean 1.2.0 install first, only to know which files a good install has (the next install removes it).
@@ -65,6 +69,7 @@ writeResult(`interrupted-${delayArg}-${attempt}`, {
   finalStartFailed: /Error during app startup|Failed to start app|Startup Error/.test(finalOutput),
   appLogTail: appLogTail(),
   crashEvents: crashEvents(since),
+  dumps: analyzeDumps(dumps),
 });
 
 // One round of the 2026-10-01 log: the updater runs the installer on quit; the person reopens the app
