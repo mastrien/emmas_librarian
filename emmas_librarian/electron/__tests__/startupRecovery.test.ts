@@ -71,6 +71,29 @@ describe('offerRecoveryAfterFailedStartup', () => {
     expect(prompt.prompts[0].error).toBe('still broken');
   });
 
+  it.each(['unknown', 'latest'])(
+    'offers recovery on the first start after an update whose version the updater did not report (%s)',
+    (targetVersion) => {
+      const stateFile = new FakeUpdateStateFile({ ...justUpdated, targetVersion });
+
+      expect(offerRecoveryAfterFailedStartup(new Error('boom'), '1.2.0', stateFile, prompt)).toBe(true);
+    },
+  );
+
+  it.each([
+    ['the old version is the one running', { ...justUpdated, targetVersion: 'unknown' }, '1.1.23'],
+    [
+      'the start was already reported as failed',
+      { ...justUpdated, targetVersion: 'unknown', status: 'failed' as const },
+      '1.2.0',
+    ],
+    ['the recorded version is a real, different one', { ...justUpdated, targetVersion: '1.3.0' }, '1.2.0'],
+  ])('does not guess the update when %s', (_reason, state, running) => {
+    const stateFile = new FakeUpdateStateFile(state);
+
+    expect(offerRecoveryAfterFailedStartup(new Error('boom'), running, stateFile, prompt)).toBe(false);
+  });
+
   it.each([
     ['no update was recorded', null],
     ['the update was already verified', { ...justUpdated, status: 'verified' as const }],
