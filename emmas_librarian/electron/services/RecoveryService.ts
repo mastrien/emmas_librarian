@@ -112,8 +112,8 @@ ${preRestoreBackupPath}`
       this.bridge.showMessageBoxSync({
         type: 'info',
         title: 'Restauração Concluída',
-        message: 'O banco de dados foi restaurado para a versão anterior com sucesso.',
-        detail: `Por favor, execute novamente a versão estável v${state?.fromVersion || 'anterior'}.${savedCopy}`,
+        message: 'O banco de dados voltou ao estado de antes da atualização.',
+        detail: restoredDetail(state?.fromVersion, savedCopy),
         buttons: ['OK'],
       });
     } catch (err: unknown) {
@@ -132,4 +132,14 @@ ${preRestoreBackupPath}`
     const url = fromVersion ? `${RELEASES_URL}/tag/v${fromVersion}` : RELEASES_URL;
     this.bridge.openExternal(url).finally(() => this.bridge.quitApp());
   }
+}
+
+// Restoring puts the data back; it does not reinstall the old program. Saying otherwise sent people to
+// reopen the same broken version expecting the old one.
+function restoredDetail(fromVersion: string | undefined, savedCopy: string): string {
+  const previous = fromVersion ? `v${fromVersion}` : 'anterior';
+  return (
+    `Os dados voltaram ao estado da versão ${previous}, mas o programa continua na versão nova. ` +
+    `Se ela falhar de novo, instale a versão ${previous} pela página de versões e abra o app em seguida.${savedCopy}`
+  );
 }

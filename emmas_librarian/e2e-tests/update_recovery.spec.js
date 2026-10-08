@@ -44,8 +44,10 @@ function takePreUpdateSnapshot(ws) {
   return snapshotPath;
 }
 
+// A verified update only offers the Settings restore for a while (snapshotRestoreWindow.ts), so the
+// recorded update is dated now, as a real one just installed would be.
 function recordUpdate(ws, { status, targetVersion, snapshotPath }) {
-  const state = { status, fromVersion: '0.0.1', targetVersion, snapshotPath, timestamp: 1000000000000 };
+  const state = { status, fromVersion: '0.0.1', targetVersion, snapshotPath, timestamp: Date.now() };
   fs.writeFileSync(ws.statePath, JSON.stringify(state, null, 2));
 }
 
