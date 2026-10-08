@@ -147,3 +147,44 @@ export function writeResult(name, result) {
   fs.writeFileSync(path.join(dir, `${name}.json`), JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result, null, 2));
 }
+
+/** Real-time protection on or off (machine-wide; runners are throwaway). */
+export function setDefenderRealtime(enabled) {
+  powershell(`Set-MpPreference -DisableRealtimeMonitoring $${enabled ? 'false' : 'true'}; exit 0`);
+}
+
+export function defenderStatus() {
+  const json = powershell(
+    'Get-MpComputerStatus | Select-Object AMServiceEnabled, AntivirusEnabled, RealTimeProtectionEnabled, ' +
+      'BehaviorMonitorEnabled, IoavProtectionEnabled, OnAccessProtectionEnabled | ConvertTo-Json -Compress; exit 0',
+  ).trim();
+  return json ? JSON.parse(json) : null;
+}
+
+/** Defender's own log since `since` (scans, detections, blocked or terminated programs). */
+export function defenderEvents(since) {
+  const script =
+    `$e = Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-Windows Defender/Operational'; ` +
+    `StartTime=[datetime]'${since.toISOString()}'} -ErrorAction SilentlyContinue; ` +
+    `@($e | ForEach-Object { [pscustomobject]@{ time=$_.TimeCreated.ToString('o'); id=$_.Id; ` +
+    `message=($_.Message -replace '\s+', ' ').Substring(0, [Math]::Min(400, $_.Message.Length)) } }) | ` +
+    `ConvertTo-Json -Compress; exit 0`;
+  const json = powershell(script).trim();
+  if (!json) return [];
+  const parsed = JSON.parse(json);
+  return Array.isArray(parsed) ? parsed : [parsed];
+}
+
+/** Which clean install each file of `actual` matches: tells a coherent install from a mix of two versions. */
+export function classifyAgainst(actual, cleanOld, cleanNew) {
+  const counts = { old: 0, new: 0, both: 0, neither: [] };
+  for (const [file, signature] of Object.entries(actual)) {
+    const isOld = cleanOld[file] === signature;
+    const isNew = cleanNew[file] === signature;
+    if (isOld && isNew) counts.both++;
+    else if (isOld) counts.old++;
+    else if (isNew) counts.new++;
+    else counts.neither.push(file);
+  }
+  return counts;
+}
