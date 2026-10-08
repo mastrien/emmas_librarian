@@ -8,6 +8,21 @@ import { seedFullProject } from './fullProjectFixture';
 const run = (db: Database.Database, sql: string, ...params: unknown[]) =>
   Number(db.prepare(sql).run(...params).lastInsertRowid);
 
+/**
+ * The library's own tables: without SQLite's internal ones and the storage tables sqlite-vec keeps
+ * behind a virtual table (`pdf_chunk_embeddings_chunks`, ...), which are implementation details.
+ *
+ * Usage:
+ *   libraryTables(db).forEach((table) => dump(table));
+ */
+export function libraryTables(db: Database.Database): string[] {
+  const tables = db
+    .prepare("SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+    .all() as { name: string; sql: string }[];
+  const virtual = tables.filter((t) => /CREATE VIRTUAL TABLE/i.test(t.sql)).map((t) => t.name);
+  return tables.map((t) => t.name).filter((name) => !virtual.some((v) => name.startsWith(`${v}_`)));
+}
+
 export interface LibraryFiles {
   pdfPath: string;
   docPath: string;

@@ -6,7 +6,8 @@ import type Database from 'better-sqlite3';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { seedFullProject, expectFullProjectCopied, projectContent } from './support/fullProjectFixture';
+import { seedFullProject, projectContent } from './support/fullProjectFixture';
+import { expectFullProjectCopied } from './support/fullProjectAssertions';
 
 const electron = vi.hoisted(() => ({ userData: '' }));
 
