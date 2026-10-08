@@ -61,23 +61,6 @@ jobs:
           echo "RELEASE_TEST_OLD_INSTALLER=$(cygpath -w "$old")" >> "$GITHUB_ENV"
           echo "RELEASE_TEST_NEW_INSTALLER=$(cygpath -w "$new")" >> "$GITHUB_ENV"
           echo "RELEASE_TEST_INSTALL_DIR=$(cygpath -w "$RUNNER_TEMP/emma-app")" >> "$GITHUB_ENV"
-          echo "APP_LOGS=$(cygpath -w "$APPDATA/emmas_librarian/logs")" >> "$GITHUB_ENV"
-
-      # TEMPORARY diagnostics: the published installer crashed (0xC0000005) when started from the test.
-      - name: Diagnose installer start
-        shell: pwsh
-        run: |
-          Write-Host "pwsh TEMP=$env:TEMP TMP=$env:TMP"
-          bash -c 'echo "bash TEMP=$TEMP TMP=$TMP"; node -e "console.log(\"node-from-bash TEMP=\" + process.env.TEMP)"'
-          foreach ($case in @(@{ n = 'old /S'; f = $env:RELEASE_TEST_OLD_INSTALLER; a = '/S' },
-                              @{ n = 'old /S /D'; f = $env:RELEASE_TEST_OLD_INSTALLER; a = "/S /D=$env:RUNNER_TEMP\diag-old" },
-                              @{ n = 'new /S /D'; f = $env:RELEASE_TEST_NEW_INSTALLER; a = "/S /D=$env:RUNNER_TEMP\diag-new" })) {
-            $p = Start-Process -FilePath $case.f -ArgumentList $case.a -Wait -PassThru
-            Write-Host ("{0}: exit {1} (0x{2:X8})" -f $case.n, $p.ExitCode, $p.ExitCode)
-          }
-          Get-ChildItem "$env:RUNNER_TEMP\diag-old", "$env:RUNNER_TEMP\diag-new", "$env:LOCALAPPDATA\Programs" -ErrorAction SilentlyContinue | Select-Object FullName
-          bash -c 'node -e "const r=require(\"child_process\").spawnSync(process.env.RELEASE_TEST_OLD_INSTALLER,[\"/S\",\"/D=\"+process.env.RUNNER_TEMP+\"\\diag-node\"]);console.log(\"node-from-bash spawnSync status\",r.status)"'
-        continue-on-error: true
 
       # The test reads and fills the installed library with better-sqlite3 from this checkout.
       - name: Rebuild native modules for Node
@@ -86,12 +69,11 @@ jobs:
       - name: Upgrade and compare
         run: npm run test:release-upgrade
 
+      # Dumps, transfer report and the app's main.log (the test copies it here).
       - name: Keep the dumps, reports and app logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: release-upgrade-${{ matrix.os }}
-          path: |
-            emmas_librarian/test-results/release
-            ${{ env.APP_LOGS }}
+          path: emmas_librarian/test-results/release
           if-no-files-found: ignore

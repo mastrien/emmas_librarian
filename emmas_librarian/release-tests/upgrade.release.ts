@@ -70,6 +70,13 @@ function dumpInstalledLibrary(name: string): LibraryDump {
   }
 }
 
+// The app's main.log lives on another drive than the checkout on GitHub runners, where the artifact
+// upload cannot take both; copying it next to the dumps keeps one folder to upload.
+test.afterEach(() => {
+  const logs = path.join(USER_DATA, 'logs');
+  if (fs.existsSync(logs)) fs.cpSync(logs, test.info().outputPath('app-logs'), { recursive: true });
+});
+
 test('upgrading from the published release keeps the whole library', async () => {
   test.setTimeout(15 * 60 * 1000);
   refuseToTouchARealLibrary();
