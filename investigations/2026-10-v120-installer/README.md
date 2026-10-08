@@ -60,16 +60,16 @@ Execuções do workflow: rodada 1 `37851835168`, rodada 2 `37853326091`, rodada 
 
 ### H1, instalador que trava: não explica o incidente
 
-| | 1ª instalação de um runner novo | reinstalações |
+| | 1ª instalação de um runner novo | reinstalações (rodadas 1 e 2) |
 |---|---|---|
-| publicado 1.1.23 | 3 de 10 travaram | 2 de 66 |
-| v1.2.0 recompilada | 0 de 10 | 0 de 66 |
-| build atual | 2 de 10 | 0 de 66 |
+| publicado 1.1.23 | 3 de 10 travaram | 1 de 60 |
+| v1.2.0 recompilada | 0 de 10 | 0 de 60 |
+| build atual | 2 de 10 | 0 de 60 |
 | publicado 1.1.23, Defender em tempo real **ligado** (rodada 3) | 2 de 10 | — |
 | publicado 1.1.23, Defender em tempo real **desligado** (rodada 3) | 1 de 10 | — |
 
-- O `0xC0000005` acontece em ~1 s e quase só na primeira instalação de um Windows recém-criado, com qualquer
-  instalador. Não deixa evento "Application Error", nem dump (WER LocalDumps ligado), nem evento do Defender.
+- O `0xC0000005` acontece em ~1 s e quase só na primeira instalação de um Windows recém-criado (houve 1 caso
+  numa reinstalação, na rodada 2), com qualquer instalador. Não deixa evento "Application Error", nem dump (WER LocalDumps ligado), nem evento do Defender.
 - Não é o Defender: trava com a proteção em tempo real desligada.
 - A máquina afetada já tinha instalado várias versões antes, sem problema. Causa não identificada; pouca
   relação com o incidente. O teste de release repete a instalação uma vez (após 20 s) e avisa.
