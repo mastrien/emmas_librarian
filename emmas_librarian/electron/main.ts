@@ -144,6 +144,7 @@ app
         autoUpdater.checkForUpdatesAndNotify();
       }
     } catch (err: unknown) {
+      log.error('Error during app startup:', err);
       console.error('Error during app startup:', err);
       dialog.showErrorBox('Startup Error', (err as Error).message || String(err));
     }
@@ -153,6 +154,7 @@ app
     });
   })
   .catch((err) => {
+    log.error('Failed to start app:', err);
     console.error('Failed to start app:', err);
     dialog.showErrorBox('Initialization Error', (err as Error).message || String(err));
   });

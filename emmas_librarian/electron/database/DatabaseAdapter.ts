@@ -66,24 +66,34 @@ export class DatabaseAdapter {
   public trashRepo: TrashRepository;
   public investigationRepo: MassiveInvestigationRepository;
 
+  // A constructor that throws leaves no adapter to close, so the file would stay locked (Windows) for
+  // anything that replaces it before the process exits: the post-update restore failed with EPERM on a
+  // library that was "not a database" until this closed the connection on every failure.
   constructor(dbPath: string) {
     this.db = new Database(dbPath);
+    try {
+      this.configureConnection();
+      this.projectRepo = new ProjectRepository(this.db);
+      this.settingsRepo = new SettingsRepository(this.db);
+      this.articleRepo = new ArticleRepository(this.db);
+      this.articleCategoryRepo = new ArticleCategoryRepository(this.db);
+      this.pdfLibraryRepo = new PdfLibraryRepository(this.db);
+      this.historyRepo = new HistoryRepository(this.db);
+      this.documentRepo = new DocumentRepository(this.db);
+      this.annotationRepo = new AnnotationRepository(this.db);
+      this.trashRepo = new TrashRepository(this.db, this.projectRepo);
+      this.investigationRepo = new MassiveInvestigationRepository(this.db);
+      this.initSchema();
+    } catch (err) {
+      this.db.close();
+      throw err;
+    }
+  }
+
+  private configureConnection(): void {
     this.loadSqliteVec(this.db);
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
-
-    this.projectRepo = new ProjectRepository(this.db);
-    this.settingsRepo = new SettingsRepository(this.db);
-    this.articleRepo = new ArticleRepository(this.db);
-    this.articleCategoryRepo = new ArticleCategoryRepository(this.db);
-    this.pdfLibraryRepo = new PdfLibraryRepository(this.db);
-    this.historyRepo = new HistoryRepository(this.db);
-    this.documentRepo = new DocumentRepository(this.db);
-    this.annotationRepo = new AnnotationRepository(this.db);
-    this.trashRepo = new TrashRepository(this.db, this.projectRepo);
-    this.investigationRepo = new MassiveInvestigationRepository(this.db);
-
-    this.initSchema();
   }
 
   private loadSqliteVec(db: Database.Database): void {
