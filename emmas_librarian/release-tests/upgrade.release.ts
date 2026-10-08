@@ -30,19 +30,36 @@ function refuseToTouchARealLibrary(): void {
   );
 }
 
+// STATUS_ACCESS_VIOLATION. The published v1.1.23 installer exited with it on 3 of its first 5 runs on fresh
+// GitHub runners (2026-10-08) without installing anything; the next run passed.
+const INSTALLER_CRASH = 0xc0000005;
+
 /** Silent NSIS install into INSTALL_DIR; extra args (e.g. --updated) are the ones electron-updater passes. */
 function install(installer: string, ...args: string[]): void {
   if (!fs.existsSync(installer)) {
     throw new Error(`[ERR_RELEASE_TEST_INSTALLER] Installer not found: "${installer}". Expected a NSIS setup .exe.`);
   }
-  // NSIS requires /D= last and unquoted.
-  const result = spawnSync(installer, [...args, '/S', `/D=${INSTALL_DIR}`], { encoding: 'utf-8', timeout: 300000 });
+  const first = runInstaller(installer, args);
+  if (first.status === 0) return;
+  // Retried once so the data check still runs, but reported: a crashing installer also hits real users.
+  const result = first.status === INSTALLER_CRASH ? retryAfterCrash(installer, args) : first;
   if (result.status === 0) return;
   throw new Error(
     `[ERR_RELEASE_TEST_INSTALL] "${path.basename(installer)} ${args.join(' ')}" exited with status=${result.status} ` +
       `signal=${result.signal} error=${result.error?.message}; app exe present=${fs.existsSync(appExe())}; ` +
       `stdout=${JSON.stringify(result.stdout)} stderr=${JSON.stringify(result.stderr)}. Expected status 0.`,
   );
+}
+
+// NSIS requires /D= last and unquoted.
+const runInstaller = (installer: string, args: string[]) =>
+  spawnSync(installer, [...args, '/S', `/D=${INSTALL_DIR}`], { encoding: 'utf-8', timeout: 300000 });
+
+function retryAfterCrash(installer: string, args: string[]): ReturnType<typeof runInstaller> {
+  const message = `${path.basename(installer)} crashed (0xC0000005) on its first run and was started again.`;
+  test.info().annotations.push({ type: 'warning', description: message });
+  console.log(`::warning title=Installer crashed::${message}`);
+  return runInstaller(installer, args);
 }
 
 const appExe = () => path.join(INSTALL_DIR, "Emma's Librarian.exe");
