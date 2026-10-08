@@ -32,14 +32,14 @@ export function refuseToTouchARealLibrary(): void {
 const INSTALLER_CRASH = 0xc0000005;
 
 /** Silent NSIS install into INSTALL_DIR; extra args (e.g. --updated) are the ones electron-updater passes. */
-export function install(installer: string, ...args: string[]): void {
+export async function install(installer: string, ...args: string[]): Promise<void> {
   if (!fs.existsSync(installer)) {
     throw new Error(`[ERR_RELEASE_TEST_INSTALLER] Installer not found: "${installer}". Expected a NSIS setup .exe.`);
   }
   const first = runInstaller(installer, args);
   if (first.status === 0) return;
   // Retried once so the data check still runs, but reported: a crashing installer also hits real users.
-  const result = first.status === INSTALLER_CRASH ? retryAfterCrash(installer, args) : first;
+  const result = first.status === INSTALLER_CRASH ? await retryAfterCrash(installer, args) : first;
   if (result.status === 0) return;
   throw new Error(
     `[ERR_RELEASE_TEST_INSTALL] "${path.basename(installer)} ${args.join(' ')}" exited with status=${result.status} ` +
@@ -52,10 +52,14 @@ export function install(installer: string, ...args: string[]): void {
 const runInstaller = (installer: string, args: string[]) =>
   spawnSync(installer, [...args, '/S', `/D=${INSTALL_DIR}`], { encoding: 'utf-8', timeout: 300000 });
 
-function retryAfterCrash(installer: string, args: string[]): ReturnType<typeof runInstaller> {
-  const message = `${path.basename(installer)} crashed (0xC0000005) on its first run and was started again.`;
+// Started again right away, the 9.0.0 installer crashed a second time (2026-10-09); runs a little later passed.
+const RETRY_AFTER_CRASH_MS = 20000;
+
+async function retryAfterCrash(installer: string, args: string[]): Promise<ReturnType<typeof runInstaller>> {
+  const message = `${path.basename(installer)} crashed (0xC0000005) on its first run and was started again ${RETRY_AFTER_CRASH_MS / 1000} s later.`;
   test.info().annotations.push({ type: 'warning', description: message });
   console.log(`::warning title=Installer crashed::${message}`);
+  await new Promise((resolve) => setTimeout(resolve, RETRY_AFTER_CRASH_MS));
   return runInstaller(installer, args);
 }
 

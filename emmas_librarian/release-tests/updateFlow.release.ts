@@ -69,7 +69,7 @@ test('a release through the app’s own updater keeps the whole library', async 
   const server = await serveUpdates(UPDATE_FOLDER, UPDATE_PORT);
   try {
     await test.step(`install ${FROM}, fill its library, set preferences and a key`, async () => {
-      install(FROM_INSTALLER);
+      await install(FROM_INSTALLER);
       await (await launchInstalled()).app.close();
       fillInstalledLibrary();
       const { app, page } = await launchInstalled();

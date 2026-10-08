@@ -29,7 +29,7 @@ test('upgrading from the published release keeps the whole library', async () =>
   refuseToTouchARealLibrary();
 
   await test.step('install the published release and let it create its library', async () => {
-    install(OLD_INSTALLER);
+    await install(OLD_INSTALLER);
     const { app } = await launchInstalled();
     await app.close();
   });
@@ -46,7 +46,7 @@ test('upgrading from the published release keeps the whole library', async () =>
   const before = dumpInstalledLibrary('before-upgrade');
 
   await test.step('install the new build over it, as the auto-updater does', async () => {
-    install(NEW_INSTALLER, '--updated');
+    await install(NEW_INSTALLER, '--updated');
   });
 
   await test.step('the new version shows the library, the preferences and the API key', async () => {
