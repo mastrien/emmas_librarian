@@ -1,0 +1,126 @@
+name: Investigate v1.2.0 installer
+
+# Experiments only (investigations/2026-10-v120-installer/README.md): they install builds on throwaway
+# runners and record what happens. Runs only on this investigation branch.
+on:
+  push:
+    branches: [investigate/v120-installer]
+    paths:
+      - 'investigations/2026-10-v120-installer/**'
+      - '.github/workflows/investigate-v120-installer.yml'
+
+env:
+  SCRIPTS: investigations/2026-10-v120-installer
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - label: current
+            ref: main
+          - label: rebuilt-1.2.0
+            ref: v1.2.0
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build installer
+        working-directory: ./emmas_librarian
+        run: |
+          npm ci
+          npm run electron:build -- --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.label }}
+          path: emmas_librarian/release/*Setup*.exe
+
+  crash-rate:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        first: [published-1.1.23, rebuilt-1.2.0, current]
+        attempt: [1, 2, 3, 4]
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: installer-current
+          path: ${{ runner.temp }}/inst/current
+      - uses: actions/download-artifact@v4
+        with:
+          name: installer-rebuilt-1.2.0
+          path: ${{ runner.temp }}/inst/rebuilt
+      - name: Get the three installers
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash ${{ env.SCRIPTS }}/get-installers.sh
+      - name: Install, record exit codes and crash events
+        run: node install-crash-rate.mjs ${{ matrix.first }} ${{ matrix.attempt }}
+        working-directory: ${{ env.SCRIPTS }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-crash-${{ matrix.first }}-${{ matrix.attempt }}
+          path: ${{ env.SCRIPTS }}/results
+
+  interrupted:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        reopen: [none, 3, 9, 15]
+        attempt: [1, 2]
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: installer-current
+          path: ${{ runner.temp }}/inst/current
+      - uses: actions/download-artifact@v4
+        with:
+          name: installer-rebuilt-1.2.0
+          path: ${{ runner.temp }}/inst/rebuilt
+      - name: Get the three installers
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash ${{ env.SCRIPTS }}/get-installers.sh
+      - name: Replay the 2026-10-01 update sequence
+        run: node interrupted-update.mjs ${{ matrix.reopen }} ${{ matrix.attempt }}
+        working-directory: ${{ env.SCRIPTS }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-interrupted-${{ matrix.reopen }}-${{ matrix.attempt }}
+          path: ${{ env.SCRIPTS }}/results
+
+  summary:
+    needs: [crash-rate, interrupted]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: result-*
+          path: all-results
+      - name: Tables
+        run: node ${{ env.SCRIPTS }}/summarize.mjs all-results
