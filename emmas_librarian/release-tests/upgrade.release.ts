@@ -1,5 +1,5 @@
 import { test, expect, _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
-import { execFileSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -36,11 +36,19 @@ function install(installer: string, ...args: string[]): void {
     throw new Error(`[ERR_RELEASE_TEST_INSTALLER] Installer not found: "${installer}". Expected a NSIS setup .exe.`);
   }
   // NSIS requires /D= last and unquoted.
-  execFileSync(installer, [...args, '/S', `/D=${INSTALL_DIR}`], { stdio: 'inherit', timeout: 300000 });
+  const result = spawnSync(installer, [...args, '/S', `/D=${INSTALL_DIR}`], { encoding: 'utf-8', timeout: 300000 });
+  if (result.status === 0) return;
+  throw new Error(
+    `[ERR_RELEASE_TEST_INSTALL] "${path.basename(installer)} ${args.join(' ')}" exited with status=${result.status} ` +
+      `signal=${result.signal} error=${result.error?.message}; app exe present=${fs.existsSync(appExe())}; ` +
+      `stdout=${JSON.stringify(result.stdout)} stderr=${JSON.stringify(result.stderr)}. Expected status 0.`,
+  );
 }
 
+const appExe = () => path.join(INSTALL_DIR, "Emma's Librarian.exe");
+
 async function launchInstalled(): Promise<{ app: ElectronApplication; page: Page }> {
-  const app = await electron.launch({ executablePath: path.join(INSTALL_DIR, "Emma's Librarian.exe") });
+  const app = await electron.launch({ executablePath: appExe() });
   return { app, page: await getFirstWindow(app) };
 }
 
