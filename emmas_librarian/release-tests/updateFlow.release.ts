@@ -83,14 +83,19 @@ test('a release through the app’s own updater keeps the whole library', async 
     await test.step(`${FROM} finds ${TO}, downloads it when asked and installs it`, async () => {
       const { app, page } = await launchInstalled();
       await updateThroughTheApp(page, app.waitForEvent('close', { timeout: 120000 }));
-      await waitUntil(() => !appIsRunning(), 60000, `${FROM} to quit for the installer`);
     });
 
-    // The installer reopens the app only once it has finished (--force-run), so that is the signal; the
-    // exe's file version is no use here, it does not follow the version injected into these builds.
+    // The installer reopens the app once it has finished (--force-run), and that first boot of TO marks the
+    // update "verified": the one signal that does not depend on how long FROM took to quit (up to ~60 s in
+    // 2 of 3 runs, by which time TO may already be open). The exe's file version does not follow the
+    // version injected into these builds, so it cannot tell either.
     await test.step('the installer reopens the app, which passes its first-boot check', async () => {
-      await waitUntil(appIsRunning, 5 * 60 * 1000, 'the installer to finish and reopen the app (--force-run)');
-      await waitUntil(() => readUpdateState().status === 'verified', 60000, 'update_state.json to say "verified"');
+      await waitUntil(
+        () => readUpdateState().status === 'verified',
+        5 * 60 * 1000,
+        `${TO}'s first boot to mark "verified"`,
+      );
+      expect(appIsRunning()).toBe(true);
       await closeRunningApp();
     });
 
