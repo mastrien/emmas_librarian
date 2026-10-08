@@ -54,6 +54,59 @@ Instaladores usados:
 
 Os resultados de cada runner viram JSON nos artefatos, e o resumo da execução reúne uma tabela.
 
-## Resultados
+## Resultados (08/10/2026)
 
-_A preencher depois das execuções._
+Execuções do workflow: rodada 1 `37851835168`, rodada 2 `37853326091`, rodada 3 `37859559896`.
+
+### H1, instalador que trava: não explica o incidente
+
+| | 1ª instalação de um runner novo | reinstalações |
+|---|---|---|
+| publicado 1.1.23 | 3 de 10 travaram | 2 de 66 |
+| v1.2.0 recompilada | 0 de 10 | 0 de 66 |
+| build atual | 2 de 10 | 0 de 66 |
+| publicado 1.1.23, Defender em tempo real **ligado** (rodada 3) | 2 de 10 | — |
+| publicado 1.1.23, Defender em tempo real **desligado** (rodada 3) | 1 de 10 | — |
+
+- O `0xC0000005` acontece em ~1 s e quase só na primeira instalação de um Windows recém-criado, com qualquer
+  instalador. Não deixa evento "Application Error", nem dump (WER LocalDumps ligado), nem evento do Defender.
+- Não é o Defender: trava com a proteção em tempo real desligada.
+- A máquina afetada já tinha instalado várias versões antes, sem problema. Causa não identificada; pouca
+  relação com o incidente. O teste de release repete a instalação uma vez (após 20 s) e avisa.
+
+### H2, instalação interrompida: confirmada para as duas primeiras rodadas do log
+
+Rodada 3, `stuck-installer.mjs` (sem nunca encerrar instaladores):
+
+| reabre o app após | resultado (3 tentativas cada) |
+|---|---|
+| 2 s | 3/3: 1º instalador **nunca termina**; 2º e 3º saem com código 2; app fica na 1.1.23 |
+| 3 s | 2/3 igual ao de 2 s; 1/3 a 1ª instalação concluiu e a 1.2.0 ficou correta |
+| 4 s | 2/2: o exe já não existia ao reabrir; 1.2.0 correta (2º instalador saiu com 2, o 3º instalou) |
+| 9 s, 15 s, sem reabrir (rodada 2) | 1.2.0 correta |
+
+- Reabrir o app nos primeiros segundos da instalação silenciosa (enquanto o exe antigo ainda existe) deixa o
+  instalador preso: ele continua vivo minutos depois de o app fechar. Com ele vivo, as próximas instalações
+  desistem em menos de 1 s com código 2. O app continua na versão antiga, sem aviso: é o que o log da
+  máquina afetada mostra nas duas primeiras rodadas (lá a reabertura foi em ~9 s; o runner instala mais
+  rápido, então o ponto equivalente fica mais cedo).
+- Em nenhum caso os arquivos ficaram misturados: a instalação final é coerente com a 1.1.23 ou com a 1.2.0.
+- **Não reproduzido:** a 3ª rodada do incidente, em que a 1.2.0 abriu e falhou no banco. Em todos os
+  runners a versão final abriu sem erro.
+
+### Achado lateral (teste de release, etapa 3, PR #20)
+
+Depois de "Reiniciar e Instalar" (`quitAndInstall`), a versão antiga levou ~60 s para fechar em 2 de 3
+execuções; o instalador espera o app sair. Uma pessoa esperando um minuto tende a abrir o app de novo, que é
+justamente o caso H2.
+
+## Conclusões e próximos passos
+
+1. **Causa real e reproduzível de atualizações que não aplicam (H2).** Candidatas a correção, a decidir:
+   impedir que a versão antiga abra enquanto um instalador de atualização roda (ou avisar e sair); na
+   abertura seguinte, detectar que a atualização registrada não foi aplicada e avisar/tentar de novo;
+   descobrir por que o app demora ~60 s para fechar depois de `quitAndInstall`.
+2. **A falha final da v1.2.0 continua sem causa.** Ela não vem da instalação interrompida nos testes feitos.
+   O que ajudaria: o texto da caixa de erro, ou uma cópia do `emma.db` daquela máquina, e o `main.log` com o
+   erro gravado (PR #15).
+3. H1 fica registrado; não justifica mudança no app.
