@@ -1,0 +1,79 @@
+name: Release upgrade test
+
+# Before publishing: install the published release, fill it with every kind of data, install this
+# build over it the way the auto-updater does, and check nothing was lost
+# (emmas_librarian/release-tests/upgrade.release.ts). Slow, so it is not part of the Tests workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      from_tag:
+        description: "Published release to upgrade from (empty = latest)"
+        required: false
+        default: ""
+  pull_request:
+    paths:
+      - "emmas_librarian/release-tests/**"
+      - "emmas_librarian/playwright.release.config.js"
+      - "emmas_librarian/electron/database/__tests__/support/fullLibraryFixture.ts"
+      - "emmas_librarian/electron/database/__tests__/support/fullProjectFixture.ts"
+      - ".github/workflows/release-upgrade-test.yml"
+
+jobs:
+  upgrade:
+    strategy:
+      fail-fast: false
+      matrix:
+        # Linux (AppImage, Xvfb, keyring for safeStorage): issue #17.
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: ./emmas_librarian
+        shell: bash
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build this version's installer
+        run: npm run electron:build -- --publish never
+
+      - name: Download the published installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FROM_TAG: ${{ inputs.from_tag }}
+        run: |
+          tag="${FROM_TAG:-$(gh release view --json tagName -q .tagName)}"
+          echo "Upgrading from $tag"
+          mkdir -p "$RUNNER_TEMP/published"
+          gh release download "$tag" --pattern '*.exe' --dir "$RUNNER_TEMP/published"
+          old="$(ls "$RUNNER_TEMP"/published/*.exe | head -1)"
+          new="$(ls "$PWD"/release/*Setup*.exe | head -1)"
+          echo "RELEASE_TEST_OLD_INSTALLER=$(cygpath -w "$old")" >> "$GITHUB_ENV"
+          echo "RELEASE_TEST_NEW_INSTALLER=$(cygpath -w "$new")" >> "$GITHUB_ENV"
+          echo "RELEASE_TEST_INSTALL_DIR=$(cygpath -w "$RUNNER_TEMP/emma-app")" >> "$GITHUB_ENV"
+
+      # The test reads and fills the installed library with better-sqlite3 from this checkout.
+      - name: Rebuild native modules for Node
+        run: npm run rebuild:node
+
+      - name: Upgrade and compare
+        run: npm run test:release-upgrade
+
+      # Dumps, transfer report and the app's main.log (the test copies it here).
+      - name: Keep the dumps, reports and app logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-upgrade-${{ matrix.os }}
+          path: emmas_librarian/test-results/release
+          if-no-files-found: ignore

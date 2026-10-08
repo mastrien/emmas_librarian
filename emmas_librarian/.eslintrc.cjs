@@ -51,6 +51,7 @@ module.exports = {
         'e2e-tests/**/*.js',
         'build-db.js',
         'playwright.config.js',
+        'playwright.release.config.js',
         'scripts/**/*.js',
         'performance-tests/performance-harness.js',
       ],
