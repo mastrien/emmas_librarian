@@ -59,12 +59,6 @@ function retryAfterCrash(installer: string, args: string[]): ReturnType<typeof r
   return runInstaller(installer, args);
 }
 
-/** The version Windows reports for the installed exe (electron-builder writes the app version there). */
-export function installedVersion(): string | null {
-  if (!fs.existsSync(appExe())) return null;
-  return powershell(`(Get-Item -LiteralPath '${appExe().replace(/'/g, "''")}').VersionInfo.ProductVersion`);
-}
-
 export async function launchInstalled(): Promise<{ app: ElectronApplication; page: Page }> {
   const app = await electron.launch({ executablePath: appExe() });
   return { app, page: await getFirstWindow(app) };

@@ -15,7 +15,6 @@ import {
   expectLibraryOnScreen,
   fillInstalledLibrary,
   install,
-  installedVersion,
   keepAppLogs,
   launchInstalled,
   readPreferencesAndKey,
@@ -79,11 +78,13 @@ test('a release through the app’s own updater keeps the whole library', async 
     await test.step(`${FROM} finds ${TO}, downloads it when asked and installs it`, async () => {
       const { app, page } = await launchInstalled();
       await updateThroughTheApp(page, app.waitForEvent('close'));
-      await waitUntil(() => installedVersion() === TO, 5 * 60 * 1000, `the installed exe to report ${TO}`);
+      await waitUntil(() => !appIsRunning(), 60000, `${FROM} to quit for the installer`);
     });
 
+    // The installer reopens the app only once it has finished (--force-run), so that is the signal; the
+    // exe's file version is no use here, it does not follow the version injected into these builds.
     await test.step('the installer reopens the app, which passes its first-boot check', async () => {
-      await waitUntil(appIsRunning, 60000, 'the installer to reopen the app (--force-run)');
+      await waitUntil(appIsRunning, 5 * 60 * 1000, 'the installer to finish and reopen the app (--force-run)');
       await waitUntil(() => readUpdateState().status === 'verified', 60000, 'update_state.json to say "verified"');
       await closeRunningApp();
     });
