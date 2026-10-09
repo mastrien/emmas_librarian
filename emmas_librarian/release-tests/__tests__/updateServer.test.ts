@@ -2,7 +2,8 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { Readable } from 'stream';
 import { serveUpdates, type UpdateServer } from '../updateServer';
 
 const PORT = 18765;
@@ -47,5 +48,23 @@ describe('serveUpdates', () => {
     await get('/Emma%27s%20Librarian%20Setup%209.0.1.exe');
 
     expect(server.requests).toEqual(['latest.yml', "Emma's Librarian Setup 9.0.1.exe"]);
+  });
+
+  it('answers 400 to a malformed path and keeps serving', async () => {
+    expect((await get('/%E0%A4%A')).status).toBe(400);
+
+    expect(await get('/latest.yml')).toEqual({ status: 200, body: 'version: 9.0.1\n' });
+  });
+
+  it('answers 500 when the file cannot be read after it was found', async () => {
+    // Like fs.createReadStream on a file locked or deleted after the stat: created fine, fails while opening.
+    vi.spyOn(fs, 'createReadStream').mockImplementationOnce(() => {
+      const unreadable = new Readable({ read: () => undefined });
+      setImmediate(() => unreadable.destroy(new Error('EBUSY: resource busy or locked')));
+      return unreadable as unknown as fs.ReadStream;
+    });
+
+    expect((await get('/latest.yml')).status).toBe(500);
+    vi.restoreAllMocks();
   });
 });

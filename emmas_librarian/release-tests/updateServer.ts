@@ -22,18 +22,7 @@ export interface UpdateServer {
 export async function serveUpdates(folder: string, port: number): Promise<UpdateServer> {
   const requests: string[] = [];
   const root = path.resolve(folder);
-  const server = http.createServer((req, res) => {
-    const name = decodeURIComponent(new URL(req.url ?? '/', 'http://localhost').pathname).replace(/^\/+/, '');
-    requests.push(name);
-    const file = path.resolve(root, name);
-    const servable = file.startsWith(root + path.sep) && !name.endsWith('.blockmap') && fs.existsSync(file);
-    if (!servable || !fs.statSync(file).isFile()) {
-      res.writeHead(404, { Connection: 'close' }).end();
-      return;
-    }
-    res.writeHead(200, { 'Content-Length': fs.statSync(file).size, Connection: 'close' });
-    fs.createReadStream(file).pipe(res);
-  });
+  const server = http.createServer((req, res) => answer(req, res, root, requests));
   await new Promise<void>((resolve) => server.listen(port, '127.0.0.1', resolve));
   // Responses say "Connection: close", so no client keeps a socket to a server that went away; any socket
   // still open would also keep close() waiting.
@@ -43,4 +32,46 @@ export async function serveUpdates(folder: string, port: number): Promise<Update
       server.closeAllConnections();
     });
   return { requests, close };
+}
+
+function answer(req: http.IncomingMessage, res: http.ServerResponse, root: string, requests: string[]): void {
+  const name = requestedName(req.url);
+  if (name === null) return reply(res, 400);
+  requests.push(name);
+  const file = path.resolve(root, name);
+  const servable = file.startsWith(root + path.sep) && !name.endsWith('.blockmap');
+  if (!servable) return reply(res, 404);
+  serveFile(file, res);
+}
+
+// A malformed escape ("%E0%A4%A") makes decodeURIComponent throw; uncaught in the handler, it would become an
+// uncaughtException that leaves the client waiting and takes down the Playwright worker.
+function requestedName(url: string | undefined): string | null {
+  try {
+    return decodeURIComponent(new URL(url ?? '/', 'http://localhost').pathname).replace(/^\/+/, '');
+  } catch {
+    return null;
+  }
+}
+
+function serveFile(file: string, res: http.ServerResponse): void {
+  let size: number;
+  try {
+    const stat = fs.statSync(file);
+    if (!stat.isFile()) return reply(res, 404);
+    size = stat.size;
+  } catch {
+    return reply(res, 404);
+  }
+  const stream = fs.createReadStream(file);
+  // The file can go away or get locked between the stat and the read.
+  stream.on('error', () => (res.headersSent ? res.destroy() : reply(res, 500)));
+  stream.once('open', () => {
+    res.writeHead(200, { 'Content-Length': size, Connection: 'close' });
+    stream.pipe(res);
+  });
+}
+
+function reply(res: http.ServerResponse, status: number): void {
+  res.writeHead(status, { Connection: 'close' }).end();
 }
