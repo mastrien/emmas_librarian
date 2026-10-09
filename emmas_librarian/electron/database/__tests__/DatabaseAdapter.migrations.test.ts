@@ -326,3 +326,67 @@ describe('search_history.unique_results migration', () => {
     expect(rows).toEqual([{ unified_query: 'q', unique_results: null }]);
   });
 });
+
+// A database last opened by v1.1.11 or older lacks deleted_at, which schema.sql indexes since v1.1.20.
+describe('database from v1.1.11 or older (no deleted_at)', () => {
+  it('adds deleted_at before schema.sql builds its partial indexes', () => {
+    withRawDatabase((raw) => {
+      raw.exec(`
+        CREATE TABLE projects (id INTEGER PRIMARY KEY, name TEXT);
+        CREATE TABLE articles (
+          id INTEGER PRIMARY KEY,
+          project_id INTEGER,
+          doi TEXT,
+          title TEXT,
+          source_query TEXT,
+          source_databases TEXT,
+          csl_json TEXT,
+          local_file_path TEXT,
+          status TEXT DEFAULT 'new'
+        );
+        CREATE TABLE annotations (id INTEGER PRIMARY KEY, article_id INTEGER, content_markdown TEXT);
+        CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT);
+      `);
+      raw.prepare("INSERT INTO projects (id, name) VALUES (1, 'Legacy Project')").run();
+      raw
+        .prepare(
+          "INSERT INTO articles (id, project_id, doi, title, source_query, source_databases, csl_json) VALUES (1, 1, '10.1/x', 'Legacy Article', 'q', '[]', '{}')",
+        )
+        .run();
+    });
+
+    const adapter = new DatabaseAdapter(dbPath);
+    try {
+      expect(adapter.checkIntegrity()).toBe(true);
+      expect(adapter.getProject(1)?.name).toBe('Legacy Project');
+      expect(adapter.getArticlesByProject(1)).toHaveLength(1);
+    } finally {
+      adapter.close();
+    }
+
+    const cols = reopen((raw) => (raw.pragma('table_info(articles)') as { name: string }[]).map((c) => c.name));
+    expect(cols).toContain('deleted_at');
+  });
+});
+
+describe('schema.sql failure', () => {
+  it('refuses to open instead of starting on a half-built schema', () => {
+    // articles without doi: no column migration adds it, so idx_articles_doi in schema.sql fails.
+    withRawDatabase((raw) => raw.exec('CREATE TABLE articles (id INTEGER PRIMARY KEY, project_id INTEGER)'));
+
+    expect(() => new DatabaseAdapter(dbPath)).toThrow(/no such column: doi/);
+  });
+});
+
+describe('a file that is not a database', () => {
+  it('refuses to open and releases the file so a restore can replace it', () => {
+    fs.writeFileSync(dbPath, 'not a sqlite database, written by a failed update');
+
+    expect(() => new DatabaseAdapter(dbPath)).toThrow(/file is not a database/);
+
+    // On Windows a connection left open makes this rename fail with EPERM.
+    const replacement = path.join(workDir, 'restored.db');
+    fs.writeFileSync(replacement, '');
+    expect(() => fs.renameSync(replacement, dbPath)).not.toThrow();
+  });
+});

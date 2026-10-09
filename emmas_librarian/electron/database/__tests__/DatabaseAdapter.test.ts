@@ -456,6 +456,24 @@ describe('DatabaseAdapter', () => {
     pragmaSpy.mockRestore();
   });
 
+  it('runs the quick check, not the full one, for checkQuickIntegrity', () => {
+    const pragmaSpy = vi.spyOn(dbAdapter.getDB(), 'pragma');
+
+    expect(dbAdapter.checkQuickIntegrity()).toBe(true);
+    expect(pragmaSpy).toHaveBeenCalledWith('quick_check');
+    expect(pragmaSpy).not.toHaveBeenCalledWith('integrity_check');
+
+    pragmaSpy.mockReturnValue([{ quick_check: 'row 3 missing from index idx_x' }]);
+    expect(dbAdapter.checkQuickIntegrity()).toBe(false);
+
+    pragmaSpy.mockImplementation(() => {
+      throw new Error('DB Error');
+    });
+    expect(dbAdapter.checkQuickIntegrity()).toBe(false);
+
+    pragmaSpy.mockRestore();
+  });
+
   it('checks database integrity correctly', () => {
     expect(dbAdapter.checkIntegrity()).toBe(true);
 
