@@ -22,12 +22,20 @@ export interface InstallerOutcome {
  * time. Only the installer of the published release (which this project does not control) may be tolerated:
  * the installer of the build under test crashing is a finding, not noise.
  *
+ * `beforeRetry` runs only when the installer is started again (the update-flow test waits there: started
+ * right away, its first installer crashed a second time).
+ *
  * Usage:
  *   const { result, crashedFirst } = runInstallerOnce(() => spawnInstaller(oldExe), true);
  */
-export function runInstallerOnce(run: () => InstallerResult, tolerateCrash: boolean): InstallerOutcome {
+export function runInstallerOnce(
+  run: () => InstallerResult,
+  tolerateCrash: boolean,
+  beforeRetry: () => void = () => undefined,
+): InstallerOutcome {
   const first = run();
   const crashedFirst = first.status === INSTALLER_CRASH;
   if (!crashedFirst || !tolerateCrash) return { result: first, crashedFirst };
+  beforeRetry();
   return { result: run(), crashedFirst };
 }

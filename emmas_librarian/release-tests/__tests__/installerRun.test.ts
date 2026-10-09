@@ -60,4 +60,17 @@ describe('runInstallerOnce', () => {
     expect(installer.starts).toBe(1);
     expect(outcome).toEqual({ result: exited(status), crashedFirst: false });
   });
+
+  it('runs beforeRetry only when it starts a tolerated installer again', () => {
+    const waits: number[] = [];
+    const crashing = new ScriptedInstaller([exited(INSTALLER_CRASH), exited(0)]);
+    const working = new ScriptedInstaller([exited(0)]);
+    const untolerated = new ScriptedInstaller([exited(INSTALLER_CRASH)]);
+
+    runInstallerOnce(crashing.run, true, () => waits.push(crashing.starts));
+    runInstallerOnce(working.run, true, () => waits.push(-1));
+    runInstallerOnce(untolerated.run, false, () => waits.push(-2));
+
+    expect(waits).toEqual([1]);
+  });
 });
