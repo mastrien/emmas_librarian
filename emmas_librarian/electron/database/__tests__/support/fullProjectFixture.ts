@@ -46,6 +46,7 @@ export function seedFullProject(db: Database.Database, files: { pdfPath: string;
   seedCategories(db, project, withPdf);
   seedInvestigation(db, project, withPdf, plain);
   seedReadingNotes(db, project, withPdf);
+  stampDatesInThePast(db, project);
   return project;
 }
 
@@ -225,9 +226,8 @@ const PROJECT_SCOPE: Record<string, string> = {
   investigation_results: 'investigation_id IN (SELECT id FROM massive_investigations WHERE project_id = @project)',
 };
 
-// Differ on purpose in a copy: row ids and the keys pointing at them, stored files (moved into this
-// installation), creation times, and the project name ("Tese (Importado)").
-const REMAPPED_COLUMNS = new Set([
+// Keys that point at other rows: a copy gives them new values on purpose, in every table.
+const KEY_COLUMNS = new Set([
   'id',
   'project_id',
   'article_id',
@@ -237,24 +237,68 @@ const REMAPPED_COLUMNS = new Set([
   'annotation_id',
   'highlight_id',
   'search_id',
-  'articles_ids',
-  'local_file_path',
-  'created_at',
-  'updated_at',
 ]);
+
+// What else differs on purpose in a copy, table by table: stored files are moved into this installation,
+// the project name gets "(Importado)", and the investigation's article ids point at the copied articles.
+// Per table, so a column added to another table with one of these names is compared, not ignored.
+const REMAPPED_COLUMNS: Record<string, string[]> = {
+  projects: ['name'],
+  articles: ['local_file_path'],
+  project_documents: ['local_file_path'],
+  massive_investigations: ['articles_ids'],
+};
 
 const comparableRow = (table: string, row: Row) =>
   JSON.stringify(
     Object.entries(row)
-      .filter(([column]) => !REMAPPED_COLUMNS.has(column) && !(table === 'projects' && column === 'name'))
+      .filter(([column]) => !KEY_COLUMNS.has(column) && !(REMAPPED_COLUMNS[table] ?? []).includes(column))
       .sort(([a], [b]) => a.localeCompare(b)),
   );
+
+// Rows get CURRENT_TIMESTAMP when inserted, which a copy made seconds later could match by accident. Fixed
+// past dates make "the copy kept the dates" a real check.
+const PAST_CREATED_AT = '2025-03-04 05:06:07';
+const PAST_UPDATED_AT = '2025-03-05 06:07:08';
+
+function stampDatesInThePast(db: Database.Database, project: number): void {
+  for (const [table, where] of Object.entries(PROJECT_SCOPE)) {
+    const columns = (db.pragma(`table_info(${table})`) as { name: string }[]).map(({ name }) => name);
+    for (const [column, stamp] of [
+      ['created_at', PAST_CREATED_AT],
+      ['updated_at', PAST_UPDATED_AT],
+    ]) {
+      if (columns.includes(column))
+        db.prepare(`UPDATE ${table} SET ${column} = @stamp WHERE ${where}`).run({ stamp, project });
+    }
+  }
+}
+
+/**
+ * `table.column` of the project's rows whose created_at/updated_at is still the time they were inserted
+ * (seedFullProject stamps fixed past dates), so a copy that lost the dates could not be told apart.
+ *
+ * Usage:
+ *   expect(columnsDatedNow(db, projectId)).toEqual([]);
+ */
+export function columnsDatedNow(db: Database.Database, projectId: number): string[] {
+  return Object.entries(PROJECT_SCOPE).flatMap(([table, where]) =>
+    ['created_at', 'updated_at']
+      .filter((column) => (db.pragma(`table_info(${table})`) as { name: string }[]).some(({ name }) => name === column))
+      .filter((column) => {
+        const sql = `SELECT count(*) AS n FROM ${table} WHERE ${where} AND ${column} >= datetime('now', '-1 day')`;
+        return (db.prepare(sql).get({ project: projectId }) as { n: number }).n > 0;
+      })
+      .map((column) => `${table}.${column}`),
+  );
+}
 
 /** The tables projectContent compares. */
 export const projectScopedTables = (): string[] => Object.keys(PROJECT_SCOPE);
 
 /**
- * Every value of a project, table by table, without what a copy remaps; equal results mean an
+ * Every value of a project, table by table, without the keys and files a copy remaps (dates are
+ * compared); equal results mean an
  * export/import or backup merge kept every column of every row.
  *
  * Usage:

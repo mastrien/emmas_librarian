@@ -5,7 +5,7 @@ import type Database from 'better-sqlite3';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 import { seedFullLibrary, writeLibraryFiles } from './support/fullLibraryFixture';
-import { projectScopedTables } from './support/fullProjectFixture';
+import { columnsDatedNow, projectContent, projectScopedTables } from './support/fullProjectFixture';
 
 vi.mock('electron', () => ({ safeStorage: {} }));
 
@@ -102,5 +102,29 @@ describe('full library fixture', () => {
     const missing = linkedToProject.filter((table) => !projectScopedTables().includes(table) && !notCopied.has(table));
 
     expect(missing).toEqual([]);
+  });
+
+  describe('what projectContent compares', () => {
+    const thesis = () => (db.prepare("SELECT id FROM projects WHERE name = 'Tese'").get() as { id: number }).id;
+
+    it('gives the project rows fixed past dates, so a copy that loses them is noticed', () => {
+      expect(columnsDatedNow(db, thesis())).toEqual([]);
+    });
+
+    it('compares creation and update dates', () => {
+      const content = projectContent(db, thesis());
+
+      expect(content.annotations[0]).toContain('2025-03-04 05:06:07');
+      expect(content.question_sets[0]).toContain('2025-03-05 06:07:08');
+    });
+
+    it('leaves out keys and remapped files, and the project name only on projects', () => {
+      const content = projectContent(db, thesis());
+
+      expect(content.articles.join()).not.toMatch(/"local_file_path"|"project_id"|"search_id"/);
+      expect(content.articles.join()).toContain('"ai_summary"');
+      expect(content.projects.join()).not.toContain('"name"');
+      expect(content.project_categories.join()).toContain('"name"');
+    });
   });
 });
