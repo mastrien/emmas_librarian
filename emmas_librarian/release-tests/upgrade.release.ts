@@ -6,6 +6,8 @@ import path from 'path';
 import { getFirstWindow, navigateTo } from '../e2e-tests/helpers';
 import { buildFullLibrary, copyLibraryInto, openLibrary } from './libraryTransfer';
 import { dumpLibrary, findLostData, type LibraryDump } from './libraryDump';
+import { INSTALLER_CRASH, runInstallerOnce, type InstallerResult } from './installerRun';
+import { findUpgradeProblems } from './versionCheck';
 
 /**
  * Installs the published release, fills it with the full test library, installs the new build over it
@@ -30,37 +32,54 @@ function refuseToTouchARealLibrary(): void {
   );
 }
 
-// STATUS_ACCESS_VIOLATION. The published v1.1.23 installer exited with it on 3 of its first 5 runs on fresh
-// GitHub runners (2026-10-08) without installing anything; the next run passed.
-const INSTALLER_CRASH = 0xc0000005;
+interface InstallOptions {
+  /** Extra arguments, e.g. --updated, the one electron-updater passes. */
+  args?: string[];
+  /** Start the installer again once if it crashes with the access violation (published release only). */
+  tolerateCrash?: boolean;
+}
 
-/** Silent NSIS install into INSTALL_DIR; extra args (e.g. --updated) are the ones electron-updater passes. */
-function install(installer: string, ...args: string[]): void {
+/** Silent NSIS install into INSTALL_DIR. */
+function install(installer: string, { args = [], tolerateCrash = false }: InstallOptions = {}): void {
   if (!fs.existsSync(installer)) {
     throw new Error(`[ERR_RELEASE_TEST_INSTALLER] Installer not found: "${installer}". Expected a NSIS setup .exe.`);
   }
-  const first = runInstaller(installer, args);
-  if (first.status === 0) return;
-  // Retried once so the data check still runs, but reported: a crashing installer also hits real users.
-  const result = first.status === INSTALLER_CRASH ? retryAfterCrash(installer, args) : first;
+  const { result, crashedFirst } = runInstallerOnce(() => runInstaller(installer, args), tolerateCrash);
+  // Reported, not hidden: a crashing installer also hits real users.
+  if (crashedFirst && result.status === 0) reportInstallerCrash(installer);
   if (result.status === 0) return;
-  throw new Error(
-    `[ERR_RELEASE_TEST_INSTALL] "${path.basename(installer)} ${args.join(' ')}" exited with status=${result.status} ` +
-      `signal=${result.signal} error=${result.error?.message}; app exe present=${fs.existsSync(appExe())}; ` +
-      `stdout=${JSON.stringify(result.stdout)} stderr=${JSON.stringify(result.stderr)}. Expected status 0.`,
-  );
+  throw new Error(installFailureMessage(installer, args, result, crashedFirst && !tolerateCrash));
 }
 
 // NSIS requires /D= last and unquoted.
-const runInstaller = (installer: string, args: string[]) =>
+const runInstaller = (installer: string, args: string[]): InstallerResult =>
   spawnSync(installer, [...args, '/S', `/D=${INSTALL_DIR}`], { encoding: 'utf-8', timeout: 300000 });
 
-function retryAfterCrash(installer: string, args: string[]): ReturnType<typeof runInstaller> {
+function reportInstallerCrash(installer: string): void {
   const message = `${path.basename(installer)} crashed (0xC0000005) on its first run and was started again.`;
   test.info().annotations.push({ type: 'warning', description: message });
   console.log(`::warning title=Installer crashed::${message}`);
-  return runInstaller(installer, args);
 }
+
+function installFailureMessage(
+  installer: string,
+  args: string[],
+  result: InstallerResult,
+  notRetried: boolean,
+): string {
+  const note = notRetried
+    ? ` (0x${INSTALLER_CRASH.toString(16)}: the installer of the build under test crashed, not retried)`
+    : '';
+  return (
+    `[ERR_RELEASE_TEST_INSTALL] "${path.basename(installer)} ${args.join(' ')}" exited with status=${result.status}${note} ` +
+    `signal=${result.signal} error=${result.error?.message}; app exe present=${fs.existsSync(appExe())}; ` +
+    `stdout=${JSON.stringify(result.stdout)} stderr=${JSON.stringify(result.stderr)}. Expected status 0.`
+  );
+}
+
+const PACKAGE_VERSION = (
+  JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8')) as { version: string }
+).version;
 
 const appExe = () => path.join(INSTALL_DIR, "Emma's Librarian.exe");
 
@@ -68,6 +87,9 @@ async function launchInstalled(): Promise<{ app: ElectronApplication; page: Page
   const app = await electron.launch({ executablePath: appExe() });
   return { app, page: await getFirstWindow(app) };
 }
+
+const appVersion = (app: ElectronApplication): Promise<string> =>
+  app.evaluate(({ app: electronApp }) => electronApp.getVersion());
 
 async function expectLibraryOnScreen(page: Page): Promise<void> {
   await navigateTo(page, 'Projetos');
@@ -99,7 +121,7 @@ test('upgrading from the published release keeps the whole library', async () =>
   refuseToTouchARealLibrary();
 
   await test.step('install the published release and let it create its library', async () => {
-    install(OLD_INSTALLER);
+    install(OLD_INSTALLER, { tolerateCrash: true });
     const { app } = await launchInstalled();
     await app.close();
   });
@@ -116,8 +138,10 @@ test('upgrading from the published release keeps the whole library', async () =>
     }
   });
 
+  let versionBefore = '';
   await test.step('set preferences and an API key through the published release', async () => {
     const { app, page } = await launchInstalled();
+    versionBefore = await appVersion(app);
     await page.evaluate((prefs) => Object.entries(prefs).forEach(([k, v]) => localStorage.setItem(k, v)), PREFERENCES);
     // Through the app, so the key is encrypted by safeStorage the way a real install stores it.
     await page.evaluate((key) => window.electronAPI.invoke('settings:set', 'api_key_openai', key), API_KEY);
@@ -128,11 +152,13 @@ test('upgrading from the published release keeps the whole library', async () =>
   const before = dumpInstalledLibrary('before-upgrade');
 
   await test.step('install the new build over it, as the auto-updater does', async () => {
-    install(NEW_INSTALLER, '--updated');
+    install(NEW_INSTALLER, { args: ['--updated'] });
   });
 
+  let versionAfter = '';
   await test.step('the new version shows the library, the preferences and the API key', async () => {
     const { app, page } = await launchInstalled();
+    versionAfter = await appVersion(app);
     const prefs = await page.evaluate(
       (keys) => Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)])),
       Object.keys(PREFERENCES),
@@ -145,5 +171,7 @@ test('upgrading from the published release keeps the whole library', async () =>
     expect(key).toBe(API_KEY);
   });
 
+  // The install must really have replaced the app: otherwise the old one reopens on an intact library.
+  expect(findUpgradeProblems({ before: versionBefore, after: versionAfter, expected: PACKAGE_VERSION })).toEqual([]);
   expect(findLostData(before, dumpInstalledLibrary('after-upgrade'))).toEqual([]);
 });
