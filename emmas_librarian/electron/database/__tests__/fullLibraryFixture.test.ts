@@ -4,7 +4,7 @@ import path from 'path';
 import type Database from 'better-sqlite3';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { DatabaseAdapter } from '../DatabaseAdapter';
-import { seedFullLibrary, writeLibraryFiles } from './support/fullLibraryFixture';
+import { libraryTables as libraryTablesOf, seedFullLibrary, writeLibraryFiles } from './support/fullLibraryFixture';
 import { columnsDatedNow, projectContent, projectScopedTables } from './support/fullProjectFixture';
 
 vi.mock('electron', () => ({ safeStorage: {} }));
@@ -27,14 +27,7 @@ afterAll(() => {
   fs.rmSync(workDir, { recursive: true, force: true });
 });
 
-/** User tables, without SQLite's own and the storage tables sqlite-vec keeps behind a virtual table. */
-function libraryTables(): string[] {
-  const tables = db
-    .prepare("SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
-    .all() as { name: string; sql: string }[];
-  const virtual = tables.filter((t) => /CREATE VIRTUAL TABLE/i.test(t.sql)).map((t) => t.name);
-  return tables.map((t) => t.name).filter((name) => !virtual.some((v) => name.startsWith(`${v}_`)));
-}
+const libraryTables = () => libraryTablesOf(db);
 
 const count = (sql: string) => (db.prepare(sql).get() as { n: number }).n;
 
