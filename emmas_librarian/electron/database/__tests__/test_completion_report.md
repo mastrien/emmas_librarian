@@ -1,5 +1,7 @@
 # Exhaustive Tests for Repositories
+
 The exhaustive Vitest tests have been written to achieve 100% statement, branch, function, and line coverage for:
+
 - `AnnotationRepository.ts`
 - `HistoryRepository.ts`
 - `TrashRepository.ts`

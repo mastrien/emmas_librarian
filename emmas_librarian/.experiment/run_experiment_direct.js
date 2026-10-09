@@ -19,7 +19,7 @@ class OllamaCloudGateway {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
         model: model || 'gpt-oss:120b-cloud',
@@ -30,7 +30,10 @@ class OllamaCloudGateway {
 
     if (!response.ok) {
       const errText = await response.text();
-      const clean = errText.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+      const clean = errText
+        .replace(/<[^>]*>?/gm, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
       throw new Error(`[Ollama Cloud Error ${response.status}]: ${clean}`);
     }
 
@@ -49,7 +52,9 @@ async function runDirectExperiment() {
     throw new Error(`PDF não encontrado em ${pdfPath}`);
   }
 
-  console.log(`📄 PDF de Artigo Encontrado: ${path.basename(pdfPath)} (${(fs.statSync(pdfPath).size / 1024).toFixed(1)} KB)`);
+  console.log(
+    `📄 PDF de Artigo Encontrado: ${path.basename(pdfPath)} (${(fs.statSync(pdfPath).size / 1024).toFixed(1)} KB)`,
+  );
 
   const gateway = new OllamaCloudGateway(baseUrl, apiKey);
 

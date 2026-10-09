@@ -1,7 +1,8 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Layout } from '../common/Layout';
+import type { UpdateStatusResponse } from '../../types';
 
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
@@ -80,5 +81,76 @@ describe('Layout Component', () => {
 
     expect(localStorage.getItem('last_seen_version')).toBe('1.1.10');
     expect(screen.queryByText('Novidades da Versão 1.1.10')).toBeNull();
+  });
+
+  describe('update banner', () => {
+    const renderLayout = () =>
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <Layout>
+            <div>Conteúdo</div>
+          </Layout>
+        </MemoryRouter>,
+      );
+    const status = (overrides: Partial<UpdateStatusResponse>): UpdateStatusResponse => ({
+      status: 'idle',
+      updateInfo: null,
+      downloadProgress: null,
+      error: null,
+      state: null,
+      ...overrides,
+    });
+
+    beforeEach(() => {
+      sessionStorage.clear();
+    });
+
+    it('shows the banner when an update is already available on load', async () => {
+      fakeService.getUpdateStatus.mockResolvedValue(status({ status: 'available', updateInfo: { version: '1.3.0' } }));
+
+      renderLayout();
+
+      expect(await screen.findByText('v1.3.0')).toBeInTheDocument();
+    });
+
+    it('follows status events: shows on available, hides once the download starts', async () => {
+      let pushStatus: (next: UpdateStatusResponse) => void = () => undefined;
+      fakeService.onUpdateStatusChange.mockImplementation((callback) => {
+        pushStatus = callback;
+        return () => undefined;
+      });
+      renderLayout();
+      await waitFor(() => expect(fakeService.getUpdateStatus).toHaveBeenCalled());
+
+      act(() => pushStatus(status({ status: 'available', updateInfo: { version: '1.4.0' } })));
+      expect(await screen.findByText('v1.4.0')).toBeInTheDocument();
+
+      act(() => pushStatus(status({ status: 'downloading' })));
+      await waitFor(() => expect(screen.queryByText('v1.4.0')).toBeNull());
+    });
+
+    it('starts the download from the banner', async () => {
+      fakeService.getUpdateStatus.mockResolvedValue(status({ status: 'available', updateInfo: { version: '1.3.0' } }));
+      renderLayout();
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Atualizar' }));
+
+      await waitFor(() => expect(fakeService.downloadUpdate).toHaveBeenCalledTimes(1));
+    });
+
+    it('shows the banner in the PDF reader layout too', async () => {
+      fakeService.getUpdateStatus.mockResolvedValue(status({ status: 'available', updateInfo: { version: '1.3.0' } }));
+      render(
+        <MemoryRouter initialEntries={['/articles/7']}>
+          <Layout>
+            <div>Leitor</div>
+          </Layout>
+        </MemoryRouter>,
+      );
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Atualizar' }));
+
+      await waitFor(() => expect(fakeService.downloadUpdate).toHaveBeenCalledTimes(1));
+    });
   });
 });

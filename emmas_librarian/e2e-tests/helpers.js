@@ -22,8 +22,11 @@ async function launchApp(env = {}, { userDataDir } = {}) {
   checkHeadless();
   const mainPath = path.resolve(__dirname, '../dist-electron/electron/main.js');
   const dataDir = userDataDir ?? fs.mkdtempSync(path.join(os.tmpdir(), 'emmas-e2e-'));
+  // E2E_ELECTRON_ARGS adds Chromium switches for shells where the default launch crashes the renderer
+  // (e.g. "--no-sandbox" when the parent process cannot host Chromium's sandbox).
+  const extraArgs = (process.env.E2E_ELECTRON_ARGS ?? '').split(' ').filter(Boolean);
   const electronApp = await electron.launch({
-    args: [mainPath],
+    args: [mainPath, ...extraArgs],
     env: { ...process.env, E2E_USER_DATA_DIR: dataDir, E2E_SKIP_RELAUNCH: 'true', ...env },
   });
   if (!userDataDir) electronApp.on('close', () => fs.rmSync(dataDir, { recursive: true, force: true }));

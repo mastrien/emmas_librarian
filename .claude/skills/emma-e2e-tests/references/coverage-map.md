@@ -25,10 +25,15 @@ Update this table when you add or extend a spec.
 | `article_filters.spec.js` | Project filters sidebar + result line + multi-select at 1000px: "Com PDF" filter, remove chip, select 2, archive with one reason, reload | filter bar and result line on one line; "0 de 3 artigos" and the chip; batch bar count; both archived rows show the shared "Motivo" after reload |
 | `mass_investigation.spec.js` | Regression: article checkbox state across re-renders | checkbox stays unchecked |
 | `playwright_e2e.test.js` | Manual article, details, mocked search | details show authors, result row |
+| `update_recovery.spec.js` (U-01) | After an update, a library the new version cannot open: recovery box (`E2E_MOCK_RECOVERY_CHOICE=0`) restores the pre-update snapshot | both boxes reported on stdout; state `failed`/`rolledBack`; broken file kept as `pre_restore_*.db.gz`; relaunch shows the old project |
+| `update_recovery.spec.js` (U-02) | Settings → "Restaurar Dados do Snapshot Pré-Atualização" | app exits; replaced library kept (holds the newer project); relaunch shows only the snapshot's project |
 
 ## Not covered yet (candidates)
 - Mass citation (ABNT/APA list, copy) and the citation modal from the project table.
 - Editing/deleting highlights and annotations; AI summary ("Insights IA", needs a mock like `E2E_MOCK_AI_EXTRACTION`).
 - Restore from an automatic backup (Settings → histórico de backups automáticos).
+- Updates with a real `electron-updater`: banner, opt-in download, snapshot before install, first-boot health
+  check. Needs two builds that contain the update code and a local update server (release test). The health
+  check failing is unit-tested only (no openable-but-corrupt library fixture yet).
 - Project export/import `.emmapcarc` through the UI (covered only by integration tests).
 - Quick access links/documents, trash (restore/delete permanently), search history revert.

@@ -40,6 +40,8 @@ await openReader(window);                                // details → "Visuali
 | `E2E_MOCK_BACKUP_FILE` | `.emmabak` chosen by "Restaurar e Sobrescrever" / "Importar e Mesclar" |
 | `E2E_MOCK_SEARCH=true` | Bibliographic search uses `electron/services/E2eMockApiIntegrator.ts`: OpenAlex returns one fixed article ("Aprendizado de Maquina E2E"), other bases none. The review dialog appears; click "Salvar no projeto" to persist |
 | `E2E_MOCK_AI_EXTRACTION=true` | Mass AI extraction returns a canned answer (shape differs from `RAGExtractionResult`; the UI answer is not asserted yet) |
+| `E2E_MOCK_RECOVERY_CHOICE` | Button index that answers the post-update recovery box (0 restore, 1 download, 2 copy report, 3 quit) and the boxes that follow; each box's title and detail go to the main process stdout as `[E2E recovery dialog] …` (read it with `app.process().stdout`) |
+| `E2E_ELECTRON_ARGS` | Extra switches for the Electron launch in `launchApp` (space-separated), e.g. `--no-sandbox` (see pitfalls) |
 
 ## Restore flows (relaunch on the same data)
 ```js

@@ -20,6 +20,7 @@ export class FakeElectronApi {
   readonly invocations: RecordedInvocation[] = [];
   private readonly responses = new Map<string, unknown>();
   private readonly failures = new Map<string, unknown>();
+  private readonly listeners = new Map<string, Set<(...args: unknown[]) => void>>();
 
   static install(): FakeElectronApi {
     const fake = new FakeElectronApi();
@@ -36,6 +37,15 @@ export class FakeElectronApi {
     this.failures.set(channel, error);
   }
 
+  /** Sends a main-process event to every renderer listener on the channel. */
+  emit(channel: string, payload: unknown): void {
+    this.listeners.get(channel)?.forEach((listener) => listener(payload));
+  }
+
+  listenerCount(channel: string): number {
+    return this.listeners.get(channel)?.size ?? 0;
+  }
+
   lastInvocation(): RecordedInvocation | undefined {
     return this.invocations[this.invocations.length - 1];
   }
@@ -46,10 +56,17 @@ export class FakeElectronApi {
     return this.responses.get(channel) ?? null;
   }
 
+  private listen(channel: string, callback: (...args: unknown[]) => void): () => void {
+    const channelListeners = this.listeners.get(channel) ?? new Set();
+    channelListeners.add(callback);
+    this.listeners.set(channel, channelListeners);
+    return () => channelListeners.delete(callback);
+  }
+
   private asBridge(): ElectronApi {
     return {
       invoke: (channel, ...args) => this.invoke(channel, ...args),
-      on: () => undefined,
+      on: (channel, callback) => this.listen(channel, callback),
       getPathForFile: (file) => file.name,
     };
   }

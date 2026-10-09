@@ -17,6 +17,9 @@ import {
   AIModelConfig,
   AISkill,
   AIProvider,
+  type UpdateStatusResponse,
+  type UpdateInfoPayload,
+  type DownloadProgressPayload,
 } from '../types';
 import { parseIpcError } from '../utils/AppError';
 import type { IProjectService } from './ProjectServiceInterface';
@@ -441,4 +444,28 @@ export const projectService: IProjectService = {
   deleteScientificVenue: (id: number): Promise<boolean> => safeInvoke(IpcChannel.SCIENTIFIC_VENUE_DELETE, id),
   toggleMilestoneStatus: (milestoneId: number, status): Promise<boolean> =>
     safeInvoke(IpcChannel.SCIENTIFIC_MILESTONE_TOGGLE_STATUS, { milestoneId, status }),
+
+  // Updates & Contingencies
+  getUpdateStatus: (): Promise<UpdateStatusResponse> => safeInvoke(IpcChannel.UPDATE_GET_STATUS),
+  checkForUpdates: (): Promise<UpdateInfoPayload | null> => safeInvoke(IpcChannel.UPDATE_CHECK),
+  async downloadUpdate(): Promise<void> {
+    await safeInvoke(IpcChannel.UPDATE_DOWNLOAD);
+  },
+  async installUpdate(): Promise<void> {
+    await safeInvoke(IpcChannel.UPDATE_INSTALL);
+  },
+  // The app restarts once the snapshot is in place, so this promise usually never settles.
+  async restoreUpdateSnapshot(): Promise<void> {
+    await safeInvoke(IpcChannel.UPDATE_RESTORE_SNAPSHOT);
+  },
+  onUpdateStatusChange: (callback: (status: UpdateStatusResponse) => void): (() => void) => {
+    if (!window?.electronAPI?.on) return () => {};
+    return window.electronAPI.on('update:status-changed', (data: unknown) => callback(data as UpdateStatusResponse));
+  },
+  onUpdateDownloadProgress: (callback: (progress: DownloadProgressPayload) => void): (() => void) => {
+    if (!window?.electronAPI?.on) return () => {};
+    return window.electronAPI.on('update:download-progress', (data: unknown) =>
+      callback(data as DownloadProgressPayload),
+    );
+  },
 };

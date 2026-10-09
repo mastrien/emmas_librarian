@@ -244,6 +244,11 @@ export enum IpcChannel {
   SCIENTIFIC_VENUE_UPDATE = 'scientificVenue:update',
   SCIENTIFIC_VENUE_DELETE = 'scientificVenue:delete',
   SCIENTIFIC_MILESTONE_TOGGLE_STATUS = 'scientificMilestone:toggleStatus',
+  UPDATE_CHECK = 'update:check',
+  UPDATE_DOWNLOAD = 'update:download',
+  UPDATE_INSTALL = 'update:install',
+  UPDATE_GET_STATUS = 'update:getStatus',
+  UPDATE_RESTORE_SNAPSHOT = 'update:restoreSnapshot',
 }
 
 export interface CategoryOption {
@@ -447,4 +452,46 @@ export interface RAGExtractionResult {
     reasoning: string;
     score?: number;
   }>;
+}
+
+export type UpdateCheckStatus =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'not-available'
+  | 'downloading'
+  | 'downloaded'
+  | 'error';
+
+export interface UpdateInfoPayload {
+  version: string;
+  releaseDate?: string;
+  releaseNotes?: string;
+}
+
+export interface DownloadProgressPayload {
+  percent: number;
+  bytesPerSecond: number;
+  transferred: number;
+  total: number;
+}
+
+export interface UpdateStateRecord {
+  status: 'idle' | 'pending_verification' | 'verified' | 'failed';
+  fromVersion?: string;
+  targetVersion?: string;
+  snapshotPath?: string;
+  timestamp?: number;
+  error?: string;
+  rolledBack?: boolean;
+  /** Copy of the library taken right before a rollback replaced it. */
+  preRestoreBackupPath?: string;
+}
+
+export interface UpdateStatusResponse {
+  status: UpdateCheckStatus;
+  updateInfo: UpdateInfoPayload | null;
+  downloadProgress: DownloadProgressPayload | null;
+  error: string | null;
+  state: UpdateStateRecord | null;
 }

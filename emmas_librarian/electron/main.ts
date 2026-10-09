@@ -3,6 +3,10 @@ import path from 'path';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import { setupIpcRegistries } from './ipc/ipcRegistries';
+import { UpdateHealthChecker } from './services/UpdateHealthChecker';
+import { RecoveryService } from './services/RecoveryService';
+import { UpdateSafetyService } from './services/UpdateSafetyService';
+import { libraryPaths, offerRecoveryAfterFailedStartup } from './startupRecovery';
 import { isE2ELaunch, resolveUserDataDir } from './userDataDir';
 
 // Configure logging for auto-updater
@@ -132,20 +136,42 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'emma-pdf', privileges: { standard: true, secure: true, supportFetchAPI: true, bypassCSP: true } },
 ]);
 
+// The library may not have opened, so the safety service works on the files alone (no adapter).
+function offerUpdateRecovery(err: unknown): boolean {
+  const { userData, dbPath, backupsDir } = libraryPaths(app.getPath('userData'));
+  const safety = new UpdateSafetyService(null, dbPath, backupsDir, userData);
+  return offerRecoveryAfterFailedStartup(err, app.getVersion(), safety, new RecoveryService(safety));
+}
+
 app
   .whenReady()
   .then(() => {
     try {
-      setupIpcRegistries();
+      const { db, safetyService, updateManager } = setupIpcRegistries({ updater: autoUpdater });
+
+      const healthChecker = new UpdateHealthChecker(db, safetyService);
+      const healthResult = healthChecker.runStartupHealthCheck();
+      if (!healthResult.passed) {
+        log.error('Post-update health check failed:', healthResult.error);
+        new RecoveryService(safetyService).handlePostUpdateFailure(
+          healthResult.error || 'Falha na integridade do banco de dados pós-atualização',
+          healthResult.state,
+        );
+        return;
+      }
+
       createWindow();
 
-      // Check for updates after the app is ready and window is created
+      // Check for updates (opt-in metadata query, does not auto-download)
       if (!isDev) {
-        autoUpdater.checkForUpdatesAndNotify();
+        updateManager.checkForUpdates().catch((err: unknown) => {
+          log.warn('Background update check failed:', err);
+        });
       }
     } catch (err: unknown) {
       log.error('Error during app startup:', err);
       console.error('Error during app startup:', err);
+      if (offerUpdateRecovery(err)) return;
       dialog.showErrorBox('Startup Error', (err as Error).message || String(err));
     }
 
