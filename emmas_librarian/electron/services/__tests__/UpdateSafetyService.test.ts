@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { gunzipSync, gzipSync } from 'zlib';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { UpdateSafetyService, type SafetyDatabase } from '../UpdateSafetyService';
 
 class FakeSafetyDatabase implements SafetyDatabase {
@@ -129,10 +129,17 @@ describe('UpdateSafetyService', () => {
   it('keeps the library open and untouched when the replaced library cannot be saved', () => {
     service.createPreUpdateSnapshot('1.1.2', '1.2.0');
     fs.writeFileSync(dbPath, 'library-after-update');
-    // A folder where the WAL should be: the snapshot stays readable, but copying the current library fails.
-    fs.mkdirSync(`${dbPath}-wal`);
+    // A folder where the copy must go: renaming the finished file onto it fails on every platform
+    // (a folder in place of the WAL did not, since Windows reports a folder's size as 0).
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(5000);
+    fs.mkdirSync(path.join(backupsDir, 'pre_restore_5000.db.gz'));
 
-    expect(() => service.restorePreUpdateSnapshot()).toThrow();
+    try {
+      expect(() => service.restorePreUpdateSnapshot()).toThrow();
+    } finally {
+      vi.useRealTimers();
+    }
     expect(fakeDb.isClosed).toBe(false);
     expect(fs.readFileSync(dbPath, 'utf-8')).toBe('library-after-update');
   });
