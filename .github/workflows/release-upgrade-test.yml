@@ -14,9 +14,15 @@ on:
     paths:
       - "emmas_librarian/release-tests/**"
       - "emmas_librarian/playwright.release.config.js"
-      - "emmas_librarian/electron/database/__tests__/support/fullLibraryFixture.ts"
-      - "emmas_librarian/electron/database/__tests__/support/fullProjectFixture.ts"
+      - "emmas_librarian/electron/database/__tests__/support/**"
+      # What the upgrade must not break: the schema and how it is migrated.
+      - "emmas_librarian/electron/database/schemaMigrations.ts"
+      - "emmas_librarian/electron/database/DatabaseAdapter.ts"
       - ".github/workflows/release-upgrade-test.yml"
+
+# Only reads the code and the published release; nothing here writes to the repository.
+permissions:
+  contents: read
 
 jobs:
   upgrade:
@@ -55,7 +61,8 @@ jobs:
           tag="${FROM_TAG:-$(gh release view --json tagName -q .tagName)}"
           echo "Upgrading from $tag"
           mkdir -p "$RUNNER_TEMP/published"
-          gh release download "$tag" --pattern '*.exe' --dir "$RUNNER_TEMP/published"
+          # The NSIS installer only: a release that gains another .exe (portable build) must not be picked by name order.
+          gh release download "$tag" --pattern '*setup*.exe' --pattern '*Setup*.exe' --dir "$RUNNER_TEMP/published"
           old="$(ls "$RUNNER_TEMP"/published/*.exe | head -1)"
           new="$(ls "$PWD"/release/*Setup*.exe | head -1)"
           echo "RELEASE_TEST_OLD_INSTALLER=$(cygpath -w "$old")" >> "$GITHUB_ENV"
