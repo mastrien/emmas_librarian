@@ -131,7 +131,10 @@ export class UpdateManager {
     }
     const targetVersion = this.updateInfo?.version || 'latest';
     this.safetyService.createPreUpdateSnapshot(fromVersion, targetVersion);
-    this.updater.quitAndInstall(false, true);
+    // Silent like updates were before this manager (autoInstallOnAppQuit): the installer is the assisted kind,
+    // and not silent it opens a wizard
+    // that waits on a "Concluir" page. The app reopens by itself once installed.
+    this.updater.quitAndInstall(true, true);
   }
 
   public getStatus(): UpdateStatusResponse {
