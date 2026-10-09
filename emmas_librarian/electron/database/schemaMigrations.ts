@@ -137,13 +137,21 @@ const PDF_LIBRARY_TABLE = `
 
 /**
  * Creates the schema and upgrades databases created by older versions. Every step is idempotent;
- * a failing step is logged and skipped so the app still opens.
+ * a failing migration step is logged and skipped so the app still opens, but a failing schema.sql
+ * throws.
  *
  * Usage:
  *   initializeSchema(db, () => pdfLibraryRepo.backfillExistingPdfs());
  */
 export function initializeSchema(db: Database.Database, backfillPdfLibrary: () => void): void {
+  // Columns first: schema.sql indexes WHERE deleted_at IS NULL, and a database last opened by
+  // v1.1.11 or older lacks deleted_at (added in v1.1.12, indexed since v1.1.20). Tables missing
+  // here make their ALTERs fail harmlessly.
+  applyColumnMigrations(db);
+  // Not wrapped in logFailure: db.exec stops at the first failing statement, and opening on a
+  // half-built schema is worse than refusing to start.
   db.exec(readSchemaFile());
+  // Again for the tables schema.sql just created: it lacks some migrated columns (projects.writing_pad).
   applyColumnMigrations(db);
   logFailure('Failed to backfill articles is_oa/publisher:', () => backfillOpenAccessAndPublisher(db));
   logFailure('Migration pending_highlights error', () => db.exec(PENDING_HIGHLIGHTS_TABLE));
