@@ -1,19 +1,21 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { gunzipSync } from 'zlib';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { gunzipSync, gzipSync } from 'zlib';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { UpdateSafetyService, type SafetyDatabase } from '../UpdateSafetyService';
 
 class FakeSafetyDatabase implements SafetyDatabase {
   public checkpointCalled = false;
   public isClosed = false;
+  public onClose: () => void = () => undefined;
 
   public checkpoint(): void {
     this.checkpointCalled = true;
   }
 
   public close(): void {
+    this.onClose();
     this.isClosed = true;
   }
 }
@@ -110,6 +112,83 @@ describe('UpdateSafetyService', () => {
     expect(gunzipText(preRestoreBackupPath!)).toBe('library-after-update');
     expect(gunzipText(preRestoreBackupPath!.replace('.db.gz', '.db-wal.gz'))).toBe('wal-after-update');
     expect(service.getUpdateState()).toMatchObject({ status: 'failed', rolledBack: true, preRestoreBackupPath });
+  });
+
+  it('saves the replaced library before closing it, so a failed save leaves the app running', () => {
+    service.createPreUpdateSnapshot('1.1.2', '1.2.0');
+    let savedWhenClosed: string[] = [];
+    fakeDb.onClose = () => {
+      savedWhenClosed = fs.readdirSync(backupsDir).filter((n) => n.startsWith('pre_restore_'));
+    };
+
+    service.restorePreUpdateSnapshot();
+
+    expect(savedWhenClosed).toHaveLength(1);
+  });
+
+  it('keeps the library open and untouched when the replaced library cannot be saved', () => {
+    service.createPreUpdateSnapshot('1.1.2', '1.2.0');
+    fs.writeFileSync(dbPath, 'library-after-update');
+    // A folder where the copy must go: renaming the finished file onto it fails on every platform
+    // (a folder in place of the WAL did not, since Windows reports a folder's size as 0).
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(5000);
+    fs.mkdirSync(path.join(backupsDir, 'pre_restore_5000.db.gz'));
+
+    try {
+      expect(() => service.restorePreUpdateSnapshot()).toThrow();
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(fakeDb.isClosed).toBe(false);
+    expect(fs.readFileSync(dbPath, 'utf-8')).toBe('library-after-update');
+  });
+
+  it('does not back up an empty WAL left by the checkpoint', () => {
+    service.createPreUpdateSnapshot('1.1.2', '1.2.0');
+    fs.writeFileSync(`${dbPath}-wal`, '');
+
+    service.restorePreUpdateSnapshot();
+
+    expect(fs.readdirSync(backupsDir).filter((n) => n.endsWith('.db-wal.gz'))).toEqual([]);
+  });
+
+  it('keeps only the three newest pre-restore copies, each with its WAL', () => {
+    service.createPreUpdateSnapshot('1.1.2', '1.2.0');
+    for (const ts of [1000, 2000, 3000]) {
+      fs.writeFileSync(path.join(backupsDir, `pre_restore_${ts}.db.gz`), '');
+      fs.writeFileSync(path.join(backupsDir, `pre_restore_${ts}.db-wal.gz`), '');
+    }
+
+    const { preRestoreBackupPath } = service.restorePreUpdateSnapshot();
+
+    const restoreCopies = fs.readdirSync(backupsDir).filter((n) => n.startsWith('pre_restore_'));
+    expect(restoreCopies.sort()).toEqual(
+      [
+        'pre_restore_2000.db.gz',
+        'pre_restore_2000.db-wal.gz',
+        'pre_restore_3000.db.gz',
+        'pre_restore_3000.db-wal.gz',
+        path.basename(preRestoreBackupPath!),
+      ].sort(),
+    );
+  });
+
+  it('refuses a snapshot path outside the backups folder and leaves the library untouched', () => {
+    const outside = path.join(tempDir, 'elsewhere.db.gz');
+    fs.writeFileSync(outside, gzipSync('not-my-library'));
+    service.saveUpdateState({
+      status: 'verified',
+      fromVersion: '1.0.0',
+      targetVersion: '1.1.0',
+      snapshotPath: outside,
+    });
+
+    expect(() => service.restorePreUpdateSnapshot()).toThrowError(
+      /\[ERR_SNAPSHOT_OUTSIDE_BACKUPS\].*elsewhere\.db\.gz/,
+    );
+    expect(fakeDb.isClosed).toBe(false);
+    expect(fs.readFileSync(dbPath, 'utf-8')).toBe('library-before-update');
   });
 
   it('restores without an open database, as when the new version could not open it', () => {

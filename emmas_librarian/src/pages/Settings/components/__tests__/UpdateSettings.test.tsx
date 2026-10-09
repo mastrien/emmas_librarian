@@ -107,6 +107,8 @@ describe('UpdateSettings Component', () => {
     expect(
       screen.getByText(/Um snapshot de segurança do seu banco de dados será gerado automaticamente/),
     ).toBeInTheDocument();
+    expect(screen.getByText(/a versão instalada não muda/)).toBeInTheDocument();
+    expect(screen.queryByText(/retornar imediatamente/)).not.toBeInTheDocument();
     const installBtn = screen.getByText('Reiniciar e Instalar Atualização');
     fireEvent.click(installBtn);
     expect(onInstall).toHaveBeenCalledTimes(1);
@@ -157,6 +159,39 @@ describe('UpdateSettings Component', () => {
     const restoreBtn = screen.getByText('Restaurar Dados do Snapshot Pré-Atualização');
     fireEvent.click(restoreBtn);
     expect(onRestore).toHaveBeenCalledTimes(1);
+  });
+
+  describe('rollback section over time', () => {
+    const renderWithState = (state: NonNullable<typeof baseStatus.state>) =>
+      render(
+        <UpdateSettings
+          currentVersion="1.2.0"
+          updateStatus={{ ...baseStatus, state }}
+          onCheckForUpdates={vi.fn()}
+          onDownloadUpdate={vi.fn()}
+          onInstallUpdate={vi.fn()}
+          onRestoreSnapshot={vi.fn()}
+        />,
+      );
+    const verified = { status: 'verified' as const, snapshotPath: '/backups/pre_update_1.1.2_1.db.gz' };
+
+    it('is shown shortly after an update that verified fine', () => {
+      renderWithState({ ...verified, timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000 });
+
+      expect(screen.getByText('Rollback de Emergência')).toBeInTheDocument();
+    });
+
+    it('is hidden once a verified update is months old', () => {
+      renderWithState({ ...verified, timestamp: Date.now() - 90 * 24 * 60 * 60 * 1000 });
+
+      expect(screen.queryByText('Rollback de Emergência')).not.toBeInTheDocument();
+    });
+
+    it('is hidden after the snapshot was restored', () => {
+      renderWithState({ ...verified, status: 'failed', rolledBack: true, timestamp: Date.now() });
+
+      expect(screen.queryByText('Rollback de Emergência')).not.toBeInTheDocument();
+    });
   });
 
   it('shows and hides the release notes of an available update', () => {

@@ -1,6 +1,7 @@
 import path from 'path';
 import type { UpdateSafetyService } from './services/UpdateSafetyService';
 import type { RecoveryService } from './services/RecoveryService';
+import type { UpdateStateRecord } from './services/UpdateTypes';
 
 export interface LibraryPaths {
   userData: string;
@@ -37,10 +38,21 @@ export function offerRecoveryAfterFailedStartup(
   recovery: StartupRecoveryPrompt,
 ): boolean {
   const state = safety.getUpdateState();
-  if (!state?.snapshotPath || state.targetVersion !== runningVersion || state.status === 'verified') return false;
+  if (!state?.snapshotPath || state.status === 'verified') return false;
+  if (!wasInstalledByRecordedUpdate(state, runningVersion)) return false;
   const message = error instanceof Error ? error.message : String(error);
   const failedState = { ...state, status: 'failed' as const, error: message };
   safety.saveUpdateState(failedState);
   recovery.handlePostUpdateFailure(message, failedState);
   return true;
+}
+
+const VERSION_NUMBER = /^\d+\.\d+\.\d+/;
+
+// The updater sometimes reports no version ('unknown', 'latest'); the first start after that update, on a
+// version other than the one it replaced, is then the best match available.
+function wasInstalledByRecordedUpdate(state: UpdateStateRecord, runningVersion: string): boolean {
+  if (state.targetVersion === runningVersion) return true;
+  const versionKnown = VERSION_NUMBER.test(state.targetVersion ?? '');
+  return !versionKnown && state.status === 'pending_verification' && state.fromVersion !== runningVersion;
 }

@@ -1,8 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { findLostData } from './libraryDump';
+import { findUpgradeProblems } from './versionCheck';
 import {
   API_KEY,
+  PACKAGE_VERSION,
   PREFERENCES,
+  appVersion,
   dumpInstalledLibrary,
   expectLibraryOnScreen,
   fillInstalledLibrary,
@@ -29,15 +32,17 @@ test('upgrading from the published release keeps the whole library', async () =>
   refuseToTouchARealLibrary();
 
   await test.step('install the published release and let it create its library', async () => {
-    await install(OLD_INSTALLER);
+    install(OLD_INSTALLER, { tolerateCrash: true });
     const { app } = await launchInstalled();
     await app.close();
   });
 
   await test.step('fill the library with every kind of data the old schema can hold', fillInstalledLibrary);
 
+  let versionBefore = '';
   await test.step('set preferences and an API key through the published release', async () => {
     const { app, page } = await launchInstalled();
+    versionBefore = await appVersion(app);
     await setPreferencesAndKey(page);
     await expectLibraryOnScreen(page);
     await app.close();
@@ -46,11 +51,13 @@ test('upgrading from the published release keeps the whole library', async () =>
   const before = dumpInstalledLibrary('before-upgrade');
 
   await test.step('install the new build over it, as the auto-updater does', async () => {
-    await install(NEW_INSTALLER, '--updated');
+    install(NEW_INSTALLER, { args: ['--updated'] });
   });
 
+  let versionAfter = '';
   await test.step('the new version shows the library, the preferences and the API key', async () => {
     const { app, page } = await launchInstalled();
+    versionAfter = await appVersion(app);
     const { prefs, key } = await readPreferencesAndKey(page);
     await expectLibraryOnScreen(page);
     await app.close();
@@ -59,5 +66,7 @@ test('upgrading from the published release keeps the whole library', async () =>
     expect(key).toBe(API_KEY);
   });
 
+  // The install must really have replaced the app: otherwise the old one reopens on an intact library.
+  expect(findUpgradeProblems({ before: versionBefore, after: versionAfter, expected: PACKAGE_VERSION })).toEqual([]);
   expect(findLostData(before, dumpInstalledLibrary('after-upgrade'))).toEqual([]);
 });

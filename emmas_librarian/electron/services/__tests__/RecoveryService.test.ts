@@ -133,6 +133,27 @@ describe('RecoveryService', () => {
 
     recovery.handlePostUpdateFailure('Corruption error', { status: 'failed', fromVersion: '1.1.2' });
 
-    expect(bridge.messageBoxesShown[1].detail).toBe('Por favor, execute novamente a versão estável v1.1.2.');
+    expect(bridge.messageBoxesShown[1].detail).toBe(
+      'Os dados voltaram ao estado da versão v1.1.2, mas o programa continua na versão nova. ' +
+        'Se ela falhar de novo, instale a versão v1.1.2 pela página de versões e abra o app em seguida.',
+    );
+  });
+
+  it('says the installed program is unchanged, not that the previous version will run', () => {
+    bridge.choiceToReturn = 0;
+
+    recovery.handlePostUpdateFailure('Corruption error', { status: 'failed', fromVersion: '1.1.2' });
+
+    const { message, detail } = bridge.messageBoxesShown[1];
+    expect(`${message} ${detail}`).toContain('o programa continua na versão nova');
+    expect(`${message} ${detail}`).not.toMatch(/execute novamente/);
+  });
+
+  it('falls back to "anterior" when the state has no previous version', () => {
+    bridge.choiceToReturn = 0;
+
+    recovery.handlePostUpdateFailure('Corruption error', { status: 'failed' });
+
+    expect(bridge.messageBoxesShown[1].detail).toContain('estado da versão anterior');
   });
 });

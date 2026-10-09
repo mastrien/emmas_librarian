@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RefreshCw, Download, ArrowUpCircle, ShieldCheck, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
 import type { UpdateStatusResponse } from '../../../types';
+import { canOfferSnapshotRestore } from '../snapshotRestoreWindow';
 
 interface UpdateSettingsProps {
   currentVersion: string;
@@ -75,6 +76,7 @@ export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
   const [loading, setLoading] = useState(false);
   const status = updateStatus.status;
   const info = updateStatus.updateInfo;
+  const snapshotToRestore = canOfferSnapshotRestore(updateStatus.state) ? updateStatus.state : null;
 
   const handleCheck = async () => {
     setLoading(true);
@@ -218,8 +220,9 @@ export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
               <span style={{ fontWeight: 600 }}>Atualização pronta para instalação</span>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              Um snapshot de segurança do seu banco de dados será gerado automaticamente antes da instalação. Em caso de
-              qualquer falha na nova versão, você poderá retornar imediatamente para a versão atual.
+              Um snapshot de segurança do seu banco de dados será gerado automaticamente antes da instalação. Se a nova
+              versão não abrir a biblioteca, o app oferece restaurar esse snapshot. A restauração devolve só os dados: a
+              versão instalada não muda, e voltar a uma versão anterior exige instalá-la de novo.
             </p>
             <button
               type="button"
@@ -249,14 +252,14 @@ export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
           </div>
         )}
 
-        {updateStatus.state?.snapshotPath && onRestoreSnapshot && (
+        {snapshotToRestore && onRestoreSnapshot && (
           <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
             <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: 'var(--text-heading)' }}>
               Rollback de Emergência
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-              Snapshot de {describeSnapshotDate(updateStatus.state.timestamp)}, salvo em:{' '}
-              <code>{updateStatus.state.snapshotPath}</code>
+              Snapshot de {describeSnapshotDate(snapshotToRestore.timestamp)}, salvo em:{' '}
+              <code>{snapshotToRestore.snapshotPath}</code>
             </p>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
               Restaurar desfaz o que foi feito depois dessa data. O banco atual é guardado em <code>backups/</code>{' '}

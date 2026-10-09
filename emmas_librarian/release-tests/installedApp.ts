@@ -6,6 +6,8 @@ import path from 'path';
 import { getFirstWindow, navigateTo } from '../e2e-tests/helpers';
 import { buildFullLibrary, copyLibraryInto, openLibrary } from './libraryTransfer';
 import { dumpLibrary, type LibraryDump } from './libraryDump';
+import { INSTALLER_CRASH, runInstallerOnce, type InstallerResult } from './installerRun';
+import { waitUntil } from './waitUntil';
 
 /**
  * The installed app, as the release tests drive it: silent NSIS installs, launches through Playwright,
@@ -19,49 +21,85 @@ export const PREFERENCES = { theme: 'dark', accent: 'green', emma_sidebar_width:
 
 export const appExe = () => path.join(INSTALL_DIR, "Emma's Librarian.exe");
 
+// GitHub Actions sets GITHUB_ACTIONS on its runners only; CI=true is also set by many local tools, and this
+// test installs over the app and force-closes every "Emma's Librarian" process.
 export function refuseToTouchARealLibrary(): void {
-  if (process.env.CI === 'true' || process.env.RELEASE_TEST_ALLOW_REAL_LIBRARY === '1') return;
+  if (process.env.GITHUB_ACTIONS === 'true' || process.env.RELEASE_TEST_ALLOW_REAL_LIBRARY === '1') return;
   throw new Error(
-    `[ERR_RELEASE_TEST_REAL_LIBRARY] Refusing to run: it installs over "${INSTALL_DIR}" and rewrites "${USER_DATA}", ` +
-      "the library of any Emma's Librarian installed here. Expected CI=true (GitHub runner) or RELEASE_TEST_ALLOW_REAL_LIBRARY=1 on a throwaway machine.",
+    `[ERR_RELEASE_TEST_REAL_LIBRARY] Refusing to run: it installs over "${INSTALL_DIR}", rewrites "${USER_DATA}" (the ` +
+      "library of any Emma's Librarian installed here) and closes every running Emma's Librarian. Expected " +
+      'GITHUB_ACTIONS=true (GitHub runner) or RELEASE_TEST_ALLOW_REAL_LIBRARY=1 on a throwaway machine.',
   );
 }
 
-// STATUS_ACCESS_VIOLATION. The first install on a fresh GitHub runner exits with it now and then, without
-// installing anything, for any of our installers (investigations/2026-10-v120-installer); later runs pass.
-const INSTALLER_CRASH = 0xc0000005;
+export interface InstallOptions {
+  /** Extra arguments, e.g. --updated, the one electron-updater passes. */
+  args?: string[];
+  /**
+   * Start the installer again once if it crashes with the access violation. Only for an install whose crash is
+   * not what the test is about (the published release, or the first install of the update-flow test): the
+   * build under test's installer crashing is a finding.
+   */
+  tolerateCrash?: boolean;
+}
 
-/** Silent NSIS install into INSTALL_DIR; extra args (e.g. --updated) are the ones electron-updater passes. */
-export async function install(installer: string, ...args: string[]): Promise<void> {
+// Started again right away, the update-flow test's first installer crashed a second time (2026-10-09); a run
+// 20 s later passed.
+const RETRY_AFTER_CRASH_MS = 20000;
+
+/** Silent NSIS install into INSTALL_DIR. */
+export function install(installer: string, { args = [], tolerateCrash = false }: InstallOptions = {}): void {
   if (!fs.existsSync(installer)) {
     throw new Error(`[ERR_RELEASE_TEST_INSTALLER] Installer not found: "${installer}". Expected a NSIS setup .exe.`);
   }
-  const first = runInstaller(installer, args);
-  if (first.status === 0) return;
-  // Retried once so the data check still runs, but reported: a crashing installer also hits real users.
-  const result = first.status === INSTALLER_CRASH ? await retryAfterCrash(installer, args) : first;
-  if (result.status === 0) return;
-  throw new Error(
-    `[ERR_RELEASE_TEST_INSTALL] "${path.basename(installer)} ${args.join(' ')}" exited with status=${result.status} ` +
-      `signal=${result.signal} error=${result.error?.message}; app exe present=${fs.existsSync(appExe())}; ` +
-      `stdout=${JSON.stringify(result.stdout)} stderr=${JSON.stringify(result.stderr)}. Expected status 0.`,
+  const { result, crashedFirst } = runInstallerOnce(
+    () => runInstaller(installer, args),
+    tolerateCrash,
+    () => sleepSync(RETRY_AFTER_CRASH_MS),
   );
+  // Reported, not hidden: a crashing installer also hits real users.
+  if (crashedFirst && result.status === 0) reportInstallerCrash(installer);
+  if (result.status === 0) return;
+  throw new Error(installFailureMessage(installer, args, result, crashedFirst && !tolerateCrash));
 }
 
 // NSIS requires /D= last and unquoted.
-const runInstaller = (installer: string, args: string[]) =>
+const runInstaller = (installer: string, args: string[]): InstallerResult =>
   spawnSync(installer, [...args, '/S', `/D=${INSTALL_DIR}`], { encoding: 'utf-8', timeout: 300000 });
 
-// Started again right away, the 9.0.0 installer crashed a second time (2026-10-09); runs a little later passed.
-const RETRY_AFTER_CRASH_MS = 20000;
+// The installs run synchronously (spawnSync), so the wait before a retry blocks too.
+const sleepSync = (ms: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 
-async function retryAfterCrash(installer: string, args: string[]): Promise<ReturnType<typeof runInstaller>> {
+function reportInstallerCrash(installer: string): void {
   const message = `${path.basename(installer)} crashed (0xC0000005) on its first run and was started again ${RETRY_AFTER_CRASH_MS / 1000} s later.`;
   test.info().annotations.push({ type: 'warning', description: message });
   console.log(`::warning title=Installer crashed::${message}`);
-  await new Promise((resolve) => setTimeout(resolve, RETRY_AFTER_CRASH_MS));
-  return runInstaller(installer, args);
 }
+
+function installFailureMessage(
+  installer: string,
+  args: string[],
+  result: InstallerResult,
+  notRetried: boolean,
+): string {
+  const note = notRetried
+    ? ` (0x${INSTALLER_CRASH.toString(16)}: the installer of the build under test crashed, not retried)`
+    : '';
+  return (
+    `[ERR_RELEASE_TEST_INSTALL] "${path.basename(installer)} ${args.join(' ')}" exited with status=${result.status}${note} ` +
+    `signal=${result.signal} error=${result.error?.message}; app exe present=${fs.existsSync(appExe())}; ` +
+    `stdout=${JSON.stringify(result.stdout)} stderr=${JSON.stringify(result.stderr)}. Expected status 0.`
+  );
+}
+
+/** Version of this checkout (package.json): what the build under test reports. */
+export const PACKAGE_VERSION = (
+  JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8')) as { version: string }
+).version;
+
+/** The version the running app reports (app.getVersion() in its main process). */
+export const appVersion = (app: ElectronApplication): Promise<string> =>
+  app.evaluate(({ app: electronApp }) => electronApp.getVersion());
 
 export async function launchInstalled(): Promise<{ app: ElectronApplication; page: Page }> {
   const app = await electron.launch({ executablePath: appExe() });
@@ -142,13 +180,4 @@ export async function closeRunningApp(): Promise<void> {
   );
   await waitUntil(() => !appIsRunning(), 10000, 'the app to close').catch(() => undefined);
   if (appIsRunning()) powershell(`Stop-Process -Name '${PROCESS_NAME}' -Force -ErrorAction SilentlyContinue; exit 0`);
-}
-
-/** Polls `condition` every second until it holds, or fails naming what it waited for. */
-export async function waitUntil(condition: () => boolean, timeoutMs: number, what: string): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  while (!condition()) {
-    if (Date.now() > deadline) throw new Error(`[ERR_RELEASE_TEST_TIMEOUT] Waited ${timeoutMs} ms for ${what}.`);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
 }

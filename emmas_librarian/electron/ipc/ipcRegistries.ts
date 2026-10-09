@@ -27,7 +27,7 @@ import { registerBackupHandlers, scheduleStartupBackup } from './handlers/backup
 import { registerAgendaHandlers } from './handlers/agendaHandlers';
 import { registerSettingsHandlers } from './handlers/settingsHandlers';
 import { registerUpdateHandlers } from './handlers/updateHandlers';
-import { libraryPaths } from '../startupRecovery';
+import { libraryPaths, type LibraryPaths } from '../startupRecovery';
 
 export interface IpcRegistriesDeps {
   db?: DatabaseAdapter;
@@ -51,8 +51,30 @@ export interface IpcRegistriesResult {
  *   app.whenReady().then(() => { const { db, updateManager, safetyService } = setupIpcRegistries({ updater: autoUpdater }); createWindow(); });
  */
 export function setupIpcRegistries(deps?: IpcRegistriesDeps): IpcRegistriesResult {
-  const { userData, dbPath, backupsDir } = libraryPaths(app.getPath('userData'));
-  const db = deps?.db || new DatabaseAdapter(dbPath);
+  const paths = libraryPaths(app.getPath('userData'));
+  const db = deps?.db || new DatabaseAdapter(paths.dbPath);
+  try {
+    return registerLibraryServices(db, paths, deps);
+  } catch (err) {
+    // An open library file stays locked on Windows, which would make the startup recovery's restore fail.
+    if (!deps?.db) closeQuietly(db);
+    throw err;
+  }
+}
+
+function closeQuietly(db: DatabaseAdapter): void {
+  try {
+    db.close();
+  } catch (err) {
+    console.error('Could not close the library after a failed startup:', err);
+  }
+}
+
+function registerLibraryServices(
+  db: DatabaseAdapter,
+  { userData, dbPath, backupsDir }: LibraryPaths,
+  deps?: IpcRegistriesDeps,
+): IpcRegistriesResult {
   const backupService = new BackupService(db, dbPath, backupsDir);
   scheduleStartupBackup(backupService);
 

@@ -2,7 +2,7 @@ import type { DatabaseAdapter } from '../database/DatabaseAdapter';
 import type { UpdateSafetyService } from './UpdateSafetyService';
 import type { HealthCheckResult, UpdateStateRecord } from './UpdateTypes';
 
-export type HealthCheckDatabase = Pick<DatabaseAdapter, 'checkIntegrity' | 'getDB'>;
+export type HealthCheckDatabase = Pick<DatabaseAdapter, 'checkQuickIntegrity' | 'getDB'>;
 export type HealthCheckSafetyService = Pick<UpdateSafetyService, 'getUpdateState' | 'saveUpdateState'>;
 
 /**
@@ -46,7 +46,7 @@ export class UpdateHealthChecker {
   }
 
   private verifyDatabaseIntegrity(): void {
-    const isHealthy = this.db.checkIntegrity();
+    const isHealthy = this.db.checkQuickIntegrity();
     if (!isHealthy) {
       throw new Error('[ERR_HEALTH_INTEGRITY] PRAGMA quick_check returned non-ok result.');
     }

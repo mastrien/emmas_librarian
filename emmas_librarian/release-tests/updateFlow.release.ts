@@ -5,11 +5,13 @@ import path from 'path';
 import { gunzipSync } from 'zlib';
 import { findLostData, type LibraryDump } from './libraryDump';
 import { serveUpdates } from './updateServer';
+import { waitUntil } from './waitUntil';
 import {
   API_KEY,
   PREFERENCES,
   USER_DATA,
   appIsRunning,
+  appVersion,
   closeRunningApp,
   dumpInstalledLibrary,
   expectLibraryOnScreen,
@@ -20,7 +22,6 @@ import {
   readPreferencesAndKey,
   refuseToTouchARealLibrary,
   setPreferencesAndKey,
-  waitUntil,
 } from './installedApp';
 
 /**
@@ -28,6 +29,11 @@ import {
  * downloads it when asked, snapshots the library, installs silently and reopens; the new version passes
  * its first-boot check and keeps everything. Both builds come from this checkout
  * (release-tests/build-update-pair.mjs), so this exercises the updater that ships next, not the old one.
+ *
+ * What it does not prove: both builds share this checkout's schema, so no migration runs and "nothing was
+ * lost" holds by construction here; migrations are upgrade.release.ts's job. The update comes from a local
+ * "generic" server without blockmaps (always a full download) instead of GitHub Releases (differential
+ * download, release notes, GitHub's release lookup).
  */
 const FROM = process.env.RELEASE_TEST_UPDATE_FROM ?? '9.0.0';
 const TO = process.env.RELEASE_TEST_UPDATE_TO ?? '9.0.1';
@@ -58,9 +64,14 @@ function readUpdateState(): Record<string, unknown> {
 
 /** The pre-update snapshot (a gzipped emma.db), dumped like the live library. */
 function dumpSnapshot(snapshotPath: string): LibraryDump {
-  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'emma-snapshot-')), 'emma.db');
-  fs.writeFileSync(file, gunzipSync(fs.readFileSync(snapshotPath)));
-  return dumpInstalledLibrary('pre-update-snapshot', file);
+  const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-snapshot-'));
+  try {
+    const file = path.join(folder, 'emma.db');
+    fs.writeFileSync(file, gunzipSync(fs.readFileSync(snapshotPath)));
+    return dumpInstalledLibrary('pre-update-snapshot', file);
+  } finally {
+    fs.rmSync(folder, { recursive: true, force: true });
+  }
 }
 
 test('a release through the app’s own updater keeps the whole library', async () => {
@@ -69,7 +80,9 @@ test('a release through the app’s own updater keeps the whole library', async 
   const server = await serveUpdates(UPDATE_FOLDER, UPDATE_PORT);
   try {
     await test.step(`install ${FROM}, fill its library, set preferences and a key`, async () => {
-      await install(FROM_INSTALLER);
+      // The first install on a fresh runner sometimes crashes (0xC0000005) whatever the installer (issue #22);
+      // this one is setup, not what the test is about, so it may be started again.
+      install(FROM_INSTALLER, { tolerateCrash: true });
       await (await launchInstalled()).app.close();
       fillInstalledLibrary();
       const { app, page } = await launchInstalled();
@@ -105,7 +118,7 @@ test('a release through the app’s own updater keeps the whole library', async 
 
     await test.step(`${TO} shows the library, the preferences and the API key`, async () => {
       const { app, page } = await launchInstalled();
-      const version = await page.evaluate(() => window.electronAPI.invoke('app:getVersion'));
+      const version = await appVersion(app);
       const { prefs, key } = await readPreferencesAndKey(page);
       await expectLibraryOnScreen(page);
       await app.close();
