@@ -12,6 +12,16 @@ for (const r of rows) {
   const setup = [].concat(r.snapshot.setupLike ?? []).join(',');
   console.log(`${r.mode} #${r.attempt}: ${r.first.statusHex} in ${r.first.ms} ms; uptime ${r.snapshot.uptimeSeconds}s; setup-like=[${setup}]${retry}`);
 }
+for (const r of rows.filter((row) => row.crashed)) printCrashDetail(r);
+
+/** What a crashed first install left in %TEMP% and, with Process Monitor, its last events before exiting. */
+function printCrashDetail(r) {
+  console.log(`
+--- ${r.mode} #${r.attempt} crashed`);
+  for (const folder of r.afterFirst.nsisTemp) console.log(`  ${folder.folder}: ${[].concat(folder.files).join(' ')}`);
+  for (const e of (r.trace?.last ?? []).slice(-25)) console.log(`  ${e.time} ${e.operation} ${e.path} -> ${e.result} ${e.detail}`.slice(0, 260));
+}
+
 const crashed = rows.filter((r) => r.crashed);
 const of = (mode) => crashed.filter((r) => r.mode === mode).length;
 console.log(`\n${crashed.length} of ${rows.length} first installs crashed (plain ${of('plain')}, cdb ${of('cdb')}).`);

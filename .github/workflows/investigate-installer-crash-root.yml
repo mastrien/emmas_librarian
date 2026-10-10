@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [plain, cdb]
+        mode: [plain, cdb-hd, procmon]
         attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     runs-on: windows-latest
     timeout-minutes: 30
@@ -31,7 +31,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash investigations/2026-10-v120-installer/get-installers.sh
       - name: Ensure the x86 debugger (cdb)
-        if: matrix.mode == 'cdb'
+        if: startsWith(matrix.mode, 'cdb')
         shell: pwsh
         run: |
           $cdb = 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe'
@@ -40,6 +40,13 @@ jobs:
             Start-Process "$env:RUNNER_TEMP\winsdksetup.exe" -ArgumentList '/features','OptionId.WindowsDesktopDebuggers','/quiet','/norestart' -Wait
           }
           if (-not (Test-Path $cdb)) { throw "cdb.exe missing after the SDK debugger install: $cdb" }
+      - name: Get Process Monitor
+        if: matrix.mode == 'procmon'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest 'https://download.sysinternals.com/files/ProcessMonitor.zip' -OutFile "$env:RUNNER_TEMP\procmon.zip"
+          Expand-Archive "$env:RUNNER_TEMP\procmon.zip" -DestinationPath "$env:RUNNER_TEMP\procmon"
+          "PROCMON_EXE=$env:RUNNER_TEMP\procmon\Procmon64.exe" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
       - name: First install on a fresh runner (${{ matrix.mode }})
         run: node crash-root.mjs ${{ matrix.mode }} ${{ matrix.attempt }}
         working-directory: investigations/2026-10-installer-crash-root

@@ -1,18 +1,22 @@
 // Root cause of the first-run 0xC0000005 of the NSIS installer on fresh runners (follow-up of
 // investigations/2026-10-v120-installer, which ruled out Defender and left WER silent).
-// Usage: node crash-root.mjs <plain|cdb> <attempt>   (INSTALLER_PUBLISHED_1_1_23 from get-installers.sh)
-// plain: install as the release test does, then record what the machine looked like and retry twice.
-// cdb:   same install under the x86 debugger, which prints the faulting module and stack (first and second chance).
+// Usage: node crash-root.mjs <plain|cdb|cdb-hd|procmon> <attempt>   (INSTALLER_PUBLISHED_1_1_23 from get-installers.sh)
+// plain:   install as the release test does, then record what the machine looked like and retry twice.
+// cdb:     same install under the x86 debugger (round 1: 0 of 12 crashed, the debugger hides the crash).
+// cdb-hd:  like cdb with the debug heap off (-hd), to tell a heap-layout bug from a timing one.
+// procmon: plain install while Process Monitor records, keeping the installer's last events.
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { crashEvents, enableCrashDumps, hex, installSync, powershell, sleep, writeResult } from '../2026-10-v120-installer/lib.mjs';
+import { startTrace, stopTrace } from './procmon.mjs';
 
 const CDB = 'C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x86\\cdb.exe';
+const MODES = ['plain', 'cdb', 'cdb-hd', 'procmon'];
 const [mode, attempt] = process.argv.slice(2);
-if (!['plain', 'cdb'].includes(mode)) throw new Error(`Unknown mode "${mode}". Expected plain or cdb.`);
+if (!MODES.includes(mode)) throw new Error(`Unknown mode "${mode}". Expected one of ${MODES.join(', ')}.`);
 
 const installer = process.env.INSTALLER_PUBLISHED_1_1_23;
 if (!installer) throw new Error('INSTALLER_PUBLISHED_1_1_23 is not set. Expected the path from get-installers.sh.');
@@ -56,7 +60,8 @@ function installUnderCdb(dir, label) {
     'q',
   ].join('; ');
   const started = Date.now();
-  const run = spawnSync(CDB, ['-logo', log, '-o', '-g', '-G', '-c', commands, installer, '/S', `/D=${dir}`], {
+  const heapFlag = mode === 'cdb-hd' ? ['-hd'] : [];
+  const run = spawnSync(CDB, ['-logo', log, ...heapFlag, '-o', '-g', '-G', '-c', commands, installer, '/S', `/D=${dir}`], {
     encoding: 'utf-8',
     timeout: 300000,
   });
@@ -68,8 +73,27 @@ function aftermath(since) {
   fs.mkdirSync(results, { recursive: true });
   const kept = fs.existsSync(dumps) ? fs.readdirSync(dumps).filter((n) => n.endsWith('.dmp')) : [];
   kept.forEach((name) => fs.copyFileSync(path.join(dumps, name), path.join(results, name)));
-  const listing = powershell(`@(Get-ChildItem $env:TEMP -Filter 'ns*.tmp' | ForEach-Object { $_.Name }) | ConvertTo-Json -Compress; exit 0`).trim();
-  return { crashEvents: crashEvents(since), dumps: kept, nsisTemp: listing ? [].concat(JSON.parse(listing)) : [] };
+  return { crashEvents: crashEvents(since), dumps: kept, nsisTemp: nsisTempContents() };
+}
+
+/** The ns*.tmp folders in %TEMP% with their files: shows which plugins the installer unpacked before it died. */
+function nsisTempContents() {
+  const script =
+    `@(Get-ChildItem $env:TEMP -Filter 'ns*.tmp' -Directory | ForEach-Object { [pscustomobject]@{ folder=$_.Name; ` +
+    `files=@(Get-ChildItem $_.FullName -Recurse -File | ForEach-Object { "$($_.Name):$($_.Length)" }) } }) | ConvertTo-Json -Depth 4 -Compress; exit 0`;
+  const json = powershell(script).trim();
+  return json ? [].concat(JSON.parse(json)) : [];
+}
+
+/** The plain install, optionally inside a Process Monitor capture that is kept only when the install crashed. */
+async function installPlain(dir) {
+  if (mode !== 'procmon') return { run: installSync(installer, dir), trace: null };
+  const trace = await startTrace(path.join(results, 'trace.pml'));
+  const run = installSync(installer, dir);
+  const crashedNow = run.statusHex === '0xC0000005';
+  const events = stopTrace(trace, path.basename(installer).slice(0, 15), crashedNow);
+  if (!crashedNow) fs.rmSync(trace.pml, { force: true });
+  return { run, trace: events };
 }
 
 /** Plain installs after the first: immediately, then 20 s later (what the release test does). */
@@ -85,9 +109,12 @@ enableCrashDumps(dumps);
 const since = new Date();
 const snapshot = machineSnapshot();
 const facts = installerFacts();
-const first = mode === 'cdb' ? installUnderCdb(installDir('first'), 'first') : installSync(installer, installDir('first'));
+const underCdb = mode.startsWith('cdb');
+const { run: first, trace } = underCdb
+  ? { run: installUnderCdb(installDir('first'), 'first'), trace: null }
+  : await installPlain(installDir('first'));
 console.log(`${mode} first install: ${first.statusHex} in ${first.ms} ms`);
 const crashed = first.statusHex === '0xC0000005';
 const afterFirst = aftermath(since);
-const retried = crashed && mode === 'plain' ? await retries(since) : null;
-writeResult(`crash-root-${mode}-${attempt}`, { mode, attempt: Number(attempt), snapshot, facts, first, crashed, afterFirst, retried });
+const retried = crashed && !underCdb && mode === 'plain' ? await retries(since) : null;
+writeResult(`crash-root-${mode}-${attempt}`, { mode, attempt: Number(attempt), snapshot, facts, first, crashed, afterFirst, retried, trace });
