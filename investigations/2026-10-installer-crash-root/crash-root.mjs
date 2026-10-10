@@ -5,6 +5,7 @@
 // cdb:     same install under the x86 debugger (round 1: 0 of 12 crashed, the debugger hides the crash).
 // cdb-hd:  like cdb with the debug heap off (-hd), to tell a heap-layout bug from a timing one.
 // procmon: plain install while Process Monitor records, keeping the installer's last events.
+// default-dir: install with /S only (no /D) and report where the app landed: checks the install path the fix computes.
 // reinstall: plain first install, repeated until it works, then 5 reinstalls: electron-builder's multiUser.nsh only calls
 //           SHGetKnownFolderPath + `*$2(&w8192 .s)` (the over-read) when no InstallLocation is in the registry yet.
 // medium:  the install in a Limited scheduled task via cmd.exe (it stayed High on the runner; it is a launch-path variant).
@@ -20,12 +21,14 @@ import { installAtMediumIntegrity } from './medium.mjs';
 import { LAUNCH_VARIANTS, installWithVariant } from './launch-variants.mjs';
 
 const CDB = 'C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x86\\cdb.exe';
-const MODES = ['plain', 'cdb', 'cdb-hd', 'procmon', 'medium', 'reinstall', ...LAUNCH_VARIANTS];
+const MODES = ['plain', 'cdb', 'cdb-hd', 'procmon', 'medium', 'reinstall', 'default-dir', ...LAUNCH_VARIANTS];
 const [mode, attempt] = process.argv.slice(2);
 if (!MODES.includes(mode)) throw new Error(`Unknown mode "${mode}". Expected one of ${MODES.join(', ')}.`);
 
-const installer = process.env.INSTALLER_PUBLISHED_1_1_23;
-if (!installer) throw new Error('INSTALLER_PUBLISHED_1_1_23 is not set. Expected the path from get-installers.sh.');
+// INSTALLER_UNDER_TEST (a build of the fix or its control) wins over the published v1.1.23 from get-installers.sh.
+const installer = process.env.INSTALLER_UNDER_TEST ?? process.env.INSTALLER_PUBLISHED_1_1_23;
+if (!installer) throw new Error('Neither INSTALLER_UNDER_TEST nor INSTALLER_PUBLISHED_1_1_23 is set. Expected an installer path.');
+const label = process.env.INSTALLER_LABEL ?? path.basename(installer);
 const results = path.resolve('results');
 const dumps = path.join(process.env.RUNNER_TEMP ?? os.tmpdir(), 'dumps');
 const installDir = (name) => path.join(os.tmpdir(), 'crash-root', name);
@@ -92,8 +95,19 @@ function nsisTempContents() {
   return json ? [].concat(JSON.parse(json)) : [];
 }
 
+/** Per-user default location: %LOCALAPPDATA%/Programs/<folder>/Emma's Librarian.exe, whatever <folder> the build computes. */
+function installIntoDefaultDirectory() {
+  const started = Date.now();
+  const result = spawnSync(installer, ['/S'], { timeout: 300000 });
+  const programs = path.join(process.env.LOCALAPPDATA ?? '', 'Programs');
+  const folders = fs.existsSync(programs) ? fs.readdirSync(programs) : [];
+  const defaultFolders = folders.filter((name) => fs.existsSync(path.join(programs, name, "Emma's Librarian.exe")));
+  return { status: result.status, statusHex: hex(result.status), ms: Date.now() - started, defaultFolders, programsListing: folders };
+}
+
 /** The plain install, optionally inside a Process Monitor capture that is kept only when the install crashed. */
 async function installPlain(dir) {
+  if (mode === 'default-dir') return { run: installIntoDefaultDirectory(), trace: null };
   if (mode === 'medium') return { run: await installAtMediumIntegrity(installer, dir), trace: null };
   if (LAUNCH_VARIANTS.includes(mode)) return { run: await installWithVariant(mode, installer, dir), trace: null };
   if (mode !== 'procmon') return { run: installSync(installer, dir), trace: null };
@@ -140,4 +154,4 @@ const crashed = first.statusHex === '0xC0000005';
 const afterFirst = aftermath(since);
 const retried = crashed && !underCdb && mode === 'plain' ? await retries(since) : null;
 const series = mode === 'reinstall' ? await reinstallSeries(crashed) : null;
-writeResult(`crash-root-${mode}-${attempt}`, { mode, attempt: Number(attempt), snapshot, facts, first, crashed, afterFirst, retried, series, trace });
+writeResult(`crash-root-${mode}-${attempt}`, { label, mode, attempt: Number(attempt), snapshot, facts, first, crashed, afterFirst, retried, series, trace });

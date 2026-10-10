@@ -1,0 +1,129 @@
+name: Verify the NSIS first-install fix
+
+# Builds two real installers, one from the fix branch (patch-package applies the multiUser.nsh patch in `npm ci`)
+# and one from the same main without it, then installs each on fresh runners the way the failing harness did
+# (direct launch from Node). Expected: control crashes ~20% of first installs, patched 0.
+on:
+  push:
+    branches: [investigate/installer-crash-root]
+    paths:
+      - '.github/workflows/verify-nsis-fix.yml'
+
+env:
+  SCRIPTS: investigations/2026-10-installer-crash-root
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { label: patched, ref: fix/nsis-install-location-overread, expect: patched }
+          - { label: control, ref: ef8b707f436520aa4b7531e0ddf8bf15a8d3897b, expect: unpatched }
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies (postinstall runs patch-package on the patched ref)
+        working-directory: ./emmas_librarian
+        run: npm ci
+      - name: Check the template is in the expected state
+        shell: bash
+        working-directory: ./emmas_librarian
+        run: |
+          f=node_modules/app-builder-lib/templates/nsis/multiUser.nsh
+          if grep -q 'lstrcpyW(t .s, p r2)' "$f"; then state=patched; else state=unpatched; fi
+          echo "multiUser.nsh is $state (expected ${{ matrix.expect }})"
+          [ "$state" = "${{ matrix.expect }}" ]
+      - name: Build the installer
+        working-directory: ./emmas_librarian
+        run: npm run electron:build -- --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.label }}
+          path: emmas_librarian/release/*.exe
+          if-no-files-found: error
+
+  first-install:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        label: [patched, control]
+        attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: installer-${{ matrix.label }}
+          path: ${{ runner.temp }}/under-test
+      - name: Point the experiment at the installer
+        shell: bash
+        run: |
+          exe="$(ls "$RUNNER_TEMP"/under-test/*.exe | head -1)"
+          echo "INSTALLER_UNDER_TEST=$(cygpath -w "$exe")" >> "$GITHUB_ENV"
+          echo "INSTALLER_LABEL=${{ matrix.label }}" >> "$GITHUB_ENV"
+      - name: First install on a fresh runner
+        run: node crash-root.mjs plain ${{ matrix.attempt }}
+        working-directory: ${{ env.SCRIPTS }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-fix-${{ matrix.label }}-${{ matrix.attempt }}
+          path: ${{ env.SCRIPTS }}/results
+
+  default-directory:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        label: [patched, control]
+        attempt: [1, 2, 3, 4, 5]
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: installer-${{ matrix.label }}
+          path: ${{ runner.temp }}/under-test
+      - name: Point the experiment at the installer
+        shell: bash
+        run: |
+          exe="$(ls "$RUNNER_TEMP"/under-test/*.exe | head -1)"
+          echo "INSTALLER_UNDER_TEST=$(cygpath -w "$exe")" >> "$GITHUB_ENV"
+          echo "INSTALLER_LABEL=${{ matrix.label }}" >> "$GITHUB_ENV"
+      - name: Install with /S only and look where the app landed
+        run: node crash-root.mjs default-dir ${{ matrix.attempt }}
+        working-directory: ${{ env.SCRIPTS }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-fixdir-${{ matrix.label }}-${{ matrix.attempt }}
+          path: ${{ env.SCRIPTS }}/results
+
+  summary:
+    needs: [first-install, default-directory]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: result-fix*
+          path: all-results
+      - name: Table
+        run: node ${{ env.SCRIPTS }}/summarize.mjs all-results
