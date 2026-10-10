@@ -2,10 +2,10 @@ const { _electron: electron } = require('playwright');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { isHeadlessRun } = require('./displayCheck');
 
 function checkHeadless() {
-  const isHeadless = process.env.HEADLESS_E2E === 'true' || (process.env.CI === 'true' && process.platform !== 'win32');
-  if (isHeadless) {
+  if (isHeadlessRun(process.env, process.platform)) {
     throw new Error(
       'Erro de Ambiente: Os testes E2E do Electron exigem um servidor de exibição gráfica (GUI) ativo (ou framebuffer virtual Xvfb em Linux/CI) para instanciar BrowserWindow. Execução interrompida de forma diagnóstica para evitar timeout.',
     );

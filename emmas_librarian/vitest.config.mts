@@ -17,7 +17,8 @@ export default defineConfig({
       '**/dist-electron/**',
       '**/release/**',
       '**/.stryker-tmp/**',
-      '**/e2e-tests/**',
+      // Playwright specs; e2e-tests/__tests__ holds unit tests of the E2E helpers and runs here.
+      '**/e2e-tests/*.{spec,test}.js',
       '**/performance-tests/**',
       '**/.{idea,git,cache,output,temp}/**',
     ],
