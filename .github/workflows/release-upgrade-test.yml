@@ -99,7 +99,9 @@ jobs:
         run: |
           native() { if [ "$RUNNER_OS" = Windows ]; then cygpath -w "$1"; else echo "$1"; fi; }
           npm run electron:build -- --publish never
-          new="$(ls "$PWD"/release/*Setup*.exe "$PWD"/release/*.AppImage 2>/dev/null | head -1)"
+          # One pattern per OS: a pattern with no match makes ls fail, and the step runs with pipefail.
+          if [ "$RUNNER_OS" = Windows ]; then pattern='*Setup*.exe'; else pattern='*.AppImage'; fi
+          new="$(ls "$PWD"/release/$pattern | head -1)"
           echo "RELEASE_TEST_NEW_INSTALLER=$(native "$new")" >> "$GITHUB_ENV"
 
       # The test reads and fills the installed library with better-sqlite3 from this checkout.
@@ -173,7 +175,9 @@ jobs:
           npx vite build
           npx tsc -p tsconfig.electron.json
           node release-tests/build-update-pair.mjs "$UPDATE_PORT" "$FROM_VERSION" "$TO_VERSION"
-          from="$(ls "$PWD"/release-update/"$FROM_VERSION"/*Setup*.exe "$PWD"/release-update/"$FROM_VERSION"/*.AppImage 2>/dev/null | head -1)"
+          # One pattern per OS: a pattern with no match makes ls fail, and the step runs with pipefail.
+          if [ "$RUNNER_OS" = Windows ]; then pattern='*Setup*.exe'; else pattern='*.AppImage'; fi
+          from="$(ls "$PWD"/release-update/"$FROM_VERSION"/$pattern | head -1)"
           echo "RELEASE_TEST_UPDATE_FROM_INSTALLER=$(native "$from")" >> "$GITHUB_ENV"
           echo "RELEASE_TEST_UPDATE_FOLDER=$(native "$PWD/release-update/$TO_VERSION")" >> "$GITHUB_ENV"
           echo "RELEASE_TEST_UPDATE_FROM=$FROM_VERSION" >> "$GITHUB_ENV"
