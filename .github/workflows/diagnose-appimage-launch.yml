@@ -1,0 +1,59 @@
+name: Diagnose AppImage launch (temporary)
+
+# TEMPORARY (PR #26): the Linux release test sometimes hangs launching the AppImage. Opens and closes it many
+# times, straight and through Playwright, and keeps hang dumps (processes, gdb backtraces, Chromium log).
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/diagnose-appimage-launch.yml'
+      - 'emmas_librarian/release-tests/diagnostics/**'
+
+permissions:
+  contents: read
+
+jobs:
+  launch-loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: ./emmas_librarian
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare Linux to run the AppImage
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q libfuse2t64 gdb
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          # gdb attaches to processes it did not start.
+          sudo sysctl -w kernel.yama.ptrace_scope=0
+
+      - run: npm ci
+
+      - name: Build the AppImage
+        run: |
+          npm run electron:build -- --publish never
+          ls -la release/*.AppImage
+
+      - name: Launch loop, straight
+        continue-on-error: true
+        run: xvfb-run -a node release-tests/diagnostics/appimage-launch-loop.mjs "$(ls "$PWD"/release/*.AppImage)" 15 plain "$PWD/diag"
+
+      - name: Launch loop, through Playwright
+        continue-on-error: true
+        run: xvfb-run -a node release-tests/diagnostics/appimage-launch-loop.mjs "$(ls "$PWD"/release/*.AppImage)" 15 playwright "$PWD/diag"
+
+      - name: Keep the dumps
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appimage-launch-diagnostics
+          path: emmas_librarian/diag
+          if-no-files-found: ignore
