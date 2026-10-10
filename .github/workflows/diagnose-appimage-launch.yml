@@ -1,0 +1,66 @@
+name: Diagnose AppImage launch (temporary)
+
+# TEMPORARY (PR #26): the Linux release test sometimes hangs launching the AppImage. Opens and closes it many
+# times, straight and through Playwright, and keeps hang dumps (processes, gdb backtraces, Chromium log).
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/diagnose-appimage-launch.yml'
+      - 'emmas_librarian/release-tests/diagnostics/**'
+
+permissions:
+  contents: read
+
+jobs:
+  launch-loop:
+    strategy:
+      fail-fast: false
+      matrix:
+        # Run 38023731036: pipe 2/30 hangs, file 2/30, pipe-extract (no FUSE) 0/30. Run 38024849435: legacy runtime
+        # 6/40, new runtime (toolsets.appimage 1.0.2) 2/40 and 4/40: not the runtime. Each "hang" is the main process
+        # aborting (int3) and its core dump stuck in the pipe to apport, after the GPU process died (SIGBUS once).
+        # Runner kernel was 6.17; now the same loop on an older kernel.
+        os: [ubuntu-24.04, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: ./emmas_librarian
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare Linux to run the AppImage
+        run: |
+          sudo apt-get update -q
+          uname -a
+          # libfuse2t64 on 24.04, libfuse2 on 22.04.
+          sudo apt-get install -y -q libfuse2t64 || sudo apt-get install -y -q libfuse2
+          # Only on kernels with the restriction (24.04).
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          # gdb attaches to processes it did not start.
+          sudo sysctl -w kernel.yama.ptrace_scope=0
+
+      - run: npm ci
+
+      - name: Build the AppImage
+        run: |
+          npm run electron:build -- --publish never
+          ls -la release/*.AppImage
+
+      - name: Launch loop (${{ matrix.os }})
+        continue-on-error: true
+        run: xvfb-run -a node release-tests/diagnostics/appimage-launch-loop.mjs "$(ls "$PWD"/release/*.AppImage)" 40 file "$PWD/diag"
+
+      - name: Keep the dumps
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appimage-launch-diagnostics-${{ matrix.os }}
+          path: emmas_librarian/diag
+          if-no-files-found: ignore

@@ -42,8 +42,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Linux (AppImage, Xvfb, keyring for safeStorage): issue #17.
-        os: [windows-latest]
+        # Linux installs the AppImage (issue #17); it runs once a published release has one to upgrade from.
+        os: [windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     defaults:
@@ -60,34 +60,59 @@ jobs:
         with:
           node-version: 22
 
+      # FUSE 2 runs the AppImage as users run it (Ubuntu 22.04+ ships without it). Ubuntu 24.04 blocks the
+      # unprivileged user namespaces Electron's Chromium sandbox needs; lifting it keeps the sandbox on.
+      - name: Prepare Linux to run the AppImage
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q libfuse2t64
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Build this version's installer
-        run: npm run electron:build -- --publish never
-
       - name: Download the published installer
+        id: published
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FROM_TAG: ${{ inputs.from_tag }}
         run: |
+          native() { if [ "$RUNNER_OS" = Windows ]; then cygpath -w "$1"; else echo "$1"; fi; }
           tag="${FROM_TAG:-$(gh release view --json tagName -q .tagName)}"
           echo "Upgrading from $tag"
           mkdir -p "$RUNNER_TEMP/published"
-          # The NSIS installer only: a release that gains another .exe (portable build) must not be picked by name order.
-          gh release download "$tag" --pattern '*setup*.exe' --pattern '*Setup*.exe' --dir "$RUNNER_TEMP/published"
-          old="$(ls "$RUNNER_TEMP"/published/*.exe | head -1)"
-          new="$(ls "$PWD"/release/*Setup*.exe | head -1)"
-          echo "RELEASE_TEST_OLD_INSTALLER=$(cygpath -w "$old")" >> "$GITHUB_ENV"
-          echo "RELEASE_TEST_NEW_INSTALLER=$(cygpath -w "$new")" >> "$GITHUB_ENV"
-          echo "RELEASE_TEST_INSTALL_DIR=$(cygpath -w "$RUNNER_TEMP/emma-app")" >> "$GITHUB_ENV"
+          if [ "$RUNNER_OS" = Windows ]; then
+            # The NSIS installer only: a release that gains another .exe (portable build) must not be picked by name order.
+            gh release download "$tag" --pattern '*setup*.exe' --pattern '*Setup*.exe' --dir "$RUNNER_TEMP/published"
+          elif ! gh release download "$tag" --pattern '*.AppImage' --dir "$RUNNER_TEMP/published"; then
+            echo "::notice title=No AppImage in $tag::Nothing to upgrade from on Linux yet; the update-flow job covers it."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          old="$(ls "$RUNNER_TEMP"/published/* | head -1)"
+          echo "RELEASE_TEST_OLD_INSTALLER=$(native "$old")" >> "$GITHUB_ENV"
+          echo "RELEASE_TEST_INSTALL_DIR=$(native "$RUNNER_TEMP/emma-app")" >> "$GITHUB_ENV"
+
+      - name: Build this version's installer
+        if: steps.published.outputs.skip != 'true'
+        run: |
+          native() { if [ "$RUNNER_OS" = Windows ]; then cygpath -w "$1"; else echo "$1"; fi; }
+          npm run electron:build -- --publish never
+          # One pattern per OS: a pattern with no match makes ls fail, and the step runs with pipefail.
+          if [ "$RUNNER_OS" = Windows ]; then pattern='*Setup*.exe'; else pattern='*.AppImage'; fi
+          new="$(ls "$PWD"/release/$pattern | head -1)"
+          echo "RELEASE_TEST_NEW_INSTALLER=$(native "$new")" >> "$GITHUB_ENV"
 
       # The test reads and fills the installed library with better-sqlite3 from this checkout.
       - name: Rebuild native modules for Node
+        if: steps.published.outputs.skip != 'true'
         run: npm run rebuild:node
 
+      # Xvfb is the screen for the app on Linux; Windows runners have a desktop.
       - name: Upgrade and compare
-        run: npm run test:release-upgrade -- upgrade.release.ts
+        if: steps.published.outputs.skip != 'true'
+        run: ${{ runner.os == 'Linux' && 'xvfb-run -a' || '' }} npm run test:release-upgrade -- upgrade.release.ts
 
       # Dumps, transfer report and the app's main.log (the test copies it here).
       - name: Keep the dumps, reports and app logs
@@ -102,14 +127,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Linux: issue #17.
-        os: [windows-latest]
+        include:
+          - os: windows-latest
+          # Linux (issue #17), with and without a keyring: the API key must survive the update either way.
+          # Without one, safeStorage falls back to basic_text; with GNOME's, it uses libsecret.
+          - os: ubuntu-latest
+            keyring: none
+            key-storage: basic_text
+          - os: ubuntu-latest
+            keyring: gnome
+            key-storage: gnome_libsecret
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
       UPDATE_PORT: 8765
       FROM_VERSION: 9.0.0
       TO_VERSION: 9.0.1
+      RELEASE_TEST_EXPECT_KEY_STORAGE: ${{ matrix.key-storage }}
     defaults:
       run:
         working-directory: ./emmas_librarian
@@ -124,21 +158,32 @@ jobs:
         with:
           node-version: 22
 
+      # See the upgrade job; gnome-keyring only for the keyring variant.
+      - name: Prepare Linux to run the AppImage
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q libfuse2t64 ${{ matrix.keyring == 'gnome' && 'gnome-keyring libsecret-tools' || '' }}
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build two versions that update from a local server
         run: |
+          native() { if [ "$RUNNER_OS" = Windows ]; then cygpath -w "$1"; else echo "$1"; fi; }
           npx vite build
           npx tsc -p tsconfig.electron.json
           node release-tests/build-update-pair.mjs "$UPDATE_PORT" "$FROM_VERSION" "$TO_VERSION"
-          from="$(ls "$PWD"/release-update/"$FROM_VERSION"/*Setup*.exe | head -1)"
-          echo "RELEASE_TEST_UPDATE_FROM_INSTALLER=$(cygpath -w "$from")" >> "$GITHUB_ENV"
-          echo "RELEASE_TEST_UPDATE_FOLDER=$(cygpath -w "$PWD/release-update/$TO_VERSION")" >> "$GITHUB_ENV"
+          # One pattern per OS: a pattern with no match makes ls fail, and the step runs with pipefail.
+          if [ "$RUNNER_OS" = Windows ]; then pattern='*Setup*.exe'; else pattern='*.AppImage'; fi
+          from="$(ls "$PWD"/release-update/"$FROM_VERSION"/$pattern | head -1)"
+          echo "RELEASE_TEST_UPDATE_FROM_INSTALLER=$(native "$from")" >> "$GITHUB_ENV"
+          echo "RELEASE_TEST_UPDATE_FOLDER=$(native "$PWD/release-update/$TO_VERSION")" >> "$GITHUB_ENV"
           echo "RELEASE_TEST_UPDATE_FROM=$FROM_VERSION" >> "$GITHUB_ENV"
           echo "RELEASE_TEST_UPDATE_TO=$TO_VERSION" >> "$GITHUB_ENV"
           echo "RELEASE_TEST_UPDATE_PORT=$UPDATE_PORT" >> "$GITHUB_ENV"
-          echo "RELEASE_TEST_INSTALL_DIR=$(cygpath -w "$RUNNER_TEMP/emma-app")" >> "$GITHUB_ENV"
+          echo "RELEASE_TEST_INSTALL_DIR=$(native "$RUNNER_TEMP/emma-app")" >> "$GITHUB_ENV"
           ls release-update/"$TO_VERSION"
 
       # The test reads and fills the installed library with better-sqlite3 from this checkout.
@@ -146,11 +191,14 @@ jobs:
         run: npm run rebuild:node
 
       - name: Update through the app and compare
-        run: npm run test:release-upgrade -- updateFlow.release.ts
+        run: >-
+          ${{ matrix.keyring == 'gnome' && 'dbus-run-session -- bash release-tests/with-keyring.sh' || '' }}
+          ${{ runner.os == 'Linux' && 'xvfb-run -a' || '' }}
+          npm run test:release-upgrade -- updateFlow.release.ts
 
       - name: Keep the dumps, reports and app logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: release-update-flow-${{ matrix.os }}
+          name: release-update-flow-${{ matrix.os }}${{ matrix.keyring && format('-{0}', matrix.keyring) || '' }}
           path: emmas_librarian/test-results/release
