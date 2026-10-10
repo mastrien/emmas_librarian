@@ -5,6 +5,8 @@
 // cdb:     same install under the x86 debugger (round 1: 0 of 12 crashed, the debugger hides the crash).
 // cdb-hd:  like cdb with the debug heap off (-hd), to tell a heap-layout bug from a timing one.
 // procmon: plain install while Process Monitor records, keeping the installer's last events.
+// reinstall: plain first install, repeated until it works, then 5 reinstalls: electron-builder's multiUser.nsh only calls
+//           SHGetKnownFolderPath + `*$2(&w8192 .s)` (the over-read) when no InstallLocation is in the registry yet.
 // medium:  the install in a Limited scheduled task via cmd.exe (it stayed High on the runner; it is a launch-path variant).
 // stdio-ignore | clean-env | via-cmd | hide | detached | delay | async | cmd-nul | via-pwsh | cmd-start | pwsh-em0 (SetErrorMode(0) first, so WER keeps a dump): plain install with one part of Node's launch changed (see launch-variants.mjs).
 import crypto from 'node:crypto';
@@ -18,7 +20,7 @@ import { installAtMediumIntegrity } from './medium.mjs';
 import { LAUNCH_VARIANTS, installWithVariant } from './launch-variants.mjs';
 
 const CDB = 'C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x86\\cdb.exe';
-const MODES = ['plain', 'cdb', 'cdb-hd', 'procmon', 'medium', ...LAUNCH_VARIANTS];
+const MODES = ['plain', 'cdb', 'cdb-hd', 'procmon', 'medium', 'reinstall', ...LAUNCH_VARIANTS];
 const [mode, attempt] = process.argv.slice(2);
 if (!MODES.includes(mode)) throw new Error(`Unknown mode "${mode}". Expected one of ${MODES.join(', ')}.`);
 
@@ -111,6 +113,19 @@ async function retries(since) {
   return { immediate, later, aftermath: aftermath(since) };
 }
 
+/** Statuses of the installs that follow the first: retries until one works (no registry key before that), then reinstalls. */
+async function reinstallSeries(firstCrashed) {
+  const dir = installDir('first');
+  const recovery = [];
+  while (firstCrashed && recovery.length < 6 && recovery.at(-1) !== '0x0') {
+    await sleep(20000);
+    recovery.push(installSync(installer, dir).statusHex);
+  }
+  const installed = !firstCrashed || recovery.at(-1) === '0x0';
+  const reinstalls = installed ? Array.from({ length: 5 }, () => installSync(installer, dir).statusHex) : [];
+  return { recovery, reinstalls };
+}
+
 fs.mkdirSync(results, { recursive: true });
 enableCrashDumps(dumps);
 const since = new Date();
@@ -124,4 +139,5 @@ console.log(`${mode} first install: ${first.statusHex} in ${first.ms} ms`);
 const crashed = first.statusHex === '0xC0000005';
 const afterFirst = aftermath(since);
 const retried = crashed && !underCdb && mode === 'plain' ? await retries(since) : null;
-writeResult(`crash-root-${mode}-${attempt}`, { mode, attempt: Number(attempt), snapshot, facts, first, crashed, afterFirst, retried, trace });
+const series = mode === 'reinstall' ? await reinstallSeries(crashed) : null;
+writeResult(`crash-root-${mode}-${attempt}`, { mode, attempt: Number(attempt), snapshot, facts, first, crashed, afterFirst, retried, series, trace });

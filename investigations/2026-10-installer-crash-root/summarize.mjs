@@ -8,9 +8,10 @@ const files = fs.readdirSync(root, { recursive: true }).filter((f) => String(f).
 const rows = files.map((f) => JSON.parse(fs.readFileSync(path.join(root, String(f)), 'utf-8')));
 rows.sort((a, b) => a.mode.localeCompare(b.mode) || a.attempt - b.attempt);
 for (const r of rows) {
+  const reinstalls = r.series ? ` recovery=[${r.series.recovery}] reinstalls=[${r.series.reinstalls}]` : '';
   const retry = r.retried ? ` now=${r.retried.immediate.statusHex} +20s=${r.retried.later.statusHex}` : '';
   const setup = [].concat(r.snapshot.setupLike ?? []).join(',');
-  console.log(`${r.mode} #${r.attempt}: ${r.first.statusHex} in ${r.first.ms} ms; uptime ${r.snapshot.uptimeSeconds}s; setup-like=[${setup}]${retry}${r.first.integrity ? ` integrity=${r.first.integrity.replace(/s+/g, " ").slice(0, 70)}` : ""}`);
+  console.log(`${r.mode} #${r.attempt}: ${r.first.statusHex} in ${r.first.ms} ms; uptime ${r.snapshot.uptimeSeconds}s; setup-like=[${setup}]${retry}${reinstalls}${r.first.integrity ? ` integrity=${r.first.integrity.replace(/s+/g, " ").slice(0, 70)}` : ""}`);
 }
 for (const r of rows.filter((row) => row.crashed)) printCrashDetail(r);
 
