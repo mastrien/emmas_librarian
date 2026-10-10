@@ -8,10 +8,12 @@ import { serveUpdates } from './updateServer';
 import { waitUntil } from './waitUntil';
 import {
   API_KEY,
+  PLATFORM,
   PREFERENCES,
   USER_DATA,
   appIsRunning,
   appVersion,
+  checkKeyStorage,
   closeRunningApp,
   dumpInstalledLibrary,
   expectLibraryOnScreen,
@@ -87,6 +89,7 @@ test('a release through the app’s own updater keeps the whole library', async 
       fillInstalledLibrary();
       const { app, page } = await launchInstalled();
       await setPreferencesAndKey(page);
+      await checkKeyStorage(app);
       await expectLibraryOnScreen(page);
       await app.close();
     });
@@ -129,8 +132,10 @@ test('a release through the app’s own updater keeps the whole library', async 
     });
 
     expect(findLostData(before, dumpInstalledLibrary('after-update'))).toEqual([]);
-    expect(server.requests).toEqual(expect.arrayContaining(['latest.yml']));
-    expect(server.requests.some((name) => name.endsWith(`${TO}.exe`))).toBe(true);
+    expect(server.requests).toEqual(expect.arrayContaining([PLATFORM.updateMetadataFile]));
+    // "Emma's Librarian Setup 9.0.1.exe" on Windows, "emmas-librarian-9.0.1-x86_64.AppImage" on Linux.
+    const downloaded = (name: string) => name.includes(TO) && name.endsWith(PLATFORM.installerExtension);
+    expect(server.requests.some(downloaded)).toBe(true);
   } finally {
     await server.close();
   }

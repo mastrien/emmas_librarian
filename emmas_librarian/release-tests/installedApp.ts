@@ -1,25 +1,25 @@
 import { test, expect, _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
-import { execFileSync, spawnSync } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { getFirstWindow, navigateTo } from '../e2e-tests/helpers';
 import { buildFullLibrary, copyLibraryInto, openLibrary } from './libraryTransfer';
 import { dumpLibrary, type LibraryDump } from './libraryDump';
-import { INSTALLER_CRASH, runInstallerOnce, type InstallerResult } from './installerRun';
+import { installedAppPlatform } from './installedPlatform';
+import type { InstallOptions } from './platformTypes';
 import { waitUntil } from './waitUntil';
 
 /**
- * The installed app, as the release tests drive it: silent NSIS installs, launches through Playwright,
- * and the library under its real data folder (installed apps have no switch for another one).
+ * The installed app, as the release tests drive it: installed by the platform's own means (NSIS on Windows, an
+ * AppImage on Linux), launched through Playwright, and the library under its real data folder (installed apps
+ * have no switch for another one).
  */
 export const INSTALL_DIR = process.env.RELEASE_TEST_INSTALL_DIR ?? path.join(os.tmpdir(), 'emma-release-test', 'app');
-// Electron's userData for the installed app: %APPDATA%/<package name> on Windows (Linux: issue #17).
-export const USER_DATA = path.join(process.env.APPDATA ?? '', 'emmas_librarian');
+export const PLATFORM = installedAppPlatform(process.platform, process.env, INSTALL_DIR);
+// Electron's userData for the installed app: %APPDATA%/<package name> on Windows, ~/.config/<package name> on Linux.
+export const USER_DATA = PLATFORM.userData;
 export const API_KEY = 'sk-release-test-0123456789';
 export const PREFERENCES = { theme: 'dark', accent: 'green', emma_sidebar_width: '320' };
-
-export const appExe = () => path.join(INSTALL_DIR, "Emma's Librarian.exe");
 
 // GitHub Actions sets GITHUB_ACTIONS on its runners only; CI=true is also set by many local tools, and this
 // test installs over the app and force-closes every "Emma's Librarian" process.
@@ -32,65 +32,10 @@ export function refuseToTouchARealLibrary(): void {
   );
 }
 
-export interface InstallOptions {
-  /** Extra arguments, e.g. --updated, the one electron-updater passes. */
-  args?: string[];
-  /**
-   * Start the installer again once if it crashes with the access violation. Only for an install whose crash is
-   * not what the test is about (the published release, or the first install of the update-flow test): the
-   * build under test's installer crashing is a finding.
-   */
-  tolerateCrash?: boolean;
-}
+export type { InstallOptions };
 
-// Started again right away, the update-flow test's first installer crashed a second time (2026-10-09); a run
-// 20 s later passed.
-const RETRY_AFTER_CRASH_MS = 20000;
-
-/** Silent NSIS install into INSTALL_DIR. */
-export function install(installer: string, { args = [], tolerateCrash = false }: InstallOptions = {}): void {
-  if (!fs.existsSync(installer)) {
-    throw new Error(`[ERR_RELEASE_TEST_INSTALLER] Installer not found: "${installer}". Expected a NSIS setup .exe.`);
-  }
-  const { result, crashedFirst } = runInstallerOnce(
-    () => runInstaller(installer, args),
-    tolerateCrash,
-    () => sleepSync(RETRY_AFTER_CRASH_MS),
-  );
-  // Reported, not hidden: a crashing installer also hits real users.
-  if (crashedFirst && result.status === 0) reportInstallerCrash(installer);
-  if (result.status === 0) return;
-  throw new Error(installFailureMessage(installer, args, result, crashedFirst && !tolerateCrash));
-}
-
-// NSIS requires /D= last and unquoted.
-const runInstaller = (installer: string, args: string[]): InstallerResult =>
-  spawnSync(installer, [...args, '/S', `/D=${INSTALL_DIR}`], { encoding: 'utf-8', timeout: 300000 });
-
-// The installs run synchronously (spawnSync), so the wait before a retry blocks too.
-const sleepSync = (ms: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-
-function reportInstallerCrash(installer: string): void {
-  const message = `${path.basename(installer)} crashed (0xC0000005) on its first run and was started again ${RETRY_AFTER_CRASH_MS / 1000} s later.`;
-  test.info().annotations.push({ type: 'warning', description: message });
-  console.log(`::warning title=Installer crashed::${message}`);
-}
-
-function installFailureMessage(
-  installer: string,
-  args: string[],
-  result: InstallerResult,
-  notRetried: boolean,
-): string {
-  const note = notRetried
-    ? ` (0x${INSTALLER_CRASH.toString(16)}: the installer of the build under test crashed, not retried)`
-    : '';
-  return (
-    `[ERR_RELEASE_TEST_INSTALL] "${path.basename(installer)} ${args.join(' ')}" exited with status=${result.status}${note} ` +
-    `signal=${result.signal} error=${result.error?.message}; app exe present=${fs.existsSync(appExe())}; ` +
-    `stdout=${JSON.stringify(result.stdout)} stderr=${JSON.stringify(result.stderr)}. Expected status 0.`
-  );
-}
+/** Installs `installer` into INSTALL_DIR the way this platform does. */
+export const install = (installer: string, options?: InstallOptions): void => PLATFORM.install(installer, options);
 
 /** Version of this checkout (package.json): what the build under test reports. */
 export const PACKAGE_VERSION = (
@@ -102,7 +47,7 @@ export const appVersion = (app: ElectronApplication): Promise<string> =>
   app.evaluate(({ app: electronApp }) => electronApp.getVersion());
 
 export async function launchInstalled(): Promise<{ app: ElectronApplication; page: Page }> {
-  const app = await electron.launch({ executablePath: appExe() });
+  const app = await electron.launch({ executablePath: PLATFORM.appExecutable });
   return { app, page: await getFirstWindow(app) };
 }
 
@@ -130,6 +75,21 @@ export function fillInstalledLibrary(): void {
 export async function setPreferencesAndKey(page: Page): Promise<void> {
   await page.evaluate((prefs) => Object.entries(prefs).forEach(([k, v]) => localStorage.setItem(k, v)), PREFERENCES);
   await page.evaluate((key) => window.electronAPI.invoke('settings:set', 'api_key_openai', key), API_KEY);
+}
+
+/**
+ * Records which safeStorage backend holds the API key and, when RELEASE_TEST_EXPECT_KEY_STORAGE is set, checks it:
+ * on Linux a run meant to use the keyring (gnome_libsecret) would otherwise pass on plain basic_text unnoticed.
+ * Windows always uses DPAPI ("os" here).
+ */
+export async function checkKeyStorage(app: ElectronApplication): Promise<void> {
+  const backend = await app.evaluate(({ safeStorage }) =>
+    process.platform === 'linux' ? safeStorage.getSelectedStorageBackend() : 'os',
+  );
+  test.info().annotations.push({ type: 'key-storage', description: backend });
+  console.log(`[release-test] API key storage: ${backend}`);
+  const expected = process.env.RELEASE_TEST_EXPECT_KEY_STORAGE;
+  if (expected) expect(backend, 'safeStorage backend (RELEASE_TEST_EXPECT_KEY_STORAGE)').toBe(expected);
 }
 
 export async function readPreferencesAndKey(
@@ -164,20 +124,12 @@ export function keepAppLogs(): void {
   if (fs.existsSync(logs)) fs.cpSync(logs, test.info().outputPath('app-logs'), { recursive: true });
 }
 
-const powershell = (script: string) =>
-  execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', script], { encoding: 'utf-8' }).trim();
-// PowerShell single-quoted string: '' is one apostrophe.
-const PROCESS_NAME = "Emma''s Librarian";
-
 /** Whether an app process is running that Playwright did not start (e.g. reopened by the installer). */
-export const appIsRunning = (): boolean =>
-  powershell(`@(Get-Process -Name '${PROCESS_NAME}' -ErrorAction SilentlyContinue).Count`) !== '0';
+export const appIsRunning = (): boolean => PLATFORM.appIsRunning();
 
 /** Closes the app's windows as clicking X would, and ends whatever is left after 10 s. */
 export async function closeRunningApp(): Promise<void> {
-  powershell(
-    `Get-Process -Name '${PROCESS_NAME}' -ErrorAction SilentlyContinue | % { $_.CloseMainWindow() | Out-Null }; exit 0`,
-  );
+  PLATFORM.askAppToClose();
   await waitUntil(() => !appIsRunning(), 10000, 'the app to close').catch(() => undefined);
-  if (appIsRunning()) powershell(`Stop-Process -Name '${PROCESS_NAME}' -Force -ErrorAction SilentlyContinue; exit 0`);
+  if (appIsRunning()) PLATFORM.forceQuitApp();
 }
