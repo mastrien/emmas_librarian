@@ -1,0 +1,43 @@
+name: Investigate installer dump analysis
+
+# Reads the minidumps that round 8 (run 38070894167) kept for four crashes of the NSIS installer and prints the
+# faulting instruction, the invalid address, registers, stack arguments and the loaded modules. Analysis only.
+on:
+  push:
+    branches: [investigate/installer-crash-root]
+    paths:
+      - 'investigations/2026-10-dump-analysis/**'
+      - '.github/workflows/investigate-dump-analysis.yml'
+
+env:
+  SOURCE_RUN: 38070894167
+
+jobs:
+  analyze:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: result-root-pwsh-em0-*
+          path: dumps
+          run-id: ${{ env.SOURCE_RUN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install the x86 debugger (cdb)
+        shell: pwsh
+        run: |
+          $cdb = 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe'
+          if (-not (Test-Path $cdb)) {
+            Invoke-WebRequest 'https://go.microsoft.com/fwlink/?linkid=2196241' -OutFile "$env:RUNNER_TEMP\winsdksetup.exe"
+            Start-Process "$env:RUNNER_TEMP\winsdksetup.exe" -ArgumentList '/features','OptionId.WindowsDesktopDebuggers','/quiet','/norestart' -Wait
+          }
+          if (-not (Test-Path $cdb)) { throw "cdb.exe missing: $cdb" }
+      - name: Analyse every minidump
+        shell: pwsh
+        run: node investigations/2026-10-dump-analysis/analyze-dumps.mjs dumps
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dump-analysis
+          path: dump-analysis

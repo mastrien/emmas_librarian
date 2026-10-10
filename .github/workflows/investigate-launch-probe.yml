@@ -1,0 +1,32 @@
+name: Investigate launch probe
+
+# Experiments only: shows which attributes a child inherits through each way of starting it (direct, cmd.exe,
+# cmd start, NUL handles...), to find what `cmd /c "installer"` changes. No installer runs here.
+on:
+  push:
+    branches: [investigate/installer-crash-root]
+    paths:
+      - 'investigations/2026-10-launch-probe/**'
+      - '.github/workflows/investigate-launch-probe.yml'
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [1, 2, 3]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Probe every launch path
+        run: node probe-launch.mjs
+        working-directory: investigations/2026-10-launch-probe
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-${{ matrix.runner }}
+          path: investigations/2026-10-launch-probe/results
