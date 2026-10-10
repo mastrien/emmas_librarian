@@ -16,8 +16,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # pipe: output to a pipe (Playwright, CI); file: to a file (desktop launch); pipe-extract: pipe, no FUSE.
-        mode: [pipe, file, pipe-extract]
+        # First A/B (run 38023731036): pipe 2/30 hangs, file 2/30, pipe-extract (no FUSE) 0/30; the GPU process
+        # died with SIGBUS reading from the FUSE mount. Now: the legacy AppImage runtime (needs libfuse2) against
+        # electron-builder's newer one (toolsets.appimage 1.0.2, runtime 20251108, FUSE 3 built in).
+        include:
+          - { runtime: legacy, mode: file }
+          - { runtime: '1.0.2', mode: file }
+          - { runtime: '1.0.2', mode: pipe }
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:
@@ -35,7 +40,7 @@ jobs:
       - name: Prepare Linux to run the AppImage
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y -q libfuse2t64 gdb
+          sudo apt-get install -y -q gdb ${{ matrix.runtime == 'legacy' && 'libfuse2t64' || '' }}
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           # gdb attaches to processes it did not start.
           sudo sysctl -w kernel.yama.ptrace_scope=0
@@ -44,17 +49,17 @@ jobs:
 
       - name: Build the AppImage
         run: |
-          npm run electron:build -- --publish never
+          npm run electron:build -- --publish never ${{ matrix.runtime != 'legacy' && format('-c.toolsets.appimage={0}', matrix.runtime) || '' }}
           ls -la release/*.AppImage
 
-      - name: Launch loop (${{ matrix.mode }})
+      - name: Launch loop (${{ matrix.runtime }}, ${{ matrix.mode }})
         continue-on-error: true
-        run: xvfb-run -a node release-tests/diagnostics/appimage-launch-loop.mjs "$(ls "$PWD"/release/*.AppImage)" 30 ${{ matrix.mode }} "$PWD/diag"
+        run: xvfb-run -a node release-tests/diagnostics/appimage-launch-loop.mjs "$(ls "$PWD"/release/*.AppImage)" 40 ${{ matrix.mode }} "$PWD/diag"
 
       - name: Keep the dumps
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: appimage-launch-diagnostics-${{ matrix.mode }}
+          name: appimage-launch-diagnostics-${{ matrix.runtime }}-${{ matrix.mode }}
           path: emmas_librarian/diag
           if-no-files-found: ignore

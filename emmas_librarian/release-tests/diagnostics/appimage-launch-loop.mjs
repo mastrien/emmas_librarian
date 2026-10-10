@@ -37,10 +37,12 @@ function dumpHang(round, stderrText) {
   const ps = sh('ps', ['-eo', 'pid,ppid,stat,wchan:32,etime,args']).stdout;
   const appLines = ps.split('\n').filter((l) => /emmas|AppRun|\.mount_/i.test(l));
   const pids = sh('pgrep', ['-x', 'emmas-librarian']).stdout.trim().split('\n').filter(Boolean);
+  // Kernel stacks and open pipes only, all pids first: gdb cannot attach to a process in uninterruptible sleep,
+  // and while it waited (90 s) the other processes went away (A/B run 38023731036).
   const stacks = pids.map((pid) => {
-    const bt = sh('sudo', ['gdb', '-p', pid, '-batch', '-ex', 'thread apply all bt 25']);
-    const kernel = sh('sudo', ['sh', '-c', `for t in /proc/${pid}/task/*; do echo "== $t $(cat $t/comm)"; cat $t/stack; done`]);
-    return `##### pid ${pid}\n${bt.stdout}\n${bt.stderr}\n##### kernel stacks ${pid}\n${kernel.stdout}`;
+    const kernel = sh('sudo', ['sh', '-c', `for t in /proc/${pid}/task/*; do echo "== $t $(cat $t/comm) $(cat $t/wchan)"; cat $t/stack; done`]);
+    const fds = sh('sudo', ['sh', '-c', `ls -l /proc/${pid}/fd | grep -E 'pipe|fuse|socket' | head -40`]);
+    return `##### kernel stacks ${pid}\n${kernel.stdout}\n##### fds ${pid}\n${fds.stdout}`;
   });
   const log = fs.existsSync(mainLog) ? fs.readFileSync(mainLog, 'utf-8') : '(no main.log)';
   fs.writeFileSync(
