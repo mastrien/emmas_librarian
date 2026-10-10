@@ -1,12 +1,21 @@
 import { AIModelConfig } from '../../src/types';
 import { AppError } from '../ipc/errorHandler';
+import {
+  importTransformers,
+  loadLocalEmbeddingExtractor,
+  LOCAL_EMBEDDING_MODEL,
+  type LocalEmbeddingExtractor,
+  type TransformersRuntime,
+} from './localEmbeddingModel';
 
 export class EmbeddingService {
-  private static transformerExtractor: any = null;
+  private static transformerExtractor: LocalEmbeddingExtractor | null = null;
 
   constructor(
     private readonly config: AIModelConfig,
     private readonly keys?: any,
+    private readonly localModelsDir?: string,
+    private readonly loadTransformers: () => Promise<TransformersRuntime> = importTransformers,
   ) {}
 
   private async fetchWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs = 2000): Promise<T> {
@@ -229,10 +238,10 @@ export class EmbeddingService {
 
     if (this.config.provider === 'local' || this.config.provider === 'llama_cpp') {
       try {
-        const { pipeline } = await import('@xenova/transformers');
         if (!EmbeddingService.transformerExtractor) {
-          console.log('[EmbeddingService] Inicializando motor local de vetorização ONNX (Xenova/all-MiniLM-L6-v2)...');
-          EmbeddingService.transformerExtractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+          console.log(`[EmbeddingService] Inicializando motor local de vetorização ONNX (${LOCAL_EMBEDDING_MODEL})...`);
+          const runtime = await this.loadTransformers();
+          EmbeddingService.transformerExtractor = await loadLocalEmbeddingExtractor(this.localModelsDir, runtime);
         }
         const output = await EmbeddingService.transformerExtractor(text, { pooling: 'mean', normalize: true });
         return Array.from(output.data) as number[];
