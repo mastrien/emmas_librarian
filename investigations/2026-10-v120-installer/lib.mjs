@@ -138,7 +138,7 @@ export function appLogTail(lines = 40) {
   return fs.readFileSync(log, 'utf-8').split(/\r?\n/).slice(-lines).join('\n');
 }
 
-const powershell = (script) =>
+export const powershell = (script) =>
   execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', script], { encoding: 'utf-8' });
 
 export function writeResult(name, result) {

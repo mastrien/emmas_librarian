@@ -1,0 +1,63 @@
+name: Investigate installer crash (root cause)
+
+# Experiments only (investigations/2026-10-installer-crash-root): install the published v1.1.23 on fresh
+# throwaway runners, plain and under the cdb debugger, to find what raises 0xC0000005. Investigation branch only.
+on:
+  push:
+    branches: [investigate/installer-crash-root]
+    paths:
+      - 'investigations/2026-10-installer-crash-root/**'
+      - 'investigations/2026-10-v120-installer/lib.mjs'
+      - 'investigations/2026-10-v120-installer/get-installers.sh'
+      - '.github/workflows/investigate-installer-crash-root.yml'
+
+jobs:
+  first-install:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [plain, cdb]
+        attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Get the published installer
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash investigations/2026-10-v120-installer/get-installers.sh
+      - name: Ensure the x86 debugger (cdb)
+        if: matrix.mode == 'cdb'
+        shell: pwsh
+        run: |
+          $cdb = 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe'
+          if (-not (Test-Path $cdb)) {
+            Invoke-WebRequest 'https://go.microsoft.com/fwlink/?linkid=2196241' -OutFile "$env:RUNNER_TEMP\winsdksetup.exe"
+            Start-Process "$env:RUNNER_TEMP\winsdksetup.exe" -ArgumentList '/features','OptionId.WindowsDesktopDebuggers','/quiet','/norestart' -Wait
+          }
+          if (-not (Test-Path $cdb)) { throw "cdb.exe missing after the SDK debugger install: $cdb" }
+      - name: First install on a fresh runner (${{ matrix.mode }})
+        run: node crash-root.mjs ${{ matrix.mode }} ${{ matrix.attempt }}
+        working-directory: investigations/2026-10-installer-crash-root
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-root-${{ matrix.mode }}-${{ matrix.attempt }}
+          path: investigations/2026-10-installer-crash-root/results
+
+  summary:
+    needs: first-install
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: result-root-*
+          path: all-results
+      - name: Table
+        run: node investigations/2026-10-installer-crash-root/summarize.mjs all-results
