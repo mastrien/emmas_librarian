@@ -5,11 +5,13 @@ name: Investigate installer crash (root cause)
 on:
   push:
     branches: [investigate/installer-crash-root]
+    # Only the files that change the crash experiment itself: the launch probe and launch-variants.mjs tweaks
+    # (investigations/2026-10-launch-probe) must not start the whole matrix again.
     paths:
-      - 'investigations/2026-10-installer-crash-root/**'
-      - 'investigations/2026-10-v120-installer/lib.mjs'
-      - 'investigations/2026-10-v120-installer/get-installers.sh'
-      - '.github/workflows/investigate-installer-crash-root.yml'
+      - 'investigations/2026-10-installer-crash-root/crash-root.mjs'
+      - 'investigations/2026-10-installer-crash-root/medium.mjs'
+      - 'investigations/2026-10-installer-crash-root/procmon.mjs'
+      - 'investigations/2026-10-installer-crash-root/summarize.mjs'
 
 jobs:
   first-install:

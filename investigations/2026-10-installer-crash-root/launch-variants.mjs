@@ -67,11 +67,12 @@ function runPlan(plan) {
 }
 
 /**
- * Installs once with the given launch variant and returns the exit status.
+ * Installs once with the given launch variant and returns the exit status. `args` replaces the installer arguments
+ * (the launch probe starts a PowerShell script through the same paths).
  * Usage: const run = await installWithVariant('hide', installerPath, installDir);
  */
-export async function installWithVariant(variant, installer, dir) {
-  const plan = spawnPlan(variant, installer, ['/S', `/D=${dir}`]);
+export async function installWithVariant(variant, installer, dir, args = ['/S', `/D=${dir}`]) {
+  const plan = spawnPlan(variant, installer, args);
   const started = Date.now();
   if (variant === 'delay') await sleep(DELAY_MS);
   const result = await runPlan(plan);
