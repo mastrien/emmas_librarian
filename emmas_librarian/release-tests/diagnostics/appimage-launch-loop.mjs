@@ -3,22 +3,27 @@
 // Opens and closes the AppImage `rounds` times in a row, either straight (spawn) or through Playwright, with
 // Chromium logging on. On a hang it dumps the app's processes, kernel wait channels and a gdb backtrace of every
 // thread, then kills it and goes on. Prints a summary line per round.
-// Usage (under xvfb-run): node appimage-launch-loop.mjs <appimage> <rounds> <plain|playwright> <outDir>
+// Modes: pipe (stdout/stderr to a pipe, as Playwright and CI do), file (to a file, as a desktop launch),
+// pipe-extract (pipe, but APPIMAGE_EXTRACT_AND_RUN=1: no FUSE mount), playwright. Add "verbose" for Chromium's
+// own log (--enable-logging=stderr --v=1).
+// Usage (under xvfb-run): node appimage-launch-loop.mjs <appimage> <rounds> <mode> <outDir> [verbose]
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 
-const [appImage, roundsArg, mode, outDir] = process.argv.slice(2);
+const [appImage, roundsArg, mode, outDir, verbose] = process.argv.slice(2);
 const rounds = Number(roundsArg);
-if (!appImage || !rounds || !['plain', 'playwright'].includes(mode) || !outDir) {
-  throw new Error(`Usage: appimage-launch-loop.mjs <appimage> <rounds> <plain|playwright> <outDir>. Got ${process.argv.slice(2)}`);
+const MODES = ['pipe', 'file', 'pipe-extract', 'playwright'];
+if (!appImage || !rounds || !MODES.includes(mode) || !outDir) {
+  throw new Error(`Usage: appimage-launch-loop.mjs <appimage> <rounds> <${MODES.join('|')}> <outDir> [verbose]. Got ${process.argv.slice(2)}`);
 }
 fs.mkdirSync(outDir, { recursive: true });
 const configHome = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-diag-'));
-const env = { ...process.env, XDG_CONFIG_HOME: configHome, ELECTRON_ENABLE_LOGGING: '1' };
-const chromiumArgs = ['--enable-logging=stderr', '--v=1'];
+const env = { ...process.env, XDG_CONFIG_HOME: configHome };
+if (mode === 'pipe-extract') env.APPIMAGE_EXTRACT_AND_RUN = '1';
+const chromiumArgs = verbose === 'verbose' ? ['--enable-logging=stderr', '--v=1'] : [];
 const READY_MS = 40000;
 const mainLog = path.join(configHome, 'emmas_librarian', 'logs', 'main.log');
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -51,10 +56,12 @@ function killApp() {
 
 async function plainRound(round) {
   const before = initializedCount();
-  const child = spawn(appImage, chromiumArgs, { env, stdio: ['ignore', 'pipe', 'pipe'] });
+  const outFile = path.join(outDir, `${mode}-round-${round}-output.txt`);
+  const out = mode === 'file' ? fs.openSync(outFile, 'w') : 'pipe';
+  const child = spawn(appImage, chromiumArgs, { env, stdio: ['ignore', out, out] });
   let stderrText = '';
-  child.stdout.on('data', (d) => (stderrText += d));
-  child.stderr.on('data', (d) => (stderrText += d));
+  child.stdout?.on('data', (d) => (stderrText += d));
+  child.stderr?.on('data', (d) => (stderrText += d));
   const started = Date.now();
   while (initializedCount() === before && Date.now() - started < READY_MS) await sleep(250);
   const readyMs = Date.now() - started;
@@ -62,9 +69,11 @@ async function plainRound(round) {
   if (!ok) dumpHang(round, stderrText);
   // Close as the release test does between launches: ask, then make sure.
   sh('pkill', ['-TERM', '-x', 'emmas-librarian']);
-  const exited = await Promise.race([new Promise((r) => child.once('exit', () => r(true))), sleep(15000).then(() => false)]);
+  const exited = await Promise.race([new Promise((r) => child.once('exit', () => r(true))), sleep(5000).then(() => false)]);
   if (!exited) killApp();
-  fs.writeFileSync(path.join(outDir, `${mode}-round-${round}-stderr.txt`), stderrText);
+  if (typeof out === 'number') fs.closeSync(out);
+  else if (!ok) fs.writeFileSync(outFile, stderrText);
+  else fs.rmSync(outFile, { force: true });
   return { ok, readyMs, exited };
 }
 
@@ -89,7 +98,7 @@ const require = createRequire(path.join(process.cwd(), 'package.json'));
 const electron = mode === 'playwright' ? require('playwright')._electron : null;
 let hangs = 0;
 for (let round = 1; round <= rounds; round++) {
-  const result = mode === 'plain' ? await plainRound(round) : await playwrightRound(round, electron);
+  const result = mode === 'playwright' ? await playwrightRound(round, electron) : await plainRound(round);
   if (!result.ok) hangs++;
   console.log(`[${mode}] round ${round}: ${result.ok ? 'ready' : 'HANG'} in ${result.readyMs} ms, exited=${result.exited}`);
   // The release test relaunches about 3 s after closing.

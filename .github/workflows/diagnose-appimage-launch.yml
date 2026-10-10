@@ -13,6 +13,11 @@ permissions:
 
 jobs:
   launch-loop:
+    strategy:
+      fail-fast: false
+      matrix:
+        # pipe: output to a pipe (Playwright, CI); file: to a file (desktop launch); pipe-extract: pipe, no FUSE.
+        mode: [pipe, file, pipe-extract]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:
@@ -42,18 +47,14 @@ jobs:
           npm run electron:build -- --publish never
           ls -la release/*.AppImage
 
-      - name: Launch loop, straight
+      - name: Launch loop (${{ matrix.mode }})
         continue-on-error: true
-        run: xvfb-run -a node release-tests/diagnostics/appimage-launch-loop.mjs "$(ls "$PWD"/release/*.AppImage)" 15 plain "$PWD/diag"
-
-      - name: Launch loop, through Playwright
-        continue-on-error: true
-        run: xvfb-run -a node release-tests/diagnostics/appimage-launch-loop.mjs "$(ls "$PWD"/release/*.AppImage)" 15 playwright "$PWD/diag"
+        run: xvfb-run -a node release-tests/diagnostics/appimage-launch-loop.mjs "$(ls "$PWD"/release/*.AppImage)" 30 ${{ matrix.mode }} "$PWD/diag"
 
       - name: Keep the dumps
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: appimage-launch-diagnostics
+          name: appimage-launch-diagnostics-${{ matrix.mode }}
           path: emmas_librarian/diag
           if-no-files-found: ignore
