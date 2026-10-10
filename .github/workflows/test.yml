@@ -14,8 +14,13 @@ on:
 
 jobs:
   unit:
-    # Windows matches release.yml and the dev machine; better-sqlite3 is a native module.
-    runs-on: windows-latest
+    # Windows matches the dev machine; Linux because the app ships an AppImage too (ext4 is case-sensitive,
+    # NTFS is not, so a wrong-case import only breaks there). better-sqlite3 is a native module.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: ./emmas_librarian
