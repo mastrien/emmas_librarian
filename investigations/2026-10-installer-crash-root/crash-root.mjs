@@ -33,6 +33,7 @@ const results = path.resolve('results');
 const dumps = path.join(process.env.RUNNER_TEMP ?? os.tmpdir(), 'dumps');
 const installDir = (name) => path.join(os.tmpdir(), 'crash-root', name);
 
+// The installer built from this repo is called "Emma's Librarian Setup ...exe": a quote inside a PowerShell '...' string must be doubled.
 /** Machine facts at the moment of the first install: uptime, what else is busy, how the installer got here. */
 function machineSnapshot() {
   const script =
@@ -42,7 +43,7 @@ function machineSnapshot() {
     `[pscustomobject]@{ uptimeSeconds=[int]((Get-Date) - $os.LastBootUpTime).TotalSeconds; freeMemoryMB=[int]($os.FreePhysicalMemory/1024); ` +
     `processCount=@(Get-Process).Count; busiest=$busy; setupLike=$setup; build=$os.BuildNumber; ` +
     `integrity=(whoami /groups | Select-String 'Mandatory Label').ToString().Trim(); ` +
-    `zone=[bool](Get-Item -LiteralPath '${installer}' -Stream Zone.Identifier -ErrorAction SilentlyContinue) } | ConvertTo-Json -Compress; exit 0`;
+    `zone=[bool](Get-Item -LiteralPath '${installer.replace(/'/g, "''")}' -Stream Zone.Identifier -ErrorAction SilentlyContinue) } | ConvertTo-Json -Compress; exit 0`;
   return JSON.parse(powershell(script));
 }
 
