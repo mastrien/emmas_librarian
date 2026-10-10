@@ -16,10 +16,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [plain, stdio-ignore, clean-env, via-cmd]
+        mode: [plain, via-cmd, async, hide, detached, delay]
         attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
         exclude:
-          # plain already has 124 runs of control data (27 crashed); ten more keep a same-day comparison
+          # plain already has 124 runs of control data (27 crashed); ten more keep a same-day comparison, and ten via-cmd a same-day positive control
           - { mode: plain, attempt: 11 }
           - { mode: plain, attempt: 12 }
           - { mode: plain, attempt: 13 }
@@ -40,6 +40,26 @@ jobs:
           - { mode: plain, attempt: 28 }
           - { mode: plain, attempt: 29 }
           - { mode: plain, attempt: 30 }
+          - { mode: via-cmd, attempt: 11 }
+          - { mode: via-cmd, attempt: 12 }
+          - { mode: via-cmd, attempt: 13 }
+          - { mode: via-cmd, attempt: 14 }
+          - { mode: via-cmd, attempt: 15 }
+          - { mode: via-cmd, attempt: 16 }
+          - { mode: via-cmd, attempt: 17 }
+          - { mode: via-cmd, attempt: 18 }
+          - { mode: via-cmd, attempt: 19 }
+          - { mode: via-cmd, attempt: 20 }
+          - { mode: via-cmd, attempt: 21 }
+          - { mode: via-cmd, attempt: 22 }
+          - { mode: via-cmd, attempt: 23 }
+          - { mode: via-cmd, attempt: 24 }
+          - { mode: via-cmd, attempt: 25 }
+          - { mode: via-cmd, attempt: 26 }
+          - { mode: via-cmd, attempt: 27 }
+          - { mode: via-cmd, attempt: 28 }
+          - { mode: via-cmd, attempt: 29 }
+          - { mode: via-cmd, attempt: 30 }
     runs-on: windows-latest
     timeout-minutes: 30
     steps:

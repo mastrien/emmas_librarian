@@ -6,7 +6,7 @@
 // cdb-hd:  like cdb with the debug heap off (-hd), to tell a heap-layout bug from a timing one.
 // procmon: plain install while Process Monitor records, keeping the installer's last events.
 // medium:  the install in a Limited scheduled task via cmd.exe (it stayed High on the runner; it is a launch-path variant).
-// stdio-ignore | clean-env | via-cmd: plain install with one part of Node's launch changed (see launch-variants.mjs).
+// stdio-ignore | clean-env | via-cmd | hide | detached | delay | async: plain install with one part of Node's launch changed (see launch-variants.mjs).
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -92,7 +92,7 @@ function nsisTempContents() {
 /** The plain install, optionally inside a Process Monitor capture that is kept only when the install crashed. */
 async function installPlain(dir) {
   if (mode === 'medium') return { run: await installAtMediumIntegrity(installer, dir), trace: null };
-  if (LAUNCH_VARIANTS.includes(mode)) return { run: installWithVariant(mode, installer, dir), trace: null };
+  if (LAUNCH_VARIANTS.includes(mode)) return { run: await installWithVariant(mode, installer, dir), trace: null };
   if (mode !== 'procmon') return { run: installSync(installer, dir), trace: null };
   const trace = await startTrace(path.join(results, 'trace.pml'));
   const run = installSync(installer, dir);
