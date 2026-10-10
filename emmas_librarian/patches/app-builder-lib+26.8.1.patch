@@ -1,0 +1,16 @@
+diff --git a/node_modules/app-builder-lib/templates/nsis/multiUser.nsh b/node_modules/app-builder-lib/templates/nsis/multiUser.nsh
+index c345dee..b2486c2 100644
+--- a/node_modules/app-builder-lib/templates/nsis/multiUser.nsh
++++ b/node_modules/app-builder-lib/templates/nsis/multiUser.nsh
+@@ -32,7 +32,10 @@ Var installMode
+       # Win7 has a per-user programfiles known folder and this can be a non-default location
+       System::Call 'SHELL32::SHGetKnownFolderPath(g "${FOLDERID_UserProgramFiles}", i ${KF_FLAG_CREATE}, p 0, *p .r2)i.r1'
+       ${If} $1 == 0
+-        System::Call '*$2(&w${NSIS_MAX_STRLEN} .s)'
++        # lstrcpyW stops at the terminator. '*$2(&w${NSIS_MAX_STRLEN} .s)' copied NSIS_MAX_STRLEN characters (16 KB with large
++        # strings) from the short string SHGetKnownFolderPath returns, and crashed the installer (0xC0000005) when the page
++        # after it was not mapped. Only first installs reach this branch (no InstallLocation in the registry yet).
++        System::Call 'kernel32::lstrcpyW(t .s, p r2)v'
+         StrCpy $0 $1
+         System::Call 'OLE32::CoTaskMemFree(p r2)'
+       ${endif}
