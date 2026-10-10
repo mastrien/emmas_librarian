@@ -5,7 +5,8 @@
 // cdb:     same install under the x86 debugger (round 1: 0 of 12 crashed, the debugger hides the crash).
 // cdb-hd:  like cdb with the debug heap off (-hd), to tell a heap-layout bug from a timing one.
 // procmon: plain install while Process Monitor records, keeping the installer's last events.
-// medium:  the install at Medium integrity (restricted token), as a normal non-elevated user would run it.
+// medium:  the install in a Limited scheduled task via cmd.exe (it stayed High on the runner; it is a launch-path variant).
+// stdio-ignore | clean-env | via-cmd: plain install with one part of Node's launch changed (see launch-variants.mjs).
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -14,9 +15,10 @@ import { spawnSync } from 'node:child_process';
 import { crashEvents, enableCrashDumps, hex, installSync, powershell, sleep, writeResult } from '../2026-10-v120-installer/lib.mjs';
 import { startTrace, stopTrace } from './procmon.mjs';
 import { installAtMediumIntegrity } from './medium.mjs';
+import { LAUNCH_VARIANTS, installWithVariant } from './launch-variants.mjs';
 
 const CDB = 'C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x86\\cdb.exe';
-const MODES = ['plain', 'cdb', 'cdb-hd', 'procmon', 'medium'];
+const MODES = ['plain', 'cdb', 'cdb-hd', 'procmon', 'medium', ...LAUNCH_VARIANTS];
 const [mode, attempt] = process.argv.slice(2);
 if (!MODES.includes(mode)) throw new Error(`Unknown mode "${mode}". Expected one of ${MODES.join(', ')}.`);
 
@@ -90,6 +92,7 @@ function nsisTempContents() {
 /** The plain install, optionally inside a Process Monitor capture that is kept only when the install crashed. */
 async function installPlain(dir) {
   if (mode === 'medium') return { run: await installAtMediumIntegrity(installer, dir), trace: null };
+  if (LAUNCH_VARIANTS.includes(mode)) return { run: installWithVariant(mode, installer, dir), trace: null };
   if (mode !== 'procmon') return { run: installSync(installer, dir), trace: null };
   const trace = await startTrace(path.join(results, 'trace.pml'));
   const run = installSync(installer, dir);
