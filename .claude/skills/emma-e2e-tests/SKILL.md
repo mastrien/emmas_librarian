@@ -28,7 +28,9 @@ npx concurrently --kill-others --success first "vite" \
 ```
 Add `-g "<test name>"` to run a single test. `tsc -p tsconfig.electron.json` is required after any change in
 `electron/` (the specs launch `dist-electron/electron/main.js`); renderer changes are served live by Vite.
-Each spec opens real app windows, one at a time; runs need a desktop session (they refuse to run headless).
+Each spec opens real app windows, one at a time; runs need a display (they refuse to run headless). On Linux CI
+that is `xvfb-run -a npm run test:e2e` (workflow `.github/workflows/e2e-linux.yml`); locally on Windows, WSLg's
+display also works for running the suite on Ubuntu.
 
 ## Safety: data isolation (do not bypass)
 

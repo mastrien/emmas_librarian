@@ -2,10 +2,12 @@ const { _electron: electron } = require('playwright');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { execFile } = require('child_process');
+const electronBinary = require('electron');
+const { isHeadlessRun } = require('./displayCheck');
 
 function checkHeadless() {
-  const isHeadless = process.env.HEADLESS_E2E === 'true' || (process.env.CI === 'true' && process.platform !== 'win32');
-  if (isHeadless) {
+  if (isHeadlessRun(process.env, process.platform)) {
     throw new Error(
       'Erro de Ambiente: Os testes E2E do Electron exigem um servidor de exibição gráfica (GUI) ativo (ou framebuffer virtual Xvfb em Linux/CI) para instanciar BrowserWindow. Execução interrompida de forma diagnóstica para evitar timeout.',
     );
@@ -20,17 +22,43 @@ function checkHeadless() {
  */
 async function launchApp(env = {}, { userDataDir } = {}) {
   checkHeadless();
-  const mainPath = path.resolve(__dirname, '../dist-electron/electron/main.js');
   const dataDir = userDataDir ?? fs.mkdtempSync(path.join(os.tmpdir(), 'emmas-e2e-'));
-  // E2E_ELECTRON_ARGS adds Chromium switches for shells where the default launch crashes the renderer
-  // (e.g. "--no-sandbox" when the parent process cannot host Chromium's sandbox).
-  const extraArgs = (process.env.E2E_ELECTRON_ARGS ?? '').split(' ').filter(Boolean);
-  const electronApp = await electron.launch({
-    args: [mainPath, ...extraArgs],
-    env: { ...process.env, E2E_USER_DATA_DIR: dataDir, E2E_SKIP_RELAUNCH: 'true', ...env },
-  });
+  const electronApp = await electron.launch({ args: appArgs(), env: appEnv(dataDir, env) });
   if (!userDataDir) electronApp.on('close', () => fs.rmSync(dataDir, { recursive: true, force: true }));
   return electronApp;
+}
+
+// E2E_ELECTRON_ARGS adds Chromium switches for shells where the default launch crashes the renderer
+// (e.g. "--no-sandbox" when the parent process cannot host Chromium's sandbox).
+function appArgs() {
+  const mainPath = path.resolve(__dirname, '../dist-electron/electron/main.js');
+  const extraArgs = (process.env.E2E_ELECTRON_ARGS ?? '').split(' ').filter(Boolean);
+  return [mainPath, ...extraArgs];
+}
+
+const appEnv = (dataDir, env) => ({ ...process.env, E2E_USER_DATA_DIR: dataDir, E2E_SKIP_RELAUNCH: 'true', ...env });
+
+/**
+ * Runs the app on `userDataDir` until it exits by itself and returns everything it printed. For startups that
+ * never open a window (the recovery boxes, answered by E2E_MOCK_RECOVERY_CHOICE, then quit). launchApp() cannot
+ * be used there: its stdout listener is attached after the launch returns, and on Linux the app had already
+ * printed and quit by then, so the output was empty.
+ *
+ * Usage:
+ *   const { code, signal, stdout } = await runAppUntilExit({ E2E_MOCK_RECOVERY_CHOICE: '0' }, { userDataDir });
+ */
+function runAppUntilExit(env, { userDataDir, timeoutMs = 60000 }) {
+  checkHeadless();
+  // --remote-debugging-port is what marks a launch as automated, as Playwright's does (electron/userDataDir.ts).
+  const args = [...appArgs(), '--remote-debugging-port=0'];
+  const options = { env: appEnv(userDataDir, env), timeout: timeoutMs };
+  // code is the exit status (0 without an error), or e.g. 'ENOENT' if Electron could not start; signal is set
+  // when the timeout killed it.
+  return new Promise((resolve) => {
+    execFile(electronBinary, args, options, (error, stdout, stderr) =>
+      resolve({ code: error?.code ?? 0, signal: error?.signal ?? null, stdout, stderr }),
+    );
+  });
 }
 
 async function dismissChangelog(window) {
@@ -129,6 +157,7 @@ async function clickAddArticlesOption(window, optionText) {
 
 module.exports = {
   launchApp,
+  runAppUntilExit,
   getFirstWindow,
   createProject,
   navigateTo,
