@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { crashEvents, enableCrashDumps, hex, installSync, powershell, sleep, writeResult } from './lib.mjs';
+import { crashEvents, enableCrashDumps, hex, installSync, powershell, sleep, writeResult } from '../2026-10-v120-installer/lib.mjs';
 
 const CDB = 'C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x86\\cdb.exe';
 const [mode, attempt] = process.argv.slice(2);
