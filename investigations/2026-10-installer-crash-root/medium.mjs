@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process';
 import { hex, sleep } from '../2026-10-v120-installer/lib.mjs';
 
 const LAUNCHER = path.join(path.dirname(fileURLToPath(import.meta.url)), 'medium.ps1');
-const WAIT_LIMIT_MS = 300000;
+const WAIT_LIMIT_MS = 150000; // an install takes 35-60 s on a runner
 
 /**
  * Installs silently at Medium integrity and reports the exit status plus the integrity label and the Administrators
@@ -24,7 +24,7 @@ export async function installAtMediumIntegrity(installer, dir) {
   const started = Date.now();
   const launch = spawnSync(
     'powershell',
-    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', LAUNCHER, '-CommandLine', `cmd.exe /c "${script}"`],
+    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', LAUNCHER, '-CommandLine', `cmd.exe /c "${script}"`, '-TimeoutMs', String(WAIT_LIMIT_MS)],
     { encoding: 'utf-8', timeout: WAIT_LIMIT_MS + 30000 },
   );
   // A failed launch (token or CreateProcessWithTokenW error) exits non-zero: do not wait out the whole limit for it.

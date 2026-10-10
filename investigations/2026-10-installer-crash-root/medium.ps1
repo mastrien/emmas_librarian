@@ -3,7 +3,7 @@
 # itself: CreateRestrictedToken(LUA_TOKEN) is what UAC hands a non-elevated session (Administrators deny-only,
 # privileges stripped), then the integrity label is set to Medium (S-1-16-8192).
 # Usage: powershell -File medium.ps1 -CommandLine 'cmd.exe /c "C:\work\run.cmd"'   (prints the process exit code)
-param([Parameter(Mandatory = $true)][string]$CommandLine)
+param([Parameter(Mandatory = $true)][string]$CommandLine, [int]$TimeoutMs = 150000)
 
 Add-Type -TypeDefinition @"
 using System;
@@ -31,7 +31,7 @@ public static class MediumLauncher {
   [DllImport("kernel32.dll", SetLastError = true)] static extern uint WaitForSingleObject(IntPtr handle, uint ms);
   [DllImport("kernel32.dll", SetLastError = true)] static extern bool GetExitCodeProcess(IntPtr handle, out uint code);
 
-  const uint TOKEN_ASSIGN_PRIMARY = 0x1, TOKEN_DUPLICATE = 0x2, TOKEN_QUERY = 0x8, LUA_TOKEN = 0x4, SE_GROUP_INTEGRITY = 0x20;
+  const uint TOKEN_ASSIGN_PRIMARY = 0x1, TOKEN_DUPLICATE = 0x2, TOKEN_QUERY = 0x8, LUA_TOKEN = 0x4, SE_GROUP_INTEGRITY = 0x20, CREATE_NO_WINDOW = 0x08000000;
   const int TokenIntegrityLevel = 25, SecurityImpersonation = 2, TokenPrimary = 1;
   const uint MAXIMUM_ALLOWED = 0x02000000;
 
@@ -58,9 +58,11 @@ public static class MediumLauncher {
   }
 
   public static uint Run(string commandLine, uint timeoutMs) {
-    var si = new STARTUPINFO(); si.cb = Marshal.SizeOf(si);
+    // A Medium process cannot attach to the High console of its parent (round 3b: cmd.exe hung before its first line),
+    // so it gets a console of its own, on the interactive desktop.
+    var si = new STARTUPINFO(); si.cb = Marshal.SizeOf(si); si.lpDesktop = "winsta0\\default";
     PROCESS_INFORMATION pi;
-    Check(CreateProcessWithTokenW(MediumToken(), 0, null, commandLine, 0, IntPtr.Zero, null, ref si, out pi), "CreateProcessWithTokenW");
+    Check(CreateProcessWithTokenW(MediumToken(), 0, null, commandLine, CREATE_NO_WINDOW, IntPtr.Zero, null, ref si, out pi), "CreateProcessWithTokenW");
     uint code;
     if (WaitForSingleObject(pi.hProcess, timeoutMs) != 0) throw new TimeoutException("Medium-integrity process did not exit in " + timeoutMs + " ms: " + commandLine);
     Check(GetExitCodeProcess(pi.hProcess, out code), "GetExitCodeProcess");
@@ -69,4 +71,4 @@ public static class MediumLauncher {
 }
 "@
 
-[MediumLauncher]::Run($CommandLine, 300000)
+[MediumLauncher]::Run($CommandLine, [uint32]$TimeoutMs)
