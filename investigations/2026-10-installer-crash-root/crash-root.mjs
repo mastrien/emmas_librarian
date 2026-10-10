@@ -1,10 +1,11 @@
 // Root cause of the first-run 0xC0000005 of the NSIS installer on fresh runners (follow-up of
 // investigations/2026-10-v120-installer, which ruled out Defender and left WER silent).
-// Usage: node crash-root.mjs <plain|cdb|cdb-hd|procmon> <attempt>   (INSTALLER_PUBLISHED_1_1_23 from get-installers.sh)
+// Usage: node crash-root.mjs <plain|cdb|cdb-hd|procmon|medium> <attempt>   (INSTALLER_PUBLISHED_1_1_23 from get-installers.sh)
 // plain:   install as the release test does, then record what the machine looked like and retry twice.
 // cdb:     same install under the x86 debugger (round 1: 0 of 12 crashed, the debugger hides the crash).
 // cdb-hd:  like cdb with the debug heap off (-hd), to tell a heap-layout bug from a timing one.
 // procmon: plain install while Process Monitor records, keeping the installer's last events.
+// medium:  the install at Medium integrity (restricted token), as a normal non-elevated user would run it.
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -12,9 +13,10 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { crashEvents, enableCrashDumps, hex, installSync, powershell, sleep, writeResult } from '../2026-10-v120-installer/lib.mjs';
 import { startTrace, stopTrace } from './procmon.mjs';
+import { installAtMediumIntegrity } from './medium.mjs';
 
 const CDB = 'C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x86\\cdb.exe';
-const MODES = ['plain', 'cdb', 'cdb-hd', 'procmon'];
+const MODES = ['plain', 'cdb', 'cdb-hd', 'procmon', 'medium'];
 const [mode, attempt] = process.argv.slice(2);
 if (!MODES.includes(mode)) throw new Error(`Unknown mode "${mode}". Expected one of ${MODES.join(', ')}.`);
 
@@ -87,6 +89,7 @@ function nsisTempContents() {
 
 /** The plain install, optionally inside a Process Monitor capture that is kept only when the install crashed. */
 async function installPlain(dir) {
+  if (mode === 'medium') return { run: await installAtMediumIntegrity(installer, dir), trace: null };
   if (mode !== 'procmon') return { run: installSync(installer, dir), trace: null };
   const trace = await startTrace(path.join(results, 'trace.pml'));
   const run = installSync(installer, dir);
