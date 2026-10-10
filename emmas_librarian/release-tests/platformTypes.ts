@@ -29,4 +29,6 @@ export interface InstalledAppPlatform {
   /** Asks the app to close as clicking X would. */
   askAppToClose(): void;
   forceQuitApp(): void;
+  /** The app's processes, one per line, for failure messages. */
+  listAppProcesses(): string;
 }

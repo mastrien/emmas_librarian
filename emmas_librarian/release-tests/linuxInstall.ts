@@ -30,6 +30,8 @@ export function linuxInstall(env: NodeJS.ProcessEnv, installDir: string): Instal
     // Electron quits on SIGTERM the way it does when the last window is closed.
     askAppToClose: () => void spawnSync('pkill', ['-TERM', '-x', PROCESS_NAME]),
     forceQuitApp: () => void spawnSync('pkill', ['-KILL', '-x', PROCESS_NAME]),
+    listAppProcesses: () =>
+      spawnSync('ps', ['-o', 'pid,ppid,etime,args', '-C', PROCESS_NAME], { encoding: 'utf-8' }).stdout.trim(),
   };
 }
 

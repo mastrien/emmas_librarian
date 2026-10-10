@@ -4,6 +4,7 @@ import os from 'os';
 import path from 'path';
 import { gunzipSync } from 'zlib';
 import { findLostData, type LibraryDump } from './libraryDump';
+import { processExited } from './processExit';
 import { serveUpdates } from './updateServer';
 import { waitUntil } from './waitUntil';
 import {
@@ -46,18 +47,28 @@ const UPDATE_PORT = Number(process.env.RELEASE_TEST_UPDATE_PORT ?? 8765);
 test.afterEach(keepAppLogs);
 
 /** Banner → "Atualizar" (download) → Settings → "Reiniciar e Instalar Atualização"; the app then quits. */
-async function updateThroughTheApp(page: Page, appClosed: Promise<unknown>): Promise<void> {
+async function updateThroughTheApp(page: Page, waitForQuit: () => Promise<void>): Promise<void> {
   await expect(page.getByText(`v${TO}`)).toBeVisible({ timeout: 60000 });
   await page.getByRole('button', { name: 'Atualizar' }).click();
   const installButton = page.getByRole('button', { name: 'Reiniciar e Instalar Atualização' });
   await expect(installButton).toBeVisible({ timeout: 180000 });
   const clicked = Date.now();
   await installButton.click();
-  await appClosed;
+  await waitForQuit();
   // How long the app took to quit for the installer: a slow quit keeps files locked while it installs.
   const quitMs = Date.now() - clicked;
   test.info().annotations.push({ type: 'quit-for-installer-ms', description: String(quitMs) });
   console.log(`[release-test] ${FROM} quit for the installer ${quitMs} ms after "Reiniciar e Instalar"`);
+}
+
+// The main process, not Playwright's "close" event: see processExited.
+async function appQuits(pid: number): Promise<void> {
+  try {
+    await processExited(pid, 120000, `${FROM} to quit for the installer`);
+  } catch (err) {
+    throw new Error(`${(err as Error).message} App processes now:
+${PLATFORM.listAppProcesses()}`);
+  }
 }
 
 function readUpdateState(): Record<string, unknown> {
@@ -98,7 +109,7 @@ test('a release through the app’s own updater keeps the whole library', async 
 
     await test.step(`${FROM} finds ${TO}, downloads it when asked and installs it`, async () => {
       const { app, page } = await launchInstalled();
-      await updateThroughTheApp(page, app.waitForEvent('close', { timeout: 120000 }));
+      await updateThroughTheApp(page, () => appQuits(app.process().pid!));
     });
 
     // The installer reopens the app once it has finished (--force-run), and that first boot of TO marks the

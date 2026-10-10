@@ -28,6 +28,10 @@ export function windowsInstall(env: NodeJS.ProcessEnv, installDir: string): Inst
         `Get-Process -Name '${PROCESS_NAME}' -ErrorAction SilentlyContinue | % { $_.CloseMainWindow() | Out-Null }; exit 0`,
       );
     },
+    listAppProcesses: () =>
+      powershell(
+        `Get-Process -Name '${PROCESS_NAME}' -ErrorAction SilentlyContinue | % { "$($_.Id) $($_.StartTime) $($_.Path)" }; exit 0`,
+      ),
     forceQuitApp: () => {
       powershell(`Stop-Process -Name '${PROCESS_NAME}' -Force -ErrorAction SilentlyContinue; exit 0`);
     },
