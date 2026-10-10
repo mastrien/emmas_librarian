@@ -18,50 +18,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [plain, via-cmd, cmd-nul, via-pwsh, cmd-start]
+        mode: [pwsh-em0, via-pwsh]
         attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
         exclude:
-          # plain already has 124 runs of control data (27 crashed); ten more keep a same-day comparison, and ten via-cmd a same-day positive control
-          - { mode: plain, attempt: 11 }
-          - { mode: plain, attempt: 12 }
-          - { mode: plain, attempt: 13 }
-          - { mode: plain, attempt: 14 }
-          - { mode: plain, attempt: 15 }
-          - { mode: plain, attempt: 16 }
-          - { mode: plain, attempt: 17 }
-          - { mode: plain, attempt: 18 }
-          - { mode: plain, attempt: 19 }
-          - { mode: plain, attempt: 20 }
-          - { mode: plain, attempt: 21 }
-          - { mode: plain, attempt: 22 }
-          - { mode: plain, attempt: 23 }
-          - { mode: plain, attempt: 24 }
-          - { mode: plain, attempt: 25 }
-          - { mode: plain, attempt: 26 }
-          - { mode: plain, attempt: 27 }
-          - { mode: plain, attempt: 28 }
-          - { mode: plain, attempt: 29 }
-          - { mode: plain, attempt: 30 }
-          - { mode: via-cmd, attempt: 11 }
-          - { mode: via-cmd, attempt: 12 }
-          - { mode: via-cmd, attempt: 13 }
-          - { mode: via-cmd, attempt: 14 }
-          - { mode: via-cmd, attempt: 15 }
-          - { mode: via-cmd, attempt: 16 }
-          - { mode: via-cmd, attempt: 17 }
-          - { mode: via-cmd, attempt: 18 }
-          - { mode: via-cmd, attempt: 19 }
-          - { mode: via-cmd, attempt: 20 }
-          - { mode: via-cmd, attempt: 21 }
-          - { mode: via-cmd, attempt: 22 }
-          - { mode: via-cmd, attempt: 23 }
-          - { mode: via-cmd, attempt: 24 }
-          - { mode: via-cmd, attempt: 25 }
-          - { mode: via-cmd, attempt: 26 }
-          - { mode: via-cmd, attempt: 27 }
-          - { mode: via-cmd, attempt: 28 }
-          - { mode: via-cmd, attempt: 29 }
-          - { mode: via-cmd, attempt: 30 }
+          - { mode: via-pwsh, attempt: 11 }
+          - { mode: via-pwsh, attempt: 12 }
+          - { mode: via-pwsh, attempt: 13 }
+          - { mode: via-pwsh, attempt: 14 }
+          - { mode: via-pwsh, attempt: 15 }
+          - { mode: via-pwsh, attempt: 16 }
+          - { mode: via-pwsh, attempt: 17 }
+          - { mode: via-pwsh, attempt: 18 }
+          - { mode: via-pwsh, attempt: 19 }
+          - { mode: via-pwsh, attempt: 20 }
+          - { mode: via-pwsh, attempt: 21 }
+          - { mode: via-pwsh, attempt: 22 }
+          - { mode: via-pwsh, attempt: 23 }
+          - { mode: via-pwsh, attempt: 24 }
+          - { mode: via-pwsh, attempt: 25 }
+          - { mode: via-pwsh, attempt: 26 }
+          - { mode: via-pwsh, attempt: 27 }
+          - { mode: via-pwsh, attempt: 28 }
+          - { mode: via-pwsh, attempt: 29 }
+          - { mode: via-pwsh, attempt: 30 }
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -74,8 +53,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash investigations/2026-10-v120-installer/get-installers.sh
-      - name: Ensure the x86 debugger (cdb)
-        if: startsWith(matrix.mode, 'cdb')
+      - name: Ensure the x86 debugger (cdb; pwsh-em0 uses it only to read the minidump)
+        if: startsWith(matrix.mode, 'cdb') || matrix.mode == 'pwsh-em0'
         shell: pwsh
         run: |
           $cdb = 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe'

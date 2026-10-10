@@ -6,13 +6,13 @@
 // cdb-hd:  like cdb with the debug heap off (-hd), to tell a heap-layout bug from a timing one.
 // procmon: plain install while Process Monitor records, keeping the installer's last events.
 // medium:  the install in a Limited scheduled task via cmd.exe (it stayed High on the runner; it is a launch-path variant).
-// stdio-ignore | clean-env | via-cmd | hide | detached | delay | async | cmd-nul | via-pwsh | cmd-start: plain install with one part of Node's launch changed (see launch-variants.mjs).
+// stdio-ignore | clean-env | via-cmd | hide | detached | delay | async | cmd-nul | via-pwsh | cmd-start | pwsh-em0 (SetErrorMode(0) first, so WER keeps a dump): plain install with one part of Node's launch changed (see launch-variants.mjs).
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { crashEvents, enableCrashDumps, hex, installSync, powershell, sleep, writeResult } from '../2026-10-v120-installer/lib.mjs';
+import { analyzeDumps, crashEvents, enableCrashDumps, hex, installSync, powershell, sleep, writeResult } from '../2026-10-v120-installer/lib.mjs';
 import { startTrace, stopTrace } from './procmon.mjs';
 import { installAtMediumIntegrity } from './medium.mjs';
 import { LAUNCH_VARIANTS, installWithVariant } from './launch-variants.mjs';
@@ -77,7 +77,8 @@ function aftermath(since) {
   fs.mkdirSync(results, { recursive: true });
   const kept = fs.existsSync(dumps) ? fs.readdirSync(dumps).filter((n) => n.endsWith('.dmp')) : [];
   kept.forEach((name) => fs.copyFileSync(path.join(dumps, name), path.join(results, name)));
-  return { crashEvents: crashEvents(since), dumps: kept, nsisTemp: nsisTempContents() };
+  const analysis = kept.length > 0 ? analyzeDumps(dumps) : [];
+  return { crashEvents: crashEvents(since), dumps: kept, analysis, nsisTemp: nsisTempContents() };
 }
 
 /** The ns*.tmp folders in %TEMP% with their files: shows which plugins the installer unpacked before it died. */

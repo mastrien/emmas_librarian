@@ -7,8 +7,13 @@
 //   cmd-nul   through cmd.exe but with stdin/stdout/stderr redirected to NUL: if still 0, the parent matters, not the std handles
 //   via-pwsh  through PowerShell (another console parent): if also 0, any console parent works
 //   cmd-start through `cmd /c start /wait`, which creates the process by another path
+//   Round 8 (the probe showed every path hands the child errorMode 32771, SEM_NOGPFAULTERRORBOX included, which is why
+//   no crash ever left a WER event or dump; checked with a minimal exe: Node child 32771, flag 0, SetErrorMode(0) in a parent no effect):
+//   pwsh-em0 installer started with CREATE_DEFAULT_ERROR_MODE (child error mode 0 instead of Node's 32771), so WER can record a crash
 //   async    plain launch with the async spawn these variants use (the baseline `plain` is spawnSync): the control for them
 //   delay    plain launch after a 100 ms pause (cmd.exe starts the installer a few ms later than Node would)
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { hex, sleep } from '../2026-10-v120-installer/lib.mjs';
 
@@ -39,11 +44,24 @@ function spawnPlan(variant, installer, args) {
   if (variant === 'cmd-nul') return viaCmd(`"${installer}" ${args.join(' ')} < NUL > NUL 2>&1`);
   // `start /wait` alone makes cmd.exe exit 0 whatever the installer returned: pass ERRORLEVEL on (delayed expansion).
   if (variant === 'cmd-start') return viaCmd(`start /wait "" "${installer}" ${args.join(' ')} & exit /b !ERRORLEVEL!`, ['/v:on']);
-  if (variant === 'via-pwsh') {
-    const script = `& '${installer}' ${args.join(' ')} | Out-Null; exit $LASTEXITCODE`;
-    return { file: 'pwsh', args: ['-NoProfile', '-NonInteractive', '-Command', script], options: {} };
-  }
+  if (variant === 'via-pwsh') return viaPwsh(`& '${installer}' ${args.join(' ')} | Out-Null; exit $LASTEXITCODE`);
+  if (variant === 'pwsh-em0') return defaultErrorMode(installer, args);
   throw new Error(`Unknown launch variant "${variant}". Expected one of ${LAUNCH_VARIANTS.join(', ')}.`);
+}
+
+const POWERSHELL = process.env.PROBE_SHELL ?? 'pwsh';
+
+/** Runs a script in PowerShell as an encoded command, which spares the quoting of paths and quotes through spawn. */
+function viaPwsh(script) {
+  const encoded = Buffer.from(script, 'utf16le').toString('base64');
+  return { file: POWERSHELL, args: ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded], options: {} };
+}
+
+/** pwsh running launch-default-errormode.ps1: the installer starts with error mode 0, so a crash reaches WER and leaves a dump. */
+function defaultErrorMode(installer, args) {
+  const script = path.join(path.dirname(fileURLToPath(import.meta.url)), 'launch-default-errormode.ps1');
+  const commandLine = `"${installer}" ${args.join(' ')}`;
+  return { file: POWERSHELL, args: ['-NoProfile', '-NonInteractive', '-File', script, '-CommandLine', commandLine], options: {} };
 }
 
 /** cmd.exe /s /c "<command>": the outer quotes are stripped, the inner ones kept (hence the verbatim arguments). */
@@ -79,4 +97,4 @@ export async function installWithVariant(variant, installer, dir, args = ['/S', 
   return { status: result.status, statusHex: hex(result.status), ms: Date.now() - started, error: result.error, variant };
 }
 
-export const LAUNCH_VARIANTS = ['stdio-ignore', 'clean-env', 'via-cmd', 'hide', 'detached', 'delay', 'async', 'cmd-nul', 'via-pwsh', 'cmd-start'];
+export const LAUNCH_VARIANTS = ['stdio-ignore', 'clean-env', 'via-cmd', 'hide', 'detached', 'delay', 'async', 'cmd-nul', 'via-pwsh', 'cmd-start', 'pwsh-em0'];
