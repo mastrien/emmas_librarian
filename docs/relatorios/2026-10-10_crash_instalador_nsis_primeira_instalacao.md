@@ -242,7 +242,7 @@ gh run download 38070894167 -n result-root-pwsh-em0-1
 
 ## 6. O que decidir ainda
 
-1. Acompanhar o relatório aberto no `electron-builder` (ver o link no fim desta seção quando for criado).
+1. Acompanhar o relatório aberto no `electron-builder`: https://github.com/electron-userland/electron-builder/issues/10296 (aberto em 10/10/2026, com os números das duas verificações).
 2. Abrir o PR da correção (`fix/nsis-install-location-overread`) e o PR da investigação (scripts e este relatório).
 3. Se o upstream corrigir, remover o patch e a dependência explícita do `patch-package` na versão que trouxer a correção.
 4. Decidir se vale reduzir o ruído do CI: com a correção, a tolerância de 20 s do harness para o instalador publicado

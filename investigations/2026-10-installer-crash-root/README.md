@@ -49,11 +49,14 @@ pipes de saída, console, pausa antes de lançar, `spawn` síncrono ou assíncro
 
 - A linha 35 é identificada por leitura do template mais a coincidência exata (`0x4000` bytes, só na primeira
   instalação, `System.dll`), não por um mapa do script compilado até o endereço do chamador.
-- Não testei uma correção. Uma candidata é ler até o terminador nulo, por exemplo
-  `System::Call 'kernel32::lstrcpyW(t .r0, p r2)'`; ela mudaria o instalador distribuído e precisa do teste de release.
+- A correção (`System::Call 'kernel32::lstrcpyW(t .s, p r2)v'`) foi aplicada com `patch-package` (branch
+  `fix/nsis-install-location-overread`) e verificada com page heap: ver `docs/relatorios/2026-10-10_crash_instalador_nsis_primeira_instalacao.md`.
 - Nenhum relato upstream foi encontrado nas buscas.
 
-## Rascunho de relatório para o `electron-builder` (não enviado)
+## Relatório para o `electron-builder`
+
+Aberto em https://github.com/electron-userland/electron-builder/issues/10296. O texto abaixo é o rascunho original; o publicado inclui também a
+verificação com page heap (6 de 6 contra 0 de 6) e a sugestão `kernel32::lstrcpyW(t .s, p r2)v`.
 
 > **Title:** NSIS per-user installer: out-of-bounds read in `setInstallModePerUser` (`System::Call '*$2(&w${NSIS_MAX_STRLEN} .s)'`) crashes the installer intermittently on first install
 >
