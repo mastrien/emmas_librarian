@@ -45,6 +45,8 @@ function dumpHang(round, stderrText) {
     return `##### kernel stacks ${pid}\n${kernel.stdout}\n##### fds ${pid}\n${fds.stdout}`;
   });
   const log = fs.existsSync(mainLog) ? fs.readFileSync(mainLog, 'utf-8') : '(no main.log)';
+  // The kernel logs how each process died (traps: int3, Bus error) and which kernel it is.
+  stacks.unshift(`### kernel ${sh('uname', ['-r']).stdout}\n### dmesg (tail)\n${sh('sudo', ['dmesg', '--ctime']).stdout.split('\n').slice(-40).join('\n')}`);
   fs.writeFileSync(
     file,
     [`### processes\n${appLines.join('\n')}`, `### main.log\n${log}`, `### stderr (tail)\n${stderrText.slice(-20000)}`, ...stacks].join('\n\n'),
