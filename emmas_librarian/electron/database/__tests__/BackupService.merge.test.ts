@@ -6,7 +6,8 @@ import type Database from 'better-sqlite3';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { seedFullProject, expectFullProjectCopied } from './support/fullProjectFixture';
+import { seedFullProject, projectContent } from './support/fullProjectFixture';
+import { expectFullProjectCopied } from './support/fullProjectAssertions';
 
 const electron = vi.hoisted(() => ({ userData: '' }));
 
@@ -56,6 +57,16 @@ const seed = (db: Database.Database) => {
   seedFullProject(db, { pdfPath: '/old/pdfs/a.pdf', docPath: '/old/docs/d.pdf' });
 };
 
+/** What the backed-up project holds, read from a scratch library seeded the same way. */
+function backedUpProjectContent(): ReturnType<typeof projectContent> {
+  const scratch = new DatabaseAdapter(':memory:');
+  try {
+    return projectContent(scratch.getDB(), seedFullProject(scratch.getDB(), { pdfPath: '/x.pdf', docPath: '/y.pdf' }));
+  } finally {
+    scratch.close();
+  }
+}
+
 beforeEach(() => {
   workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-backup-'));
   electron.userData = path.join(workDir, 'userData');
@@ -85,6 +96,12 @@ describe('BackupService.restoreBackupMerge with real databases', () => {
     expect(await merge()).toBe(1);
 
     expectFullProjectCopied(active.getDB(), mergedProjectId());
+  });
+
+  it('keeps every value of every row of the merged project', async () => {
+    await merge();
+
+    expect(projectContent(active.getDB(), mergedProjectId())).toEqual(backedUpProjectContent());
   });
 
   it('copies stored PDFs and documents into this installation', async () => {

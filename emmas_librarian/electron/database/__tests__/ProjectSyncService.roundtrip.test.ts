@@ -5,7 +5,8 @@ import AdmZip from 'adm-zip';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { seedFullProject, expectFullProjectCopied } from './support/fullProjectFixture';
+import { seedFullProject, projectContent } from './support/fullProjectFixture';
+import { expectFullProjectCopied } from './support/fullProjectAssertions';
 
 const electron = vi.hoisted(() => ({ userData: '', savePath: '' }));
 
@@ -65,11 +66,19 @@ afterEach(() => {
 });
 
 describe('ProjectSyncService export → import round trip', () => {
+  let original = 0;
   const roundTrip = async () => {
     const files = { pdfPath: writeFile('a.pdf', 'PDF-A'), docPath: writeFile('d.pdf', 'DOC-D') };
-    await service.exportProject(seedFullProject(db(), files));
+    original = seedFullProject(db(), files);
+    await service.exportProject(original);
     return Number(await service.importProject(electron.savePath));
   };
+
+  it('keeps every value of every row of the project', async () => {
+    const projectId = await roundTrip();
+
+    expect(projectContent(db(), projectId)).toEqual(projectContent(db(), original));
+  });
 
   it('imports the project as "<name> (Importado)" with every row and remapped foreign key', async () => {
     const projectId = await roundTrip();
