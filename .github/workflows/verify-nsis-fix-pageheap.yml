@@ -1,0 +1,77 @@
+name: Verify the NSIS fix with page heap
+
+# Makes the over-read deterministic: with full page heap every heap block is followed by a guard page, so reading 16 KB
+# past the short string SHGetKnownFolderPath returns faults at once. Reuses the installers built by the run that
+# "Verify the NSIS first-install fix" started (SOURCE_RUN). Expected: control crashes every first install at
+# System.dll+0x1581, patched never.
+on:
+  push:
+    branches: [investigate/installer-crash-root]
+    paths:
+      - '.github/workflows/verify-nsis-fix-pageheap.yml'
+
+env:
+  SOURCE_RUN: 38077489666
+  SCRIPTS: investigations/2026-10-installer-crash-root
+
+jobs:
+  first-install:
+    strategy:
+      fail-fast: false
+      matrix:
+        label: [patched, control]
+        attempt: [1, 2, 3, 4, 5, 6]
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: installer-${{ matrix.label }}
+          path: ${{ runner.temp }}/under-test
+          run-id: ${{ env.SOURCE_RUN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install the debugger tools (gflags for page heap, cdb to read the dumps)
+        shell: pwsh
+        run: |
+          $dir = 'C:\Program Files (x86)\Windows Kits\10\Debuggers'
+          if (-not (Test-Path "$dir\x86\cdb.exe")) {
+            Invoke-WebRequest 'https://go.microsoft.com/fwlink/?linkid=2196241' -OutFile "$env:RUNNER_TEMP\winsdksetup.exe"
+            Start-Process "$env:RUNNER_TEMP\winsdksetup.exe" -ArgumentList '/features','OptionId.WindowsDesktopDebuggers','/quiet','/norestart' -Wait
+          }
+          foreach ($f in 'x86\cdb.exe','x86\gflags.exe','x64\gflags.exe') { if (-not (Test-Path "$dir\$f")) { throw "missing $dir\$f" } }
+      - name: Turn on full page heap for the installer
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem "$env:RUNNER_TEMP\under-test\*.exe" | Select-Object -First 1
+          "INSTALLER_UNDER_TEST=$($exe.FullName)" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "INSTALLER_LABEL=${{ matrix.label }}" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          $dir = 'C:\Program Files (x86)\Windows Kits\10\Debuggers'
+          # Both bitnesses: the installer is a 32-bit process, whose Image File Execution Options may live in the WOW64 view.
+          & "$dir\x64\gflags.exe" /p /enable $exe.Name /full
+          & "$dir\x86\gflags.exe" /p /enable $exe.Name /full
+          & "$dir\x64\gflags.exe" /p
+      - name: First install with page heap (SetErrorMode default, so WER keeps a dump)
+        run: node crash-root.mjs pwsh-em0 ${{ matrix.attempt }}
+        working-directory: ${{ env.SCRIPTS }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-pageheap-${{ matrix.label }}-${{ matrix.attempt }}
+          path: ${{ env.SCRIPTS }}/results
+
+  summary:
+    needs: first-install
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: result-pageheap-*
+          path: all-results
+      - name: Table
+        run: node ${{ env.SCRIPTS }}/summarize.mjs all-results
