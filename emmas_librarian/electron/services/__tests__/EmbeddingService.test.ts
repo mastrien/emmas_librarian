@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EmbeddingService } from '../EmbeddingService';
 import { AIModelConfig } from '../../../src/types';
+import { FakeTransformersRuntime } from './fakes/FakeTransformersRuntime';
 
 const mockConfig: AIModelConfig = {
   id: 1,
@@ -180,6 +181,15 @@ describe('EmbeddingService', () => {
     const config = { ...mockConfig, provider: 'unknown' as any };
     const service = new EmbeddingService(config, {});
     await expect(service.embed('test')).rejects.toThrow('Provedor de embedding unknown não suportado.');
+  });
+
+  // The only test that loads the local model: EmbeddingService keeps the loaded extractor in a static field.
+  it('loads the local ONNX model with its cache in the given models folder', async () => {
+    const config = { ...mockConfig, provider: 'local' as const, model_name: 'all-MiniLM-L6-v2' };
+    const runtime = new FakeTransformersRuntime([0.25, 0.5]);
+    const service = new EmbeddingService(config, {}, '/userData/models', async () => runtime);
+    expect(await service.embed('texto local')).toEqual([0.25, 0.5]);
+    expect(runtime.cacheDirAtLoad).toBe('/userData/models');
   });
 
   it('should support local ONNX provider', async () => {

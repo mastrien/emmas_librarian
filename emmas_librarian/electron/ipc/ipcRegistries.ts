@@ -1,4 +1,5 @@
 import { ipcMain, app } from 'electron';
+import path from 'path';
 import { DatabaseAdapter } from '../database/DatabaseAdapter';
 import { ScientificVenueRepository } from '../database/ScientificVenueRepository';
 import { SyncService } from '../database/SyncService';
@@ -84,7 +85,7 @@ function registerLibraryServices(
 
   // E2E runs must not hit the real bibliographic APIs.
   const orchestrator = new SearchOrchestrator(db, new QueryTranslator(), apiIntegratorFor(process.env));
-  setupAiIpcHandlers(db, new AIService(db));
+  setupAiIpcHandlers(db, new AIService(db, path.join(userData, 'models')));
 
   registerWindowHandlers(ipcMain);
   registerProjectHandlers(ipcMain, db);
