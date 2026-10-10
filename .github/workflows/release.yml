@@ -7,7 +7,14 @@ on:
 
 jobs:
   release:
-    runs-on: windows-latest
+    strategy:
+      # One at a time, Windows first: electron-builder creates the tag's release if it is missing, and two jobs
+      # doing that at once can leave two releases. The second job finds the first one's and adds its files
+      # (NSIS + latest.yml, AppImage + latest-linux.yml).
+      max-parallel: 1
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Check out Git repository
