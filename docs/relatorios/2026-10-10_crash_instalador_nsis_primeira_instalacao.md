@@ -57,6 +57,9 @@ primeiras instalações lançadas direto (dezenas de amostras em várias rodadas
 | 8 | `38070894167` | instalador lançado com `CREATE_DEFAULT_ERROR_MODE`, para o WER registrar | **4/30 crasharam e deixaram minidump**: a primeira vez que se viu o ponto exato da falha |
 | 8b | `38072399076` | análise dos 4 minidumps com o `cdb` | mesmo ponto de falha nos quatro (seção 3) |
 | 9 | `38072774395` | primeira instalação e depois 5 reinstalações no mesmo runner | sem a chave no registro 14/44 crasharam; **com a chave 0/150** |
+| 10 | `38076935197` | verificação da correção com instaladores compilados no CI | todos os 90 jobs falharam por um erro meu (o instalador se chama `Emma's Librarian Setup ...exe` e o apóstrofo quebrava um comando PowerShell) |
+| 10b | `38077489666` | o mesmo, corrigido | `control` 2/40 e 1/5; `patched` 0/40 e 0/5; pasta padrão igual nos dois |
+| 11 | `38078315267` | os mesmos instaladores com page heap | **`control` 6/6 crasharam em `System.dll+0x1581`; `patched` 0/6 passam por ali** (e um segundo defeito, no `StdUtils`, aparece no fim) |
 
 ### 2.1 O que cada tentativa ensinou (e onde errei)
 
@@ -136,7 +139,8 @@ Depende de a memória depois do bloco estar mapeada ou não, ou seja, do layout 
 
 - A linha 35 foi identificada por leitura do template e pela coincidência exata dos números (`0x4000` bytes, só na
   primeira instalação, `System.dll`), não por um mapa do script compilado até o endereço do chamador. A prova de
-  causalidade vem do teste sem e com a chave no registro e da verificação da correção (seção 4).
+  causalidade vem do teste sem e com a chave no registro (0 de 150) e da verificação com page heap (6 de 6 contra 0 de
+  6), seção 4.2.
 - Usuários reais devem ter o mesmo risco na primeira instalação, mas não foi medido fora dos runners.
 - Não foi encontrado relato upstream do defeito nas buscas.
 
@@ -164,7 +168,38 @@ ele). Também há uma regra de `.gitattributes` para o patch ficar sempre com fi
 Workflow `verify-nsis-fix.yml` na branch de investigação: compila dois instaladores (um da branch da correção, outro da
 mesma `main` sem o patch, `ef8b707`), instala cada um em 40 runners novos e confere o diretório padrão de instalação.
 
-VERIFICACAO_PENDENTE
+Duas verificações, a segunda é a que prova.
+
+**a) Taxa em instaladores compilados no CI (run `38077489666`, 45 runners por lado).** Dois instaladores reais: `patched`
+(branch da correção, o `npm ci` aplica o patch) e `control` (a mesma `main`, `ef8b707`, sem o patch).
+
+| Instalador | Primeiras instalações que crasharam |
+|---|---|
+| `control` | 2 de 40, e 1 de 5 no teste da pasta padrão |
+| `patched` | 0 de 40, e 0 de 5 |
+
+Isso **não** discrimina por si só: o controle compilado crashou só ~7%, bem abaixo dos ~20-30% dos instaladores
+`1.1.23` e `9.0.0` (cada binário tem um layout de memória um pouco diferente), e 2/40 contra 0/40 tem cerca de 24% de
+chance de ser acaso. O que a execução prova é a função: o instalador patchado instala normalmente e calcula a mesma pasta
+padrão do controle (`emmas_librarian`, em `%LOCALAPPDATA%\Programs`), ou seja, a nova leitura da string está correta.
+
+**b) Page heap, que torna o defeito determinístico (run `38078315267`).** Com `gflags /p /full` no executável do
+instalador, cada bloco de heap fica seguido de uma página de guarda e qualquer leitura além do fim falha na hora. Mesmos
+dois instaladores do run anterior, 6 primeiras instalações cada:
+
+| Instalador | Resultado |
+|---|---|
+| `control` | **6 de 6** `0xC0000005`, sempre em `System.dll+0x1581` (bucket `INVALID_POINTER_READ_AVRF`) |
+| `patched` | **0 de 6** passam por esse ponto |
+
+Isso confirma a causa de ponta a ponta: o defeito é uma leitura além do fim de um bloco de heap, e o patch a elimina.
+
+**Um segundo defeito, separado, apareceu.** No instalador patchado com page heap, os 6 saíram com `0xC0000421` (verifier
+stop) 40 a 79 s depois de começar, ou seja, no fim da instalação: o verificador acusa um bloco de heap corrompido num `free`
+dentro do `StdUtils.dll` quando o plugin é descarregado (`DLL_PROCESS_DETACH`). Sem page heap isso é silencioso (as
+instalações normais saem com 0), e acontece ao encerrar o processo, depois de instalar. Fica registrado como defeito
+latente do plugin `StdUtils` do NSIS, **fora do escopo desta correção**. Não foi investigado mais (não confirmei que a
+instalação termina por inteiro nesse caso; a duração de 40 a 79 s é compatível com isso).
 
 ## 5. Como refazer ou revisitar
 
@@ -207,8 +242,7 @@ gh run download 38070894167 -n result-root-pwsh-em0-1
 
 ## 6. O que decidir ainda
 
-1. Abrir o relatório no `electron-builder` com os números da verificação (rascunho no README da pasta
-   `investigations/2026-10-installer-crash-root/`).
+1. Acompanhar o relatório aberto no `electron-builder` (ver o link no fim desta seção quando for criado).
 2. Abrir o PR da correção (`fix/nsis-install-location-overread`) e o PR da investigação (scripts e este relatório).
 3. Se o upstream corrigir, remover o patch e a dependência explícita do `patch-package` na versão que trouxer a correção.
 4. Decidir se vale reduzir o ruído do CI: com a correção, a tolerância de 20 s do harness para o instalador publicado
