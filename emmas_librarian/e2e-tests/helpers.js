@@ -44,10 +44,12 @@ const appEnv = (dataDir, env) => ({ ...process.env, E2E_USER_DATA_DIR: dataDir, 
  * be used there: its stdout listener is attached after the launch returns, and on Linux the app had already
  * printed and quit by then, so the output was empty.
  *
+ * `execFileImpl` is the process launcher, replaced by a fake in the helper's own unit tests.
+ *
  * Usage:
  *   const { code, signal, stdout } = await runAppUntilExit({ E2E_MOCK_RECOVERY_CHOICE: '0' }, { userDataDir });
  */
-function runAppUntilExit(env, { userDataDir, timeoutMs = 60000 }) {
+function runAppUntilExit(env, { userDataDir, timeoutMs = 60000, execFileImpl = execFile }) {
   checkHeadless();
   // --remote-debugging-port is what marks a launch as automated, as Playwright's does (electron/userDataDir.ts).
   const args = [...appArgs(), '--remote-debugging-port=0'];
@@ -55,7 +57,7 @@ function runAppUntilExit(env, { userDataDir, timeoutMs = 60000 }) {
   // code is the exit status (0 without an error), or e.g. 'ENOENT' if Electron could not start; signal is set
   // when the timeout killed it.
   return new Promise((resolve) => {
-    execFile(electronBinary, args, options, (error, stdout, stderr) =>
+    execFileImpl(electronBinary, args, options, (error, stdout, stderr) =>
       resolve({ code: error?.code ?? 0, signal: error?.signal ?? null, stdout, stderr }),
     );
   });
