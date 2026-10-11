@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AIService } from '../AIService';
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import { extractTextWithCoordinates } from '../PdfExtractor';
+import { EmbeddingService } from '../EmbeddingService';
 
 vi.mock('../PdfExtractor', () => ({
   extractTextWithCoordinates: vi.fn().mockResolvedValue({
@@ -182,6 +183,20 @@ describe('AIService', () => {
     expect(results[0].question).toBe('Q1?');
     expect(results[0].synthesizedAnswer).toBe('A1');
     expect(results[0].evidences[0].text).toBe('quote');
+  });
+
+  // Regression: the local embedding model was cached inside app.asar; AIService must pass the models folder on.
+  it('passes the local models folder to the EmbeddingService it creates', async () => {
+    const answer = '{"question": "Q1?", "synthesizedAnswer": "A1", "confidenceScore": 0.9, "evidences": []}';
+    vi.mocked(global.fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: answer } }] }),
+    });
+    const withModelsDir = new AIService(dbMock, '/userData/models');
+
+    await withModelsDir.massiveExtraction(1, 'fake/path.pdf', ['Q1?']);
+
+    expect(vi.mocked(EmbeddingService).mock.calls[0][2]).toBe('/userData/models');
   });
 
   it('should throw error when configured API key is missing', async () => {
