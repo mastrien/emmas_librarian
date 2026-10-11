@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { spawn } from 'child_process';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { isProcessAlive, processExited } from '../processExit';
 
 const startNode = (script: string) => spawn(process.execPath, ['-e', script], { stdio: 'ignore' });
@@ -14,6 +14,25 @@ describe('isProcessAlive', () => {
     const child = startNode('process.exit(0)');
     await new Promise((resolve) => child.once('exit', resolve));
     expect(isProcessAlive(child.pid!)).toBe(false);
+  });
+});
+
+describe('isProcessAlive, when signal 0 is refused', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  const refuseSignalWith = (code: string) =>
+    vi.spyOn(process, 'kill').mockImplementation(() => {
+      throw Object.assign(new Error(code), { code });
+    });
+
+  it('counts a process owned by someone else as alive (EPERM)', () => {
+    refuseSignalWith('EPERM');
+    expect(isProcessAlive(1234)).toBe(true);
+  });
+
+  it('counts a process that does not exist as gone (ESRCH)', () => {
+    refuseSignalWith('ESRCH');
+    expect(isProcessAlive(1234)).toBe(false);
   });
 });
 
