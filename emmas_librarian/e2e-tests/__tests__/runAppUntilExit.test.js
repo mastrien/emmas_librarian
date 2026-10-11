@@ -1,12 +1,16 @@
 // @vitest-environment node
 import path from 'path';
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { runAppUntilExit } from '../helpers';
 import { FakeExecFile } from './fakes/FakeExecFile';
 
-// The helper refuses to run on CI without a display; these tests start no Electron, so give it one.
-vi.stubEnv('DISPLAY', ':99');
-vi.stubEnv('HEADLESS_E2E', '');
+// The helper refuses to run on Linux CI without a display. These tests start no Electron, so take the run out of
+// CI mode in every test (a module-level stub is undone by unstubAllEnvs after the first one: the Ubuntu job of
+// PR #25 failed that way while Windows passed).
+beforeEach(() => {
+  vi.stubEnv('CI', '');
+  vi.stubEnv('HEADLESS_E2E', '');
+});
 afterEach(() => vi.unstubAllEnvs());
 
 const run = (launcher, env = {}, options = {}) =>
