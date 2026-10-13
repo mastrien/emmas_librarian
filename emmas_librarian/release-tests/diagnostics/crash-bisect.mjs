@@ -3,7 +3,7 @@
 // process died on its own (signal or early exit). Core dumps go to a file (core_pattern set by the workflow, apport off),
 // so a crash no longer wedges the exit; the workflow then runs gdb on the cores.
 // Usage (under xvfb-run): node crash-bisect.mjs <name> <rounds> <dwellMs> <outDir> <command> [args...]
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -25,21 +25,30 @@ async function oneRound(round) {
   child.once('exit', (code, signal) => (died = { code, signal }));
   await sleep(dwellMs);
   const diedEarly = died;
-  if (!died) {
-    // Own process group: pkill -f would match this script's own command line (it carries the app path).
-    process.kill(-child.pid, 'SIGTERM');
-    await Promise.race([new Promise((r) => child.once('exit', r)), sleep(5000)]);
-    try { process.kill(-child.pid, 'SIGKILL'); } catch { /* already gone */ }
-  }
+  // SIGKILL, not SIGTERM: on SIGTERM Chromium's children abort with a FATAL log (HandleFatal, int3) when they lose
+  // the parent, which looked like a crash in every round (run 38327759502). The group is ours: pkill -f would match
+  // this script's own command line, which carries the app path.
+  try { process.kill(-child.pid, 'SIGKILL'); } catch { /* already gone */ }
+  await Promise.race([new Promise((r) => child.once('exit', r)), sleep(5000)]);
   fs.rmSync(configHome, { recursive: true, force: true });
   return diedEarly;
 }
 
+// The kernel names every trap it saw. The AppImage's top process is its runtime, so its exit status is not the app's.
+let seenTraps = 0;
+function newTraps() {
+  const lines = spawnSync('sudo', ['dmesg']).stdout.toString().split(String.fromCharCode(10)).filter((l) => l.includes('traps:'));
+  const fresh = lines.slice(seenTraps).map((l) => (l.match(/in [^\s\[]+\[([0-9a-f]+),/) ?? [])[1] ?? l);
+  seenTraps = lines.length;
+  return fresh;
+}
+newTraps();
 let crashes = 0;
 for (let round = 1; round <= rounds; round++) {
   const early = await oneRound(round);
-  if (early) crashes++;
-  console.log(`[${name}] round ${round}: ${early ? `DIED code=${early.code} signal=${early.signal}` : 'alive'}`);
+  const traps = newTraps();
+  if (early || traps.length) crashes++;
+  console.log(`[${name}] round ${round}: ${early ? `DIED code=${early.code} signal=${early.signal}` : 'alive'} traps=[${traps}]`);
   await sleep(1000);
 }
 console.log(`[${name}] ${crashes} early death(s) in ${rounds} rounds`);

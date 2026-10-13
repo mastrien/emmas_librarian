@@ -61,16 +61,16 @@ jobs:
             unpacked-nogpu) CMD=(release/linux-unpacked/emmas-librarian --disable-gpu) ;;
             appimage)       CMD=("$(ls "$PWD"/release/*.AppImage)") ;;
           esac
-          xvfb-run -a node release-tests/diagnostics/crash-bisect.mjs "${{ matrix.variant }}" 60 8000 diag "${CMD[@]}" | tee diag/loop.txt
+          xvfb-run -a node release-tests/diagnostics/crash-bisect.mjs "${{ matrix.variant }}" 150 8000 diag "${CMD[@]}" | tee diag/loop.txt
 
       - name: Stacks from the core dumps
         if: always()
         run: |
           mkdir -p diag
-          sudo dmesg --ctime | grep -E 'trap|segfault|Bus error' | tail -60 > diag/dmesg.txt || true
+          sudo dmesg --ctime | grep -E 'trap|segfault|Bus error' > diag/dmesg.txt || true
           ls -la /tmp/cores > diag/cores.txt || true
           n=0
-          for core in $(ls -S /tmp/cores/core.* 2>/dev/null | head -6); do
+          for core in $(ls -t /tmp/cores/core.* 2>/dev/null | head -6); do
             n=$((n+1))
             gdb -batch -c "$core" -ex 'info proc mappings' -ex 'bt 30' -ex 'info registers rip' > "diag/gdb-$n-$(basename "$core").txt" 2>&1 || true
           done
