@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [bare, bare-nogpu, unpacked, unpacked-nogpu, appimage]
+        variant: [appimage, appimage-extract, unpacked-nosandbox, bare-nosandbox, unpacked]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     defaults:
@@ -53,15 +53,19 @@ jobs:
         continue-on-error: true
         run: |
           ulimit -c unlimited
+          # What the AppImage launcher passes to the app (sandbox flags), to compare with the unpacked runs.
+          if ls release/*.AppImage >/dev/null 2>&1; then
+            (cd /tmp && "$OLDPWD"/release/*.AppImage --appimage-extract >/dev/null && head -40 squashfs-root/AppRun) | tee diag-apprun.txt || true
+          fi
           mkdir -p diag
           case "${{ matrix.variant }}" in
-            bare)           CMD=(node_modules/electron/dist/electron release-tests/diagnostics/bare-app) ;;
-            bare-nogpu)     CMD=(node_modules/electron/dist/electron --disable-gpu release-tests/diagnostics/bare-app) ;;
-            unpacked)       CMD=(release/linux-unpacked/emmas-librarian) ;;
-            unpacked-nogpu) CMD=(release/linux-unpacked/emmas-librarian --disable-gpu) ;;
-            appimage)       CMD=("$(ls "$PWD"/release/*.AppImage)") ;;
+            bare-nosandbox)     CMD=(node_modules/electron/dist/electron --no-sandbox release-tests/diagnostics/bare-app) ;;
+            unpacked)           CMD=(release/linux-unpacked/emmas-librarian) ;;
+            unpacked-nosandbox) CMD=(release/linux-unpacked/emmas-librarian --no-sandbox) ;;
+            appimage)           CMD=("$(ls "$PWD"/release/*.AppImage)") ;;
+            appimage-extract)   CMD=(env APPIMAGE_EXTRACT_AND_RUN=1 "$(ls "$PWD"/release/*.AppImage)") ;;
           esac
-          xvfb-run -a node release-tests/diagnostics/crash-bisect.mjs "${{ matrix.variant }}" 150 8000 diag "${CMD[@]}" | tee diag/loop.txt
+          xvfb-run -a node release-tests/diagnostics/crash-bisect.mjs "${{ matrix.variant }}" 150 8000 diag "${CMD[@]}" | tee diag/loop.txt; cp diag-apprun.txt diag/ 2>/dev/null || true
 
       - name: Stacks from the core dumps
         if: always()
