@@ -3,7 +3,7 @@
 // process died on its own (signal or early exit). Core dumps go to a file (core_pattern set by the workflow, apport off),
 // so a crash no longer wedges the exit; the workflow then runs gdb on the cores.
 // Usage (under xvfb-run): node crash-bisect.mjs <name> <rounds> <dwellMs> <outDir> <command> [args...]
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -20,15 +20,16 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function oneRound(round) {
   const configHome = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-bisect-'));
   const env = { ...process.env, XDG_CONFIG_HOME: configHome };
-  const child = spawn(command, args, { env, stdio: ['ignore', 'ignore', 'ignore'] });
+  const child = spawn(command, args, { env, stdio: ['ignore', 'ignore', 'ignore'], detached: true });
   let died = null;
   child.once('exit', (code, signal) => (died = { code, signal }));
   await sleep(dwellMs);
   const diedEarly = died;
   if (!died) {
-    child.kill('SIGTERM');
+    // Own process group: pkill -f would match this script's own command line (it carries the app path).
+    process.kill(-child.pid, 'SIGTERM');
     await Promise.race([new Promise((r) => child.once('exit', r)), sleep(5000)]);
-    spawnSync('pkill', ['-KILL', '-f', command]);
+    try { process.kill(-child.pid, 'SIGKILL'); } catch { /* already gone */ }
   }
   fs.rmSync(configHome, { recursive: true, force: true });
   return diedEarly;
