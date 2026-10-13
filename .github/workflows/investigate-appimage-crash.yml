@@ -1,0 +1,84 @@
+name: Investigate AppImage crash (temporary)
+
+# TEMPORARY (issue #37): on ubuntu-24.04 the app sometimes aborts at startup (int3 in
+# partition_alloc::internal::FreelistCorruptionDetected, 5/5 the same site; run 38025654139). Who corrupts the heap is
+# unknown. This bisects: bare Electron (no app code) vs our app unpacked vs the AppImage, with and without the GPU, and
+# runs gdb on the core dumps to get the stack at the abort.
+on:
+  push:
+    branches: [investigate/appimage-crash]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bisect:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [bare, bare-nogpu, unpacked, unpacked-nogpu, appimage]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: ./emmas_librarian
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare Linux
+        run: |
+          sudo apt-get update -q
+          uname -a
+          sudo apt-get install -y -q libfuse2t64 gdb
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          # Cores to files (no apport pipe, which wedged the exit); stop apport so it does not take the pattern back.
+          sudo systemctl stop apport.service || true
+          sudo mkdir -p /tmp/cores && sudo chmod 777 /tmp/cores
+          sudo sysctl -w kernel.core_pattern='/tmp/cores/core.%e.%p'
+
+      - run: npm ci
+
+      - name: Build the app
+        if: ${{ !startsWith(matrix.variant, 'bare') }}
+        run: npm run electron:build -- --publish never
+
+      - name: Launch loop (${{ matrix.variant }})
+        continue-on-error: true
+        run: |
+          ulimit -c unlimited
+          mkdir -p diag
+          case "${{ matrix.variant }}" in
+            bare)           CMD=(node_modules/electron/dist/electron release-tests/diagnostics/bare-app) ;;
+            bare-nogpu)     CMD=(node_modules/electron/dist/electron --disable-gpu release-tests/diagnostics/bare-app) ;;
+            unpacked)       CMD=(release/linux-unpacked/emmas-librarian) ;;
+            unpacked-nogpu) CMD=(release/linux-unpacked/emmas-librarian --disable-gpu) ;;
+            appimage)       CMD=("$(ls "$PWD"/release/*.AppImage)") ;;
+          esac
+          xvfb-run -a node release-tests/diagnostics/crash-bisect.mjs "${{ matrix.variant }}" 60 8000 diag "${CMD[@]}" | tee diag/loop.txt
+
+      - name: Stacks from the core dumps
+        if: always()
+        run: |
+          mkdir -p diag
+          sudo dmesg --ctime | grep -E 'trap|segfault|Bus error' | tail -60 > diag/dmesg.txt || true
+          ls -la /tmp/cores > diag/cores.txt || true
+          n=0
+          for core in $(ls -S /tmp/cores/core.* 2>/dev/null | head -6); do
+            n=$((n+1))
+            gdb -batch -c "$core" -ex 'info proc mappings' -ex 'bt 30' -ex 'info registers rip' > "diag/gdb-$n-$(basename "$core").txt" 2>&1 || true
+          done
+
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crash-bisect-${{ matrix.variant }}
+          path: emmas_librarian/diag
+          if-no-files-found: ignore
