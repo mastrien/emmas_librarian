@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [apprun-direct, trap-exec, bash-exec, unpacked]
+        variant: [apprun-direct, apprunenv-exact, apprun-patched, ld-only]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     defaults:
@@ -60,13 +60,19 @@ jobs:
             # Is the extracted tree the same files as linux-unpacked?
             diff -rq release/linux-unpacked release/squashfs-root > diag/tree-diff.txt || true
           fi
-          # AppRun starts the app with `exec` inside a bash EXIT trap (run 38477721269: only that path crashes).
+          # run 38495170979: only AppRun-family launches crash (~3%); the exec-in-trap and the signal state are not it.
+          # AppRun exports LD_LIBRARY_PATH="$APPDIR/usr/lib:$LD_LIBRARY_PATH": with the variable unset the trailing ':'
+          # is an empty entry = the current directory, so every dlopen searches it first (timing, and a stray lib).
           B="$PWD/release/linux-unpacked/emmas-librarian"
+          U="$PWD/release/linux-unpacked"
           case "${{ matrix.variant }}" in
-            unpacked)     CMD=("$B") ;;
-            apprun-direct) CMD=("$PWD/release/squashfs-root/AppRun") ;;
-            trap-exec)    CMD=(bash -c "trap 'exec $B' EXIT; exit 0") ;;
-            bash-exec)    CMD=(bash -c "exec $B") ;;
+            apprun-direct)   CMD=("$PWD/release/squashfs-root/AppRun") ;;
+            apprunenv-exact) CMD=(env "APPDIR=$U" "PATH=$U:$U/usr/sbin:$PATH" "LD_LIBRARY_PATH=$U/usr/lib:" "GSETTINGS_SCHEMA_DIR=$U/usr/share/glib-2.0/schemas:" "XDG_DATA_DIRS=$U/usr/share/:./share/:/usr/share/gnome:/usr/local/share/:/usr/share/:$U/usr/share/:/usr/share/gnome/:/usr/local/share/:/usr/share/" "$B") ;;
+            ld-only)         CMD=(env "LD_LIBRARY_PATH=$U/usr/lib:" "$B") ;;
+            apprun-patched)  sed '/export LD_LIBRARY_PATH=/d' release/squashfs-root/AppRun > release/squashfs-root/AppRun.patched
+                             chmod +x release/squashfs-root/AppRun.patched
+                             grep -c LD_LIBRARY_PATH release/squashfs-root/AppRun.patched > diag/patched-ld-count.txt || true
+                             CMD=("$PWD/release/squashfs-root/AppRun.patched") ;;
           esac
           # Signal masks/dispositions of the app's main process, to compare how each variant starts it.
           xvfb-run -a bash -c '"$@" & sleep 5; p=$(pgrep -o -x emmas-librarian); grep -E "^(PPid|SigBlk|SigIgn|SigCgt)" /proc/$p/status; cat /proc/$p/limits | grep -E "core|stack"; tr "\000" " " < /proc/$p/cmdline; echo; pkill -KILL -x emmas-librarian' _ "${CMD[@]}" | tee diag/sigstate.txt || true
