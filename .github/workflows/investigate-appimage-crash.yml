@@ -69,7 +69,7 @@ jobs:
             bash-exec)    CMD=(bash -c "exec $B") ;;
           esac
           # Signal masks/dispositions of the app's main process, to compare how each variant starts it.
-          xvfb-run -a bash -c '"$@" & sleep 5; p=$(pgrep -o -x emmas-librarian); grep -E "^(PPid|SigBlk|SigIgn|SigCgt)" /proc/$p/status; cat /proc/$p/limits | grep -E "core|stack"; tr '\000' ' ' < /proc/$p/cmdline; echo; pkill -KILL -x emmas-librarian' _ "${CMD[@]}" | tee diag/sigstate.txt || true
+          xvfb-run -a bash -c '"$@" & sleep 5; p=$(pgrep -o -x emmas-librarian); grep -E "^(PPid|SigBlk|SigIgn|SigCgt)" /proc/$p/status; cat /proc/$p/limits | grep -E "core|stack"; tr "\000" " " < /proc/$p/cmdline; echo; pkill -KILL -x emmas-librarian' _ "${CMD[@]}" | tee diag/sigstate.txt || true
           xvfb-run -a node release-tests/diagnostics/crash-bisect.mjs "${{ matrix.variant }}" 150 8000 diag "${CMD[@]}" | tee diag/loop.txt
 
       - name: Stacks from the core dumps
