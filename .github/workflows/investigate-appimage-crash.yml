@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [apprun-direct, apprunenv-exact, apprun-patched, ld-only]
+        variant: [apprun-direct, apprun-no-usr, apprunenv-sq, apprun-no-xdg]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     defaults:
@@ -60,19 +60,19 @@ jobs:
             # Is the extracted tree the same files as linux-unpacked?
             diff -rq release/linux-unpacked release/squashfs-root > diag/tree-diff.txt || true
           fi
-          # run 38495170979: only AppRun-family launches crash (~3%); the exec-in-trap and the signal state are not it.
-          # AppRun exports LD_LIBRARY_PATH="$APPDIR/usr/lib:$LD_LIBRARY_PATH": with the variable unset the trailing ':'
-          # is an empty entry = the current directory, so every dlopen searches it first (timing, and a stray lib).
-          B="$PWD/release/linux-unpacked/emmas-librarian"
-          U="$PWD/release/linux-unpacked"
+          # run 38499235117: the AppRun script crashes ~3-5% (LD_LIBRARY_PATH patched out: still 7/150); the same env without
+          # the script, pointing at linux-unpacked (which has no usr/), does not. What is left: the usr/ tree AppRun points
+          # XDG_DATA_DIRS and GSETTINGS_SCHEMA_DIR at (only the AppImage has it).
+          SQ="$PWD/release/squashfs-root"
+          find "$SQ/usr" | head -80 > diag/usr-tree.txt || true
           case "${{ matrix.variant }}" in
-            apprun-direct)   CMD=("$PWD/release/squashfs-root/AppRun") ;;
-            apprunenv-exact) CMD=(env "APPDIR=$U" "PATH=$U:$U/usr/sbin:$PATH" "LD_LIBRARY_PATH=$U/usr/lib:" "GSETTINGS_SCHEMA_DIR=$U/usr/share/glib-2.0/schemas:" "XDG_DATA_DIRS=$U/usr/share/:./share/:/usr/share/gnome:/usr/local/share/:/usr/share/:$U/usr/share/:/usr/share/gnome/:/usr/local/share/:/usr/share/" "$B") ;;
-            ld-only)         CMD=(env "LD_LIBRARY_PATH=$U/usr/lib:" "$B") ;;
-            apprun-patched)  sed '/export LD_LIBRARY_PATH=/d' release/squashfs-root/AppRun > release/squashfs-root/AppRun.patched
-                             chmod +x release/squashfs-root/AppRun.patched
-                             grep -c LD_LIBRARY_PATH release/squashfs-root/AppRun.patched > diag/patched-ld-count.txt || true
-                             CMD=("$PWD/release/squashfs-root/AppRun.patched") ;;
+            apprun-direct)  CMD=("$SQ/AppRun") ;;
+            apprun-no-usr)  rm -rf /tmp/sq2 && cp -a "$SQ" /tmp/sq2 && rm -rf /tmp/sq2/usr
+                            CMD=(/tmp/sq2/AppRun) ;;
+            apprun-no-xdg)  sed -e '/export XDG_DATA_DIRS=/d' -e '/export GSETTINGS_SCHEMA_DIR=/d' "$SQ/AppRun" > "$SQ/AppRun.noxdg"
+                            chmod +x "$SQ/AppRun.noxdg"
+                            CMD=("$SQ/AppRun.noxdg") ;;
+            apprunenv-sq)   CMD=(env "APPDIR=$SQ" "PATH=$SQ:$SQ/usr/sbin:$PATH" "LD_LIBRARY_PATH=$SQ/usr/lib:" "GSETTINGS_SCHEMA_DIR=$SQ/usr/share/glib-2.0/schemas:" "XDG_DATA_DIRS=$SQ/usr/share/:./share/:/usr/share/gnome:/usr/local/share/:/usr/share/:$SQ/usr/share/:/usr/share/gnome/:/usr/local/share/:/usr/share/" "$SQ/emmas-librarian") ;;
           esac
           # Signal masks/dispositions of the app's main process, to compare how each variant starts it.
           xvfb-run -a bash -c '"$@" & sleep 5; p=$(pgrep -o -x emmas-librarian); grep -E "^(PPid|SigBlk|SigIgn|SigCgt)" /proc/$p/status; cat /proc/$p/limits | grep -E "core|stack"; tr "\000" " " < /proc/$p/cmdline; echo; pkill -KILL -x emmas-librarian' _ "${CMD[@]}" | tee diag/sigstate.txt || true
