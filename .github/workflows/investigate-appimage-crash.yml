@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [apprun-direct, apprun-no-usr, apprunenv-sq, apprun-no-xdg]
+        variant: [env-exact, env-no-xdg, env-no-gset, env-no-both]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     defaults:
@@ -60,19 +60,19 @@ jobs:
             # Is the extracted tree the same files as linux-unpacked?
             diff -rq release/linux-unpacked release/squashfs-root > diag/tree-diff.txt || true
           fi
-          # run 38499235117: the AppRun script crashes ~3-5% (LD_LIBRARY_PATH patched out: still 7/150); the same env without
-          # the script, pointing at linux-unpacked (which has no usr/), does not. What is left: the usr/ tree AppRun points
-          # XDG_DATA_DIRS and GSETTINGS_SCHEMA_DIR at (only the AppImage has it).
-          SQ="$PWD/release/squashfs-root"
-          find "$SQ/usr" | head -80 > diag/usr-tree.txt || true
+          # run 38638135781: AppRun without its XDG_DATA_DIRS/GSETTINGS_SCHEMA_DIR exports: 0/150 (usr/ is not it).
+          # My hand-made copies of that env assumed XDG_DATA_DIRS unset on the runner. Capture the real environment of an
+          # AppRun-launched app and replay it on the unpacked binary, minus one variable at a time.
+          SQ="$PWD/release/squashfs-root"; B="$PWD/release/linux-unpacked/emmas-librarian"
+          R="$PWD/release-tests/diagnostics/replay-apprun-env.sh"
+          xvfb-run -a "$R" capture "$SQ/AppRun" /tmp/apprun.environ || true
+          tr '\0' '\n' < /tmp/apprun.environ > diag/apprun.environ.txt || true
+          printenv | sort > diag/runner.environ.txt
           case "${{ matrix.variant }}" in
-            apprun-direct)  CMD=("$SQ/AppRun") ;;
-            apprun-no-usr)  rm -rf /tmp/sq2 && cp -a "$SQ" /tmp/sq2 && rm -rf /tmp/sq2/usr
-                            CMD=(/tmp/sq2/AppRun) ;;
-            apprun-no-xdg)  sed -e '/export XDG_DATA_DIRS=/d' -e '/export GSETTINGS_SCHEMA_DIR=/d' "$SQ/AppRun" > "$SQ/AppRun.noxdg"
-                            chmod +x "$SQ/AppRun.noxdg"
-                            CMD=("$SQ/AppRun.noxdg") ;;
-            apprunenv-sq)   CMD=(env "APPDIR=$SQ" "PATH=$SQ:$SQ/usr/sbin:$PATH" "LD_LIBRARY_PATH=$SQ/usr/lib:" "GSETTINGS_SCHEMA_DIR=$SQ/usr/share/glib-2.0/schemas:" "XDG_DATA_DIRS=$SQ/usr/share/:./share/:/usr/share/gnome:/usr/local/share/:/usr/share/:$SQ/usr/share/:/usr/share/gnome/:/usr/local/share/:/usr/share/" "$SQ/emmas-librarian") ;;
+            env-exact)   CMD=("$R" exec /tmp/apprun.environ '' "$B") ;;
+            env-no-xdg)  CMD=("$R" exec /tmp/apprun.environ '^XDG_DATA_DIRS=' "$B") ;;
+            env-no-gset) CMD=("$R" exec /tmp/apprun.environ '^GSETTINGS_SCHEMA_DIR=' "$B") ;;
+            env-no-both) CMD=("$R" exec /tmp/apprun.environ '^(XDG_DATA_DIRS|GSETTINGS_SCHEMA_DIR)=' "$B") ;;
           esac
           # Signal masks/dispositions of the app's main process, to compare how each variant starts it.
           xvfb-run -a bash -c '"$@" & sleep 5; p=$(pgrep -o -x emmas-librarian); grep -E "^(PPid|SigBlk|SigIgn|SigCgt)" /proc/$p/status; cat /proc/$p/limits | grep -E "core|stack"; tr "\000" " " < /proc/$p/cmdline; echo; pkill -KILL -x emmas-librarian' _ "${CMD[@]}" | tee diag/sigstate.txt || true
