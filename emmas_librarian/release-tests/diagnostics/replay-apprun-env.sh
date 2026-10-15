@@ -18,6 +18,9 @@ mapfile -d '' vars < "$2"
 keep=()
 for v in "${vars[@]}"; do
   if [ -n "$3" ] && [[ "$v" =~ $3 ]]; then continue; fi
+  # The captured X display belonged to the capture's own xvfb-run; run 38653574452 died on "Missing X server".
+  if [[ "$v" =~ ^(DISPLAY|XAUTHORITY)= ]]; then continue; fi
   keep+=("$v")
 done
+keep+=("DISPLAY=$DISPLAY" "XAUTHORITY=$XAUTHORITY")
 exec env -i "${keep[@]}" "$4"
