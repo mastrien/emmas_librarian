@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [env-exact, x-no-rel, x-no-empty, x-no-both]
+        variant: [unset, empty, ubuntu, usr-share]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     defaults:
@@ -63,24 +63,14 @@ jobs:
           # run 38638135781: AppRun without its XDG_DATA_DIRS/GSETTINGS_SCHEMA_DIR exports: 0/150 (usr/ is not it).
           # My hand-made copies of that env assumed XDG_DATA_DIRS unset on the runner. Capture the real environment of an
           # AppRun-launched app and replay it on the unpacked binary, minus one variable at a time.
-          SQ="$PWD/release/squashfs-root"; B="$PWD/release/linux-unpacked/emmas-librarian"
-          R="$PWD/release-tests/diagnostics/replay-apprun-env.sh"
-          xvfb-run -a "$R" capture "$SQ/AppRun" /tmp/apprun.environ || true
-          tr '\0' '\n' < /tmp/apprun.environ > diag/apprun.environ.txt || true
-          printenv | sort > diag/runner.environ.txt
-          # run 38674889636: replaying AppRun's real env on the unpacked binary reproduces the crash (3/150, 5/150 without
-          # GSETTINGS_SCHEMA_DIR) and 0/150 without XDG_DATA_DIRS. Its value has a relative './share/' and an empty '::' entry
-          # (the runner has no XDG_DATA_DIRS of its own). Which one?
-          XV=$(grep '^XDG_DATA_DIRS=' diag/apprun.environ.txt | cut -d= -f2-)
-          NOREL=${XV//.\/share\/:/}
-          NOEMPTY=${XV//::/:}
-          NOBOTH=${NOREL//::/:}
-          printf '%s\n' "orig=$XV" "norel=$NOREL" "noempty=$NOEMPTY" "noboth=$NOBOTH" > diag/xdg-values.txt
+          # Who is exposed? AppRun builds XDG_DATA_DIRS as "...:${XDG_DATA_DIRS}", an empty entry (= current dir) when the
+          # variable is unset or empty (run 38680775243: that entry alone crashes ~3%). A desktop session sets it.
+          SQ="$PWD/release/squashfs-root"
           case "${{ matrix.variant }}" in
-            env-exact)    CMD=("$R" exec /tmp/apprun.environ '' "$B") ;;
-            x-no-rel)     CMD=("$R" exec /tmp/apprun.environ '^XDG_DATA_DIRS=' "$B" "XDG_DATA_DIRS=$NOREL") ;;
-            x-no-empty)   CMD=("$R" exec /tmp/apprun.environ '^XDG_DATA_DIRS=' "$B" "XDG_DATA_DIRS=$NOEMPTY") ;;
-            x-no-both)    CMD=("$R" exec /tmp/apprun.environ '^XDG_DATA_DIRS=' "$B" "XDG_DATA_DIRS=$NOBOTH") ;;
+            unset)       CMD=(env -u XDG_DATA_DIRS "$SQ/AppRun") ;;
+            empty)       CMD=(env XDG_DATA_DIRS= "$SQ/AppRun") ;;
+            ubuntu)      CMD=(env XDG_DATA_DIRS=/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop "$SQ/AppRun") ;;
+            usr-share)   CMD=(env XDG_DATA_DIRS=/usr/share "$SQ/AppRun") ;;
           esac
           # Signal masks/dispositions of the app's main process, to compare how each variant starts it.
           xvfb-run -a bash -c '"$@" & sleep 5; p=$(pgrep -o -x emmas-librarian); grep -E "^(PPid|SigBlk|SigIgn|SigCgt)" /proc/$p/status; cat /proc/$p/limits | grep -E "core|stack"; tr "\000" " " < /proc/$p/cmdline; echo; pkill -KILL -x emmas-librarian' _ "${CMD[@]}" | tee diag/sigstate.txt || true
