@@ -6,9 +6,11 @@ on:
       - 'v*' # Trigger on tags starting with "v" (e.g., v1.0.0)
 
 jobs:
-  release:
+  # Typecheck and unit tests run on their own runner. `npm test` rebuilds better-sqlite3 for Node (ABI 127);
+  # in the build job below that left a Node binary in the installer of v1.2.0 and v1.2.1 (the rebuild back for
+  # Electron finished in about 1 ms: @electron/rebuild thought it was already done). The build job never runs it.
+  verify:
     runs-on: windows-latest
-
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
@@ -30,13 +32,36 @@ jobs:
         working-directory: ./emmas_librarian
         run: npm test
 
-      # npm test rebuilds better-sqlite3 for the Node ABI; the packaged app needs the Electron ABI.
-      - name: Rebuild native modules for Electron
-        working-directory: ./emmas_librarian
-        run: npm run rebuild:electron
+  release:
+    needs: verify
+    runs-on: windows-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
 
-      - name: Build and Publish
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # postinstall builds better-sqlite3 for Electron. Nothing between here and the build touches it.
+      - name: Install dependencies
+        working-directory: ./emmas_librarian
+        run: npm ci
+
+      - name: Build the installer (not published yet)
+        working-directory: ./emmas_librarian
+        run: npm run electron:build -- --publish never
+
+      # Opens the unpacked app electron-builder just made, the files the installer packs. Fails the release if
+      # the app cannot open its library (e.g. a native module for the wrong ABI).
+      - name: Open the packaged app
+        working-directory: ./emmas_librarian
+        run: npm run test:release-upgrade -- packagedApp.release.ts
+
+      # Publishes exactly the build that was just opened, instead of building a second time.
+      - name: Publish that build
         working-directory: ./emmas_librarian
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run electron:build -- --publish always
+        run: npx electron-builder --prepackaged release/win-unpacked --publish always
