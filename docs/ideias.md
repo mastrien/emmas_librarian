@@ -3,18 +3,21 @@
 Ideias combinadas com o autor que ainda não viraram tarefa. Cada uma diz de onde veio, o que já se sabe
 e quando faz sentido fazer. Quando uma virar branch, mova o que foi decidido para o plano ou o PR e apague daqui.
 
-## Bases novas e download de PDFs de acesso aberto
+Situação em 2026-10-15: **feito** (Teste de atualização entre releases), **em parte** (Bases novas e download de PDFs
+de acesso aberto) e **pendente** (as demais). O que está feito fica marcado aqui como registro, até alguém apagar.
+
+## Bases novas e download de PDFs de acesso aberto (em parte feito)
 
 Pedido em 2026-09-28. Fazer **depois da paginação e antes da atualização dos tutoriais**, para o capítulo 2 ser
 escrito uma vez só. Ainda não se sabe quais bases o público mais usa.
 
-- **OpenAlex:** as respostas que o app já recebe trazem `best_oa_location.pdf_url` / `open_access.oa_url`;
+- **OpenAlex (feito):** as respostas que o app já recebe trazem `best_oa_location.pdf_url` / `open_access.oa_url`;
   `normalizeOpenAlex` guarda só `is_oa` e descarta o link. É o primeiro passo, e o mais barato.
-- **Unpaywall:** acha o PDF aberto pelo DOI (`best_oa_location.url_for_pdf`), o que cobre os resultados de
+- **Unpaywall (pendente):** acha o PDF aberto pelo DOI (`best_oa_location.url_for_pdf`), o que cobre os resultados de
   Crossref, Scopus e WoS. Pede um e-mail em vez de chave; o limite sugerido é de 100 mil consultas por dia.
-- **arXiv** (`export.arxiv.org/api/query`, Atom XML): sem chave, no máximo 1 requisição a cada 3 segundos e uma
+- **arXiv (feito)** (`export.arxiv.org/api/query`, Atom XML): sem chave, no máximo 1 requisição a cada 3 segundos e uma
   conexão por vez; o PDF fica em `arxiv.org/pdf/<id>`.
-- **Candidatas a base nova:** Semantic Scholar (campo `openAccessPdf`; com chave grátis é mais estável),
+- **Candidatas a base nova (pendentes):** Semantic Scholar (campo `openAccessPdf`; com chave grátis é mais estável),
   CORE (baixa o PDF de repositórios; chave grátis, limite de ~5 requisições a cada 10 s), PubMed / Europe PMC
   (se o público for da saúde).
 - **Cuidados:**
@@ -24,11 +27,13 @@ escrito uma vez só. Ainda não se sabe quais bases o público mais usa.
     de deduplicação, de UI e de texto no tutorial.
 - **Onde entra na UI:** "Baixar PDFs de acesso aberto" na barra da seleção múltipla da tabela de artigos.
 - **Feito (2026-09-29):** Europe PMC, arXiv e IEEE Xplore (PR #11) e o download de PDFs abertos (branch
-  `feat/open-access-pdfs`). Semantic Scholar e CORE continuam para outro momento.
+  `feat/open-access-pdfs`, hoje no `main`). O download usa os links de `locations` do OpenAlex (PubMed Central,
+  repositórios, editora), o PDF do arXiv e, quando o OpenAlex não tem link, o `citation_pdf_url` da página do artigo.
+  **Pendentes:** Unpaywall, Semantic Scholar e CORE, para outro momento.
 
-## Tarefas longas em segundo plano
+## Tarefas longas em segundo plano (pendente)
 
-Pedido em 2026-09-28, para depois.
+Pedido em 2026-09-28, para depois. Nada disso existe ainda no código (não há fila de tarefas nem progresso global).
 
 Buscas grandes e investigação em massa com IA rodam sem travar o app. O usuário continua usando o sistema, e um
 elemento flutuante num canto da tela mostra o progresso e avisa quando a tarefa terminou.
@@ -42,7 +47,7 @@ elemento flutuante num canto da tela mostra o progresso e avisa quando a tarefa 
 - Decidir: quantas tarefas ao mesmo tempo, o que acontece se o app fechar no meio e se o resultado da busca
   (a prévia) espera o usuário voltar para revisar.
 
-## Teste de atualização entre releases
+## Teste de atualização entre releases (feito)
 
 Pedido em 2026-09-28. Rodar só antes de publicar uma versão, fora do CI.
 
@@ -53,15 +58,24 @@ Pedido em 2026-09-28. Rodar só antes de publicar uma versão, fora do CI.
 
 Pode ser lento.
 
-## Separador do CSV
+- **Feito (2026-10-08):** a fixture com todas as tabelas (#18), o upgrade a partir da release publicada (#19) e a
+  atualização pelo próprio app, com snapshot e verificação do primeiro boot (#20). Roda no workflow
+  `release-upgrade-test.yml`.
+- **Mudou (2026-10-15, PR #39):** deixou de ser só "fora do CI". O `release.yml` agora abre o app empacotado e roda o
+  upgrade a partir da última release publicada, **com o instalador que vai ser publicado**, antes de criar o
+  rascunho da release. Motivo: a 1.2.0 e a 1.2.1 saíram com o `better-sqlite3` do ABI errado e esses testes, que
+  construíam o instalador em outra ordem, não pegaram.
+
+## Separador do CSV (pendente)
 
 Aberto em 2026-09-28. O CSV exportado usa vírgula, mas o Excel em português espera `;` ao abrir o arquivo com
 duplo clique. Decisão de produto: trocar, oferecer as duas opções ou deixar como está (já tem BOM para os acentos).
+Hoje o CSV segue com vírgula; já existe uma exportação XLSX com as mesmas colunas (`ExportService`).
 
-## Mais fontes
+## Mais fontes (pendente)
 
 Testar viabilidade de permitir o usuário configurar fontes customizadas na plataforma dentre um grupo pré-definido de fontes (que deve incluir Lexend e uma fonte serifada)
 
-## Loading customizado
+## Loading customizado (pendente)
 
 Desenvolver um loading customizado que lembre a logo do sistema, similar a um giroscópio que gira enquanto o loading está em andamento. Testar vários com testes A/B avaliando design e desempenho da animação (ou então fazer de outra forma que não uma animação, se for mais eficiente)
