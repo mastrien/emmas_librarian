@@ -4,18 +4,16 @@ on:
   push:
     tags:
       - 'v*' # Trigger on tags starting with "v" (e.g., v1.0.0)
+  # A manual run on a branch builds and tests everything and publishes nothing (the publish steps need a tag).
+  workflow_dispatch:
 
 jobs:
-  release:
-    strategy:
-      # One at a time, Windows first: electron-builder creates the tag's release if it is missing, and two jobs
-      # doing that at once can leave two releases. The second job finds the first one's and adds its files
-      # (NSIS + latest.yml, AppImage + latest-linux.yml).
-      max-parallel: 1
-      matrix:
-        os: [windows-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
-
+  # Typecheck and unit tests run on their own runner. `npm test` rebuilds better-sqlite3 for Node (ABI 127);
+  # in the build job below that left a Node binary in the installer of v1.2.0 and v1.2.1 (the rebuild back for
+  # Electron finished in about 1 ms: @electron/rebuild thought it was already done). The build job never runs it.
+  # The Linux unit tests run in test.yml, on every pull request.
+  verify:
+    runs-on: windows-latest
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
@@ -37,13 +35,121 @@ jobs:
         working-directory: ./emmas_librarian
         run: npm test
 
-      # npm test rebuilds better-sqlite3 for the Node ABI; the packaged app needs the Electron ABI.
-      - name: Rebuild native modules for Electron
+  # Builds the installer once, tests that very file, and publishes those same files as a draft release.
+  release:
+    needs: verify
+    strategy:
+      # One at a time, Windows first: the Windows job creates the tag's draft release and the Linux job adds its
+      # files to it (two jobs creating it at once can leave two releases).
+      max-parallel: 1
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    defaults:
+      run:
         working-directory: ./emmas_librarian
-        run: npm run rebuild:electron
+        shell: bash
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
 
-      - name: Build and Publish
-        working-directory: ./emmas_librarian
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Ubuntu 24.04 blocks the unprivileged user namespaces Chromium's sandbox needs; lifting it keeps the sandbox on.
+      - name: Prepare Linux to open the packaged app
+        if: runner.os == 'Linux'
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      # postinstall builds better-sqlite3 for Electron. Nothing before the packaged-app test touches it.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the installer (not published yet)
+        run: npm run electron:build -- --publish never
+
+      # Opens the unpacked app electron-builder just made, the files the installer packs. Fails the release if
+      # the app cannot open its library (e.g. a native module for the wrong ABI). Xvfb is the screen on Linux.
+      - name: Open the packaged app
+        run: ${{ runner.os == 'Linux' && 'xvfb-run -a' || '' }} npm run test:release-upgrade -- packagedApp.release.ts
+
+      # What users have: the latest release that is neither a draft nor a pre-release.
+      - name: Download the last published installer
+        if: runner.os == 'Windows'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run electron:build -- --publish always
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="$(gh release list --exclude-drafts --exclude-pre-releases --limit 1 --json tagName -q '.[0].tagName')"
+          [ -n "$tag" ] || { echo "::error::No published release to upgrade from"; exit 1; }
+          echo "Upgrading from $tag"
+          mkdir -p "$RUNNER_TEMP/published"
+          gh release download "$tag" --pattern '*setup*.exe' --pattern '*Setup*.exe' --dir "$RUNNER_TEMP/published"
+          old="$(ls "$RUNNER_TEMP"/published/*.exe | head -1)"
+          new="$(ls "$PWD"/release/*Setup*.exe | head -1)"
+          echo "RELEASE_TEST_OLD_INSTALLER=$(cygpath -w "$old")" >> "$GITHUB_ENV"
+          echo "RELEASE_TEST_NEW_INSTALLER=$(cygpath -w "$new")" >> "$GITHUB_ENV"
+          echo "RELEASE_TEST_INSTALL_DIR=$(cygpath -w "$RUNNER_TEMP/emma-app")" >> "$GITHUB_ENV"
+
+      # The test reads and fills the installed library with better-sqlite3 from this checkout. The installer is
+      # already built, so this cannot reach it.
+      - name: Rebuild native modules for Node
+        if: runner.os == 'Windows'
+        run: npm run rebuild:node
+
+      - name: Upgrade and compare, with the installer to be published
+        if: runner.os == 'Windows'
+        run: npm run test:release-upgrade -- upgrade.release.ts
+
+      # No published release has an AppImage yet, so there is nothing to upgrade from; the update-flow job of
+      # release-upgrade-test.yml covers Linux updates.
+      - name: Upgrade test on Linux
+        if: runner.os == 'Linux'
+        run: echo "::notice title=No AppImage to upgrade from::The upgrade test runs on Linux once a published release has an AppImage."
+
+      - name: Keep the dumps, reports and app logs
+        if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-upgrade-windows-latest
+          path: emmas_librarian/test-results/release
+          if-no-files-found: ignore
+
+      # A draft: the author publishes it by hand after trying the installer.
+      # electron-builder uploads the installer under the name latest.yml points to (emmas_librarian-setup-X.exe), not
+      # the file name it builds ("Emma's Librarian Setup X.exe", which GitHub would turn into Emma.s.Librarian...).
+      # Uploaded under the wrong name the auto-updater gets a 404 (v1.2.2's draft had to be renamed by hand).
+      - name: Publish the tested files as a draft release (Windows)
+        if: github.ref_type == 'tag' && runner.os == 'Windows'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ls -la release
+          name="$(grep -m1 '^path:' release/latest.yml | awk '{print $2}')"
+          [ -n "$name" ] || { echo "::error::No 'path:' in release/latest.yml"; exit 1; }
+          cp "$(ls release/*Setup*.exe | head -1)" "release/$name"
+          cp "$(ls release/*Setup*.exe.blockmap | head -1)" "release/$name.blockmap"
+          gh release create "$GITHUB_REF_NAME" "release/$name" "release/$name.blockmap" release/latest.yml \
+            --draft --verify-tag --title "$GITHUB_REF_NAME"
+          gh release view "$GITHUB_REF_NAME" --json assets -q '.assets[].name' | grep -qx "$name" \
+            || { echo "::error::The release has no asset named $name, which latest.yml points to"; exit 1; }
+
+      # Adds the AppImage and latest-linux.yml to the draft the Windows job created. The AppImage carries its own
+      # blockmap, so there is no separate file.
+      - name: Add the tested AppImage to the draft release (Linux)
+        if: github.ref_type == 'tag' && runner.os == 'Linux'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ls -la release
+          name="$(grep -m1 '^path:' release/latest-linux.yml | awk '{print $2}')"
+          [ -n "$name" ] || { echo "::error::No 'path:' in release/latest-linux.yml"; exit 1; }
+          built="$(ls release/*.AppImage | head -1)"
+          [ "$built" = "release/$name" ] || cp "$built" "release/$name"
+          gh release upload "$GITHUB_REF_NAME" "release/$name" release/latest-linux.yml --clobber
+          gh release view "$GITHUB_REF_NAME" --json assets -q '.assets[].name' | grep -qx "$name" \
+            || { echo "::error::The release has no asset named $name, which latest-linux.yml points to"; exit 1; }

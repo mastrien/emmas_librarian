@@ -111,6 +111,11 @@ jobs:
 
       # Xvfb is the screen for the app on Linux; Windows runners have a desktop.
       - name: Upgrade and compare
+        env:
+          # A desktop session normally sets it. The AppRun electron-builder 26.8 generates builds XDG_DATA_DIRS as
+          # "...:${XDG_DATA_DIRS}", which leaves an empty entry when the variable is unset (a bare CI runner) and the
+          # app then aborts at startup in ~1.5-3% of launches (issue #37). Ubuntu's own value, 0 in 200 launches.
+          XDG_DATA_DIRS: ${{ runner.os == 'Linux' && '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop' || '' }}
         if: steps.published.outputs.skip != 'true'
         run: ${{ runner.os == 'Linux' && 'xvfb-run -a' || '' }} npm run test:release-upgrade -- upgrade.release.ts
 
@@ -191,6 +196,11 @@ jobs:
         run: npm run rebuild:node
 
       - name: Update through the app and compare
+        env:
+          # A desktop session normally sets it. The AppRun electron-builder 26.8 generates builds XDG_DATA_DIRS as
+          # "...:${XDG_DATA_DIRS}", which leaves an empty entry when the variable is unset (a bare CI runner) and the
+          # app then aborts at startup in ~1.5-3% of launches (issue #37). Ubuntu's own value, 0 in 200 launches.
+          XDG_DATA_DIRS: ${{ runner.os == 'Linux' && '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop' || '' }}
         run: >-
           ${{ matrix.keyring == 'gnome' && 'dbus-run-session -- bash release-tests/with-keyring.sh' || '' }}
           ${{ runner.os == 'Linux' && 'xvfb-run -a' || '' }}
