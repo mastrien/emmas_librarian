@@ -8,6 +8,33 @@ export interface ChangelogRelease {
 /** Release notes shown after an update, newest first. Add new releases at the top. */
 export const CHANGELOG_RELEASES: ChangelogRelease[] = [
   {
+    title: 'Versão 1.2.1 — Atualizações mais seguras',
+    items: [
+      <>
+        <strong>Cópia da biblioteca antes de atualizar:</strong> o programa guarda uma cópia dos seus dados antes de
+        instalar uma nova versão. Se a versão nova não abrir, uma tela de recuperação oferece restaurar essa cópia (só
+        os dados voltam, o programa continua na versão nova). Em Configurações a cópia fica disponível por 14 dias.
+      </>,
+      <>
+        <strong>Atualização em segundo plano:</strong> a instalação roda sem abrir o assistente e o programa reabre
+        sozinho no fim.
+      </>,
+      <>
+        <strong>Erros na abertura da biblioteca ficam registrados:</strong> quando a biblioteca não abre, o motivo vai
+        para o log em vez de a falha passar sem explicação. Bibliotecas criadas até a versão 1.1.11 também voltaram a
+        abrir.
+      </>,
+      <>
+        <strong>Modelo local de busca semântica:</strong> o modelo (cerca de 23 MB) agora fica guardado na pasta de
+        dados do programa. Antes ele era baixado de novo a cada abertura.
+      </>,
+      <>
+        <strong>Instalador:</strong> corrigida uma falha rara na primeira instalação (erro 0xC0000005, em cerca de 20%
+        das instalações limpas que testamos).
+      </>,
+    ],
+  },
+  {
     title: 'Versão 1.2.0 — Open Access, Novas Bases & Filtros',
     items: [
       <>
