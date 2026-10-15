@@ -50,6 +50,13 @@ Se você é um desenvolvedor e deseja rodar o projeto localmente, contribuir com
 
 Acompanhe as últimas novidades, melhorias e correções recentes do **Emma's Librarian**:
 
+### v1.2.1
+- **Cópia antes de atualizar:** o programa guarda uma cópia da biblioteca antes de instalar uma nova versão e oferece restaurá-la, por 14 dias, se a versão nova não abrir. A restauração devolve só os dados, o programa continua na versão nova.
+- **Atualização em segundo plano:** a instalação roda sem o assistente e o programa reabre sozinho.
+- **Erros ao abrir a biblioteca:** o motivo passa a ir para o log, e bibliotecas criadas até a versão 1.1.11 voltaram a abrir.
+- **Modelo local de busca semântica:** fica guardado na pasta de dados (cerca de 23 MB) em vez de ser baixado a cada abertura.
+- **Instalador:** corrigida uma falha rara (0xC0000005) na primeira instalação.
+
 ### v1.2.0
 - **Download de PDFs Open Access:** Busca e download automático de artigos em acesso aberto, individualmente ou em lote para a seleção de artigos.
 - **Novas Bases Científicas:** Suporte a Europe PMC, arXiv e IEEE Xplore (experimental), com busca paginada e limites independentes por base.
