@@ -12,8 +12,8 @@ export const CHANGELOG_RELEASES: ChangelogRelease[] = [
     items: [
       <>
         <strong>Cópia da biblioteca antes de atualizar:</strong> o programa guarda uma cópia dos seus dados antes de
-        instalar uma nova versão. Se a versão nova não abrir, uma tela de recuperação oferece restaurar essa cópia
-        (só os dados voltam, o programa continua na versão nova). Em Configurações a cópia fica disponível por 14 dias.
+        instalar uma nova versão. Se a versão nova não abrir, uma tela de recuperação oferece restaurar essa cópia (só
+        os dados voltam, o programa continua na versão nova). Em Configurações a cópia fica disponível por 14 dias.
       </>,
       <>
         <strong>Atualização em segundo plano:</strong> a instalação roda sem abrir o assistente e o programa reabre
