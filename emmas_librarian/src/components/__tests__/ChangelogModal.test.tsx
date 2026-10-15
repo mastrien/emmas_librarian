@@ -28,6 +28,8 @@ describe('ChangelogModal', () => {
     render(<ChangelogModal isOpen={true} version="1.2.0" onClose={vi.fn()} />);
 
     expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
+      'Versão 1.2.2 — Correção da abertura do programa',
+      'Versão 1.2.1 — Atualizações mais seguras',
       'Versão 1.2.0 — Open Access, Novas Bases & Filtros',
       'Versão 1.1.23 — Leitura de PDF & Categorias',
       'Versão 1.1.22 — Otimização Extrema de Performance',
@@ -36,7 +38,7 @@ describe('ChangelogModal', () => {
       'Versão 1.1.19 — Agenda & Prazos',
       ...[18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6].map((n) => `Versão 1.1.${n}`),
     ]);
-    expect(screen.getAllByRole('listitem')).toHaveLength(65);
+    expect(screen.getAllByRole('listitem')).toHaveLength(71);
   });
 
   it('keeps inline formatting inside release notes', () => {
