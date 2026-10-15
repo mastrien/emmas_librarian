@@ -1,7 +1,7 @@
 #!/bin/bash
 # TEMPORARY diagnostic for issue #37. Two modes, both under xvfb-run:
 #   capture <AppRun> <outFile>        launch AppRun, save the app's real /proc/<pid>/environ (NUL separated), kill it.
-#   exec <environFile> <dropRegex> <binary>
+#   exec <environFile> <dropRegex> <binary> [KEY=VALUE...]
 #                                     exec <binary> in that environment minus the variables matching dropRegex
 #                                     (empty regex keeps all).
 set -e
@@ -23,4 +23,6 @@ for v in "${vars[@]}"; do
   keep+=("$v")
 done
 keep+=("DISPLAY=$DISPLAY" "XAUTHORITY=$XAUTHORITY")
+# Extra KEY=VALUE arguments after the binary override the replayed values.
+keep+=("${@:5}")
 exec env -i "${keep[@]}" "$4"

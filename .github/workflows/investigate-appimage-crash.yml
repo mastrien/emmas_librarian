@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [env-exact, env-no-xdg, env-no-gset, env-no-both]
+        variant: [env-exact, x-no-rel, x-no-empty, x-no-both]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     defaults:
@@ -68,15 +68,23 @@ jobs:
           xvfb-run -a "$R" capture "$SQ/AppRun" /tmp/apprun.environ || true
           tr '\0' '\n' < /tmp/apprun.environ > diag/apprun.environ.txt || true
           printenv | sort > diag/runner.environ.txt
+          # run 38674889636: replaying AppRun's real env on the unpacked binary reproduces the crash (3/150, 5/150 without
+          # GSETTINGS_SCHEMA_DIR) and 0/150 without XDG_DATA_DIRS. Its value has a relative './share/' and an empty '::' entry
+          # (the runner has no XDG_DATA_DIRS of its own). Which one?
+          XV=$(grep '^XDG_DATA_DIRS=' diag/apprun.environ.txt | cut -d= -f2-)
+          NOREL=${XV//.\/share\/:/}
+          NOEMPTY=${XV//::/:}
+          NOBOTH=${NOREL//::/:}
+          printf '%s\n' "orig=$XV" "norel=$NOREL" "noempty=$NOEMPTY" "noboth=$NOBOTH" > diag/xdg-values.txt
           case "${{ matrix.variant }}" in
-            env-exact)   CMD=("$R" exec /tmp/apprun.environ '' "$B") ;;
-            env-no-xdg)  CMD=("$R" exec /tmp/apprun.environ '^XDG_DATA_DIRS=' "$B") ;;
-            env-no-gset) CMD=("$R" exec /tmp/apprun.environ '^GSETTINGS_SCHEMA_DIR=' "$B") ;;
-            env-no-both) CMD=("$R" exec /tmp/apprun.environ '^(XDG_DATA_DIRS|GSETTINGS_SCHEMA_DIR)=' "$B") ;;
+            env-exact)    CMD=("$R" exec /tmp/apprun.environ '' "$B") ;;
+            x-no-rel)     CMD=("$R" exec /tmp/apprun.environ '^XDG_DATA_DIRS=' "$B" "XDG_DATA_DIRS=$NOREL") ;;
+            x-no-empty)   CMD=("$R" exec /tmp/apprun.environ '^XDG_DATA_DIRS=' "$B" "XDG_DATA_DIRS=$NOEMPTY") ;;
+            x-no-both)    CMD=("$R" exec /tmp/apprun.environ '^XDG_DATA_DIRS=' "$B" "XDG_DATA_DIRS=$NOBOTH") ;;
           esac
           # Signal masks/dispositions of the app's main process, to compare how each variant starts it.
           xvfb-run -a bash -c '"$@" & sleep 5; p=$(pgrep -o -x emmas-librarian); grep -E "^(PPid|SigBlk|SigIgn|SigCgt)" /proc/$p/status; cat /proc/$p/limits | grep -E "core|stack"; tr "\000" " " < /proc/$p/cmdline; echo; pkill -KILL -x emmas-librarian' _ "${CMD[@]}" | tee diag/sigstate.txt || true
-          xvfb-run -a node release-tests/diagnostics/crash-bisect.mjs "${{ matrix.variant }}" 150 8000 diag "${CMD[@]}" | tee diag/loop.txt
+          xvfb-run -a node release-tests/diagnostics/crash-bisect.mjs "${{ matrix.variant }}" 200 8000 diag "${CMD[@]}" | tee diag/loop.txt
 
       - name: Stacks from the core dumps
         if: always()
