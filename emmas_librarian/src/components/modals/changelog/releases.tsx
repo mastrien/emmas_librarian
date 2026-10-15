@@ -8,6 +8,16 @@ export interface ChangelogRelease {
 /** Release notes shown after an update, newest first. Add new releases at the top. */
 export const CHANGELOG_RELEASES: ChangelogRelease[] = [
   {
+    title: 'Versão 1.2.2 — Correção da abertura do programa',
+    items: [
+      <>
+        <strong>Programa não abria na 1.2.1:</strong> o instalador da 1.2.1 levava o módulo do banco de dados compilado
+        para a versão errada do Node e o programa mostrava &quot;Startup Error&quot; ao abrir. A 1.2.2 corrige isso, e
+        agora cada versão só é publicada depois que o programa empacotado abre e atualiza a partir da versão anterior.
+      </>,
+    ],
+  },
+  {
     title: 'Versão 1.2.1 — Atualizações mais seguras',
     items: [
       <>

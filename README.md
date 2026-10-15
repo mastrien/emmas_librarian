@@ -50,6 +50,9 @@ Se você é um desenvolvedor e deseja rodar o projeto localmente, contribuir com
 
 Acompanhe as últimas novidades, melhorias e correções recentes do **Emma's Librarian**:
 
+### v1.2.2
+- **Correção da abertura:** o instalador da 1.2.1 levava o módulo do banco de dados compilado para a versão errada do Node e o programa mostrava "Startup Error" ao abrir. A causa era a ordem dos passos do build de release (o mesmo defeito explica a falha da 1.2.0). Agora cada versão só é publicada depois que o programa empacotado abre e atualiza a partir da versão anterior.
+
 ### v1.2.1
 - **Cópia antes de atualizar:** o programa guarda uma cópia da biblioteca antes de instalar uma nova versão e oferece restaurá-la, por 14 dias, se a versão nova não abrir. A restauração devolve só os dados, o programa continua na versão nova.
 - **Atualização em segundo plano:** a instalação roda sem o assistente e o programa reabre sozinho.
