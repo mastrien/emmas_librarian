@@ -12,7 +12,11 @@ import { AnthropicGateway } from './llm/AnthropicGateway';
 export class AIService {
   private db: DatabaseAdapter;
 
-  constructor(db: DatabaseAdapter) {
+  /** `localModelsDir`: where the local embedding model is cached (userData/models in the app). */
+  constructor(
+    db: DatabaseAdapter,
+    private readonly localModelsDir?: string,
+  ) {
     this.db = db;
   }
 
@@ -310,6 +314,7 @@ ${truncatedText}
         model_name: embeddingsConfig?.model_name || 'text-embedding-3-small',
       } as any,
       this.getKeys(),
+      this.localModelsDir,
     );
     const vectorStore = new VectorStore(this.db.getDB());
 

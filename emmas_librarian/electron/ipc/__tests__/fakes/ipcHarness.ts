@@ -73,7 +73,14 @@ export const queryTranslatorModule = {
 };
 export const apiIntegratorModule = { ApiIntegrator: constructing(createRecordingDouble()) };
 export const exportServiceModule = { ExportService: constructing(harness.exporter) };
-export const aiServiceModule = { AIService: constructing(harness.ai) };
+/** Constructor arguments of every `new AIService(...)`, to check what setupIpcRegistries wires into it. */
+export const aiServiceConstructions: unknown[][] = [];
+export const aiServiceModule = {
+  AIService: function FakeAIService(...args: unknown[]) {
+    aiServiceConstructions.push(args);
+    return harness.ai;
+  } as unknown as Constructor,
+};
 export const syncServiceModule = { SyncService: constructing(harness.sync) };
 export const backupServiceModule = { BackupService: constructing(harness.backup) };
 
@@ -85,6 +92,7 @@ const plainMocks = [harness.app, harness.dialog, harness.shell, harness.windows]
 
 export function resetIpcHarness(): void {
   harness.ipcMain.reset();
+  aiServiceConstructions.length = 0;
   disk.reset();
   [...doubles, ...moreDoubles].forEach((double) => double.reset());
   plainMocks.forEach((mock) => mock.mockReset());

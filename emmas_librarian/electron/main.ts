@@ -8,6 +8,7 @@ import { RecoveryService } from './services/RecoveryService';
 import { UpdateSafetyService } from './services/UpdateSafetyService';
 import { libraryPaths, offerRecoveryAfterFailedStartup } from './startupRecovery';
 import { isE2ELaunch, resolveUserDataDir } from './userDataDir';
+import { windowIconFile } from './windowIcon';
 
 // Configure logging for auto-updater
 autoUpdater.logger = log;
@@ -36,7 +37,7 @@ function createBrowserWindow(): BrowserWindow {
     width: 1200,
     height: 800,
     show: false,
-    icon: nativeImage.createFromPath(path.join(app.getAppPath(), isDev ? 'public/favicon.ico' : 'dist/favicon.ico')),
+    icon: nativeImage.createFromPath(windowIconFile(app.getAppPath(), process.platform, isDev)),
     titleBarStyle: 'hidden',
     titleBarOverlay: {
       color: '#f8fafc',
