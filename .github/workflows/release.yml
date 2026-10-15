@@ -99,11 +99,18 @@ jobs:
           if-no-files-found: ignore
 
       # A draft: the author publishes it by hand after trying the installer.
+      # electron-builder uploads the installer under the name latest.yml points to (emmas_librarian-setup-X.exe), not
+      # the file name it builds ("Emma's Librarian Setup X.exe", which GitHub would turn into Emma.s.Librarian...).
+      # Uploaded under the wrong name the auto-updater gets a 404 (v1.2.2's draft had to be renamed by hand).
       - name: Publish the tested files as a draft release
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ls -la release
-          gh release create "$GITHUB_REF_NAME" release/*Setup*.exe release/*.exe.blockmap release/latest.yml \
-            --draft --verify-tag --title "$GITHUB_REF_NAME"
+          name="$(grep -m1 '^path:' release/latest.yml | awk '{print $2}')"
+          [ -n "$name" ] || { echo "::error::No 'path:' in release/latest.yml"; exit 1; }
+          cp "$(ls release/*Setup*.exe | head -1)" "release/$name"
+          cp "$(ls release/*Setup*.exe.blockmap | head -1)" "release/$name.blockmap"
+          gh release create "$GITHUB_REF_NAME" "release/$name" "release/$name.blockmap" release/latest.yml             --draft --verify-tag --title "$GITHUB_REF_NAME"
+          gh release view "$GITHUB_REF_NAME" --json assets -q '.assets[].name' | grep -qx "$name"             || { echo "::error::The release has no asset named $name, which latest.yml points to"; exit 1; }
