@@ -4,11 +4,15 @@ on:
   push:
     tags:
       - 'v*' # Trigger on tags starting with "v" (e.g., v1.0.0)
+  # A manual run on a branch builds and tests everything and publishes nothing (the last step needs a tag).
+  workflow_dispatch:
 
 jobs:
-  release:
+  # Typecheck and unit tests run on their own runner. `npm test` rebuilds better-sqlite3 for Node (ABI 127);
+  # in the build job below that left a Node binary in the installer of v1.2.0 and v1.2.1 (the rebuild back for
+  # Electron finished in about 1 ms: @electron/rebuild thought it was already done).
+  verify:
     runs-on: windows-latest
-
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
@@ -30,13 +34,76 @@ jobs:
         working-directory: ./emmas_librarian
         run: npm test
 
-      # npm test rebuilds better-sqlite3 for the Node ABI; the packaged app needs the Electron ABI.
-      - name: Rebuild native modules for Electron
+  # Builds the installer once, tests that very file, and publishes those same files as a draft release.
+  release:
+    needs: verify
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    defaults:
+      run:
         working-directory: ./emmas_librarian
-        run: npm run rebuild:electron
+        shell: bash
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
 
-      - name: Build and Publish
-        working-directory: ./emmas_librarian
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # postinstall builds better-sqlite3 for Electron. Nothing before the packaged-app test touches it.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the installer (not published yet)
+        run: npm run electron:build -- --publish never
+
+      # Opens the unpacked app electron-builder just made, the files the installer packs. Fails the release if
+      # the app cannot open its library (e.g. a native module for the wrong ABI).
+      - name: Open the packaged app
+        run: npm run test:release-upgrade -- packagedApp.release.ts
+
+      # What users have: the latest release that is neither a draft nor a pre-release.
+      - name: Download the last published installer
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run electron:build -- --publish always
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="$(gh release list --exclude-drafts --exclude-pre-releases --limit 1 --json tagName -q '.[0].tagName')"
+          [ -n "$tag" ] || { echo "::error::No published release to upgrade from"; exit 1; }
+          echo "Upgrading from $tag"
+          mkdir -p "$RUNNER_TEMP/published"
+          gh release download "$tag" --pattern '*setup*.exe' --pattern '*Setup*.exe' --dir "$RUNNER_TEMP/published"
+          old="$(ls "$RUNNER_TEMP"/published/*.exe | head -1)"
+          new="$(ls "$PWD"/release/*Setup*.exe | head -1)"
+          echo "RELEASE_TEST_OLD_INSTALLER=$(cygpath -w "$old")" >> "$GITHUB_ENV"
+          echo "RELEASE_TEST_NEW_INSTALLER=$(cygpath -w "$new")" >> "$GITHUB_ENV"
+          echo "RELEASE_TEST_INSTALL_DIR=$(cygpath -w "$RUNNER_TEMP/emma-app")" >> "$GITHUB_ENV"
+
+      # The test reads and fills the installed library with better-sqlite3 from this checkout. The installer is
+      # already built, so this cannot reach it.
+      - name: Rebuild native modules for Node
+        run: npm run rebuild:node
+
+      - name: Upgrade and compare, with the installer to be published
+        run: npm run test:release-upgrade -- upgrade.release.ts
+
+      - name: Keep the dumps, reports and app logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-upgrade-windows-latest
+          path: emmas_librarian/test-results/release
+          if-no-files-found: ignore
+
+      # A draft: the author publishes it by hand after trying the installer.
+      - name: Publish the tested files as a draft release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ls -la release
+          gh release create "$GITHUB_REF_NAME" release/*Setup*.exe release/*.exe.blockmap release/latest.yml \
+            --draft --verify-tag --title "$GITHUB_REF_NAME"
