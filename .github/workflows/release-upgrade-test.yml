@@ -94,6 +94,24 @@ jobs:
           echo "RELEASE_TEST_OLD_INSTALLER=$(native "$old")" >> "$GITHUB_ENV"
           echo "RELEASE_TEST_INSTALL_DIR=$(native "$RUNNER_TEMP/emma-app")" >> "$GITHUB_ENV"
 
+      # The upgrade test needs a build newer than the release it upgrades from. A pull request at the same version as
+      # the latest release (main right after a release) would fail with "the installer did not replace it", which is
+      # the test working, not the app failing. The version is raised in this checkout only.
+      - name: Make this build newer than the published release
+        if: steps.published.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FROM_TAG: ${{ inputs.from_tag }}
+        run: |
+          tag="${FROM_TAG:-$(gh release view --json tagName -q .tagName)}"
+          published="${tag#v}"
+          current="$(node -p "require('./package.json').version")"
+          if [ -z "$(npx --no-install semver -r ">$published" "$current")" ]; then
+            next="$(npx --no-install semver -i patch "$published")"
+            echo "::notice title=Version raised for this run::package.json says $current, not above the published $published; building as $next."
+            npm version "$next" --no-git-tag-version
+          fi
+
       - name: Build this version's installer
         if: steps.published.outputs.skip != 'true'
         run: |
