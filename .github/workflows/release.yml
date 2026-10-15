@@ -58,6 +58,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The upgrade test needs a build newer than the release it upgrades from. A manual run on a branch at the same
+      # version as the latest release (main right after a release) would fail with "the installer did not replace
+      # it". A real release (a tag) always carries the new version and is left alone.
+      - name: Make this build newer than the published release (manual runs)
+        if: github.ref_type != 'tag'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="$(gh release list --exclude-drafts --exclude-pre-releases --limit 1 --json tagName -q '.[0].tagName')"
+          [ -n "$tag" ] || { echo "::error::No published release to compare with"; exit 1; }
+          published="${tag#v}"
+          current="$(node -p "require('./package.json').version")"
+          if [ -z "$(npx --no-install semver -r ">$published" "$current")" ]; then
+            next="$(npx --no-install semver -i patch "$published")"
+            echo "::notice title=Version raised for this run::package.json says $current, not above the published $published; building as $next."
+            npm version "$next" --no-git-tag-version
+          fi
+
       - name: Build the installer (not published yet)
         run: npm run electron:build -- --publish never
 
