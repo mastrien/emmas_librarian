@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*' # Trigger on tags starting with "v" (e.g., v1.0.0)
+  # A manual run on a branch builds and tests everything and publishes nothing (the last step needs a tag).
+  workflow_dispatch:
 
 jobs:
   # Typecheck and unit tests run on their own runner. `npm test` rebuilds better-sqlite3 for Node (ABI 127);
@@ -98,6 +100,7 @@ jobs:
 
       # A draft: the author publishes it by hand after trying the installer.
       - name: Publish the tested files as a draft release
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
