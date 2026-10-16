@@ -92,6 +92,23 @@ export class UpdateSafetyService {
   }
 
   /**
+   * Records that the installer is about to start, so a second start of this version while it works (#22) is
+   * recognised on the next launch.
+   *
+   * Usage:
+   *   safety.markInstallStarted(); // right before updater.quitAndInstall()
+   */
+  public markInstallStarted(now: number = Date.now()): void {
+    const state = this.getUpdateState();
+    if (!state) {
+      throw new Error(
+        '[ERR_NO_UPDATE_STATE] Cannot mark the install as started. Expected createPreUpdateSnapshot to have saved update_state.json.',
+      );
+    }
+    this.saveUpdateState({ ...state, installStartedAt: now });
+  }
+
+  /**
    * Puts the recorded pre-update snapshot back as the library. The current database is saved first
    * (pre_restore_*.db.gz), so a restore never destroys work done after the update.
    *

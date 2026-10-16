@@ -477,11 +477,13 @@ export interface DownloadProgressPayload {
 }
 
 export interface UpdateStateRecord {
-  status: 'idle' | 'pending_verification' | 'verified' | 'failed';
+  status: 'idle' | 'pending_verification' | 'verified' | 'failed' | 'not_applied';
   fromVersion?: string;
   targetVersion?: string;
   snapshotPath?: string;
   timestamp?: number;
+  /** When the installer was started (right before the app quit for it); a reopen soon after is the #22 case. */
+  installStartedAt?: number;
   error?: string;
   rolledBack?: boolean;
   /** Copy of the library taken right before a rollback replaced it. */

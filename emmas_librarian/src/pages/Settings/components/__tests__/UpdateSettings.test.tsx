@@ -217,6 +217,50 @@ describe('UpdateSettings Component', () => {
   });
 });
 
+describe('UpdateSettings, an update that never landed (#22)', () => {
+  const notApplied: UpdateStatusResponse = {
+    status: 'idle',
+    updateInfo: null,
+    downloadProgress: null,
+    error: null,
+    state: { status: 'not_applied', fromVersion: '1.2.2', targetVersion: '1.3.0', snapshotPath: '/backups/p.db.gz' },
+  };
+
+  function renderWith(updateStatus: UpdateStatusResponse) {
+    return render(
+      <UpdateSettings
+        currentVersion="1.2.2"
+        updateStatus={updateStatus}
+        onCheckForUpdates={vi.fn()}
+        onDownloadUpdate={vi.fn()}
+        onInstallUpdate={vi.fn()}
+        onRestoreSnapshot={vi.fn()}
+      />,
+    );
+  }
+
+  it('says plainly that the update was started and not applied, and that the library is untouched', () => {
+    renderWith(notApplied);
+
+    const notice = screen.getByRole('alert');
+    expect(notice).toHaveTextContent('A atualização para a v1.3.0 foi iniciada, mas não foi aplicada');
+    expect(notice).toHaveTextContent('você continua na v1.2.2');
+    expect(notice).toHaveTextContent('Sua biblioteca não foi alterada');
+  });
+
+  it('does not offer the snapshot rollback, which would only take the library back in time', () => {
+    renderWith(notApplied);
+
+    expect(screen.queryByText('Rollback de Emergência')).toBeNull();
+  });
+
+  it('shows no notice when nothing is wrong', () => {
+    renderWith({ ...notApplied, state: null });
+
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+});
+
 describe('describeSnapshotDate', () => {
   it('formats the snapshot timestamp in Brazilian date and time', () => {
     const timestamp = new Date(2026, 9, 3, 17, 45).getTime();

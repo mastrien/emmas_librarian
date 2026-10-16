@@ -15,7 +15,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  *   canOfferSnapshotRestore(state) // true right after an update, false 3 months later
  */
 export function canOfferSnapshotRestore(state: UpdateStateRecord | null, now: number = Date.now()): boolean {
-  if (!state?.snapshotPath || state.rolledBack) return false;
+  // 'not_applied': the new version never ran, so the library is untouched and the snapshot would only go back in time.
+  if (!state?.snapshotPath || state.rolledBack || state.status === 'not_applied') return false;
   if (state.status !== 'verified' || state.timestamp === undefined) return true;
   return now - state.timestamp <= VERIFIED_SNAPSHOT_RESTORE_DAYS * DAY_MS;
 }

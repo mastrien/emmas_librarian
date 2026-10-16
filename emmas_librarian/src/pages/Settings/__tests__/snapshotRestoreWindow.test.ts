@@ -32,6 +32,12 @@ describe('canOfferSnapshotRestore', () => {
     expect(canOfferSnapshotRestore(withSnapshot, now)).toBe(true);
   });
 
+  it('does not offer it for an update that never landed (#22): the new version never touched the library', () => {
+    const notApplied = { ...withSnapshot, status: 'not_applied' as const, timestamp: now };
+
+    expect(canOfferSnapshotRestore(notApplied, now)).toBe(false);
+  });
+
   it('stops offering it once it was restored', () => {
     expect(canOfferSnapshotRestore({ ...withSnapshot, status: 'failed', rolledBack: true, timestamp: now }, now)).toBe(
       false,
