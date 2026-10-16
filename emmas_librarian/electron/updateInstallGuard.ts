@@ -47,6 +47,13 @@ function describeNotApplied(state: UpdateStateRecord, runningVersion: string): s
   return `[ERR_UPDATE_NOT_APPLIED] The update to "${state.targetVersion}" was started but "${runningVersion}" is still running. Expected the installer to have replaced it.`;
 }
 
+// The release test reads this line from main.log to tell "the guard stopped it" from any other reason to exit.
+function warnInstallInProgress(deps: StartupGuardDeps, state: UpdateStateRecord): void {
+  deps.logWarning(
+    `[ERR_UPDATE_INSTALL_IN_PROGRESS] "${deps.runningVersion}" was opened while its installer for "${state.targetVersion}" works. Expected it to stay closed until the new version opens.`,
+  );
+}
+
 function recordNotApplied(deps: StartupGuardDeps, state: UpdateStateRecord): void {
   const error = describeNotApplied(state, deps.runningVersion);
   deps.logWarning(error);
@@ -74,6 +81,7 @@ export function runStartupUpdateGuard(deps: StartupGuardDeps): 'continue' | 'qui
   if (verdict === 'landed_late') recordLandedLate(deps, state);
   if (verdict === 'not_applied') recordNotApplied(deps, state);
   if (verdict !== 'install_in_progress') return 'continue';
+  warnInstallInProgress(deps, state);
   if (deps.askWhileInstalling(state.targetVersion ?? 'latest') === 'quit') return 'quit';
   // Opened anyway: the installer was interrupted by this start, so the update is not applied.
   recordNotApplied(deps, state);

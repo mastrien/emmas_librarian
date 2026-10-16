@@ -107,6 +107,12 @@ describe('runStartupUpdateGuard', () => {
     expect(safety.saved).toEqual([]);
   });
 
+  it('logs the reopen during the install, so main.log shows why the app closed itself', () => {
+    run(pending(), '1.2.2', 'quit');
+
+    expect(warnings).toEqual([expect.stringMatching(/ERR_UPDATE_INSTALL_IN_PROGRESS.*"1\.2\.2".*"1\.3\.0"/)]);
+  });
+
   it('records the update as not applied when the person opens the app anyway', () => {
     const { result, safety } = run(pending(), '1.2.2', 'open');
 
