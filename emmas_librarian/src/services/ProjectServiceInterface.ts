@@ -9,6 +9,7 @@
  *   const svc: IProjectService = new FakeService(); // test double
  */
 import type { SearchLimits } from '../utils/searchLimits';
+import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
 import type { OpenAccessOutcome, SearchReportFormat } from '../types';
 import type {
   SearchPreview,
@@ -243,6 +244,10 @@ export interface IProjectService {
 
   // ── Categories ────────────────────────────────────────────────────
   getProjectCategories(projectId: number): Promise<ProjectCategory[]>;
+  /** Adds a template's or an imported set's categories (#46); names the project already has are skipped. */
+  applyCategorySet(projectId: number, entries: CategorySetEntry[]): Promise<CategorySetResult>;
+  /** Opens a category set JSON chosen by the user; null when the dialog was cancelled. Invalid files reject. */
+  readCategorySetFile(): Promise<CategorySetEntry[] | null>;
   createProjectCategory(
     projectId: number,
     name: string,

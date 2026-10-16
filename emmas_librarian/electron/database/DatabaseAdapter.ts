@@ -11,6 +11,7 @@ import { AnnotationRepository } from './AnnotationRepository';
 import { TrashRepository } from './TrashRepository';
 import { MassiveInvestigationRepository } from './MassiveInvestigationRepository';
 import { initializeSchema } from './schemaMigrations';
+import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
 
 import {
   Project,
@@ -321,6 +322,9 @@ export class DatabaseAdapter {
   }
   public createProjectCategory(projectId: number, name: string, type: string, options?: any): number {
     return this.projectRepo.createProjectCategory(projectId, name, type as any, options);
+  }
+  public applyCategorySet(projectId: number, entries: CategorySetEntry[]): CategorySetResult {
+    return this.projectRepo.applyCategorySet(projectId, entries);
   }
   public updateProjectCategory(categoryId: number, name: string, type: string, options?: any): void {
     return this.projectRepo.updateProjectCategory(categoryId, name, type as any, options);

@@ -1,6 +1,9 @@
 import type { Database } from 'better-sqlite3';
 import { Project, ProjectCategory, CategoryOption } from '../../src/types';
 import fs from 'fs';
+import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
+
+const normalizeCategoryName = (name: string): string => name.trim().toLocaleLowerCase('pt-BR');
 
 export class ProjectRepository {
   private db: Database;
@@ -91,13 +94,14 @@ export class ProjectRepository {
 
   getProjectCategories(projectId: number): ProjectCategory[] {
     const cats = this.db
-      .prepare('SELECT * FROM project_categories WHERE project_id = ?')
+      // Creation order, so a template's categories and options read back in the order the template lists them (#46).
+      .prepare('SELECT * FROM project_categories WHERE project_id = ? ORDER BY id')
       .all(projectId) as ProjectCategory[];
 
     for (const cat of cats) {
       if (cat.type === 'enum' || cat.type === 'multiselect') {
         const opts = this.db
-          .prepare('SELECT * FROM project_category_options WHERE category_id = ?')
+          .prepare('SELECT * FROM project_category_options WHERE category_id = ? ORDER BY id')
           .all(cat.id) as CategoryOption[];
         cat.parsedOptions = opts;
       }
@@ -115,6 +119,39 @@ export class ProjectRepository {
       this.db.prepare('UPDATE project_categories SET options = ? WHERE id = ?').run(options, categoryId);
     }
     return categoryId;
+  }
+
+  /**
+   * Adds a template's or an imported set's categories, with their options, in the set's order, all or nothing. Names
+   * the project already has (ignoring case and spaces) are skipped, never replaced: nothing is deleted (#46).
+   *
+   * Usage:
+   *   repo.applyCategorySet(projectId, CATEGORY_TEMPLATES[0].categories); // { created: [...], skipped: [] }
+   */
+  applyCategorySet(projectId: number, entries: CategorySetEntry[]): CategorySetResult {
+    const taken = new Set(this.getProjectCategories(projectId).map((c) => normalizeCategoryName(c.name)));
+    const result: CategorySetResult = { created: [], skipped: [] };
+    this.db.transaction(() => {
+      for (const entry of entries) {
+        const key = normalizeCategoryName(entry.name);
+        if (taken.has(key)) {
+          result.skipped.push(entry.name);
+          continue;
+        }
+        taken.add(key);
+        this.insertCategoryEntry(projectId, entry);
+        result.created.push(entry.name);
+      }
+    })();
+    return result;
+  }
+
+  private insertCategoryEntry(projectId: number, entry: CategorySetEntry): void {
+    const info = this.db
+      .prepare('INSERT INTO project_categories (project_id, name, type) VALUES (?, ?, ?)')
+      .run(projectId, entry.name, entry.type);
+    const addOption = this.db.prepare('INSERT INTO project_category_options (category_id, name) VALUES (?, ?)');
+    for (const option of entry.options ?? []) addOption.run(info.lastInsertRowid, option);
   }
 
   deleteProjectCategory(categoryId: number): void {
