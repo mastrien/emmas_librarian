@@ -89,6 +89,6 @@ mindmap
 | **Exportação** | xlsx | 0.18.5 | Geração de planilhas |
 | **Exportação** | citation-js | 0.7.22 | Formatação de citações |
 | **Editor** | @mdxeditor/editor | 4.0.0 | Editor Markdown rico |
-| **Build** | electron-builder | 26.8.1 | Empacotamento e distribuição |
+| **Build** | electron-builder | 26.15.3 | Empacotamento e distribuição |
 | **Atualização** | electron-updater | 6.8.3 | Auto-update via GitHub Releases |
 | **Testes** | vitest | 3.0.0 | Test runner |
