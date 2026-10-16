@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { RefreshCw, Download, ArrowUpCircle, ShieldCheck, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
 import type { UpdateStatusResponse } from '../../../types';
 import { canOfferSnapshotRestore } from '../snapshotRestoreWindow';
+import { showsNotAppliedNotice } from '../updateNotice';
 
 interface UpdateSettingsProps {
   currentVersion: string;
@@ -65,6 +66,30 @@ const ReleaseNotesView: React.FC<{ notes?: string }> = ({ notes }) => {
   );
 };
 
+const UpdateNotAppliedNotice: React.FC<{ targetVersion?: string; currentVersion: string }> = ({
+  targetVersion,
+  currentVersion,
+}) => (
+  <div
+    role="alert"
+    style={{
+      padding: '0.75rem 1rem',
+      borderRadius: 'var(--radius-md)',
+      backgroundColor: 'var(--bg-warning-subtle, rgba(245, 158, 11, 0.12))',
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: '0.5rem',
+    }}
+  >
+    <AlertTriangle size={18} color="var(--color-warning, #f59e0b)" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
+    <span>
+      A atualização para a v{targetVersion ?? '...'} foi iniciada, mas não foi aplicada: você continua na v
+      {currentVersion}. Isso acontece, por exemplo, quando o app é aberto de novo enquanto o instalador ainda trabalha.
+      Sua biblioteca não foi alterada. Use &quot;Verificar Atualizações&quot; para tentar outra vez.
+    </span>
+  </div>
+);
+
 export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
   currentVersion,
   updateStatus,
@@ -127,6 +152,10 @@ export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
             {loading || status === 'checking' ? 'Verificando...' : 'Verificar Atualizações'}
           </button>
         </div>
+
+        {showsNotAppliedNotice(updateStatus, currentVersion) && (
+          <UpdateNotAppliedNotice targetVersion={updateStatus.state?.targetVersion} currentVersion={currentVersion} />
+        )}
 
         {status === 'not-available' && (
           <div

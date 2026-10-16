@@ -7,6 +7,12 @@ import type { SnapshotCreationResult, UpdateStateRecord } from '../UpdateTypes';
 class FakeUpdateSafetyService implements Partial<UpdateSafetyService> {
   public snapshotCalledWith: { from: string; target: string } | null = null;
   public state: UpdateStateRecord | null = null;
+  /** Called when the install start is recorded; lets a test see what had already happened by then. */
+  public onInstallStarted: () => void = () => undefined;
+
+  public markInstallStarted(): void {
+    this.onInstallStarted();
+  }
 
   public createPreUpdateSnapshot(fromVersion: string, targetVersion: string): SnapshotCreationResult {
     this.snapshotCalledWith = { from: fromVersion, target: targetVersion };
@@ -103,6 +109,23 @@ describe('UpdateManager', () => {
     expect(fakeSafety.snapshotCalledWith).toEqual({ from: '1.2.0', target: '1.3.0' });
     expect(fakeUpdater.quitAndInstallCalled).toBe(true);
     expect(fakeUpdater.lastQuitAndInstallArgs).toEqual({ isSilent: true, isForceRunAfter: true });
+  });
+
+  // #22: the next launch tells "reopened during the install" from "never installed" by this record, so it must
+  // be written after the snapshot and before the app hands over to the installer.
+  it('records the install start after the snapshot and before handing over to the installer', async () => {
+    fakeUpdater.emit('update-available', { version: '1.3.0' });
+    fakeUpdater.emit('update-downloaded', { version: '1.3.0' });
+    const seen: { snapshotTaken: boolean; installerStarted: boolean }[] = [];
+    fakeSafety.onInstallStarted = () =>
+      seen.push({
+        snapshotTaken: fakeSafety.snapshotCalledWith !== null,
+        installerStarted: fakeUpdater.quitAndInstallCalled,
+      });
+
+    await manager.prepareAndInstall('1.2.0');
+
+    expect(seen).toEqual([{ snapshotTaken: true, installerStarted: false }]);
   });
 
   it('fails prepareAndInstall if update is not downloaded', async () => {

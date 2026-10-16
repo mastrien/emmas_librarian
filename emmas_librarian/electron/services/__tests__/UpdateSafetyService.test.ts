@@ -91,6 +91,23 @@ describe('UpdateSafetyService', () => {
     expect(() => service.createPreUpdateSnapshot('1.1.2', '1.2.0')).toThrowError(/\[ERR_DB_MISSING\].*emma\.db/);
   });
 
+  it('records when the installer is started, keeping the rest of the state (#22)', () => {
+    service.createPreUpdateSnapshot('1.1.2', '1.2.0');
+
+    service.markInstallStarted(1_800_000_000_000);
+
+    expect(service.getUpdateState()).toMatchObject({
+      status: 'pending_verification',
+      fromVersion: '1.1.2',
+      targetVersion: '1.2.0',
+      installStartedAt: 1_800_000_000_000,
+    });
+  });
+
+  it('refuses to record the install start without a snapshot state to add it to', () => {
+    expect(() => service.markInstallStarted()).toThrowError(/\[ERR_NO_UPDATE_STATE\].*update_state\.json/);
+  });
+
   it('refuses to snapshot without an open database to checkpoint', () => {
     const closedService = new UpdateSafetyService(null, dbPath, backupsDir, userDataDir);
 

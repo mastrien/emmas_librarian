@@ -9,6 +9,9 @@ import { UpdateSafetyService } from './services/UpdateSafetyService';
 import { libraryPaths, offerRecoveryAfterFailedStartup } from './startupRecovery';
 import { isE2ELaunch, resolveUserDataDir } from './userDataDir';
 import { windowIconFile } from './windowIcon';
+import { logShutdownTimeline, type ShutdownEmitter } from './shutdownTimeline';
+import { askWhileInstalling } from './updateInstallDialog';
+import { runStartupUpdateGuard } from './updateInstallGuard';
 
 // Configure logging for auto-updater
 autoUpdater.logger = log;
@@ -144,9 +147,37 @@ function offerUpdateRecovery(err: unknown): boolean {
   return offerRecoveryAfterFailedStartup(err, app.getVersion(), safety, new RecoveryService(safety));
 }
 
+// Before the library opens: a second start of the old version while its installer works (#22) must not run, and an
+// update that did not land must not be "verified". A failure here never blocks the start.
+function shouldQuitForRunningInstaller(): boolean {
+  try {
+    const { userData, dbPath, backupsDir } = libraryPaths(app.getPath('userData'));
+    const safety = new UpdateSafetyService(null, dbPath, backupsDir, userData);
+    return (
+      runStartupUpdateGuard({
+        safety,
+        runningVersion: app.getVersion(),
+        now: Date.now,
+        askWhileInstalling,
+        logWarning: (message) => log.warn(message),
+      }) === 'quit'
+    );
+  } catch (err: unknown) {
+    log.error('Update install guard failed; starting normally:', err);
+    return false;
+  }
+}
+
+// Electron types `app.on` per event name; the timeline only needs the generic string form.
+logShutdownTimeline(app as unknown as ShutdownEmitter, log);
+
 app
   .whenReady()
   .then(() => {
+    if (shouldQuitForRunningInstaller()) {
+      app.quit();
+      return;
+    }
     try {
       const { db, safetyService, updateManager } = setupIpcRegistries({ updater: autoUpdater });
 

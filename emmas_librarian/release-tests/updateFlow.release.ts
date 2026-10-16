@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { spawn } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -61,6 +62,29 @@ async function updateThroughTheApp(page: Page, waitForQuit: () => Promise<void>)
   console.log(`[release-test] ${FROM} quit for the installer ${quitMs} ms after "Reiniciar e Instalar"`);
 }
 
+/**
+ * An impatient person: the old version is opened again while it is still quitting for its installer. Unguarded,
+ * that second start keeps running, the installer waits on it for good and the update is silently lost (issue #22,
+ * the v1.2.0 incident). Guarded, it must leave on its own, and say why in main.log (so a crash cannot pass for it);
+ * E2E_UPDATE_GUARD_CHOICE answers the dialog a test cannot click.
+ *
+ * Windows only: an AppImage update swaps the file about 2 s after "Reiniciar e Instalar" (see processExited), so a
+ * reopen on Linux already starts the new version, which rightly stays open. There is no window to test there.
+ */
+async function reopenWhileInstalling(): Promise<void> {
+  if (process.platform !== 'win32') {
+    test.info().annotations.push({ type: 'reopen-during-install', description: 'skipped: no window on Linux (#22)' });
+    return;
+  }
+  const second = spawn(PLATFORM.appExecutable, [], {
+    env: { ...process.env, E2E_UPDATE_GUARD_CHOICE: 'quit' },
+    stdio: 'ignore',
+  });
+  await processExited(second.pid!, 90000, `a second ${FROM}, opened during the install, to leave on its own (#22)`);
+  const mainLog = fs.readFileSync(path.join(USER_DATA, 'logs', 'main.log'), 'utf-8');
+  expect(mainLog).toContain('ERR_UPDATE_INSTALL_IN_PROGRESS');
+}
+
 // The main process, not Playwright's "close" event: see processExited.
 async function appQuits(pid: number): Promise<void> {
   try {
@@ -109,7 +133,11 @@ test('a release through the app’s own updater keeps the whole library', async 
 
     await test.step(`${FROM} finds ${TO}, downloads it when asked and installs it`, async () => {
       const { app, page } = await launchInstalled();
-      await updateThroughTheApp(page, () => appQuits(app.process().pid!));
+      await updateThroughTheApp(page, async () => {
+        const reopened = reopenWhileInstalling();
+        await appQuits(app.process().pid!);
+        await reopened;
+      });
     });
 
     // The installer reopens the app once it has finished (--force-run), and that first boot of TO marks the
