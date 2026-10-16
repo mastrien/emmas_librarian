@@ -2,11 +2,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { X, Calendar, Search, ChevronRight, RotateCcw, Pencil } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import type { SearchBreakdown, SearchHistoryItem } from '../../types';
+import type { SearchBreakdown, SearchHistoryItem, SearchReportFormat } from '../../types';
 import { restoreSearch } from '../../pages/Search/searchQueries';
 import { HistoryBreakdown } from './searchHistory/HistoryBreakdown';
 import { historyLimitText, parseStoredObject } from './searchHistory/historyDetails';
 import { databaseLabel } from './searchSummary/SearchBreakdownList';
+import { SearchStrategyExport } from './searchHistory/SearchStrategyExport';
 
 type HistoryItem = SearchHistoryItem;
 
@@ -18,6 +19,8 @@ interface Props {
   onRevertSearch?: (searchId: number) => void;
   // Enables "Nova busca a partir desta", which opens the search page preloaded with that search.
   projectId?: number;
+  // Shows "Exportar estratégia de busca" (#45); saves the report and answers the path (null if cancelled).
+  onExportStrategy?: (format: SearchReportFormat) => Promise<string | null>;
 }
 
 type HistoryContentProps = Pick<Props, 'history' | 'onRevertSearch' | 'projectId'>;
@@ -263,6 +266,7 @@ export const SearchHistoryModal: React.FC<Props> = ({
   embedded,
   onRevertSearch,
   projectId,
+  onExportStrategy,
 }) => {
   if (!isOpen) return null;
 
@@ -283,6 +287,7 @@ export const SearchHistoryModal: React.FC<Props> = ({
             <RotateCcw size={24} /> Histórico de Buscas
           </h2>
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>Registro de todas as buscas realizadas neste projeto.</p>
+          {onExportStrategy && <SearchStrategyExport onExport={onExportStrategy} />}
         </div>
         <HistoryContent history={history} onRevertSearch={onRevertSearch} projectId={projectId} />
       </div>
@@ -344,6 +349,7 @@ export const SearchHistoryModal: React.FC<Props> = ({
             <RotateCcw size={28} /> Histórico de Buscas
           </h2>
           <p style={{ color: 'var(--text-muted)', margin: 0 }}>Registro de todas as buscas realizadas neste projeto.</p>
+          {onExportStrategy && <SearchStrategyExport onExport={onExportStrategy} />}
         </div>
 
         <HistoryContent history={history} onRevertSearch={onRevertSearch} projectId={projectId} />

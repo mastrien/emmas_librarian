@@ -177,6 +177,7 @@ export enum IpcChannel {
   EXPORT_CSV = 'export:csv',
   EXPORT_BIBLIOSHINY = 'export:biblioshiny',
   EXPORT_XLSX = 'export:xlsx',
+  EXPORT_SEARCH_REPORT = 'export:search-report',
   DIALOG_OPEN_FILE = 'dialog:openFile',
   DIALOG_SAVE_FILE = 'dialog:saveFile',
   DIALOG_OPEN_MULTIPLE_FILES = 'dialog:openMultipleFiles',
@@ -340,6 +341,9 @@ export interface SearchBaseOutcome {
 }
 
 export type SearchBreakdown = Record<string, SearchBaseOutcome>;
+
+/** File type of the search strategy report (#45). */
+export type SearchReportFormat = 'xlsx' | 'md';
 
 /**
  * What happened when the app looked for an open access PDF of one article: downloaded (and from where),

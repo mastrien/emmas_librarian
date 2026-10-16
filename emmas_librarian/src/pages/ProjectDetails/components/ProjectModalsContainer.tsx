@@ -117,6 +117,7 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
           onClose={() => modals.setIsHistoryOpen(false)}
           history={history}
           onRevertSearch={handleRevertSearch}
+          onExportStrategy={(format) => projectService.exportSearchReport(project.id, format)}
           projectId={projectId}
         />
       )}

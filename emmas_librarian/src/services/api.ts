@@ -24,7 +24,7 @@ import {
 import { parseIpcError } from '../utils/AppError';
 import type { IProjectService } from './ProjectServiceInterface';
 import type { SearchLimits } from '../utils/searchLimits';
-import type { OpenAccessOutcome } from '../types';
+import type { OpenAccessOutcome, SearchReportFormat } from '../types';
 
 // Highlights are stored with a numeric id and JSON-encoded position; the UI works with string ids and objects.
 interface HighlightRow {
@@ -97,6 +97,9 @@ export const projectService: IProjectService = {
   exportCsv: (projectId: number): Promise<string | null> => safeInvoke(IpcChannel.EXPORT_CSV, projectId),
 
   exportXlsx: (projectId: number): Promise<string | null> => safeInvoke(IpcChannel.EXPORT_XLSX, projectId),
+
+  exportSearchReport: (projectId: number, format: SearchReportFormat): Promise<string | null> =>
+    safeInvoke(IpcChannel.EXPORT_SEARCH_REPORT, projectId, format),
 
   exportBiblioshiny: (projectId: number): Promise<string | null> =>
     safeInvoke(IpcChannel.EXPORT_BIBLIOSHINY, projectId),
