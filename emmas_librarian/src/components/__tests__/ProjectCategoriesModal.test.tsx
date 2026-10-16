@@ -28,8 +28,8 @@ describe('ProjectCategoriesModal', () => {
     fireEvent.change(input, { target: { value: 'New Enum Category' } });
 
     // Change type to enum to show options input
-    const selects = screen.getAllByRole('combobox');
-    fireEvent.change(selects[0], { target: { value: 'enum' } });
+    // By label: the template picker (#46) is also a combobox, above this one.
+    fireEvent.change(screen.getByLabelText('Tipo da nova categoria'), { target: { value: 'enum' } });
 
     const optionsInput = screen.getByPlaceholderText('Opções separadas por vírgula (ex: Qualitativa, Quantitativa)');
     fireEvent.change(optionsInput, { target: { value: 'Opt1, Opt2' } });

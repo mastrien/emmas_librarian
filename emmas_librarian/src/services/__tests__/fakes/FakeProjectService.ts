@@ -1,4 +1,5 @@
 import type { SearchLimits } from '../../../utils/searchLimits';
+import type { CategorySetEntry, CategorySetResult } from '../../../utils/categoryTemplates';
 import type { OpenAccessOutcome, SearchReportFormat } from '../../../types';
 import type {
   SearchHistoryItem,
@@ -363,6 +364,15 @@ export class FakeProjectService implements IProjectService {
 
   // ── Categories ──────────────────────────────────────────────────────
   getProjectCategories = vi.fn(async (_projectId: number): Promise<ProjectCategory[]> => []);
+
+  applyCategorySet = vi.fn(
+    async (_projectId: number, entries: CategorySetEntry[]): Promise<CategorySetResult> => ({
+      created: entries.map((e) => e.name),
+      skipped: [],
+    }),
+  );
+
+  readCategorySetFile = vi.fn(async (): Promise<CategorySetEntry[] | null> => null);
 
   createProjectCategory = vi.fn(
     async (_projectId: number, _name: string, _type: string, _options?: any): Promise<number> => 0,

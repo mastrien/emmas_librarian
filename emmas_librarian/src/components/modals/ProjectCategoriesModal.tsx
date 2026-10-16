@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Plus, Trash2, Tag, Loader2 } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { ProjectCategory } from '../../types';
+import { CategoryTemplatesPanel } from './categories/CategoryTemplatesPanel';
 
 interface ProjectCategoriesModalProps {
   isOpen: boolean;
@@ -161,6 +162,14 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
           </button>
         </div>
 
+        <CategoryTemplatesPanel
+          categories={categories}
+          applySet={(entries) => projectService.applyCategorySet(projectId, entries)}
+          readSetFile={projectService.readCategorySetFile}
+          saveFile={projectService.saveExportedFile}
+          onApplied={loadCategories}
+        />
+
         <form
           onSubmit={handleAdd}
           style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}
@@ -177,6 +186,7 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
             />
             <select
               className="input-field"
+              aria-label="Tipo da nova categoria"
               value={newCatType}
               onChange={(e) => setNewCatType(e.target.value)}
               style={{ width: '150px' }}
