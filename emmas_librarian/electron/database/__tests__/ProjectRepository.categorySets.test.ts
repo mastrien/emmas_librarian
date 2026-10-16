@@ -36,8 +36,9 @@ describe('ProjectRepository.applyCategorySet (#46), against real SQLite', () => 
 
   it('only adds to a project that already has categories: nothing deleted, same names kept as they were', () => {
     const existing = repo.createProjectCategory(projectId, 'população', 'text');
+    const article = db.prepare("INSERT INTO articles (project_id, title) VALUES (?, 'Estudo')").run(projectId);
     db.prepare('INSERT INTO article_categories (article_id, category_id, value) VALUES (?, ?, ?)').run(
-      1,
+      article.lastInsertRowid,
       existing,
       'x',
     );
