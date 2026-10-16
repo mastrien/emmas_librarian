@@ -6,6 +6,7 @@ import {
   PACKAGE_VERSION,
   PREFERENCES,
   appVersion,
+  checkKeyStorage,
   dumpInstalledLibrary,
   expectLibraryOnScreen,
   fillInstalledLibrary,
@@ -44,6 +45,7 @@ test('upgrading from the published release keeps the whole library', async () =>
     const { app, page } = await launchInstalled();
     versionBefore = await appVersion(app);
     await setPreferencesAndKey(page);
+    await checkKeyStorage(app);
     await expectLibraryOnScreen(page);
     await app.close();
   });
