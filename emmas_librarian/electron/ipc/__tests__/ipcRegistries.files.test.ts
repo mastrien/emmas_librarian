@@ -132,6 +132,55 @@ describe('EXPORT_BIBLIOSHINY', () => {
   });
 });
 
+describe('EXPORT_SEARCH_REPORT (#45)', () => {
+  const search = {
+    id: 1,
+    unified_query: 'q',
+    translated_queries: JSON.stringify({ openalex: 'title.search:(x | y)' }),
+    total_results: 3,
+    results_breakdown: JSON.stringify({ openalex: { count: 3, requested: 3 } }),
+    created_at: '2026-10-16T13:05:00.000Z',
+  };
+
+  beforeEach(() => {
+    db.getProject.mockReturnValue({ id: 1, name: 'Tese' });
+    db.getSearchHistory.mockReturnValue([search]);
+  });
+
+  it('saves the Markdown report under the project name, with the query as sent', async () => {
+    const target = path.join(path.sep, 'out', 'Tese_estrategia_de_busca.md');
+    dialog.showSaveDialog.mockResolvedValue({ canceled: false, filePath: target });
+
+    expect(await invoke(IpcChannel.EXPORT_SEARCH_REPORT, 1, 'md')).toBe(target);
+    expect(dialog.showSaveDialog).toHaveBeenCalledWith({
+      title: 'Exportar estratégia de busca',
+      defaultPath: 'Tese_estrategia_de_busca.md',
+      filters: [{ name: 'Markdown', extensions: ['md'] }],
+    });
+    expect(disk.files.get(target)?.toString()).toContain('title.search:(x | y)');
+  });
+
+  it('saves the XLSX report to the E2E path without a dialog', async () => {
+    vi.stubEnv('E2E_MOCK_SAVE_FILE_PATH', E2E_PATH);
+
+    expect(await invoke(IpcChannel.EXPORT_SEARCH_REPORT, 1, 'xlsx')).toBe(E2E_PATH);
+    // An XLSX is a zip: it starts with "PK".
+    expect(disk.files.get(E2E_PATH)?.subarray(0, 2).toString()).toBe('PK');
+  });
+
+  it('refuses a format it does not write, naming the value and the formats it does', async () => {
+    const message = (await rejectionPayload(invoke(IpcChannel.EXPORT_SEARCH_REPORT, 1, 'pdf'))).message;
+
+    expect(message).toMatch(/\[ERR_INVALID_FORMAT\].*"pdf".*"xlsx" ou "md"/);
+  });
+
+  it('fails for an unknown project', async () => {
+    db.getProject.mockReturnValue(undefined);
+
+    expect((await rejectionPayload(invoke(IpcChannel.EXPORT_SEARCH_REPORT, 404, 'md'))).message).toBe(notFound(404));
+  });
+});
+
 describe('file dialogs', () => {
   const pdfFilter = [{ name: 'PDF Files', extensions: ['pdf'] }];
 

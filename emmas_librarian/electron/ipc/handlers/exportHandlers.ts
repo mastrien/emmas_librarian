@@ -1,8 +1,14 @@
 import fs from 'fs';
 import { dialog } from 'electron';
-import { IpcChannel, type Project } from '../../types';
+import { IpcChannel, type Project, type SearchHistoryItem } from '../../types';
 import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import type { ExportService } from '../../services/ExportService';
+import {
+  searchReportMarkdown,
+  searchReportRows,
+  searchReportXlsx,
+  type SearchReportFormat,
+} from '../../services/SearchReportService';
 import { handle, type IpcRegistrar } from './handle';
 
 interface SaveTarget {
@@ -37,6 +43,35 @@ export function registerExportHandlers(ipc: IpcRegistrar, db: DatabaseAdapter, e
       defaultPath: `${project.name}_biblioshiny.csv`,
       filterName: 'CSV Files',
       extension: 'csv',
+    });
+  });
+  registerSearchReportHandler(ipc, db);
+}
+
+const REPORT_TARGETS: Record<SearchReportFormat, Pick<SaveTarget, 'filterName' | 'extension'>> = {
+  xlsx: { filterName: 'Excel Files', extension: 'xlsx' },
+  md: { filterName: 'Markdown', extension: 'md' },
+};
+
+function requireReportFormat(format: unknown): SearchReportFormat {
+  if (format === 'xlsx' || format === 'md') return format;
+  throw new Error(
+    `[ERR_INVALID_FORMAT] Formato de relatório inválido. Offending value: format=${JSON.stringify(format)}. Expected shape: "xlsx" ou "md".`,
+  );
+}
+
+// #45: the search strategy (one row per base and run, with each query as sent) as XLSX or Markdown.
+function registerSearchReportHandler(ipc: IpcRegistrar, db: DatabaseAdapter): void {
+  handle(ipc, IpcChannel.EXPORT_SEARCH_REPORT, (_e, projectId: number, rawFormat: unknown) => {
+    const project = requireProject(db, projectId);
+    const format = requireReportFormat(rawFormat);
+    const rows = searchReportRows(db.getSearchHistory(projectId) as SearchHistoryItem[]);
+    const content = format === 'md' ? searchReportMarkdown(rows, project.name, new Date()) : searchReportXlsx(rows);
+    const target = REPORT_TARGETS[format];
+    return saveExport(content, {
+      title: 'Exportar estratégia de busca',
+      defaultPath: `${project.name}_estrategia_de_busca.${target.extension}`,
+      ...target,
     });
   });
 }

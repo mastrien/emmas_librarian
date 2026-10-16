@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useGlobalError } from '../contexts/GlobalErrorContext';
+import { useProjectService } from '../contexts/ServicesContext';
 import type { Article } from '../types';
 import { useProjectData } from './ProjectDetails/hooks/useProjectData';
 import { useProjectFiltering, useProjectViewState } from './ProjectDetails/hooks/useProjectFiltering';
@@ -36,6 +37,7 @@ export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const projectId = id ? parseInt(id) : null;
   const { showError } = useGlobalError();
+  const projectService = useProjectService();
   const modals = useProjectModals();
   const [activeTab, setActiveTab] = useProjectViewState<ProjectTabId>(projectId, 'activeTab', 'articles');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -172,6 +174,9 @@ export const ProjectDetailsPage: React.FC = () => {
           history={data.history}
           embedded={true}
           onRevertSearch={actions.revertSearch}
+          onExportStrategy={
+            projectId === null ? undefined : (format) => projectService.exportSearchReport(projectId, format)
+          }
           projectId={projectId ?? undefined}
         />
       )}

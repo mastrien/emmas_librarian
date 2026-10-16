@@ -1,5 +1,5 @@
 import type { SearchLimits } from '../../../utils/searchLimits';
-import type { OpenAccessOutcome } from '../../../types';
+import type { OpenAccessOutcome, SearchReportFormat } from '../../../types';
 import type {
   SearchHistoryItem,
   SearchPreview,
@@ -132,6 +132,8 @@ export class FakeProjectService implements IProjectService {
   exportXlsx = vi.fn(async (_projectId: number): Promise<string | null> => null);
 
   exportBiblioshiny = vi.fn(async (_projectId: number): Promise<string | null> => null);
+
+  exportSearchReport = vi.fn(async (_projectId: number, _format: SearchReportFormat): Promise<string | null> => null);
 
   // ── Highlights ──────────────────────────────────────────────────────
   getHighlights = vi.fn(async (_articleId: number): Promise<Highlight[]> => []);

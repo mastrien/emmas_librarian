@@ -9,7 +9,7 @@
  *   const svc: IProjectService = new FakeService(); // test double
  */
 import type { SearchLimits } from '../utils/searchLimits';
-import type { OpenAccessOutcome } from '../types';
+import type { OpenAccessOutcome, SearchReportFormat } from '../types';
 import type {
   SearchPreview,
   SavedSearchSummary,
@@ -121,6 +121,8 @@ export interface IProjectService {
   exportCsv(projectId: number): Promise<string | null>;
   exportXlsx(projectId: number): Promise<string | null>;
   exportBiblioshiny(projectId: number): Promise<string | null>;
+  /** Search strategy of the project (#45); null when the save dialog was cancelled. */
+  exportSearchReport(projectId: number, format: SearchReportFormat): Promise<string | null>;
 
   // ── Highlights & Annotations ──────────────────────────────────────
   getHighlights(articleId: number): Promise<Highlight[]>;
