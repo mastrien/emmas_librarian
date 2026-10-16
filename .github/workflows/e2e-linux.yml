@@ -1,0 +1,53 @@
+name: E2E (Linux)
+
+# The Playwright E2E suite (emmas_librarian/e2e-tests) on Ubuntu, since the app also ships as an AppImage.
+# About 10 minutes; Windows E2E still runs on the dev machine.
+on:
+  pull_request:
+    paths:
+      - 'emmas_librarian/**'
+      - '.github/workflows/e2e-linux.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: ./emmas_librarian
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: emmas_librarian/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor, and Electron's Chromium sandbox
+      # needs them (node_modules' chrome-sandbox has no SUID bit). Lifting it on the runner keeps the sandbox
+      # on in the tests instead of passing --no-sandbox to the app.
+      - name: Allow the Chromium sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      # e2e-tests/helpers.js refuses Linux CI without a display; xvfb-run provides one (DISPLAY).
+      - name: E2E tests under Xvfb
+        run: xvfb-run -a npm run test:e2e
+
+      - name: Keep the failure context
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-linux-test-results
+          path: emmas_librarian/test-results
+          if-no-files-found: ignore

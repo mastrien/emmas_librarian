@@ -3,7 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const zlib = require('zlib');
-const { launchApp, getFirstWindow, createProject, navigateTo } = require('./helpers');
+const { launchApp, runAppUntilExit, getFirstWindow, createProject, navigateTo } = require('./helpers');
 
 /**
  * Recovery after an update, through the real main process (main.ts and preload are not covered by unit
@@ -54,13 +54,6 @@ function recordUpdate(ws, { status, targetVersion, snapshotPath }) {
 const readState = (ws) => JSON.parse(fs.readFileSync(ws.statePath, 'utf-8'));
 const preRestoreCopies = (ws) => fs.readdirSync(ws.backupsDir).filter((name) => /^pre_restore_\d+\.db\.gz$/.test(name));
 
-/** Collects the main process stdout, where the E2E recovery mock reports each box it answered. */
-function captureStdout(app) {
-  let output = '';
-  app.process().stdout.on('data', (chunk) => (output += chunk.toString()));
-  return () => output;
-}
-
 async function expectProjects(ws, { present, absent }) {
   const app = await launchApp({}, { userDataDir: ws.dataDir });
   try {
@@ -87,13 +80,12 @@ test.describe('Recovery after an update', () => {
       const broken = Buffer.from('not a sqlite database, written by a failed update');
       fs.writeFileSync(ws.dbPath, broken);
 
-      const app = await launchApp({ E2E_MOCK_RECOVERY_CHOICE: '0' }, { userDataDir: ws.dataDir });
-      const stdout = captureStdout(app);
       // Choice 0 = "Restaurar Dados Anteriores": restore, confirm, quit; no window is ever opened.
-      await app.waitForEvent('close');
+      const run = await runAppUntilExit({ E2E_MOCK_RECOVERY_CHOICE: '0' }, { userDataDir: ws.dataDir });
 
-      expect(stdout()).toContain("[E2E recovery dialog] Emma's Librarian - Erro de Atualização");
-      expect(stdout()).toContain('[E2E recovery dialog] Restauração Concluída');
+      expect({ code: run.code, signal: run.signal }).toEqual({ code: 0, signal: null });
+      expect(run.stdout).toContain("[E2E recovery dialog] Emma's Librarian - Erro de Atualização");
+      expect(run.stdout).toContain('[E2E recovery dialog] Restauração Concluída');
       expect(readState(ws)).toMatchObject({ status: 'failed', rolledBack: true });
       const [copy] = preRestoreCopies(ws);
       expect(zlib.gunzipSync(fs.readFileSync(path.join(ws.backupsDir, copy)))).toEqual(broken);

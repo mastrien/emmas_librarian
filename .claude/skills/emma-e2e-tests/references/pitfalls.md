@@ -27,3 +27,9 @@
   exit_code=-2147483645` and `Render process gone`: the shell that starts the run cannot host Chromium's
   sandbox (seen when the run was started by an agent's shell; `--disable-gpu` alone does not help). Run with
   `E2E_ELECTRON_ARGS=--no-sandbox`. It is a property of the launching environment, not of the app.
+- **Reading the main process stdout of a startup that quits by itself** (recovery boxes answered by
+  `E2E_MOCK_RECOVERY_CHOICE`): a listener on `electronApp.process().stdout` is attached after `electron.launch`
+  returns, and on Linux the app had already printed and quit, so U-01 always saw an empty string although the
+  recovery worked. Use `runAppUntilExit` from helpers.js (execFile, whole output) for startups without a window.
+- **Linux CI**: Ubuntu 24.04 runners block the unprivileged user namespaces the Chromium sandbox needs; the
+  workflow lifts it with `sysctl kernel.apparmor_restrict_unprivileged_userns=0` instead of `--no-sandbox`.
