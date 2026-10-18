@@ -8,6 +8,7 @@ import { ReaderSidebar } from '../../../components/reader/ReaderSidebar';
 import { Annotation } from '../../../types';
 
 import type { Highlight as AppHighlight } from '../../../types';
+import { scrollViewerTo } from '../viewerHighlight';
 
 interface ArticleReaderPdfViewProps {
   pdfUrl: string;
@@ -327,7 +328,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
               setEditContent={setEditContent}
               onSaveEdit={saveEdit}
               setEditingId={setEditingId}
-              onHighlightClick={() => {}}
+              onHighlightClick={(h) => scrollViewerTo(highlighterRef, h)}
             />
 
             {/* Resizer Handle */}
