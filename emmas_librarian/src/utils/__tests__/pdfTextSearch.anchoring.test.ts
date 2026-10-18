@@ -77,6 +77,18 @@ describe('anchoring AI quotes the PDF typesets differently', () => {
     expect(locate(page, 'we utilize the daily-averaged data ... from ERA5 reanalysis dataset')).toBeNull();
   });
 
+  it.each([
+    [
+      'closes with a period a sentence the text goes on with',
+      'under climate variability (Fig. 2). To ensure',
+      'under climate variability.',
+    ],
+    ['drops a comma', 'Author contributions. Y.W., S.H., and Q.L. conceived', 'Y.W., S.H. and Q.L. conceived'],
+    ['writes other quote marks', "the ''Stage II'' hourly radar composites", 'the "Stage II" hourly radar composites'],
+  ])('finds a quote where the AI %s', (_case, pdfText, quote) => {
+    expect(locate(lines(pdfText), quote)).not.toBeNull();
+  });
+
   it('still refuses text that is not on the page', () => {
     expect(locate(lines('precipitation forecasts'), 'temperature forecasts')).toBeNull();
   });
@@ -91,7 +103,7 @@ describe('quote parts', () => {
   });
 
   it('uses the whole quote when every part is short, or there is no ellipsis', () => {
-    expect(quoteSegments('et al. ... 2011')).toEqual(['etal.2011']);
+    expect(quoteSegments('et al. ... 2011')).toEqual(['etal2011']);
     expect(quoteSegments('Precipi-tação  Média')).toEqual([stripForMatching('Precipitação Média')]);
   });
 });

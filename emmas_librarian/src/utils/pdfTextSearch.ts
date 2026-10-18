@@ -33,6 +33,10 @@ function normalizePdfText(str: string): string {
 // ("forecas-" / "ts") that the AI quotes whole, and writes hyphens the AI copies as other code points (U+2010 in
 // "semi‐arid"): 27 and 3 of the 80 AI quotes that failed in a real project (2026-10, precipitation forecasting).
 const HYPHEN_LIKE = /[-\u00AD\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/;
+// Punctuation is left out too: the AI re-types the quote instead of copying it, closing a sentence the text goes on
+// with ("variability." for "variability (Fig. 2)"), dropping a comma, or writing "Stage II" in other quote marks
+// (6 of the 12 quotes still unanchored after the hyphen and ellipsis rules). Ellipses are found before stripping.
+const PUNCTUATION = /[.,;:!?'"()[\]]/;
 // The AI shortens long quotes with "..." (26 of those 80); each part is then looked for in order.
 const ELLIPSIS = /\.\.\.|…/;
 // Shorter parts around an ellipsis ("et al.", "(Fig. 1)") match too many places to locate anything.
@@ -47,7 +51,7 @@ export interface PdfTextItem {
   hasEOL?: boolean;
 }
 
-/** A page's text with spaces and hyphens removed, and where each kept character came from. */
+/** A page's text with spaces, hyphens and punctuation removed, and where each kept character came from. */
 export interface PageTextIndex {
   stripped: string;
   strippedToOriginal: number[];
@@ -69,10 +73,10 @@ export interface AnchorRect {
   height: number;
 }
 
-const isSkipped = (char: string): boolean => /\s/.test(char) || HYPHEN_LIKE.test(char);
+const isSkipped = (char: string): boolean => /\s/.test(char) || HYPHEN_LIKE.test(char) || PUNCTUATION.test(char);
 
 /**
- * The comparable form of a quote or context: normalized, lower case, without spaces and hyphens.
+ * The comparable form of a quote or context: normalized, lower case, without spaces, hyphens and punctuation.
  *
  * Usage:
  *   stripForMatching('Precipi-\ntação  Média'); // "precipitaçãomédia"
