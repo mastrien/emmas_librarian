@@ -43,6 +43,7 @@ interface ArticleReaderPdfViewProps {
   handleDeleteStandaloneAnnotation: (annId: string) => Promise<void>;
   handleEditHighlightAnnotation: (h: any, e: React.MouseEvent) => Promise<void>;
   handleEditStandaloneAnnotation: (a: Annotation) => Promise<void>;
+  handleRetryAnchor: (a: Annotation) => Promise<void>;
   editingId: string | null;
   editContent: string;
   setEditContent: (val: string) => void;
@@ -83,6 +84,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
   handleDeleteStandaloneAnnotation,
   handleEditHighlightAnnotation,
   handleEditStandaloneAnnotation,
+  handleRetryAnchor,
   editingId,
   editContent,
   setEditContent,
@@ -319,6 +321,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
               onDeleteStandaloneAnnotation={handleDeleteStandaloneAnnotation}
               onEditHighlightAnnotation={handleEditHighlightAnnotation}
               onEditStandaloneAnnotation={handleEditStandaloneAnnotation}
+              onRetryAnchor={handleRetryAnchor}
               editingId={editingId}
               editContent={editContent}
               setEditContent={setEditContent}

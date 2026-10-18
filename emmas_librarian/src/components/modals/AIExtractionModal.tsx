@@ -105,7 +105,7 @@ export const AIExtractionModal = (props: AIExtractionModalProps) => {
   };
 
   const viewEvidence = (articleId: number, evidence: RAGExtractionResultType['evidences'][0]) => {
-    navigate(`/reader/${articleId}`, { state: { searchQuery: evidence.text, page: evidence.page } });
+    navigate(`/articles/${articleId}`, { state: { searchQuery: evidence.text, page: evidence.page } });
     onClose();
   };
 
