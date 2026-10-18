@@ -79,6 +79,15 @@ describe('SettingsPage updates', () => {
   describe('restoring the pre-update snapshot', () => {
     const snapshotTakenAt = new Date(2026, 9, 3, 17, 45).getTime();
 
+    // A verified snapshot is offered for 14 days (snapshotRestoreWindow); without a fixed "today" these tests
+    // started failing on 2026-10-18, two weeks after the snapshot date. Only Date is faked: waitFor needs real timers.
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(2026, 9, 5, 9, 0));
+    });
+
+    afterEach(() => vi.useRealTimers());
+
     beforeEach(() => {
       fakeService.getUpdateStatus.mockResolvedValue(
         statusWith({
