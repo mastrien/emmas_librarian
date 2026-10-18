@@ -24,6 +24,7 @@ import {
 import { parseIpcError } from '../utils/AppError';
 import type { IProjectService } from './ProjectServiceInterface';
 import type { SearchLimits } from '../utils/searchLimits';
+import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
 import type { OpenAccessOutcome, SearchReportFormat } from '../types';
 
 // Highlights are stored with a numeric id and JSON-encoded position; the UI works with string ids and objects.
@@ -399,6 +400,11 @@ export const projectService: IProjectService = {
 
   // Categories
   getProjectCategories: (projectId: number) => safeInvoke(IpcChannel.CATEGORIES_GET_PROJECT, projectId),
+
+  applyCategorySet: (projectId: number, entries: CategorySetEntry[]): Promise<CategorySetResult> =>
+    safeInvoke(IpcChannel.CATEGORIES_APPLY_SET, projectId, entries),
+
+  readCategorySetFile: (): Promise<CategorySetEntry[] | null> => safeInvoke(IpcChannel.CATEGORIES_READ_SET_FILE),
 
   createProjectCategory: (projectId: number, name: string, type: string, options?): Promise<number> =>
     safeInvoke(IpcChannel.CATEGORIES_CREATE_PROJECT, projectId, name, type, options),

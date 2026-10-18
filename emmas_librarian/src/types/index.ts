@@ -213,6 +213,8 @@ export enum IpcChannel {
   CATEGORIES_GET_ARTICLE = 'categories:getArticle',
   CATEGORIES_SET_ARTICLE = 'categories:setArticle',
   CATEGORIES_GET_ALL_PROJECT_ARTICLE = 'categories:getAllProjectArticle',
+  CATEGORIES_APPLY_SET = 'categories:applySet',
+  CATEGORIES_READ_SET_FILE = 'categories:readSetFile',
   SYNC_EXPORT_PROJECT = 'sync:exportProject',
   SYNC_IMPORT_PROJECT = 'sync:importProject',
   TRASH_GET_ITEMS = 'trash:getItems',
