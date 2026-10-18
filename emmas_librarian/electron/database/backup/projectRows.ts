@@ -22,8 +22,12 @@ export interface ProjectRows {
   diaryHistory?: SqlRow[];
   questionSets?: SqlRow[];
   investigationResults?: SqlRow[];
+  /** Audits by stratified sample (#48); files from before them lack the list. */
+  investigationAudits?: SqlRow[];
 }
 
+const AUDITS_SQL = `SELECT a.* FROM investigation_audits a
+  JOIN massive_investigations m ON a.investigation_id = m.id WHERE m.project_id = ?`;
 const CATEGORY_OPTIONS_SQL = `SELECT o.* FROM project_category_options o
   JOIN project_categories c ON o.category_id = c.id WHERE c.project_id = ?`;
 
@@ -63,5 +67,6 @@ export function readProjectRows(
     diaryHistory: byProject('project_diary_history'),
     questionSets: db.prepare(questionSetsSql).all(projectId) as SqlRow[],
     investigationResults: byArticle('investigation_results'),
+    investigationAudits: db.prepare(AUDITS_SQL).all(projectId) as SqlRow[],
   };
 }

@@ -10,6 +10,7 @@ import {
   type MassiveInvestigation,
   type InvestigationResult,
   type ResultReview,
+  type InvestigationAudit,
   type QueryASTNode,
   type DatabaseTranslationMap,
   type SearchHistoryItem,
@@ -26,6 +27,7 @@ import { parseIpcError } from '../utils/AppError';
 import type { IProjectService } from './ProjectServiceInterface';
 import type { SearchLimits } from '../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
+import type { AuditParams } from '../utils/auditSampling';
 import type { OpenAccessOutcome, SearchReportFormat } from '../types';
 
 // Highlights are stored with a numeric id and JSON-encoded position; the UI works with string ids and objects.
@@ -393,6 +395,15 @@ export const projectService: IProjectService = {
   ): Promise<void> {
     await safeInvoke(IpcChannel.INVESTIGATION_RESULTS_SAVE, investigationId, articleId, results);
   },
+  getInvestigationAudit: (investigationId: number): Promise<InvestigationAudit | null> =>
+    safeInvoke(IpcChannel.INVESTIGATION_AUDIT_GET, investigationId),
+
+  saveInvestigationAudit: (investigationId: number, params: AuditParams): Promise<InvestigationAudit> =>
+    safeInvoke(IpcChannel.INVESTIGATION_AUDIT_SAVE, investigationId, params),
+
+  getInvestigationAuditsByProject: (projectId: number): Promise<InvestigationAudit[]> =>
+    safeInvoke(IpcChannel.INVESTIGATION_AUDITS_BY_PROJECT, projectId),
+
   reviewInvestigationResult: (resultId: number, review: ResultReview): Promise<InvestigationResult> =>
     safeInvoke(IpcChannel.INVESTIGATION_RESULT_REVIEW, resultId, review),
   getInvestigationResults: (investigationId: number): Promise<InvestigationResult[]> =>

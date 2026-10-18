@@ -1,5 +1,6 @@
 import type { SearchLimits } from '../../../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../../../utils/categoryTemplates';
+import type { AuditParams } from '../../../utils/auditSampling';
 import type { OpenAccessOutcome, SearchReportFormat } from '../../../types';
 import type {
   SearchHistoryItem,
@@ -37,6 +38,7 @@ import type {
   QuestionSet,
   InvestigationResult,
   ResultReview,
+  InvestigationAudit,
   QueryASTNode,
   DatabaseTranslationMap,
 } from '../../../types';
@@ -358,6 +360,21 @@ export class FakeProjectService implements IProjectService {
   );
 
   getInvestigationResults = vi.fn(async (_investigationId: number): Promise<InvestigationResult[]> => []);
+
+  getInvestigationAudit = vi.fn(async (_investigationId: number): Promise<InvestigationAudit | null> => null);
+
+  saveInvestigationAudit = vi.fn(
+    async (investigationId: number, params: AuditParams): Promise<InvestigationAudit> => ({
+      id: 1,
+      investigation_id: investigationId,
+      seed: params.seed,
+      sample_percent: params.samplePercent,
+      min_per_question: params.minPerQuestion,
+      created_at: '',
+    }),
+  );
+
+  getInvestigationAuditsByProject = vi.fn(async (_projectId: number): Promise<InvestigationAudit[]> => []);
 
   reviewInvestigationResult = vi.fn(
     async (resultId: number, review: ResultReview): Promise<InvestigationResult> =>

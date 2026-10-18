@@ -10,6 +10,7 @@
  */
 import type { SearchLimits } from '../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
+import type { AuditParams } from '../utils/auditSampling';
 import type { OpenAccessOutcome, SearchReportFormat } from '../types';
 import type {
   SearchPreview,
@@ -25,6 +26,7 @@ import type {
   QuestionSet,
   InvestigationResult,
   ResultReview,
+  InvestigationAudit,
   QueryASTNode,
   DatabaseTranslationMap,
   SearchHistoryItem,
@@ -244,6 +246,12 @@ export interface IProjectService {
   getInvestigationResultsByArticle(investigationId: number, articleId: number): Promise<InvestigationResult[]>;
   /** Records the person's decision on one AI answer (#47) and answers the updated row. */
   reviewInvestigationResult(resultId: number, review: ResultReview): Promise<InvestigationResult>;
+  /** The stored draw of an investigation's audit (#48), or null when it was never audited. */
+  getInvestigationAudit(investigationId: number): Promise<InvestigationAudit | null>;
+  /** Creates or replaces the audit of an investigation. */
+  saveInvestigationAudit(investigationId: number, params: AuditParams): Promise<InvestigationAudit>;
+  /** Every audit of a project's investigations, for comparing models. */
+  getInvestigationAuditsByProject(projectId: number): Promise<InvestigationAudit[]>;
 
   // ── Categories ────────────────────────────────────────────────────
   getProjectCategories(projectId: number): Promise<ProjectCategory[]>;

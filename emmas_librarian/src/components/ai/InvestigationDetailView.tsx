@@ -6,6 +6,8 @@ import { useProjectService } from '../../contexts/ServicesContext';
 import { formatResultsAsCsv, formatResultsAsJson } from '../../utils/investigationExporter';
 import { parseJsonList } from '../../utils/parseJsonList';
 import { ArticleResultAccordion } from './investigation/ArticleResultAccordion';
+import { AuditView } from './audit/AuditView';
+import { auditForExport } from '../../utils/auditExport';
 
 export interface InvestigationDetailViewProps {
   investigation: InvestigationHistoryRecord;
@@ -13,6 +15,10 @@ export interface InvestigationDetailViewProps {
   getInvestigationResults: (investigationId: number) => Promise<InvestigationResult[]>;
   onBack: () => void;
   onReExecute: (questions: string[], articleIds: number[]) => void;
+  /** For the audit (#48): the project, its investigations (to compare models) and the item to reopen. */
+  projectId?: number;
+  history?: InvestigationHistoryRecord[];
+  initialAuditResultId?: number;
 }
 
 export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = ({
@@ -21,12 +27,16 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
   getInvestigationResults,
   onBack,
   onReExecute,
+  projectId,
+  history = [],
+  initialAuditResultId,
 }) => {
   const projectService = useProjectService();
   const navigate = useNavigate();
   const [results, setResults] = useState<InvestigationResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [onlyPending, setOnlyPending] = useState(false);
+  const [auditing, setAuditing] = useState(initialAuditResultId !== undefined);
 
   // #47: the saved row comes back from the database, so the screen shows exactly what was stored.
   const reviewResult = async (resultId: number, review: ResultReview) => {
@@ -70,8 +80,12 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
     onReExecute(questionsList, articleIds);
   };
 
+  // The audit (#48) goes into the export when there is one: its draw, rates and which answers were drawn.
+  const auditOfExport = async () =>
+    auditForExport(questionsList, results, await projectService.getInvestigationAudit(investigation.id));
+
   const handleExportCsv = async () => {
-    const csvContent = formatResultsAsCsv(investigation, results, articles);
+    const csvContent = formatResultsAsCsv(investigation, results, articles, await auditOfExport());
     const success = await projectService.saveExportedFile(csvContent, `investigation_${investigation.id}_results.csv`);
     if (success) {
       console.log('CSV exported successfully');
@@ -79,7 +93,7 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
   };
 
   const handleExportJson = async () => {
-    const jsonContent = formatResultsAsJson(investigation, results, articles);
+    const jsonContent = formatResultsAsJson(investigation, results, articles, await auditOfExport());
     const success = await projectService.saveExportedFile(
       jsonContent,
       `investigation_${investigation.id}_results.json`,
@@ -88,6 +102,22 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
       console.log('JSON exported successfully');
     }
   };
+
+  if (auditing && !isLoading) {
+    return (
+      <AuditView
+        investigation={investigation}
+        projectId={projectId}
+        articles={articles}
+        results={results}
+        history={history}
+        getInvestigationResults={getInvestigationResults}
+        onReview={reviewResult}
+        onBack={() => setAuditing(false)}
+        initialResultId={initialAuditResultId}
+      />
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -105,6 +135,9 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
           </button>
           <button className="btn-secondary" onClick={handleExportJson} disabled={results.length === 0}>
             Exportar JSON
+          </button>
+          <button className="btn-secondary" onClick={() => setAuditing(true)} disabled={results.length === 0}>
+            Auditar
           </button>
           <button className="btn-primary" onClick={handleReExecute}>
             Re-executar

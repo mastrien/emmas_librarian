@@ -175,6 +175,12 @@ function importInvestigations(ctx: ImportContext, rows: ProjectRows): void {
       article_id: remap(ctx, 'article', result.article_id),
     });
   }
+  // Results keep their review, so the copied audit draws the same sample and shows the same rates (#48).
+  for (const audit of rows.investigationAudits ?? []) {
+    copyLinkedRow(ctx, 'investigation_audits', audit, {
+      investigation_id: remap(ctx, 'investigation', audit.investigation_id),
+    });
+  }
 }
 
 function importReadingNotes(ctx: ImportContext, rows: ProjectRows): void {

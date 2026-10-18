@@ -17,10 +17,13 @@ import { ImportArticlesModal } from '../../../components/modals/ImportArticlesMo
 import { Project, Article, ProjectDocument } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { ProjectModals } from '../hooks/useProjectModals';
+import type { AuditReturn } from '../../../utils/auditReturn';
 import type { ProjectTabId } from './ProjectTabs';
 
 interface ProjectModalsContainerProps {
   projectId: number;
+  /** Set when coming back from the reader to an audit (#48). */
+  reopenAudit?: AuditReturn | null;
   project: Project;
   articles: Article[];
   projectDocuments: ProjectDocument[];
@@ -48,6 +51,7 @@ interface ProjectModalsContainerProps {
 
 export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
   projectId,
+  reopenAudit,
   project,
   articles,
   projectDocuments,
@@ -136,6 +140,8 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
         cancelExtractionRef={cancelExtractionRef}
         investigationHistory={investigationHistory}
         searchHistory={history}
+        projectId={projectId}
+        reopenAudit={reopenAudit}
         getInvestigationResults={projectService.getInvestigationResults}
       />
 

@@ -192,6 +192,17 @@ CREATE INDEX IF NOT EXISTS idx_inv_results_investigation
 CREATE INDEX IF NOT EXISTS idx_inv_results_article
     ON investigation_results(article_id);
 
+-- Audit of an investigation by stratified sample (#48). Only the draw is stored; the sample is drawn again from it.
+CREATE TABLE IF NOT EXISTS investigation_audits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    investigation_id INTEGER NOT NULL UNIQUE,
+    seed INTEGER NOT NULL,
+    sample_percent REAL NOT NULL,
+    min_per_question INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(investigation_id) REFERENCES massive_investigations(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS ai_model_config (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     skill TEXT NOT NULL UNIQUE,

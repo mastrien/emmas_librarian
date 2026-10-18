@@ -58,6 +58,11 @@ function expectCategoriesCopied(db: Database.Database, projectId: number, articl
 
 function expectInvestigationCopied(db: Database.Database, projectId: number, articleIds: number[]): void {
   const investigation = one(db, 'SELECT * FROM massive_investigations WHERE project_id = ?', projectId);
+  expect(one(db, 'SELECT * FROM investigation_audits WHERE investigation_id = ?', investigation.id)).toMatchObject({
+    seed: 48213,
+    sample_percent: 10,
+    min_per_question: 2,
+  });
   expect(JSON.parse(String(investigation.articles_ids))).toEqual(articleIds);
   expect(one(db, 'SELECT * FROM investigation_results WHERE investigation_id = ?', investigation.id)).toMatchObject({
     article_id: articleIds[0],

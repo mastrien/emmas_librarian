@@ -238,6 +238,9 @@ export enum IpcChannel {
   INVESTIGATION_RESULTS_GET = 'investigationResults:get',
   INVESTIGATION_RESULTS_GET_BY_ARTICLE = 'investigationResults:getByArticle',
   INVESTIGATION_RESULT_REVIEW = 'investigationResults:review',
+  INVESTIGATION_AUDIT_GET = 'investigationAudits:get',
+  INVESTIGATION_AUDIT_SAVE = 'investigationAudits:save',
+  INVESTIGATION_AUDITS_BY_PROJECT = 'investigationAudits:byProject',
   PDF_LIBRARY_LIST = 'pdfLibrary:list',
   PDF_LIBRARY_DELETE = 'pdfLibrary:delete',
   PDF_LIBRARY_LINK = 'pdfLibrary:link',
@@ -329,6 +332,16 @@ export type ReviewStatus = 'pending' | 'accepted' | 'edited' | 'rejected';
 export interface ResultReview {
   status: ReviewStatus;
   answer?: string;
+}
+
+/** The stored draw of an investigation audit (#48); the sample itself is drawn again from these values. */
+export interface InvestigationAudit {
+  id: number;
+  investigation_id: number;
+  seed: number;
+  sample_percent: number;
+  min_per_question: number;
+  created_at: string;
 }
 
 export type TabId = 'overview' | 'articles' | 'ai' | 'history' | 'diaries';

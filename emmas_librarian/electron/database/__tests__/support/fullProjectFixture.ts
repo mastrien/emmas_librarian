@@ -106,6 +106,12 @@ function seedInvestigation(db: Database.Database, project: number, article: numb
     investigation,
     other,
   );
+  // An audit by stratified sample (#48): its draw must reach the copy.
+  run(
+    db,
+    'INSERT INTO investigation_audits (investigation_id, seed, sample_percent, min_per_question) VALUES (?, 48213, 10, 2)',
+    investigation,
+  );
 }
 
 function seedReadingNotes(db: Database.Database, project: number, article: number): void {
@@ -155,6 +161,7 @@ const PROJECT_SCOPE: Record<string, string> = {
   article_category_selections: ARTICLES_OF_PROJECT,
   project_category_options: 'category_id IN (SELECT id FROM project_categories WHERE project_id = @project)',
   investigation_results: 'investigation_id IN (SELECT id FROM massive_investigations WHERE project_id = @project)',
+  investigation_audits: 'investigation_id IN (SELECT id FROM massive_investigations WHERE project_id = @project)',
 };
 
 // Keys that point at other rows: a copy gives them new values on purpose, in every table.

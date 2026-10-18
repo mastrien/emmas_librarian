@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { auditReturnFrom } from '../../../utils/auditReturn';
 import { ArrowLeft, Edit2, CopyPlus, Loader2, Upload, ZoomOut, ZoomIn, X as XIcon } from 'lucide-react';
 import { HelpButton } from '../../../components/common/HelpButton';
 import type { Article } from '../../../types';
@@ -27,6 +28,8 @@ export const ArticleReaderToolbar: React.FC<ArticleReaderToolbarProps> = ({
   setIsEditingMetadata,
   setIsCitationModalOpen,
 }) => {
+  // Opened from an audit's "Abrir no PDF" (#48): going back reopens the audit on the same item.
+  const backToAudit = auditReturnFrom(useLocation().state);
   return (
     <header
       className="glass-panel"
@@ -47,6 +50,9 @@ export const ArticleReaderToolbar: React.FC<ArticleReaderToolbarProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
         <Link
           to={`/projects/${article.project_id}`}
+          state={backToAudit ? { openAudit: backToAudit } : undefined}
+          title={backToAudit ? 'Voltar para a auditoria' : 'Voltar ao projeto'}
+          aria-label={backToAudit ? 'Voltar para a auditoria' : 'Voltar ao projeto'}
           style={{
             textDecoration: 'none',
             color: 'var(--text-muted)',
