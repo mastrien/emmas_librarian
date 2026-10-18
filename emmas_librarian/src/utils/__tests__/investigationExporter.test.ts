@@ -18,50 +18,60 @@ describe('investigationExporter', () => {
     { id: 20, title: 'Article "20" Title', status: 'new', project_id: 1 } as Article,
   ];
 
+  const base = {
+    investigation_id: 1,
+    status: 'success' as const,
+    error_message: null,
+    created_at: '2026-06-22T14:31:00Z',
+    review_status: 'pending' as const,
+    reviewed_answer: null,
+    reviewed_at: null,
+  };
+
   const results: InvestigationResult[] = [
-    {
-      id: 101,
-      investigation_id: 1,
-      article_id: 10,
-      question: 'Qual a metodologia?',
-      answer: 'Metodologia A',
-      quote: 'quote A',
-      status: 'success',
-      error_message: null,
-      created_at: '2026-06-22T14:31:00Z',
-    },
-    {
-      id: 102,
-      investigation_id: 1,
-      article_id: 20,
-      question: 'Qual a "amostra"?',
-      answer: 'Amostra de 100',
-      quote: null,
-      status: 'success',
-      error_message: null,
-      created_at: '2026-06-22T14:31:00Z',
-    },
+    { ...base, id: 101, article_id: 10, question: 'Qual a metodologia?', answer: 'Metodologia A', quote: 'quote A' },
+    { ...base, id: 102, article_id: 20, question: 'Qual a "amostra"?', answer: 'Amostra de 100', quote: null },
   ];
 
+  // A RAG result keeps its answer as JSON; the export must show the synthesized text, not the JSON.
+  const ragAnswer = JSON.stringify({ question: 'Q', synthesizedAnswer: 'Coorte', confidenceScore: 0.9, evidences: [] });
+
   it('formatResultsAsCsv formats results correctly and escapes quotes', () => {
-    const csv = formatResultsAsCsv(investigation, results, articles);
-    const lines = csv.split('\n');
+    const lines = formatResultsAsCsv(investigation, results, articles).split('\n');
+
     expect(lines).toHaveLength(3);
-    expect(lines[0]).toBe('Artigo,Pergunta,Resposta,Citação,Status');
-    expect(lines[1]).toBe('"Article 10 Title","Qual a metodologia?","Metodologia A","quote A",success');
-    // Article 20 has quotes in title and question
-    expect(lines[2]).toBe('"Article ""20"" Title","Qual a ""amostra""?","Amostra de 100","",success');
+    expect(lines[0]).toBe('Artigo,Pergunta,Resposta,Resposta da IA,Citação,Status,Revisão');
+    expect(lines[1]).toBe(
+      '"Article 10 Title","Qual a metodologia?","Metodologia A","Metodologia A","quote A",success,pendente',
+    );
+    expect(lines[2]).toBe(
+      '"Article ""20"" Title","Qual a ""amostra""?","Amostra de 100","Amostra de 100","",success,pendente',
+    );
   });
 
-  it('formatResultsAsJson formats results correctly', () => {
-    const jsonStr = formatResultsAsJson(investigation, results, articles);
-    const parsed = JSON.parse(jsonStr);
+  it('exports the answer after review: the edit when edited, nothing when rejected, the AI text from RAG JSON', () => {
+    const reviewed: InvestigationResult[] = [
+      { ...results[0], answer: ragAnswer, review_status: 'edited', reviewed_answer: 'Coorte prospectiva' },
+      { ...results[1], answer: ragAnswer, review_status: 'rejected' },
+      { ...results[1], id: 103, answer: ragAnswer, review_status: 'accepted' },
+    ];
+
+    const lines = formatResultsAsCsv(investigation, reviewed, articles).split('\n');
+
+    expect(lines[1]).toContain('"Coorte prospectiva","Coorte","quote A",success,editada');
+    expect(lines[2]).toContain('"","Coorte","",success,rejeitada');
+    expect(lines[3]).toContain('"Coorte","Coorte","",success,aceita');
+  });
+
+  it('formatResultsAsJson formats results correctly, with the review of each answer', () => {
+    const edited = [{ ...results[0], review_status: 'edited' as const, reviewed_answer: 'B', reviewed_at: 'when' }];
+    const parsed = JSON.parse(formatResultsAsJson(investigation, [...edited, results[1]], articles));
 
     expect(parsed.investigation_id).toBe(1);
     expect(parsed.status).toBe('Sucesso');
     expect(parsed.results).toHaveLength(2);
-    expect(parsed.results[0].article_title).toBe('Article 10 Title');
+    expect(parsed.results[0]).toMatchObject({ answer: 'B', ai_answer: 'Metodologia A', review_status: 'edited' });
     expect(parsed.results[1].article_title).toBe('Article "20" Title');
-    expect(parsed.results[1].question).toBe('Qual a "amostra"?');
+    expect(parsed.results[1]).toMatchObject({ question: 'Qual a "amostra"?', review_status: 'pending' });
   });
 });

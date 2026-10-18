@@ -7,7 +7,7 @@ import { QuestionSetRepository } from '../database/QuestionSetRepository';
 import { InvestigationResultRepository } from '../database/InvestigationResultRepository';
 import { AIModelConfigRepository } from '../database/AIModelConfigRepository';
 import { IpcChannel } from '../types';
-import type { AISkill, AIProvider } from '../types';
+import type { AISkill, AIProvider, ResultReview } from '../types';
 import type { InvestigationResultInput } from '../database/InvestigationResultRepository';
 
 export function setupAiIpcHandlers(db: DatabaseAdapter, aiService: AIService, ipcMainModule: typeof ipcMain = ipcMain) {
@@ -146,5 +146,10 @@ export function setupAiIpcHandlers(db: DatabaseAdapter, aiService: AIService, ip
     withErrorHandling(async (_, investigationId: number, articleId: number) => {
       return irRepo.getResultsByArticle(investigationId, articleId);
     }),
+  );
+
+  ipcMainModule.handle(
+    IpcChannel.INVESTIGATION_RESULT_REVIEW,
+    withErrorHandling(async (_, resultId: number, review: ResultReview) => irRepo.reviewResult(resultId, review)),
   );
 }

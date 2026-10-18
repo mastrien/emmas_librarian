@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import type { InvestigationResult, ResultReview, ReviewStatus } from '../../src/types';
 
 /** Input shape for saving a single investigation result row. */
 export interface InvestigationResultInput {
@@ -9,17 +10,26 @@ export interface InvestigationResultInput {
   error_message: string | null;
 }
 
-/** Row shape returned from the database. */
-export interface InvestigationResultRow {
-  id: number;
-  investigation_id: number;
-  article_id: number;
-  question: string;
-  answer: string | null;
-  quote: string | null;
-  status: 'success' | 'error' | 'skipped';
-  error_message: string | null;
-  created_at: string;
+/** Row shape returned from the database: the same contract the renderer reads. */
+export type InvestigationResultRow = InvestigationResult;
+
+const REVIEW_STATUSES: readonly ReviewStatus[] = ['pending', 'accepted', 'edited', 'rejected'];
+
+// Only 'edited' keeps the person's text; any other decision clears it, so a stale edit never resurfaces.
+function reviewedAnswerOf(review: ResultReview): string | null {
+  if (!REVIEW_STATUSES.includes(review.status)) {
+    throw new Error(
+      `[ERR_INVALID_REVIEW] Unknown review status. Offending value: ${JSON.stringify(review.status)}. Expected shape: one of ${REVIEW_STATUSES.join(', ')}.`,
+    );
+  }
+  if (review.status !== 'edited') return null;
+  const answer = review.answer?.trim();
+  if (!answer) {
+    throw new Error(
+      `[ERR_INVALID_REVIEW] An edited answer needs text. Offending value: ${JSON.stringify(review.answer)}. Expected shape: a non-empty string.`,
+    );
+  }
+  return answer;
 }
 
 /**
@@ -73,6 +83,26 @@ export class InvestigationResultRepository {
          ORDER BY id`,
       )
       .all(investigationId, articleId) as InvestigationResultRow[];
+  }
+
+  /**
+   * Records the person's decision on one AI answer (#47) and returns the updated row. 'pending' undoes a decision.
+   *
+   * Usage:
+   *   repo.reviewResult(42, { status: 'edited', answer: 'Coorte prospectiva' });
+   */
+  reviewResult(resultId: number, review: ResultReview): InvestigationResultRow {
+    const reviewedAnswer = reviewedAnswerOf(review);
+    const reviewedAt = review.status === 'pending' ? null : new Date().toISOString();
+    const info = this.db
+      .prepare('UPDATE investigation_results SET review_status = ?, reviewed_answer = ?, reviewed_at = ? WHERE id = ?')
+      .run(review.status, reviewedAnswer, reviewedAt, resultId);
+    if (info.changes === 0) {
+      throw new Error(
+        `[ERR_NOT_FOUND] No investigation result. Offending value: resultId=${resultId}. Expected shape: an existing result id.`,
+      );
+    }
+    return this.db.prepare('SELECT * FROM investigation_results WHERE id = ?').get(resultId) as InvestigationResultRow;
   }
 
   /** Deletes all result rows belonging to the given investigation. */

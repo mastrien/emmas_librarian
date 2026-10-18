@@ -24,6 +24,7 @@ const mockIrRepo = {
   saveResultsBatch: vi.fn(),
   getResultsByInvestigation: vi.fn(),
   getResultsByArticle: vi.fn(),
+  reviewResult: vi.fn(),
 };
 
 const mockAmcRepo = {
@@ -235,6 +236,14 @@ describe('aiIpcHandlers', () => {
       const res = await handler({}, 1, 2);
       expect(res).toEqual(['r2']);
       expect(mockIrRepo.getResultsByArticle).toHaveBeenCalledWith(1, 2);
+    });
+
+    it('INVESTIGATION_RESULT_REVIEW hands the decision to the repository and answers the saved row (#47)', async () => {
+      const handler = getHandler(IpcChannel.INVESTIGATION_RESULT_REVIEW);
+      mockIrRepo.reviewResult.mockReturnValue({ id: 7, review_status: 'accepted' });
+      const res = await handler({}, 7, { status: 'accepted' });
+      expect(res).toEqual({ id: 7, review_status: 'accepted' });
+      expect(mockIrRepo.reviewResult).toHaveBeenCalledWith(7, { status: 'accepted' });
     });
   });
 });

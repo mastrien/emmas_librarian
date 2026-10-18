@@ -24,6 +24,7 @@ import type {
   MassiveInvestigation,
   QuestionSet,
   InvestigationResult,
+  ResultReview,
   QueryASTNode,
   DatabaseTranslationMap,
   SearchHistoryItem,
@@ -241,6 +242,8 @@ export interface IProjectService {
   ): Promise<void>;
   getInvestigationResults(investigationId: number): Promise<InvestigationResult[]>;
   getInvestigationResultsByArticle(investigationId: number, articleId: number): Promise<InvestigationResult[]>;
+  /** Records the person's decision on one AI answer (#47) and answers the updated row. */
+  reviewInvestigationResult(resultId: number, review: ResultReview): Promise<InvestigationResult>;
 
   // ── Categories ────────────────────────────────────────────────────
   getProjectCategories(projectId: number): Promise<ProjectCategory[]>;
