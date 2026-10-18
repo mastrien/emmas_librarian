@@ -62,6 +62,9 @@ function expectInvestigationCopied(db: Database.Database, projectId: number, art
   expect(one(db, 'SELECT * FROM investigation_results WHERE investigation_id = ?', investigation.id)).toMatchObject({
     article_id: articleIds[0],
     answer: 'R',
+    review_status: 'edited',
+    reviewed_answer: 'R revisada',
+    reviewed_at: '2026-10-18T10:00:00.000Z',
   });
 }
 

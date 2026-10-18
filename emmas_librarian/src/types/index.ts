@@ -237,6 +237,7 @@ export enum IpcChannel {
   INVESTIGATION_RESULTS_SAVE = 'investigationResults:save',
   INVESTIGATION_RESULTS_GET = 'investigationResults:get',
   INVESTIGATION_RESULTS_GET_BY_ARTICLE = 'investigationResults:getByArticle',
+  INVESTIGATION_RESULT_REVIEW = 'investigationResults:review',
   PDF_LIBRARY_LIST = 'pdfLibrary:list',
   PDF_LIBRARY_DELETE = 'pdfLibrary:delete',
   PDF_LIBRARY_LINK = 'pdfLibrary:link',
@@ -315,6 +316,19 @@ export interface InvestigationResult {
   status: 'success' | 'error' | 'skipped';
   error_message: string | null;
   created_at: string;
+  /** Human review of the AI answer (#47); every answer starts pending. */
+  review_status: ReviewStatus;
+  /** The person's own answer, only when review_status is 'edited'. */
+  reviewed_answer: string | null;
+  reviewed_at: string | null;
+}
+
+export type ReviewStatus = 'pending' | 'accepted' | 'edited' | 'rejected';
+
+/** A review decision sent from the screen: `answer` is required for 'edited' and ignored otherwise. */
+export interface ResultReview {
+  status: ReviewStatus;
+  answer?: string;
 }
 
 export type TabId = 'overview' | 'articles' | 'ai' | 'history' | 'diaries';

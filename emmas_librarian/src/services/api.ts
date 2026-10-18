@@ -9,6 +9,7 @@ import {
   type ProjectDocument,
   type MassiveInvestigation,
   type InvestigationResult,
+  type ResultReview,
   type QueryASTNode,
   type DatabaseTranslationMap,
   type SearchHistoryItem,
@@ -392,6 +393,8 @@ export const projectService: IProjectService = {
   ): Promise<void> {
     await safeInvoke(IpcChannel.INVESTIGATION_RESULTS_SAVE, investigationId, articleId, results);
   },
+  reviewInvestigationResult: (resultId: number, review: ResultReview): Promise<InvestigationResult> =>
+    safeInvoke(IpcChannel.INVESTIGATION_RESULT_REVIEW, resultId, review),
   getInvestigationResults: (investigationId: number): Promise<InvestigationResult[]> =>
     safeInvoke(IpcChannel.INVESTIGATION_RESULTS_GET, investigationId),
   async getInvestigationResultsByArticle(investigationId: number, articleId: number): Promise<InvestigationResult[]> {

@@ -95,7 +95,8 @@ function seedInvestigation(db: Database.Database, project: number, article: numb
   );
   run(
     db,
-    "INSERT INTO investigation_results (investigation_id, article_id, question, answer, quote) VALUES (?, ?, 'Q', 'R', 'citação')",
+    // A reviewed answer (#47): the review must travel with the project like every other value.
+    "INSERT INTO investigation_results (investigation_id, article_id, question, answer, quote, review_status, reviewed_answer, reviewed_at) VALUES (?, ?, 'Q', 'R', 'citação', 'edited', 'R revisada', '2026-10-18T10:00:00.000Z')",
     investigation,
     article,
   );

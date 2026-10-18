@@ -36,6 +36,7 @@ import type {
   MassiveInvestigation,
   QuestionSet,
   InvestigationResult,
+  ResultReview,
   QueryASTNode,
   DatabaseTranslationMap,
 } from '../../../types';
@@ -357,6 +358,11 @@ export class FakeProjectService implements IProjectService {
   );
 
   getInvestigationResults = vi.fn(async (_investigationId: number): Promise<InvestigationResult[]> => []);
+
+  reviewInvestigationResult = vi.fn(
+    async (resultId: number, review: ResultReview): Promise<InvestigationResult> =>
+      ({ id: resultId, review_status: review.status, reviewed_answer: review.answer ?? null }) as InvestigationResult,
+  );
 
   getInvestigationResultsByArticle = vi.fn(
     async (_investigationId: number, _articleId: number): Promise<InvestigationResult[]> => [],

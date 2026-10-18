@@ -137,4 +137,53 @@ describe('InvestigationResultRepository', () => {
 
     expect(remaining).toHaveLength(0);
   });
+
+  // ── reviewResult (#47) ────────────────────────────────────────────
+
+  describe('reviewResult', () => {
+    let resultId: number;
+
+    beforeEach(() => {
+      repo.saveResultsBatch(1, 1, [
+        { question: 'Q1', answer: 'A1', quote: null, status: 'success', error_message: null },
+      ]);
+      resultId = repo.getResultsByInvestigation(1)[0].id;
+    });
+
+    it('starts every answer pending', () => {
+      expect(repo.getResultsByInvestigation(1)[0]).toMatchObject({
+        review_status: 'pending',
+        reviewed_answer: null,
+        reviewed_at: null,
+      });
+    });
+
+    it('keeps the person’s text and when it was reviewed, and survives reopening the repository', () => {
+      const saved = repo.reviewResult(resultId, { status: 'edited', answer: '  Coorte prospectiva ' });
+
+      expect(saved).toMatchObject({ review_status: 'edited', reviewed_answer: 'Coorte prospectiva', answer: 'A1' });
+      expect(Date.parse(saved.reviewed_at!)).not.toBeNaN();
+      expect(new InvestigationResultRepository(db).getResultsByInvestigation(1)[0].review_status).toBe('edited');
+    });
+
+    it('clears an earlier edit when the answer is accepted, rejected or set back to pending', () => {
+      repo.reviewResult(resultId, { status: 'edited', answer: 'texto' });
+
+      expect(repo.reviewResult(resultId, { status: 'rejected', answer: 'ignored' }).reviewed_answer).toBeNull();
+      expect(repo.reviewResult(resultId, { status: 'accepted' })).toMatchObject({ reviewed_answer: null });
+      expect(repo.reviewResult(resultId, { status: 'pending' })).toMatchObject({
+        review_status: 'pending',
+        reviewed_at: null,
+      });
+    });
+
+    it('refuses an edit without text, an unknown status and an unknown result, changing nothing', () => {
+      expect(() => repo.reviewResult(resultId, { status: 'edited', answer: '  ' })).toThrowError(
+        /ERR_INVALID_REVIEW.*non-empty string/,
+      );
+      expect(() => repo.reviewResult(resultId, { status: 'done' as never })).toThrowError(/ERR_INVALID_REVIEW.*"done"/);
+      expect(() => repo.reviewResult(999, { status: 'accepted' })).toThrowError(/ERR_NOT_FOUND.*resultId=999/);
+      expect(repo.getResultsByInvestigation(1)[0].review_status).toBe('pending');
+    });
+  });
 });

@@ -151,6 +151,21 @@ describe('ProjectSyncService importing hand-made or older files', () => {
     expect(db().prepare("SELECT * FROM article_categories WHERE value = 'orphan'").all()).toEqual([]);
   });
 
+  it('imports answers from files made before the review existed as pending (#47)', async () => {
+    const older = {
+      ...minimal,
+      investigationResults: [
+        { id: 7, investigation_id: 3, article_id: 5, question: 'Q', answer: 'R', status: 'success' },
+      ],
+    };
+
+    const projectId = Number(await service.importProject(writeProjectFile(older)));
+
+    const sql = `SELECT r.answer, r.review_status, r.reviewed_answer FROM investigation_results r
+      JOIN massive_investigations m ON m.id = r.investigation_id WHERE m.project_id = ?`;
+    expect(one(sql, projectId)).toEqual({ answer: 'R', review_status: 'pending', reviewed_answer: null });
+  });
+
   it('rejects an archive without project.json', async () => {
     const zip = new AdmZip();
     zip.addFile('other.txt', Buffer.from('x'));

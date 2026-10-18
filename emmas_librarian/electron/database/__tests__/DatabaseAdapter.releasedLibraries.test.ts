@@ -135,3 +135,30 @@ describe.each([['library_v1_1_11.sql'], ['library_v1_1_23.sql']])('upgrading %s'
     expect(dump()).toBe(dump());
   });
 });
+
+// #47 added review columns to investigation_results; answers saved before them must come back pending, untouched.
+describe('upgrading library_v1_1_23.sql with AI answers', () => {
+  beforeEach(() => {
+    restoreReleasedLibrary('library_v1_1_23.sql');
+    const raw = new Database(dbPath);
+    try {
+      const investigation = raw.prepare('SELECT id FROM massive_investigations LIMIT 1').get() as { id: number };
+      const article = raw.prepare('SELECT id FROM articles LIMIT 1').get() as { id: number };
+      raw
+        .prepare(
+          "INSERT INTO investigation_results (investigation_id, article_id, question, answer) VALUES (?, ?, 'Q', 'R')",
+        )
+        .run(investigation.id, article.id);
+    } finally {
+      raw.close();
+    }
+  });
+
+  it('keeps every answer and marks it pending review', () => {
+    const rows = withUpgradedLibrary((db) =>
+      db.getDB().prepare('SELECT answer, review_status, reviewed_answer, reviewed_at FROM investigation_results').all(),
+    );
+
+    expect(rows).toEqual([{ answer: 'R', review_status: 'pending', reviewed_answer: null, reviewed_at: null }]);
+  });
+});

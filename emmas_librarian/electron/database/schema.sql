@@ -179,6 +179,10 @@ CREATE TABLE IF NOT EXISTS investigation_results (
     status TEXT DEFAULT 'success',
     error_message TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    -- Human review of the AI answer (#47): pending until the person accepts, edits or rejects it.
+    review_status TEXT NOT NULL DEFAULT 'pending',
+    reviewed_answer TEXT,
+    reviewed_at DATETIME,
     FOREIGN KEY(investigation_id) REFERENCES massive_investigations(id) ON DELETE CASCADE,
     FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE
 );
