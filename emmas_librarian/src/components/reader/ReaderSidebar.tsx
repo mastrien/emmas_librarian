@@ -23,6 +23,7 @@ interface ReaderSidebarProps {
   onDeleteStandaloneAnnotation: (annId: string) => void;
   onEditHighlightAnnotation: (h: unknown, e: React.MouseEvent) => void;
   onEditStandaloneAnnotation: (a: Annotation) => void;
+  onRetryAnchor?: (a: Annotation) => void;
   onSaveEdit: (idToSave: string, annotationId: number, isStandalone: boolean) => void;
   onHighlightClick: (h: unknown) => void;
 
@@ -58,6 +59,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
   onDeleteStandaloneAnnotation,
   onEditHighlightAnnotation,
   onEditStandaloneAnnotation,
+  onRetryAnchor,
   onSaveEdit,
   onHighlightClick,
 
@@ -159,6 +161,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
           onDeleteStandaloneAnnotation={onDeleteStandaloneAnnotation}
           onEditHighlightAnnotation={onEditHighlightAnnotation}
           onEditStandaloneAnnotation={onEditStandaloneAnnotation}
+          onRetryAnchor={onRetryAnchor}
           onSaveEdit={onSaveEdit}
           onHighlightClick={onHighlightClick}
         />

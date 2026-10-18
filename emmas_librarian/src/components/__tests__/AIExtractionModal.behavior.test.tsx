@@ -142,7 +142,8 @@ describe('AIExtractionModal running and results', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Visualizar no Documento' }));
 
-    expect(screen.getByTestId('location')).toHaveTextContent('/reader/2|{"searchQuery":"quote","page":4}');
+    // /articles/:id is the reader route; /reader/:id never existed, so the link used to land nowhere.
+    expect(screen.getByTestId('location')).toHaveTextContent('/articles/2|{"searchQuery":"quote","page":4}');
     expect(props.onClose).toHaveBeenCalled();
   });
 });

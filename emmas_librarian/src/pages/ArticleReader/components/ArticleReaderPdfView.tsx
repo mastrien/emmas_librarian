@@ -8,6 +8,7 @@ import { ReaderSidebar } from '../../../components/reader/ReaderSidebar';
 import { Annotation } from '../../../types';
 
 import type { Highlight as AppHighlight } from '../../../types';
+import { scrollViewerTo } from '../viewerHighlight';
 
 interface ArticleReaderPdfViewProps {
   pdfUrl: string;
@@ -43,6 +44,7 @@ interface ArticleReaderPdfViewProps {
   handleDeleteStandaloneAnnotation: (annId: string) => Promise<void>;
   handleEditHighlightAnnotation: (h: any, e: React.MouseEvent) => Promise<void>;
   handleEditStandaloneAnnotation: (a: Annotation) => Promise<void>;
+  handleRetryAnchor: (a: Annotation) => Promise<void>;
   editingId: string | null;
   editContent: string;
   setEditContent: (val: string) => void;
@@ -83,6 +85,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
   handleDeleteStandaloneAnnotation,
   handleEditHighlightAnnotation,
   handleEditStandaloneAnnotation,
+  handleRetryAnchor,
   editingId,
   editContent,
   setEditContent,
@@ -319,12 +322,13 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
               onDeleteStandaloneAnnotation={handleDeleteStandaloneAnnotation}
               onEditHighlightAnnotation={handleEditHighlightAnnotation}
               onEditStandaloneAnnotation={handleEditStandaloneAnnotation}
+              onRetryAnchor={handleRetryAnchor}
               editingId={editingId}
               editContent={editContent}
               setEditContent={setEditContent}
               onSaveEdit={saveEdit}
               setEditingId={setEditingId}
-              onHighlightClick={() => {}}
+              onHighlightClick={(h) => scrollViewerTo(highlighterRef, h)}
             />
 
             {/* Resizer Handle */}

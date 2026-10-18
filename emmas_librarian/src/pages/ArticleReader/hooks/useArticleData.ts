@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { Article, Highlight, Annotation, ProjectCategory, ArticleCategory } from '../../../types';
 import { anchorPendingHighlights } from '../../../utils/pdfTextSearch';
+import { unanchoredNoteMarkdown } from '../../../utils/unanchoredNote';
 import { toViewerHighlight, type ViewerHighlight } from '../viewerHighlight';
 
 export function useArticleData(
@@ -11,6 +12,17 @@ export function useArticleData(
   setAnchoringStatus: (s: string) => void,
 ) {
   const projectService = useProjectService();
+
+  // Highlights and the notes not attached to one, as stored; after a note became a highlight (or the other way).
+  const reloadHighlightsAndNotes = useCallback(async () => {
+    if (!id) return;
+    const stored: Highlight[] = await projectService.getHighlights(parseInt(id));
+    setHighlights(stored.map(toViewerHighlight));
+    const attached = new Set(stored.map((h) => h.annotation_id));
+    const notes: Annotation[] = await projectService.getAnnotations(parseInt(id));
+    setStandaloneAnnotations(notes.filter((a) => !attached.has(a.id)));
+  }, [id, projectService, setHighlights, setStandaloneAnnotations]);
+
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -130,7 +142,7 @@ export function useArticleData(
             // If some couldn't be anchored, create standalone annotations so they aren't lost
             if (unanchoredHighlights && unanchoredHighlights.length > 0) {
               for (const unanchored of unanchoredHighlights) {
-                const markdown = `[Destaque não ancorado]\n\nComentário: ${unanchored.comment}\n\nCitação no texto: "${unanchored.quote}"`;
+                const markdown = unanchoredNoteMarkdown(unanchored.comment, unanchored.quote);
                 await projectService.createAnnotation(parseInt(id), markdown);
                 await projectService.deletePendingHighlight(unanchored.id);
               }
@@ -202,6 +214,7 @@ export function useArticleData(
     setAiSummary,
     hasAiKey,
     fetchData,
+    reloadHighlightsAndNotes,
     fetchCategories,
     handleFileUpload,
     handleUnlinkClick,

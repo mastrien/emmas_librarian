@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 
 import { Annotation } from '../../types';
+import { isUnanchoredNote } from '../../utils/unanchoredNote';
 
 interface AnnotationsTabProps {
   highlights: unknown[];
@@ -17,6 +18,8 @@ interface AnnotationsTabProps {
   onDeleteStandaloneAnnotation: (annId: string) => void;
   onEditHighlightAnnotation: (h: unknown, e: React.MouseEvent) => void;
   onEditStandaloneAnnotation: (a: Annotation) => void;
+  /** Only for "[Destaque não ancorado]" notes: tries again to place the AI quote in the PDF. */
+  onRetryAnchor?: (a: Annotation) => void;
   onSaveEdit: (idToSave: string, annotationId: number, isStandalone: boolean) => void;
   onHighlightClick: (h: unknown) => void;
 }
@@ -35,6 +38,7 @@ export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
   onDeleteStandaloneAnnotation,
   onEditHighlightAnnotation,
   onEditStandaloneAnnotation,
+  onRetryAnchor,
   onSaveEdit,
   onHighlightClick,
 }) => {
@@ -173,7 +177,24 @@ export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{a.content_markdown}</span>
+                    <>
+                      <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{a.content_markdown}</span>
+                      {onRetryAnchor && isUnanchoredNote(a.content_markdown) && (
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => onRetryAnchor(a)}
+                          style={{
+                            display: 'block',
+                            marginTop: '0.6rem',
+                            fontSize: '0.8rem',
+                            padding: '0.25rem 0.6rem',
+                          }}
+                        >
+                          Tentar ancorar de novo
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

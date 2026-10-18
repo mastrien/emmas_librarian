@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 
 import 'react-pdf-highlighter/dist/style/AreaHighlight.css';
 import 'react-pdf-highlighter/dist/style/Highlight.css';
@@ -21,6 +21,10 @@ import { useArticleData } from './ArticleReader/hooks/useArticleData';
 import { usePdfAnnotations } from './ArticleReader/hooks/usePdfAnnotations';
 import { usePdfZoom } from './ArticleReader/hooks/usePdfZoom';
 import { usePdfSearch } from './ArticleReader/hooks/usePdfSearch';
+import { evidenceTargetFrom, useEvidenceNavigation } from './ArticleReader/hooks/useEvidenceNavigation';
+import { retryAnchorNote, RETRY_ANCHOR_MESSAGES } from './ArticleReader/retryAnchorNote';
+import { openPdfForAnchoring } from '../utils/pdfTextSearch';
+import type { Annotation } from '../types';
 
 import { ArticleReaderToolbar } from './ArticleReader/components/ArticleReaderToolbar';
 import { ArticleReaderModals } from './ArticleReader/components/ArticleReaderModals';
@@ -89,6 +93,7 @@ export const ArticleReaderPage: React.FC = () => {
     setAiSummary,
     hasAiKey,
     fetchData,
+    reloadHighlightsAndNotes,
     fetchCategories,
     handleFileUpload,
     handleUnlinkClick,
@@ -185,6 +190,27 @@ export const ArticleReaderPage: React.FC = () => {
       setCurrentPage(pageNum);
       setInputPage(pageNum.toString());
     }
+  };
+
+  // "Visualizar no Documento" from an investigation: open on the evidence's highlight, or on its page.
+  const location = useLocation();
+  const evidenceTarget = useMemo(() => evidenceTargetFrom(location.state), [location.state]);
+  useEvidenceNavigation({ target: evidenceTarget, ready: !loading && !!pdfUrl, highlights, highlighterRef, goToPage });
+
+  // Only offered on "[Destaque não ancorado]" notes: the quote may anchor now that hyphens and "..." are handled.
+  const handleRetryAnchor = async (note: Annotation) => {
+    if (!id || !pdfUrl) return;
+    const outcome = await retryAnchorNote(parseInt(id), pdfUrl, note, {
+      openPdf: openPdfForAnchoring,
+      createHighlight: projectService.createHighlight,
+      deleteAnnotation: projectService.deleteAnnotation,
+    });
+    if (outcome !== 'anchored') {
+      alert(RETRY_ANCHOR_MESSAGES[outcome]);
+      return;
+    }
+    await reloadHighlightsAndNotes();
+    showToast('Citação ancorada no PDF.');
   };
 
   const handleEditMetadataSubmit = async (data: Record<string, unknown>) => {
@@ -284,6 +310,7 @@ export const ArticleReaderPage: React.FC = () => {
             handleDeleteStandaloneAnnotation={handleDeleteStandaloneAnnotation}
             handleEditHighlightAnnotation={handleEditHighlightAnnotation}
             handleEditStandaloneAnnotation={handleEditStandaloneAnnotation}
+            handleRetryAnchor={handleRetryAnchor}
             editingId={editingId}
             editContent={editContent}
             setEditContent={setEditContent}

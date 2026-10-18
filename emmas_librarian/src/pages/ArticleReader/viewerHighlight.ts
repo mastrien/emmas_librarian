@@ -44,3 +44,16 @@ export const withNote = (highlight: ViewerHighlight, text: string): ViewerHighli
   ...highlight,
   comment: { ...highlight.comment, text },
 });
+
+/**
+ * Scrolls the PDF viewer to a highlight clicked in the annotations list; the viewer may not be mounted yet.
+ *
+ * Usage:
+ *   onHighlightClick={(h) => scrollViewerTo(highlighterRef, h)}
+ */
+export function scrollViewerTo(
+  viewer: { current: { scrollTo: (h: unknown) => void } | null },
+  highlight: unknown,
+): void {
+  viewer.current?.scrollTo(highlight);
+}

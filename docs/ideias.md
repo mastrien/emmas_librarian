@@ -3,7 +3,7 @@
 Ideias combinadas com o autor que ainda não viraram tarefa. Cada uma diz de onde veio, o que já se sabe
 e quando faz sentido fazer. Quando uma virar branch, mova o que foi decidido para o plano ou o PR e apague daqui.
 
-Situação em 2026-10-15: **feito** (Teste de atualização entre releases), **em parte** (Bases novas e download de PDFs
+Situação em 2026-10-18: **feito** (Teste de atualização entre releases), **em parte** (Bases novas e download de PDFs
 de acesso aberto) e **pendente** (as demais). O que está feito fica marcado aqui como registro, até alguém apagar.
 
 ## Bases novas e download de PDFs de acesso aberto (em parte feito)
@@ -79,3 +79,18 @@ Testar viabilidade de permitir o usuário configurar fontes customizadas na plat
 ## Loading customizado (pendente)
 
 Desenvolver um loading customizado que lembre a logo do sistema, similar a um giroscópio que gira enquanto o loading está em andamento. Testar vários com testes A/B avaliando design e desempenho da animação (ou então fazer de outra forma que não uma animação, se for mais eficiente)
+
+## Citações da IA que atravessam a quebra de página (pendente)
+
+Aberto em 2026-10-18 (PR #62). Os chunks que a IA lê seguem de uma página para a outra, com o cabeçalho ou rodapé da
+página no meio ("1702 JOURNAL OF CLIMATE VOLUME 23 Unauthenticated…"). A IA pula esse texto ao citar, com ou sem
+"...", e o leitor procura a citação numa página só. No projeto de previsão de precipitação foram 5 das 102 citações.
+Corrigir pede destaque em duas páginas e reconhecer o que pular no meio. Perde o sentido se a evidência passar a ser
+copiada do chunk em vez de redigitada pela IA (#63).
+
+## Chunks cortados no meio da palavra (pendente)
+
+Aberto em 2026-10-18 (PR #62). `PdfExtractor` fecha um chunk a cada ~1000 caracteres (`rag_chunk_size`), mesmo no
+meio de uma frase ou palavra ("precipita"), e a IA completa a palavra por conta própria ao citar. Cortar em fim de
+frase deixaria os trechos mais limpos, mas muda os chunks e os embeddings de toda a biblioteca (reindexar) e a busca
+semântica. Medir antes o efeito nas respostas.
