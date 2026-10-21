@@ -4,6 +4,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { DatabaseAdapter } from '../DatabaseAdapter';
+import { InvestigationAuditRepository } from '../InvestigationAuditRepository';
 
 vi.mock('electron', () => ({ safeStorage: {} }));
 
@@ -160,5 +161,19 @@ describe('upgrading library_v1_1_23.sql with AI answers', () => {
     );
 
     expect(rows).toEqual([{ answer: 'R', review_status: 'pending', reviewed_answer: null, reviewed_at: null }]);
+  });
+
+  // #48: a library from before audits gets the table and can audit its old investigation.
+  it('gets the audits table and audits an investigation saved before it existed', () => {
+    const saved = withUpgradedLibrary((db) => {
+      const investigation = db.getDB().prepare('SELECT id FROM massive_investigations LIMIT 1').get() as { id: number };
+      return new InvestigationAuditRepository(db.getDB()).saveAudit(investigation.id, {
+        seed: 3,
+        samplePercent: 10,
+        minPerQuestion: 2,
+      });
+    });
+
+    expect(saved).toMatchObject({ seed: 3, sample_percent: 10, min_per_question: 2 });
   });
 });

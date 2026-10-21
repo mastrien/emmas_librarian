@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useLocation } from 'react-router-dom';
+import { auditToReopen } from '../utils/auditReturn';
 import { ArrowLeft } from 'lucide-react';
 import { useGlobalError } from '../contexts/GlobalErrorContext';
 import { useProjectService } from '../contexts/ServicesContext';
@@ -39,6 +40,13 @@ export const ProjectDetailsPage: React.FC = () => {
   const { showError } = useGlobalError();
   const projectService = useProjectService();
   const modals = useProjectModals();
+  // Back from the reader after "Abrir no PDF" in an audit (#48): reopen the AI window on that audit and item.
+  const location = useLocation();
+  const reopenAudit = auditToReopen(location.state);
+  useEffect(() => {
+    if (reopenAudit) modals.setIsAIExtractionModalOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
   const [activeTab, setActiveTab] = useProjectViewState<ProjectTabId>(projectId, 'activeTab', 'articles');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showKeyAlert, setShowKeyAlert] = useState(false);
@@ -183,6 +191,7 @@ export const ProjectDetailsPage: React.FC = () => {
 
       <ProjectModalsContainer
         projectId={projectId ?? 0}
+        reopenAudit={reopenAudit}
         project={project}
         articles={data.articles}
         projectDocuments={data.projectDocuments}

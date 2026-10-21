@@ -9,6 +9,7 @@ import {
   type SearchHistoryItem,
 } from '../../types';
 import { InvestigationDetailView } from '../ai/InvestigationDetailView';
+import type { AuditReturn } from '../../utils/auditReturn';
 import { NewInvestigationPanel } from './aiExtraction/NewInvestigationPanel';
 import { InvestigationHistoryList } from './aiExtraction/InvestigationHistoryList';
 
@@ -39,6 +40,9 @@ export interface AIExtractionModalProps {
   aiExtractionResults: AIExtractionResult[];
   cancelExtractionRef: React.MutableRefObject<boolean>;
   investigationHistory?: InvestigationHistoryRecord[];
+  projectId?: number;
+  /** Opens the history on this investigation's audit, at this item (back from the reader, #48). */
+  reopenAudit?: AuditReturn | null;
   searchHistory?: SearchHistoryItem[];
   articles?: Article[];
   getInvestigationResults: (investigationId: number) => Promise<InvestigationResult[]>;
@@ -85,6 +89,19 @@ export const AIExtractionModal = (props: AIExtractionModalProps) => {
     setSelectedIds(articlesWithPdf.map((a) => a.id));
     hasInitializedRef.current = true;
   }, [isOpen, isExtracting, aiExtractionResults, articlesWithPdf]);
+
+  // Back from the reader to an audit (#48): open the history on that investigation once its list is loaded.
+  const reopened = useRef<string | null>(null);
+  const reopen = props.reopenAudit;
+  useEffect(() => {
+    if (!isOpen || !reopen) return;
+    const key = `${reopen.investigationId}:${reopen.resultId}`;
+    const investigation = props.investigationHistory?.find((h) => h.id === reopen.investigationId);
+    if (!investigation || reopened.current === key) return;
+    reopened.current = key;
+    setActiveTab('history');
+    setSelectedHistoryItem(investigation);
+  }, [isOpen, reopen, props.investigationHistory]);
 
   if (!isOpen) return null;
 
@@ -183,6 +200,9 @@ export const AIExtractionModal = (props: AIExtractionModalProps) => {
                 investigation={selectedHistoryItem}
                 articles={props.articles ?? []}
                 getInvestigationResults={props.getInvestigationResults}
+                projectId={props.projectId}
+                history={props.investigationHistory ?? []}
+                initialAuditResultId={reopen?.investigationId === selectedHistoryItem.id ? reopen.resultId : undefined}
                 onBack={() => setSelectedHistoryItem(null)}
                 onReExecute={reExecute}
               />

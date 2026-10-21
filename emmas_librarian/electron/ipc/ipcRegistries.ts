@@ -24,6 +24,7 @@ import { registerDialogHandlers } from './handlers/dialogHandlers';
 import { registerDocumentHandlers } from './handlers/documentHandlers';
 import { registerDiaryAndTrashHandlers } from './handlers/diaryHandlers';
 import { registerCategoryAndInvestigationHandlers } from './handlers/categoryHandlers';
+import { registerAuditHandlers } from './handlers/auditHandlers';
 import { registerBackupHandlers, scheduleStartupBackup } from './handlers/backupHandlers';
 import { registerAgendaHandlers } from './handlers/agendaHandlers';
 import { registerSettingsHandlers } from './handlers/settingsHandlers';
@@ -95,6 +96,7 @@ function registerLibraryServices(
   registerAnnotationHandlers(ipcMain, db);
   registerPdfHandlers(ipcMain, db);
   registerExportHandlers(ipcMain, db, new ExportService());
+  registerAuditHandlers(ipcMain, db);
   registerDialogHandlers(ipcMain);
   registerDocumentHandlers(ipcMain, db);
   registerDiaryAndTrashHandlers(ipcMain, db);
