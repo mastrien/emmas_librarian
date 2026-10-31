@@ -27,6 +27,8 @@ export interface ProjectRows {
   /** Screening labels and decisions (#49); files from before them lack the lists. */
   screeningLabels?: SqlRow[];
   screeningDecisions?: SqlRow[];
+  /** Numbers of the PRISMA diagram typed by hand (#50); files from before them lack the list. */
+  prismaManualCounts?: SqlRow[];
 }
 
 const AUDITS_SQL = `SELECT a.* FROM investigation_audits a
@@ -73,5 +75,6 @@ export function readProjectRows(
     investigationAudits: db.prepare(AUDITS_SQL).all(projectId) as SqlRow[],
     screeningLabels: byProject('screening_labels'),
     screeningDecisions: byArticle('screening_decisions'),
+    prismaManualCounts: byProject('prisma_manual_counts'),
   };
 }

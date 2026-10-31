@@ -232,6 +232,18 @@ CREATE TABLE IF NOT EXISTS screening_decisions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_screening_labels_project ON screening_labels(project_id);
+
+-- Numbers of the PRISMA diagram typed by hand (#50), for records from outside the app; kept apart and dated so
+-- the diagram can mark them "editado manualmente".
+CREATE TABLE IF NOT EXISTS prisma_manual_counts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    count_key TEXT NOT NULL,
+    value INTEGER NOT NULL CHECK (value >= 0),
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(project_id, count_key),
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
 CREATE INDEX IF NOT EXISTS idx_screening_decisions_label ON screening_decisions(label_id);
 
 CREATE TABLE IF NOT EXISTS ai_model_config (

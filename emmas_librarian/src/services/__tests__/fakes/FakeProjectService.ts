@@ -44,6 +44,9 @@ import type {
   ScreeningLabel,
   ScreeningLabelInput,
   ScreeningStage,
+  PrismaImageFormat,
+  PrismaManualCount,
+  PrismaManualKey,
   QueryASTNode,
   DatabaseTranslationMap,
 } from '../../../types';
@@ -461,6 +464,27 @@ export class FakeProjectService implements IProjectService {
       this.screeningDecisions = [...kept, ...added];
       return articleIds.length;
     },
+  );
+
+  // ── PRISMA diagram (#50) ────────────────────────────────────────
+  prismaManualCounts: PrismaManualCount[] = [];
+
+  getPrismaManualCounts = vi.fn(
+    async (_projectId: number): Promise<PrismaManualCount[]> => [...this.prismaManualCounts],
+  );
+
+  setPrismaManualCount = vi.fn(
+    async (_projectId: number, key: PrismaManualKey, value: number | null): Promise<PrismaManualCount[]> => {
+      const others = this.prismaManualCounts.filter((c) => c.count_key !== key);
+      this.prismaManualCounts =
+        value === null ? others : [...others, { count_key: key, value, updated_at: '2026-10-31 12:00:00' }];
+      return [...this.prismaManualCounts];
+    },
+  );
+
+  exportPrismaDiagram = vi.fn(
+    async (_projectId: number, _format: PrismaImageFormat, _image: string, _csv: string): Promise<string | null> =>
+      '/out/prisma.svg',
   );
 
   undecideScreening = vi.fn(async (articleIds: number[], stage: ScreeningStage): Promise<number> => {

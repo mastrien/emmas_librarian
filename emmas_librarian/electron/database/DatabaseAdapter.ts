@@ -12,6 +12,7 @@ import { TrashRepository } from './TrashRepository';
 import { MassiveInvestigationRepository } from './MassiveInvestigationRepository';
 import { ScreeningDecisionRepository, type ScreeningExportRow } from './ScreeningDecisionRepository';
 import { ScreeningLabelRepository } from './ScreeningLabelRepository';
+import { PrismaManualRepository } from './PrismaManualRepository';
 import { initializeSchema } from './schemaMigrations';
 import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
 
@@ -70,6 +71,7 @@ export class DatabaseAdapter {
   public investigationRepo: MassiveInvestigationRepository;
   public screeningDecisionRepo: ScreeningDecisionRepository;
   public screeningLabelRepo: ScreeningLabelRepository;
+  public prismaManualRepo: PrismaManualRepository;
 
   // A constructor that throws leaves no adapter to close, so the file would stay locked (Windows) for
   // anything that replaces it before the process exits: the post-update restore failed with EPERM on a
@@ -90,6 +92,7 @@ export class DatabaseAdapter {
       this.investigationRepo = new MassiveInvestigationRepository(this.db);
       this.screeningDecisionRepo = new ScreeningDecisionRepository(this.db);
       this.screeningLabelRepo = new ScreeningLabelRepository(this.db, this.screeningDecisionRepo);
+      this.prismaManualRepo = new PrismaManualRepository(this.db);
       this.initSchema();
     } catch (err) {
       this.db.close();

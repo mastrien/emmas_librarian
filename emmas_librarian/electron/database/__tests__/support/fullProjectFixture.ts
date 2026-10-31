@@ -156,6 +156,8 @@ function seedReadingNotes(db: Database.Database, project: number, article: numbe
     "INSERT INTO question_sets (project_id, name, description, questions) VALUES (?, 'Set', 'perguntas', '[]')",
     project,
   );
+  // A number typed into the PRISMA diagram (#50), with the date it was edited.
+  run(db, "INSERT INTO prisma_manual_counts (project_id, count_key, value) VALUES (?, 'other_sources', 2)", project);
 }
 
 // Where each project-scoped table keeps its rows; a table added to a project needs an entry here.
@@ -180,6 +182,7 @@ const PROJECT_SCOPE: Record<string, string> = {
   investigation_audits: 'investigation_id IN (SELECT id FROM massive_investigations WHERE project_id = @project)',
   screening_labels: 'project_id = @project',
   screening_decisions: ARTICLES_OF_PROJECT,
+  prisma_manual_counts: 'project_id = @project',
 };
 
 // Keys that point at other rows: a copy gives them new values on purpose, in every table.

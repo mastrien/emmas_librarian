@@ -15,6 +15,9 @@ import {
   type ScreeningLabel,
   type ScreeningLabelInput,
   type ScreeningStage,
+  type PrismaImageFormat,
+  type PrismaManualCount,
+  type PrismaManualKey,
   type QueryASTNode,
   type DatabaseTranslationMap,
   type SearchHistoryItem,
@@ -430,6 +433,16 @@ export const projectService: IProjectService = {
   ): Promise<number> => safeInvoke(IpcChannel.SCREENING_DECIDE, articleIds, labelId, stage, note ?? null),
   undecideScreening: (articleIds: number[], stage: ScreeningStage): Promise<number> =>
     safeInvoke(IpcChannel.SCREENING_UNDECIDE, articleIds, stage),
+  getPrismaManualCounts: (projectId: number): Promise<PrismaManualCount[]> =>
+    safeInvoke(IpcChannel.PRISMA_MANUAL_GET, projectId),
+  setPrismaManualCount: (projectId: number, key: PrismaManualKey, value: number | null): Promise<PrismaManualCount[]> =>
+    safeInvoke(IpcChannel.PRISMA_MANUAL_SET, projectId, key, value),
+  exportPrismaDiagram: (
+    projectId: number,
+    format: PrismaImageFormat,
+    image: string,
+    csv: string,
+  ): Promise<string | null> => safeInvoke(IpcChannel.EXPORT_PRISMA, projectId, format, image, csv),
 
   reviewInvestigationResult: (resultId: number, review: ResultReview): Promise<InvestigationResult> =>
     safeInvoke(IpcChannel.INVESTIGATION_RESULT_REVIEW, resultId, review),

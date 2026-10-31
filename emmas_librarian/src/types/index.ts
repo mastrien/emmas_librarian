@@ -250,6 +250,9 @@ export enum IpcChannel {
   SCREENING_DECISIONS_LIST = 'screening:decisions',
   SCREENING_DECIDE = 'screening:decide',
   SCREENING_UNDECIDE = 'screening:undecide',
+  PRISMA_MANUAL_GET = 'prisma:manualGet',
+  PRISMA_MANUAL_SET = 'prisma:manualSet',
+  EXPORT_PRISMA = 'export:prisma',
   PDF_LIBRARY_LIST = 'pdfLibrary:list',
   PDF_LIBRARY_DELETE = 'pdfLibrary:delete',
   PDF_LIBRARY_LINK = 'pdfLibrary:link',
@@ -383,6 +386,19 @@ export interface ScreeningDecision {
   status_before: string | null;
   decided_at: string;
 }
+
+/** Numbers of the PRISMA diagram a person may type by hand (#50): records from sources outside the app. */
+export type PrismaManualKey = 'other_sources';
+
+/** A number typed by hand into the PRISMA diagram, with when it was last changed. */
+export interface PrismaManualCount {
+  count_key: PrismaManualKey;
+  value: number;
+  updated_at: string;
+}
+
+/** File type of the PRISMA diagram export; the data table always goes with it as CSV. */
+export type PrismaImageFormat = 'svg' | 'png';
 
 /** A new label as typed in the labels window. */
 export interface ScreeningLabelInput {

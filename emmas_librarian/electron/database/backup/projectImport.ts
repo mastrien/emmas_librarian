@@ -227,6 +227,7 @@ function importProjectNotes(ctx: ImportContext, rows: ProjectRows): void {
     ['project_diary', rows.diaryEntries],
     ['project_diary_history', rows.diaryHistory],
     ['question_sets', rows.questionSets],
+    ['prisma_manual_counts', rows.prismaManualCounts],
   ];
   for (const [table, tableRows] of tables) {
     for (const row of tableRows ?? []) copyRow(ctx.db, table, row, { project_id: ctx.projectId });

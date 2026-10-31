@@ -31,6 +31,9 @@ import type {
   ScreeningLabel,
   ScreeningLabelInput,
   ScreeningStage,
+  PrismaImageFormat,
+  PrismaManualCount,
+  PrismaManualKey,
   QueryASTNode,
   DatabaseTranslationMap,
   SearchHistoryItem,
@@ -274,6 +277,14 @@ export interface IProjectService {
   decideScreening(articleIds: number[], labelId: number, stage: ScreeningStage, note?: string | null): Promise<number>;
   /** Takes back the decision at a stage; articles only the triage archived come back. */
   undecideScreening(articleIds: number[], stage: ScreeningStage): Promise<number>;
+
+  // ── PRISMA diagram (#50) ─────────────────────────────────────────
+  /** Numbers of the diagram typed by hand, with when each was last changed. */
+  getPrismaManualCounts(projectId: number): Promise<PrismaManualCount[]>;
+  /** Sets a hand-typed number, or clears it with null. */
+  setPrismaManualCount(projectId: number, key: PrismaManualKey, value: number | null): Promise<PrismaManualCount[]>;
+  /** Saves the diagram (SVG text or PNG as base64) and its CSV table beside it; answers the image path, or null if cancelled. */
+  exportPrismaDiagram(projectId: number, format: PrismaImageFormat, image: string, csv: string): Promise<string | null>;
 
   // ── Categories ────────────────────────────────────────────────────
   getProjectCategories(projectId: number): Promise<ProjectCategory[]>;

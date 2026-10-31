@@ -41,6 +41,11 @@ export function expectFullProjectCopied(db: Database.Database, projectId: number
   expectInvestigationCopied(db, projectId, [Number(article.id), Number(other.id)]);
   expectReadingNotesCopied(db, projectId, Number(article.id));
   expectScreeningCopied(db, projectId, Number(other.id));
+  // The date is compared with the original's by projectContent; here, that the number itself arrived.
+  expect(one(db, 'SELECT count_key, value FROM prisma_manual_counts WHERE project_id = ?', projectId)).toEqual({
+    count_key: 'other_sources',
+    value: 2,
+  });
 }
 
 function expectScreeningCopied(db: Database.Database, projectId: number, articleId: number): void {
