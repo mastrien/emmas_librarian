@@ -27,6 +27,10 @@ import type {
   InvestigationResult,
   ResultReview,
   InvestigationAudit,
+  ScreeningDecision,
+  ScreeningLabel,
+  ScreeningLabelInput,
+  ScreeningStage,
   QueryASTNode,
   DatabaseTranslationMap,
   SearchHistoryItem,
@@ -252,6 +256,24 @@ export interface IProjectService {
   saveInvestigationAudit(investigationId: number, params: AuditParams): Promise<InvestigationAudit>;
   /** Every audit of a project's investigations, for comparing models. */
   getInvestigationAuditsByProject(projectId: number): Promise<InvestigationAudit[]>;
+
+  // ── Systematic review screening (#49) ────────────────────────────
+  /** The project's screening labels in order; a project without labels gets the defaults first. */
+  getScreeningLabels(projectId: number): Promise<ScreeningLabel[]>;
+  createScreeningLabel(projectId: number, input: ScreeningLabelInput): Promise<ScreeningLabel>;
+  /** Renames a label; the articles it archived get the new name as their reason. */
+  renameScreeningLabel(labelId: number, name: string): Promise<ScreeningLabel>;
+  /** Swaps a label with its neighbour of the same kind. */
+  moveScreeningLabel(labelId: number, step: -1 | 1): Promise<void>;
+  /** Deletes a label, moving its decisions to `moveTo` (same kind) or taking them back when null. */
+  deleteScreeningLabel(labelId: number, moveTo: number | null): Promise<void>;
+  /** Creates the preset's labels the project lacks and answers the whole list. */
+  applyScreeningPreset(projectId: number, presetKey: string): Promise<ScreeningLabel[]>;
+  getScreeningDecisions(projectId: number): Promise<ScreeningDecision[]>;
+  /** Puts a label on articles at a stage; exclusions archive them in the project. */
+  decideScreening(articleIds: number[], labelId: number, stage: ScreeningStage, note?: string | null): Promise<number>;
+  /** Takes back the decision at a stage; articles only the triage archived come back. */
+  undecideScreening(articleIds: number[], stage: ScreeningStage): Promise<number>;
 
   // ── Categories ────────────────────────────────────────────────────
   getProjectCategories(projectId: number): Promise<ProjectCategory[]>;

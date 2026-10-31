@@ -91,6 +91,7 @@ function categorizedArticles(db: DatabaseAdapter, projectId: number) {
     db.getArticlesByProject(projectId),
     db.getProjectCategories(projectId),
     db.getAllProjectArticleCategories(projectId),
+    db.getScreeningExportRows(projectId),
   ] as const;
 }
 

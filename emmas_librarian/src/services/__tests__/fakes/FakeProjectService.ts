@@ -1,6 +1,7 @@
 import type { SearchLimits } from '../../../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../../../utils/categoryTemplates';
 import type { AuditParams } from '../../../utils/auditSampling';
+import { DEFAULT_LABELS, SCREENING_PRESETS } from '../../../utils/screeningPresets';
 import type { OpenAccessOutcome, SearchReportFormat } from '../../../types';
 import type {
   SearchHistoryItem,
@@ -39,6 +40,10 @@ import type {
   InvestigationResult,
   ResultReview,
   InvestigationAudit,
+  ScreeningDecision,
+  ScreeningLabel,
+  ScreeningLabelInput,
+  ScreeningStage,
   QueryASTNode,
   DatabaseTranslationMap,
 } from '../../../types';
@@ -375,6 +380,95 @@ export class FakeProjectService implements IProjectService {
   );
 
   getInvestigationAuditsByProject = vi.fn(async (_projectId: number): Promise<InvestigationAudit[]> => []);
+
+  // ── Screening (#49) ─────────────────────────────────────────────
+  // Kept in memory, so a screen that decides and then reloads sees its own decisions, as with the real database.
+  // It does not archive articles: tests of that rule run against real SQLite (ScreeningRepository.test.ts).
+  screeningLabels: ScreeningLabel[] = DEFAULT_LABELS.map((l, i) => ({
+    id: i + 1,
+    project_id: 1,
+    name: l.name,
+    kind: l.kind,
+    position: i,
+    preset_key: l.key,
+    created_at: '',
+  }));
+  screeningDecisions: ScreeningDecision[] = [];
+
+  getScreeningLabels = vi.fn(async (_projectId: number): Promise<ScreeningLabel[]> => [...this.screeningLabels]);
+
+  createScreeningLabel = vi.fn(async (projectId: number, input: ScreeningLabelInput): Promise<ScreeningLabel> => {
+    const label = {
+      id: this.screeningLabels.length + 100,
+      project_id: projectId,
+      ...input,
+      position: 99,
+      preset_key: null,
+      created_at: '',
+    };
+    this.screeningLabels = [...this.screeningLabels, label];
+    return label;
+  });
+
+  renameScreeningLabel = vi.fn(async (labelId: number, name: string): Promise<ScreeningLabel> => {
+    this.screeningLabels = this.screeningLabels.map((l) => (l.id === labelId ? { ...l, name } : l));
+    return this.screeningLabels.find((l) => l.id === labelId)!;
+  });
+
+  moveScreeningLabel = vi.fn(async (_labelId: number, _step: -1 | 1): Promise<void> => {});
+
+  deleteScreeningLabel = vi.fn(async (labelId: number, moveTo: number | null): Promise<void> => {
+    this.screeningLabels = this.screeningLabels.filter((l) => l.id !== labelId);
+    this.screeningDecisions = this.screeningDecisions
+      .map((d) => (d.label_id === labelId && moveTo !== null ? { ...d, label_id: moveTo } : d))
+      .filter((d) => d.label_id !== labelId);
+  });
+
+  applyScreeningPreset = vi.fn(async (projectId: number, presetKey: string): Promise<ScreeningLabel[]> => {
+    const known = new Set(this.screeningLabels.map((l) => l.preset_key));
+    const missing = (SCREENING_PRESETS[presetKey] ?? []).filter((p) => !known.has(p.key));
+    missing.forEach((p) => {
+      const id = this.screeningLabels.length + 100;
+      this.screeningLabels.push({
+        id,
+        project_id: projectId,
+        name: p.name,
+        kind: p.kind,
+        position: id,
+        preset_key: p.key,
+        created_at: '',
+      });
+    });
+    return [...this.screeningLabels];
+  });
+
+  getScreeningDecisions = vi.fn(
+    async (_projectId: number): Promise<ScreeningDecision[]> => [...this.screeningDecisions],
+  );
+
+  decideScreening = vi.fn(
+    async (articleIds: number[], labelId: number, stage: ScreeningStage, note?: string | null): Promise<number> => {
+      const kept = this.screeningDecisions.filter((d) => !(articleIds.includes(d.article_id) && d.stage === stage));
+      const added = articleIds.map((article_id, i) => ({
+        id: Date.now() + i,
+        article_id,
+        label_id: labelId,
+        stage,
+        note: note ?? null,
+        status_before: null,
+        decided_at: '',
+      }));
+      this.screeningDecisions = [...kept, ...added];
+      return articleIds.length;
+    },
+  );
+
+  undecideScreening = vi.fn(async (articleIds: number[], stage: ScreeningStage): Promise<number> => {
+    this.screeningDecisions = this.screeningDecisions.filter(
+      (d) => !(articleIds.includes(d.article_id) && d.stage === stage),
+    );
+    return articleIds.length;
+  });
 
   reviewInvestigationResult = vi.fn(
     async (resultId: number, review: ResultReview): Promise<InvestigationResult> =>

@@ -76,6 +76,23 @@ describe('ExportService', () => {
       expect(csv.slice(1).split('\n')[0]).toBe('id,doi,title,authors,year,source,status,archive_note,Método');
     });
 
+    // #49: why each study was kept or excluded, and at which stage, is what a systematic review reports.
+    it('adds the screening decision, kind, stage and note once the project has decisions', () => {
+      const csv = exportService.exportToCsv(
+        mockArticles,
+        [{ id: 1, name: 'Método' }],
+        [],
+        [{ article_id: 2, name: 'Fora do escopo', kind: 'exclude', stage: 'full', note: 'só radar' }],
+      );
+
+      const [header, first, second] = csv.slice(1).split('\n');
+      expect(header).toBe(
+        'id,doi,title,authors,year,source,status,archive_note,screening_decision,screening_kind,screening_stage,screening_note,Método',
+      );
+      expect(first.endsWith(',"",,,"",""')).toBe(true);
+      expect(second.endsWith(',"Fora do escopo",exclude,full,"só radar",""')).toBe(true);
+    });
+
     it('handles empty articles list gracefully', () => {
       const csv = exportService.exportToCsv([]);
       expect(csv).toBe('﻿id,doi,title,authors,year,source,status,archive_note');

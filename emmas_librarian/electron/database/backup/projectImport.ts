@@ -16,7 +16,7 @@ export interface StoredFileSource {
   documentDir: string;
 }
 
-type IdKind = 'search' | 'article' | 'category' | 'option' | 'investigation' | 'annotation';
+type IdKind = 'search' | 'article' | 'category' | 'option' | 'investigation' | 'annotation' | 'label';
 
 interface ImportContext {
   db: Database.Database;
@@ -32,6 +32,7 @@ const newIdMaps = (): ImportContext['ids'] => ({
   option: new Map(),
   investigation: new Map(),
   annotation: new Map(),
+  label: new Map(),
 });
 
 // Foreign keys whose target was not imported become NULL instead of pointing at an unrelated row.
@@ -70,6 +71,7 @@ export function insertProjectRows(
     importSearchesAndArticles(ctx, rows);
     importDocuments(ctx, rows.projectDocs);
     importCategories(ctx, rows);
+    importScreening(ctx, rows);
     importInvestigations(ctx, rows);
     importReadingNotes(ctx, rows);
     importProjectNotes(ctx, rows);
@@ -148,6 +150,19 @@ function importCategories(ctx: ImportContext, rows: ProjectRows): void {
   for (const link of rows.categorySelections ?? []) {
     const required = { ...articleAndCategory(link), option_id: remap(ctx, 'option', link.option_id) };
     copyLinkedRow(ctx, 'article_category_selections', link, required);
+  }
+}
+
+// Decisions are copied as they are: the articles they archived arrive archived, with the same reason (#49).
+function importScreening(ctx: ImportContext, rows: ProjectRows): void {
+  for (const label of rows.screeningLabels ?? []) {
+    ctx.ids.label.set(Number(label.id), copyRow(ctx.db, 'screening_labels', label, { project_id: ctx.projectId }));
+  }
+  for (const decision of rows.screeningDecisions ?? []) {
+    copyLinkedRow(ctx, 'screening_decisions', decision, {
+      article_id: remap(ctx, 'article', decision.article_id),
+      label_id: remap(ctx, 'label', decision.label_id),
+    });
   }
 }
 

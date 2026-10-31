@@ -40,6 +40,18 @@ export function expectFullProjectCopied(db: Database.Database, projectId: number
   expectCategoriesCopied(db, projectId, Number(article.id));
   expectInvestigationCopied(db, projectId, [Number(article.id), Number(other.id)]);
   expectReadingNotesCopied(db, projectId, Number(article.id));
+  expectScreeningCopied(db, projectId, Number(other.id));
+}
+
+function expectScreeningCopied(db: Database.Database, projectId: number, articleId: number): void {
+  const label = one(db, "SELECT * FROM screening_labels WHERE project_id = ? AND name = 'Fora do escopo'", projectId);
+  expect(label).toMatchObject({ kind: 'exclude', position: 2, preset_key: 'excluded' });
+  expect(one(db, 'SELECT * FROM screening_decisions WHERE article_id = ?', articleId)).toMatchObject({
+    label_id: label.id,
+    stage: 'full',
+    note: 'só radar',
+    status_before: 'read',
+  });
 }
 
 function expectCategoriesCopied(db: Database.Database, projectId: number, articleId: number): void {

@@ -53,6 +53,12 @@ describe('ProjectToolbar', () => {
     expect(screen.getByText('Acesso rápido')).toBeInTheDocument();
   });
 
+  // #49: the systematic review is a page of its own; the project page only links to it.
+  it('links to the systematic review page of the project', () => {
+    renderComponent();
+    expect(screen.getByRole('link', { name: /Revisão sistemática/ })).toHaveAttribute('href', '/projects/1/review');
+  });
+
   it('handles Extração IA click', () => {
     renderComponent();
     fireEvent.click(screen.getByText('Extração IA'));

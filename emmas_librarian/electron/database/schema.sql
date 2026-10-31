@@ -203,6 +203,37 @@ CREATE TABLE IF NOT EXISTS investigation_audits (
     FOREIGN KEY(investigation_id) REFERENCES massive_investigations(id) ON DELETE CASCADE
 );
 
+-- Screening labels of a project (#49). The kind gives the label its meaning in counts and in the PRISMA diagram:
+-- include, maybe, exclude (archives the article) or removed (before screening, e.g. duplicates; also archives).
+CREATE TABLE IF NOT EXISTS screening_labels (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    kind TEXT NOT NULL CHECK (kind IN ('include', 'maybe', 'exclude', 'removed')),
+    position INTEGER NOT NULL DEFAULT 0,
+    preset_key TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+-- One current decision per article and screening stage (title = title and abstract, full = full text).
+-- status_before keeps the article status a triage exclusion replaced, so undoing it gives back 'read'.
+CREATE TABLE IF NOT EXISTS screening_decisions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    article_id INTEGER NOT NULL,
+    label_id INTEGER NOT NULL,
+    stage TEXT NOT NULL DEFAULT 'title' CHECK (stage IN ('title', 'full')),
+    note TEXT,
+    status_before TEXT,
+    decided_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(article_id, stage),
+    FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    FOREIGN KEY(label_id) REFERENCES screening_labels(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_screening_labels_project ON screening_labels(project_id);
+CREATE INDEX IF NOT EXISTS idx_screening_decisions_label ON screening_decisions(label_id);
+
 CREATE TABLE IF NOT EXISTS ai_model_config (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     skill TEXT NOT NULL UNIQUE,

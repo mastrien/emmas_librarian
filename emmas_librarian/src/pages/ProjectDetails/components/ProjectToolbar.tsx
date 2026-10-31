@@ -13,6 +13,7 @@ import {
   Settings,
   FileIcon,
   ExternalLink,
+  ListChecks,
 } from 'lucide-react';
 import { Project, ProjectDocument } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
@@ -79,6 +80,15 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
         >
           <Brain size={18} /> Extração IA
         </button>
+
+        {/* The systematic review is a page of its own (#49); this page only links to it. */}
+        <Link
+          to={`/projects/${project.id}/review`}
+          className="btn-secondary"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <ListChecks size={18} /> Revisão sistemática
+        </Link>
 
         {/* Group 1: Dropdown "Adicionar Artigos" */}
         <div
