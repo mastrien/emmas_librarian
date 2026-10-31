@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import type { ScreeningDecision, ScreeningLabel, ScreeningStage } from '../../types';
 
 interface GuidedDecisionPanelProps {
@@ -22,7 +22,9 @@ function useGuidedKeys(
   note: string,
   noteRef: React.RefObject<HTMLTextAreaElement | null>,
 ) {
-  useEffect(() => {
+  // Layout effect: the keys work from the moment the article is on screen, with no gap after the paint where a
+  // key pressed at once would be lost.
+  useLayoutEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (typing(e.target)) {

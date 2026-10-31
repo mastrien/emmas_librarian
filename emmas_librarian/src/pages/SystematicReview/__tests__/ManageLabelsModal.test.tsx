@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor, configure } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 import { SystematicReviewPage } from '../SystematicReviewPage';
@@ -19,6 +19,9 @@ async function openLabels(service: FakeProjectService) {
   fireEvent.click(await screen.findByRole('button', { name: /Gerenciar rótulos/ }));
   return screen.getByRole('dialog', { name: 'Rótulos de triagem' });
 }
+
+// Each action goes through the service and a reload; under the coverage run in CI that can take over the default 1 s.
+configure({ asyncUtilTimeout: 4000 });
 
 describe('ManageLabelsModal (#49)', () => {
   it('adds a label of the chosen kind', async () => {

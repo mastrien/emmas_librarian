@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, configure } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 import { GuidedScreeningPage } from '../GuidedScreeningPage';
@@ -19,6 +19,9 @@ function renderGuided(service: FakeProjectService) {
 }
 
 const articles = [reviewArticle(1, 'ConvLSTM'), reviewArticle(2, 'MetNet'), reviewArticle(3, 'Attention')];
+// Each decision goes through the service and a reload; under the coverage run in CI that took over the default 1 s.
+configure({ asyncUtilTimeout: 4000 });
+
 const heading = (title: string) => screen.findByRole('heading', { name: title, level: 2 });
 
 describe('GuidedScreeningPage (#49)', () => {
