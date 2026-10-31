@@ -241,6 +241,15 @@ export enum IpcChannel {
   INVESTIGATION_AUDIT_GET = 'investigationAudits:get',
   INVESTIGATION_AUDIT_SAVE = 'investigationAudits:save',
   INVESTIGATION_AUDITS_BY_PROJECT = 'investigationAudits:byProject',
+  SCREENING_LABELS_LIST = 'screening:labels',
+  SCREENING_LABEL_CREATE = 'screening:labelCreate',
+  SCREENING_LABEL_RENAME = 'screening:labelRename',
+  SCREENING_LABEL_MOVE = 'screening:labelMove',
+  SCREENING_LABEL_DELETE = 'screening:labelDelete',
+  SCREENING_PRESET_APPLY = 'screening:presetApply',
+  SCREENING_DECISIONS_LIST = 'screening:decisions',
+  SCREENING_DECIDE = 'screening:decide',
+  SCREENING_UNDECIDE = 'screening:undecide',
   PDF_LIBRARY_LIST = 'pdfLibrary:list',
   PDF_LIBRARY_DELETE = 'pdfLibrary:delete',
   PDF_LIBRARY_LINK = 'pdfLibrary:link',
@@ -342,6 +351,43 @@ export interface InvestigationAudit {
   sample_percent: number;
   min_per_question: number;
   created_at: string;
+}
+
+/**
+ * What a screening label means (#49), whatever its name: include and maybe keep the article in the review,
+ * exclude archives it with the label as reason, removed archives it as removed before screening (duplicates).
+ */
+export type ScreeningKind = 'include' | 'maybe' | 'exclude' | 'removed';
+
+/** Screening stage: title and abstract first, then full text (PRISMA 2020). */
+export type ScreeningStage = 'title' | 'full';
+
+/** A project's screening label. */
+export interface ScreeningLabel {
+  id: number;
+  project_id: number;
+  name: string;
+  kind: ScreeningKind;
+  position: number;
+  preset_key: string | null;
+  created_at: string;
+}
+
+/** The current decision on an article at one stage. */
+export interface ScreeningDecision {
+  id: number;
+  article_id: number;
+  label_id: number;
+  stage: ScreeningStage;
+  note: string | null;
+  status_before: string | null;
+  decided_at: string;
+}
+
+/** A new label as typed in the labels window. */
+export interface ScreeningLabelInput {
+  name: string;
+  kind: ScreeningKind;
 }
 
 export type TabId = 'overview' | 'articles' | 'ai' | 'history' | 'diaries';

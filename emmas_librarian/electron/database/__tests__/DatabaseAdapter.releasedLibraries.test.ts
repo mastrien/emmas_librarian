@@ -176,4 +176,16 @@ describe('upgrading library_v1_1_23.sql with AI answers', () => {
 
     expect(saved).toMatchObject({ seed: 3, sample_percent: 10, min_per_question: 2 });
   });
+
+  // #49: an old library gets the screening tables, its project the default labels, and an exclusion archives.
+  it('gets the screening tables and screens an article saved before they existed', () => {
+    const after = withUpgradedLibrary((db) => {
+      const target = articleByTitle(db, 'Artigo aberto')!;
+      const excluded = db.screeningLabelRepo.listLabels(1).find((l) => l.kind === 'exclude')!;
+      db.screeningDecisionRepo.decide([target.id], excluded.id, 'title');
+      return articleByTitle(db, 'Artigo aberto');
+    });
+
+    expect(after).toMatchObject({ status: 'archived', archive_note: 'Excluído' });
+  });
 });

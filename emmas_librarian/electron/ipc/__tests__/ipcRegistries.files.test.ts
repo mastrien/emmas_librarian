@@ -60,14 +60,15 @@ describe.each([
     db.getArticlesByProject.mockReturnValue([{ id: 2 }]);
     db.getProjectCategories.mockReturnValue([{ id: 3 }]);
     db.getAllProjectArticleCategories.mockReturnValue([{ id: 4 }]);
+    db.getScreeningExportRows.mockReturnValue([{ article_id: 2 }]);
     exporter[method].mockReturnValue(content);
   });
 
-  it('writes the export where the user chose, including categories', async () => {
+  it('writes the export where the user chose, including categories and screening decisions', async () => {
     dialog.showSaveDialog.mockResolvedValue({ canceled: false, filePath: path.join(path.sep, 'out', `x.${ext}`) });
 
     expect(await invoke(channel, 1)).toBe(path.join(path.sep, 'out', `x.${ext}`));
-    expect(exporter[method]).toHaveBeenCalledWith([{ id: 2 }], [{ id: 3 }], [{ id: 4 }]);
+    expect(exporter[method]).toHaveBeenCalledWith([{ id: 2 }], [{ id: 3 }], [{ id: 4 }], [{ article_id: 2 }]);
     expect(dialog.showSaveDialog).toHaveBeenCalledWith({
       title,
       defaultPath: `project_1_export.${ext}`,

@@ -11,6 +11,10 @@ import {
   type InvestigationResult,
   type ResultReview,
   type InvestigationAudit,
+  type ScreeningDecision,
+  type ScreeningLabel,
+  type ScreeningLabelInput,
+  type ScreeningStage,
   type QueryASTNode,
   type DatabaseTranslationMap,
   type SearchHistoryItem,
@@ -403,6 +407,29 @@ export const projectService: IProjectService = {
 
   getInvestigationAuditsByProject: (projectId: number): Promise<InvestigationAudit[]> =>
     safeInvoke(IpcChannel.INVESTIGATION_AUDITS_BY_PROJECT, projectId),
+
+  getScreeningLabels: (projectId: number): Promise<ScreeningLabel[]> =>
+    safeInvoke(IpcChannel.SCREENING_LABELS_LIST, projectId),
+  createScreeningLabel: (projectId: number, input: ScreeningLabelInput): Promise<ScreeningLabel> =>
+    safeInvoke(IpcChannel.SCREENING_LABEL_CREATE, projectId, input),
+  renameScreeningLabel: (labelId: number, name: string): Promise<ScreeningLabel> =>
+    safeInvoke(IpcChannel.SCREENING_LABEL_RENAME, labelId, name),
+  moveScreeningLabel: (labelId: number, step: -1 | 1): Promise<void> =>
+    safeInvoke(IpcChannel.SCREENING_LABEL_MOVE, labelId, step),
+  deleteScreeningLabel: (labelId: number, moveTo: number | null): Promise<void> =>
+    safeInvoke(IpcChannel.SCREENING_LABEL_DELETE, labelId, moveTo),
+  applyScreeningPreset: (projectId: number, presetKey: string): Promise<ScreeningLabel[]> =>
+    safeInvoke(IpcChannel.SCREENING_PRESET_APPLY, projectId, presetKey),
+  getScreeningDecisions: (projectId: number): Promise<ScreeningDecision[]> =>
+    safeInvoke(IpcChannel.SCREENING_DECISIONS_LIST, projectId),
+  decideScreening: (
+    articleIds: number[],
+    labelId: number,
+    stage: ScreeningStage,
+    note?: string | null,
+  ): Promise<number> => safeInvoke(IpcChannel.SCREENING_DECIDE, articleIds, labelId, stage, note ?? null),
+  undecideScreening: (articleIds: number[], stage: ScreeningStage): Promise<number> =>
+    safeInvoke(IpcChannel.SCREENING_UNDECIDE, articleIds, stage),
 
   reviewInvestigationResult: (resultId: number, review: ResultReview): Promise<InvestigationResult> =>
     safeInvoke(IpcChannel.INVESTIGATION_RESULT_REVIEW, resultId, review),

@@ -1,5 +1,6 @@
 import { Article, ProjectCategory } from '../../src/types';
 import * as xlsx from 'xlsx';
+import type { ScreeningExportRow } from '../database/ScreeningDecisionRepository';
 
 type ExportCategory = Pick<ProjectCategory, 'id' | 'name'>;
 // getAllProjectArticleCategories rows carry article_id even though the shared ArticleCategory type omits it.
@@ -25,13 +26,29 @@ const BASE_COLUMNS: TabularColumn[] = [
   { header: 'archive_note', value: (a) => a.archive_note || '', quoted: true },
 ];
 
-function tabularColumns(categories: ExportCategory[], values: ExportCategoryValue[]): TabularColumn[] {
+// Screening columns (#49) only appear once the project has decisions, so exports of other projects stay as they were.
+function screeningColumns(decisions: ScreeningExportRow[]): TabularColumn[] {
+  if (decisions.length === 0) return [];
+  const of = (a: Article) => decisions.find((d) => d.article_id === a.id);
+  return [
+    { header: 'screening_decision', value: (a) => of(a)?.name ?? '', quoted: true },
+    { header: 'screening_kind', value: (a) => of(a)?.kind ?? '', quoted: false },
+    { header: 'screening_stage', value: (a) => of(a)?.stage ?? '', quoted: false },
+    { header: 'screening_note', value: (a) => of(a)?.note ?? '', quoted: true },
+  ];
+}
+
+function tabularColumns(
+  categories: ExportCategory[],
+  values: ExportCategoryValue[],
+  decisions: ScreeningExportRow[],
+): TabularColumn[] {
   const categoryColumns = categories.map((cat) => ({
     header: cat.name,
     value: (a: Article) => values.find((v) => v.article_id === a.id && v.category_id === cat.id)?.value || '',
     quoted: true,
   }));
-  return [...BASE_COLUMNS, ...categoryColumns];
+  return [...BASE_COLUMNS, ...screeningColumns(decisions), ...categoryColumns];
 }
 
 // Excel on Windows reads a UTF-8 CSV without a byte order mark as ANSI and garbles accents ("MÃ©todo").
@@ -51,8 +68,9 @@ export class ExportService {
     articles: Article[],
     projectCategories: ExportCategory[] = [],
     articleCategories: ExportCategoryValue[] = [],
+    screening: ScreeningExportRow[] = [],
   ): string {
-    const columns = tabularColumns(projectCategories, articleCategories);
+    const columns = tabularColumns(projectCategories, articleCategories, screening);
     const rows = articles.map((a) =>
       columns.map((col) => (col.quoted ? quoteCsv(col.value(a)) : String(col.value(a)))).join(','),
     );
@@ -68,8 +86,9 @@ export class ExportService {
     articles: Article[],
     projectCategories: ExportCategory[] = [],
     articleCategories: ExportCategoryValue[] = [],
+    screening: ScreeningExportRow[] = [],
   ): Buffer {
-    const columns = tabularColumns(projectCategories, articleCategories);
+    const columns = tabularColumns(projectCategories, articleCategories, screening);
     const worksheetData = [
       columns.map((col) => col.header),
       ...articles.map((a) => columns.map((col) => col.value(a))),

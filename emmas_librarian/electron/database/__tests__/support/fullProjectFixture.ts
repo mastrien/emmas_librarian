@@ -10,8 +10,8 @@ const run = (db: Database.Database, sql: string, ...params: unknown[]) =>
  * those rows filled (fullLibraryFixture.test.ts fails when a new column is left empty): a search, an
  * article with full metadata (PDF at `pdfPath`) and an archived one, a document (file at `docPath`),
  * an enum (single choice) category with an option and selections, an investigation with a result and a failed one,
- * an annotation linked both ways to its highlight, a pending highlight, diary + history and a
- * question set.
+ * an annotation linked both ways to its highlight, a pending highlight, diary + history, a
+ * question set and a screening label with the decision that archived article B.
  *
  * Free of vitest so the release test (Playwright) can seed with it too; checks live in
  * fullProjectAssertions.ts.
@@ -47,6 +47,7 @@ export function seedFullProject(db: Database.Database, files: { pdfPath: string;
   seedCategories(db, project, withPdf);
   seedInvestigation(db, project, withPdf, plain);
   seedReadingNotes(db, project, withPdf);
+  seedScreening(db, project, plain);
   stampDatesInThePast(db, project);
   return project;
 }
@@ -114,6 +115,21 @@ function seedInvestigation(db: Database.Database, project: number, article: numb
   );
 }
 
+// Screening (#49): a label and the exclusion that archived article B, which was read before it.
+function seedScreening(db: Database.Database, project: number, article: number): void {
+  const label = run(
+    db,
+    "INSERT INTO screening_labels (project_id, name, kind, position, preset_key) VALUES (?, 'Fora do escopo', 'exclude', 2, 'excluded')",
+    project,
+  );
+  run(
+    db,
+    "INSERT INTO screening_decisions (article_id, label_id, stage, note, status_before, decided_at) VALUES (?, ?, 'full', 'só radar', 'read', '2026-10-30 09:00:00')",
+    article,
+    label,
+  );
+}
+
 function seedReadingNotes(db: Database.Database, project: number, article: number): void {
   const annotation = run(db, "INSERT INTO annotations (article_id, content_markdown) VALUES (?, 'nota')", article);
   const highlight = run(
@@ -162,6 +178,8 @@ const PROJECT_SCOPE: Record<string, string> = {
   project_category_options: 'category_id IN (SELECT id FROM project_categories WHERE project_id = @project)',
   investigation_results: 'investigation_id IN (SELECT id FROM massive_investigations WHERE project_id = @project)',
   investigation_audits: 'investigation_id IN (SELECT id FROM massive_investigations WHERE project_id = @project)',
+  screening_labels: 'project_id = @project',
+  screening_decisions: ARTICLES_OF_PROJECT,
 };
 
 // Keys that point at other rows: a copy gives them new values on purpose, in every table.
@@ -175,6 +193,7 @@ const KEY_COLUMNS = new Set([
   'annotation_id',
   'highlight_id',
   'search_id',
+  'label_id',
 ]);
 
 // What else differs on purpose in a copy, table by table: stored files are moved into this installation,

@@ -24,6 +24,9 @@ export interface ProjectRows {
   investigationResults?: SqlRow[];
   /** Audits by stratified sample (#48); files from before them lack the list. */
   investigationAudits?: SqlRow[];
+  /** Screening labels and decisions (#49); files from before them lack the lists. */
+  screeningLabels?: SqlRow[];
+  screeningDecisions?: SqlRow[];
 }
 
 const AUDITS_SQL = `SELECT a.* FROM investigation_audits a
@@ -68,5 +71,7 @@ export function readProjectRows(
     questionSets: db.prepare(questionSetsSql).all(projectId) as SqlRow[],
     investigationResults: byArticle('investigation_results'),
     investigationAudits: db.prepare(AUDITS_SQL).all(projectId) as SqlRow[],
+    screeningLabels: byProject('screening_labels'),
+    screeningDecisions: byArticle('screening_decisions'),
   };
 }

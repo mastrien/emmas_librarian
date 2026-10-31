@@ -10,6 +10,8 @@ import { DocumentRepository } from './DocumentRepository';
 import { AnnotationRepository } from './AnnotationRepository';
 import { TrashRepository } from './TrashRepository';
 import { MassiveInvestigationRepository } from './MassiveInvestigationRepository';
+import { ScreeningDecisionRepository, type ScreeningExportRow } from './ScreeningDecisionRepository';
+import { ScreeningLabelRepository } from './ScreeningLabelRepository';
 import { initializeSchema } from './schemaMigrations';
 import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
 
@@ -66,6 +68,8 @@ export class DatabaseAdapter {
   public annotationRepo: AnnotationRepository;
   public trashRepo: TrashRepository;
   public investigationRepo: MassiveInvestigationRepository;
+  public screeningDecisionRepo: ScreeningDecisionRepository;
+  public screeningLabelRepo: ScreeningLabelRepository;
 
   // A constructor that throws leaves no adapter to close, so the file would stay locked (Windows) for
   // anything that replaces it before the process exits: the post-update restore failed with EPERM on a
@@ -84,6 +88,8 @@ export class DatabaseAdapter {
       this.annotationRepo = new AnnotationRepository(this.db);
       this.trashRepo = new TrashRepository(this.db, this.projectRepo);
       this.investigationRepo = new MassiveInvestigationRepository(this.db);
+      this.screeningDecisionRepo = new ScreeningDecisionRepository(this.db);
+      this.screeningLabelRepo = new ScreeningLabelRepository(this.db, this.screeningDecisionRepo);
       this.initSchema();
     } catch (err) {
       this.db.close();
@@ -162,11 +168,22 @@ export class DatabaseAdapter {
   updateArticleFilePath(articleId: number, path: string | null): void {
     return this.articleRepo.updateArticleFilePath(articleId, path);
   }
+  // A status set on the project page wins over the triage: archiving there drops an inclusion, restoring drops
+  // an exclusion (#49), so the review page never shows an article where the project page does not.
   updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', archiveNote?: string): void {
-    return this.articleRepo.updateArticleStatus(articleId, status, archiveNote);
+    // 'Restaurar' sends 'new'; an article the triage archived goes back to what it was, so 'read' stays read.
+    const before = status === 'new' ? this.screeningDecisionRepo.statusBefore(articleId) : null;
+    this.articleRepo.updateArticleStatus(articleId, before ?? status, archiveNote);
+    this.screeningDecisionRepo.followProjectStatus([articleId], status);
   }
   updateArticlesStatus(articleIds: number[], status: 'new' | 'read' | 'archived', archiveNote?: string): number {
-    return this.articleRepo.updateArticlesStatus(articleIds, status, archiveNote);
+    const changed = this.articleRepo.updateArticlesStatus(articleIds, status, archiveNote);
+    this.screeningDecisionRepo.followProjectStatus(articleIds, status);
+    return changed;
+  }
+  /** Each decided article's current screening decision (#49), for CSV and XLSX exports. */
+  getScreeningExportRows(projectId: number): ScreeningExportRow[] {
+    return this.screeningDecisionRepo.effectiveDecisions(projectId);
   }
   updateArticleMetadata(articleId: number, data: Partial<ArticleInput>): void {
     return this.articleRepo.updateArticleMetadata(articleId, data);
