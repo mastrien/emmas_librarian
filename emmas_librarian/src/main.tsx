@@ -119,6 +119,7 @@ if (rootEl)
                 <Route path="/projects/:id/search" element={<SearchPage />} />
                 <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
                 <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
+                <Route path="/projects/:id/review/prisma" element={<SystematicReviewPage tab="prisma" />} />
                 <Route path="/articles/:id" element={<ArticleReaderPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/terms" element={<TermsOfUsePage />} />

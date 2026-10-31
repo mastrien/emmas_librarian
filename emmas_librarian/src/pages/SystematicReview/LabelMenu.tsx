@@ -13,7 +13,8 @@ interface LabelMenuProps {
   alignLeft?: boolean;
 }
 
-function useCloseOnOutside(open: boolean, close: () => void) {
+/** Closes a dropdown on a click outside it or on Escape; answers the ref to put on its wrapper. */
+export function useCloseOnOutside(open: boolean, close: () => void) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;

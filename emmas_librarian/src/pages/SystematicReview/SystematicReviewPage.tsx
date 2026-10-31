@@ -9,6 +9,7 @@ import { ExcludedSection, LabelSection, type RowActions } from './ReviewSections
 import { PendingList } from './PendingList';
 import { ReviewCountsBar, UndoToast } from './ReviewBits';
 import { ManageLabelsModal } from './ManageLabelsModal';
+import { PrismaTab } from './prisma/PrismaTab';
 import './review.css';
 
 // Sections start open, except those the person closed during this visit.
@@ -112,7 +113,29 @@ const ReviewBody: React.FC<{ screening: ScreeningState; onCite: (articles: Artic
  * Usage:
  *   <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
  */
-export const SystematicReviewPage: React.FC = () => {
+/** The two tabs of the review page (#50): the screening and the PRISMA diagram, each with its own address. */
+export type ReviewTab = 'screening' | 'prisma';
+
+const ReviewTabs: React.FC<{ projectId: number; tab: ReviewTab }> = ({ projectId, tab }) => (
+  <nav aria-label="Abas da revisão" className="review-tabs">
+    <Link
+      to={`/projects/${projectId}/review`}
+      className={tab === 'screening' ? 'review-tab review-tab--on' : 'review-tab'}
+      aria-current={tab === 'screening' ? 'page' : undefined}
+    >
+      Triagem
+    </Link>
+    <Link
+      to={`/projects/${projectId}/review/prisma`}
+      className={tab === 'prisma' ? 'review-tab review-tab--on' : 'review-tab'}
+      aria-current={tab === 'prisma' ? 'page' : undefined}
+    >
+      Diagrama PRISMA
+    </Link>
+  </nav>
+);
+
+export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'screening' }) => {
   const projectId = Number(useParams<{ id: string }>().id);
   const screening = useScreening(projectId);
   const [managing, setManaging] = useState(false);
@@ -125,7 +148,12 @@ export const SystematicReviewPage: React.FC = () => {
         projectName={screening.project?.name ?? ''}
         onManageLabels={() => setManaging(true)}
       />
-      <ReviewBody screening={screening} onCite={setCiting} />
+      <ReviewTabs projectId={projectId} tab={tab} />
+      {tab === 'prisma' ? (
+        <PrismaTab projectId={projectId} screening={screening} />
+      ) : (
+        <ReviewBody screening={screening} onCite={setCiting} />
+      )}
       {screening.lastChange && <UndoToast change={screening.lastChange} />}
       <ManageLabelsModal
         isOpen={managing}
