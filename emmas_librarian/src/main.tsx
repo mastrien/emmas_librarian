@@ -75,6 +75,8 @@ const ProjectDetailsPage = lazy(() =>
   import('./pages/ProjectDetailsPage').then((module) => ({ default: module.ProjectDetailsPage })),
 );
 const SearchPage = lazy(() => import('./pages/SearchPage').then((module) => ({ default: module.SearchPage })));
+const SystematicReviewPage = lazy(() => import('./pages/SystematicReview/SystematicReviewPage'));
+const GuidedScreeningPage = lazy(() => import('./pages/SystematicReview/GuidedScreeningPage'));
 const ArticleReaderPage = lazy(() =>
   import('./pages/ArticleReaderPage').then((module) => ({ default: module.ArticleReaderPage })),
 );
@@ -115,6 +117,8 @@ if (rootEl)
                 <Route path="/new-project" element={<NewProjectPage />} />
                 <Route path="/projects/:id" element={<ProjectDetailsPage />} />
                 <Route path="/projects/:id/search" element={<SearchPage />} />
+                <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
+                <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
                 <Route path="/articles/:id" element={<ArticleReaderPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/terms" element={<TermsOfUsePage />} />

@@ -265,4 +265,21 @@ describe('screening IPC channels (#49)', () => {
     await call(IpcChannel.SCREENING_UNDECIDE, [id], 'title');
     expect(await call(IpcChannel.SCREENING_DECISIONS_LIST, projectId)).toEqual([]);
   });
+
+  it('renames, moves, deletes labels and applies a preset through the channels', async () => {
+    const ipc = new RecordingRegistrar();
+    registerScreeningHandlers(ipc as never, db);
+    const call = (channel: string, ...args: unknown[]) => ipc.handlers.get(channel)!({}, ...args);
+
+    await call(IpcChannel.SCREENING_LABEL_RENAME, label('Em dúvida').id, 'Talvez');
+    await call(IpcChannel.SCREENING_PRESET_APPLY, projectId, 'prisma2020');
+    const reason = db.screeningLabelRepo.listLabels(projectId).find((l) => l.name === 'População diferente')!;
+    await call(IpcChannel.SCREENING_LABEL_MOVE, reason.id, -1);
+    await call(IpcChannel.SCREENING_LABEL_DELETE, label('Duplicado').id, null);
+
+    const names = db.screeningLabelRepo.listLabels(projectId).map((l) => l.name);
+    expect(names).toContain('Talvez');
+    expect(names).not.toContain('Duplicado');
+    expect(names.indexOf('População diferente')).toBeLessThan(names.indexOf('Texto completo não recuperado'));
+  });
 });
