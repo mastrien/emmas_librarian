@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { boxLines, fit, prismaLayout, WIDTH } from '../prismaLayout';
+import { boxLines, fit, prismaLayout, withCount, WIDTH } from '../prismaLayout';
 import { PrismaDiagram, PRINT_PALETTE, SCREEN_PALETTE } from '../PrismaDiagram';
 import { diagramSvgText, exportPrismaDiagram } from '../prismaExport';
 import { FakeProjectService } from '../../../../services/__tests__/fakes/FakeProjectService';
@@ -32,6 +32,20 @@ describe('prismaLayout (#50)', () => {
     expect(place('identified').h).toBeGreaterThan(place('included').h);
     expect(Math.max(...layout.boxes.map((b) => b.x + b.w))).toBeLessThanOrEqual(WIDTH);
     expect(layout.bands.map((b) => b.label)).toEqual(['Identificação', 'Triagem', 'Incluídos']);
+  });
+
+  // Regression (E2E of #50): long titles were cut with an ellipsis right where the number was.
+  it('never cuts the number of a box or of a line', () => {
+    for (const box of layout.boxes) {
+      expect(box.lines.map((l) => l.text).join(' ')).toContain(`(n = ${flow[box.key].n})`);
+      expect(box.label.startsWith(`${flow[box.key].title} (n = ${flow[box.key].n})`)).toBe(true);
+    }
+    expect(
+      place('assessed')
+        .lines.slice(0, 2)
+        .map((l) => l.text),
+    ).toEqual(['Relatórios avaliados para elegibilidade', '(n = 1)']);
+    expect(withCount('Desenho de estudo não elegível', 5, 24)).toBe('Desenho de estu… (n = 5)');
   });
 
   it('writes one short line per kind of warning and cuts lines that do not fit', () => {

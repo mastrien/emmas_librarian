@@ -84,7 +84,7 @@ const BoxShape: React.FC<{ box: BoxPlace; p: PrismaPalette; selected: boolean; o
       data-box={box.key}
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
-      aria-label={interactive ? box.lines.map((l) => l.text).join('. ') : undefined}
+      aria-label={interactive ? box.label : undefined}
       aria-pressed={interactive ? selected : undefined}
       onClick={onSelect}
       onKeyDown={interactive ? onKey : undefined}

@@ -13,6 +13,8 @@ export interface BoxPlace {
   w: number;
   h: number;
   lines: BoxLine[];
+  /** The whole text, never cut: the name of the box as a button. */
+  label: string;
   warned: boolean;
 }
 
@@ -75,10 +77,38 @@ export function fit(text: string, chars: number): string {
 export function boxLines(box: PrismaBox, chars: number): BoxLine[] {
   const kinds = [...new Set(box.warnings.map((w) => w.kind))];
   return [
-    { text: fit(`${box.title} (n = ${box.n})`, chars), kind: 'title' },
-    ...box.lines.map((l) => ({ text: fit(`${l.label} (n = ${l.n ?? 'sem dados'})`, chars), kind: 'line' as const })),
+    ...titleLines(box, chars),
+    ...box.lines.map((l) => ({ text: withCount(l.label, l.n, chars), kind: 'line' as const })),
     ...kinds.map((k) => WARNING_LINE[k]),
   ];
+}
+
+const countOf = (n: number | null) => `(n = ${n ?? 'sem dados'})`;
+
+/**
+ * A line with its count, cutting only the label when it is too long: the number is never the part that goes.
+ *
+ * @example withCount('Desenho de estudo não elegível', 5, 24) // 'Desenho de estu… (n = 5)'
+ */
+export function withCount(label: string, n: number | null, chars: number): string {
+  const count = countOf(n);
+  const whole = `${label} ${count}`;
+  return whole.length <= chars ? whole : `${fit(label, chars - count.length - 1)} ${count}`;
+}
+
+// A title and its number on one line when they fit; otherwise the number gets a line of its own.
+function titleLines(box: PrismaBox, chars: number): BoxLine[] {
+  const whole = `${box.title} ${countOf(box.n)}`;
+  if (whole.length <= chars) return [{ text: whole, kind: 'title' }];
+  return [
+    { text: fit(box.title, chars), kind: 'title' },
+    { text: countOf(box.n), kind: 'title' },
+  ];
+}
+
+/** The whole text of a box, never cut, for screen readers and the button's name. */
+export function boxLabel(box: PrismaBox): string {
+  return [`${box.title} ${countOf(box.n)}`, ...box.lines.map((l) => `${l.label} ${countOf(l.n)}`)].join('. ');
 }
 
 const heightOf = (lines: BoxLine[]) => PAD * 2 + LINE_H * lines.length;
@@ -91,11 +121,29 @@ function placeRow(flow: PrismaFlow, [left, right]: (typeof ROWS)[number], top: n
   const ly = top + Math.max(0, Math.round((hr - hl) / 2));
   const warned = (key: PrismaBoxKey) => flow[key].warnings.some((w) => w.kind !== 'nodata');
   const placed: BoxPlace[] = [
-    { key: left, x: MAIN.x, y: ly, w: MAIN.w, h: hl, lines: leftLines, warned: warned(left) },
+    {
+      key: left,
+      x: MAIN.x,
+      y: ly,
+      w: MAIN.w,
+      h: hl,
+      lines: leftLines,
+      label: boxLabel(flow[left]),
+      warned: warned(left),
+    },
   ];
   if (right) {
     const ry = ly + Math.round(hl / 2 - hr / 2);
-    placed.push({ key: right, x: SIDE.x, y: ry, w: SIDE.w, h: hr, lines: rightLines, warned: warned(right) });
+    placed.push({
+      key: right,
+      x: SIDE.x,
+      y: ry,
+      w: SIDE.w,
+      h: hr,
+      lines: rightLines,
+      label: boxLabel(flow[right]),
+      warned: warned(right),
+    });
   }
   const bottom = Math.max(...placed.map((p) => p.y + p.h));
   return { placed, bottom };
