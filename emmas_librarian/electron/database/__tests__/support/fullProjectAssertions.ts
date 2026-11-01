@@ -41,6 +41,19 @@ export function expectFullProjectCopied(db: Database.Database, projectId: number
   expectInvestigationCopied(db, projectId, [Number(article.id), Number(other.id)]);
   expectReadingNotesCopied(db, projectId, Number(article.id));
   expectScreeningCopied(db, projectId, Number(other.id));
+  expectPrismaCopied(db, projectId, Number(article.id), Number(other.id));
+}
+
+// The copy keeps where A came from and that B is of A's study, with both links pointing at the copied rows.
+function expectPrismaCopied(db: Database.Database, projectId: number, articleId: number, otherId: number): void {
+  const source = one(db, 'SELECT * FROM prisma_sources WHERE project_id = ?', projectId);
+  expect(source).toMatchObject({ name: 'Google Scholar', method: 'websites', consulted_on: '2026-10-20' });
+  expect(one(db, 'SELECT source_id FROM prisma_article_origins WHERE article_id = ?', articleId)).toEqual({
+    source_id: source.id,
+  });
+  expect(one(db, 'SELECT study_article_id FROM prisma_study_links WHERE article_id = ?', otherId)).toEqual({
+    study_article_id: articleId,
+  });
 }
 
 function expectScreeningCopied(db: Database.Database, projectId: number, articleId: number): void {

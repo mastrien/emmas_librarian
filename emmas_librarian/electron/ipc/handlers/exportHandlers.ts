@@ -11,7 +11,7 @@ import {
 } from '../../services/SearchReportService';
 import { handle, type IpcRegistrar } from './handle';
 
-interface SaveTarget {
+export interface SaveTarget {
   title: string;
   defaultPath: string;
   filterName: string;
@@ -76,7 +76,7 @@ function registerSearchReportHandler(ipc: IpcRegistrar, db: DatabaseAdapter): vo
   });
 }
 
-function requireProject(db: DatabaseAdapter, projectId: number): Project {
+export function requireProject(db: DatabaseAdapter, projectId: number): Project {
   const project = db.getProject(projectId);
   if (!project) {
     throw new Error(
@@ -100,7 +100,7 @@ function tabularTarget(projectId: number, title: string, filterName: string, ext
 }
 
 // E2E runs set E2E_MOCK_SAVE_FILE_PATH because native save dialogs cannot be driven by Playwright.
-async function saveExport(content: string | Buffer, target: SaveTarget): Promise<string | null> {
+export async function saveExport(content: string | Buffer, target: SaveTarget): Promise<string | null> {
   const e2ePath = process.env.E2E_MOCK_SAVE_FILE_PATH;
   if (e2ePath) {
     fs.writeFileSync(e2ePath, content);

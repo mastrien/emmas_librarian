@@ -89,6 +89,8 @@ describe('ARTICLES_IMPORT_FROM_PROJECT', () => {
       { import: { count: 2 } },
     );
     expect(db.importArticlesFromProject).toHaveBeenCalledWith(2, 3, [5, 6], 77);
+    // The copies already know where they came from in the PRISMA diagram (#50).
+    expect(db.tagPrismaSearchEntry).toHaveBeenCalledWith(3, 77, { name: 'Projeto "Fonte"', method: 'app_projects' });
   });
 
   it('names the source by id when it no longer exists', async () => {

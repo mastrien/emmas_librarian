@@ -31,6 +31,10 @@ import type {
   ScreeningLabel,
   ScreeningLabelInput,
   ScreeningStage,
+  PrismaImageFormat,
+  PrismaExportTables,
+  PrismaRecords,
+  PrismaSourceInput,
   QueryASTNode,
   DatabaseTranslationMap,
   SearchHistoryItem,
@@ -274,6 +278,25 @@ export interface IProjectService {
   decideScreening(articleIds: number[], labelId: number, stage: ScreeningStage, note?: string | null): Promise<number>;
   /** Takes back the decision at a stage; articles only the triage archived come back. */
   undecideScreening(articleIds: number[], stage: ScreeningStage): Promise<number>;
+
+  // ── PRISMA diagram (#50) ─────────────────────────────────────────
+  /** Sources, article origins and same-study links of the project. Every change below answers them anew. */
+  getPrismaRecords(projectId: number): Promise<PrismaRecords>;
+  /** Creates a consulted source, or updates it when the input has an id. */
+  savePrismaSource(projectId: number, input: PrismaSourceInput): Promise<PrismaRecords>;
+  /** Says which source the articles came from; null forgets it. */
+  setPrismaOrigins(projectId: number, articleIds: number[], sourceId: number | null): Promise<PrismaRecords>;
+  /** Marks two publications as of the same study. */
+  linkSameStudy(projectId: number, articleId: number, otherId: number): Promise<PrismaRecords>;
+  /** Undoes a study named by its first article. */
+  unlinkStudy(projectId: number, studyArticleId: number): Promise<PrismaRecords>;
+  /** Saves the diagram (SVG text or PNG as base64) and its two CSV tables beside it; answers the image path, or null if cancelled. */
+  exportPrismaDiagram(
+    projectId: number,
+    format: PrismaImageFormat,
+    image: string,
+    tables: PrismaExportTables,
+  ): Promise<string | null>;
 
   // ── Categories ────────────────────────────────────────────────────
   getProjectCategories(projectId: number): Promise<ProjectCategory[]>;

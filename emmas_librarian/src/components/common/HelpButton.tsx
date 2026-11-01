@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { HelpCircle, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
+import { REVIEW_HELP } from './help/reviewHelp';
 
 const tutorials: Record<string, { title: string; content: React.ReactNode }> = {
+  review: REVIEW_HELP,
   '/': {
     title: 'Guia do Dashboard',
     content: (
@@ -402,6 +404,8 @@ export const HelpButton: React.FC<{ forcePageKey?: string; style?: React.CSSProp
   let pageKey = location.pathname;
   if (forcePageKey) {
     pageKey = forcePageKey;
+  } else if (location.pathname.startsWith('/projects/') && location.pathname.includes('/review')) {
+    pageKey = 'review';
   } else if (location.pathname.startsWith('/projects/') && location.pathname.includes('/search')) {
     pageKey = 'search';
   } else if (location.pathname.startsWith('/projects/')) {

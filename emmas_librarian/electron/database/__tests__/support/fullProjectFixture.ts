@@ -48,6 +48,7 @@ export function seedFullProject(db: Database.Database, files: { pdfPath: string;
   seedInvestigation(db, project, withPdf, plain);
   seedReadingNotes(db, project, withPdf);
   seedScreening(db, project, plain);
+  seedPrisma(db, project, withPdf, plain);
   stampDatesInThePast(db, project);
   return project;
 }
@@ -158,6 +159,17 @@ function seedReadingNotes(db: Database.Database, project: number, article: numbe
   );
 }
 
+// PRISMA (#50): article A came from a consulted source, and B is another publication of A's study.
+function seedPrisma(db: Database.Database, project: number, article: number, other: number): void {
+  const source = run(
+    db,
+    "INSERT INTO prisma_sources (project_id, name, method, url, consulted_on) VALUES (?, 'Google Scholar', 'websites', 'https://scholar.google.com', '2026-10-20')",
+    project,
+  );
+  run(db, 'INSERT INTO prisma_article_origins (article_id, source_id) VALUES (?, ?)', article, source);
+  run(db, 'INSERT INTO prisma_study_links (article_id, study_article_id) VALUES (?, ?)', other, article);
+}
+
 // Where each project-scoped table keeps its rows; a table added to a project needs an entry here.
 const ARTICLES_OF_PROJECT = 'article_id IN (SELECT id FROM articles WHERE project_id = @project)';
 const PROJECT_SCOPE: Record<string, string> = {
@@ -180,6 +192,9 @@ const PROJECT_SCOPE: Record<string, string> = {
   investigation_audits: 'investigation_id IN (SELECT id FROM massive_investigations WHERE project_id = @project)',
   screening_labels: 'project_id = @project',
   screening_decisions: ARTICLES_OF_PROJECT,
+  prisma_sources: 'project_id = @project',
+  prisma_article_origins: ARTICLES_OF_PROJECT,
+  prisma_study_links: ARTICLES_OF_PROJECT,
 };
 
 // Keys that point at other rows: a copy gives them new values on purpose, in every table.
@@ -194,6 +209,8 @@ const KEY_COLUMNS = new Set([
   'highlight_id',
   'search_id',
   'label_id',
+  'source_id',
+  'study_article_id',
 ]);
 
 // What else differs on purpose in a copy, table by table: stored files are moved into this installation,

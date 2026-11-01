@@ -12,6 +12,8 @@ import { TrashRepository } from './TrashRepository';
 import { MassiveInvestigationRepository } from './MassiveInvestigationRepository';
 import { ScreeningDecisionRepository, type ScreeningExportRow } from './ScreeningDecisionRepository';
 import { ScreeningLabelRepository } from './ScreeningLabelRepository';
+import { PrismaOriginRepository } from './PrismaOriginRepository';
+import { PrismaStudyRepository } from './PrismaStudyRepository';
 import { initializeSchema } from './schemaMigrations';
 import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
 
@@ -24,6 +26,7 @@ import {
   ProjectDocument,
   ProjectCategory,
   ArticleCategory,
+  PrismaSourceInput,
 } from '../../src/types';
 
 export interface ArticleInput {
@@ -70,6 +73,8 @@ export class DatabaseAdapter {
   public investigationRepo: MassiveInvestigationRepository;
   public screeningDecisionRepo: ScreeningDecisionRepository;
   public screeningLabelRepo: ScreeningLabelRepository;
+  public prismaOriginRepo: PrismaOriginRepository;
+  public prismaStudyRepo: PrismaStudyRepository;
 
   // A constructor that throws leaves no adapter to close, so the file would stay locked (Windows) for
   // anything that replaces it before the process exits: the post-update restore failed with EPERM on a
@@ -90,6 +95,8 @@ export class DatabaseAdapter {
       this.investigationRepo = new MassiveInvestigationRepository(this.db);
       this.screeningDecisionRepo = new ScreeningDecisionRepository(this.db);
       this.screeningLabelRepo = new ScreeningLabelRepository(this.db, this.screeningDecisionRepo);
+      this.prismaOriginRepo = new PrismaOriginRepository(this.db);
+      this.prismaStudyRepo = new PrismaStudyRepository(this.db);
       this.initSchema();
     } catch (err) {
       this.db.close();
@@ -398,6 +405,11 @@ export class DatabaseAdapter {
   public registerPdfInLibrary(filePath: string, hash: string, filename: string, size: number): void {
     return this.pdfLibraryRepo.registerPdfInLibrary(filePath, hash, filename, size);
   }
+  /** Tags the articles a history entry logged with a PRISMA source, created the first time (#50). */
+  public tagPrismaSearchEntry(projectId: number, searchId: number, source: Omit<PrismaSourceInput, 'id'>): void {
+    this.prismaOriginRepo.tagSearchEntry(projectId, searchId, source);
+  }
+
   public importArticlesFromProject(
     sourceProjectId: number,
     destProjectId: number,

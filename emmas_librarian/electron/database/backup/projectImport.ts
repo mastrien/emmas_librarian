@@ -16,7 +16,7 @@ export interface StoredFileSource {
   documentDir: string;
 }
 
-type IdKind = 'search' | 'article' | 'category' | 'option' | 'investigation' | 'annotation' | 'label';
+type IdKind = 'search' | 'article' | 'category' | 'option' | 'investigation' | 'annotation' | 'label' | 'prismaSource';
 
 interface ImportContext {
   db: Database.Database;
@@ -33,6 +33,7 @@ const newIdMaps = (): ImportContext['ids'] => ({
   investigation: new Map(),
   annotation: new Map(),
   label: new Map(),
+  prismaSource: new Map(),
 });
 
 // Foreign keys whose target was not imported become NULL instead of pointing at an unrelated row.
@@ -72,6 +73,7 @@ export function insertProjectRows(
     importDocuments(ctx, rows.projectDocs);
     importCategories(ctx, rows);
     importScreening(ctx, rows);
+    importPrisma(ctx, rows);
     importInvestigations(ctx, rows);
     importReadingNotes(ctx, rows);
     importProjectNotes(ctx, rows);
@@ -162,6 +164,28 @@ function importScreening(ctx: ImportContext, rows: ProjectRows): void {
     copyLinkedRow(ctx, 'screening_decisions', decision, {
       article_id: remap(ctx, 'article', decision.article_id),
       label_id: remap(ctx, 'label', decision.label_id),
+    });
+  }
+}
+
+// Origins and study links point at copied articles and sources, so they follow the article and source maps.
+function importPrisma(ctx: ImportContext, rows: ProjectRows): void {
+  for (const source of rows.prismaSources ?? []) {
+    ctx.ids.prismaSource.set(
+      Number(source.id),
+      copyRow(ctx.db, 'prisma_sources', source, { project_id: ctx.projectId }),
+    );
+  }
+  for (const origin of rows.prismaArticleOrigins ?? []) {
+    copyLinkedRow(ctx, 'prisma_article_origins', origin, {
+      article_id: remap(ctx, 'article', origin.article_id),
+      source_id: remap(ctx, 'prismaSource', origin.source_id),
+    });
+  }
+  for (const link of rows.prismaStudyLinks ?? []) {
+    copyLinkedRow(ctx, 'prisma_study_links', link, {
+      article_id: remap(ctx, 'article', link.article_id),
+      study_article_id: remap(ctx, 'article', link.study_article_id),
     });
   }
 }

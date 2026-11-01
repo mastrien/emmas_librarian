@@ -232,6 +232,38 @@ CREATE TABLE IF NOT EXISTS screening_decisions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_screening_labels_project ON screening_labels(project_id);
+
+-- PRISMA diagram (#50). No number is typed by hand: the "other methods" column counts the articles that came
+-- from outside the searches by the source each one was found in, and the studies are the included publications
+-- minus those marked as of the same study.
+CREATE TABLE IF NOT EXISTS prisma_sources (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    method TEXT NOT NULL CHECK (method IN ('citations', 'websites', 'organisations', 'app_projects', 'other')),
+    url TEXT,
+    consulted_on TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS prisma_article_origins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    article_id INTEGER NOT NULL UNIQUE,
+    source_id INTEGER NOT NULL,
+    FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    FOREIGN KEY(source_id) REFERENCES prisma_sources(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS prisma_study_links (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    article_id INTEGER NOT NULL UNIQUE,
+    study_article_id INTEGER NOT NULL,
+    FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    FOREIGN KEY(study_article_id) REFERENCES articles(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_prisma_sources_project ON prisma_sources(project_id);
 CREATE INDEX IF NOT EXISTS idx_screening_decisions_label ON screening_decisions(label_id);
 
 CREATE TABLE IF NOT EXISTS ai_model_config (
