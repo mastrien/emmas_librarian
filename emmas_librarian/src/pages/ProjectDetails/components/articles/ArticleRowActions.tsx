@@ -184,9 +184,13 @@ const Shortcuts: React.FC<{ actions: ToggleAction[] }> = ({ actions }) => (
   </div>
 );
 
+// There is no delete button: an article from outside the searches leaves with its history entry (#67).
+const UNDO_HINT = 'se quiser excluir este artigo, desfaça a inclusão dele no histórico';
+
 /**
  * Actions of one row in the project's article table: DOI, read/attach PDF and a "⋯" menu with everything
  * else; "Lido" and "Arquivar" also appear as shortcuts on a second line while the row is hovered or focused.
+ * For an article from outside the searches the menu ends with a hint on how to remove it.
  *
  * @example <ArticleRowActions article={article} handlers={rowHandlers} />
  */
@@ -194,7 +198,9 @@ export const ArticleRowActions: React.FC<{
   article: Article;
   handlers: ArticleRowHandlers;
   openAccess?: OpenAccessRowState;
-}> = ({ article, handlers, openAccess }) => {
+  /** The article came from outside the structured searches (added by hand, a PDF batch, another project). */
+  outsideSearch?: boolean;
+}> = ({ article, handlers, openAccess, outsideSearch = false }) => {
   // The "⋯" button the menu is anchored to; null while the menu is closed.
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const closeMenu = useCallback(() => setMenuAnchor(null), []);
@@ -231,7 +237,14 @@ export const ArticleRowActions: React.FC<{
       </div>
       <OpenAccessStatus state={openAccess} />
       <Shortcuts actions={statusActions(article, handlers)} />
-      {menuAnchor && <ArticleRowMenu anchor={menuAnchor} groups={menuGroups(article, handlers)} onClose={closeMenu} />}
+      {menuAnchor && (
+        <ArticleRowMenu
+          anchor={menuAnchor}
+          groups={menuGroups(article, handlers)}
+          onClose={closeMenu}
+          footnote={outsideSearch ? UNDO_HINT : undefined}
+        />
+      )}
     </div>
   );
 };

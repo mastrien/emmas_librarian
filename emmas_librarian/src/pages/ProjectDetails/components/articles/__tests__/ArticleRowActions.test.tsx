@@ -12,7 +12,7 @@ const article = (overrides: Partial<Article> = {}): Article => ({
   ...overrides,
 });
 
-function renderActions(overrides: Partial<Article> = {}) {
+function renderActions(overrides: Partial<Article> = {}, outsideSearch = false) {
   const handlers: ArticleRowHandlers = {
     onUpload: vi.fn(),
     onFindOpenAccess: vi.fn(),
@@ -29,7 +29,7 @@ function renderActions(overrides: Partial<Article> = {}) {
         <tbody>
           <tr>
             <td>
-              <ArticleRowActions article={a} handlers={handlers} />
+              <ArticleRowActions article={a} handlers={handlers} outsideSearch={outsideSearch} />
             </td>
           </tr>
         </tbody>
@@ -172,5 +172,26 @@ describe('ArticleRowActions menu', () => {
     openMenu();
 
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+});
+
+// #67: there is no delete button; an article from outside the searches leaves with its history entry.
+describe('ArticleRowActions hint for articles from outside the searches', () => {
+  const HINT = 'se quiser excluir este artigo, desfaça a inclusão dele no histórico';
+
+  it('ends the menu of an article added by hand with how to remove it, as text and not an action', () => {
+    renderActions({}, true);
+    openMenu();
+
+    const menu = screen.getByRole('menu');
+    expect(within(menu).getByText(HINT)).toHaveClass('row-menu__footnote');
+    expect(within(menu).queryByRole('menuitem', { name: new RegExp(HINT) })).not.toBeInTheDocument();
+  });
+
+  it('says nothing of the kind for an article from a structured search', () => {
+    renderActions();
+    openMenu();
+
+    expect(screen.queryByText(HINT)).not.toBeInTheDocument();
   });
 });

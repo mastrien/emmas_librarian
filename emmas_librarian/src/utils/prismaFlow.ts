@@ -1,5 +1,5 @@
-import type { Article, PrismaRecords, SearchHistoryItem } from '../types';
-import { isOutsideSearchBreakdown } from './outsideSearchEntries';
+import type { Article, PrismaRecords } from '../types';
+import { outsideSearchIds } from './outsideSearchEntries';
 import { searchContribution } from './prismaSearches';
 import { box, Decisions } from './prisma/prismaDecisions';
 import { databaseColumn } from './prisma/prismaDatabaseColumn';
@@ -10,15 +10,6 @@ export * from './prisma/prismaTypes';
 export { brazilianDate } from './prisma/prismaDecisions';
 export { METHOD_NAMES } from './prisma/prismaOtherColumn';
 
-function breakdownOf(search: SearchHistoryItem): Record<string, unknown> {
-  try {
-    const parsed: unknown = JSON.parse(search.results_breakdown || '{}');
-    return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {};
-  } catch {
-    return {};
-  }
-}
-
 /**
  * Splits the history into structured searches and entries that only logged articles brought from outside one
  * (added by hand, a batch of PDFs, a copy from another project). Articles with no history entry at all predate
@@ -27,7 +18,7 @@ function breakdownOf(search: SearchHistoryItem): Record<string, unknown> {
  * @example splitBySource(input).outside.map((a) => a.id) // [7, 9]
  */
 export function splitBySource(input: Pick<PrismaInput, 'searches' | 'articles'>) {
-  const outsideIds = new Set(input.searches.filter((s) => isOutsideSearchBreakdown(breakdownOf(s))).map((s) => s.id));
+  const outsideIds = outsideSearchIds(input.searches);
   const isOutside = (a: Article) => !a.search_id || outsideIds.has(a.search_id);
   return {
     searches: input.searches.filter((s) => !outsideIds.has(s.id)),

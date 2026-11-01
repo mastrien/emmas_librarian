@@ -147,4 +147,32 @@ describe('SearchHistoryModal', () => {
       expect(screen.queryByRole('link', { name: /Nova busca a partir desta/ })).not.toBeInTheDocument();
     });
   });
+
+  // #67: undoing an entry from outside the searches removes articles PRISMA must know were never identified.
+  it('warns about PRISMA before undoing an article added by hand, and keeps the usual question for a search', () => {
+    const onRevertSearch = vi.fn();
+    const manual = {
+      ...mockHistory[0],
+      id: 9,
+      unified_query: 'Adição manual de artigo avulso: Radar',
+      translated_queries: '{}',
+      results_breakdown: JSON.stringify({ Manual: { count: 1 } }),
+    };
+    render(
+      <MemoryRouter>
+        <SearchHistoryModal
+          isOpen
+          onClose={vi.fn()}
+          history={[manual, mockHistory[0]]}
+          onRevertSearch={onRevertSearch}
+        />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Desfazer inclusão/ }));
+    expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain('Atenção (PRISMA)');
+    fireEvent.click(screen.getByRole('button', { name: /Desfazer Busca/ }));
+    expect(vi.mocked(window.confirm).mock.calls[1][0]).not.toContain('PRISMA');
+    expect(onRevertSearch.mock.calls).toEqual([[9], [1]]);
+  });
 });

@@ -17,6 +17,8 @@ interface ArticleRowMenuProps {
   anchor: HTMLElement;
   groups: RowMenuGroup[];
   onClose: () => void;
+  /** A short note in smaller text at the end of the menu, not an action. */
+  footnote?: string;
 }
 
 const EDGE = 8;
@@ -63,7 +65,7 @@ function useCloseTriggers(menuRef: React.RefObject<HTMLDivElement | null>, ancho
  *
  * @example {menuOpen && <ArticleRowMenu anchor={buttonEl} groups={groups} onClose={() => setMenuOpen(false)} />}
  */
-export const ArticleRowMenu: React.FC<ArticleRowMenuProps> = ({ anchor, groups, onClose }) => {
+export const ArticleRowMenu: React.FC<ArticleRowMenuProps> = ({ anchor, groups, onClose, footnote }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   useCloseTriggers(menuRef, anchor, onClose);
@@ -115,6 +117,7 @@ export const ArticleRowMenu: React.FC<ArticleRowMenuProps> = ({ anchor, groups, 
           ))}
         </div>
       ))}
+      {footnote && <p className="row-menu__footnote">{footnote}</p>}
     </div>,
     document.body,
   );
