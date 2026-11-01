@@ -1,6 +1,6 @@
 import type { Database } from 'better-sqlite3';
 import { DiaryEntry } from '../../src/types';
-import fs from 'fs';
+import { deletePdfIfUnused } from './sharedPdfFiles';
 
 /** What only a database search records beyond the query and its per-base breakdown. */
 export interface SearchRunDetails {
@@ -62,21 +62,13 @@ export class HistoryRepository {
     const stmtArticles = this.db.prepare('SELECT id, local_file_path FROM articles WHERE search_id = ?');
     const articles = stmtArticles.all(searchId) as { id: number; local_file_path?: string }[];
 
-    // 2. Delete all annotations, highlights, physical files and the articles themselves
+    // 2. Delete all annotations, highlights and the articles themselves; a PDF goes only when no other
+    //    article (a copy in another project, the same file in the library) still uses it (#68).
     for (const article of articles) {
       this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(article.id);
       this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(article.id);
-
-      if (article.local_file_path) {
-        try {
-          if (fs.existsSync(article.local_file_path)) {
-            fs.unlinkSync(article.local_file_path);
-          }
-        } catch (err) {
-          console.error(`Failed to delete physical PDF for article ${article.id}:`, err);
-        }
-      }
       this.db.prepare('DELETE FROM articles WHERE id = ?').run(article.id);
+      deletePdfIfUnused(this.db, article.local_file_path, `article ${article.id}`);
     }
 
     // 3. Delete the search history entry

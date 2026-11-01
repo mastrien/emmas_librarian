@@ -1,8 +1,8 @@
 import type { Database } from 'better-sqlite3';
-import fs from 'fs';
 import { Article } from '../../src/types';
 import { ArticleInput } from './DatabaseAdapter';
 import { doiKey } from '../utils/doi';
+import { deletePdfIfUnused } from './sharedPdfFiles';
 
 export class ArticleRepository {
   private db: Database;
@@ -124,23 +124,11 @@ export class ArticleRepository {
     return stmt.all(projectId) as Article[];
   }
 
-  private unlinkFileIfExists(filePath: string): void {
-    try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    } catch (err) {
-      console.error('Failed to remove file:', err);
-    }
-  }
-
   public updateArticleFilePath(articleId: number, path: string | null): void {
-    const existing = this.getArticle(articleId);
-    if (existing && existing.local_file_path && existing.local_file_path !== path) {
-      this.unlinkFileIfExists(existing.local_file_path);
-    }
-    const stmt = this.db.prepare('UPDATE articles SET local_file_path = ? WHERE id = ?');
-    stmt.run(path, articleId);
+    const previous = this.getArticle(articleId)?.local_file_path;
+    this.db.prepare('UPDATE articles SET local_file_path = ? WHERE id = ?').run(path, articleId);
+    // The old PDF goes only when no other article uses it (#68).
+    if (previous && previous !== path) deletePdfIfUnused(this.db, previous, `article ${articleId}`);
   }
 
   public updateArticleStatus(articleId: number, status: 'new' | 'read' | 'archived', archiveNote?: string): void {

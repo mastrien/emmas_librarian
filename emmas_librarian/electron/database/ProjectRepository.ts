@@ -1,6 +1,7 @@
 import type { Database } from 'better-sqlite3';
 import { Project, ProjectCategory, CategoryOption } from '../../src/types';
 import fs from 'fs';
+import { deletePdfIfUnused } from './sharedPdfFiles';
 import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
 
 const normalizeCategoryName = (name: string): string => name.trim().toLocaleLowerCase('pt-BR');
@@ -42,7 +43,7 @@ export class ProjectRepository {
 
   deleteProjectPermanent(id: number): void {
     const transaction = this.db.transaction(() => {
-      // 1. Delete articles and their files
+      // 1. Delete articles, and their PDFs once no other project's article uses them (#68)
       const articles = this.db.prepare('SELECT id, local_file_path FROM articles WHERE project_id = ?').all(id) as {
         id: number;
         local_file_path?: string;
@@ -50,14 +51,8 @@ export class ProjectRepository {
       for (const article of articles) {
         this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(article.id);
         this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(article.id);
-        if (article.local_file_path) {
-          try {
-            if (fs.existsSync(article.local_file_path)) fs.unlinkSync(article.local_file_path);
-          } catch (err) {
-            console.error(`Failed to delete physical PDF for article ${article.id}:`, err);
-          }
-        }
         this.db.prepare('DELETE FROM articles WHERE id = ?').run(article.id);
+        deletePdfIfUnused(this.db, article.local_file_path, `article ${article.id}`);
       }
 
       // 2. Delete project documents and their files
