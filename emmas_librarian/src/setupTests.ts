@@ -1,5 +1,10 @@
 import '@testing-library/jest-dom';
+import { configure } from '@testing-library/dom';
 import { afterEach, vi } from 'vitest';
+
+// findBy/waitFor give up after 1 s by default; a reload through the fake service under the CI coverage run can
+// take longer (flakes in auditNavigation, #48, and the review page, #49), so every suite waits up to 4 s.
+configure({ asyncUtilTimeout: 4000 });
 
 // Suites that opt into `@vitest-environment node` (e.g. real zip/SQLite round trips) have no window.
 if (typeof window !== 'undefined') {
