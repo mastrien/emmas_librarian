@@ -74,7 +74,8 @@ test('draws the PRISMA diagram from the screening and exports it with its tables
     await expect(window.getByText(`Diagrama salvo em ${target}, com as duas tabelas ao lado.`)).toBeVisible();
     const svg = fs.readFileSync(target, 'utf8');
     expect(svg).toContain('Identificação de estudos por outros métodos');
-    expect(svg).toContain('Estudos incluídos na revisão (n = 0)');
+    // In two columns the included box is narrower: its number goes to the line under the title, never cut.
+    expect(svg).toMatch(/Estudos incluídos na revisão<\/tspan><tspan[^>]*>\(n = 0\)</);
     expect(fs.readFileSync(path.join(dir, 'prisma_dados.csv'), 'utf8')).toContain(
       '"Outros métodos","Publicações excluídas","","1"',
     );
