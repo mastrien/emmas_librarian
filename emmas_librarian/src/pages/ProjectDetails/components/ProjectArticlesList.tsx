@@ -39,6 +39,8 @@ interface ProjectArticlesListProps {
   selection?: ArticleSelection;
   /** Each row's open access PDF search: its state and how to start it. */
   openAccess: { stateOf: (articleId: number) => OpenAccessRowState | undefined; onFind: (articleId: number) => void };
+  /** History entries that only brought articles from outside the searches. */
+  outsideSearchIds?: Set<number>;
 }
 
 export interface ArticleSelection {
@@ -57,6 +59,7 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
   setCitationArticle,
   selection,
   openAccess,
+  outsideSearchIds,
 }) => {
   const rowHandlers: ArticleRowHandlers = {
     onUpload: handleUploadClick,
@@ -125,6 +128,7 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
                   article={article}
                   handlers={rowHandlers}
                   openAccess={openAccess.stateOf(article.id)}
+                  outsideSearch={article.search_id !== undefined && !!outsideSearchIds?.has(article.search_id)}
                 />
               </td>
             </tr>

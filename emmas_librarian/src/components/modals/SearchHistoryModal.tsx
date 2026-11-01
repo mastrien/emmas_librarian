@@ -8,6 +8,7 @@ import { HistoryBreakdown } from './searchHistory/HistoryBreakdown';
 import { historyLimitText, parseStoredObject } from './searchHistory/historyDetails';
 import { databaseLabel } from './searchSummary/SearchBreakdownList';
 import { SearchStrategyExport } from './searchHistory/SearchStrategyExport';
+import { undoTexts } from './searchHistory/undoTexts';
 
 type HistoryItem = SearchHistoryItem;
 
@@ -134,15 +135,9 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ history, onRevertSearch
                   {onRevertSearch && (
                     <button
                       onClick={() => {
-                        if (
-                          window.confirm(
-                            'Deseja realmente desfazer esta busca? Todos os artigos importados por ela serão removidos permanentemente.',
-                          )
-                        ) {
-                          onRevertSearch(item.id);
-                        }
+                        if (window.confirm(undoTexts(item).confirm)) onRevertSearch(item.id);
                       }}
-                      title="Desfazer busca (remover artigos importados)"
+                      title={undoTexts(item).title}
                       style={{
                         background: 'rgba(239, 68, 68, 0.1)',
                         color: 'var(--color-danger)',
@@ -166,7 +161,7 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ history, onRevertSearch
                         e.currentTarget.style.color = 'var(--color-danger)';
                       }}
                     >
-                      <RotateCcw size={12} /> Desfazer Busca
+                      <RotateCcw size={12} /> {undoTexts(item).label}
                     </button>
                   )}
                   <div

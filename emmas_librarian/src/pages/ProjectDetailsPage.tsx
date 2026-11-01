@@ -23,6 +23,7 @@ import { ProjectModalsContainer } from './ProjectDetails/components/ProjectModal
 import { PdfDropOverlay } from './ProjectDetails/components/PdfDropOverlay';
 import { DiarySection } from '../components/common/DiarySection';
 import { SearchHistoryModal } from '../components/modals/SearchHistoryModal';
+import { outsideSearchIds } from '../utils/outsideSearchEntries';
 import { useOpenAccessPdfs } from './ProjectDetails/hooks/useOpenAccessPdfs';
 
 const ARTICLES_PER_PAGE = 50;
@@ -155,6 +156,7 @@ export const ProjectDetailsPage: React.FC = () => {
           onUnlinkPdf={actions.unlinkPdf}
           onAttachPdf={actions.attachPdf}
           openAccess={openAccess}
+          outsideSearchIds={outsideSearchIds(data.history)}
         />
       )}
       {activeTab === 'overview' && (

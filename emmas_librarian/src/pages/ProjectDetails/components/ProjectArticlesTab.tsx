@@ -25,6 +25,8 @@ interface ProjectArticlesTabProps {
   onUnlinkPdf: (articleId: number) => void;
   onAttachPdf: (articleId: number) => void;
   openAccess: OpenAccessPdfs;
+  /** History entries that only brought articles from outside the searches. */
+  outsideSearchIds?: Set<number>;
 }
 
 /**
@@ -153,6 +155,7 @@ const PaginatedArticles: React.FC<ProjectArticlesTabProps> = (props) => {
         setCitationArticle={modals.setCitationArticle}
         selection={selection.selecting ? { isSelected: selection.isSelected, onToggle: selection.toggle } : undefined}
         openAccess={{ stateOf: (id) => props.openAccess.rows[id], onFind: props.openAccess.fetchOne }}
+        outsideSearchIds={props.outsideSearchIds}
       />
       {props.openAccess.report && (
         <OpenAccessReport report={props.openAccess.report} onClose={props.openAccess.closeReport} />

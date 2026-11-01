@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { isOutsideSearchBreakdown } from '../outsideSearchEntries';
+import { isOutsideSearchBreakdown, outsideSearchIds } from '../outsideSearchEntries';
 import { DatabaseAdapter } from '../../../electron/database/DatabaseAdapter';
 import { registerArticleHandlers } from '../../../electron/ipc/handlers/articleHandlers';
 import { IpcChannel } from '../../types';
@@ -16,6 +16,21 @@ describe('isOutsideSearchBreakdown', () => {
     [{}, false],
   ])('%o → %s', (breakdown, expected) => {
     expect(isOutsideSearchBreakdown(breakdown)).toBe(expected);
+  });
+});
+
+describe('outsideSearchIds', () => {
+  it('picks the entries that only brought articles from outside the searches, and survives broken JSON', () => {
+    const entry = (id: number, results_breakdown: string) => ({ id, results_breakdown }) as never;
+
+    const ids = outsideSearchIds([
+      entry(1, '{"openalex":{"count":3}}'),
+      entry(2, '{"Manual":{"count":1}}'),
+      entry(3, '{"import":{"count":2}}'),
+      entry(4, 'não é JSON'),
+    ]);
+
+    expect([...ids]).toEqual([2, 3]);
   });
 });
 
