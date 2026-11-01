@@ -1,6 +1,6 @@
 import type { Database } from 'better-sqlite3';
 import { ProjectRepository } from './ProjectRepository';
-import fs from 'fs';
+import { deletePdfIfUnused } from './sharedPdfFiles';
 
 export class TrashRepository {
   private db: Database;
@@ -46,14 +46,9 @@ export class TrashRepository {
       if (article) {
         this.db.prepare('DELETE FROM highlights WHERE article_id = ?').run(id);
         this.db.prepare('DELETE FROM annotations WHERE article_id = ?').run(id);
-        if (article.local_file_path) {
-          try {
-            if (fs.existsSync(article.local_file_path)) fs.unlinkSync(article.local_file_path);
-          } catch (err) {
-            console.error(`Failed to delete physical PDF for article ${id}:`, err);
-          }
-        }
         this.db.prepare('DELETE FROM articles WHERE id = ?').run(id);
+        // Another article may share the PDF (a copy, the library's one file per content): it stays then (#68).
+        deletePdfIfUnused(this.db, article.local_file_path, `article ${id}`);
       }
     } else if (type === 'annotation') {
       this.db.prepare('DELETE FROM annotations WHERE id = ?').run(id);
