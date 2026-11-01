@@ -32,8 +32,9 @@ import type {
   ScreeningLabelInput,
   ScreeningStage,
   PrismaImageFormat,
-  PrismaManualCount,
-  PrismaManualKey,
+  PrismaExportTables,
+  PrismaRecords,
+  PrismaSourceInput,
   QueryASTNode,
   DatabaseTranslationMap,
   SearchHistoryItem,
@@ -279,12 +280,23 @@ export interface IProjectService {
   undecideScreening(articleIds: number[], stage: ScreeningStage): Promise<number>;
 
   // ── PRISMA diagram (#50) ─────────────────────────────────────────
-  /** Numbers of the diagram typed by hand, with when each was last changed. */
-  getPrismaManualCounts(projectId: number): Promise<PrismaManualCount[]>;
-  /** Sets a hand-typed number, or clears it with null. */
-  setPrismaManualCount(projectId: number, key: PrismaManualKey, value: number | null): Promise<PrismaManualCount[]>;
-  /** Saves the diagram (SVG text or PNG as base64) and its CSV table beside it; answers the image path, or null if cancelled. */
-  exportPrismaDiagram(projectId: number, format: PrismaImageFormat, image: string, csv: string): Promise<string | null>;
+  /** Sources, article origins and same-study links of the project. Every change below answers them anew. */
+  getPrismaRecords(projectId: number): Promise<PrismaRecords>;
+  /** Creates a consulted source, or updates it when the input has an id. */
+  savePrismaSource(projectId: number, input: PrismaSourceInput): Promise<PrismaRecords>;
+  /** Says which source the articles came from; null forgets it. */
+  setPrismaOrigins(projectId: number, articleIds: number[], sourceId: number | null): Promise<PrismaRecords>;
+  /** Marks two publications as of the same study. */
+  linkSameStudy(projectId: number, articleId: number, otherId: number): Promise<PrismaRecords>;
+  /** Undoes a study named by its first article. */
+  unlinkStudy(projectId: number, studyArticleId: number): Promise<PrismaRecords>;
+  /** Saves the diagram (SVG text or PNG as base64) and its two CSV tables beside it; answers the image path, or null if cancelled. */
+  exportPrismaDiagram(
+    projectId: number,
+    format: PrismaImageFormat,
+    image: string,
+    tables: PrismaExportTables,
+  ): Promise<string | null>;
 
   // ── Categories ────────────────────────────────────────────────────
   getProjectCategories(projectId: number): Promise<ProjectCategory[]>;

@@ -45,8 +45,9 @@ import type {
   ScreeningLabelInput,
   ScreeningStage,
   PrismaImageFormat,
-  PrismaManualCount,
-  PrismaManualKey,
+  PrismaExportTables,
+  PrismaRecords,
+  PrismaSourceInput,
   QueryASTNode,
   DatabaseTranslationMap,
 } from '../../../types';
@@ -467,24 +468,59 @@ export class FakeProjectService implements IProjectService {
   );
 
   // ── PRISMA diagram (#50) ────────────────────────────────────────
-  prismaManualCounts: PrismaManualCount[] = [];
+  prismaRecords: PrismaRecords = { sources: [], origins: [], studyLinks: [] };
 
-  getPrismaManualCounts = vi.fn(
-    async (_projectId: number): Promise<PrismaManualCount[]> => [...this.prismaManualCounts],
-  );
+  private prismaSnapshot(): PrismaRecords {
+    const r = this.prismaRecords;
+    return { sources: [...r.sources], origins: [...r.origins], studyLinks: [...r.studyLinks] };
+  }
 
-  setPrismaManualCount = vi.fn(
-    async (_projectId: number, key: PrismaManualKey, value: number | null): Promise<PrismaManualCount[]> => {
-      const others = this.prismaManualCounts.filter((c) => c.count_key !== key);
-      this.prismaManualCounts =
-        value === null ? others : [...others, { count_key: key, value, updated_at: '2026-10-31 12:00:00' }];
-      return [...this.prismaManualCounts];
+  getPrismaRecords = vi.fn(async (_projectId: number): Promise<PrismaRecords> => this.prismaSnapshot());
+
+  savePrismaSource = vi.fn(async (projectId: number, input: PrismaSourceInput): Promise<PrismaRecords> => {
+    const id = input.id ?? this.prismaRecords.sources.length + 1;
+    const source = {
+      id,
+      project_id: projectId,
+      name: input.name,
+      method: input.method,
+      url: input.url ?? null,
+      consulted_on: input.consulted_on ?? null,
+    };
+    this.prismaRecords.sources = [...this.prismaRecords.sources.filter((s) => s.id !== id), source];
+    return this.prismaSnapshot();
+  });
+
+  setPrismaOrigins = vi.fn(
+    async (_projectId: number, articleIds: number[], sourceId: number | null): Promise<PrismaRecords> => {
+      const kept = this.prismaRecords.origins.filter((o) => !articleIds.includes(o.article_id));
+      const added = sourceId === null ? [] : articleIds.map((article_id) => ({ article_id, source_id: sourceId }));
+      this.prismaRecords.origins = [...kept, ...added];
+      return this.prismaSnapshot();
     },
   );
 
+  // Simpler than the repository: enough for the tab's tests, which link articles that are in no study yet.
+  linkSameStudy = vi.fn(async (_projectId: number, articleId: number, otherId: number): Promise<PrismaRecords> => {
+    this.prismaRecords.studyLinks = [
+      ...this.prismaRecords.studyLinks,
+      { article_id: otherId, study_article_id: articleId },
+    ];
+    return this.prismaSnapshot();
+  });
+
+  unlinkStudy = vi.fn(async (_projectId: number, studyArticleId: number): Promise<PrismaRecords> => {
+    this.prismaRecords.studyLinks = this.prismaRecords.studyLinks.filter((l) => l.study_article_id !== studyArticleId);
+    return this.prismaSnapshot();
+  });
+
   exportPrismaDiagram = vi.fn(
-    async (_projectId: number, _format: PrismaImageFormat, _image: string, _csv: string): Promise<string | null> =>
-      '/out/prisma.svg',
+    async (
+      _projectId: number,
+      _format: PrismaImageFormat,
+      _image: string,
+      _tables: PrismaExportTables,
+    ): Promise<string | null> => '/out/prisma.svg',
   );
 
   undecideScreening = vi.fn(async (articleIds: number[], stage: ScreeningStage): Promise<number> => {

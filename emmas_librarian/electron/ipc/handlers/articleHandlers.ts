@@ -4,10 +4,12 @@ import { IpcChannel, type Article } from '../../types';
 import type { ArticleInput, DatabaseAdapter } from '../../database/DatabaseAdapter';
 import { handle, type IpcRegistrar } from './handle';
 import { ensureStorageDir, savePdfToStorage } from './pdfStorage';
+import { OUTSIDE_SEARCH_BASES } from '../../../src/utils/outsideSearchEntries';
 
 type ManualArticleData = Partial<Omit<Article, 'year'>> & { title: string; year?: string | number };
 
-const MANUAL_SOURCES = JSON.stringify(['Manual']);
+const { manual: MANUAL, projectImport: PROJECT_IMPORT } = OUTSIDE_SEARCH_BASES;
+const MANUAL_SOURCES = JSON.stringify([MANUAL]);
 
 /**
  * Article queries, metadata/status updates, cross-project import and manual/PDF-based creation.
@@ -46,17 +48,22 @@ function importFromProject(db: DatabaseAdapter, sourceProjectId: number, destPro
   const searchId = db.saveSearchHistory(
     destProjectId,
     `Importação de artigos do projeto '${sourceName}'`,
-    { import: `Origem: Projeto ID ${sourceProjectId}` },
+    { [PROJECT_IMPORT]: `Origem: Projeto ID ${sourceProjectId}` },
     articleIds.length,
-    { import: { count: articleIds.length } },
+    { [PROJECT_IMPORT]: { count: articleIds.length } },
   );
   db.importArticlesFromProject(sourceProjectId, destProjectId, articleIds, searchId);
+  // The copies come from another project of the app: the PRISMA diagram already knows where they came from (#50).
+  db.tagPrismaSearchEntry(destProjectId, searchId, {
+    name: `Projeto "${sourceName}"`,
+    method: 'app_projects',
+  });
   return searchId;
 }
 
 function createManualArticle(db: DatabaseAdapter, projectId: number, data: ManualArticleData, sourceFilePath?: string) {
   const searchId = logToHistory('Failed to log manual article creation to search history:', () =>
-    db.saveSearchHistory(projectId, `Adição manual de artigo avulso: ${data.title}`, {}, 1, { Manual: { count: 1 } }),
+    db.saveSearchHistory(projectId, `Adição manual de artigo avulso: ${data.title}`, {}, 1, { [MANUAL]: { count: 1 } }),
   );
   const articleId = db.saveArticle(projectId, {
     title: data.title,
@@ -89,7 +96,7 @@ function createArticlesFromPdfs(db: DatabaseAdapter, projectId: number, filePath
     filePaths.length > 0
       ? logToHistory('Failed to log batch import to search history:', () =>
           db.saveSearchHistory(projectId, `Importação em Lote de ${filePaths.length} PDFs`, {}, filePaths.length, {
-            Manual: { count: filePaths.length },
+            [MANUAL]: { count: filePaths.length },
           }),
         )
       : undefined;

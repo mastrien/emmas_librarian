@@ -1,6 +1,6 @@
 import React from 'react';
 import type { PrismaBoxKey } from '../../../utils/prismaFlow';
-import { BAND_W, LINE_H, PAD, type BoxPlace, type PrismaLayout } from './prismaLayout';
+import { BAND_W, FOOTER_LINE_H, HEAD_H, LINE_H, PAD, type BoxPlace, type PrismaLayout } from './prismaLayout';
 
 /** Colours of the diagram: CSS variables on screen (follows the theme), plain hex in exported files. */
 export interface PrismaPalette {
@@ -16,6 +16,8 @@ export interface PrismaPalette {
   bandText: string;
   line: string;
   selected: string;
+  muted: string;
+  link: string;
 }
 
 export const SCREEN_PALETTE: PrismaPalette = {
@@ -31,6 +33,8 @@ export const SCREEN_PALETTE: PrismaPalette = {
   bandText: 'var(--review-read-text)',
   line: '#94a3b8',
   selected: 'var(--color-primary)',
+  muted: 'var(--text-muted)',
+  link: 'var(--color-primary)',
 };
 
 // An exported figure goes into papers and slides: always light, whatever the app's theme.
@@ -47,6 +51,8 @@ export const PRINT_PALETTE: PrismaPalette = {
   bandText: '#3730a3',
   line: '#94a3b8',
   selected: '#4f46e5',
+  muted: '#475569',
+  link: '#4338ca',
 };
 
 interface PrismaDiagramProps {
@@ -117,9 +123,52 @@ const BoxShape: React.FC<{ box: BoxPlace; p: PrismaPalette; selected: boolean; o
   );
 };
 
+const Heads: React.FC<{ layout: PrismaLayout; p: PrismaPalette }> = ({ layout, p }) => (
+  <>
+    {layout.heads.map((head) => (
+      <g key={head.label}>
+        <rect x={head.x} y={0} width={head.w} height={HEAD_H} rx={6} fill={p.band} />
+        <text
+          x={head.x + head.w / 2}
+          y={HEAD_H / 2 + 4}
+          textAnchor="middle"
+          fontFamily={FONT}
+          fontSize={13}
+          fontWeight={600}
+          fill={p.bandText}
+        >
+          {head.label}
+        </text>
+      </g>
+    ))}
+  </>
+);
+
+// The template's reference, with its links clickable in the SVG and written out so a PNG still shows them.
+const Footer: React.FC<{ layout: PrismaLayout; p: PrismaPalette }> = ({ layout, p }) => (
+  <text fontFamily={FONT} fontSize={11} fill={p.muted} aria-label="Referência do modelo PRISMA 2020">
+    {layout.footer.lines.map((line, i) => (
+      <tspan key={i} x={0} y={layout.footer.y + i * FOOTER_LINE_H}>
+        {line.segments.map((segment, j) => {
+          const text = (j > 0 ? ' ' : '') + segment.text;
+          if (!segment.href) return <tspan key={j}>{text}</tspan>;
+          return (
+            <a key={j} href={segment.href} target="_blank" rel="noreferrer">
+              <tspan fill={p.link} textDecoration="underline">
+                {text}
+              </tspan>
+            </a>
+          );
+        })}
+      </tspan>
+    ))}
+  </text>
+);
+
 /**
- * The PRISMA 2020 flow diagram as one SVG that scales to its container. On screen every box is a button that
- * shows where its number comes from; rendered for export (no onSelect, print palette) it is a plain figure.
+ * The PRISMA 2020 flow diagram as one SVG that scales to its container, with its column heads and, under it,
+ * the reference of the template. On screen every box is a button that shows where its number comes from;
+ * rendered for export (no onSelect, print palette) it is a plain figure.
  *
  * @example <PrismaDiagram layout={prismaLayout(flow)} palette={SCREEN_PALETTE} selected="screened" onSelect={setSelected} />
  */
@@ -144,6 +193,7 @@ export const PrismaDiagram: React.FC<PrismaDiagramProps> = ({
         <path d="M0 0 L6 3 L0 6 Z" fill={p.line} />
       </marker>
     </defs>
+    <Heads layout={layout} p={p} />
     {layout.bands.map((band) => (
       <g key={band.label}>
         <rect x={0} y={band.y} width={BAND_W} height={band.h} rx={6} fill={p.band} />
@@ -168,7 +218,7 @@ export const PrismaDiagram: React.FC<PrismaDiagramProps> = ({
         y2={a.y2}
         stroke={p.line}
         strokeWidth={2}
-        markerEnd="url(#prisma-arrow)"
+        markerEnd={a.head ? 'url(#prisma-arrow)' : undefined}
       />
     ))}
     {layout.boxes.map((box) => (
@@ -180,5 +230,6 @@ export const PrismaDiagram: React.FC<PrismaDiagramProps> = ({
         onSelect={onSelect ? () => onSelect(box.key) : undefined}
       />
     ))}
+    <Footer layout={layout} p={p} />
   </svg>
 );

@@ -250,8 +250,11 @@ export enum IpcChannel {
   SCREENING_DECISIONS_LIST = 'screening:decisions',
   SCREENING_DECIDE = 'screening:decide',
   SCREENING_UNDECIDE = 'screening:undecide',
-  PRISMA_MANUAL_GET = 'prisma:manualGet',
-  PRISMA_MANUAL_SET = 'prisma:manualSet',
+  PRISMA_RECORDS_GET = 'prisma:recordsGet',
+  PRISMA_SOURCE_SAVE = 'prisma:sourceSave',
+  PRISMA_ORIGINS_SET = 'prisma:originsSet',
+  PRISMA_STUDY_LINK = 'prisma:studyLink',
+  PRISMA_STUDY_UNLINK = 'prisma:studyUnlink',
   EXPORT_PRISMA = 'export:prisma',
   PDF_LIBRARY_LIST = 'pdfLibrary:list',
   PDF_LIBRARY_DELETE = 'pdfLibrary:delete',
@@ -387,18 +390,56 @@ export interface ScreeningDecision {
   decided_at: string;
 }
 
-/** Numbers of the PRISMA diagram a person may type by hand (#50): records from sources outside the app. */
-export type PrismaManualKey = 'other_sources';
+/** The PRISMA 2020 "other methods" an article from outside the searches was found by (#50). */
+export type PrismaSourceMethod = 'citations' | 'websites' | 'organisations' | 'app_projects' | 'other';
 
-/** A number typed by hand into the PRISMA diagram, with when it was last changed. */
-export interface PrismaManualCount {
-  count_key: PrismaManualKey;
-  value: number;
-  updated_at: string;
+/** A source a person consulted outside the app's searches: a website, a reference list, another project. */
+export interface PrismaSource {
+  id: number;
+  project_id: number;
+  name: string;
+  method: PrismaSourceMethod;
+  url: string | null;
+  /** YYYY-MM-DD, the day it was consulted (PRISMA item 6). */
+  consulted_on: string | null;
 }
 
-/** File type of the PRISMA diagram export; the data table always goes with it as CSV. */
+/** A source as typed in the review page; without id it is new. */
+export interface PrismaSourceInput {
+  id?: number;
+  name: string;
+  method: PrismaSourceMethod;
+  url?: string | null;
+  consulted_on?: string | null;
+}
+
+/** Where one article from outside the searches came from. */
+export interface PrismaArticleOrigin {
+  article_id: number;
+  source_id: number;
+}
+
+/** One publication marked as of the same study as another; the study is named by its first article. */
+export interface PrismaStudyLink {
+  article_id: number;
+  study_article_id: number;
+}
+
+/** What the person told the app about a project's PRISMA diagram: sources, origins and studies. */
+export interface PrismaRecords {
+  sources: PrismaSource[];
+  origins: PrismaArticleOrigin[];
+  studyLinks: PrismaStudyLink[];
+}
+
+/** File type of the PRISMA diagram export; the data tables always go with it as CSV. */
 export type PrismaImageFormat = 'svg' | 'png';
+
+/** The CSV tables saved beside the exported diagram: its numbers, and the excluded reports (item 16b). */
+export interface PrismaExportTables {
+  data: string;
+  excluded: string;
+}
 
 /** A new label as typed in the labels window. */
 export interface ScreeningLabelInput {

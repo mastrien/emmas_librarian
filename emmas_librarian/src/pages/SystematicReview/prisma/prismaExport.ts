@@ -1,8 +1,8 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { PrismaImageFormat } from '../../../types';
+import type { PrismaExportTables, PrismaImageFormat } from '../../../types';
 import type { IProjectService } from '../../../services/ProjectServiceInterface';
-import { prismaTableCsv, type PrismaFlow } from '../../../utils/prismaFlow';
+import type { PrismaFlow } from '../../../utils/prismaFlow';
 import { PrismaDiagram, PRINT_PALETTE } from './PrismaDiagram';
 import { prismaLayout } from './prismaLayout';
 
@@ -10,12 +10,12 @@ import { prismaLayout } from './prismaLayout';
 export type Rasterize = (svg: string, width: number, height: number) => Promise<string>;
 
 /**
- * The diagram as a standalone SVG file: light palette, size in px, no buttons.
+ * The diagram as a standalone SVG file: light palette, size in px, no buttons, the reference dated `today`.
  *
- * @example diagramSvgText(flow).startsWith('<svg') // true
+ * @example diagramSvgText(flow, new Date()).startsWith('<svg') // true
  */
-export function diagramSvgText(flow: PrismaFlow): string {
-  const layout = prismaLayout(flow);
+export function diagramSvgText(flow: PrismaFlow, today: Date): string {
+  const layout = prismaLayout(flow, today);
   return renderToStaticMarkup(React.createElement(PrismaDiagram, { layout, palette: PRINT_PALETTE, fixedSize: true }));
 }
 
@@ -48,20 +48,29 @@ export const browserRasterize: Rasterize = (svg, width, height) =>
   });
 
 /**
- * Exports the diagram as SVG or PNG with its data table, through the main process. Answers where the image was
+ * What one export takes: the format, the flow and its two tables, the day for the reference's access date.
+ */
+export interface PrismaExportJob {
+  format: PrismaImageFormat;
+  flow: PrismaFlow;
+  tables: PrismaExportTables;
+  today: Date;
+}
+
+/**
+ * Exports the diagram as SVG or PNG with its two tables, through the main process. Answers where the image was
  * saved, or null when the person cancelled the dialog.
  *
- * @example await exportPrismaDiagram(service, 3, 'png', flow);
+ * @example await exportPrismaDiagram(service, 3, { format: 'png', flow, tables, today: new Date() });
  */
 export async function exportPrismaDiagram(
   service: IProjectService,
   projectId: number,
-  format: PrismaImageFormat,
-  flow: PrismaFlow,
+  job: PrismaExportJob,
   rasterize: Rasterize = browserRasterize,
 ): Promise<string | null> {
-  const svg = diagramSvgText(flow);
-  const layout = prismaLayout(flow);
-  const image = format === 'png' ? await rasterize(svg, layout.width, layout.height) : svg;
-  return service.exportPrismaDiagram(projectId, format, image, prismaTableCsv(flow));
+  const svg = diagramSvgText(job.flow, job.today);
+  const layout = prismaLayout(job.flow, job.today);
+  const image = job.format === 'png' ? await rasterize(svg, layout.width, layout.height) : svg;
+  return service.exportPrismaDiagram(projectId, job.format, image, job.tables);
 }

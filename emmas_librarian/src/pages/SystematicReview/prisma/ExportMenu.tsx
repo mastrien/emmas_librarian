@@ -3,12 +3,12 @@ import type { PrismaImageFormat } from '../../../types';
 import { useCloseOnOutside } from '../LabelMenu';
 
 const OPTIONS: { format: PrismaImageFormat; title: string; hint: string }[] = [
-  { format: 'svg', title: 'SVG + tabela de dados (CSV)', hint: 'Vetor, para o artigo; a tabela vai junto' },
-  { format: 'png', title: 'PNG + tabela de dados (CSV)', hint: 'Imagem, para slides; a tabela vai junto' },
+  { format: 'svg', title: 'SVG + tabelas (CSV)', hint: 'Vetor, para o artigo' },
+  { format: 'png', title: 'PNG + tabelas (CSV)', hint: 'Imagem, para slides' },
 ];
 
 /**
- * "Exportar ▾" of the PRISMA tab: SVG or PNG, the data table always beside the image.
+ * "Exportar ▾" of the PRISMA tab: SVG or PNG, the two CSV tables always beside the image.
  *
  * @example <ExportMenu onPick={(format) => exportDiagram(format)} />
  */
@@ -31,7 +31,7 @@ export const ExportMenu: React.FC<{ onPick: (format: PrismaImageFormat) => void 
         Exportar ▾
       </button>
       {open && (
-        <div className="review-menu" role="menu" aria-label="Exportar o diagrama" style={{ width: '300px' }}>
+        <div className="review-menu" role="menu" aria-label="Exportar o diagrama" style={{ width: '320px' }}>
           {OPTIONS.map((o) => (
             <button
               key={o.format}
@@ -47,7 +47,9 @@ export const ExportMenu: React.FC<{ onPick: (format: PrismaImageFormat) => void 
             </button>
           ))}
           <p className="review-muted" style={{ margin: '0.4rem 0.5rem 0.2rem', lineHeight: 1.5 }}>
-            Caixas com aviso saem com o aviso. O app não corrige nenhum número sozinho.
+            Vão junto duas tabelas: a de dados do diagrama e a lista de publicações excluídas e não recuperadas, com o
+            motivo (item 16b da PRISMA). A imagem leva no rodapé a referência do modelo PRISMA, com link. Caixas com
+            aviso saem com o aviso; o app não corrige nenhum número sozinho.
           </p>
         </div>
       )}

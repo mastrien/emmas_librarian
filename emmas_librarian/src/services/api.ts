@@ -16,8 +16,9 @@ import {
   type ScreeningLabelInput,
   type ScreeningStage,
   type PrismaImageFormat,
-  type PrismaManualCount,
-  type PrismaManualKey,
+  type PrismaExportTables,
+  type PrismaRecords,
+  type PrismaSourceInput,
   type QueryASTNode,
   type DatabaseTranslationMap,
   type SearchHistoryItem,
@@ -433,16 +434,21 @@ export const projectService: IProjectService = {
   ): Promise<number> => safeInvoke(IpcChannel.SCREENING_DECIDE, articleIds, labelId, stage, note ?? null),
   undecideScreening: (articleIds: number[], stage: ScreeningStage): Promise<number> =>
     safeInvoke(IpcChannel.SCREENING_UNDECIDE, articleIds, stage),
-  getPrismaManualCounts: (projectId: number): Promise<PrismaManualCount[]> =>
-    safeInvoke(IpcChannel.PRISMA_MANUAL_GET, projectId),
-  setPrismaManualCount: (projectId: number, key: PrismaManualKey, value: number | null): Promise<PrismaManualCount[]> =>
-    safeInvoke(IpcChannel.PRISMA_MANUAL_SET, projectId, key, value),
+  getPrismaRecords: (projectId: number): Promise<PrismaRecords> => safeInvoke(IpcChannel.PRISMA_RECORDS_GET, projectId),
+  savePrismaSource: (projectId: number, input: PrismaSourceInput): Promise<PrismaRecords> =>
+    safeInvoke(IpcChannel.PRISMA_SOURCE_SAVE, projectId, input),
+  setPrismaOrigins: (projectId: number, articleIds: number[], sourceId: number | null): Promise<PrismaRecords> =>
+    safeInvoke(IpcChannel.PRISMA_ORIGINS_SET, projectId, articleIds, sourceId),
+  linkSameStudy: (projectId: number, articleId: number, otherId: number): Promise<PrismaRecords> =>
+    safeInvoke(IpcChannel.PRISMA_STUDY_LINK, projectId, articleId, otherId),
+  unlinkStudy: (projectId: number, studyArticleId: number): Promise<PrismaRecords> =>
+    safeInvoke(IpcChannel.PRISMA_STUDY_UNLINK, projectId, studyArticleId),
   exportPrismaDiagram: (
     projectId: number,
     format: PrismaImageFormat,
     image: string,
-    csv: string,
-  ): Promise<string | null> => safeInvoke(IpcChannel.EXPORT_PRISMA, projectId, format, image, csv),
+    tables: PrismaExportTables,
+  ): Promise<string | null> => safeInvoke(IpcChannel.EXPORT_PRISMA, projectId, format, image, tables),
 
   reviewInvestigationResult: (resultId: number, review: ResultReview): Promise<InvestigationResult> =>
     safeInvoke(IpcChannel.INVESTIGATION_RESULT_REVIEW, resultId, review),
