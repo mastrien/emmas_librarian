@@ -85,8 +85,9 @@ Desenvolver um loading customizado que lembre a logo do sistema, similar a um gi
 Aberto em 2026-10-18 (PR #62). Os chunks que a IA lê seguem de uma página para a outra, com o cabeçalho ou rodapé da
 página no meio ("1702 JOURNAL OF CLIMATE VOLUME 23 Unauthenticated…"). A IA pula esse texto ao citar, com ou sem
 "...", e o leitor procura a citação numa página só. No projeto de previsão de precipitação foram 5 das 102 citações.
-Corrigir pede destaque em duas páginas e reconhecer o que pular no meio. Perde o sentido se a evidência passar a ser
-copiada do chunk em vez de redigitada pela IA (#63).
+Corrigir pede destaque em duas páginas e reconhecer o que pular no meio. Continua valendo depois da #63: a evidência
+agora é copiada do chunk, mas uma cópia que atravessa a página traz o cabeçalho junto e o leitor ainda procura numa
+página só.
 
 ## Chunks cortados no meio da palavra (pendente)
 
@@ -94,3 +95,13 @@ Aberto em 2026-10-18 (PR #62). `PdfExtractor` fecha um chunk a cada ~1000 caract
 meio de uma frase ou palavra ("precipita"), e a IA completa a palavra por conta própria ao citar. Cortar em fim de
 frase deixaria os trechos mais limpos, mas muda os chunks e os embeddings de toda a biblioteca (reindexar) e a busca
 semântica. Medir antes o efeito nas respostas.
+
+## Limpar cabeçalhos, rodapés e afiliações do texto extraído (pendente)
+
+Aberto em 2026-11-01 (#63). O texto que `PdfExtractor` entrega mistura o corpo do artigo com título, lista de autores
+e instituições, cabeçalhos de página e rodapés de licença ("This is an open access article…", "See the Terms and
+Conditions… Wiley"), às vezes no meio de uma frase. No teste da #63 (gpt-oss:120b, 40 casos de artigos abertos do
+projeto de precipitação) isso fez a opção de frases numeradas apontar 6 de 70 evidências para linhas de autores e
+rodapés, e errar um número do ERA5 ("de 67% para 77%" virou "para 67%", com a licença no meio da frase). Tirar esse
+texto antes de montar os chunks deixaria as evidências e a busca semântica mais limpas, e poderia reabrir a opção de
+frases numeradas. Muda os chunks e os embeddings da biblioteca (reindexar): medir antes.

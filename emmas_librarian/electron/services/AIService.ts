@@ -7,6 +7,8 @@ import { extractTextWithCoordinates } from './PdfExtractor';
 import { AppError } from '../ipc/errorHandler';
 import { parseAndRepairJson } from './llm/jsonRepair';
 import { OllamaCloudGateway } from './llm/OllamaCloudGateway';
+import { quotePrompt } from './extraction/extractionPrompts';
+import { anchorEvidence, type AiEvidence, type ExtractionChunk } from './extraction/evidenceAnchoring';
 import { AnthropicGateway } from './llm/AnthropicGateway';
 
 export class AIService {
@@ -336,36 +338,14 @@ ${truncatedText}
     for (const question of questions) {
       const queryEmbedding = await embeddingService.embed(question);
       const relevantChunks = vectorStore.searchSimilar(queryEmbedding, extractionConfig.topK, articleId);
-      const contextPrompt = relevantChunks
-        .map(
-          (c: any, i: number) =>
-            `[Trecho ${i + 1} - Página ${c.page} - Score: ${(1 / (1 + c.similarityScore)).toFixed(2)}]\n${c.text}`,
-        )
-        .join('\n\n');
-
-      const prompt = `Você é um assistente acadêmico RAG. Baseado nos trechos do texto fornecidos, responda à pergunta.
-A sua resposta deve ser EXATAMENTE um objeto JSON válido (sem tags markdown de código), no seguinte formato:
-{
-  "question": "${question}",
-  "synthesizedAnswer": "Sua resposta completa",
-  "confidenceScore": 0.95,
-  "evidences": [
-    {
-      "text": "trecho EXATO e COMPLETO do texto original usado como base (nunca extraia apenas palavras soltas; extraia a frase inteira ou parágrafo completo que contém a informação)",
-      "page": 1,
-      "score": 0.85,
-      "reasoning": "Por que este trecho justifica a resposta"
-    }
-  ]
-}
-Se não for possível encontrar a resposta nos trechos, responda com confidenceScore baixo e evidences vazias. Copie o score do trecho correspondente para o campo 'score'.
-
-PERGUNTA:
-${question}
-
-TRECHOS:
-${contextPrompt}
-`;
+      // The prompt text lives in extractionPrompts.ts.
+      const chunks: ExtractionChunk[] = relevantChunks.map((c: any) => ({
+        text: c.text,
+        page: c.page,
+        bbox: c.bbox,
+        score: 1 / (1 + c.similarityScore),
+      }));
+      const prompt = quotePrompt(question, chunks);
       let result = await this.generateCompletion(prompt, 'extraction');
       result = result
         .replace(/```json/g, '')
@@ -374,18 +354,10 @@ ${contextPrompt}
 
       try {
         const parsed = JSON.parse(result);
-        if (parsed.evidences && parsed.evidences.length > 0) {
-          for (const ev of parsed.evidences) {
-            const matchedChunk = relevantChunks.find(
-              (c: any) => c.page === ev.page && (c.text.includes(ev.text) || ev.text.includes(c.text)),
-            );
-            if (matchedChunk && matchedChunk.bbox && matchedChunk.bbox.w > 0) {
-              ev.bbox = matchedChunk.bbox;
-              if (!ev.score) ev.score = Number((1 / (1 + matchedChunk.similarityScore)).toFixed(2));
-            } else {
-              ev.bbox = null;
-            }
-          }
+        // Each evidence is the chunk's own text: the AI re-types quotes, so its text is looked for in the chunks
+        // it read and the matching part is copied, or the whole chunk when it cannot be found (#63).
+        if (Array.isArray(parsed.evidences)) {
+          parsed.evidences = parsed.evidences.map((ev: AiEvidence) => anchorEvidence(ev, chunks));
         }
         results.push(parsed);
 

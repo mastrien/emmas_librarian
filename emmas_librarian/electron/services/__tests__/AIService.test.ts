@@ -169,7 +169,7 @@ describe('AIService', () => {
           {
             message: {
               content:
-                '{"question": "Q1?", "synthesizedAnswer": "A1", "confidenceScore": 0.9, "evidences": [{"text": "quote", "page": 1, "reasoning": "bla"}]}',
+                '{"question": "Q1?", "synthesizedAnswer": "A1", "confidenceScore": 0.9, "evidences": [{"text": "Context-chunk 2.", "page": 2, "reasoning": "bla"}, {"text": "not in any chunk", "page": 1}]}',
             },
           },
         ],
@@ -182,7 +182,16 @@ describe('AIService', () => {
     expect(results).toHaveLength(1);
     expect(results[0].question).toBe('Q1?');
     expect(results[0].synthesizedAnswer).toBe('A1');
-    expect(results[0].evidences[0].text).toBe('quote');
+    // #63: each evidence is copied from the chunk the AI read; one it re-typed beyond recognition keeps the whole chunk.
+    expect(results[0].evidences.map((e: { text: string; match: string }) => [e.text, e.match])).toEqual([
+      ['context chunk 2', 'exact'],
+      ['Mocked context chunk 1', 'chunk'],
+    ]);
+    expect(results[0].evidences[0].aiText).toBe('Context-chunk 2.');
+    expect(dbMock.savePendingHighlight.mock.calls.map((c: unknown[]) => c[1])).toEqual([
+      'context chunk 2',
+      'Mocked context chunk 1',
+    ]);
   });
 
   // Regression: the local embedding model was cached inside app.asar; AIService must pass the models folder on.
