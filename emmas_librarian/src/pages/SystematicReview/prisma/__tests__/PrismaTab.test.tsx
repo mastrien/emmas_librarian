@@ -1,13 +1,10 @@
-import { render, screen, fireEvent, within, waitFor, configure } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 import { SystematicReviewPage } from '../../SystematicReviewPage';
 import { ServicesProvider } from '../../../../contexts/ServicesContext';
 import type { FakeProjectService } from '../../../../services/__tests__/fakes/FakeProjectService';
 import { prismaService } from './prismaTestData';
-
-// Each action goes through the service and a reload; under the coverage run in CI that can take over the default 1 s.
-configure({ asyncUtilTimeout: 4000 });
 
 function renderPrisma(service: FakeProjectService, path = '/projects/1/review/prisma') {
   render(

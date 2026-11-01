@@ -41,8 +41,8 @@ const count = (db: Database.Database, table: string) =>
   (db.prepare(`SELECT count(*) AS n FROM "${table}"`).get() as { n: number }).n;
 
 // Each test builds the whole schema and a full library, and the first one also loads sqlite-vec: ~350 ms here,
-// but 9.5 s on the Windows CI runner (unit job of #19 failed on the 5 s default).
-const BUILDS_A_FULL_LIBRARY = { timeout: 30_000 };
+// but 9.5 s on the Windows CI runner (unit job of #19 failed on the 5 s default) and once 41.6 s (#66).
+const BUILDS_A_FULL_LIBRARY = { timeout: 60_000 };
 
 describe('copyLibraryInto', BUILDS_A_FULL_LIBRARY, () => {
   it('copies every row with its id into a library with the same schema', () => {

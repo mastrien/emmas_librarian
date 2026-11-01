@@ -11,6 +11,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts'],
+    // The CI runners, Windows above all, are slow at disk work while hundreds of files run with coverage: a
+    // backup restore (#48), a full library copy and a file rename (#66, #69) passed 5 s there and nowhere else.
+    // Locally the default stays, so a test that really became slow still shows.
+    testTimeout: process.env.CI ? 20_000 : 5_000,
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
