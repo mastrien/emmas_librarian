@@ -11,7 +11,7 @@
 import type { SearchLimits } from '../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
 import type { AuditParams } from '../utils/auditSampling';
-import type { OpenAccessOutcome, SearchReportFormat } from '../types';
+import type { CategoryOption, OpenAccessOutcome, SearchReportFormat } from '../types';
 import type {
   SearchPreview,
   SavedSearchSummary,
@@ -308,13 +308,14 @@ export interface IProjectService {
     projectId: number,
     name: string,
     type: string,
-    options?: Record<string, unknown> | null,
+    /** The options of a list category, each with its id when it already exists. */
+    options?: CategoryOption[] | null,
   ): Promise<number>;
   updateProjectCategory(
     categoryId: number,
     name: string,
     type: string,
-    options?: Record<string, unknown> | null,
+    options?: CategoryOption[] | null,
   ): Promise<void>;
   deleteProjectCategory(categoryId: number): Promise<void>;
   getArticleCategories(articleId: number): Promise<ArticleCategory[]>;

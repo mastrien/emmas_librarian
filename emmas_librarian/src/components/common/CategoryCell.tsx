@@ -88,12 +88,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
             : localOptions.map((n) => ({ name: n }));
           updatedOptions.push({ name: trimmed });
           try {
-            await projectService.updateProjectCategory(
-              category.id,
-              category.name,
-              category.type,
-              updatedOptions as any,
-            );
+            await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions);
             setLocalOptions([...localOptions, trimmed]);
             handleSave(trimmed);
           } catch (err) {
@@ -202,12 +197,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
           updatedOptions.push({ name: trimmed });
 
           try {
-            await projectService.updateProjectCategory(
-              category.id,
-              category.name,
-              category.type,
-              updatedOptions as any,
-            );
+            await projectService.updateProjectCategory(category.id, category.name, category.type, updatedOptions);
             setLocalOptions([...localOptions, trimmed]);
 
             const newSelected = [...selectedValues, trimmed];

@@ -13,6 +13,7 @@ describe('CategoryTemplatesPanel (#46)', () => {
   let props: CategoryTemplatesPanelProps;
 
   beforeEach(() => {
+    // The panel answers inside the modal (validation of epic #44); native dialogs must stay unused.
     alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
     confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     props = {
@@ -24,7 +25,11 @@ describe('CategoryTemplatesPanel (#46)', () => {
     };
   });
 
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(confirmSpy).not.toHaveBeenCalled();
+    vi.restoreAllMocks();
+  });
 
   const click = async (name: string) => {
     await act(async () => {
@@ -32,49 +37,60 @@ describe('CategoryTemplatesPanel (#46)', () => {
     });
   };
 
-  it('applies the chosen template to an empty project without asking, then reloads', async () => {
+  it('applies the chosen template to an empty project without asking, then reloads and says what it did', async () => {
     render(<CategoryTemplatesPanel {...props} />);
     fireEvent.change(screen.getByLabelText('Modelo de categorias'), { target: { value: 'methodological-quality' } });
 
     await click('Usar modelo');
 
-    expect(confirmSpy).not.toHaveBeenCalled();
     expect(props.applySet).toHaveBeenCalledWith(CATEGORY_TEMPLATES[2].categories);
-    expect(alertSpy).toHaveBeenCalledWith('1 categoria criada.');
+    expect(screen.getByRole('status')).toHaveTextContent('1 categoria criada.');
     expect(props.onApplied).toHaveBeenCalled();
   });
 
-  it('asks before adding to a project that has categories, and does nothing on "no"', async () => {
-    confirmSpy.mockReturnValue(false);
+  it('asks inside the panel before adding to a project that has categories, and does nothing on "Cancelar"', async () => {
     render(<CategoryTemplatesPanel {...props} categories={existing} />);
 
     await click('Usar modelo');
+    expect(screen.getByRole('alertdialog')).toHaveTextContent('Nada é apagado');
+    await click('Cancelar');
 
-    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Nada é apagado'));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(props.applySet).not.toHaveBeenCalled();
+  });
+
+  it('adds the set once the question is answered with "Acrescentar"', async () => {
+    render(<CategoryTemplatesPanel {...props} categories={existing} />);
+
+    await click('Usar modelo');
+    await click('Acrescentar');
+
+    expect(props.applySet).toHaveBeenCalledWith(CATEGORY_TEMPLATES[0].categories);
+    expect(screen.getByRole('status')).toHaveTextContent('1 categoria criada.');
   });
 
   it('shows why an imported file was refused', async () => {
     props.readSetFile = vi.fn().mockRejectedValue(new Error('[ERR_INVALID_CATEGORY_SET] Tipo desconhecido'));
     render(<CategoryTemplatesPanel {...props} />);
 
-    await click('Importar categorias (JSON)');
+    await click('Importar JSON');
 
-    expect(alertSpy).toHaveBeenCalledWith(expect.stringMatching(/Não foi possível importar.*ERR_INVALID_CATEGORY_SET/));
+    expect(screen.getByRole('status')).toHaveTextContent(/Não foi possível importar.*ERR_INVALID_CATEGORY_SET/);
     expect(props.applySet).not.toHaveBeenCalled();
   });
 
   it('exports the project’s categories as a category set file', async () => {
     render(<CategoryTemplatesPanel {...props} categories={existing} />);
 
-    await click('Exportar categorias (JSON)');
+    await click('Exportar JSON');
 
     expect(props.saveFile).toHaveBeenCalledWith(expect.stringContaining('"emma-category-set"'), 'categorias.json');
+    expect(screen.getByRole('status')).toHaveTextContent('Categorias exportadas.');
   });
 
   it('cannot export a project without categories', () => {
     render(<CategoryTemplatesPanel {...props} />);
 
-    expect(screen.getByRole('button', { name: 'Exportar categorias (JSON)' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Exportar JSON' })).toBeDisabled();
   });
 });

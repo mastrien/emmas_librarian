@@ -78,7 +78,8 @@ export const CATEGORY_TEMPLATES: CategoryTemplate[] = [
 
 const hasOptions = (type: CategoryKind): boolean => type === 'enum' || type === 'multiselect';
 
-function categoryOptionNames(category: ProjectCategory): string[] {
+/** The option names of a list category, from its relational options or the legacy comma list. */
+export function categoryOptionNames(category: ProjectCategory): string[] {
   if (category.parsedOptions) return category.parsedOptions.map((o) => o.name);
   return (category.options ?? '')
     .split(',')

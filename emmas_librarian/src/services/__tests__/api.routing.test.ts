@@ -382,9 +382,9 @@ const routes: RouteCase[] = [
   },
   {
     method: 'createProjectCategory',
-    call: () => api.createProjectCategory(1, 'C', 'select', { options: ['a'] }),
+    call: () => api.createProjectCategory(1, 'C', 'enum', [{ name: 'a' }]),
     channel: IpcChannel.CATEGORIES_CREATE_PROJECT,
-    args: [1, 'C', 'select', { options: ['a'] }],
+    args: [1, 'C', 'enum', [{ name: 'a' }]],
   },
   {
     method: 'updateProjectCategory',

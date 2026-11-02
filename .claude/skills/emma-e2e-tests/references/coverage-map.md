@@ -13,7 +13,7 @@ Update this table when you add or extend a spec.
 | `open_access.spec.js` (F-18) | "Vincular PDF" → "Buscar PDF aberto" on a manual article with DOI (mocked lookup), then a selection batch | row says "PDF baixado. Fonte: Repositório E2E." and shows "Ler"; report "0 de 2 baixados" grouped (no DOI, already had PDF); the reader opens the downloaded PDF |
 | `backup.spec.js` (F-09) | Full backup creation | alert, real `.emmabak` with emma.db + metadata |
 | `error_flows.spec.js` (F-10) | Duplicate project name | error, stays on form, no second project |
-| `categories.spec.js` (F-11) | Create text/list/boolean categories, classify in the reader, Categories tab, CSV | values after reload, CSV columns |
+| `categories.spec.js` (F-11) | Create text/list/boolean categories, classify in the reader, Categories tab, CSV | the list row sums up its options; the modal is 720px and nothing spills past it on a 1000px window; values after reload, CSV columns |
 | `backup_restore.spec.js` (F-12) | "Restaurar e Sobrescrever" | library equals backup, PDF deleted from disk comes back and opens |
 | `backup_restore.spec.js` (F-14) | "Restaurar e Sobrescrever" into another data folder (old one deleted) | restored PDF still opens in the reader (paths rebased to this userData) |
 | `backup_restore.spec.js` (F-13) | "Importar e Mesclar" into another library | project + PDF merged, second merge imports nothing |
