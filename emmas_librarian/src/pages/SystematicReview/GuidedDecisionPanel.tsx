@@ -140,7 +140,8 @@ export const GuidedDecisionPanel: React.FC<GuidedDecisionPanelProps> = (props) =
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="ex.: só usa radar, sem satélite"
-          style={{ font: 'inherit', padding: '0.5rem', resize: 'vertical' }}
+          className="input-field"
+          style={{ font: 'inherit', resize: 'vertical' }}
         />
       </label>
       <p className="review-muted" style={{ margin: 0 }}>

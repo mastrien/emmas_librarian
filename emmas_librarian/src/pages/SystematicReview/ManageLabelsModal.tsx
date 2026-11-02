@@ -59,7 +59,11 @@ const DeletePrompt: React.FC<{
         <>
           <label className="review-muted" style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
             Mover para
-            <select value={target} onChange={(e) => setTarget(Number(e.target.value))}>
+            <select
+              className="input-field input-compact"
+              value={target}
+              onChange={(e) => setTarget(Number(e.target.value))}
+            >
               {others.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.name}
@@ -113,7 +117,8 @@ const LabelLine: React.FC<{ label: ScreeningLabel; count: number; others: Screen
           onChange={(e) => setName(e.target.value)}
           onBlur={rename}
           onKeyDown={(e) => e.key === 'Enter' && rename()}
-          style={{ flex: 1, minWidth: 0, padding: '0.45rem 0.6rem' }}
+          className="input-field input-compact"
+          style={{ flex: 1, minWidth: 0 }}
         />
         <span className="review-muted" style={{ minWidth: '84px', textAlign: 'right' }}>
           {count === 0 ? 'sem artigos' : articlesCount(count)}
@@ -173,9 +178,15 @@ const NewLabelForm: React.FC<{ projectId: number; run: Run }> = ({ projectId, ru
         placeholder="ex.: Fora do período"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        style={{ flex: '1 1 200px', minWidth: 0, padding: '0.45rem 0.6rem' }}
+        className="input-field input-compact"
+        style={{ flex: '1 1 200px', minWidth: 0 }}
       />
-      <select aria-label="Tipo do rótulo" value={kind} onChange={(e) => setKind(e.target.value as ScreeningKind)}>
+      <select
+        className="input-field input-compact"
+        aria-label="Tipo do rótulo"
+        value={kind}
+        onChange={(e) => setKind(e.target.value as ScreeningKind)}
+      >
         {KINDS.map((k) => (
           <option key={k} value={k}>
             {KIND_TITLE[k]}
