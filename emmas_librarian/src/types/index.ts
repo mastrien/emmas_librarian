@@ -201,6 +201,8 @@ export enum IpcChannel {
   AI_GENERATE_SUMMARY = 'ai:generateSummary',
   AI_MASSIVE_EXTRACTION = 'ai:massiveExtraction',
   AI_EXTRACT_METADATA = 'ai:extractMetadata',
+  AI_PROJECT_INDEX_COVERAGE = 'ai:projectIndexCoverage',
+  AI_ASK_PROJECT = 'ai:askProject',
   AI_MODEL_CONFIG_GET_ALL = 'aiModelConfig:getAll',
   AI_MODEL_CONFIG_UPDATE = 'aiModelConfig:update',
   AI_MODEL_CONFIG_RESTORE = 'aiModelConfig:restore',
@@ -709,4 +711,44 @@ export interface UpdateStatusResponse {
   downloadProgress: DownloadProgressPayload | null;
   error: string | null;
   state: UpdateStateRecord | null;
+}
+
+/** An article as a question over the project sees it (#53). */
+export interface ProjectIndexArticle {
+  id: number;
+  title: string;
+  authors: string | null;
+  year: number | null;
+}
+
+/** What a question over a project can read: indexed articles, those left out and why, and which model indexed them. */
+export interface ProjectIndexCoverage {
+  total: number;
+  indexed: ProjectIndexArticle[];
+  withoutIndex: ProjectIndexArticle[];
+  withoutPdf: ProjectIndexArticle[];
+  otherModel: ProjectIndexArticle[];
+  unknownModel: ProjectIndexArticle[];
+}
+
+export interface ProjectCitation {
+  articleId: number;
+  title: string;
+  authors: string | null;
+  year: number | null;
+  page: number;
+  bbox: { x: number; y: number; w: number; h: number };
+  text: string;
+}
+
+export interface ProjectClaim {
+  text: string;
+  citations: ProjectCitation[];
+}
+
+/** No claims means the articles read do not answer the question, or that none could be read. */
+export interface ProjectAnswer {
+  question: string;
+  claims: ProjectClaim[];
+  coverage: ProjectIndexCoverage;
 }

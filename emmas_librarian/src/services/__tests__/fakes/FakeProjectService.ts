@@ -7,6 +7,8 @@ import type {
   CitationRequest,
   CitationSeed,
   MonitorOverview,
+  ProjectAnswer,
+  ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
   OpenAccessOutcome,
@@ -337,6 +339,25 @@ export class FakeProjectService implements IProjectService {
     async (_articleId: number): Promise<ArticleSummary> => ({
       generalSummary: '',
       sectionSummary: '',
+    }),
+  );
+
+  getProjectIndexCoverage = vi.fn(
+    async (_projectId: number): Promise<ProjectIndexCoverage> => ({
+      total: 0,
+      indexed: [],
+      withoutIndex: [],
+      withoutPdf: [],
+      otherModel: [],
+      unknownModel: [],
+    }),
+  );
+
+  askProject = vi.fn(
+    async (_projectId: number, question: string): Promise<ProjectAnswer> => ({
+      question,
+      claims: [],
+      coverage: { total: 0, indexed: [], withoutIndex: [], withoutPdf: [], otherModel: [], unknownModel: [] },
     }),
   );
 

@@ -351,6 +351,18 @@ const routes: RouteCase[] = [
   { method: 'getAppVersion', call: () => api.getAppVersion(), channel: IpcChannel.APP_GET_VERSION, args: [] },
   { method: 'generateSummary', call: () => api.generateSummary(2), channel: IpcChannel.AI_GENERATE_SUMMARY, args: [2] },
   {
+    method: 'getProjectIndexCoverage',
+    call: () => api.getProjectIndexCoverage(3),
+    channel: IpcChannel.AI_PROJECT_INDEX_COVERAGE,
+    args: [3],
+  },
+  {
+    method: 'askProject',
+    call: () => api.askProject(3, 'Qual a amostra?'),
+    channel: IpcChannel.AI_ASK_PROJECT,
+    args: [3, 'Qual a amostra?'],
+  },
+  {
     method: 'massiveExtraction',
     call: () => api.massiveExtraction(2, ['q']),
     channel: IpcChannel.AI_MASSIVE_EXTRACTION,

@@ -98,6 +98,9 @@ function seedSemanticIndex(db: Database.Database, project: number): void {
   new VectorStore(db).indexArticleChunks(article.id, [chunk], [[0.1, 0.2, 0.3, 0.4]]);
   // The app writes no token count today; older versions may have, so the column is kept filled.
   db.prepare('UPDATE pdf_chunks SET token_count = 12 WHERE article_id = ?').run(article.id);
+  db.prepare("UPDATE pdf_chunks SET embedding_model = 'openai/text-embedding-3-small' WHERE article_id = ?").run(
+    article.id,
+  );
 }
 
 // A monitored search with what its last check left: a notice, a base it missed and what was already shown (#52).

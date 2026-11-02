@@ -102,6 +102,83 @@ describe('VectorStore', () => {
     expect(store.searchSimilar([0, 0], 3, first).map((c) => c.text)).toEqual(['a0', 'a1', 'a2']);
   });
 
+  describe('searchSimilarAcross', () => {
+    it('finds the nearest among the articles asked, saying whose they are', () => {
+      indexRow(first, 'a', 3, 0);
+      indexRow(second, 'b', 3, 0.0005);
+
+      const found = store.searchSimilarAcross([0, 0], 4, [first, second]);
+
+      expect(found.map((c) => [c.articleId, c.text])).toEqual([
+        [first, 'a0'],
+        [second, 'b0'],
+        [first, 'a1'],
+        [second, 'b1'],
+      ]);
+    });
+
+    it('leaves out an article not asked, however near it is', () => {
+      indexRow(first, 'a', 50, 0);
+      indexRow(second, 'b', 12, 100);
+
+      const found = store.searchSimilarAcross([0, 0], 10, [second]);
+
+      expect(found).toHaveLength(10);
+      expect(new Set(found.map((c) => c.articleId))).toEqual(new Set([second]));
+    });
+
+    it('gives the same answer through the plain distance', () => {
+      indexRow(first, 'a', 3, 0);
+      indexRow(second, 'b', 3, 0.0005);
+      const indexed = store.searchSimilarAcross([0, 0], 4, [first, second]).map((c) => c.text);
+      const realPrepare = db.prepare.bind(db);
+      vi.spyOn(db, 'prepare').mockImplementation(((sql: string) => {
+        if (sql.includes('MATCH')) throw new Error('unsupported');
+        return realPrepare(sql);
+      }) as typeof db.prepare);
+
+      expect(store.searchSimilarAcross([0, 0], 4, [first, second]).map((c) => c.text)).toEqual(indexed);
+    });
+
+    it('takes more articles than SQLite takes bound parameters', () => {
+      indexRow(first, 'a', 1, 0);
+      const many = [first, ...Array.from({ length: 40_000 }, (_, i) => 100_000 + i)];
+
+      expect(store.searchSimilarAcross([0, 0], 1, many)).toHaveLength(1);
+    });
+
+    it('finds nothing when no article is asked or nothing is indexed yet', () => {
+      expect(store.searchSimilarAcross([0, 0], 5, [first])).toEqual([]);
+
+      indexRow(first, 'a', 1, 0);
+      expect(store.searchSimilarAcross([0, 0], 5, [])).toEqual([]);
+    });
+  });
+
+  describe('indexedDimension', () => {
+    it('is unknown before the first indexing, then the size of the vectors', () => {
+      expect(store.indexedDimension()).toBeNull();
+
+      indexRow(first, 'a', 1, 0);
+
+      expect(store.indexedDimension()).toBe(2);
+    });
+
+    it('only reads', () => {
+      indexRow(first, 'a', 2, 0);
+
+      store.indexedDimension();
+
+      expect(rows('pdf_chunks')).toBe(2);
+    });
+  });
+
+  it('records which model indexed the chunks', () => {
+    store.indexArticleChunks(first, [chunkAt('a')], [[0, 0]], 'openai/x');
+
+    expect(db.prepare('SELECT embedding_model AS m FROM pdf_chunks').get()).toEqual({ m: 'openai/x' });
+  });
+
   it('removes the chunks of an article and leaves the others', () => {
     indexRow(first, 'a', 2, 0);
     indexRow(second, 'b', 1, 0);

@@ -3,6 +3,7 @@ import { PdfTextChunk } from './PdfExtractor';
 
 export interface SimilarChunk {
   chunkId: number;
+  articleId: number;
   text: string;
   page: number;
   bbox: { x: number; y: number; w: number; h: number };
@@ -11,6 +12,7 @@ export interface SimilarChunk {
 
 interface SimilarChunkRow {
   chunkId: number;
+  articleId: number;
   text: string;
   page: number;
   bbox_x: number;
@@ -20,11 +22,12 @@ interface SimilarChunkRow {
   similarityScore: number;
 }
 
-const CHUNK_COLUMNS = `c.id as chunkId, c.text_content as text, c.page_number as page,
+const CHUNK_COLUMNS = `c.id as chunkId, c.article_id as articleId, c.text_content as text, c.page_number as page,
   c.bbox_x as bbox_x, c.bbox_y as bbox_y, c.bbox_w as bbox_w, c.bbox_h as bbox_h`;
 
 const toSimilarChunk = (row: SimilarChunkRow): SimilarChunk => ({
   chunkId: row.chunkId,
+  articleId: row.articleId,
   text: row.text,
   page: row.page,
   bbox: { x: row.bbox_x, y: row.bbox_y, w: row.bbox_w, h: row.bbox_h },
@@ -55,7 +58,12 @@ export class VectorStore {
   }
 
   /** Indexa chunks de um artigo (chamado na importação). */
-  indexArticleChunks(articleId: number, chunks: PdfTextChunk[], embeddings: number[][]): void {
+  indexArticleChunks(
+    articleId: number,
+    chunks: PdfTextChunk[],
+    embeddings: number[][],
+    embeddingModel: string | null = null,
+  ): void {
     if (chunks.length !== embeddings.length) {
       throw new Error('Chunks and embeddings must have the same length');
     }
@@ -64,8 +72,8 @@ export class VectorStore {
     this.ensureDimensionAndClearIfMismatched(embeddings[0].length);
 
     const insertChunkStmt = this.db.prepare(`
-      INSERT INTO pdf_chunks (article_id, chunk_index, text_content, page_number, bbox_x, bbox_y, bbox_w, bbox_h, token_count)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO pdf_chunks (article_id, chunk_index, text_content, page_number, bbox_x, bbox_y, bbox_w, bbox_h, token_count, embedding_model)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const insertEmbeddingStmt = this.db.prepare(`
@@ -88,6 +96,7 @@ export class VectorStore {
           chunk.bbox.w,
           chunk.bbox.h,
           null, // token_count
+          embeddingModel,
         );
 
         const chunkId = info.lastInsertRowid;
@@ -104,43 +113,72 @@ export class VectorStore {
 
   /** Busca os K chunks mais similares à query em um artigo específico. */
   searchSimilar(queryEmbedding: number[], topK: number, articleId: number): SimilarChunk[] {
+    return this.nearest(queryEmbedding, topK, [articleId]);
+  }
+
+  /**
+   * The nearest chunks among several articles, nearest first (#53). Nothing is indexed yet: no chunks.
+   *
+   * @example store.searchSimilarAcross(vector, 20, [1, 2, 3]);
+   */
+  searchSimilarAcross(queryEmbedding: number[], topK: number, articleIds: number[]): SimilarChunk[] {
+    if (articleIds.length === 0 || this.indexedDimension() === null) return [];
+    return this.nearest(queryEmbedding, topK, articleIds);
+  }
+
+  /**
+   * The size of the indexed vectors, or null before the first indexing. Only reads, unlike
+   * ensureDimensionAndClearIfMismatched, which clears the index when the size differs.
+   *
+   * @example store.indexedDimension() // 1536
+   */
+  indexedDimension(): number | null {
+    const table = this.db
+      .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='pdf_chunk_embeddings'")
+      .get() as { sql: string } | undefined;
+    const size = table?.sql.match(/float\[(\d+)\]/);
+    return size ? Number(size[1]) : null;
+  }
+
+  private nearest(queryEmbedding: number[], topK: number, articleIds: number[]): SimilarChunk[] {
     const floatArray = new Float32Array(queryEmbedding);
+    const ids = JSON.stringify(articleIds);
     try {
-      const rows = this.nearestByIndex(floatArray, topK, articleId);
+      const rows = this.nearestByIndex(floatArray, topK, ids);
       if (rows.length > 0) return rows.map(toSimilarChunk);
     } catch {
       // Fallback query if MATCH clause isn't supported by the loaded virtual table format
     }
-    return this.nearestByDistance(floatArray, topK, articleId).map(toSimilarChunk);
+    return this.nearestByDistance(floatArray, topK, ids).map(toSimilarChunk);
   }
 
   // The article goes in as a rowid filter because vec0 applies it ahead of the search. As a plain condition on the
   // joined chunks it ran after: k picked the nearest of the whole library, and the article kept only those of its
   // own that were among them, down to 1 chunk of 10 asked.
-  private nearestByIndex(query: Float32Array, topK: number, articleId: number): SimilarChunkRow[] {
+  private nearestByIndex(query: Float32Array, topK: number, articleIds: string): SimilarChunkRow[] {
     return this.db
       .prepare(
         `SELECT ${CHUNK_COLUMNS}, e.distance as similarityScore
          FROM pdf_chunk_embeddings e
          JOIN pdf_chunks c ON c.id = e.rowid
          WHERE e.embedding MATCH ? AND k = ?
-           AND e.rowid IN (SELECT id FROM pdf_chunks WHERE article_id = ?)
+           AND e.rowid IN (SELECT id FROM pdf_chunks WHERE article_id IN (SELECT value FROM json_each(?)))
          ORDER BY e.distance ASC`,
       )
-      .all(query, topK, articleId) as SimilarChunkRow[];
+      .all(query, topK, articleIds) as SimilarChunkRow[];
   }
 
-  private nearestByDistance(query: Float32Array, topK: number, articleId: number): SimilarChunkRow[] {
+  private nearestByDistance(query: Float32Array, topK: number, articleIds: string): SimilarChunkRow[] {
     return this.db
       .prepare(
         `SELECT ${CHUNK_COLUMNS}, vec_distance_L2(e.embedding, ?) as similarityScore
          FROM pdf_chunk_embeddings e
          JOIN pdf_chunks c ON c.id = e.rowid
-         WHERE c.article_id = ?
+         WHERE c.article_id IN (SELECT value FROM json_each(?))
          ORDER BY similarityScore ASC
          LIMIT ?`,
       )
-      .all(query, articleId, topK) as SimilarChunkRow[];
+      .all(query, articleIds, topK) as SimilarChunkRow[];
   }
 
   /** Remove chunks de um artigo (chamado na exclusão). */

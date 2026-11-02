@@ -308,6 +308,7 @@ CREATE TABLE IF NOT EXISTS pdf_chunks (
     bbox_w REAL,
     bbox_h REAL,
     token_count INTEGER,
+    embedding_model TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE
 );

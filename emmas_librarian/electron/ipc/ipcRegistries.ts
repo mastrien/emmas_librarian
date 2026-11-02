@@ -17,6 +17,7 @@ import { setupAiIpcHandlers } from './aiIpcHandlers';
 import { registerWindowHandlers } from './handlers/windowHandlers';
 import { registerProjectHandlers, registerSearchHandlers } from './handlers/projectHandlers';
 import { registerSearchMonitorHandlers } from './handlers/searchMonitorHandlers';
+import { registerProjectQuestionHandlers } from './handlers/projectQuestionHandlers';
 import { SearchMonitorService } from '../services/SearchMonitorService';
 import { registerArticleHandlers } from './handlers/articleHandlers';
 import { registerAnnotationHandlers } from './handlers/annotationHandlers';
@@ -90,7 +91,9 @@ function registerLibraryServices(
 
   // E2E runs must not hit the real bibliographic APIs.
   const orchestrator = new SearchOrchestrator(db, new QueryTranslator(), apiIntegratorFor(process.env));
-  setupAiIpcHandlers(db, new AIService(db, path.join(userData, 'models')));
+  const aiService = new AIService(db, path.join(userData, 'models'));
+  setupAiIpcHandlers(db, aiService);
+  registerProjectQuestionHandlers(ipcMain, db, aiService);
 
   registerWindowHandlers(ipcMain);
   registerProjectHandlers(ipcMain, db);

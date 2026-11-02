@@ -258,8 +258,8 @@ export class ArticleRepository {
       const info = this.db
         .prepare(
           `
-        INSERT INTO pdf_chunks (article_id, chunk_index, text_content, page_number, bbox_x, bbox_y, bbox_w, bbox_h, token_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO pdf_chunks (article_id, chunk_index, text_content, page_number, bbox_x, bbox_y, bbox_w, bbox_h, token_count, embedding_model)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
         )
         .run(
@@ -272,6 +272,7 @@ export class ArticleRepository {
           chunk.bbox_w,
           chunk.bbox_h,
           chunk.token_count,
+          chunk.embedding_model,
         );
       const newChunkId = BigInt(info.lastInsertRowid);
       const oldChunkId = BigInt(chunk.id);

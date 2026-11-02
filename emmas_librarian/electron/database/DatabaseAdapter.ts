@@ -14,6 +14,7 @@ import { ScreeningDecisionRepository, type ScreeningExportRow } from './Screenin
 import { ScreeningLabelRepository } from './ScreeningLabelRepository';
 import { PrismaOriginRepository } from './PrismaOriginRepository';
 import { SearchMonitorRepository } from './SearchMonitorRepository';
+import { PdfChunkIndexRepository } from './PdfChunkIndexRepository';
 import { PrismaStudyRepository } from './PrismaStudyRepository';
 import { initializeSchema } from './schemaMigrations';
 import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
@@ -76,6 +77,7 @@ export class DatabaseAdapter {
   public screeningLabelRepo: ScreeningLabelRepository;
   public prismaOriginRepo: PrismaOriginRepository;
   public searchMonitorRepo: SearchMonitorRepository;
+  public pdfChunkIndexRepo: PdfChunkIndexRepository;
   public prismaStudyRepo: PrismaStudyRepository;
 
   // A constructor that throws leaves no adapter to close, so the file would stay locked (Windows) for
@@ -99,6 +101,7 @@ export class DatabaseAdapter {
       this.screeningLabelRepo = new ScreeningLabelRepository(this.db, this.screeningDecisionRepo);
       this.prismaOriginRepo = new PrismaOriginRepository(this.db);
       this.searchMonitorRepo = new SearchMonitorRepository(this.db);
+      this.pdfChunkIndexRepo = new PdfChunkIndexRepository(this.db);
       this.prismaStudyRepo = new PrismaStudyRepository(this.db);
       this.initSchema();
     } catch (err) {

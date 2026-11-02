@@ -16,6 +16,8 @@ import type {
   CitationRequest,
   CitationSeed,
   MonitorOverview,
+  ProjectAnswer,
+  ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
   OpenAccessOutcome,
@@ -246,6 +248,10 @@ export interface IProjectService {
 
   // ── AI ────────────────────────────────────────────────────────────
   generateSummary(articleId: number): Promise<ArticleSummary>;
+  /** What a question over the project can read (#53). */
+  getProjectIndexCoverage(projectId: number): Promise<ProjectIndexCoverage>;
+  /** Answers from the indexed PDFs of the project, each statement citing article and page (#53). */
+  askProject(projectId: number, question: string): Promise<ProjectAnswer>;
   massiveExtraction(articleId: number, questions: string[]): Promise<ExtractionAnswer[]>;
   extractMetadata(articleId: number): Promise<ExtractedMetadata>;
 

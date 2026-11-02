@@ -9,6 +9,7 @@ interface TableInfoRow {
 // Columns added after the first public release; ALTER fails harmlessly once a column exists.
 const COLUMN_MIGRATIONS = [
   'ALTER TABLE articles ADD COLUMN archive_note TEXT',
+  'ALTER TABLE pdf_chunks ADD COLUMN embedding_model TEXT',
   'ALTER TABLE articles ADD COLUMN abstract TEXT',
   'ALTER TABLE articles ADD COLUMN author_keywords TEXT',
   'ALTER TABLE articles ADD COLUMN index_keywords TEXT',
@@ -125,6 +126,7 @@ const VECTOR_TABLES_V3 = `
       bbox_w REAL,
       bbox_h REAL,
       token_count INTEGER,
+      embedding_model TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE
   );`;

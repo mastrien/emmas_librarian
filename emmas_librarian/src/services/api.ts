@@ -41,6 +41,8 @@ import type {
   CitationRequest,
   CitationSeed,
   MonitorOverview,
+  ProjectAnswer,
+  ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
   OpenAccessOutcome,
@@ -302,6 +304,12 @@ export const projectService: IProjectService = {
   async generateSummary(articleId: number): Promise<{ generalSummary: string; sectionSummary: string }> {
     return safeInvoke(IpcChannel.AI_GENERATE_SUMMARY, articleId);
   },
+
+  getProjectIndexCoverage: (projectId: number): Promise<ProjectIndexCoverage> =>
+    safeInvoke(IpcChannel.AI_PROJECT_INDEX_COVERAGE, projectId),
+
+  askProject: (projectId: number, question: string): Promise<ProjectAnswer> =>
+    safeInvoke(IpcChannel.AI_ASK_PROJECT, projectId, question),
 
   async massiveExtraction(
     articleId: number,

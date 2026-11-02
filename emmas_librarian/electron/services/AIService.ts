@@ -10,6 +10,8 @@ import { OllamaCloudGateway } from './llm/OllamaCloudGateway';
 import { quotePrompt } from './extraction/extractionPrompts';
 import { anchorEvidence, type AiEvidence, type ExtractionChunk } from './extraction/evidenceAnchoring';
 import { AnthropicGateway } from './llm/AnthropicGateway';
+import { ProjectQuestionService } from './projectQuestion/ProjectQuestionService';
+import type { ProjectAnswer, ProjectIndexCoverage } from '../../src/types';
 
 export class AIService {
   private db: DatabaseAdapter;
@@ -294,6 +296,43 @@ ${truncatedText}
     return parsed;
   }
 
+  private embeddingSetup(): { embeddingService: EmbeddingService; modelId: string } {
+    const config = new AIModelConfigRepository(this.db.getDB()).getConfig('embeddings');
+    const provider = config?.provider || 'openai';
+    const model_name = config?.model_name || 'text-embedding-3-small';
+    const embeddingService = new EmbeddingService({ provider, model_name } as any, this.getKeys(), this.localModelsDir);
+    return { embeddingService, modelId: `${provider}/${model_name}` };
+  }
+
+  private projectQuestions(): ProjectQuestionService {
+    const { embeddingService, modelId } = this.embeddingSetup();
+    return new ProjectQuestionService(
+      new VectorStore(this.db.getDB()),
+      this.db.pdfChunkIndexRepo,
+      embeddingService,
+      (prompt) => this.generateCompletion(prompt, 'extraction'),
+      modelId,
+    );
+  }
+
+  /**
+   * What a question over these articles would read (#53).
+   *
+   * @example service.projectIndexCoverage([1, 2]).withoutIndex
+   */
+  public projectIndexCoverage(articleIds: number[]): ProjectIndexCoverage {
+    return this.projectQuestions().coverage(articleIds);
+  }
+
+  /**
+   * Answers from the indexed PDFs of several articles, each statement citing its article and page (#53).
+   *
+   * @example await service.askProject('Qual o tamanho da amostra?', [1, 2]);
+   */
+  public askProject(question: string, articleIds: number[]): Promise<ProjectAnswer> {
+    return this.projectQuestions().ask(question, articleIds);
+  }
+
   public async massiveExtraction(articleId: number, pdfPath: string, questions: string[]): Promise<any[]> {
     const extractionConfig = {
       chunkSize: parseInt(this.db.getSetting('rag_chunk_size') || '1000', 10),
@@ -308,16 +347,7 @@ ${truncatedText}
     );
     // Services imported at the top
 
-    const configRepo = new AIModelConfigRepository(this.db.getDB());
-    const embeddingsConfig = configRepo.getConfig('embeddings');
-    const embeddingService = new EmbeddingService(
-      {
-        provider: embeddingsConfig?.provider || 'openai',
-        model_name: embeddingsConfig?.model_name || 'text-embedding-3-small',
-      } as any,
-      this.getKeys(),
-      this.localModelsDir,
-    );
+    const { embeddingService, modelId } = this.embeddingSetup();
     const vectorStore = new VectorStore(this.db.getDB());
 
     if (questions.length === 0) return [];
@@ -331,7 +361,7 @@ ${truncatedText}
       .get(articleId) as any;
     if (existingChunksCount.count === 0) {
       const embeddings = await embeddingService.embedBatch(extractionResult.chunks.map((c: any) => c.text));
-      vectorStore.indexArticleChunks(articleId, extractionResult.chunks, embeddings);
+      vectorStore.indexArticleChunks(articleId, extractionResult.chunks, embeddings, modelId);
     }
 
     const results = [];
