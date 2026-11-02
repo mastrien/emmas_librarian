@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import type { Article, PrismaRecords } from '../../../types';
+import { PANEL_FIELD, PANEL_LABEL } from './panelFieldStyles';
 
 /** What the study grouping can change; each call answers the records as they now are. */
 export interface StudyActions {
   link: (articleId: number, otherId: number) => Promise<void>;
   unlink: (studyArticleId: number) => Promise<void>;
 }
-
-const FIELD: React.CSSProperties = { width: '100%', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' };
-const LABEL: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '0.2rem', fontSize: '0.8rem' };
 
 // Studies with more than one included publication, each named by its first article.
 function groupsOf(publications: Article[], records: PrismaRecords): { study: number; members: Article[] }[] {
@@ -27,9 +25,14 @@ const PublicationPicker: React.FC<{
   value: string;
   onChange: (value: string) => void;
 }> = ({ label, publications, value, onChange }) => (
-  <label style={LABEL}>
+  <label style={PANEL_LABEL}>
     {label}
-    <select style={FIELD} value={value} onChange={(e) => onChange(e.target.value)}>
+    <select
+      className="input-field input-compact"
+      style={PANEL_FIELD}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
       <option value="">Escolha a publicação</option>
       {publications.map((p) => (
         <option key={p.id} value={p.id}>

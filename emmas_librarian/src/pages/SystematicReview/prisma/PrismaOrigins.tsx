@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Article, PrismaRecords, PrismaSourceInput, PrismaSourceMethod } from '../../../types';
 import { brazilianDate, METHOD_NAMES } from '../../../utils/prismaFlow';
+import { PANEL_FIELD, PANEL_LABEL } from './panelFieldStyles';
 
 /** What the origin editor can change; each call answers the records as they now are. */
 export interface OriginActions {
@@ -8,9 +9,6 @@ export interface OriginActions {
   setOrigins: (articleIds: number[], sourceId: number | null) => Promise<void>;
 }
 
-// Long option names must shrink with the panel, never push past it (the #50 mock-up's select did).
-const FIELD: React.CSSProperties = { width: '100%', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box' };
-const LABEL: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '0.2rem', fontSize: '0.8rem' };
 const METHODS = Object.keys(METHOD_NAMES) as PrismaSourceMethod[];
 
 const SourceOptions: React.FC<{ records: PrismaRecords }> = ({ records }) => (
@@ -38,10 +36,11 @@ const OriginRow: React.FC<{
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', minWidth: 0, flex: 1 }}>
         <span style={{ overflowWrap: 'anywhere' }}>{article.title}</span>
         <span className="review-muted">{via}</span>
-        <label style={LABEL}>
+        <label style={PANEL_LABEL}>
           Origem
           <select
-            style={FIELD}
+            className="input-field input-compact"
+            style={PANEL_FIELD}
             value={current ?? ''}
             onChange={(e) => onPick(e.target.value ? Number(e.target.value) : null)}
           >
@@ -62,9 +61,14 @@ const BulkOrigin: React.FC<{ records: PrismaRecords; count: number; onApply: (so
   const [sourceId, setSourceId] = useState('');
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'flex-end' }}>
-      <label style={{ ...LABEL, flex: '1 1 10rem', minWidth: 0 }}>
+      <label style={{ ...PANEL_LABEL, flex: '1 1 10rem', minWidth: 0 }}>
         Marcar os selecionados ({count}) como
-        <select style={FIELD} value={sourceId} onChange={(e) => setSourceId(e.target.value)}>
+        <select
+          className="input-field input-compact"
+          style={PANEL_FIELD}
+          value={sourceId}
+          onChange={(e) => setSourceId(e.target.value)}
+        >
           <option value="">Escolha a fonte</option>
           <SourceOptions records={records} />
         </select>
@@ -142,13 +146,19 @@ const SourceForm: React.FC<{ onSave: (input: PrismaSourceInput) => Promise<void>
         if (draft.name.trim()) void onSave(draft);
       }}
     >
-      <label style={LABEL}>
+      <label style={PANEL_LABEL}>
         Nome
-        <input style={FIELD} value={draft.name} onChange={set('name')} placeholder="Ex.: Google Scholar" />
+        <input
+          className="input-field input-compact"
+          style={PANEL_FIELD}
+          value={draft.name}
+          onChange={set('name')}
+          placeholder="Ex.: Google Scholar"
+        />
       </label>
-      <label style={LABEL}>
+      <label style={PANEL_LABEL}>
         Método
-        <select style={FIELD} value={draft.method} onChange={set('method')}>
+        <select className="input-field input-compact" style={PANEL_FIELD} value={draft.method} onChange={set('method')}>
           {METHODS.map((m) => (
             <option key={m} value={m}>
               {METHOD_NAMES[m]}
@@ -156,13 +166,26 @@ const SourceForm: React.FC<{ onSave: (input: PrismaSourceInput) => Promise<void>
           ))}
         </select>
       </label>
-      <label style={LABEL}>
+      <label style={PANEL_LABEL}>
         Endereço (opcional)
-        <input style={FIELD} type="url" value={draft.url ?? ''} onChange={set('url')} placeholder="https://" />
+        <input
+          className="input-field input-compact"
+          style={PANEL_FIELD}
+          type="url"
+          value={draft.url ?? ''}
+          onChange={set('url')}
+          placeholder="https://"
+        />
       </label>
-      <label style={LABEL}>
+      <label style={PANEL_LABEL}>
         Consultada em
-        <input style={FIELD} type="date" value={draft.consulted_on ?? ''} onChange={set('consulted_on')} />
+        <input
+          className="input-field input-compact"
+          style={PANEL_FIELD}
+          type="date"
+          value={draft.consulted_on ?? ''}
+          onChange={set('consulted_on')}
+        />
       </label>
       <div style={{ display: 'flex', gap: '0.4rem' }}>
         <button type="submit" className="review-small">
