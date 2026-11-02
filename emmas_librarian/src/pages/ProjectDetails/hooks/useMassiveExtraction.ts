@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { IProjectService, ExtractionAnswer } from '../../../services/ProjectServiceInterface';
 import type { Article, MassiveInvestigation } from '../../../types';
+import { investigationStatus } from '../../../utils/investigationStatus';
 
 export interface ArticleExtraction {
   article: Article;
@@ -110,7 +111,7 @@ async function extractSequentially(
       return { collected, status: 'Erro: Quota Excedida' };
     }
   }
-  return { collected, status: 'Sucesso' };
+  return { collected, status: investigationStatus(collected) };
 }
 
 async function extractOne(service: IProjectService, article: Article, questions: string[]): Promise<ArticleExtraction> {

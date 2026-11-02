@@ -7,6 +7,7 @@ import { formatResultsAsCsv, formatResultsAsJson } from '../../utils/investigati
 import { parseJsonList } from '../../utils/parseJsonList';
 import { ArticleResultAccordion } from './investigation/ArticleResultAccordion';
 import { AuditView } from './audit/AuditView';
+import { statusColour } from '../../utils/investigationStatus';
 import { auditForExport } from '../../utils/auditExport';
 
 export interface InvestigationDetailViewProps {
@@ -165,7 +166,7 @@ export const InvestigationDetailView: React.FC<InvestigationDetailViewProps> = (
                 fontSize: '0.75rem',
                 padding: '0.15rem 0.4rem',
                 borderRadius: '4px',
-                background: investigation.status === 'Sucesso' ? 'var(--color-success)' : 'var(--color-danger)',
+                background: statusColour(investigation.status),
                 color: 'white',
                 fontWeight: 600,
               }}
