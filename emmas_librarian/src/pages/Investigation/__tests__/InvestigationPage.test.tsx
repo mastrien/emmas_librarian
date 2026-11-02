@@ -35,6 +35,16 @@ describe('InvestigationPage (#73): where it opens', () => {
     await waitFor(() => expect(card).toHaveTextContent('3 para revisar'));
   });
 
+  // #84: measured at mount the page was still loading, so it had no height until the window was resized.
+  it('takes its height from the window as soon as it appears, with no resize', async () => {
+    const { service } = reviewProject();
+    renderInvestigation(service, '/projects/3/investigation/14');
+
+    const page = await screen.findByTestId('investigation-page');
+
+    expect(page).toHaveStyle({ height: `${window.innerHeight}px` });
+  });
+
   it('opens on a new investigation when the project has none, and says it in the list', async () => {
     renderInvestigation(investigationService([article(1)], []), '/projects/3/investigation');
 

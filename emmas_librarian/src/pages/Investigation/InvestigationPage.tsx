@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertCircle, ArrowLeft, ChevronsRight, Plus } from 'lucide-react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
@@ -14,19 +14,20 @@ import { useInvestigationPageData } from './useInvestigationPageData';
 import type { InvestigationRunState } from './useInvestigationRun';
 import './investigation.css';
 
-// The page scrolls inside its panes, so it takes what the app's header leaves of the window.
+// The page scrolls inside its panes, so it takes what the app's header leaves of the window. It measures when its
+// element appears, not when the component mounts: that is still "Carregando…", and with nothing measured the page
+// grew with its table and the whole window scrolled until the next resize (seen on the first opening, #84).
 function useFillWindowHeight() {
-  const page = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState<HTMLDivElement | null>(null);
   const [height, setHeight] = useState<number | undefined>(undefined);
   useLayoutEffect(() => {
-    const measure = () => {
-      if (page.current) setHeight(window.innerHeight - page.current.getBoundingClientRect().top + window.scrollY);
-    };
+    if (!page) return;
+    const measure = () => setHeight(window.innerHeight - page.getBoundingClientRect().top + window.scrollY);
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, []);
-  return { page, height };
+  }, [page]);
+  return { setPage, height };
 }
 
 const QuotaNotice: React.FC<{ onClose: () => void }> = ({ onClose }) =>
@@ -85,7 +86,7 @@ export const InvestigationPage: React.FC = () => {
   const view = params.view;
   const navigate = useNavigate();
   const narrow = useNarrowWindow();
-  const { page, height } = useFillWindowHeight();
+  const { setPage, height } = useFillWindowHeight();
   const { run, start, cancel, dismiss, dismissQuota } = useInvestigationRunContext();
   const ownRun = run?.projectId === projectId ? run : null;
   const data = useInvestigationPageData(projectId, ownRun?.savedId ?? null);
@@ -139,7 +140,7 @@ export const InvestigationPage: React.FC = () => {
   );
 
   return (
-    <div ref={page} className="inv-page" style={{ height }}>
+    <div ref={setPage} className="inv-page" style={{ height }} data-testid="investigation-page">
       <header className="inv-page-head">
         <div style={{ minWidth: 0 }}>
           <Link to={`/projects/${projectId}`} className="inv-back">

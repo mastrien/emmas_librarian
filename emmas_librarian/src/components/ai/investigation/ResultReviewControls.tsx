@@ -72,11 +72,15 @@ export const ResultReviewControls: React.FC<ResultReviewControlsProps> = ({ resu
       aria-label={`Revisão da resposta: ${REVIEW_LABELS[result.review_status]}`}
       style={{ padding: '0.5rem 0.75rem', borderTop: '1px solid var(--border-color)', outlineOffset: '2px' }}
     >
-      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: BADGE_COLORS[result.review_status] }}>
-          Revisão: {REVIEW_LABELS[result.review_status]}
-        </span>
-        <span style={{ flex: 1 }} />
+      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: BADGE_COLORS[result.review_status] }}>
+        Revisão: {REVIEW_LABELS[result.review_status]}
+      </div>
+      {/* All under the status: sharing its line, two fit and the third fell alone onto the next (#84). */}
+      <div
+        role="group"
+        aria-label="Ações da revisão"
+        style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.4rem' }}
+      >
         {marked ? (
           <button
             type="button"
