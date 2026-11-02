@@ -161,6 +161,24 @@ describe('AuditView (#48)', () => {
     expect(onReview).toHaveBeenCalledTimes(1);
   });
 
+  // Validation of epic #44: "Corrigir" saved with the same text counted as a correction, so as a wrong answer.
+  it('keeps "Salvar correção" off until the answer really changes, Ctrl+Enter included', async () => {
+    const { onReview } = renderAudit(fullDraw);
+    await openFirstItem();
+
+    fireEvent.click(screen.getByRole('button', { name: /Corrigir/ }));
+    const box = screen.getByLabelText('Resposta corrigida');
+    const save = screen.getByRole('button', { name: 'Salvar correção' });
+    expect(save).toBeDisabled();
+    fireEvent.change(box, { target: { value: `  ${(box as HTMLTextAreaElement).value}  ` } });
+    fireEvent.keyDown(box, { key: 'Enter', ctrlKey: true });
+    expect(save).toBeDisabled();
+    expect(onReview).not.toHaveBeenCalled();
+
+    fireEvent.change(box, { target: { value: 'Coorte retrospectiva' } });
+    expect(save).toBeEnabled();
+  });
+
   it('opens the PDF on the evidence and remembers the item to come back to', async () => {
     renderAudit(fullDraw);
     await openFirstItem();

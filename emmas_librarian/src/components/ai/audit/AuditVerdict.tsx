@@ -1,6 +1,6 @@
 import React from 'react';
 import type { InvestigationResult, ResultReview } from '../../../types';
-import { aiAnswerText } from '../../../utils/investigationAnswers';
+import { aiAnswerText, canSaveCorrection } from '../../../utils/investigationAnswers';
 
 export interface AuditVerdictProps {
   result: InvestigationResult;
@@ -83,6 +83,7 @@ interface FixBoxProps {
 // Mounted when "Corrigir" opens, so the draft starts from the current answer without syncing state in an effect.
 const FixBox: React.FC<FixBoxProps> = ({ initial, onSave, onCancel }) => {
   const [draft, setDraft] = React.useState(initial);
+  const canSave = canSaveCorrection(draft, initial);
   return (
     <>
       <textarea
@@ -94,11 +95,11 @@ const FixBox: React.FC<FixBoxProps> = ({ initial, onSave, onCancel }) => {
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Escape') onCancel();
-          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) onSave(draft);
+          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && canSave) onSave(draft);
         }}
       />
       <div className="audit-row">
-        <button type="button" className="btn-primary" disabled={!draft.trim()} onClick={() => onSave(draft)}>
+        <button type="button" className="btn-primary" disabled={!canSave} onClick={() => onSave(draft)}>
           Salvar correção
         </button>
         <button type="button" className="btn-secondary" onClick={onCancel}>
