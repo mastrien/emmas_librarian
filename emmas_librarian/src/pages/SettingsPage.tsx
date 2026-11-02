@@ -10,6 +10,8 @@ import { BackupSettings } from './Settings/components/BackupSettings';
 import { UpdateSettings, describeSnapshotDate } from './Settings/components/UpdateSettings';
 import { TrashSettings } from './Settings/components/TrashSettings';
 import { modelSuggestions, suggestedModelFor } from './Settings/aiModelSuggestions';
+import { TYPING_DELAY_MS, useSettingsAutosave } from './Settings/useSettingsAutosave';
+import { AutosaveNotice } from './Settings/components/AutosaveNotice';
 
 export const SettingsPage: React.FC = () => {
   const projectService = useProjectService();
@@ -22,13 +24,9 @@ export const SettingsPage: React.FC = () => {
   const [anthropicKey, setAnthropicKey] = useState('');
   const [geminiKey, setGeminiKey] = useState('');
   const [ollamaUrl, setOllamaUrl] = useState('');
-  const [ollamaModel, setOllamaModel] = useState('');
   const [ollamaCloudKey, setOllamaCloudKey] = useState('');
-  const [ollamaCloudUrl, setOllamaCloudUrl] = useState('');
-  const [ollamaCloudModel, setOllamaCloudModel] = useState('');
 
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const autosave = useSettingsAutosave();
   const [appVersion, setAppVersion] = useState('');
   const [aiConfigs, setAiConfigs] = useState<AIModelConfig[]>([]);
 
@@ -77,10 +75,7 @@ export const SettingsPage: React.FC = () => {
       const aKey = await projectService.getSetting('api_key_anthropic');
       const gKey = await projectService.getSetting('api_key_gemini');
       const olUrl = await projectService.getSetting('api_key_ollama');
-      const olMod = await projectService.getSetting('ollama_model');
       const olCloudKey = await projectService.getSetting('api_key_ollama_cloud');
-      const olCloudUrl = await projectService.getSetting('ollama_cloud_base_url');
-      const olCloudMod = await projectService.getSetting('ollama_cloud_model');
       const backupsEnabledSetting = await projectService.getSetting('enable_auto_backups');
       const rSize = await projectService.getSetting('rag_chunk_size');
       const rOverlap = await projectService.getSetting('rag_chunk_overlap');
@@ -94,10 +89,7 @@ export const SettingsPage: React.FC = () => {
       if (aKey) setAnthropicKey(aKey);
       if (gKey) setGeminiKey(gKey);
       if (olUrl) setOllamaUrl(olUrl);
-      if (olMod) setOllamaModel(olMod);
       if (olCloudKey) setOllamaCloudKey(olCloudKey);
-      if (olCloudUrl) setOllamaCloudUrl(olCloudUrl);
-      if (olCloudMod) setOllamaCloudModel(olCloudMod);
       if (rSize) setRagChunkSize(rSize);
       if (rOverlap) setRagChunkOverlap(rOverlap);
       if (rTopK) setRagTopK(rTopK);
@@ -127,52 +119,38 @@ export const SettingsPage: React.FC = () => {
     loadSettings();
   }, []);
 
-  const handleSaveKeys = async () => {
-    setSaving(true);
-    await projectService.setSetting('scopus_api_key', scopusKey);
-    await projectService.setSetting('wos_api_key', wosKey);
-    await projectService.setSetting('openalex_api_key', openAlexKey);
-    await projectService.setSetting('ieee_api_key', ieeeKey);
-    await projectService.setSetting('api_key_openai', openaiKey);
-    await projectService.setSetting('api_key_anthropic', anthropicKey);
-    await projectService.setSetting('api_key_gemini', geminiKey);
-    await projectService.setSetting('api_key_ollama', ollamaUrl);
-    await projectService.setSetting('ollama_model', ollamaModel);
-    await projectService.setSetting('api_key_ollama_cloud', ollamaCloudKey);
-    await projectService.setSetting('ollama_cloud_base_url', ollamaCloudUrl);
-    await projectService.setSetting('ollama_cloud_model', ollamaCloudModel);
-    await projectService.setSetting('rag_chunk_size', ragChunkSize);
-    await projectService.setSetting('rag_chunk_overlap', ragChunkOverlap);
-    await projectService.setSetting('rag_top_k', ragTopK);
-
-    for (const conf of aiConfigs) {
-      await projectService.updateAiModelConfig(conf.skill, conf.provider, conf.model_name);
-    }
-
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  // Every setting saves on its own as it changes; there is no "Salvar" to forget (validation of epic #44).
+  const bind = (key: string, setter: (value: string) => void) => (value: string) => {
+    setter(value);
+    autosave.schedule(key, () => projectService.setSetting(key, value));
   };
 
   const handleRestoreAiDefaults = async () => {
     if (confirm('Restaurar as configurações avançadas de IA para os padrões originais?')) {
+      autosave.cancel('ai_model:');
       await projectService.restoreAiModelConfigDefaults();
       const configs = await projectService.getAiModelConfigs();
       setAiConfigs(configs);
     }
   };
 
+  // A provider is a choice and saves at once; a model name is typed and waits for the pause.
   const handleUpdateAiConfig = (skill: AISkill, field: 'provider' | 'model_name', value: string) => {
-    setAiConfigs((prev) =>
-      prev.map((c) => {
-        if (c.skill !== skill) return c;
-        if (field === 'provider') {
-          const newProvider = value as AIProvider;
-          const suggestedModel = suggestedModelFor(skill, newProvider, c.model_name);
-          return { ...c, provider: newProvider, model_name: suggestedModel };
-        }
-        return { ...c, [field]: value };
-      }),
+    const next = aiConfigs.map((c) => {
+      if (c.skill !== skill) return c;
+      if (field === 'provider') {
+        const newProvider = value as AIProvider;
+        return { ...c, provider: newProvider, model_name: suggestedModelFor(skill, newProvider, c.model_name) };
+      }
+      return { ...c, [field]: value };
+    });
+    setAiConfigs(next);
+    const changed = next.find((c) => c.skill === skill);
+    if (!changed) return;
+    autosave.schedule(
+      `ai_model:${skill}`,
+      () => projectService.updateAiModelConfig(changed.skill, changed.provider, changed.model_name),
+      field === 'provider' ? 0 : TYPING_DELAY_MS,
     );
   };
 
@@ -324,6 +302,7 @@ export const SettingsPage: React.FC = () => {
           <Settings size={28} />
         </div>
         <h1 style={{ margin: 0, fontSize: '2.5rem' }}>Configurações</h1>
+        <AutosaveNotice status={autosave.status} />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -331,39 +310,37 @@ export const SettingsPage: React.FC = () => {
 
         <ApiKeysSettings
           scopusKey={scopusKey}
-          setScopusKey={setScopusKey}
+          setScopusKey={bind('scopus_api_key', setScopusKey)}
           wosKey={wosKey}
-          setWosKey={setWosKey}
+          setWosKey={bind('wos_api_key', setWosKey)}
           openAlexKey={openAlexKey}
-          setOpenAlexKey={setOpenAlexKey}
+          setOpenAlexKey={bind('openalex_api_key', setOpenAlexKey)}
           ieeeKey={ieeeKey}
-          setIeeeKey={setIeeeKey}
+          setIeeeKey={bind('ieee_api_key', setIeeeKey)}
         />
 
         <AiSettings
           openaiKey={openaiKey}
-          setOpenaiKey={setOpenaiKey}
+          setOpenaiKey={bind('api_key_openai', setOpenaiKey)}
           geminiKey={geminiKey}
-          setGeminiKey={setGeminiKey}
+          setGeminiKey={bind('api_key_gemini', setGeminiKey)}
           anthropicKey={anthropicKey}
-          setAnthropicKey={setAnthropicKey}
+          setAnthropicKey={bind('api_key_anthropic', setAnthropicKey)}
           ollamaUrl={ollamaUrl}
-          setOllamaUrl={setOllamaUrl}
+          setOllamaUrl={bind('api_key_ollama', setOllamaUrl)}
           ollamaCloudKey={ollamaCloudKey}
-          setOllamaCloudKey={setOllamaCloudKey}
+          setOllamaCloudKey={bind('api_key_ollama_cloud', setOllamaCloudKey)}
           aiConfigs={aiConfigs}
           handleUpdateAiConfig={handleUpdateAiConfig}
           getModelSuggestions={modelSuggestions}
           ragChunkSize={ragChunkSize}
-          setRagChunkSize={setRagChunkSize}
+          setRagChunkSize={bind('rag_chunk_size', setRagChunkSize)}
           ragChunkOverlap={ragChunkOverlap}
-          setRagChunkOverlap={setRagChunkOverlap}
+          setRagChunkOverlap={bind('rag_chunk_overlap', setRagChunkOverlap)}
           ragTopK={ragTopK}
-          setRagTopK={setRagTopK}
+          setRagTopK={bind('rag_top_k', setRagTopK)}
           handleRestoreAiDefaults={handleRestoreAiDefaults}
-          handleSaveKeys={handleSaveKeys}
-          saving={saving}
-          saved={saved}
+          autosaveStatus={autosave.status}
         />
 
         <BackupSettings

@@ -36,9 +36,7 @@ function renderSettings(overrides: Partial<Props> = {}) {
     ragTopK: '5',
     setRagTopK: vi.fn(),
     handleRestoreAiDefaults: vi.fn(),
-    handleSaveKeys: vi.fn(),
-    saving: false,
-    saved: false,
+    autosaveStatus: 'idle' as const,
     ...overrides,
   };
   render(
@@ -173,28 +171,12 @@ describe('AiSettings RAG parameters', () => {
 });
 
 describe('AiSettings actions', () => {
-  it('saves from both buttons and restores defaults', () => {
+  it('restores the defaults, and has no save button: settings save on their own', () => {
     const props = renderSettings();
 
-    fireEvent.click(screen.getByRole('button', { name: /Salvar Chaves/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Salvar Configuração/ }));
     fireEvent.click(screen.getByRole('button', { name: /Restaurar Padrões/ }));
 
-    expect(props.handleSaveKeys).toHaveBeenCalledTimes(2);
     expect(props.handleRestoreAiDefaults).toHaveBeenCalledTimes(1);
-  });
-
-  it('disables both save buttons while saving', () => {
-    renderSettings({ saving: true });
-
-    const buttons = screen.getAllByRole('button', { name: /Salvando/ });
-    expect(buttons).toHaveLength(2);
-    buttons.forEach((b) => expect(b).toBeDisabled());
-  });
-
-  it('confirms a completed save on both buttons', () => {
-    renderSettings({ saved: true });
-
-    expect(screen.getAllByRole('button', { name: /Salvo!/ })).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /Salvar/ })).toBeNull();
   });
 });
