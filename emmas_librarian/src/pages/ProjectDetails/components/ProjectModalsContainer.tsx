@@ -1,11 +1,10 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, Key } from 'lucide-react';
+import { Key } from 'lucide-react';
 import { SearchHistoryModal } from '../../../components/modals/SearchHistoryModal';
 import { ArchiveModal } from '../../../components/modals/ArchiveModal';
 import { ManualArticleModal } from '../../../components/modals/ManualArticleModal';
-import { AIExtractionModal } from '../../../components/modals/AIExtractionModal';
 import { EditArticleModal } from '../../../components/modals/EditArticleModal';
 import { ManageQuickAccessModal } from '../../../components/modals/ManageQuickAccessModal';
 import { ProjectCategoriesModal } from '../../../components/modals/ProjectCategoriesModal';
@@ -17,33 +16,22 @@ import { ImportArticlesModal } from '../../../components/modals/ImportArticlesMo
 import { Project, Article, ProjectDocument } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { ProjectModals } from '../hooks/useProjectModals';
-import type { AuditReturn } from '../../../utils/auditReturn';
 import type { ProjectTabId } from './ProjectTabs';
 
 interface ProjectModalsContainerProps {
   projectId: number;
   /** Set when coming back from the reader to an audit (#48). */
-  reopenAudit?: AuditReturn | null;
   project: Project;
   articles: Article[];
   projectDocuments: ProjectDocument[];
   history: any[];
   readArticles: Article[];
-  investigationHistory: any[];
   modals: ProjectModals;
   fetchData: () => void;
   handleArchiveSubmit: (note: string) => void;
   handleEditArticleSubmit: (data: Partial<Article>) => Promise<void>;
   handleManualArticleSubmit: (data: Partial<Article>, filePath?: string) => Promise<void>;
   handleRevertSearch: (searchId: number) => void;
-  handleCloseAIExtractionModal: () => void;
-  handleMassiveExtraction: (selectedIds: number[]) => void;
-  aiQuestions: string[];
-  setAiQuestions: (val: string[]) => void;
-  isExtracting: boolean;
-  extractionProgress: { current: number; total: number };
-  aiExtractionResults: any[];
-  cancelExtractionRef: React.MutableRefObject<boolean>;
   showKeyAlert: boolean;
   setShowKeyAlert: (val: boolean) => void;
   setActiveTab: (tab: ProjectTabId) => void;
@@ -51,27 +39,17 @@ interface ProjectModalsContainerProps {
 
 export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
   projectId,
-  reopenAudit,
   project,
   articles,
   projectDocuments,
   history,
   readArticles,
-  investigationHistory,
   modals,
   fetchData,
   handleArchiveSubmit,
   handleEditArticleSubmit,
   handleManualArticleSubmit,
   handleRevertSearch,
-  handleCloseAIExtractionModal,
-  handleMassiveExtraction,
-  aiQuestions,
-  setAiQuestions,
-  isExtracting,
-  extractionProgress,
-  aiExtractionResults,
-  cancelExtractionRef,
   showKeyAlert,
   setShowKeyAlert,
   setActiveTab,
@@ -125,61 +103,6 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
           projectId={projectId}
         />
       )}
-
-      <AIExtractionModal
-        isOpen={modals.isAIExtractionModalOpen}
-        onClose={handleCloseAIExtractionModal}
-        articles={articles}
-        articlesWithPdf={articles.filter((a) => !!a.local_file_path)}
-        aiQuestions={aiQuestions}
-        setAiQuestions={setAiQuestions}
-        handleMassiveExtraction={handleMassiveExtraction}
-        isExtracting={isExtracting}
-        extractionProgress={extractionProgress}
-        aiExtractionResults={aiExtractionResults}
-        cancelExtractionRef={cancelExtractionRef}
-        investigationHistory={investigationHistory}
-        searchHistory={history}
-        projectId={projectId}
-        reopenAudit={reopenAudit}
-        getInvestigationResults={projectService.getInvestigationResults}
-      />
-
-      {modals.showQuotaModal &&
-        createPortal(
-          <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              background: 'rgba(0,0,0,0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000,
-              backdropFilter: 'blur(4px)',
-            }}
-          >
-            <div
-              className="card fade-in"
-              style={{ padding: '2rem', width: '400px', background: 'var(--bg-main)', textAlign: 'center' }}
-            >
-              <AlertCircle size={48} style={{ color: 'var(--color-danger)', margin: '0 auto 1rem auto' }} />
-              <h3 style={{ margin: '0 0 1rem 0' }}>Limite de Cota Atingido</h3>
-              <p style={{ margin: '0 0 1.5rem 0', color: 'var(--text-muted)' }}>
-                A sua chave de API (OpenAI/Anthropic/Gemini) parece ter esgotado o limite de cota ou os créditos
-                disponíveis. Verifique o seu provedor de IA e atualize as configurações no sistema.
-              </p>
-              <button
-                className="btn-primary"
-                style={{ width: '100%', justifyContent: 'center' }}
-                onClick={() => modals.setShowQuotaModal(false)}
-              >
-                Entendi
-              </button>
-            </div>
-          </div>,
-          document.body,
-        )}
 
       {showKeyAlert &&
         createPortal(

@@ -13,7 +13,7 @@ async function importPdf(window) {
 }
 
 async function createQuestionSet(window, setName) {
-  await window.click('button[title="Extração Inteligente IA"]');
+  await window.getByRole('link', { name: 'Investigação com IA' }).click();
   await window.fill('input[placeholder="Pergunta 1"]', 'What is the main finding?');
   await window.click('button:has-text("+ Salvar Atual")');
   await window.fill('input[placeholder="Nome do conjunto"]', setName);
@@ -23,18 +23,17 @@ async function createQuestionSet(window, setName) {
 
 async function runExtractionFlow(window) {
   await window.check('label:has-text("E2E_Import_Test_Article") input[type="checkbox"]');
-  await window.click('button:has-text("Iniciar Investigação")');
-  const finishBtn = window.locator('button:has-text("Concluir Investigação")');
-  await finishBtn.waitFor({ state: 'visible', timeout: 10000 });
-  await finishBtn.click();
+  await window.getByRole('button', { name: 'Iniciar investigação' }).click();
+  // When the run ends the page opens what it saved.
+  await expect(window.getByRole('heading', { name: /Investigação #\d+/ })).toBeVisible({ timeout: 10000 });
 }
 
 async function verifyHistory(window) {
-  await window.click('button[title="Extração Inteligente IA"]');
-  await window.click('.card >> button:has-text("Histórico")');
-  await window.click('button:has-text("Ver Detalhes")');
-  await expect(window.locator('text=Investigação #')).toBeVisible();
-  await window.click('.card >> button[title="Fechar"]');
+  await window.getByRole('link', { name: 'Voltar ao projeto' }).click();
+  await window.getByRole('link', { name: 'Investigação com IA' }).click();
+  await window.getByRole('navigation', { name: 'Investigações do projeto' }).getByRole('link').first().click();
+  await expect(window.getByRole('heading', { name: /Investigação #\d+/ })).toBeVisible();
+  await window.getByRole('link', { name: 'Voltar ao projeto' }).click();
 }
 
 test('F-07 Create and answer investigation questionnaire', async () => {

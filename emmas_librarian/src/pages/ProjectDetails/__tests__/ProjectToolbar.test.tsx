@@ -13,7 +13,6 @@ describe('ProjectToolbar', () => {
   const defaultProps = {
     project: { id: 1 } as any,
     projectDocuments: [],
-    setIsAIExtractionModalOpen: vi.fn(),
     isAddArticlesMenuOpen: false,
     setIsAddArticlesMenuOpen: vi.fn(),
     isExportMenuOpen: false,
@@ -46,7 +45,7 @@ describe('ProjectToolbar', () => {
   it('renders all buttons', () => {
     renderComponent();
     expect(screen.getByText('Nova busca')).toBeInTheDocument();
-    expect(screen.getByText('Extração IA')).toBeInTheDocument();
+    expect(screen.getByText('Investigação com IA')).toBeInTheDocument();
     expect(screen.getByText('Adicionar Artigos')).toBeInTheDocument();
     expect(screen.getByText('Exportar')).toBeInTheDocument();
     expect(screen.getByText('Criar categorias')).toBeInTheDocument();
@@ -59,10 +58,12 @@ describe('ProjectToolbar', () => {
     expect(screen.getByRole('link', { name: /Revisão sistemática/ })).toHaveAttribute('href', '/projects/1/review');
   });
 
-  it('handles Extração IA click', () => {
+  it('links to the investigation page', () => {
     renderComponent();
-    fireEvent.click(screen.getByText('Extração IA'));
-    expect(defaultProps.setIsAIExtractionModalOpen).toHaveBeenCalledWith(true);
+    expect(screen.getByRole('link', { name: 'Investigação com IA' })).toHaveAttribute(
+      'href',
+      `/projects/${defaultProps.project.id}/investigation`,
+    );
   });
 
   it('handles Adicionar Artigos click to open menu', () => {

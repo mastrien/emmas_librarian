@@ -3,7 +3,6 @@ import { useProjectService } from '../../../contexts/ServicesContext';
 import type {
   Article,
   ArticleCategory,
-  MassiveInvestigation,
   Project,
   ProjectCategory,
   ProjectDocument,
@@ -24,7 +23,6 @@ export function useProjectData(projectId: number | null, onArticlesReloaded?: (a
   const [articles, setArticles] = useState<Article[]>([]);
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
   const [projectDocuments, setProjectDocuments] = useState<ProjectDocument[]>([]);
-  const [investigationHistory, setInvestigationHistory] = useState<MassiveInvestigation[]>([]);
   const [projectCategories, setProjectCategories] = useState<ProjectCategory[]>([]);
   const [articleCategories, setArticleCategories] = useState<ArticleCategory[]>([]);
   // Kept in a ref so a new callback identity does not re-trigger the initial load.
@@ -36,12 +34,11 @@ export function useProjectData(projectId: number | null, onArticlesReloaded?: (a
   const reload = useCallback(async () => {
     if (projectId === null) return;
     try {
-      const [proj, arts, hist, docs, investigations, categories, assignments] = await Promise.all([
+      const [proj, arts, hist, docs, categories, assignments] = await Promise.all([
         projectService.getProject(projectId),
         projectService.getArticles(projectId),
         projectService.getSearchHistory(projectId),
         projectService.getProjectDocuments(projectId),
-        projectService.getMassiveInvestigations(projectId),
         projectService.getProjectCategories(projectId),
         projectService.getAllProjectArticleCategories(projectId),
       ]);
@@ -50,7 +47,6 @@ export function useProjectData(projectId: number | null, onArticlesReloaded?: (a
       articlesReloaded.current?.(arts);
       setHistory(hist);
       setProjectDocuments(docs);
-      setInvestigationHistory(investigations);
       setProjectCategories(categories);
       setArticleCategories(assignments);
     } catch (err) {
@@ -72,8 +68,6 @@ export function useProjectData(projectId: number | null, onArticlesReloaded?: (a
     setArticles,
     history,
     projectDocuments,
-    investigationHistory,
-    setInvestigationHistory,
     projectCategories,
     articleCategories,
     reload,

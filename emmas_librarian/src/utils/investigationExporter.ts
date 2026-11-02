@@ -1,5 +1,5 @@
 import { type Article, type InvestigationResult } from '../types';
-import { type InvestigationHistoryRecord } from '../components/modals/AIExtractionModal';
+import type { InvestigationHistoryRecord } from '../types';
 import { aiAnswerText, finalAnswerText, REVIEW_LABELS } from './investigationAnswers';
 import { auditStatsJson, type AuditExport } from './auditExport';
 

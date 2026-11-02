@@ -314,6 +314,16 @@ export interface MassiveInvestigation {
   created_at: string;
 }
 
+/** A stored investigation as the screens read it; every extra field is optional in rows from older versions. */
+export interface InvestigationHistoryRecord {
+  id: number;
+  created_at: string;
+  status?: string;
+  model_used?: string;
+  questions?: string; // JSON string
+  articles_ids?: string; // JSON string
+}
+
 export interface QuestionSet {
   id: number;
   project_id: number | null;

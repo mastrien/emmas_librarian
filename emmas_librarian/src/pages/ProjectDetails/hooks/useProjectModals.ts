@@ -5,7 +5,6 @@ export const useProjectModals = () => {
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
-  const [isAIExtractionModalOpen, setIsAIExtractionModalOpen] = useState(false);
   const [isImportArticlesModalOpen, setIsImportArticlesModalOpen] = useState(false);
   const [isQuickAccessModalOpen, setIsQuickAccessModalOpen] = useState(false);
   const [isMassCitationModalOpen, setIsMassCitationModalOpen] = useState(false);
@@ -20,8 +19,6 @@ export const useProjectModals = () => {
   const [selectedArticleForDetails, setSelectedArticleForDetails] = useState<Article | null>(null);
   const [attachPdfArticle, setAttachPdfArticle] = useState<{ id: number; title: string } | null>(null);
 
-  const [showQuotaModal, setShowQuotaModal] = useState(false);
-
   return {
     isManualModalOpen,
     setIsManualModalOpen,
@@ -29,8 +26,6 @@ export const useProjectModals = () => {
     setIsHistoryOpen,
     isCategoriesModalOpen,
     setIsCategoriesModalOpen,
-    isAIExtractionModalOpen,
-    setIsAIExtractionModalOpen,
     isImportArticlesModalOpen,
     setIsImportArticlesModalOpen,
     isQuickAccessModalOpen,
@@ -52,9 +47,6 @@ export const useProjectModals = () => {
     setSelectedArticleForDetails,
     attachPdfArticle,
     setAttachPdfArticle,
-
-    showQuotaModal,
-    setShowQuotaModal,
   };
 };
 

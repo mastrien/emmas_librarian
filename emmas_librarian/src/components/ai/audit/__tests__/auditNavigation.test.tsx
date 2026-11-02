@@ -1,83 +1,64 @@
-import React from 'react';
 import { act } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { describe, it, expect, vi } from 'vitest';
-import { AIExtractionModal, type AIExtractionModalProps } from '../../../modals/AIExtractionModal';
-import { InvestigationDetailView } from '../../InvestigationDetailView';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { ArticleReaderToolbar } from '../../../../pages/ArticleReader/components/ArticleReaderToolbar';
-import { ServicesProvider } from '../../../../contexts/ServicesContext';
-import { FakeProjectService } from '../../../../services/__tests__/fakes/FakeProjectService';
-import type { Article, InvestigationAudit, InvestigationResult } from '../../../../types';
+import {
+  answer,
+  article,
+  investigationService,
+  record,
+  renderInvestigation,
+  setWindowWidth,
+} from '../../../../pages/Investigation/__tests__/investigationTestData';
+import type { InvestigationAudit } from '../../../../types';
 
-const article = { id: 1, project_id: 3, title: 'Estudo 1', status: 'read' } as Article;
-const answer: InvestigationResult = {
+const study = article(1);
+const result = answer(1, 'Q1', {
   id: 42,
   investigation_id: 19,
-  article_id: 1,
-  question: 'Q1',
   answer: 'Coorte',
   quote: 'trecho',
-  status: 'success',
-  error_message: null,
-  created_at: '',
   review_status: 'accepted',
-  reviewed_answer: null,
-  reviewed_at: null,
-};
-const audit: InvestigationAudit = {
+});
+const audit = {
   id: 1,
   investigation_id: 19,
-  seed: 7,
+  seed: 1,
   sample_percent: 100,
   min_per_question: 1,
   created_at: '',
-};
-const investigation = { id: 19, created_at: '', model_used: 'gpt-x', questions: '["Q1"]', articles_ids: '[1]' };
+} as InvestigationAudit;
 const back = { projectId: 3, investigationId: 19, resultId: 42 };
 
-const Probe: React.FC = () => {
-  const location = useLocation();
-  return <div data-testid="where">{`${location.pathname}|${JSON.stringify(location.state)}`}</div>;
+const audited = () => {
+  const service = investigationService([study], [record(19, { questions: JSON.stringify(['Q1']) })], { 19: [result] });
+  service.getInvestigationAudit.mockResolvedValue(audit);
+  service.getInvestigationAuditsByProject.mockResolvedValue([audit]);
+  return service;
 };
 
-describe('the audit from the investigation screen (#48)', () => {
-  function renderDetail(service: FakeProjectService, extra: { initialAuditResultId?: number } = {}) {
-    render(
-      <MemoryRouter>
-        <ServicesProvider apiService={service}>
-          <InvestigationDetailView
-            investigation={investigation}
-            articles={[article]}
-            getInvestigationResults={async () => [answer]}
-            onBack={vi.fn()}
-            onReExecute={vi.fn()}
-            projectId={3}
-            history={[investigation]}
-            {...extra}
-          />
-        </ServicesProvider>
-      </MemoryRouter>,
-    );
-  }
+beforeEach(() => {
+  sessionStorage.clear();
+  setWindowWidth(1600);
+});
 
-  it('opens the audit with "Auditar" and goes back to the results', async () => {
-    renderDetail(new FakeProjectService());
+describe('the audit on the investigation page', () => {
+  it('is a tab of the investigation', async () => {
+    renderInvestigation(audited(), '/projects/3/investigation/19');
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Auditar' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Auditoria' }));
+
     expect(await screen.findByText('Auditoria da investigação #19')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '← Voltar à investigação' }));
-
-    expect(await screen.findByRole('button', { name: 'Auditar' })).toBeInTheDocument();
   });
 
   it('puts the audit in the CSV export when there is one', async () => {
-    const service = new FakeProjectService();
-    service.getInvestigationAudit.mockResolvedValue(audit);
+    const service = audited();
     service.saveExportedFile.mockResolvedValue(true);
-    renderDetail(service);
+    renderInvestigation(service, '/projects/3/investigation/19');
 
     const exportButton = await screen.findByRole('button', { name: 'Exportar CSV' });
+    await waitFor(() => expect(exportButton).toBeEnabled());
     await act(async () => {
       fireEvent.click(exportButton);
     });
@@ -87,16 +68,34 @@ describe('the audit from the investigation screen (#48)', () => {
     expect(csv.split(/\r?\n/)[1].endsWith(',sim')).toBe(true);
   });
 
-  it('opens straight on the audit when coming back from the reader', async () => {
-    const service = new FakeProjectService();
-    service.getInvestigationAudit.mockResolvedValue(audit);
-    renderDetail(service, { initialAuditResultId: 42 });
+  it('opens straight on the audit, at the item, when coming back from the reader', async () => {
+    renderInvestigation(audited(), { pathname: '/projects/3/investigation/19', state: { openAudit: back } });
 
     expect(await screen.findByRole('complementary', { name: 'Evidência do item selecionado' })).toHaveTextContent(
       'Coorte',
     );
+    expect(screen.getByRole('tab', { name: 'Auditoria' })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('shows the item as a drawer on a narrow window, closed by its X', async () => {
+    setWindowWidth(1000);
+    renderInvestigation(audited(), { pathname: '/projects/3/investigation/19', state: { openAudit: back } });
+
+    const drawer = await screen.findByRole('dialog', { name: 'Item da amostra' });
+    expect(within(drawer).getByRole('complementary', { name: 'Evidência do item selecionado' })).toHaveTextContent(
+      'Coorte',
+    );
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Fechar' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByText('Auditoria da investigação #19')).toBeInTheDocument();
   });
 });
+
+const Probe = () => {
+  const location = useLocation();
+  return <output data-testid="where">{`${location.pathname}|${JSON.stringify(location.state)}`}</output>;
+};
 
 describe('back from the reader to the audit', () => {
   function renderToolbar(state: unknown) {
@@ -107,7 +106,7 @@ describe('back from the reader to the audit', () => {
             path="/articles/1"
             element={
               <ArticleReaderToolbar
-                article={article}
+                article={study}
                 hasLocalFile
                 uploading={false}
                 scale={1}
@@ -119,18 +118,28 @@ describe('back from the reader to the audit', () => {
               />
             }
           />
-          <Route path="/projects/3" element={<Probe />} />
+          <Route path="/projects/*" element={<Probe />} />
         </Routes>
       </MemoryRouter>,
     );
   }
 
-  it('goes back to the project asking it to reopen the audit on the same item', () => {
+  it('goes back to the investigation asking it to reopen the audit on the same item', () => {
     renderToolbar({ searchQuery: 'trecho', returnTo: back });
 
     fireEvent.click(screen.getByRole('link', { name: 'Voltar para a auditoria' }));
 
-    expect(screen.getByTestId('where')).toHaveTextContent(`/projects/3|${JSON.stringify({ openAudit: back })}`);
+    expect(screen.getByTestId('where')).toHaveTextContent(
+      `/projects/3/investigation/19|${JSON.stringify({ openAudit: back })}`,
+    );
+  });
+
+  it('follows the way back an answer of the investigation left', () => {
+    renderToolbar({ backTo: { path: '/projects/3/investigation/19', label: 'Voltar à investigação' } });
+
+    fireEvent.click(screen.getByRole('link', { name: 'Voltar à investigação' }));
+
+    expect(screen.getByTestId('where')).toHaveTextContent('/projects/3/investigation/19|null');
   });
 
   it('is the plain way back to the project otherwise', () => {
@@ -139,42 +148,5 @@ describe('back from the reader to the audit', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Voltar ao projeto' }));
 
     expect(screen.getByTestId('where')).toHaveTextContent('/projects/3|null');
-  });
-});
-
-describe('the AI window reopening an audit', () => {
-  it('opens the history on the audited investigation, at the item', async () => {
-    const service = new FakeProjectService();
-    service.getQuestionSets.mockReturnValue(new Promise(() => undefined));
-    service.getInvestigationAudit.mockResolvedValue(audit);
-    const props: AIExtractionModalProps = {
-      isOpen: true,
-      onClose: vi.fn(),
-      articlesWithPdf: [article],
-      articles: [article],
-      aiQuestions: ['Q1'],
-      setAiQuestions: vi.fn(),
-      handleMassiveExtraction: vi.fn(),
-      isExtracting: false,
-      extractionProgress: { current: 0, total: 0 },
-      aiExtractionResults: [],
-      cancelExtractionRef: { current: false },
-      investigationHistory: [investigation],
-      getInvestigationResults: vi.fn().mockResolvedValue([answer]),
-      projectId: 3,
-      reopenAudit: back,
-    };
-    render(
-      <ServicesProvider apiService={service}>
-        <MemoryRouter>
-          <AIExtractionModal {...props} />
-        </MemoryRouter>
-      </ServicesProvider>,
-    );
-
-    expect(await screen.findByText('Auditoria da investigação #19')).toBeInTheDocument();
-    expect(await screen.findByRole('complementary', { name: 'Evidência do item selecionado' })).toHaveTextContent(
-      'Coorte',
-    );
   });
 });

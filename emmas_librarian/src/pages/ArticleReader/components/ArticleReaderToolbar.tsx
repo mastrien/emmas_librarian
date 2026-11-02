@@ -54,7 +54,11 @@ export const ArticleReaderToolbar: React.FC<ArticleReaderToolbarProps> = ({
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
         <Link
-          to={backToPage?.path ?? `/projects/${article.project_id}`}
+          to={
+            backToAudit
+              ? `/projects/${backToAudit.projectId}/investigation/${backToAudit.investigationId}`
+              : (backToPage?.path ?? `/projects/${article.project_id}`)
+          }
           state={backToAudit ? { openAudit: backToAudit } : undefined}
           title={backLabel}
           aria-label={backLabel}

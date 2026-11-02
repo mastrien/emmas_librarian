@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { formatResultsAsCsv, formatResultsAsJson } from '../investigationExporter';
 import { auditForExport } from '../auditExport';
 import { type Article, type InvestigationResult } from '../../types';
-import { type InvestigationHistoryRecord } from '../../components/modals/AIExtractionModal';
+import type { InvestigationHistoryRecord } from '../../types';
 
 describe('investigationExporter', () => {
   const investigation: InvestigationHistoryRecord = {

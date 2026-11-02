@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Article, InvestigationResult, ResultReview } from '../../../types';
-import type { InvestigationHistoryRecord } from '../../modals/AIExtractionModal';
+import type { InvestigationHistoryRecord } from '../../../types';
+import { SideDrawer } from '../../common/SideDrawer';
+import { useNarrowWindow } from '../../../hooks/useNarrowWindow';
 import { auditStats, drawStratifiedSample } from '../../../utils/auditSampling';
 import { auditQuestionRows, sampledInOrder } from '../../../utils/auditQuestions';
 import { evidencesOf, type AuditEvidenceItem } from '../../../utils/auditEvidence';
@@ -25,7 +27,6 @@ export interface AuditViewProps {
   history: InvestigationHistoryRecord[];
   getInvestigationResults: (investigationId: number) => Promise<InvestigationResult[]>;
   onReview: (resultId: number, review: ResultReview) => Promise<void>;
-  onBack: () => void;
   /** The item to show first, when coming back from the PDF reader. */
   initialResultId?: number;
 }
@@ -54,7 +55,8 @@ function useAuditKeys(handle: (key: 'a' | 'e' | 'r' | 'p') => void) {
  *   <AuditView investigation={inv} projectId={1} articles={articles} results={results} history={history} ... />
  */
 export const AuditView: React.FC<AuditViewProps> = (props) => {
-  const { investigation, projectId, articles, results, onReview, onBack, initialResultId } = props;
+  const { investigation, projectId, articles, results, onReview, initialResultId } = props;
+  const narrow = useNarrowWindow();
   const navigate = useNavigate();
   const { audit, loading, draw, modelRows } = useInvestigationAudit({ investigationId: investigation.id, ...props });
   const [view, setView] = useState<'table' | 'queue'>('table');
@@ -105,13 +107,22 @@ export const AuditView: React.FC<AuditViewProps> = (props) => {
 
   if (loading) return <div className="audit-empty">Carregando auditoria...</div>;
 
+  const evidencePanel = (
+    <AuditEvidencePanel
+      result={inView}
+      questionNumber={questionOf(inView)}
+      article={articleOf(inView)}
+      editing={editing}
+      onEdit={setEditing}
+      onReview={review(inView)}
+      onOpenEvidence={inView ? openEvidence(inView) : () => undefined}
+    />
+  );
+
   return (
     <div className="audit">
       <div className="audit-row audit-spread" style={{ alignItems: 'flex-end' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-          <button type="button" className="btn-secondary" style={{ alignSelf: 'flex-start' }} onClick={onBack}>
-            ← Voltar à investigação
-          </button>
           <h3 style={{ margin: 0 }}>Auditoria da investigação #{investigation.id}</h3>
           <span className="audit-muted" style={{ fontSize: '0.8rem' }}>
             {investigation.model_used || 'Modelo desconhecido'} · {rows.length} perguntas · amostra de {sampled.length}{' '}
@@ -161,15 +172,8 @@ export const AuditView: React.FC<AuditViewProps> = (props) => {
                   setEditing(false);
                 }}
               />
-              <AuditEvidencePanel
-                result={inView}
-                questionNumber={questionOf(inView)}
-                article={articleOf(inView)}
-                editing={editing}
-                onEdit={setEditing}
-                onReview={review(inView)}
-                onOpenEvidence={inView ? openEvidence(inView) : () => undefined}
-              />
+              {/* On a narrow window the item opens over the table, as the answer does in the "Respostas" tab. */}
+              {!narrow && evidencePanel}
             </div>
           )}
           <AuditModelComparison rows={modelRows} currentId={investigation.id} onHelp={() => setHelpOpen(true)} />
@@ -181,6 +185,11 @@ export const AuditView: React.FC<AuditViewProps> = (props) => {
         </>
       )}
       {helpOpen && <AuditHelpDialog onClose={() => setHelpOpen(false)} />}
+      {narrow && view === 'table' && inView && (
+        <SideDrawer side="right" label="Item da amostra" onClose={() => setSelectedId(null)}>
+          {evidencePanel}
+        </SideDrawer>
+      )}
     </div>
   );
 };

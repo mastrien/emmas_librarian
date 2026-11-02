@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
-import { auditToReopen } from '../utils/auditReturn';
+import React, { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { useGlobalError } from '../contexts/GlobalErrorContext';
 import { useProjectService } from '../contexts/ServicesContext';
 import type { Article } from '../types';
 import { useProjectData } from './ProjectDetails/hooks/useProjectData';
@@ -10,7 +8,6 @@ import { useProjectFiltering, useProjectViewState } from './ProjectDetails/hooks
 import { useProjectModals } from './ProjectDetails/hooks/useProjectModals';
 import { useProjectActions } from './ProjectDetails/hooks/useProjectActions';
 import { useProjectPdfImport } from './ProjectDetails/hooks/useProjectPdfImport';
-import { useMassiveExtraction } from './ProjectDetails/hooks/useMassiveExtraction';
 import { useHoverMenu } from './ProjectDetails/hooks/useHoverMenu';
 import { ProjectDetailsSkeleton } from './ProjectDetails/components/ProjectDetailsSkeleton';
 import { ProjectHeader } from './ProjectDetails/components/ProjectHeader';
@@ -38,16 +35,8 @@ const ARTICLES_PER_PAGE = 50;
 export const ProjectDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const projectId = id ? parseInt(id) : null;
-  const { showError } = useGlobalError();
   const projectService = useProjectService();
   const modals = useProjectModals();
-  // Back from the reader after "Abrir no PDF" in an audit (#48): reopen the AI window on that audit and item.
-  const location = useLocation();
-  const reopenAudit = auditToReopen(location.state);
-  useEffect(() => {
-    if (reopenAudit) modals.setIsAIExtractionModalOpen(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.key]);
   const [activeTab, setActiveTab] = useProjectViewState<ProjectTabId>(projectId, 'activeTab', 'articles');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showKeyAlert, setShowKeyAlert] = useState(false);
@@ -66,22 +55,10 @@ export const ProjectDetailsPage: React.FC = () => {
     onImported: data.reload,
     isDropBlocked: () => modals.isQuickAccessModalOpen,
   });
-  const extraction = useMassiveExtraction({
-    projectId,
-    articles: data.articles,
-    onQuotaExceeded: () => modals.setShowQuotaModal(true),
-    onHistoryChanged: data.setInvestigationHistory,
-    onFatalError: showError,
-  });
 
   if (data.loading) return <ProjectDetailsSkeleton />;
   if (!data.project) return <div style={{ padding: '2rem', textAlign: 'center' }}>Projeto não encontrado.</div>;
   const project = data.project;
-
-  const closeExtractionModal = () => {
-    modals.setIsAIExtractionModalOpen(false);
-    extraction.reset();
-  };
 
   return (
     <div
@@ -119,7 +96,6 @@ export const ProjectDetailsPage: React.FC = () => {
         <ProjectToolbar
           project={project}
           projectDocuments={data.projectDocuments}
-          setIsAIExtractionModalOpen={modals.setIsAIExtractionModalOpen}
           isAddArticlesMenuOpen={addMenu.isOpen}
           setIsAddArticlesMenuOpen={addMenu.setIsOpen}
           isExportMenuOpen={exportMenu.isOpen}
@@ -193,27 +169,17 @@ export const ProjectDetailsPage: React.FC = () => {
 
       <ProjectModalsContainer
         projectId={projectId ?? 0}
-        reopenAudit={reopenAudit}
         project={project}
         articles={data.articles}
         projectDocuments={data.projectDocuments}
         history={data.history}
         readArticles={filtering.readArticles}
-        investigationHistory={data.investigationHistory}
         modals={modals}
         fetchData={data.reload}
         handleArchiveSubmit={actions.archive}
         handleEditArticleSubmit={actions.editArticle}
         handleManualArticleSubmit={actions.createManualArticle}
         handleRevertSearch={actions.revertSearch}
-        handleCloseAIExtractionModal={closeExtractionModal}
-        handleMassiveExtraction={extraction.run}
-        aiQuestions={extraction.questions}
-        setAiQuestions={extraction.setQuestions}
-        isExtracting={extraction.isExtracting}
-        extractionProgress={extraction.progress}
-        aiExtractionResults={extraction.results}
-        cancelExtractionRef={extraction.cancelRef}
         showKeyAlert={showKeyAlert}
         setShowKeyAlert={setShowKeyAlert}
         setActiveTab={setActiveTab}
