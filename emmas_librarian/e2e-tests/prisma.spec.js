@@ -40,6 +40,33 @@ async function tagOrigins(window, panel) {
   await expect(window.getByRole('button', { name: /Sites e buscadores \(n = 2\)/ })).toBeVisible();
 }
 
+// Where the panel sits against the diagram: 'below' it or 'beside' it.
+async function panelPlacement(window, panel) {
+  const canvas = await window.locator('.prisma-canvas').boundingBox();
+  const side = await panel.boundingBox();
+  if (side.y >= canvas.y + canvas.height - 1) return 'below';
+  return side.x >= canvas.x + canvas.width - 1 ? 'beside' : 'overlapping';
+}
+
+// Validation of epic #44: on a narrow window the panel squeezed the diagram's text; it goes below it instead.
+async function expectPanelBelowOnlyWhenNarrow(electronApp, window, panel) {
+  const resize = (w) =>
+    electronApp.evaluate(({ BrowserWindow }, width) => BrowserWindow.getAllWindows()[0].setSize(width, 900), w);
+  await resize(1000);
+  await expect.poll(() => panelPlacement(window, panel), { message: '1000px' }).toBe('below');
+  await resize(1700);
+  await expect.poll(() => panelPlacement(window, panel), { message: '1700px' }).toBe('beside');
+}
+
+// The export note is a plain line of small text on the right, with no box behind it (validation of epic #44).
+async function expectPlainExportNote(note) {
+  const look = await note.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { background: style.backgroundColor, border: style.borderTopStyle, align: style.textAlign };
+  });
+  expect(look).toEqual({ background: 'rgba(0, 0, 0, 0)', border: 'none', align: 'right' });
+}
+
 // #50: articles added by hand go to the "other methods" column, their origin is told (never a number typed), each
 // box says where its number comes from, and the export writes the image with both tables beside it.
 test('draws the PRISMA diagram from the screening and exports it with its tables', async () => {
@@ -71,7 +98,10 @@ test('draws the PRISMA diagram from the screening and exports it with its tables
 
     await window.getByRole('button', { name: 'Exportar ▾' }).click();
     await window.getByRole('menuitem', { name: /SVG \+ tabelas/ }).click();
-    await expect(window.getByText(`Diagrama salvo em ${target}, com as duas tabelas ao lado.`)).toBeVisible();
+    const note = window.getByText(`Diagrama salvo em ${target}, com as duas tabelas ao lado.`);
+    await expect(note).toBeVisible();
+    await expectPlainExportNote(note);
+    await expectPanelBelowOnlyWhenNarrow(electronApp, window, panel);
     const svg = fs.readFileSync(target, 'utf8');
     expect(svg).toContain('Identificação de estudos por outros métodos');
     // In two columns the included box is narrower: its number goes to the line under the title, never cut.

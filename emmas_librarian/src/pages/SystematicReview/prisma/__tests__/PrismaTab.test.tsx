@@ -102,12 +102,26 @@ describe('PrismaTab (#50)', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Exportar ▾' }));
     fireEvent.click(screen.getByRole('menuitem', { name: /SVG \+ tabelas/ }));
 
-    expect(
-      await screen.findByText('Diagrama salvo em /out/prisma.svg, com as duas tabelas ao lado.'),
-    ).toBeInTheDocument();
+    const note = await screen.findByText('Diagrama salvo em /out/prisma.svg, com as duas tabelas ao lado.');
+    // A plain line of text, not the boxed banner it was (validation of epic #44).
+    expect(note).toHaveAttribute('role', 'status');
+    expect(note).toHaveClass('prisma-export-note');
+    expect(note).not.toHaveClass('review-counts');
     const [, format, , tables] = service.exportPrismaDiagram.mock.calls[0];
     expect(format).toBe('svg');
     expect(tables.excluded.split('\n')[0]).toBe('"Referência","Etapa","Motivo","Origem"');
+  });
+
+  it('says in the same plain line, marked as a failure, when the export could not be saved', async () => {
+    const service = prismaService();
+    service.exportPrismaDiagram.mockRejectedValueOnce(new Error('disco cheio'));
+    renderPrisma(service);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Exportar ▾' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /SVG \+ tabelas/ }));
+
+    const note = await screen.findByText(/Não foi possível exportar: .*disco cheio/);
+    expect(note).toHaveClass('prisma-export-note', 'prisma-export-note--failed');
   });
 
   it('shows the data table and the list of excluded reports that go with the export', async () => {

@@ -125,13 +125,29 @@ function titleLines(box: PrismaBox, chars: number): BoxLine[] {
   ];
 }
 
-/** The lines a box shows: title and number, its lines, one short line per kind of warning. */
+/**
+ * A warning wrapped at word breaks to the box's width. Uncut, it ran past the narrow boxes of the two-column
+ * diagram (validation of epic #44); cutting it would drop the "(veja ao lado)" pointer.
+ *
+ * @example warningLines('mismatch', 21) // ['⚠ números não batem', '(veja ao lado)'], as BoxLines
+ */
+export function warningLines(kind: PrismaWarning['kind'], chars: number): BoxLine[] {
+  const { text, kind: lineKind } = WARNING_LINE[kind];
+  const words = text.split(' ').map((word) => ({ text: word }));
+  return wrapTokens(words, chars).map((line) => ({
+    text: line.segments.map((s) => s.text).join(' '),
+    kind: lineKind,
+  }));
+}
+
+/** The lines a box shows: title and number, its lines, each kind of warning wrapped to fit. */
 export function boxLines(box: PrismaBox, chars: number): BoxLine[] {
   const kinds = [...new Set(box.warnings.map((w) => w.kind))];
   return [
     ...titleLines(box, chars),
     ...box.lines.map((l) => ({ text: withCount(l.label, l.n, chars), kind: 'line' as const })),
-    ...kinds.map((k) => WARNING_LINE[k]),
+    // Two characters short: the ⚠ and the medium weight run wider than a regular line (measured in Chrome).
+    ...kinds.flatMap((k) => warningLines(k, chars - 2)),
   ];
 }
 
