@@ -49,15 +49,6 @@ vi.mock('../../../components/modals/SearchHistoryModal', () => ({
       </div>
     ) : null,
 }));
-vi.mock('../../../components/modals/AIExtractionModal', () => ({
-  AIExtractionModal: ({ isOpen, onClose, handleMassiveExtraction }: any) =>
-    isOpen ? (
-      <div data-testid="AIExtractionModal">
-        <button onClick={() => handleMassiveExtraction([1])}>Mass Extract</button>
-        <button onClick={onClose}>Close AI</button>
-      </div>
-    ) : null,
-}));
 vi.mock('../../../components/modals/ManageQuickAccessModal', () => ({
   ManageQuickAccessModal: ({ isOpen, onClose, onDocumentsChanged }: any) =>
     isOpen ? (
@@ -140,10 +131,6 @@ describe('ProjectModalsContainer', () => {
     setIsManualModalOpen: vi.fn(),
     isHistoryOpen: false,
     setIsHistoryOpen: vi.fn(),
-    isAIExtractionModalOpen: false,
-    setIsAIExtractionModalOpen: vi.fn(),
-    showQuotaModal: false,
-    setShowQuotaModal: vi.fn(),
     isQuickAccessModalOpen: false,
     setIsQuickAccessModalOpen: vi.fn(),
     citationArticle: null,
@@ -165,21 +152,12 @@ describe('ProjectModalsContainer', () => {
     projectDocuments: [],
     history: [],
     readArticles: [],
-    investigationHistory: [],
     modals: defaultModalsState,
     fetchData: vi.fn(),
     handleArchiveSubmit: vi.fn(),
     handleEditArticleSubmit: vi.fn(),
     handleManualArticleSubmit: vi.fn(),
     handleRevertSearch: vi.fn(),
-    handleCloseAIExtractionModal: vi.fn(),
-    handleMassiveExtraction: vi.fn(),
-    aiQuestions: [],
-    setAiQuestions: vi.fn(),
-    isExtracting: false,
-    extractionProgress: { current: 0, total: 0 },
-    aiExtractionResults: [],
-    cancelExtractionRef: { current: false },
     showKeyAlert: false,
     setShowKeyAlert: vi.fn(),
     setActiveTab: vi.fn(),
@@ -202,9 +180,8 @@ describe('ProjectModalsContainer', () => {
     expect(screen.queryByTestId('ArchiveModal')).not.toBeInTheDocument();
     expect(screen.queryByTestId('ProjectCategoriesModal')).not.toBeInTheDocument();
     expect(screen.queryByTestId('EditArticleModal')).not.toBeInTheDocument();
-    // ManualArticleModal and AIExtractionModal are rendered but their isOpen controls visibility via mock
+    // ManualArticleModal is rendered but their isOpen controls visibility via mock
     expect(screen.queryByTestId('ManualArticleModal')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('AIExtractionModal')).not.toBeInTheDocument();
   });
 
   it('renders and handles ArchiveModal', () => {
@@ -249,15 +226,6 @@ describe('ProjectModalsContainer', () => {
     expect(defaultProps.handleRevertSearch).toHaveBeenCalled();
     fireEvent.click(screen.getByText('Close History'));
     expect(defaultModalsState.setIsHistoryOpen).toHaveBeenCalledWith(false);
-  });
-
-  it('renders and handles AIExtractionModal', () => {
-    renderComponent({ modals: { ...defaultModalsState, isAIExtractionModalOpen: true } });
-    expect(screen.getByTestId('AIExtractionModal')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Mass Extract'));
-    expect(defaultProps.handleMassiveExtraction).toHaveBeenCalled();
-    fireEvent.click(screen.getByText('Close AI'));
-    expect(defaultProps.handleCloseAIExtractionModal).toHaveBeenCalled();
   });
 
   it('renders and handles ManageQuickAccessModal', () => {
@@ -326,13 +294,6 @@ describe('ProjectModalsContainer', () => {
     expect(defaultProps.fetchData).toHaveBeenCalled();
     fireEvent.click(screen.getByText('Close Attach Pdf'));
     expect(defaultModalsState.setAttachPdfArticle).toHaveBeenCalledWith(null);
-  });
-
-  it('renders Quota Modal portal', () => {
-    renderComponent({ modals: { ...defaultModalsState, showQuotaModal: true } });
-    expect(screen.getByText('Limite de Cota Atingido')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Entendi'));
-    expect(defaultModalsState.setShowQuotaModal).toHaveBeenCalledWith(false);
   });
 
   it('renders Key Alert Modal portal', () => {

@@ -51,7 +51,6 @@ describe('ProjectDetailsPage loading', () => {
       'getArticles',
       'getSearchHistory',
       'getProjectDocuments',
-      'getMassiveInvestigations',
       'getProjectCategories',
       'getAllProjectArticleCategories',
     ] as const) {

@@ -84,7 +84,6 @@ function renderAudit(audit: InvestigationAudit | null, overrides: Partial<AuditV
                 history={[{ id: 19, created_at: '', model_used: 'Gemini 2.5 Flash' }]}
                 getInvestigationResults={async () => results}
                 onReview={onReview}
-                onBack={vi.fn()}
                 {...overrides}
               />
             }

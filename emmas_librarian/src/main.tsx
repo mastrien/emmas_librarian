@@ -7,6 +7,7 @@ import * as ReactDOMClient from 'react-dom/client';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/common/Layout';
 import { GlobalErrorProvider } from './contexts/GlobalErrorContext';
+import { InvestigationRunProvider } from './contexts/InvestigationRunContext';
 import { ErrorModal } from './components/modals/ErrorModal';
 import './style.css';
 
@@ -87,6 +88,9 @@ const TermsOfUsePage = lazy(() =>
 const PdfLibraryPage = lazy(() =>
   import('./pages/PdfLibraryPage').then((module) => ({ default: module.PdfLibraryPage })),
 );
+const InvestigationPage = lazy(() =>
+  import('./pages/Investigation/InvestigationPage').then((module) => ({ default: module.InvestigationPage })),
+);
 const AgendaPage = lazy(() => import('./pages/AgendaPage').then((module) => ({ default: module.AgendaPage })));
 
 // Initialize theme and accent
@@ -109,24 +113,28 @@ if (rootEl)
       <GlobalErrorProvider>
         <HashRouter>
           <Layout>
-            <Suspense
-              fallback={<div className="flex-1 flex items-center justify-center p-8 text-gray-500">Loading...</div>}
-            >
-              <Routes>
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/new-project" element={<NewProjectPage />} />
-                <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-                <Route path="/projects/:id/search" element={<SearchPage />} />
-                <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
-                <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
-                <Route path="/projects/:id/review/prisma" element={<SystematicReviewPage tab="prisma" />} />
-                <Route path="/articles/:id" element={<ArticleReaderPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/terms" element={<TermsOfUsePage />} />
-                <Route path="/pdfs" element={<PdfLibraryPage />} />
-                <Route path="/agenda" element={<AgendaPage />} />
-              </Routes>
-            </Suspense>
+            <InvestigationRunProvider>
+              <Suspense
+                fallback={<div className="flex-1 flex items-center justify-center p-8 text-gray-500">Loading...</div>}
+              >
+                <Routes>
+                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/new-project" element={<NewProjectPage />} />
+                  <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+                  <Route path="/projects/:id/search" element={<SearchPage />} />
+                  <Route path="/projects/:id/investigation" element={<InvestigationPage />} />
+                  <Route path="/projects/:id/investigation/:view" element={<InvestigationPage />} />
+                  <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
+                  <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
+                  <Route path="/projects/:id/review/prisma" element={<SystematicReviewPage tab="prisma" />} />
+                  <Route path="/articles/:id" element={<ArticleReaderPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/terms" element={<TermsOfUsePage />} />
+                  <Route path="/pdfs" element={<PdfLibraryPage />} />
+                  <Route path="/agenda" element={<AgendaPage />} />
+                </Routes>
+              </Suspense>
+            </InvestigationRunProvider>
           </Layout>
         </HashRouter>
         <ErrorModal />

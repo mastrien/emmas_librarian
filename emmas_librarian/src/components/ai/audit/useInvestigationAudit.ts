@@ -1,6 +1,6 @@
+import type { InvestigationHistoryRecord } from '../../../types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { InvestigationAudit, InvestigationResult } from '../../../types';
-import type { InvestigationHistoryRecord } from '../../modals/AIExtractionModal';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { AuditParams } from '../../../utils/auditSampling';
 import { modelAuditRows, type ModelAuditRow } from '../../../utils/auditModels';

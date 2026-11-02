@@ -40,7 +40,7 @@ export function auditReturnFrom(state: unknown): AuditReturn | null {
 }
 
 /**
- * The audit the project page must reopen, read from its router state (set by the reader's "back to the audit").
+ * The audit the investigation page must reopen, read from its router state (set by the reader's "back to the audit").
  *
  * Usage:
  *   const reopen = auditToReopen(useLocation().state);

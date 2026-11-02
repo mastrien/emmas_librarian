@@ -1,5 +1,5 @@
 import { act } from 'react';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ResultReviewControls } from '../ResultReviewControls';
 import type { InvestigationResult } from '../../../../types';
@@ -81,6 +81,20 @@ describe('ResultReviewControls (#47)', () => {
   });
 
   // Validation of epic #44: the three choices stayed on the card after one was chosen.
+  // #84: beside the status, two buttons fit in the panel and the third fell alone onto the next line.
+  it.each(['pending', 'accepted'] as const)('keeps the actions under the status, not on its line (%s)', (status) => {
+    setup({ review_status: status });
+
+    const actions = screen.getByRole('group', { name: 'Ações da revisão' });
+    const label = screen.getByText(/^Revisão: /);
+
+    expect(actions).not.toContainElement(label);
+    expect(label.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(label.parentElement).toBe(actions.parentElement);
+    expect(label.tagName).toBe('DIV');
+    expect(within(actions).getAllByRole('button').length).toBe(status === 'pending' ? 3 : 1);
+  });
+
   it('gives way to "Desfazer" once an answer is marked, and the three come back after it', async () => {
     const { onReview, block } = setup({ review_status: 'accepted' });
 

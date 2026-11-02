@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
-import { useProjectService } from '../../../contexts/ServicesContext';
-import type { IProjectService, ExtractionAnswer } from '../../../services/ProjectServiceInterface';
-import type { Article, MassiveInvestigation } from '../../../types';
-import { investigationStatus } from '../../../utils/investigationStatus';
+import { useProjectService } from '../../contexts/ServicesContext';
+import type { IProjectService, ExtractionAnswer } from '../../services/ProjectServiceInterface';
+import type { Article } from '../../types';
+import { investigationStatus } from '../../utils/investigationStatus';
 
 export interface ArticleExtraction {
   article: Article;
@@ -11,12 +11,25 @@ export interface ArticleExtraction {
   quotaExceeded?: boolean;
 }
 
-interface MassiveExtractionOptions {
-  projectId: number | null;
+/** What is being run: it outlives the investigation page, so leaving for a PDF does not lose the screen's progress. */
+export interface InvestigationRunState {
+  projectId: number;
+  questions: string[];
+  targets: Article[];
+  results: ArticleExtraction[];
+  /** The article in progress, counted from 1. */
+  current: number;
+  isRunning: boolean;
+  quotaHit: boolean;
+  /** The stored investigation, once the run finished and was saved. */
+  savedId: number | null;
+}
+
+export interface InvestigationRunRequest {
+  projectId: number;
   articles: Article[];
-  onQuotaExceeded: () => void;
-  onHistoryChanged: (history: MassiveInvestigation[]) => void;
-  onFatalError: (error: unknown) => void;
+  questions: string[];
+  selectedIds: number[];
 }
 
 const PROVIDER_NAMES: Record<string, string> = {
@@ -27,63 +40,65 @@ const PROVIDER_NAMES: Record<string, string> = {
 };
 
 /**
- * Runs the same questions over each selected article, one at a time, then persists the run.
- * A quota error stops the run; the remaining articles are recorded as skipped.
+ * Runs the same questions over each selected article, one at a time, then persists the run. A quota error stops
+ * the run; the remaining articles are recorded as skipped. It lives above the routes (InvestigationRunContext).
  *
- * Usage:
- *   const extraction = useMassiveExtraction({ projectId, articles, onQuotaExceeded, onHistoryChanged, onFatalError });
- *   await extraction.run(selectedIds);
+ * @example
+ *   const investigation = useInvestigationRun(showError);
+ *   await investigation.start({ projectId, articles, questions, selectedIds });
  */
-export function useMassiveExtraction(options: MassiveExtractionOptions) {
-  const projectService = useProjectService();
-  const [questions, setQuestions] = useState<string[]>(['']);
-  const [results, setResults] = useState<ArticleExtraction[]>([]);
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
+export function useInvestigationRun(onFatalError: (error: unknown) => void) {
+  const service = useProjectService();
+  const [run, setRun] = useState<InvestigationRunState | null>(null);
   const cancelRef = useRef(false);
+  const patch = (change: Partial<InvestigationRunState>) => setRun((now) => (now ? { ...now, ...change } : now));
 
-  const reset = () => {
-    setQuestions(['']);
-    setResults([]);
-    setProgress({ current: 0, total: 0 });
-    setIsExtracting(false);
-  };
-
-  const run = async (selectedIds: number[]) => {
+  const start = async ({ projectId, articles, questions, selectedIds }: InvestigationRunRequest) => {
     const validQuestions = questions.filter((q) => q.trim().length > 0);
-    const targets = options.articles.filter((a) => selectedIds.includes(a.id));
+    const targets = articles.filter((a) => selectedIds.includes(a.id));
     if (validQuestions.length === 0 || targets.length === 0) return;
-    setIsExtracting(true);
     cancelRef.current = false;
-    setProgress({ current: 0, total: targets.length });
-    setResults([]);
+    setRun({
+      projectId,
+      questions: validQuestions,
+      targets,
+      results: [],
+      current: 0,
+      isRunning: true,
+      quotaHit: false,
+      savedId: null,
+    });
     try {
-      const { collected, status } = await extractSequentially(projectService, targets, validQuestions, {
+      const { collected, status } = await extractSequentially(service, targets, validQuestions, {
         cancelRef,
-        onProgress: (current) => setProgress({ current, total: targets.length }),
-        onResults: setResults,
-        onQuotaExceeded: options.onQuotaExceeded,
+        onProgress: (current) => patch({ current }),
+        onResults: (results) => patch({ results }),
+        onQuotaExceeded: () => patch({ quotaHit: true }),
       });
-      if (options.projectId !== null && collected.length > 0) {
-        await persistInvestigation(
-          projectService,
-          options.projectId,
-          validQuestions,
-          selectedIds,
-          targets,
-          collected,
-          status,
-        );
-        options.onHistoryChanged(await projectService.getMassiveInvestigations(options.projectId));
-      }
+      if (collected.length === 0) return;
+      const saved = await persistInvestigation(
+        service,
+        projectId,
+        validQuestions,
+        selectedIds,
+        targets,
+        collected,
+        status,
+      );
+      patch({ savedId: saved });
     } catch (err) {
-      options.onFatalError(err);
+      onFatalError(err);
     } finally {
-      setIsExtracting(false);
+      patch({ isRunning: false });
     }
   };
 
-  return { questions, setQuestions, results, isExtracting, progress, cancelRef, run, reset };
+  // The running extraction polls this ref between articles and stops at the next one.
+  const cancel = () => {
+    cancelRef.current = true;
+  };
+
+  return { run, start, cancel, dismiss: () => setRun(null), dismissQuota: () => patch({ quotaHit: false }) };
 }
 
 interface ExtractionCallbacks {
@@ -104,7 +119,8 @@ async function extractSequentially(
     callbacks.onProgress(i + 1);
     const outcome = await extractOne(service, targets[i], questions);
     collected.push(outcome);
-    if (outcome.result) callbacks.onResults([...collected]);
+    // Failures too: the "Chamadas" tab shows each error as it happens, not only when the run ends.
+    callbacks.onResults([...collected]);
     if (outcome.quotaExceeded) {
       callbacks.onQuotaExceeded();
       callbacks.cancelRef.current = true;
@@ -118,7 +134,7 @@ async function extractOne(service: IProjectService, article: Article, questions:
   try {
     return { article, result: await service.massiveExtraction(article.id, questions) };
   } catch (err) {
-    console.error(`Erro ao extrair de ${article.title}:`, err);
+    console.error(JSON.stringify({ event: 'extraction_failed', articleId: article.id, error: String(err) }));
     const message = (err as { message?: string } | null)?.message;
     return { article, error: err instanceof Error ? err.message : String(err), quotaExceeded: isQuotaMessage(message) };
   }
@@ -136,7 +152,7 @@ async function persistInvestigation(
   targets: Article[],
   collected: ArticleExtraction[],
   status: string,
-): Promise<void> {
+): Promise<number> {
   const modelUsed = await describeExtractionModel(service);
   const investigationId = await service.saveMassiveInvestigation(projectId, questions, selectedIds, modelUsed, status);
   for (const extraction of collected) {
@@ -146,6 +162,7 @@ async function persistInvestigation(
   for (const skipped of targets.filter((a) => !processed.has(a.id))) {
     await service.saveInvestigationResults(investigationId, skipped.id, skippedRows(questions));
   }
+  return investigationId;
 }
 
 function toResultRows(extraction: ArticleExtraction, questions: string[]) {
@@ -177,7 +194,12 @@ function skippedRows(questions: string[]) {
   }));
 }
 
-async function describeExtractionModel(service: IProjectService): Promise<string> {
+/**
+ * The model the extraction skill is set to, as the page and the saved investigation name it.
+ *
+ * @example await describeExtractionModel(service) // 'Ollama (gpt-oss:120b)'
+ */
+export async function describeExtractionModel(service: IProjectService): Promise<string> {
   try {
     const config = (await service.getAiModelConfigs()).find((c) => c.skill === 'extraction');
     if (!config) return 'Desconhecido';

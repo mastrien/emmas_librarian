@@ -11,7 +11,19 @@ async function triggerImport(window) {
   await clickAddArticlesOption(window, 'Importar PDFs em Lote');
 }
 
-test('Massive Investigation Modal - Checkbox state persists across re-renders', async () => {
+// #73: without the app's side margins (12px kept at the edge), and with nothing spilling sideways.
+async function expectEdgeToEdge(window) {
+  const layout = await window.locator('.inv-page').evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    const root = document.documentElement;
+    return { left: box.left, right: root.clientWidth - box.right, spill: root.scrollWidth - root.clientWidth };
+  });
+  expect(layout.left).toBeCloseTo(12, 0);
+  expect(layout.right).toBeCloseTo(12, 0);
+  expect(layout.spill).toBeLessThanOrEqual(0);
+}
+
+test('Investigation page - Checkbox state persists across re-renders', async () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'playwright-pdf-'));
   const tempPdfPath = path.join(tempDir, 'E2E_Test_Article.pdf');
   fs.writeFileSync(tempPdfPath, 'PDF dummy content');
@@ -32,21 +44,11 @@ test('Massive Investigation Modal - Checkbox state persists across re-renders', 
     const articleRow = window.locator('table >> text=E2E_Test_Article');
     await expect(articleRow).toBeVisible({ timeout: 10000 });
 
-    // Open AI Extraction Modal
-    const massiveInvBtn = window
-      .locator('button')
-      .filter({ hasText: /Extra.*IA/ })
-      .first();
-    await massiveInvBtn.click();
-
-    // Scope all interactions to the modal container to avoid matching
-    // page-level checkboxes (e.g. the "Com PDF" filter in the sidebar)
-    const modal = window.locator('[data-testid="ai-extraction-modal"]');
-    await expect(modal).toBeVisible({ timeout: 5000 });
-
-    // Verify modal title rendered
-    const modalTitle = modal.locator('h3').filter({ hasText: /Investiga.*Massiva com IA/ });
-    await expect(modalTitle).toBeVisible({ timeout: 5000 });
+    // Open the investigation page: a project with none opens on a new one.
+    await window.getByRole('link', { name: 'Investigação com IA' }).click();
+    const modal = window.locator('.inv-page');
+    await expect(modal.getByRole('heading', { name: 'Nova investigação' })).toBeVisible({ timeout: 5000 });
+    await expectEdgeToEdge(window);
 
     // Wait for ArticleSelector to render; the article checkbox is inside a <label>
     const articleCheckbox = modal.locator('label input[type="checkbox"]').first();

@@ -1,5 +1,5 @@
 import type { InvestigationAudit, InvestigationResult } from '../types';
-import type { InvestigationHistoryRecord } from '../components/modals/AIExtractionModal';
+import type { InvestigationHistoryRecord } from '../types';
 import { auditStats, drawStratifiedSample, type AuditStats } from './auditSampling';
 
 export interface ModelAuditRow {

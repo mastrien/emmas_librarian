@@ -22,7 +22,6 @@ import { exportWithFeedback } from '../../../utils/exportWithFeedback';
 interface ProjectToolbarProps {
   project: Project;
   projectDocuments: ProjectDocument[];
-  setIsAIExtractionModalOpen: (val: boolean) => void;
   isAddArticlesMenuOpen: boolean;
   setIsAddArticlesMenuOpen: (val: boolean) => void;
   isExportMenuOpen: boolean;
@@ -43,7 +42,6 @@ interface ProjectToolbarProps {
 export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
   project,
   projectDocuments,
-  setIsAIExtractionModalOpen,
   isAddArticlesMenuOpen,
   setIsAddArticlesMenuOpen,
   isExportMenuOpen,
@@ -72,14 +70,14 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
           <Search size={18} /> Nova busca
         </Link>
 
-        <button
-          onClick={() => setIsAIExtractionModalOpen(true)}
+        {/* The investigation is a page of its own (#73), like the review below. */}
+        <Link
+          to={`/projects/${project.id}/investigation`}
           className="btn-secondary"
-          title="Extração Inteligente IA"
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
-          <Brain size={18} /> Extração IA
-        </button>
+          <Brain size={18} /> Investigação com IA
+        </Link>
 
         {/* The systematic review is a page of its own (#49); this page only links to it. */}
         <Link
