@@ -2,7 +2,7 @@ import type { SearchLimits } from '../../../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../../../utils/categoryTemplates';
 import type { AuditParams } from '../../../utils/auditSampling';
 import { DEFAULT_LABELS, SCREENING_PRESETS } from '../../../utils/screeningPresets';
-import type { OpenAccessOutcome, SearchReportFormat } from '../../../types';
+import type { CategoryOption, OpenAccessOutcome, SearchReportFormat } from '../../../types';
 import type {
   SearchHistoryItem,
   SearchPreview,
@@ -552,11 +552,12 @@ export class FakeProjectService implements IProjectService {
   readCategorySetFile = vi.fn(async (): Promise<CategorySetEntry[] | null> => null);
 
   createProjectCategory = vi.fn(
-    async (_projectId: number, _name: string, _type: string, _options?: any): Promise<number> => 0,
+    async (_projectId: number, _name: string, _type: string, _options?: CategoryOption[] | null): Promise<number> => 0,
   );
 
   updateProjectCategory = vi.fn(
-    async (_categoryId: number, _name: string, _type: string, _options?: any): Promise<void> => undefined,
+    async (_categoryId: number, _name: string, _type: string, _options?: CategoryOption[] | null): Promise<void> =>
+      undefined,
   );
 
   deleteProjectCategory = vi.fn(async (_categoryId: number): Promise<void> => undefined);

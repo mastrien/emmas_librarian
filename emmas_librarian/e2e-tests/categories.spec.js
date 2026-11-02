@@ -17,6 +17,21 @@ async function addCategory(window, name, typeLabel, options) {
   await expect(window.getByText(name, { exact: true }).first()).toBeVisible();
 }
 
+// Validation of epic #44: the modal was cramped at 500px; it is 720px, and on a 1000px window nothing in it
+// runs past its right edge.
+async function expectRoomyCategoriesModal(electronApp, window) {
+  await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1000, 850));
+  const dialog = window.getByRole('dialog', { name: 'Categorias do Projeto' });
+  await expect.poll(async () => Math.round((await dialog.boundingBox()).width)).toBe(720);
+  const spill = await dialog.evaluate((node) => {
+    const right = node.getBoundingClientRect().right;
+    return Math.max(
+      ...[...node.querySelectorAll('button, input, select')].map((el) => el.getBoundingClientRect().right - right),
+    );
+  });
+  expect(spill).toBeLessThanOrEqual(0);
+}
+
 /** In the reader's "Categorizar" panel: the editor for one category, found by its label. */
 const categoryEditor = (window, category) => window.locator('label', { hasText: category }).locator('..');
 
@@ -46,7 +61,9 @@ test('F-11 Create categories, classify an article in the reader and export the v
     await addCategory(window, 'Metodologia', 'Texto');
     await addCategory(window, 'Tipo de estudo', 'Lista de Opções', 'Qualitativa, Quantitativa');
     await addCategory(window, 'Revisado', 'Sim/Não');
-    await window.getByRole('button', { name: 'Fechar' }).click();
+    await expect(window.getByText('2 opções: Qualitativa, Quantitativa')).toBeVisible();
+    await expectRoomyCategoriesModal(electronApp, window);
+    await window.getByRole('button', { name: 'Fechar', exact: true }).click();
 
     // Classify the article where users do it: the reader's floating "Categorizar" panel.
     await openReader(window);

@@ -36,7 +36,7 @@ import type { IProjectService } from './ProjectServiceInterface';
 import type { SearchLimits } from '../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
 import type { AuditParams } from '../utils/auditSampling';
-import type { OpenAccessOutcome, SearchReportFormat } from '../types';
+import type { CategoryOption, OpenAccessOutcome, SearchReportFormat } from '../types';
 
 // Highlights are stored with a numeric id and JSON-encoded position; the UI works with string ids and objects.
 interface HighlightRow {
@@ -466,10 +466,19 @@ export const projectService: IProjectService = {
 
   readCategorySetFile: (): Promise<CategorySetEntry[] | null> => safeInvoke(IpcChannel.CATEGORIES_READ_SET_FILE),
 
-  createProjectCategory: (projectId: number, name: string, type: string, options?): Promise<number> =>
-    safeInvoke(IpcChannel.CATEGORIES_CREATE_PROJECT, projectId, name, type, options),
+  createProjectCategory: (
+    projectId: number,
+    name: string,
+    type: string,
+    options?: CategoryOption[] | null,
+  ): Promise<number> => safeInvoke(IpcChannel.CATEGORIES_CREATE_PROJECT, projectId, name, type, options),
 
-  async updateProjectCategory(categoryId: number, name: string, type: string, options?): Promise<void> {
+  async updateProjectCategory(
+    categoryId: number,
+    name: string,
+    type: string,
+    options?: CategoryOption[] | null,
+  ): Promise<void> {
     await safeInvoke(IpcChannel.CATEGORIES_UPDATE_PROJECT, categoryId, name, type, options);
   },
 
