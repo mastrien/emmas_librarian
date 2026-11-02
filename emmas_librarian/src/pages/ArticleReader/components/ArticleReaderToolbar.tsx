@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { auditReturnFrom } from '../../../utils/auditReturn';
+import { readerBackFrom } from '../../../utils/readerReturn';
 import { ArrowLeft, Edit2, CopyPlus, Loader2, Upload, ZoomOut, ZoomIn, X as XIcon } from 'lucide-react';
 import { HelpButton } from '../../../components/common/HelpButton';
 import type { Article } from '../../../types';
@@ -28,8 +29,12 @@ export const ArticleReaderToolbar: React.FC<ArticleReaderToolbarProps> = ({
   setIsEditingMetadata,
   setIsCitationModalOpen,
 }) => {
-  // Opened from an audit's "Abrir no PDF" (#48): going back reopens the audit on the same item.
-  const backToAudit = auditReturnFrom(useLocation().state);
+  // Opened from an audit's "Abrir no PDF" (#48): going back reopens the audit on the same item. Opened from the
+  // review page or the guided screening: going back returns there (validation of epic #44).
+  const routerState = useLocation().state;
+  const backToAudit = auditReturnFrom(routerState);
+  const backToPage = backToAudit ? null : readerBackFrom(routerState);
+  const backLabel = backToAudit ? 'Voltar para a auditoria' : (backToPage?.label ?? 'Voltar ao projeto');
   return (
     <header
       className="glass-panel"
@@ -49,10 +54,10 @@ export const ArticleReaderToolbar: React.FC<ArticleReaderToolbarProps> = ({
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
         <Link
-          to={`/projects/${article.project_id}`}
+          to={backToPage?.path ?? `/projects/${article.project_id}`}
           state={backToAudit ? { openAudit: backToAudit } : undefined}
-          title={backToAudit ? 'Voltar para a auditoria' : 'Voltar ao projeto'}
-          aria-label={backToAudit ? 'Voltar para a auditoria' : 'Voltar ao projeto'}
+          title={backLabel}
+          aria-label={backLabel}
           style={{
             textDecoration: 'none',
             color: 'var(--text-muted)',

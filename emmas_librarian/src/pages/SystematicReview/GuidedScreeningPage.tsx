@@ -6,6 +6,7 @@ import { useScreening } from './useScreening';
 import { useGuidedScreening, type GuidedScreening } from './useGuidedScreening';
 import { GuidedDecisionPanel } from './GuidedDecisionPanel';
 import { articleMeta, databasesOf } from './reviewText';
+import { readerStateBackTo } from '../../utils/readerReturn';
 import './review.css';
 
 const STAGES: { id: ScreeningStage; label: string }[] = [
@@ -97,7 +98,14 @@ const ArticleCard: React.FC<{ article: Article; guided: GuidedScreening }> = ({ 
     {guided.stage === 'full' && (
       <div className="review-counts">
         <span>{article.local_file_path ? 'PDF anexado ao artigo.' : 'Sem PDF anexado.'}</span>
-        <Link to={`/articles/${article.id}`} className="review-small">
+        <Link
+          to={`/articles/${article.id}`}
+          state={readerStateBackTo({
+            path: `/projects/${article.project_id}/review/guided`,
+            label: 'Voltar à triagem guiada',
+          })}
+          className="review-small"
+        >
           {article.local_file_path ? 'Abrir PDF' : 'Abrir o artigo'}
         </Link>
       </div>
@@ -180,7 +188,7 @@ const Finished: React.FC<{ guided: GuidedScreening; projectId: number }> = ({ gu
 export const GuidedScreeningPage: React.FC = () => {
   const projectId = Number(useParams<{ id: string }>().id);
   const screening = useScreening(projectId);
-  const guided = useGuidedScreening(screening);
+  const guided = useGuidedScreening(screening, projectId);
   if (screening.loading) return <div className="review review-muted">Carregando a triagem…</div>;
   const article = guided.current;
   return (
