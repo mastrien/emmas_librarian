@@ -86,7 +86,9 @@ test('draws the PRISMA diagram from the screening and exports it with its tables
     // The guide fits the window and its end can be scrolled to (it overflowed, validation of epic #44).
     const help = window.getByRole('dialog', { name: 'Guia da Revisão Sistemática' });
     const box = await help.boundingBox();
-    expect(box.y + box.height).toBeLessThanOrEqual(window.viewportSize().height);
+    // Electron has no fixed viewport (viewportSize() is null): the page says how tall the window is.
+    const windowHeight = await window.evaluate(() => globalThis.innerHeight);
+    expect(box.y + box.height).toBeLessThanOrEqual(windowHeight);
     await window.getByRole('link', { name: 'A declaração PRISMA 2020 (tradução oficial)' }).scrollIntoViewIfNeeded();
     await expect(window.getByRole('link', { name: 'A declaração PRISMA 2020 (tradução oficial)' })).toBeInViewport();
     await expect(window.getByRole('button', { name: 'Entendi' })).toBeInViewport();
