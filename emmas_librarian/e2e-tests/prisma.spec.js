@@ -83,7 +83,13 @@ test('draws the PRISMA diagram from the screening and exports it with its tables
 
     await window.getByRole('button', { name: /Ajuda/ }).click();
     await expect(window.getByText('Guia da Revisão Sistemática')).toBeVisible();
-    await expect(window.getByText('Outros métodos:')).toBeVisible();
+    // The guide fits the window and its end can be scrolled to (it overflowed, validation of epic #44).
+    const help = window.getByRole('dialog', { name: 'Guia da Revisão Sistemática' });
+    const box = await help.boundingBox();
+    expect(box.y + box.height).toBeLessThanOrEqual(window.viewportSize().height);
+    await window.getByRole('link', { name: 'A declaração PRISMA 2020 (tradução oficial)' }).scrollIntoViewIfNeeded();
+    await expect(window.getByRole('link', { name: 'A declaração PRISMA 2020 (tradução oficial)' })).toBeInViewport();
+    await expect(window.getByRole('button', { name: 'Entendi' })).toBeInViewport();
   } finally {
     await electronApp.close();
     fs.rmSync(dir, { recursive: true, force: true });

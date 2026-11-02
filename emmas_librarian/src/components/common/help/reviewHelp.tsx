@@ -1,4 +1,5 @@
 import React from 'react';
+import { PRISMA_PT_URL } from '../../../utils/prisma/prismaSourceLinks';
 
 const LIST: React.CSSProperties = {
   paddingLeft: '1.5rem',
@@ -13,8 +14,6 @@ const Term: React.FC<{ name: string; children: React.ReactNode }> = ({ name, chi
     <strong>{name}:</strong> {children}
   </li>
 );
-
-const PT_DOI = 'https://doi.org/10.5123/S1679-49742022000200033';
 
 /**
  * The help of the systematic review page: how the screening works and every PRISMA 2020 term the diagram uses,
@@ -96,7 +95,7 @@ export const REVIEW_HELP: { title: string; content: React.ReactNode } = {
       </ul>
       <p style={{ marginTop: '1rem' }}>
         O app nunca corrige um número sozinho. Referência do modelo:{' '}
-        <a href={PT_DOI} target="_blank" rel="noreferrer">
+        <a href={PRISMA_PT_URL} target="_blank" rel="noreferrer">
           A declaração PRISMA 2020 (tradução oficial)
         </a>
         .
