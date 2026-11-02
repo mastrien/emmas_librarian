@@ -19,7 +19,10 @@ test('#52 a marked search is checked on the dashboard, and what it finds is save
     await expect(window.locator('tr', { hasText: 'Aprendizado de Maquina E2E' })).toBeVisible({ timeout: 10000 });
 
     await window.getByTestId('tab-history').click();
-    await window.getByRole('checkbox', { name: 'Monitorar esta busca' }).check();
+    // Not .check(): the box is marked only when the main process answers, and .check() looks right after the click.
+    const monitorBox = window.getByRole('checkbox', { name: 'Monitorar esta busca' });
+    await monitorBox.click();
+    await expect(monitorBox).toBeChecked();
     await expect(window.getByLabel('Intervalo da verificação')).toHaveValue('7');
 
     // Opening the dashboard runs the check: only what the project lacks counts.
