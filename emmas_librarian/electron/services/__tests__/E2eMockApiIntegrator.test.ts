@@ -38,6 +38,18 @@ describe('E2eMockApiIntegrator bases added with pagination', () => {
   });
 });
 
+describe('E2eMockApiIntegrator snowballing (#51)', () => {
+  it('has one reference to explore, and answers citations with the canned article, off the network', async () => {
+    const api = new E2eMockApiIntegrator();
+
+    expect(await api.fetchCitationSeed()).toEqual({ openAlexId: 'W1', referencedIds: ['W2'], citedByCount: 0 });
+    const [references, citing] = await Promise.all([api.searchReferencedWorks(), api.searchCitingWorks()]);
+
+    expect(references.articles.map((a) => a.title)).toEqual(['Aprendizado de Maquina E2E']);
+    expect(citing.articles.map((a) => a.title)).toEqual(['Aprendizado de Maquina E2E']);
+  });
+});
+
 describe('apiIntegratorFor', () => {
   it('uses the canned integrator only when E2E_MOCK_SEARCH is exactly "true"', () => {
     expect(apiIntegratorFor({ E2E_MOCK_SEARCH: 'true' })).toBeInstanceOf(E2eMockApiIntegrator);

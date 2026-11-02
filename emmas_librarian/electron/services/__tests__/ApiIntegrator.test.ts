@@ -18,6 +18,41 @@ describe('ApiIntegrator', () => {
     vi.restoreAllMocks();
   });
 
+  // #51: the seam SearchOrchestrator and the E2E mock use for snowballing.
+  describe('citations', () => {
+    const answer = (body: object) => new Response(JSON.stringify(body));
+    const urlOfCall = () => new URL(String(vi.mocked(fetch).mock.calls[0][0]));
+
+    it('finds a work and what it cites', async () => {
+      vi.mocked(fetch).mockResolvedValue(
+        answer({ id: 'https://openalex.org/W1', referenced_works: [], cited_by_count: 2 }),
+      );
+
+      expect(await api.fetchCitationSeed({ doi: '10.1/x' })).toEqual({
+        openAlexId: 'W1',
+        referencedIds: [],
+        citedByCount: 2,
+      });
+    });
+
+    it('asks for the works a list of ids points to', async () => {
+      vi.mocked(fetch).mockResolvedValue(answer({ results: [{ id: 'W2', title: 'T' }], meta: { next_cursor: null } }));
+
+      const { articles } = await api.searchReferencedWorks(['W2'], 10);
+
+      expect(articles.map((a) => a.title)).toEqual(['T']);
+      expect(urlOfCall().searchParams.get('filter')).toBe('openalex_id:W2');
+    });
+
+    it('asks for the works that cite one', async () => {
+      vi.mocked(fetch).mockResolvedValue(answer({ results: [], meta: { next_cursor: null } }));
+
+      await api.searchCitingWorks('W1', 10);
+
+      expect(urlOfCall().searchParams.get('filter')).toBe('cites:W1');
+    });
+  });
+
   describe('searchOpenAlex', () => {
     it('calls the OpenAlex API and normalizes the results correctly', async () => {
       const mockResult = {
