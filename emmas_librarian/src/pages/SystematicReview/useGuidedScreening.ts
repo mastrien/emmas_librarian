@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSessionState } from '../../hooks/useSessionState';
 import type { Article, ScreeningDecision, ScreeningKind, ScreeningLabel, ScreeningStage } from '../../types';
 import { KINDS_BY_STAGE } from '../../utils/screeningPresets';
 import { decisionAt, guidedPool } from '../../utils/screeningView';
@@ -53,13 +54,16 @@ function tallyAt(pool: Article[], s: ScreeningState, stage: ScreeningStage): Sta
  * State of the guided screening (#49): the stage, the queue of articles, the current one, and deciding, moving and
  * undoing. Deciding moves on to the next article without a decision at this stage.
  *
+ * The stage and the current article live in the session, so opening a PDF and coming back lands on the same
+ * article of the same stage (validation of epic #44).
+ *
  * Usage:
- *   const guided = useGuidedScreening(screening);
+ *   const guided = useGuidedScreening(screening, projectId);
  *   await guided.decide(label, note);
  */
-export function useGuidedScreening(s: ScreeningState): GuidedScreening {
-  const [stage, setStageState] = useState<ScreeningStage>('title');
-  const [currentId, setCurrentId] = useState<number | null>(null);
+export function useGuidedScreening(s: ScreeningState, projectId: number): GuidedScreening {
+  const [stage, setStageState] = useSessionState<ScreeningStage>(`guidedScreening.${projectId}.stage`, 'title');
+  const [currentId, setCurrentId] = useSessionState<number | null>(`guidedScreening.${projectId}.current`, null);
   const [onlyPending, setOnlyPending] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [steps, setSteps] = useState<GuidedStep[]>([]);

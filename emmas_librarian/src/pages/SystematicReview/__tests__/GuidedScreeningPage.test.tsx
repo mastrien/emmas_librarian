@@ -1,10 +1,17 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import React from 'react';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 import { GuidedScreeningPage } from '../GuidedScreeningPage';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import type { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
 import { DUPLICATE, EXCLUDED, INCLUDED, reviewArticle, screeningService, storedDecision } from './screeningTestData';
+
+// Where a link took the page, with the router state it carried.
+const ReaderProbe: React.FC = () => {
+  const location = useLocation();
+  return <div data-testid="reader">{JSON.stringify(location.state)}</div>;
+};
 
 function renderGuided(service: FakeProjectService) {
   render(
@@ -12,6 +19,7 @@ function renderGuided(service: FakeProjectService) {
       <ServicesProvider apiService={service}>
         <Routes>
           <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
+          <Route path="/articles/:id" element={<ReaderProbe />} />
         </Routes>
       </ServicesProvider>
     </MemoryRouter>,
@@ -107,5 +115,29 @@ describe('GuidedScreeningPage (#49)', () => {
 
     expect(await screen.findByText('Artigo 1 de 3')).toBeInTheDocument();
     expect(screen.getByText('Sem PDF anexado.')).toBeInTheDocument();
+  });
+
+  // Validation of epic #44: opening the PDF at full text and going back landed on the project page, and the
+  // guided screening started over from the first article of the title stage.
+  it('opens the PDF telling the reader to come back here, and comes back on the same article and stage', async () => {
+    const service = screeningService(articles, [
+      storedDecision(1, INCLUDED),
+      storedDecision(2, INCLUDED),
+      storedDecision(3, INCLUDED),
+    ]);
+    renderGuided(service);
+    fireEvent.click(await screen.findByRole('tab', { name: 'Texto completo' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Próximo →' }));
+    expect(await heading('MetNet')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Abrir o artigo' }));
+    expect(JSON.parse(screen.getByTestId('reader').textContent!)).toEqual({
+      backTo: { path: '/projects/1/review/guided', label: 'Voltar à triagem guiada' },
+    });
+
+    cleanup();
+    renderGuided(service);
+    expect(await heading('MetNet')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Texto completo' })).toHaveAttribute('aria-selected', 'true');
   });
 });

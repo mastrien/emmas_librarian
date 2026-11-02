@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import type { ReviewRow } from '../../utils/screeningView';
+import { readerStateBackTo } from '../../utils/readerReturn';
 import { articleMeta, wasRead } from './reviewText';
 
 interface ReviewArticleRowProps {
@@ -43,7 +44,11 @@ export const ReviewArticleRow: React.FC<ReviewArticleRowProps> = ({ row, actions
         )}
       </div>
       <div className="review-row-actions">
-        <Link to={`/articles/${row.article.id}`} className="review-small">
+        <Link
+          to={`/articles/${row.article.id}`}
+          state={readerStateBackTo({ path: `/projects/${row.article.project_id}/review`, label: 'Voltar à revisão' })}
+          className="review-small"
+        >
           Ver
         </Link>
         {actions}
