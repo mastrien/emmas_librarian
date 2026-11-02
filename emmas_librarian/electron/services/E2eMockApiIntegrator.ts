@@ -27,6 +27,18 @@ export class E2eMockApiIntegrator extends ApiIntegrator {
     };
   }
 
+  override async fetchCitationSeed() {
+    return { openAlexId: 'W1', referencedIds: ['W2'], citedByCount: 0 };
+  }
+
+  override searchReferencedWorks(): Promise<PagedResult> {
+    return this.searchOpenAlex();
+  }
+
+  override searchCitingWorks(): Promise<PagedResult> {
+    return this.searchOpenAlex();
+  }
+
   override async searchCrossref(): Promise<PagedResult> {
     return { articles: [], requests: 0 };
   }

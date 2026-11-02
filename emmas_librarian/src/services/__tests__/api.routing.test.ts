@@ -90,6 +90,18 @@ const routes: RouteCase[] = [
     args: [1, { a: 'q' }, { common: 50, perBase: { wos: 20 } }, 'date', 'uq', '{"ast":{}}'],
   },
   {
+    method: 'peekCitations',
+    call: () => api.peekCitations([{ articleId: 1, title: 'T', doi: '10.1/x' }]),
+    channel: IpcChannel.SEARCH_PEEK_CITATIONS,
+    args: [[{ articleId: 1, title: 'T', doi: '10.1/x' }]],
+  },
+  {
+    method: 'previewCitations',
+    call: () => api.previewCitations(3, { seeds: [], directions: ['references'], limit: 10 }),
+    channel: IpcChannel.SEARCH_PREVIEW_CITATIONS,
+    args: [3, { seeds: [], directions: ['references'], limit: 10 }],
+  },
+  {
     method: 'saveSearchPreview',
     call: () => api.saveSearchPreview('preview-1'),
     channel: IpcChannel.SEARCH_SAVE_PREVIEW,

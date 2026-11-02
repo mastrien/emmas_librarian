@@ -21,6 +21,7 @@ function renderActions(overrides: Partial<Article> = {}, outsideSearch = false) 
     onEdit: vi.fn(),
     onArchive: vi.fn(),
     onCite: vi.fn(),
+    onExploreCitations: vi.fn(),
   };
   const a = article(overrides);
   render(
@@ -111,7 +112,14 @@ describe('ArticleRowActions menu', () => {
     openMenu();
 
     const labels = screen.getAllByRole('menuitem').map((item) => item.textContent?.trim());
-    expect(labels).toEqual(['Desvincular PDF', 'Marcar como Lido', 'Arquivar', 'Editar Metadados', 'Gerar Citação']);
+    expect(labels).toEqual([
+      'Desvincular PDF',
+      'Marcar como Lido',
+      'Arquivar',
+      'Editar Metadados',
+      'Gerar Citação',
+      'Explorar citações',
+    ]);
     expect(screen.getAllByRole('group').map((g) => g.getAttribute('aria-label'))).toEqual([
       'Leitura',
       'Organização',
@@ -125,6 +133,15 @@ describe('ArticleRowActions menu', () => {
     openMenu();
 
     expect(screen.queryByRole('group', { name: 'Leitura' })).not.toBeInTheDocument();
+  });
+
+  it('offers to explore the citations of the article (#51)', () => {
+    const { handlers, article: a } = renderActions();
+    openMenu();
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Explorar citações' }));
+
+    expect(handlers.onExploreCitations).toHaveBeenCalledWith(a);
   });
 
   it('runs the chosen action, closes and returns focus to the button', () => {

@@ -2,7 +2,14 @@ import type { SearchLimits } from '../../../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../../../utils/categoryTemplates';
 import type { AuditParams } from '../../../utils/auditSampling';
 import { DEFAULT_LABELS, SCREENING_PRESETS } from '../../../utils/screeningPresets';
-import type { CategoryOption, OpenAccessOutcome, SearchReportFormat } from '../../../types';
+import type {
+  CategoryOption,
+  CitationRequest,
+  CitationSeed,
+  CitationSeedCount,
+  OpenAccessOutcome,
+  SearchReportFormat,
+} from '../../../types';
 import type {
   SearchHistoryItem,
   SearchPreview,
@@ -561,6 +568,16 @@ export class FakeProjectService implements IProjectService {
   );
 
   deleteProjectCategory = vi.fn(async (_categoryId: number): Promise<void> => undefined);
+
+  peekCitations = vi.fn(async (_seeds: CitationSeed[]): Promise<CitationSeedCount[]> => []);
+
+  previewCitations = vi.fn(
+    async (_projectId: number, _request: CitationRequest): Promise<SearchPreview> => ({
+      previewId: 'p1',
+      breakdown: {},
+      results: [],
+    }),
+  );
 
   getArticleCategories = vi.fn(async (_articleId: number): Promise<ArticleCategory[]> => []);
 

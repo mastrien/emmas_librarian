@@ -11,7 +11,14 @@
 import type { SearchLimits } from '../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
 import type { AuditParams } from '../utils/auditSampling';
-import type { CategoryOption, OpenAccessOutcome, SearchReportFormat } from '../types';
+import type {
+  CategoryOption,
+  CitationRequest,
+  CitationSeed,
+  CitationSeedCount,
+  OpenAccessOutcome,
+  SearchReportFormat,
+} from '../types';
 import type {
   SearchPreview,
   SavedSearchSummary,
@@ -116,6 +123,10 @@ export interface IProjectService {
     queryState?: string,
   ): Promise<SearchPreview>;
   saveSearchPreview(previewId: string): Promise<SavedSearchSummary>;
+  /** How much the articles cite and are cited by, before downloading anything (#51). */
+  peekCitations(seeds: CitationSeed[]): Promise<CitationSeedCount[]>;
+  /** Snowballing (#51): held as a preview, saved or discarded like a search. */
+  previewCitations(projectId: number, request: CitationRequest): Promise<SearchPreview>;
   discardSearchPreview(previewId: string): Promise<void>;
   translateQuery(ast: QueryASTNode): Promise<DatabaseTranslationMap>;
 

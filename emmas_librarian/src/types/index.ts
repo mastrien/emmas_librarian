@@ -155,6 +155,8 @@ export enum IpcChannel {
   PROJECTS_UPDATE_WRITING_PAD = 'projects:updateWritingPad',
   SEARCH_PREVIEW = 'search:preview',
   SEARCH_SAVE_PREVIEW = 'search:savePreview',
+  SEARCH_PEEK_CITATIONS = 'search:peekCitations',
+  SEARCH_PREVIEW_CITATIONS = 'search:previewCitations',
   SEARCH_DISCARD_PREVIEW = 'search:discardPreview',
   SEARCH_TRANSLATE_QUERY = 'search:translateQuery',
   SEARCH_REVERT = 'search:revert',
@@ -483,6 +485,33 @@ export interface SearchBaseOutcome {
 }
 
 export type SearchBreakdown = Record<string, SearchBaseOutcome>;
+
+/** An article to explore the citations of (#51), and how to find it on OpenAlex. */
+export interface CitationSeed {
+  articleId: number;
+  title: string;
+  openAlexId?: string;
+  doi?: string;
+}
+
+/** What an article has to offer, read before anything is downloaded. */
+export interface CitationSeedCount {
+  articleId: number;
+  title: string;
+  /** False when OpenAlex does not know the article. */
+  found: boolean;
+  references: number;
+  citedBy: number;
+}
+
+export type CitationDirection = 'references' | 'citedBy';
+
+export interface CitationRequest {
+  seeds: CitationSeed[];
+  directions: CitationDirection[];
+  /** The most works one run downloads. */
+  limit: number;
+}
 
 /** File type of the search strategy report (#45). */
 export type SearchReportFormat = 'xlsx' | 'md';

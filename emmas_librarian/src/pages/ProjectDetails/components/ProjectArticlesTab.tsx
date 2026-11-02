@@ -121,6 +121,7 @@ const PaginatedArticles: React.FC<ProjectArticlesTabProps> = (props) => {
           onToggleAll={() => selection.setMany(paginatedArticles, !allOnPageSelected)}
           onMarkRead={() => props.onStatusChangeMany(selectedIds, 'read')}
           onArchive={() => modals.setArchivingIds(selectedIds)}
+          onExploreCitations={() => modals.setCitationSeedArticles(selection.selected)}
           onCite={() => {
             modals.setMassCitationArticles(selection.selected);
             modals.setIsMassCitationModalOpen(true);
@@ -153,6 +154,7 @@ const PaginatedArticles: React.FC<ProjectArticlesTabProps> = (props) => {
         setEditingArticle={modals.setEditingArticle}
         setArchivingId={modals.setArchivingId}
         setCitationArticle={modals.setCitationArticle}
+        onExploreCitations={(article) => modals.setCitationSeedArticles([article])}
         selection={selection.selecting ? { isSelected: selection.isSelected, onToggle: selection.toggle } : undefined}
         openAccess={{ stateOf: (id) => props.openAccess.rows[id], onFind: props.openAccess.fetchOne }}
         outsideSearchIds={props.outsideSearchIds}

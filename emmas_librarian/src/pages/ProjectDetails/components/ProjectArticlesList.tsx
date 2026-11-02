@@ -35,6 +35,7 @@ interface ProjectArticlesListProps {
   setEditingArticle: (article: Article) => void;
   setArchivingId: (id: number) => void;
   setCitationArticle: (article: Article) => void;
+  onExploreCitations: (article: Article) => void;
   // Multi-select: when present, each row gets a checkbox.
   selection?: ArticleSelection;
   /** Each row's open access PDF search: its state and how to start it. */
@@ -57,6 +58,7 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
   setEditingArticle,
   setArchivingId,
   setCitationArticle,
+  onExploreCitations,
   selection,
   openAccess,
   outsideSearchIds,
@@ -69,6 +71,7 @@ export const ProjectArticlesList: React.FC<ProjectArticlesListProps> = ({
     onEdit: setEditingArticle,
     onArchive: setArchivingId,
     onCite: setCitationArticle,
+    onExploreCitations,
   };
 
   return (

@@ -6,7 +6,19 @@ import type { PagedResult } from './searchApis/paginate';
 import { validateSearchLimits, type SearchBaseId, type SearchLimits } from '../../src/utils/searchLimits';
 import { PendingSearchStore } from './PendingSearchStore';
 import { doiKey } from '../utils/doi';
+import { OUTSIDE_SEARCH_BASES } from '../../src/utils/outsideSearchEntries';
+import {
+  countCitations,
+  runSnowball,
+  snowballQuery,
+  snowballSourceName,
+  validateCitationRequest,
+} from './citationSnowball';
 import type {
+  CitationRequest,
+  CitationSeed,
+  CitationSeedCount,
+  PrismaSourceInput,
   QuerySort,
   SavedSearchSummary,
   SearchBaseOutcome,
@@ -46,6 +58,8 @@ interface PendingSearch {
   queryState?: string;
   breakdown: SearchBreakdown;
   articles: NormalizedArticle[];
+  /** Where the new articles came from on the PRISMA diagram, when the app already knows (#51). */
+  origin?: Omit<PrismaSourceInput, 'id'>;
 }
 
 type BaseLimits = Partial<Record<SearchBaseId, number>>;
@@ -90,26 +104,62 @@ export class SearchOrchestrator {
       Object.keys(queryMap).filter((db) => queryMap[db]),
     );
     const { articles, breakdown } = await this.fetchDeduplicated(queryMap, perBase, sortBy);
-    const previewId = this.pending.put({
+    return this.holdPreview({ projectId, queryMap, limits, sortBy, unifiedQuery, queryState, breakdown, articles });
+  }
+
+  /**
+   * How much the articles cite and are cited by, before anything is downloaded (#51).
+   *
+   * @example await orchestrator.peekCitations([{ articleId: 1, title: 'T', doi: '10.1/x' }]);
+   */
+  public peekCitations(seeds: CitationSeed[]): Promise<CitationSeedCount[]> {
+    return countCitations(this.api, seeds, this.db.getSetting('openalex_api_key') || '');
+  }
+
+  /**
+   * Snowballing (#51): runs the citations and holds them as any search preview, so duplicates, the choice to save and
+   * the history work the same. A failure reaches the preview as the failure of that "base", as in a search.
+   *
+   * @example await orchestrator.previewCitations(1, { seeds: [seed], directions: ['references'], limit: 200 });
+   */
+  public async previewCitations(projectId: number, request: CitationRequest): Promise<SearchPreview> {
+    validateCitationRequest(request);
+    const base = OUTSIDE_SEARCH_BASES.snowballing;
+    const breakdown: SearchBreakdown = {};
+    let found: NormalizedArticle[] = [];
+    try {
+      const { articles, outcome } = await runSnowball(this.api, request, this.db.getSetting('openalex_api_key') || '');
+      found = articles;
+      breakdown[base] = outcome;
+    } catch (err) {
+      breakdown[base] = { count: 0, requested: request.limit, error: err instanceof Error ? err.message : String(err) };
+    }
+    return this.holdPreview({
       projectId,
-      queryMap,
-      limits,
-      sortBy,
-      unifiedQuery,
-      queryState,
+      queryMap: {
+        openalex: `snowballing:${request.directions.join(',')}:${request.seeds.map((s) => s.articleId).join(',')}`,
+      },
+      limits: { common: request.limit, perBase: {} },
+      sortBy: 'citations',
+      unifiedQuery: snowballQuery(request.seeds),
       breakdown,
-      articles,
+      articles: this.deduplicate(found),
+      origin: { name: snowballSourceName(request.seeds), method: 'citations' },
     });
-    const results = articles.map((a) => ({
+  }
+
+  private holdPreview(search: PendingSearch): SearchPreview {
+    const previewId = this.pending.put(search);
+    const results = search.articles.map((a) => ({
       title: a.title,
       authors: a.authors,
       year: a.year,
       doi: a.doi,
       sourceDatabases: a.source_databases,
-      alreadyInProject: !!this.db.findDuplicateArticle(projectId, a.doi, a.title),
+      alreadyInProject: !!this.db.findDuplicateArticle(search.projectId, a.doi, a.title),
       details: previewDetails(a),
     }));
-    return { previewId, breakdown, results };
+    return { previewId, breakdown: search.breakdown, results };
   }
 
   /**
@@ -174,7 +224,7 @@ export class SearchOrchestrator {
 
   /** Writes the history entry and the articles; returns how many were new to the project. */
   private persist(search: PendingSearch): number {
-    const { projectId, queryMap, unifiedQuery, breakdown, sortBy, limits, articles, queryState } = search;
+    const { projectId, queryMap, unifiedQuery, breakdown, sortBy, limits, articles, queryState, origin } = search;
     // Results already in the project only get their source list merged, so they do not count as
     // saved by this search (and "Desfazer Busca" does not remove them).
     const addedCount = articles.filter((a) => !this.db.findDuplicateArticle(projectId, a.doi, a.title)).length;
@@ -197,6 +247,7 @@ export class SearchOrchestrator {
         search_id: searchId,
       });
     }
+    if (origin && addedCount > 0) this.db.prismaOriginRepo.tagSearchEntry(projectId, searchId, origin);
     return addedCount;
   }
 

@@ -36,7 +36,14 @@ import type { IProjectService } from './ProjectServiceInterface';
 import type { SearchLimits } from '../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
 import type { AuditParams } from '../utils/auditSampling';
-import type { CategoryOption, OpenAccessOutcome, SearchReportFormat } from '../types';
+import type {
+  CategoryOption,
+  CitationRequest,
+  CitationSeed,
+  CitationSeedCount,
+  OpenAccessOutcome,
+  SearchReportFormat,
+} from '../types';
 
 // Highlights are stored with a numeric id and JSON-encoded position; the UI works with string ids and objects.
 interface HighlightRow {
@@ -481,6 +488,12 @@ export const projectService: IProjectService = {
   ): Promise<void> {
     await safeInvoke(IpcChannel.CATEGORIES_UPDATE_PROJECT, categoryId, name, type, options);
   },
+
+  peekCitations: (seeds: CitationSeed[]): Promise<CitationSeedCount[]> =>
+    safeInvoke(IpcChannel.SEARCH_PEEK_CITATIONS, seeds),
+
+  previewCitations: (projectId: number, request: CitationRequest): Promise<SearchPreview> =>
+    safeInvoke(IpcChannel.SEARCH_PREVIEW_CITATIONS, projectId, request),
 
   async deleteProjectCategory(categoryId: number): Promise<void> {
     await safeInvoke(IpcChannel.CATEGORIES_DELETE_PROJECT, categoryId);

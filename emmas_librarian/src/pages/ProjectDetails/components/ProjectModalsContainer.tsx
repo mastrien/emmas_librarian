@@ -1,5 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { ExploreCitationsModal } from '../../../components/modals/citations/ExploreCitationsModal';
 import { useNavigate } from 'react-router-dom';
 import { Key } from 'lucide-react';
 import { SearchHistoryModal } from '../../../components/modals/SearchHistoryModal';
@@ -101,6 +102,15 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
           onRevertSearch={handleRevertSearch}
           onExportStrategy={(format) => projectService.exportSearchReport(project.id, format)}
           projectId={projectId}
+        />
+      )}
+
+      {modals.citationSeedArticles && (
+        <ExploreCitationsModal
+          projectId={project.id}
+          articles={modals.citationSeedArticles}
+          onClose={() => modals.setCitationSeedArticles(null)}
+          onSaved={fetchData}
         />
       )}
 

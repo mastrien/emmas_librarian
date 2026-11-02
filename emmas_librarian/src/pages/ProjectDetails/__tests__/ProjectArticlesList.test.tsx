@@ -13,6 +13,7 @@ describe('ProjectArticlesList', () => {
     setEditingArticle: vi.fn(),
     setArchivingId: vi.fn(),
     setCitationArticle: vi.fn(),
+    onExploreCitations: vi.fn(),
     openAccess: { stateOf: () => undefined, onFind: vi.fn() },
   };
 

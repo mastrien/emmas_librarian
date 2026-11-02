@@ -11,6 +11,7 @@ import {
   History,
   Loader2,
   MoreHorizontal,
+  Network,
   Upload,
   X,
 } from 'lucide-react';
@@ -29,6 +30,7 @@ export interface ArticleRowHandlers {
   onEdit: (article: Article) => void;
   onArchive: (id: number) => void;
   onCite: (article: Article) => void;
+  onExploreCitations: (article: Article) => void;
 }
 
 interface ToggleAction {
@@ -94,6 +96,7 @@ function menuGroups(article: Article, h: ArticleRowHandlers): RowMenuGroup[] {
     items: [
       { label: 'Editar Metadados', icon: <Edit2 size={ICON} />, onSelect: () => h.onEdit(article) },
       { label: 'Gerar Citação', icon: <CopyPlus size={ICON} />, onSelect: () => h.onCite(article) },
+      { label: 'Explorar citações', icon: <Network size={ICON} />, onSelect: () => h.onExploreCitations(article) },
     ],
   });
   return groups;
