@@ -4,7 +4,8 @@ import { SEARCH_DATABASES } from '../pages/Search/searchQueries';
 export type DateFilterPrecision = 'day' | 'year' | 'none';
 
 // Checked on the real APIs for OpenAlex, Crossref, Europe PMC and arXiv (#52). Scopus documents only PUBYEAR; PY is the
-// year field of Web of Science. IEEE stays out: its date parameters could not be confirmed in its documentation.
+// year field of Web of Science. IEEE stays out: its documented start_date filters by insert date, not publication, and
+// the integration was never run with a real key.
 const PRECISION: Record<string, DateFilterPrecision> = {
   openalex: 'day',
   crossref: 'day',
