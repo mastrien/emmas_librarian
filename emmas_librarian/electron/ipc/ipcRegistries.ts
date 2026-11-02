@@ -16,6 +16,8 @@ import type { IAppUpdater } from '../services/UpdateTypes';
 import { setupAiIpcHandlers } from './aiIpcHandlers';
 import { registerWindowHandlers } from './handlers/windowHandlers';
 import { registerProjectHandlers, registerSearchHandlers } from './handlers/projectHandlers';
+import { registerSearchMonitorHandlers } from './handlers/searchMonitorHandlers';
+import { SearchMonitorService } from '../services/SearchMonitorService';
 import { registerArticleHandlers } from './handlers/articleHandlers';
 import { registerAnnotationHandlers } from './handlers/annotationHandlers';
 import { registerPdfHandlers } from './handlers/pdfHandlers';
@@ -93,6 +95,7 @@ function registerLibraryServices(
   registerWindowHandlers(ipcMain);
   registerProjectHandlers(ipcMain, db);
   registerSearchHandlers(ipcMain, db, orchestrator);
+  registerSearchMonitorHandlers(ipcMain, db, new SearchMonitorService(db, new QueryTranslator(), orchestrator));
   registerSettingsHandlers(ipcMain, db);
   registerArticleHandlers(ipcMain, db);
   registerAnnotationHandlers(ipcMain, db);

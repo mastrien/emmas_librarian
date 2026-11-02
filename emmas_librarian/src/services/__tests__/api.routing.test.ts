@@ -16,6 +16,7 @@ const results = [{ question: 'q', answer: 'a', quote: null, status: 'success' as
 const venue = { title: 'Conf', category: 'conference' as const, milestones: [] };
 
 const VOID_METHODS = new Set([
+  'dismissMonitorNotice',
   'restoreUpdateSnapshot',
   'updateProject',
   'deleteProject',
@@ -88,6 +89,42 @@ const routes: RouteCase[] = [
     call: () => api.previewSearch(1, { a: 'q' }, { common: 50, perBase: { wos: 20 } }, 'date', 'uq', '{"ast":{}}'),
     channel: IpcChannel.SEARCH_PREVIEW,
     args: [1, { a: 'q' }, { common: 50, perBase: { wos: 20 } }, 'date', 'uq', '{"ast":{}}'],
+  },
+  {
+    method: 'getSearchMonitors',
+    call: () => api.getSearchMonitors(3),
+    channel: IpcChannel.SEARCH_MONITORS_LIST,
+    args: [3],
+  },
+  {
+    method: 'setSearchMonitor',
+    call: () => api.setSearchMonitor(3, 7, 14),
+    channel: IpcChannel.SEARCH_MONITOR_SET,
+    args: [3, 7, 14],
+  },
+  {
+    method: 'getMonitorOverview',
+    call: () => api.getMonitorOverview(),
+    channel: IpcChannel.SEARCH_MONITOR_OVERVIEW,
+    args: [],
+  },
+  {
+    method: 'checkDueMonitors',
+    call: () => api.checkDueMonitors(),
+    channel: IpcChannel.SEARCH_MONITOR_CHECK,
+    args: [],
+  },
+  {
+    method: 'reviewMonitor',
+    call: () => api.reviewMonitor(7),
+    channel: IpcChannel.SEARCH_MONITOR_REVIEW,
+    args: [7],
+  },
+  {
+    method: 'dismissMonitorNotice',
+    call: () => api.dismissMonitorNotice(7),
+    channel: IpcChannel.SEARCH_MONITOR_DISMISS,
+    args: [7],
   },
   {
     method: 'peekCitations',

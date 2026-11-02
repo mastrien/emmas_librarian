@@ -40,6 +40,8 @@ import type {
   CategoryOption,
   CitationRequest,
   CitationSeed,
+  MonitorOverview,
+  SearchMonitor,
   CitationSeedCount,
   OpenAccessOutcome,
   SearchReportFormat,
@@ -487,6 +489,22 @@ export const projectService: IProjectService = {
     options?: CategoryOption[] | null,
   ): Promise<void> {
     await safeInvoke(IpcChannel.CATEGORIES_UPDATE_PROJECT, categoryId, name, type, options);
+  },
+
+  getSearchMonitors: (projectId: number): Promise<SearchMonitor[]> =>
+    safeInvoke(IpcChannel.SEARCH_MONITORS_LIST, projectId),
+
+  setSearchMonitor: (projectId: number, searchId: number, intervalDays: number | null): Promise<SearchMonitor[]> =>
+    safeInvoke(IpcChannel.SEARCH_MONITOR_SET, projectId, searchId, intervalDays),
+
+  getMonitorOverview: (): Promise<MonitorOverview> => safeInvoke(IpcChannel.SEARCH_MONITOR_OVERVIEW),
+
+  checkDueMonitors: (): Promise<MonitorOverview> => safeInvoke(IpcChannel.SEARCH_MONITOR_CHECK),
+
+  reviewMonitor: (searchId: number): Promise<SearchPreview> => safeInvoke(IpcChannel.SEARCH_MONITOR_REVIEW, searchId),
+
+  async dismissMonitorNotice(searchId: number): Promise<void> {
+    await safeInvoke(IpcChannel.SEARCH_MONITOR_DISMISS, searchId);
   },
 
   peekCitations: (seeds: CitationSeed[]): Promise<CitationSeedCount[]> =>

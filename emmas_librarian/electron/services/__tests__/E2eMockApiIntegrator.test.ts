@@ -24,6 +24,17 @@ describe('E2eMockApiIntegrator', () => {
   });
 });
 
+describe('E2eMockApiIntegrator with a date filter', () => {
+  it('also finds the article a monitored search reports as new', async () => {
+    const { articles, available } = await new E2eMockApiIntegrator().searchOpenAlex(
+      'q,from_publication_date:2026-01-01',
+    );
+
+    expect(articles.map((a) => a.title)).toEqual(['Aprendizado de Maquina E2E', 'Artigo Monitorado E2E']);
+    expect(available).toBe(2);
+  });
+});
+
 describe('E2eMockApiIntegrator bases added with pagination', () => {
   it('finds nothing on Europe PMC, arXiv and IEEE Xplore, so E2E searches never reach them', async () => {
     const api = new E2eMockApiIntegrator();

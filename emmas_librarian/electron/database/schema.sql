@@ -236,6 +236,22 @@ CREATE INDEX IF NOT EXISTS idx_screening_labels_project ON screening_labels(proj
 -- PRISMA diagram (#50). No number is typed by hand: the "other methods" column counts the articles that came
 -- from outside the searches by the source each one was found in, and the studies are the included publications
 -- minus those marked as of the same study.
+CREATE TABLE IF NOT EXISTS search_monitors (
+    search_id INTEGER PRIMARY KEY,
+    interval_days INTEGER NOT NULL CHECK (interval_days IN (1, 7, 14)),
+    last_checked_at TEXT,
+    pending_count INTEGER NOT NULL DEFAULT 0,
+    failed_bases TEXT NOT NULL DEFAULT '[]',
+    FOREIGN KEY(search_id) REFERENCES search_history(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS search_monitor_seen (
+    search_id INTEGER NOT NULL,
+    article_key TEXT NOT NULL,
+    PRIMARY KEY (search_id, article_key),
+    FOREIGN KEY(search_id) REFERENCES search_monitors(search_id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS prisma_sources (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id INTEGER NOT NULL,

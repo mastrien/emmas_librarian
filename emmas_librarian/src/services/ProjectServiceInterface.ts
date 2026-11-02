@@ -15,6 +15,8 @@ import type {
   CategoryOption,
   CitationRequest,
   CitationSeed,
+  MonitorOverview,
+  SearchMonitor,
   CitationSeedCount,
   OpenAccessOutcome,
   SearchReportFormat,
@@ -123,6 +125,18 @@ export interface IProjectService {
     queryState?: string,
   ): Promise<SearchPreview>;
   saveSearchPreview(previewId: string): Promise<SavedSearchSummary>;
+  /** The monitored searches of a project (#52). */
+  getSearchMonitors(projectId: number): Promise<SearchMonitor[]>;
+  /** Starts monitoring a search or changes its interval; null stops it. Answers the project's monitors as they now are. */
+  setSearchMonitor(projectId: number, searchId: number, intervalDays: number | null): Promise<SearchMonitor[]>;
+  /** What the monitored searches have to say now, and how many checks are due. */
+  getMonitorOverview(): Promise<MonitorOverview>;
+  /** Runs the checks that are due. */
+  checkDueMonitors(): Promise<MonitorOverview>;
+  /** Opens a monitored search as a preview, to save or discard like a search. */
+  reviewMonitor(searchId: number): Promise<SearchPreview>;
+  /** Hides a notice until the next check finds something. */
+  dismissMonitorNotice(searchId: number): Promise<void>;
   /** How much the articles cite and are cited by, before downloading anything (#51). */
   peekCitations(seeds: CitationSeed[]): Promise<CitationSeedCount[]>;
   /** Snowballing (#51): held as a preview, saved or discarded like a search. */

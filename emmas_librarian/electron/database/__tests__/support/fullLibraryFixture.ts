@@ -66,6 +66,7 @@ export function seedFullLibrary(db: Database.Database, files: LibraryFiles): voi
   const thesis = seedFullProject(db, files);
   seedPdfLibrary(db, files.pdfPath);
   seedSemanticIndex(db, thesis);
+  seedSearchMonitor(db, thesis);
   seedReviewProject(db);
   run(db, "INSERT INTO projects (name, deleted_at) VALUES ('Projeto antigo', '2026-02-01 08:00:00')");
   seedAgenda(db);
@@ -97,6 +98,20 @@ function seedSemanticIndex(db: Database.Database, project: number): void {
   new VectorStore(db).indexArticleChunks(article.id, [chunk], [[0.1, 0.2, 0.3, 0.4]]);
   // The app writes no token count today; older versions may have, so the column is kept filled.
   db.prepare('UPDATE pdf_chunks SET token_count = 12 WHERE article_id = ?').run(article.id);
+}
+
+// A monitored search with what its last check left: a notice, a base it missed and what was already shown (#52).
+function seedSearchMonitor(db: Database.Database, project: number): void {
+  const search = db.prepare('SELECT id FROM search_history WHERE project_id = ? LIMIT 1').get(project) as {
+    id: number;
+  };
+  run(
+    db,
+    `INSERT INTO search_monitors (search_id, interval_days, last_checked_at, pending_count, failed_bases)
+     VALUES (?, 7, '2026-01-10T08:00:00.000Z', 2, '["scopus"]')`,
+    search.id,
+  );
+  run(db, "INSERT INTO search_monitor_seen (search_id, article_key) VALUES (?, 'doi:10.1/visto')", search.id);
 }
 
 // The category types the UI offers besides the thesis' enum, and one of each item kind in the trash.
