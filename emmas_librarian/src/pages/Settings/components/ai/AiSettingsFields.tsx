@@ -1,5 +1,5 @@
 import React from 'react';
-import { Key, Save, CheckCircle } from 'lucide-react';
+import { Key } from 'lucide-react';
 
 interface KeyFieldProps {
   label: React.ReactNode;
@@ -93,33 +93,4 @@ export const NumberSetting: React.FC<{ label: string; value: string; onChange: (
       style={settingsInputStyle}
     />
   </div>
-);
-
-interface SaveSettingsButtonProps {
-  onClick: () => void;
-  saving: boolean;
-  saved: boolean;
-  idleLabel: string;
-  iconSize: number;
-  iconStyle?: React.CSSProperties;
-}
-
-/**
- * Save button that reflects the saving / saved state.
- *
- * Usage:
- *   <SaveSettingsButton onClick={save} saving={saving} saved={saved} idleLabel="Salvar Chaves" iconSize={20} />
- */
-export const SaveSettingsButton: React.FC<SaveSettingsButtonProps> = ({
-  onClick,
-  saving,
-  saved,
-  idleLabel,
-  iconSize,
-  iconStyle,
-}) => (
-  <button onClick={onClick} className="btn-primary" disabled={saving} style={{ minWidth: '150px' }}>
-    {saved ? <CheckCircle size={iconSize} style={iconStyle} /> : <Save size={iconSize} style={iconStyle} />}
-    {saving ? 'Salvando...' : saved ? 'Salvo!' : idleLabel}
-  </button>
 );

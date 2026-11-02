@@ -2,7 +2,8 @@ import React from 'react';
 import { Brain, ShieldAlert, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { AIModelConfig, AISkill, AIProvider } from '../../../types';
-import { KeyField, NumberSetting, SaveSettingsButton } from './ai/AiSettingsFields';
+import { KeyField, NumberSetting } from './ai/AiSettingsFields';
+import type { AutosaveStatus } from '../useSettingsAutosave';
 import { AiSkillCard } from './ai/AiSkillCard';
 
 interface AiSettingsProps {
@@ -26,16 +27,15 @@ interface AiSettingsProps {
   ragTopK: string;
   setRagTopK: (v: string) => void;
   handleRestoreAiDefaults: () => void;
-  handleSaveKeys: () => void;
-  saving: boolean;
-  saved: boolean;
+  /** Settings save on their own; the page shows this status at the top. */
+  autosaveStatus: AutosaveStatus;
 }
 
 /**
  * AI settings: provider credentials, per-feature provider/model choice and RAG parameters.
  *
  * Usage:
- *   <AiSettings openaiKey={k} setOpenaiKey={setK} ... saving={saving} saved={saved} />
+ *   <AiSettings openaiKey={k} setOpenaiKey={setK} ... autosaveStatus={autosave.status} />
  */
 export const AiSettings: React.FC<AiSettingsProps> = (props) => (
   <div className="card" style={{ padding: '2rem' }}>
@@ -45,15 +45,6 @@ export const AiSettings: React.FC<AiSettingsProps> = (props) => (
     <DataSharingNotice />
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <ProviderKeys {...props} />
-      <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
-        <SaveSettingsButton
-          onClick={props.handleSaveKeys}
-          saving={props.saving}
-          saved={props.saved}
-          idleLabel="Salvar Chaves"
-          iconSize={20}
-        />
-      </div>
       <AdvancedAiSettings {...props} />
     </div>
   </div>
@@ -165,14 +156,6 @@ const AdvancedAiSettings: React.FC<AiSettingsProps> = (props) => (
         >
           <RotateCcw size={14} style={{ marginRight: '0.4rem' }} /> Restaurar Padrões
         </button>
-        <SaveSettingsButton
-          onClick={props.handleSaveKeys}
-          saving={props.saving}
-          saved={props.saved}
-          idleLabel="Salvar Configuração"
-          iconSize={18}
-          iconStyle={{ marginRight: '0.4rem' }}
-        />
       </div>
     </div>
   </div>

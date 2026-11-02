@@ -7,8 +7,9 @@ async function fillOpenaiKey(window, key) {
   const locator = window.locator('input[placeholder="sk-..."]');
   await window.fill('input[placeholder="sk-..."]', key);
   await expect(locator).toHaveValue(key);
-  await window.click('button:has-text("Salvar Chaves")');
-  await window.waitForSelector('button:has-text("Salvo!")');
+  // Settings save on their own once typing pauses; there is no save button (validation of epic #44).
+  await expect(window.getByRole('button', { name: /Salvar/ })).toHaveCount(0);
+  await expect(window.getByRole('status').filter({ hasText: 'Alterações salvas.' })).toBeVisible();
 }
 
 async function verifyKeyPersisted(window, expectedKey) {

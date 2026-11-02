@@ -32,7 +32,7 @@ describe('SettingsPage', () => {
     expect(screen.getByDisplayValue('scopus-123')).toBeInTheDocument();
   });
 
-  it('loads and saves the optional OpenAlex key with the other search keys', async () => {
+  it('saves the optional OpenAlex key on its own once typing pauses', async () => {
     fakeService.getSetting.mockImplementation(async (key: string) =>
       key === 'openalex_api_key' ? 'openalex-123' : null,
     );
@@ -45,12 +45,11 @@ describe('SettingsPage', () => {
     await waitFor(() => expect(field).toHaveValue('openalex-123'));
 
     fireEvent.change(field, { target: { value: 'openalex-456' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar Chaves' }));
 
     await waitFor(() => expect(fakeService.setSetting).toHaveBeenCalledWith('openalex_api_key', 'openalex-456'));
   });
 
-  it('saves the IEEE Xplore key with the other search keys', async () => {
+  it('saves the IEEE Xplore key on its own, with no save button to press', async () => {
     render(
       <BrowserRouter>
         <SettingsPage />
@@ -60,7 +59,7 @@ describe('SettingsPage', () => {
     fireEvent.change(await screen.findByLabelText('IEEE Xplore API Key (experimental)'), {
       target: { value: 'ieee-789' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar Chaves' }));
+    expect(screen.queryByRole('button', { name: /Salvar/ })).toBeNull();
 
     await waitFor(() => expect(fakeService.setSetting).toHaveBeenCalledWith('ieee_api_key', 'ieee-789'));
   });
@@ -89,5 +88,54 @@ describe('SettingsPage', () => {
     fireEvent.change(provider, { target: { value: 'anthropic' } });
 
     expect(screen.getByRole('textbox', { name: 'Modelo: 📝 Geração de Resumos' })).toHaveValue('claude-sonnet-5');
+  });
+
+  // Validation of epic #44: a provider picked but not saved left a whole investigation failing.
+  it('saves a provider choice at once, with the suggested model, and says it was saved', async () => {
+    fakeService.getAiModelConfigs.mockResolvedValue([
+      { id: 1, skill: 'extraction', provider: 'gemini', model_name: 'gemini-2.5-flash', updated_at: '2026-09-26' },
+    ]);
+    render(
+      <BrowserRouter>
+        <SettingsPage />
+      </BrowserRouter>,
+    );
+    const provider = await screen.findByRole('combobox', { name: /Provedor: .*Investigação Massiva/ });
+
+    fireEvent.change(provider, { target: { value: 'anthropic' } });
+
+    await waitFor(() =>
+      expect(fakeService.updateAiModelConfig).toHaveBeenCalledWith('extraction', 'anthropic', 'claude-sonnet-5'),
+    );
+    expect(await screen.findByText('Alterações salvas.')).toBeInTheDocument();
+  });
+
+  it('saves what was still waiting when the person leaves the page', async () => {
+    const { unmount } = render(
+      <BrowserRouter>
+        <SettingsPage />
+      </BrowserRouter>,
+    );
+    fireEvent.change(await screen.findByLabelText('IEEE Xplore API Key (experimental)'), {
+      target: { value: 'ieee-saída' },
+    });
+
+    unmount();
+
+    expect(fakeService.setSetting).toHaveBeenCalledWith('ieee_api_key', 'ieee-saída');
+  });
+
+  it('says when a change could not be saved', async () => {
+    fakeService.setSetting.mockRejectedValue(new Error('disco cheio'));
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <BrowserRouter>
+        <SettingsPage />
+      </BrowserRouter>,
+    );
+
+    fireEvent.change(await screen.findByLabelText('IEEE Xplore API Key (experimental)'), { target: { value: 'x' } });
+
+    expect(await screen.findByText(/Não foi possível salvar uma alteração/)).toBeInTheDocument();
   });
 });
