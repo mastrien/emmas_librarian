@@ -17,6 +17,7 @@ Update this table when you add or extend a spec.
 | `backup_restore.spec.js` (F-12) | "Restaurar e Sobrescrever" | library equals backup, PDF deleted from disk comes back and opens |
 | `backup_restore.spec.js` (F-14) | "Restaurar e Sobrescrever" into another data folder (old one deleted) | restored PDF still opens in the reader (paths rebased to this userData) |
 | `backup_restore.spec.js` (F-13) | "Importar e Mesclar" into another library | project + PDF merged, second merge imports nothing |
+| `search_monitor.spec.js` (#52) | Mark a search in the history, the dashboard checks it, review and save | interval "Toda semana" after marking; "1 artigo novo em <projeto>" on the dashboard (only what the project lacks); the preview lists the new article only; saved entry in the history as "Monitoramento da busca #1" with "Resultado do monitoramento"; the notice is gone after saving |
 | `sharing_and_pdf_library.spec.js` (F-15/16) | Import from other project; PDF library reuse; "Vincular" dialog | history ID; "Utilizado em 1/2 artigos"; link overlay covers the whole window (fixed-overlay regression) |
 | `reader.spec.js` | Reader: render/paginate/zoom, in-PDF search, highlight with note, standalone annotation, ABNT citation from metadata | page input, results on page 3, persisted after reopening, citation text, saved title |
 | `diary.spec.js` | Diary: autosave + reload, version history restore, delete page | content after reload, restored version, empty state |

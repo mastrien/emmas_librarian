@@ -6,6 +6,8 @@ import type {
   CategoryOption,
   CitationRequest,
   CitationSeed,
+  MonitorOverview,
+  SearchMonitor,
   CitationSeedCount,
   OpenAccessOutcome,
   SearchReportFormat,
@@ -568,6 +570,22 @@ export class FakeProjectService implements IProjectService {
   );
 
   deleteProjectCategory = vi.fn(async (_categoryId: number): Promise<void> => undefined);
+
+  getSearchMonitors = vi.fn(async (_projectId: number): Promise<SearchMonitor[]> => []);
+
+  setSearchMonitor = vi.fn(
+    async (_projectId: number, _searchId: number, _intervalDays: number | null): Promise<SearchMonitor[]> => [],
+  );
+
+  getMonitorOverview = vi.fn(async (): Promise<MonitorOverview> => ({ dueCount: 0, notices: [] }));
+
+  checkDueMonitors = vi.fn(async (): Promise<MonitorOverview> => ({ dueCount: 0, notices: [] }));
+
+  reviewMonitor = vi.fn(
+    async (_searchId: number): Promise<SearchPreview> => ({ previewId: 'p1', breakdown: {}, results: [] }),
+  );
+
+  dismissMonitorNotice = vi.fn(async (_searchId: number): Promise<void> => undefined);
 
   peekCitations = vi.fn(async (_seeds: CitationSeed[]): Promise<CitationSeedCount[]> => []);
 

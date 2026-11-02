@@ -155,6 +155,12 @@ export enum IpcChannel {
   PROJECTS_UPDATE_WRITING_PAD = 'projects:updateWritingPad',
   SEARCH_PREVIEW = 'search:preview',
   SEARCH_SAVE_PREVIEW = 'search:savePreview',
+  SEARCH_MONITORS_LIST = 'searchMonitor:list',
+  SEARCH_MONITOR_SET = 'searchMonitor:set',
+  SEARCH_MONITOR_OVERVIEW = 'searchMonitor:overview',
+  SEARCH_MONITOR_CHECK = 'searchMonitor:check',
+  SEARCH_MONITOR_REVIEW = 'searchMonitor:review',
+  SEARCH_MONITOR_DISMISS = 'searchMonitor:dismiss',
   SEARCH_PEEK_CITATIONS = 'search:peekCitations',
   SEARCH_PREVIEW_CITATIONS = 'search:previewCitations',
   SEARCH_DISCARD_PREVIEW = 'search:discardPreview',
@@ -485,6 +491,36 @@ export interface SearchBaseOutcome {
 }
 
 export type SearchBreakdown = Record<string, SearchBaseOutcome>;
+
+/** A search the person chose to monitor (#52), with what its last check found. */
+export interface SearchMonitor {
+  search_id: number;
+  interval_days: number;
+  last_checked_at: string | null;
+  pending_count: number;
+  /** Bases the last check could not ask: they failed, or their key is gone. */
+  failed_bases: string[];
+  project_id: number;
+  project_name: string;
+  unified_query: string;
+}
+
+/** A line of the dashboard about a monitored search. */
+export interface MonitorNotice {
+  searchId: number;
+  projectId: number;
+  projectName: string;
+  query: string;
+  newCount: number;
+  failedBases: string[];
+  checkedAt: string | null;
+}
+
+export interface MonitorOverview {
+  /** How many searches are due for a check. */
+  dueCount: number;
+  notices: MonitorNotice[];
+}
 
 /** An article to explore the citations of (#51), and how to find it on OpenAlex. */
 export interface CitationSeed {

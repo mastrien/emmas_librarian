@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProjectService } from '../contexts/ServicesContext';
+import { MonitorNotices } from './Dashboard/components/MonitorNotices';
 import { Project, ScientificVenue, MilestoneStatus } from '../types';
 import { Plus, Download } from 'lucide-react';
 import { DashboardCalendar } from '../components/common/DashboardCalendar';
@@ -206,6 +207,8 @@ export const DashboardPage: React.FC = () => {
           />
         </div>
       </div>
+
+      <MonitorNotices />
 
       {/* Cabeçalho dos Projetos */}
       <div

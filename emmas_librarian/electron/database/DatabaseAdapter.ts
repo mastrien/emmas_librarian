@@ -13,6 +13,7 @@ import { MassiveInvestigationRepository } from './MassiveInvestigationRepository
 import { ScreeningDecisionRepository, type ScreeningExportRow } from './ScreeningDecisionRepository';
 import { ScreeningLabelRepository } from './ScreeningLabelRepository';
 import { PrismaOriginRepository } from './PrismaOriginRepository';
+import { SearchMonitorRepository } from './SearchMonitorRepository';
 import { PrismaStudyRepository } from './PrismaStudyRepository';
 import { initializeSchema } from './schemaMigrations';
 import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
@@ -74,6 +75,7 @@ export class DatabaseAdapter {
   public screeningDecisionRepo: ScreeningDecisionRepository;
   public screeningLabelRepo: ScreeningLabelRepository;
   public prismaOriginRepo: PrismaOriginRepository;
+  public searchMonitorRepo: SearchMonitorRepository;
   public prismaStudyRepo: PrismaStudyRepository;
 
   // A constructor that throws leaves no adapter to close, so the file would stay locked (Windows) for
@@ -96,6 +98,7 @@ export class DatabaseAdapter {
       this.screeningDecisionRepo = new ScreeningDecisionRepository(this.db);
       this.screeningLabelRepo = new ScreeningLabelRepository(this.db, this.screeningDecisionRepo);
       this.prismaOriginRepo = new PrismaOriginRepository(this.db);
+      this.searchMonitorRepo = new SearchMonitorRepository(this.db);
       this.prismaStudyRepo = new PrismaStudyRepository(this.db);
       this.initSchema();
     } catch (err) {

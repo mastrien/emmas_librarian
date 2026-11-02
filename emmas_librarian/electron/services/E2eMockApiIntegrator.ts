@@ -12,6 +12,13 @@ const E2E_ARTICLE: NormalizedArticle = {
   csl_json: {},
 };
 
+// What only a date-filtered query finds, so a monitored search (#52) has something new to report.
+const E2E_MONITORED_ARTICLE: NormalizedArticle = {
+  ...E2E_ARTICLE,
+  doi: '10.1234/e2e-monitored-doi',
+  title: 'Artigo Monitorado E2E',
+};
+
 /**
  * E2E runs (E2E_MOCK_SEARCH=true) must not hit the real bibliographic APIs. This stands in for
  * ApiIntegrator so the real preview → save flow still runs, with OpenAlex returning one article.
@@ -19,11 +26,12 @@ const E2E_ARTICLE: NormalizedArticle = {
  * @example new SearchOrchestrator(db, new QueryTranslator(), new E2eMockApiIntegrator());
  */
 export class E2eMockApiIntegrator extends ApiIntegrator {
-  override async searchOpenAlex(): Promise<PagedResult> {
+  override async searchOpenAlex(query = ''): Promise<PagedResult> {
+    const found = query.includes('from_publication_date') ? [E2E_ARTICLE, E2E_MONITORED_ARTICLE] : [E2E_ARTICLE];
     return {
-      articles: [{ ...E2E_ARTICLE, source_databases: [...E2E_ARTICLE.source_databases] }],
+      articles: found.map((article) => ({ ...article, source_databases: [...article.source_databases] })),
       requests: 1,
-      available: 1,
+      available: found.length,
     };
   }
 

@@ -3,10 +3,16 @@ import { QueryTranslator } from './QueryTranslator';
 import { ApiIntegrator } from './ApiIntegrator';
 import { NormalizedArticle } from './types';
 import type { PagedResult } from './searchApis/paginate';
-import { validateSearchLimits, type SearchBaseId, type SearchLimits } from '../../src/utils/searchLimits';
+import {
+  defaultSearchLimits,
+  validateSearchLimits,
+  type SearchBaseId,
+  type SearchLimits,
+} from '../../src/utils/searchLimits';
 import { PendingSearchStore } from './PendingSearchStore';
 import { doiKey } from '../utils/doi';
 import { OUTSIDE_SEARCH_BASES } from '../../src/utils/outsideSearchEntries';
+import type { RestoredSearch } from '../../src/pages/Search/searchQueries';
 import {
   countCitations,
   runSnowball,
@@ -26,6 +32,9 @@ import type {
   SearchPreview,
   SearchPreviewDetails,
 } from '../../src/types';
+
+// Those of an old entry may be missing.
+const monitorLimits = (restored: RestoredSearch): SearchLimits => restored.limits ?? defaultSearchLimits();
 
 // NormalizedArticle (API shape) → article columns; shared by the review dialog and the save.
 function previewDetails(article: NormalizedArticle): SearchPreviewDetails {
@@ -60,6 +69,8 @@ interface PendingSearch {
   articles: NormalizedArticle[];
   /** Where the new articles came from on the PRISMA diagram, when the app already knows (#51). */
   origin?: Omit<PrismaSourceInput, 'id'>;
+  /** The monitored search this preview reviews, and what it shows (#52). */
+  monitor?: { searchId: number; keys: string[] };
 }
 
 type BaseLimits = Partial<Record<SearchBaseId, number>>;
@@ -177,13 +188,73 @@ export class SearchOrchestrator {
     }
     // Removed only after it is written, so a failed save can be retried from the same results.
     const savedCount = this.persist(search);
+    this.settleMonitor(search);
     this.pending.discard(previewId);
     return { savedCount, breakdown: search.breakdown };
   }
 
   /** Drops a previewed search without touching the project. */
   public discardPreview(previewId: string): void {
+    const search = this.pending.get(previewId);
+    if (search) this.settleMonitor(search);
     this.pending.discard(previewId);
+  }
+
+  // Saved or set aside, what a monitored search showed has had its answer and does not alert again.
+  private settleMonitor({ monitor }: PendingSearch): void {
+    if (!monitor) return;
+    this.db.searchMonitorRepo.markSeen(monitor.searchId, monitor.keys);
+    this.db.searchMonitorRepo.clearNotice(monitor.searchId);
+  }
+
+  /**
+   * Runs a monitored search with its own limits and sort, holding nothing: a check only counts (#52).
+   *
+   * @example const { articles, breakdown } = await orchestrator.fetchForMonitor({ openalex: 'q' }, restored);
+   */
+  public fetchForMonitor(queries: Record<string, string>, restored: RestoredSearch) {
+    const perBase = validateSearchLimits(monitorLimits(restored), Object.keys(queries));
+    return this.fetchDeduplicated(queries, perBase, restored.sortBy ?? 'relevance');
+  }
+
+  /**
+   * Holds a monitored search as a preview, leaving out what was already shown. Saving makes a history entry of its
+   * own, with the builder state of the monitored search and the date it looked from.
+   *
+   * @example await orchestrator.previewForMonitor({ searchId: 7, projectId: 1, queries, restored, unifiedQuery, publishedSince });
+   */
+  public async previewForMonitor(request: {
+    searchId: number;
+    projectId: number;
+    queries: Record<string, string>;
+    restored: RestoredSearch;
+    unifiedQuery: string;
+    publishedSince: string;
+  }): Promise<SearchPreview> {
+    const { searchId, projectId, queries, restored, unifiedQuery, publishedSince } = request;
+    const { articles, breakdown } = await this.fetchForMonitor(queries, restored);
+    const seen = this.db.searchMonitorRepo.seenKeys(searchId);
+    const shown = articles.filter((a) => !seen.has(this.articleKey(a)));
+    return this.holdPreview({
+      projectId,
+      queryMap: queries,
+      limits: monitorLimits(restored),
+      sortBy: restored.sortBy ?? 'relevance',
+      unifiedQuery,
+      queryState: JSON.stringify({ ...restored.state, publishedSince }),
+      breakdown,
+      articles: shown,
+      monitor: { searchId, keys: shown.map((a) => this.articleKey(a)) },
+    });
+  }
+
+  /**
+   * What identifies an article between checks: its DOI, or its title without one.
+   *
+   * @example orchestrator.articleKey({ doi: '10.1/X', title: 'T' }) // '10.1/x'
+   */
+  public articleKey(article: Pick<NormalizedArticle, 'doi' | 'title'>): string {
+    return doiKey(article.doi) || this.normalizeTitle(article.title || '');
   }
 
   private async fetchDeduplicated(queryMap: Record<string, string>, limits: BaseLimits, sortBy: QuerySort) {

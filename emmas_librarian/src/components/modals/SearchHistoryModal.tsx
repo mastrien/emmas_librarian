@@ -5,6 +5,8 @@ import { createPortal } from 'react-dom';
 import type { SearchBreakdown, SearchHistoryItem, SearchReportFormat } from '../../types';
 import { restoreSearch } from '../../pages/Search/searchQueries';
 import { HistoryBreakdown } from './searchHistory/HistoryBreakdown';
+import { SearchMonitorControl, useSearchMonitors } from './searchHistory/SearchMonitorControl';
+import { isMonitorResult } from '../../utils/searchMonitor';
 import { historyLimitText, parseStoredObject } from './searchHistory/historyDetails';
 import { databaseLabel } from './searchSummary/SearchBreakdownList';
 import { SearchStrategyExport } from './searchHistory/SearchStrategyExport';
@@ -62,211 +64,240 @@ const NewSearchFromLink: React.FC<{ projectId: number; item: HistoryItem }> = ({
     </Link>
   ) : null;
 
-const HistoryContent: React.FC<HistoryContentProps> = ({ history, onRevertSearch, projectId }) => (
-  <div style={{ flex: 1, overflowY: 'auto', paddingRight: '1rem' }}>
-    {history.length === 0 ? (
-      <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-        Nenhuma busca registrada ainda.
-      </div>
-    ) : (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {history.map((item) => {
-          const breakdown = parseStoredObject<SearchBreakdown>(item.results_breakdown);
-          const translated = parseStoredObject<Record<string, string>>(item.translated_queries);
-          const limitText = historyLimitText(item);
+const HistoryContent: React.FC<HistoryContentProps> = ({ history, onRevertSearch, projectId }) => {
+  const monitoring = useSearchMonitors(projectId);
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', paddingRight: '1rem' }}>
+      {monitoring.error && (
+        <div role="alert" style={{ marginBottom: '0.75rem', fontSize: '0.85rem', color: 'var(--color-danger)' }}>
+          {monitoring.error}
+        </div>
+      )}
+      {history.length === 0 ? (
+        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+          Nenhuma busca registrada ainda.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {history.map((item) => {
+            const breakdown = parseStoredObject<SearchBreakdown>(item.results_breakdown);
+            const translated = parseStoredObject<Record<string, string>>(item.translated_queries);
+            const limitText = historyLimitText(item);
 
-          return (
-            <div
-              key={item.id}
-              style={{
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '1.5rem',
-                background: 'var(--bg-main)',
-              }}
-            >
+            return (
               <div
+                key={item.id}
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  marginBottom: '1rem',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '1.5rem',
+                  background: 'var(--bg-main)',
                 }}
               >
                 <div
                   style={{
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    color: 'var(--text-muted)',
-                    fontSize: '0.9rem',
-                    flexWrap: 'wrap',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: '1rem',
                   }}
                 >
-                  <span
-                    style={{
-                      background: 'rgba(79, 70, 229, 0.1)',
-                      color: 'var(--color-primary)',
-                      padding: '0.15rem 0.5rem',
-                      borderRadius: 'var(--radius-sm)',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      border: '1px solid rgba(79, 70, 229, 0.2)',
-                    }}
-                  >
-                    ID: #{item.id}
-                  </span>
-                  <Calendar size={14} /> {new Date(item.created_at).toLocaleString()}
-                  {item.sort_by && (
-                    <>
-                      <span style={{ margin: '0 0.5rem', color: 'var(--border-color)' }}>|</span>
-                      <span>
-                        Ordenação:{' '}
-                        <strong>
-                          {item.sort_by === 'relevance'
-                            ? 'Relevância'
-                            : item.sort_by === 'citations'
-                              ? 'Citações'
-                              : item.sort_by === 'date'
-                                ? 'Data'
-                                : item.sort_by}
-                        </strong>
-                      </span>
-                    </>
-                  )}
-                  {limitText && (
-                    <>
-                      <span style={{ margin: '0 0.5rem', color: 'var(--border-color)' }}>|</span>
-                      <span>
-                        Limite: <strong>{limitText}</strong>
-                      </span>
-                    </>
-                  )}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  {projectId !== undefined && <RerunSearchLink projectId={projectId} item={item} />}
-                  {projectId !== undefined && <NewSearchFromLink projectId={projectId} item={item} />}
-                  {onRevertSearch && (
-                    <button
-                      onClick={() => {
-                        if (window.confirm(undoTexts(item).confirm)) onRevertSearch(item.id);
-                      }}
-                      title={undoTexts(item).title}
-                      style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        color: 'var(--color-danger)',
-                        border: 'none',
-                        padding: '0.2rem 0.6rem',
-                        borderRadius: 'var(--radius-md)',
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.3rem',
-                        transition: 'all var(--transition-fast)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--color-danger)';
-                        e.currentTarget.style.color = 'white';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                        e.currentTarget.style.color = 'var(--color-danger)';
-                      }}
-                    >
-                      <RotateCcw size={12} /> {undoTexts(item).label}
-                    </button>
-                  )}
                   <div
                     style={{
-                      background: 'var(--color-primary)',
-                      color: 'white',
-                      padding: '0.2rem 0.75rem',
-                      borderRadius: 'var(--radius-xl)',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      color: 'var(--text-muted)',
+                      fontSize: '0.9rem',
+                      flexWrap: 'wrap',
                     }}
                   >
-                    {item.total_results} artigos salvos
+                    <span
+                      style={{
+                        background: 'rgba(79, 70, 229, 0.1)',
+                        color: 'var(--color-primary)',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        border: '1px solid rgba(79, 70, 229, 0.2)',
+                      }}
+                    >
+                      ID: #{item.id}
+                    </span>
+                    <Calendar size={14} /> {new Date(item.created_at).toLocaleString()}
+                    {item.sort_by && (
+                      <>
+                        <span style={{ margin: '0 0.5rem', color: 'var(--border-color)' }}>|</span>
+                        <span>
+                          Ordenação:{' '}
+                          <strong>
+                            {item.sort_by === 'relevance'
+                              ? 'Relevância'
+                              : item.sort_by === 'citations'
+                                ? 'Citações'
+                                : item.sort_by === 'date'
+                                  ? 'Data'
+                                  : item.sort_by}
+                          </strong>
+                        </span>
+                      </>
+                    )}
+                    {limitText && (
+                      <>
+                        <span style={{ margin: '0 0.5rem', color: 'var(--border-color)' }}>|</span>
+                        <span>
+                          Limite: <strong>{limitText}</strong>
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    {projectId !== undefined && <RerunSearchLink projectId={projectId} item={item} />}
+                    {projectId !== undefined && <NewSearchFromLink projectId={projectId} item={item} />}
+                    {onRevertSearch && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm(undoTexts(item).confirm)) onRevertSearch(item.id);
+                        }}
+                        title={undoTexts(item).title}
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          color: 'var(--color-danger)',
+                          border: 'none',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: 'var(--radius-md)',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          transition: 'all var(--transition-fast)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'var(--color-danger)';
+                          e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                          e.currentTarget.style.color = 'var(--color-danger)';
+                        }}
+                      >
+                        <RotateCcw size={12} /> {undoTexts(item).label}
+                      </button>
+                    )}
+                    <div
+                      style={{
+                        background: 'var(--color-primary)',
+                        color: 'white',
+                        padding: '0.2rem 0.75rem',
+                        borderRadius: 'var(--radius-xl)',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {item.total_results} artigos salvos
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div
-                  style={{
-                    fontWeight: 600,
-                    color: 'var(--text-heading)',
-                    marginBottom: '0.5rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                  }}
-                >
-                  <Search size={16} /> Query Unificada
-                </div>
-                <div
-                  style={{
-                    padding: '0.75rem',
-                    background: 'var(--bg-surface)',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-color)',
-                    fontStyle: 'italic',
-                    color: 'var(--text-main)',
-                  }}
-                >
-                  {item.unified_query}
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                <HistoryBreakdown breakdown={breakdown} uniqueResults={item.unique_results} />
-
-                <div>
+                {isMonitorResult(item) && (
+                  <div
+                    style={{
+                      marginBottom: '0.75rem',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      color: 'var(--color-primary)',
+                    }}
+                  >
+                    Resultado do monitoramento
+                  </div>
+                )}
+                {projectId !== undefined && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <SearchMonitorControl
+                      item={item as SearchHistoryItem}
+                      monitor={monitoring.monitors.find((m) => m.search_id === item.id)}
+                      onChange={(days) => void monitoring.set(item.id, days)}
+                    />
+                  </div>
+                )}
+                <div style={{ marginBottom: '1.5rem' }}>
                   <div
                     style={{
                       fontWeight: 600,
                       color: 'var(--text-heading)',
-                      marginBottom: '0.75rem',
-                      fontSize: '0.9rem',
+                      marginBottom: '0.5rem',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.4rem',
                     }}
                   >
-                    <ChevronRight size={14} /> Queries Traduzidas
+                    <Search size={16} /> Query Unificada
                   </div>
-                  <details style={{ fontSize: '0.8rem', cursor: 'pointer' }}>
-                    <summary style={{ color: 'var(--color-primary)', fontWeight: 500 }}>
-                      Ver detalhes da tradução
-                    </summary>
-                    <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                      {Object.entries(translated).map(([db, q]) => (
-                        <div
-                          key={db}
-                          style={{
-                            padding: '0.5rem',
-                            background: 'var(--bg-surface)',
-                            borderRadius: 'var(--radius-sm)',
-                            fontFamily: 'monospace',
-                            wordBreak: 'break-all',
-                          }}
-                        >
-                          <strong>{databaseLabel(db)}:</strong> {q}
-                        </div>
-                      ))}
+                  <div
+                    style={{
+                      padding: '0.75rem',
+                      background: 'var(--bg-surface)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-color)',
+                      fontStyle: 'italic',
+                      color: 'var(--text-main)',
+                    }}
+                  >
+                    {item.unified_query}
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <HistoryBreakdown breakdown={breakdown} uniqueResults={item.unique_results} />
+
+                  <div>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        color: 'var(--text-heading)',
+                        marginBottom: '0.75rem',
+                        fontSize: '0.9rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                      }}
+                    >
+                      <ChevronRight size={14} /> Queries Traduzidas
                     </div>
-                  </details>
+                    <details style={{ fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <summary style={{ color: 'var(--color-primary)', fontWeight: 500 }}>
+                        Ver detalhes da tradução
+                      </summary>
+                      <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        {Object.entries(translated).map(([db, q]) => (
+                          <div
+                            key={db}
+                            style={{
+                              padding: '0.5rem',
+                              background: 'var(--bg-surface)',
+                              borderRadius: 'var(--radius-sm)',
+                              fontFamily: 'monospace',
+                              wordBreak: 'break-all',
+                            }}
+                          >
+                            <strong>{databaseLabel(db)}:</strong> {q}
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-    )}
-  </div>
-);
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const SearchHistoryModal: React.FC<Props> = ({
   isOpen,
