@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { boxLines, fit, prismaLayout, withCount } from '../prismaLayout';
+import { boxLines, fit, PAD, prismaLayout, warningLines, withCount } from '../prismaLayout';
+import { prismaOrder } from '../../../../utils/prismaFlow';
 import { abntDate, referenceTokens, wrapTokens } from '../prismaReference';
 import { PrismaDiagram, PRINT_PALETTE, SCREEN_PALETTE } from '../PrismaDiagram';
 import { diagramSvgText, exportPrismaDiagram } from '../prismaExport';
@@ -71,13 +72,30 @@ describe('prismaLayout (#50): two columns', () => {
   });
 
   it('skips the screening row and reaches the included box from the side, the head only at the end', () => {
-    const fromIdentified = layout.arrows.find((a) => a.y1 === place('omIdentified').y + place('omIdentified').h)!;
-    const elbow = layout.arrows.find((a) => a.y1 === place('omAssessed').y + place('omAssessed').h)!;
+    // Found by the box's bottom AND centre: boxes of a row can share a height, and so a bottom.
+    const leaving = (key: string) =>
+      layout.arrows.find((a) => a.y1 === place(key).y + place(key).h && a.x1 === place(key).x + place(key).w / 2)!;
+    const fromIdentified = leaving('omIdentified');
+    const elbow = leaving('omAssessed');
     const toIncluded = layout.arrows.at(-1)!;
 
     expect(fromIdentified.y2).toBe(place('omSought').y - 1);
     expect(elbow.head).toBe(false);
     expect(toIncluded).toMatchObject({ x2: place('included').x + place('included').w + 1, head: true });
+  });
+
+  // Validation of epic #44: with every warning on, "⚠ aguardando decisões (veja ao lado)" ran up to 89 px past
+  // the narrowest box (measured in Chrome). 6.6 px is the widest glyph average measured there at 13 px.
+  it('keeps every line of every box inside it, warnings included', () => {
+    const flow = twoColumnFlow();
+    const kinds = ['mismatch', 'pending', 'partial', 'nodata'] as const;
+    for (const key of prismaOrder(flow)) flow[key].warnings = kinds.map((kind) => ({ kind, text: kind }));
+    const boxes = prismaLayout(flow, TODAY).boxes;
+    const overflowing = boxes.flatMap((b) =>
+      b.lines.filter((l) => l.text.length * 6.6 > b.w - 2 * PAD).map((l) => `${b.key}: ${l.text}`),
+    );
+    expect(overflowing).toEqual([]);
+    expect(warningLines('pending', 21).map((l) => l.text)).toEqual(['⚠ aguardando decisões', '(veja ao lado)']);
   });
 });
 
