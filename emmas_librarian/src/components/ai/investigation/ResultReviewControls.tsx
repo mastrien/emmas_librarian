@@ -27,8 +27,9 @@ const smallButton: React.CSSProperties = {
 const SHORTCUTS: Record<string, 'accept' | 'edit' | 'reject'> = { a: 'accept', e: 'edit', r: 'reject' };
 
 /**
- * Accept, edit or reject one AI answer (#47), with its review status always visible. Keys: A accepts, E edits,
- * R rejects, Esc leaves the edit box; Ctrl+Enter saves the edit.
+ * Accept, edit or reject one AI answer (#47), with its review status always visible. Once an answer is marked,
+ * the three give way to "Desfazer", which brings them back (validation of epic #44). Keys, while the answer is
+ * unmarked: A accepts, E edits, R rejects; Esc leaves the edit box; Ctrl+Enter saves the edit.
  *
  * Usage:
  *   <ResultReviewControls result={result} onReview={(review) => reviewResult(result.id, review)} />
@@ -53,8 +54,11 @@ export const ResultReviewControls: React.FC<ResultReviewControlsProps> = ({ resu
     reject: () => send({ status: 'rejected' }),
   };
 
+  const marked = result.review_status !== 'pending';
+
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.target instanceof HTMLTextAreaElement || busy || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (marked) return;
     const action = SHORTCUTS[event.key.toLowerCase()];
     if (!action) return;
     event.preventDefault();
@@ -73,16 +77,7 @@ export const ResultReviewControls: React.FC<ResultReviewControlsProps> = ({ resu
           Revisão: {REVIEW_LABELS[result.review_status]}
         </span>
         <span style={{ flex: 1 }} />
-        <button type="button" className="btn-secondary" style={smallButton} disabled={busy} onClick={actions.accept}>
-          <Check size={14} /> Aceitar
-        </button>
-        <button type="button" className="btn-secondary" style={smallButton} disabled={busy} onClick={actions.edit}>
-          <Pencil size={14} /> Editar
-        </button>
-        <button type="button" className="btn-secondary" style={smallButton} disabled={busy} onClick={actions.reject}>
-          <X size={14} /> Rejeitar
-        </button>
-        {result.review_status !== 'pending' && (
+        {marked ? (
           <button
             type="button"
             className="btn-secondary"
@@ -92,6 +87,30 @@ export const ResultReviewControls: React.FC<ResultReviewControlsProps> = ({ resu
           >
             <Undo2 size={14} /> Desfazer
           </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={smallButton}
+              disabled={busy}
+              onClick={actions.accept}
+            >
+              <Check size={14} /> Aceitar
+            </button>
+            <button type="button" className="btn-secondary" style={smallButton} disabled={busy} onClick={actions.edit}>
+              <Pencil size={14} /> Editar
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={smallButton}
+              disabled={busy}
+              onClick={actions.reject}
+            >
+              <X size={14} /> Rejeitar
+            </button>
+          </>
         )}
       </div>
       {result.review_status === 'edited' && draft === null && (
