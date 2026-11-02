@@ -30,7 +30,7 @@ describe('HelpButton on the systematic review page (#50)', () => {
     }
     expect(screen.getByRole('link', { name: 'A declaração PRISMA 2020 (tradução oficial)' })).toHaveAttribute(
       'href',
-      'https://doi.org/10.5123/S1679-49742022000200033',
+      'https://www.prisma-statement.org/s/PRISMA-2020-statement-BRAZILIAN-PORTUGUESE.pdf',
     );
   });
 
@@ -38,5 +38,15 @@ describe('HelpButton on the systematic review page (#50)', () => {
     openHelp('/projects/1');
 
     expect(screen.getByText('Guia do Projeto')).toBeInTheDocument();
+  });
+
+  // Validation of epic #44: the review guide overflowed the window and its middle could not be read.
+  it('keeps the help inside the window: a dialog with a maximum height whose text scrolls', () => {
+    openHelp('/projects/1/review');
+
+    const dialog = screen.getByRole('dialog', { name: 'Guia da Revisão Sistemática' });
+    expect(dialog.style.maxHeight).toBe('calc(100vh - 2rem)');
+    expect(screen.getByTestId('help-modal-body').style.overflowY).toBe('auto');
+    expect(screen.getByRole('button', { name: 'Fechar ajuda' })).toBeInTheDocument();
   });
 });

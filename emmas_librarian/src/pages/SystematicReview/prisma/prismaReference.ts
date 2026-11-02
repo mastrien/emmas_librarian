@@ -1,3 +1,5 @@
+import { PRISMA_EN_URL, PRISMA_PT_DOI, PRISMA_PT_URL } from '../../../utils/prisma/prismaSourceLinks';
+
 /** A run of footer text; with `href` it is a link in the SVG, and written out in full so a PNG still shows it. */
 export interface FooterSegment {
   text: string;
@@ -7,9 +9,6 @@ export interface FooterSegment {
 export interface FooterLine {
   segments: FooterSegment[];
 }
-
-const PT_DOI = 'https://doi.org/10.5123/S1679-49742022000200033';
-const EN_DOI = 'https://doi.org/10.1136/bmj.n71';
 
 // ABNT NBR 6023 abbreviates months like this ("maio" is not abbreviated).
 const MONTHS = ['jan.', 'fev.', 'mar.', 'abr.', 'maio', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
@@ -29,18 +28,18 @@ const words = (text: string): FooterSegment[] => text.split(' ').map((w) => ({ t
  * The reference of the PRISMA 2020 template under the diagram, in ABNT, with links to the official Brazilian
  * Portuguese translation the box titles come from and to the original paper (user request, #50).
  *
- * @example referenceTokens(new Date()).find((t) => t.href)?.href // 'https://doi.org/10.5123/S1679-49742022000200033'
+ * @example referenceTokens(new Date()).find((t) => t.href)?.href // PRISMA_PT_URL
  */
 export function referenceTokens(today: Date): FooterSegment[] {
   return [
     ...words(
-      'Modelo: PAGE, M. J. et al. A declaração PRISMA 2020: diretriz atualizada para relatar revisões sistemáticas. Tradução de Taís Freire Galvão e Gustavo Magno Baldin Tiguman. Epidemiologia e Serviços de Saúde, Brasília, v. 31, n. 2, e2022107, 2022. DOI: 10.5123/S1679-49742022000200033. Disponível em:',
+      `Modelo: PAGE, M. J. et al. A declaração PRISMA 2020: diretriz atualizada para relatar revisões sistemáticas. Tradução de Taís Freire Galvão e Gustavo Magno Baldin Tiguman. Epidemiologia e Serviços de Saúde, Brasília, v. 31, n. 2, e2022107, 2022. DOI: ${PRISMA_PT_DOI}. Disponível em:`,
     ),
-    { text: `${PT_DOI}.`, href: PT_DOI },
+    { text: `${PRISMA_PT_URL}.`, href: PRISMA_PT_URL },
     ...words(
       `Acesso em: ${abntDate(today)}. Original: PAGE, M. J. et al. The PRISMA 2020 statement: an updated guideline for reporting systematic reviews. BMJ, v. 372, n71, 2021. Disponível em:`,
     ),
-    { text: `${EN_DOI}.`, href: EN_DOI },
+    { text: `${PRISMA_EN_URL}.`, href: PRISMA_EN_URL },
   ];
 }
 

@@ -6,6 +6,7 @@ import { PrismaDiagram, PRINT_PALETTE, SCREEN_PALETTE } from '../PrismaDiagram';
 import { diagramSvgText, exportPrismaDiagram } from '../prismaExport';
 import { FakeProjectService } from '../../../../services/__tests__/fakes/FakeProjectService';
 import { smallFlow, twoColumnFlow } from './prismaTestData';
+import { PRISMA_PT_URL } from '../../../../utils/prisma/prismaSourceLinks';
 
 const TODAY = new Date(2026, 10, 1);
 const TABLES = { data: 'dados', excluded: 'excluídas' };
@@ -107,7 +108,8 @@ describe('PrismaDiagram (#50)', () => {
     expect(svg).toContain('Registros identificados (n = 9)');
     expect(svg).toContain(PRINT_PALETTE.surface);
     expect(svg).not.toContain('role="button"');
-    expect(svg).toContain('href="https://doi.org/10.5123/S1679-49742022000200033"');
+    // The translation's DOI host refused connections (validation of epic #44): the link goes to the PRISMA site.
+    expect(svg).toContain(`href="${PRISMA_PT_URL}"`);
     expect(svg).toContain('Acesso em: 1 nov. 2026.');
   });
 });
@@ -123,10 +125,11 @@ describe('prismaReference (#50)', () => {
 
     expect(texts.every((t) => t.length <= 120)).toBe(true);
     expect(lines.flatMap((l) => l.segments.filter((s) => s.href).map((s) => s.text))).toEqual([
-      'https://doi.org/10.5123/S1679-49742022000200033.',
+      `${PRISMA_PT_URL}.`,
       'https://doi.org/10.1136/bmj.n71.',
     ]);
     expect(texts.join(' ')).toContain('Tradução de Taís Freire Galvão e Gustavo Magno Baldin Tiguman.');
+    expect(texts.join(' ')).toContain('DOI: 10.5123/S1679-49742022000200033.');
   });
 });
 
