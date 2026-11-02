@@ -106,6 +106,7 @@ describe('InvestigationDetailView, reviewing AI answers (#47)', () => {
     fireEvent.click(screen.getByText(/Estudo B/));
 
     expect(screen.getByText(/sem texto/)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Aceitar' })).toHaveLength(1);
+    // Only the answer that succeeded has a review block; the failed one offers none.
+    expect(screen.getAllByLabelText(/Revisão da resposta/)).toHaveLength(1);
   });
 });

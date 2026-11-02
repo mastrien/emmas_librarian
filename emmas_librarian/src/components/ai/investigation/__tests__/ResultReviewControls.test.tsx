@@ -1,5 +1,5 @@
 import { act } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ResultReviewControls } from '../ResultReviewControls';
 import type { InvestigationResult } from '../../../../types';
@@ -68,7 +68,8 @@ describe('ResultReviewControls (#47)', () => {
 
   // Validation of epic #44: saving the answer unchanged must not turn it into a correction.
   it('will not save an edit that changes nothing, by button or Ctrl+Enter', () => {
-    const { onReview } = setup({ review_status: 'edited', reviewed_answer: 'Coorte prospectiva' });
+    // An answer whose edit was undone keeps the edited text to start from.
+    const { onReview } = setup({ review_status: 'pending', reviewed_answer: 'Coorte prospectiva' });
 
     fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
     const box = screen.getByLabelText('Sua resposta');
@@ -77,6 +78,26 @@ describe('ResultReviewControls (#47)', () => {
     fireEvent.keyDown(box, { key: 'Enter', ctrlKey: true });
 
     expect(onReview).not.toHaveBeenCalled();
+  });
+
+  // Validation of epic #44: the three choices stayed on the card after one was chosen.
+  it('gives way to "Desfazer" once an answer is marked, and the three come back after it', async () => {
+    const { onReview, block } = setup({ review_status: 'accepted' });
+
+    expect(screen.queryByRole('button', { name: 'Aceitar' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Editar' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Rejeitar' })).toBeNull();
+    await press(block, 'r');
+    expect(onReview).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
+    });
+    expect(onReview).toHaveBeenCalledWith({ status: 'pending' });
+
+    cleanup();
+    setup();
+    expect(screen.getByRole('button', { name: 'Aceitar' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Desfazer' })).toBeNull();
   });
 
   it('will not save an empty edit, and Esc leaves the edit without saving', () => {
