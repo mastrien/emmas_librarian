@@ -34,6 +34,42 @@ describe('SearchSummaryModal', () => {
   const stat = (label: string) =>
     within(screen.getByRole('group', { name: 'Contagem da busca' })).getByText(label).parentElement!;
 
+  // #52: a search run again shows what is new, and what the project already has stays one click away.
+  describe('showing only what is new', () => {
+    const toggle = () => screen.getByRole('checkbox', { name: /Mostrar só o que não está no projeto \(1 já está\)/ });
+    const list = () => within(screen.getByRole('list', { name: 'Artigos encontrados' }));
+
+    it('starts with everything in a plain search', () => {
+      renderModal();
+
+      expect(toggle()).not.toBeChecked();
+      expect(list().getByText('Artigo antigo')).toBeInTheDocument();
+    });
+
+    it('starts without what the project has when a search runs again, and can show it', () => {
+      renderModal({ startOnlyNew: true });
+
+      expect(toggle()).toBeChecked();
+      expect(list().queryByText('Artigo antigo')).not.toBeInTheDocument();
+      expect(list().getByText('Aprendizado de máquina na revisão')).toBeInTheDocument();
+
+      fireEvent.click(toggle());
+      expect(list().getByText('Artigo antigo')).toBeInTheDocument();
+    });
+
+    it('offers no choice when nothing is in the project yet', () => {
+      renderModal({ preview: { ...preview, results: [preview.results[0]] } });
+
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    });
+
+    it('still counts everything, whatever the list shows', () => {
+      renderModal({ startOnlyNew: true });
+
+      expect(stat('Já no projeto')).toHaveTextContent('1');
+    });
+  });
+
   it('breaks the total down so that found - repeated - already in project = new', () => {
     renderModal();
 

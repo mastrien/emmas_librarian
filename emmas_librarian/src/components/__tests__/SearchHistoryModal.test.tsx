@@ -137,6 +137,19 @@ describe('SearchHistoryModal', () => {
       );
     });
 
+    it('links a database search to running it again (#52)', () => {
+      render(
+        <MemoryRouter>
+          <SearchHistoryModal isOpen onClose={vi.fn()} history={mockHistory} embedded projectId={4} />
+        </MemoryRouter>,
+      );
+
+      expect(screen.getByRole('link', { name: /Rodar de novo/ })).toHaveAttribute(
+        'href',
+        '/projects/4/search?from=1&rerun=1',
+      );
+    });
+
     it('is not offered for an import from another project', () => {
       render(
         <MemoryRouter>
@@ -145,6 +158,7 @@ describe('SearchHistoryModal', () => {
       );
 
       expect(screen.queryByRole('link', { name: /Nova busca a partir desta/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /Rodar de novo/ })).not.toBeInTheDocument();
     });
   });
 

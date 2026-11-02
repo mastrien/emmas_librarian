@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { QueryBuilder } from '../components/common/QueryBuilder';
 import { useProjectService } from '../contexts/ServicesContext';
-import { Project, QueryASTNode, DatabaseTranslationMap, QuerySort, SearchPreview } from '../types';
+import { Project, QueryASTNode, DatabaseTranslationMap, QuerySort, SearchHistoryItem, SearchPreview } from '../types';
+import { withPublishedSince } from '../utils/publishedSince';
 import { Search, Loader2, ArrowLeft } from 'lucide-react';
 import { SearchSummaryModal } from '../components/modals/SearchSummaryModal';
 import { useDebounce } from '../hooks/useDebounce';
@@ -14,6 +15,7 @@ import {
   buildFinalQueries,
   defaultDatabases,
   describeQueryTree,
+  lastRunDate,
   restoreSearch,
   usableDatabases,
   type RestoredSearch,
@@ -59,7 +61,11 @@ export const SearchPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   // ?from=<history id>: "Nova busca a partir desta" in the search history.
-  const fromSearchId = Number(useSearchParams()[0].get('from')) || null;
+  const [searchParams] = useSearchParams();
+  const fromSearchId = Number(searchParams.get('from')) || null;
+  // &rerun=1: "Rodar de novo" in the history, which looks at what was published since that search ran (#52).
+  const isRerun = searchParams.get('rerun') === '1';
+  const [publishedSince, setPublishedSince] = useState('');
   const [restoredFrom, setRestoredFrom] = useState<{ id: number; isLegacy: boolean } | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [ast, setAst] = useState<QueryASTNode>(EMPTY_QUERY);
@@ -77,7 +83,9 @@ export const SearchPage: React.FC = () => {
   const [apiKeys, setApiKeys] = useState<SearchApiKeys>({ scopus: '', wos: '', ieee: '' });
   const [missingKeyDb, setMissingKeyDb] = useState<string | null>(null);
 
-  const applyRestoredSearch = (searchId: number, restored: RestoredSearch, keys: SearchApiKeys) => {
+  const applyRestoredSearch = (entry: SearchHistoryItem, restored: RestoredSearch, keys: SearchApiKeys) => {
+    const searchId = entry.id;
+    setPublishedSince(isRerun ? lastRunDate(entry) : (restored.state.publishedSince ?? ''));
     setAst(restored.state.ast);
     setSelectedDbs(usableDatabases(restored.state.selectedDbs, keys));
     setCustomQueries(restored.state.customQueries);
@@ -99,7 +107,7 @@ export const SearchPage: React.FC = () => {
       setApiKeys(keys);
       const entry = history.find((h) => h.id === fromSearchId);
       const restored = entry ? restoreSearch(entry) : null;
-      if (entry && restored) applyRestoredSearch(entry.id, restored, keys);
+      if (entry && restored) applyRestoredSearch(entry, restored, keys);
       else setSelectedDbs(defaultDatabases(keys));
     });
   }, [id, navigate, fromSearchId]);
@@ -121,11 +129,18 @@ export const SearchPage: React.FC = () => {
       return next;
     });
 
-  const runSearch = async (projectId: number, queries: Record<string, string>) => {
+  const runSearch = async (projectId: number, typedQueries: Record<string, string>) => {
+    const queries = withPublishedSince(typedQueries, publishedSince, new Date().toISOString().slice(0, 10));
     setLoading(true);
     setError(null);
     try {
-      const queryState = JSON.stringify({ ast, selectedDbs, customQueries, limits });
+      const queryState = JSON.stringify({
+        ast,
+        selectedDbs,
+        customQueries,
+        limits,
+        ...(publishedSince && { publishedSince }),
+      });
       setPreview(
         await projectService.previewSearch(projectId, queries, limits, sortBy, describeQueryTree(ast), queryState),
       );
@@ -236,6 +251,8 @@ export const SearchPage: React.FC = () => {
           selected={selectedDbs}
           onSortByChange={setSortBy}
           onLimitsChange={setLimits}
+          publishedSince={publishedSince}
+          onPublishedSinceChange={setPublishedSince}
         />
 
         {error && (
@@ -274,6 +291,7 @@ export const SearchPage: React.FC = () => {
           preview={preview}
           isSaving={isSaving}
           saveError={saveError}
+          startOnlyNew={isRerun}
           onSave={() => saveResults(preview.previewId)}
           onDiscard={() => discardResults(preview.previewId)}
         />

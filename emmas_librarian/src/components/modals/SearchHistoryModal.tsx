@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { X, Calendar, Search, ChevronRight, RotateCcw, Pencil } from 'lucide-react';
+import { X, Calendar, Search, ChevronRight, RotateCcw, Pencil, RefreshCw } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import type { SearchBreakdown, SearchHistoryItem, SearchReportFormat } from '../../types';
 import { restoreSearch } from '../../pages/Search/searchQueries';
@@ -26,24 +26,37 @@ interface Props {
 
 type HistoryContentProps = Pick<Props, 'history' | 'onRevertSearch' | 'projectId'>;
 
+const historyLinkStyle: React.CSSProperties = {
+  background: 'rgba(79, 70, 229, 0.1)',
+  color: 'var(--color-primary)',
+  padding: '0.2rem 0.6rem',
+  borderRadius: 'var(--radius-md)',
+  fontSize: '0.8rem',
+  fontWeight: 600,
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.3rem',
+  textDecoration: 'none',
+};
+
 // Only database searches can be rebuilt; imports and manual additions have no query to reuse.
+const RerunSearchLink: React.FC<{ projectId: number; item: HistoryItem }> = ({ projectId, item }) =>
+  restoreSearch(item) ? (
+    <Link
+      to={`/projects/${projectId}/search?from=${item.id}&rerun=1`}
+      title="Rodar esta busca de novo, olhando o que saiu depois dela"
+      style={historyLinkStyle}
+    >
+      <RefreshCw size={12} /> Rodar de novo
+    </Link>
+  ) : null;
+
 const NewSearchFromLink: React.FC<{ projectId: number; item: HistoryItem }> = ({ projectId, item }) =>
   restoreSearch(item) ? (
     <Link
       to={`/projects/${projectId}/search?from=${item.id}`}
       title="Abrir o construtor de busca com esta query"
-      style={{
-        background: 'rgba(79, 70, 229, 0.1)',
-        color: 'var(--color-primary)',
-        padding: '0.2rem 0.6rem',
-        borderRadius: 'var(--radius-md)',
-        fontSize: '0.8rem',
-        fontWeight: 600,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.3rem',
-        textDecoration: 'none',
-      }}
+      style={historyLinkStyle}
     >
       <Pencil size={12} /> Nova busca a partir desta
     </Link>
@@ -131,6 +144,7 @@ const HistoryContent: React.FC<HistoryContentProps> = ({ history, onRevertSearch
                   )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {projectId !== undefined && <RerunSearchLink projectId={projectId} item={item} />}
                   {projectId !== undefined && <NewSearchFromLink projectId={projectId} item={item} />}
                   {onRevertSearch && (
                     <button
