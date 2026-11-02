@@ -9,6 +9,28 @@ export interface SimilarChunk {
   similarityScore: number;
 }
 
+interface SimilarChunkRow {
+  chunkId: number;
+  text: string;
+  page: number;
+  bbox_x: number;
+  bbox_y: number;
+  bbox_w: number;
+  bbox_h: number;
+  similarityScore: number;
+}
+
+const CHUNK_COLUMNS = `c.id as chunkId, c.text_content as text, c.page_number as page,
+  c.bbox_x as bbox_x, c.bbox_y as bbox_y, c.bbox_w as bbox_w, c.bbox_h as bbox_h`;
+
+const toSimilarChunk = (row: SimilarChunkRow): SimilarChunk => ({
+  chunkId: row.chunkId,
+  text: row.text,
+  page: row.page,
+  bbox: { x: row.bbox_x, y: row.bbox_y, w: row.bbox_w, h: row.bbox_h },
+  similarityScore: row.similarityScore,
+});
+
 /** Encapsula operações de busca vetorial no sqlite-vec. */
 export class VectorStore {
   constructor(private readonly db: Database.Database) {}
@@ -83,68 +105,42 @@ export class VectorStore {
   /** Busca os K chunks mais similares à query em um artigo específico. */
   searchSimilar(queryEmbedding: number[], topK: number, articleId: number): SimilarChunk[] {
     const floatArray = new Float32Array(queryEmbedding);
-
     try {
-      const stmtMatch = this.db.prepare(`
-        SELECT 
-          c.id as chunkId,
-          c.text_content as text,
-          c.page_number as page,
-          c.bbox_x as bbox_x,
-          c.bbox_y as bbox_y,
-          c.bbox_w as bbox_w,
-          c.bbox_h as bbox_h,
-          e.distance as similarityScore
-        FROM pdf_chunk_embeddings e
-        JOIN pdf_chunks c ON c.id = e.rowid
-        WHERE e.embedding MATCH ? AND k = ? AND c.article_id = ?
-        ORDER BY e.distance ASC
-      `);
-      const rows = stmtMatch.all(floatArray, topK, articleId) as any[];
-      if (rows && rows.length > 0) {
-        return rows.map((row) => ({
-          chunkId: row.chunkId,
-          text: row.text,
-          page: row.page,
-          bbox: { x: row.bbox_x, y: row.bbox_y, w: row.bbox_w, h: row.bbox_h },
-          similarityScore: row.similarityScore,
-        }));
-      }
+      const rows = this.nearestByIndex(floatArray, topK, articleId);
+      if (rows.length > 0) return rows.map(toSimilarChunk);
     } catch {
       // Fallback query if MATCH clause isn't supported by the loaded virtual table format
     }
+    return this.nearestByDistance(floatArray, topK, articleId).map(toSimilarChunk);
+  }
 
-    const stmt = this.db.prepare(`
-      SELECT 
-        c.id as chunkId,
-        c.text_content as text,
-        c.page_number as page,
-        c.bbox_x as bbox_x,
-        c.bbox_y as bbox_y,
-        c.bbox_w as bbox_w,
-        c.bbox_h as bbox_h,
-        vec_distance_L2(e.embedding, ?) as similarityScore
-      FROM pdf_chunk_embeddings e
-      JOIN pdf_chunks c ON c.id = e.rowid
-      WHERE c.article_id = ?
-      ORDER BY similarityScore ASC
-      LIMIT ?
-    `);
+  // The article goes in as a rowid filter because vec0 applies it ahead of the search. As a plain condition on the
+  // joined chunks it ran after: k picked the nearest of the whole library, and the article kept only those of its
+  // own that were among them, down to 1 chunk of 10 asked.
+  private nearestByIndex(query: Float32Array, topK: number, articleId: number): SimilarChunkRow[] {
+    return this.db
+      .prepare(
+        `SELECT ${CHUNK_COLUMNS}, e.distance as similarityScore
+         FROM pdf_chunk_embeddings e
+         JOIN pdf_chunks c ON c.id = e.rowid
+         WHERE e.embedding MATCH ? AND k = ?
+           AND e.rowid IN (SELECT id FROM pdf_chunks WHERE article_id = ?)
+         ORDER BY e.distance ASC`,
+      )
+      .all(query, topK, articleId) as SimilarChunkRow[];
+  }
 
-    const rows = stmt.all(floatArray, articleId, topK) as any[];
-
-    return rows.map((row) => ({
-      chunkId: row.chunkId,
-      text: row.text,
-      page: row.page,
-      bbox: {
-        x: row.bbox_x,
-        y: row.bbox_y,
-        w: row.bbox_w,
-        h: row.bbox_h,
-      },
-      similarityScore: row.similarityScore,
-    }));
+  private nearestByDistance(query: Float32Array, topK: number, articleId: number): SimilarChunkRow[] {
+    return this.db
+      .prepare(
+        `SELECT ${CHUNK_COLUMNS}, vec_distance_L2(e.embedding, ?) as similarityScore
+         FROM pdf_chunk_embeddings e
+         JOIN pdf_chunks c ON c.id = e.rowid
+         WHERE c.article_id = ?
+         ORDER BY similarityScore ASC
+         LIMIT ?`,
+      )
+      .all(query, articleId, topK) as SimilarChunkRow[];
   }
 
   /** Remove chunks de um artigo (chamado na exclusão). */
