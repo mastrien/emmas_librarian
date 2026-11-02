@@ -35,12 +35,14 @@ vi.mock('../../components/modals/SearchSummaryModal', () => ({
     onSave,
     onDiscard,
     saveError,
+    startOnlyNew,
   }: {
     onSave: () => void;
     onDiscard: () => void;
     saveError?: string | null;
+    startOnlyNew?: boolean;
   }) => (
-    <div data-testid="mock-summary-modal">
+    <div data-testid="mock-summary-modal" data-only-new={String(!!startOnlyNew)}>
       Summary Modal {saveError}
       <button onClick={onSave}>Save Results</button>
       <button onClick={onDiscard}>Discard Results</button>
@@ -535,6 +537,78 @@ describe('SearchPage', () => {
         'Título contém "ontologia"',
         expect.any(String),
       );
+    });
+
+    // #52: "Rodar de novo" looks at what came out since that search ran, and the date can be changed or cleared.
+    describe('running it again (&rerun=1)', () => {
+      const restored = () =>
+        fakeService.getSearchHistory.mockResolvedValue([
+          historyEntry({
+            created_at: '2026-09-12 10:00:00',
+            query_state: JSON.stringify({
+              ast: { type: 'group', children: [] },
+              selectedDbs: ['openalex'],
+              customQueries: { openalex: 'q' },
+            }),
+          }),
+        ]);
+      const date = () => screen.getByLabelText('Publicados desde (opcional)');
+
+      it('starts from the day that search ran, sends it to the base and shows only what is new', async () => {
+        restored();
+        renderPage('1', '?from=7&rerun=1');
+
+        await waitFor(() => expect(date()).toHaveValue('2026-09-12'));
+        await search();
+
+        expect(fakeService.previewSearch.mock.calls[0][1]).toEqual({ openalex: 'q,from_publication_date:2026-09-12' });
+        expect(JSON.parse(fakeService.previewSearch.mock.calls[0][5] as string).publishedSince).toBe('2026-09-12');
+        expect(await screen.findByTestId('mock-summary-modal')).toHaveAttribute('data-only-new', 'true');
+      });
+
+      it('runs without the filter once the date is cleared', async () => {
+        restored();
+        renderPage('1', '?from=7&rerun=1');
+        await waitFor(() => expect(date()).toHaveValue('2026-09-12'));
+
+        fireEvent.change(date(), { target: { value: '' } });
+        await search();
+
+        expect(fakeService.previewSearch.mock.calls[0][1]).toEqual({ openalex: 'q' });
+        expect(JSON.parse(fakeService.previewSearch.mock.calls[0][5] as string)).not.toHaveProperty('publishedSince');
+      });
+
+      it('a plain new search from history keeps the date it had, and lists everything', async () => {
+        fakeService.getSearchHistory.mockResolvedValue([
+          historyEntry({
+            query_state: JSON.stringify({
+              ast: { type: 'group', children: [] },
+              selectedDbs: ['openalex'],
+              customQueries: { openalex: 'q' },
+              publishedSince: '2020-01-01',
+            }),
+          }),
+        ]);
+        renderPage('1', '?from=7');
+
+        await waitFor(() => expect(date()).toHaveValue('2020-01-01'));
+        await search();
+
+        expect(await screen.findByTestId('mock-summary-modal')).toHaveAttribute('data-only-new', 'false');
+      });
+    });
+
+    it('warns which chosen bases do not filter by the day, only when there is a date', async () => {
+      fakeService.getSetting.mockResolvedValue('chave');
+      renderPage();
+      await screen.findByLabelText('Publicados desde (opcional)');
+      await waitFor(() => expect(screen.getByRole('button', { name: /Scopus/ })).toBeInTheDocument());
+      await act(async () => undefined);
+      expect(screen.queryByRole('note')).not.toBeInTheDocument();
+
+      fireEvent.change(screen.getByLabelText('Publicados desde (opcional)'), { target: { value: '2026-01-01' } });
+
+      expect(screen.getByRole('note')).toHaveTextContent('Scopus, Web of Science filtram só pelo ano.');
     });
 
     it('explains that an older search came back as custom queries', async () => {

@@ -190,6 +190,13 @@ export function restoreSearch(item: SearchHistoryItem): RestoredSearch | null {
 }
 
 /**
+ * The day a past search ran, to look only at what came after it when it runs again (#52).
+ *
+ * @example lastRunDate({ created_at: '2026-09-12 10:00:00' }) // '2026-09-12'
+ */
+export const lastRunDate = (item: Pick<SearchHistoryItem, 'created_at'>): string => item.created_at.slice(0, 10);
+
+/**
  * Drops keyed bases (Scopus, WoS) that have no API key now, e.g. when reopening an old search.
  *
  * Usage:

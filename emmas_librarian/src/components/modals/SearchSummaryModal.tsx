@@ -13,6 +13,8 @@ interface SearchSummaryModalProps {
   isSaving: boolean;
   // Shown inside the dialog: the page behind it is covered by the overlay.
   saveError?: string | null;
+  /** Running a past search again: what the project already has is known, so the list starts without it (#52). */
+  startOnlyNew?: boolean;
   onSave: () => void;
   onDiscard: () => void;
 }
@@ -99,9 +101,13 @@ export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({
   preview,
   isSaving,
   saveError,
+  startOnlyNew = false,
   onSave,
   onDiscard,
 }) => {
+  const [onlyNew, setOnlyNew] = useState(startOnlyNew);
+  const known = preview.results.filter((r) => r.alreadyInProject).length;
+  const shown = onlyNew ? preview.results.filter((r) => !r.alreadyInProject) : preview.results;
   const counts = searchCounts(preview);
   const [detailsItem, setDetailsItem] = useState<SearchPreviewItem | null>(null);
 
@@ -154,7 +160,13 @@ export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({
         <SummaryHeader />
         <SummaryCounts counts={counts} />
         <SearchBreakdownList breakdown={preview.breakdown} />
-        <SearchPreviewList results={preview.results} onOpenDetails={setDetailsItem} />
+        {known > 0 && (
+          <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <input type="checkbox" checked={onlyNew} onChange={(e) => setOnlyNew(e.target.checked)} />
+            Mostrar só o que não está no projeto ({known} já {known === 1 ? 'está' : 'estão'})
+          </label>
+        )}
+        <SearchPreviewList results={shown} onOpenDetails={setDetailsItem} />
         {saveError && (
           <p role="alert" style={{ color: 'var(--color-danger)', margin: '0 0 1rem 0' }}>
             {saveError}

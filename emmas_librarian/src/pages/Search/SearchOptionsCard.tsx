@@ -1,6 +1,7 @@
 import React from 'react';
 import type { QuerySort } from '../../types';
 import type { SearchLimits } from '../../utils/searchLimits';
+import { publishedSinceNote } from '../../utils/publishedSince';
 import { SearchLimitsField } from './SearchLimitsField';
 
 interface SearchOptionsCardProps {
@@ -9,6 +10,9 @@ interface SearchOptionsCardProps {
   selected: string[];
   onSortByChange: (sortBy: QuerySort) => void;
   onLimitsChange: (limits: SearchLimits) => void;
+  /** Only works published on or after this date (YYYY-MM-DD); empty for no filter. */
+  publishedSince: string;
+  onPublishedSinceChange: (date: string) => void;
 }
 
 const headingStyle: React.CSSProperties = {
@@ -48,6 +52,8 @@ export const SearchOptionsCard: React.FC<SearchOptionsCardProps> = ({
   selected,
   onSortByChange,
   onLimitsChange,
+  publishedSince,
+  onPublishedSinceChange,
 }) => (
   <div className="card" style={{ padding: '2rem' }}>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '2rem' }}>
@@ -65,6 +71,24 @@ export const SearchOptionsCard: React.FC<SearchOptionsCardProps> = ({
         </select>
       </div>
       <SearchLimitsField limits={limits} selected={selected} onChange={onLimitsChange} inputStyle={controlStyle} />
+    </div>
+    <div style={{ marginTop: '1.5rem' }}>
+      <label htmlFor="published-since" style={headingStyle}>
+        Publicados desde (opcional)
+      </label>
+      <input
+        id="published-since"
+        type="date"
+        value={publishedSince}
+        onChange={(e) => onPublishedSinceChange(e.target.value)}
+        style={{ ...controlStyle, width: 'auto' }}
+        {...focusHighlight}
+      />
+      {publishedSince && publishedSinceNote(selected) && (
+        <p role="note" style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+          {publishedSinceNote(selected)}
+        </p>
+      )}
     </div>
   </div>
 );

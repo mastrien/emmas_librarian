@@ -592,6 +592,8 @@ export interface SearchQueryState {
   ast: QueryASTNode;
   selectedDbs: string[];
   customQueries: Record<string, string>;
+  /** Only works published on or after this date (YYYY-MM-DD); missing when the search has no such filter (#52). */
+  publishedSince?: string;
   /** Common limit and per-base adjustments; missing in searches saved before pagination. */
   limits?: SearchLimits;
 }
