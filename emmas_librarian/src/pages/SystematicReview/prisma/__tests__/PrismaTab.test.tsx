@@ -78,6 +78,33 @@ describe('PrismaTab (#50)', () => {
     expect(service.setPrismaOrigins).toHaveBeenCalledWith(1, [4, 5], 1);
   });
 
+  // Validation of epic #44: a source could only be created, never corrected.
+  it('edits a source in place, saving it by its id, and keeps one form open at a time', async () => {
+    const service = prismaService(true);
+    renderPrisma(service);
+    fireEvent.click(await screen.findByRole('button', { name: /^Registros identificados \(n = 2\)/ }));
+    fireEvent.click(within(panel()).getByRole('button', { name: '+ Nova fonte' }));
+    fireEvent.change(within(panel()).getByRole('textbox', { name: 'Nome' }), { target: { value: 'Google Scholr' } });
+    fireEvent.click(within(panel()).getByRole('button', { name: 'Salvar fonte' }));
+
+    fireEvent.click(await within(panel()).findByRole('button', { name: 'Editar fonte Google Scholr' }));
+    const form = within(panel()).getByRole('form', { name: 'Editar fonte Google Scholr' });
+    expect(within(panel()).getAllByRole('form')).toHaveLength(1);
+    fireEvent.change(within(form).getByRole('textbox', { name: 'Nome' }), { target: { value: 'Google Scholar' } });
+    fireEvent.change(within(form).getByRole('combobox', { name: 'Método' }), { target: { value: 'websites' } });
+    fireEvent.click(within(form).getByRole('button', { name: 'Salvar fonte' }));
+
+    expect(await within(panel()).findByRole('button', { name: 'Editar fonte Google Scholar' })).toBeInTheDocument();
+    expect(service.savePrismaSource).toHaveBeenLastCalledWith(1, {
+      id: 1,
+      name: 'Google Scholar',
+      method: 'websites',
+      url: '',
+      consulted_on: '',
+    });
+    expect(within(panel()).queryByText('Google Scholr')).not.toBeInTheDocument();
+  });
+
   it('counts studies from publications marked as of the same study', async () => {
     const service = prismaService(true);
     renderPrisma(service);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Article, PrismaRecords, PrismaSourceInput, PrismaSourceMethod } from '../../../types';
+import type { Article, PrismaRecords, PrismaSource, PrismaSourceInput, PrismaSourceMethod } from '../../../types';
 import { brazilianDate, METHOD_NAMES } from '../../../utils/prismaFlow';
 import { PANEL_FIELD, PANEL_LABEL } from './panelFieldStyles';
 
@@ -131,15 +131,28 @@ export const ArticleOrigins: React.FC<{
 
 const EMPTY: PrismaSourceInput = { name: '', method: 'citations', url: '', consulted_on: '' };
 
-const SourceForm: React.FC<{ onSave: (input: PrismaSourceInput) => Promise<void>; onCancel: () => void }> = ({
-  onSave,
-  onCancel,
-}) => {
-  const [draft, setDraft] = useState<PrismaSourceInput>(EMPTY);
+/**
+ * The form's starting values for a source being edited; its id makes the save an update.
+ *
+ * @example draftOf({ id: 2, project_id: 1, name: 'Scholar', method: 'websites', url: null, consulted_on: null })
+ *   // { id: 2, name: 'Scholar', method: 'websites', url: '', consulted_on: '' }
+ */
+export function draftOf(source: PrismaSource): PrismaSourceInput {
+  const { id, name, method, url, consulted_on } = source;
+  return { id, name, method, url: url ?? '', consulted_on: consulted_on ?? '' };
+}
+
+const SourceForm: React.FC<{
+  initial: PrismaSourceInput;
+  onSave: (input: PrismaSourceInput) => Promise<void>;
+  onCancel: () => void;
+}> = ({ initial, onSave, onCancel }) => {
+  const [draft, setDraft] = useState<PrismaSourceInput>(initial);
   const set = (field: keyof PrismaSourceInput) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setDraft({ ...draft, [field]: e.target.value });
   return (
     <form
+      aria-label={initial.id === undefined ? 'Nova fonte' : `Editar fonte ${initial.name}`}
       style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}
       onSubmit={(e) => {
         e.preventDefault();
@@ -199,9 +212,33 @@ const SourceForm: React.FC<{ onSave: (input: PrismaSourceInput) => Promise<void>
   );
 };
 
+const SourceItem: React.FC<{ source: PrismaSource; count: number; onEdit: () => void }> = ({
+  source,
+  count,
+  onEdit,
+}) => (
+  <li className="prisma-item">
+    <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflowWrap: 'anywhere' }}>
+      <span>{source.name}</span>
+      <span className="review-muted">
+        {METHOD_NAMES[source.method]}
+        {source.consulted_on ? ` · consultada em ${brazilianDate(source.consulted_on)}` : ''}
+        {source.url ? ` · ${source.url}` : ''}
+      </span>
+    </span>
+    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: 'none' }}>
+      <span className="review-muted">{count}</span>
+      <button type="button" className="review-small" aria-label={`Editar fonte ${source.name}`} onClick={onEdit}>
+        Editar
+      </button>
+    </span>
+  </li>
+);
+
 /**
- * The sources of the project (name, method, address, day consulted, how many articles came from each) and the
- * form for a new one. PRISMA item 6 asks for each source and when it was consulted.
+ * The sources of the project (name, method, address, day consulted, how many articles came from each), the form
+ * for a new one and, in place of a source, the same form to edit it (validation of epic #44: a source could only
+ * be created). PRISMA item 6 asks for each source and when it was consulted. One form is open at a time.
  *
  * @example <ProjectSources records={records} onSave={actions.saveSource} />
  */
@@ -209,40 +246,39 @@ export const ProjectSources: React.FC<{ records: PrismaRecords; onSave: OriginAc
   records,
   onSave,
 }) => {
-  const [adding, setAdding] = useState(false);
+  // 'new' for the form of a new source, a source id while that source is edited.
+  const [open, setOpen] = useState<'new' | number | null>(null);
   const count = (id: number) => records.origins.filter((o) => o.source_id === id).length;
+  const form = (initial: PrismaSourceInput) => (
+    <SourceForm
+      initial={initial}
+      onCancel={() => setOpen(null)}
+      onSave={async (input) => {
+        await onSave(input);
+        setOpen(null);
+      }}
+    />
+  );
   return (
     <section className="prisma-editor" aria-label="Fontes do projeto">
       <strong>Fontes do projeto</strong>
       <ul className="prisma-list">
-        {records.sources.map((s) => (
-          <li key={s.id} className="prisma-item">
-            <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflowWrap: 'anywhere' }}>
-              <span>{s.name}</span>
-              <span className="review-muted">
-                {METHOD_NAMES[s.method]}
-                {s.consulted_on ? ` · consultada em ${brazilianDate(s.consulted_on)}` : ''}
-                {s.url ? ` · ${s.url}` : ''}
-              </span>
-            </span>
-            <span className="review-muted">{count(s.id)}</span>
-          </li>
-        ))}
+        {records.sources.map((s) =>
+          open === s.id ? (
+            <li key={s.id}>{form(draftOf(s))}</li>
+          ) : (
+            <SourceItem key={s.id} source={s} count={count(s.id)} onEdit={() => setOpen(s.id)} />
+          ),
+        )}
       </ul>
-      {adding ? (
-        <SourceForm
-          onCancel={() => setAdding(false)}
-          onSave={async (input) => {
-            await onSave(input);
-            setAdding(false);
-          }}
-        />
+      {open === 'new' ? (
+        form(EMPTY)
       ) : (
         <button
           type="button"
           className="review-small"
           style={{ alignSelf: 'flex-start' }}
-          onClick={() => setAdding(true)}
+          onClick={() => setOpen('new')}
         >
           + Nova fonte
         </button>
