@@ -66,6 +66,19 @@ describe('ResultReviewControls (#47)', () => {
     expect(screen.queryByLabelText('Sua resposta')).toBeNull();
   });
 
+  // Validation of epic #44: saving the answer unchanged must not turn it into a correction.
+  it('will not save an edit that changes nothing, by button or Ctrl+Enter', () => {
+    const { onReview } = setup({ review_status: 'edited', reviewed_answer: 'Coorte prospectiva' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
+    const box = screen.getByLabelText('Sua resposta');
+    expect(box).toHaveValue('Coorte prospectiva');
+    expect(screen.getByRole('button', { name: 'Salvar resposta' })).toBeDisabled();
+    fireEvent.keyDown(box, { key: 'Enter', ctrlKey: true });
+
+    expect(onReview).not.toHaveBeenCalled();
+  });
+
   it('will not save an empty edit, and Esc leaves the edit without saving', () => {
     const { onReview } = setup();
 

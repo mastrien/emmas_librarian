@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Check, Pencil, Undo2, X } from 'lucide-react';
 import type { InvestigationResult, ResultReview, ReviewStatus } from '../../../types';
-import { aiAnswerText, REVIEW_LABELS } from '../../../utils/investigationAnswers';
+import { aiAnswerText, REVIEW_LABELS, canSaveCorrection } from '../../../utils/investigationAnswers';
 
 export interface ResultReviewControlsProps {
   result: InvestigationResult;
@@ -102,6 +102,7 @@ export const ResultReviewControls: React.FC<ResultReviewControlsProps> = ({ resu
       {draft !== null && (
         <ReviewEditor
           draft={draft}
+          initial={result.reviewed_answer ?? aiAnswerText(result)}
           busy={busy}
           onChange={setDraft}
           onCancel={() => setDraft(null)}
@@ -114,13 +115,15 @@ export const ResultReviewControls: React.FC<ResultReviewControlsProps> = ({ resu
 
 interface ReviewEditorProps {
   draft: string;
+  /** The answer the edit started from: saving it unchanged is not a correction. */
+  initial: string;
   busy: boolean;
   onChange: (value: string) => void;
   onCancel: () => void;
   onSave: () => void;
 }
 
-const ReviewEditor: React.FC<ReviewEditorProps> = ({ draft, busy, onChange, onCancel, onSave }) => (
+const ReviewEditor: React.FC<ReviewEditorProps> = ({ draft, initial, busy, onChange, onCancel, onSave }) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.5rem' }}>
     <textarea
       className="input-field"
@@ -131,7 +134,7 @@ const ReviewEditor: React.FC<ReviewEditorProps> = ({ draft, busy, onChange, onCa
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onCancel();
-        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && draft.trim()) onSave();
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && canSaveCorrection(draft, initial)) onSave();
       }}
     />
     <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
@@ -142,7 +145,7 @@ const ReviewEditor: React.FC<ReviewEditorProps> = ({ draft, busy, onChange, onCa
         type="button"
         className="btn-primary"
         style={smallButton}
-        disabled={busy || !draft.trim()}
+        disabled={busy || !canSaveCorrection(draft, initial)}
         onClick={onSave}
       >
         Salvar resposta

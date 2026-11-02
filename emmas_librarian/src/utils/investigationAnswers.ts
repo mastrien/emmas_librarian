@@ -48,3 +48,14 @@ export function finalAnswerText(
   if (result.review_status === 'rejected') return '';
   return aiAnswerText(result);
 }
+
+/**
+ * Whether a correction can be saved: it has text and differs from the answer it started from. Saving the same
+ * text counted as a correction, and an edited answer counts as wrong in the audit (validation of epic #44).
+ *
+ * @example canSaveCorrection('Coorte', 'Coorte ') // false
+ */
+export function canSaveCorrection(draft: string, initial: string): boolean {
+  const text = draft.trim();
+  return text.length > 0 && text !== initial.trim();
+}
