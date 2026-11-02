@@ -289,7 +289,8 @@ describe('ProjectDetailsPage massive investigation', () => {
       [{ question: 'Q1?', answer: null, quote: null, status: 'error', error_message: 'timeout' }],
     ]);
     expect(service.saveInvestigationResults.mock.calls[1][2][0].status).toBe('success');
-    expect(service.saveMassiveInvestigation.mock.calls[0][4]).toBe('Sucesso');
+    // One of the two articles failed: the run says so instead of "Sucesso" (validation of epic #44).
+    expect(service.saveMassiveInvestigation.mock.calls[0][4]).toBe('Concluída com erros (1 de 2)');
     expect(consoleError).toHaveBeenCalledWith('Erro ao extrair de Artigo Um:', expect.any(Error));
   });
 

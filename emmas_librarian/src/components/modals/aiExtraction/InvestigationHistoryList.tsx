@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Article } from '../../../types';
 import { parseJsonList } from '../../../utils/parseJsonList';
+import { statusColour } from '../../../utils/investigationStatus';
 import type { InvestigationHistoryRecord } from '../AIExtractionModal';
 
 interface InvestigationHistoryListProps {
@@ -20,7 +21,7 @@ const statusStyle = (status: string): React.CSSProperties => ({
   fontSize: '0.75rem',
   padding: '0.15rem 0.4rem',
   borderRadius: '4px',
-  background: status === 'Sucesso' ? 'var(--color-success)' : 'var(--color-danger)',
+  background: statusColour(status),
   color: 'white',
   fontWeight: 600,
 });
