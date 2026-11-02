@@ -1,5 +1,5 @@
 import React from 'react';
-import { Archive, CheckCircle, CopyPlus, Globe, X } from 'lucide-react';
+import { Archive, CheckCircle, CopyPlus, Globe, Network, X } from 'lucide-react';
 
 interface BatchBarProps {
   selectedCount: number;
@@ -8,6 +8,7 @@ interface BatchBarProps {
   onMarkRead: () => void;
   onArchive: () => void;
   onCite: () => void;
+  onExploreCitations: () => void;
   onExit: () => void;
   onFetchOpenAccess: () => void;
   onCancelOpenAccess: () => void;
@@ -46,6 +47,7 @@ export const BatchBar: React.FC<BatchBarProps> = ({
   onMarkRead,
   onArchive,
   onCite,
+  onExploreCitations,
   onExit,
   onFetchOpenAccess,
   onCancelOpenAccess,
@@ -66,6 +68,9 @@ export const BatchBar: React.FC<BatchBarProps> = ({
       </button>
       <button type="button" onClick={onArchive} disabled={none}>
         <Archive size={15} /> Arquivar…
+      </button>
+      <button type="button" onClick={onExploreCitations} disabled={none}>
+        <Network size={16} /> Explorar citações
       </button>
       <button type="button" onClick={onCite} disabled={none}>
         <CopyPlus size={15} /> Citar em massa

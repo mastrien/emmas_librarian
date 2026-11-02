@@ -25,6 +25,7 @@ function modalsDouble(): ProjectModals {
     'setIsMassCitationModalOpen',
     'setSelectedArticleForDetails',
     'setCitationArticle',
+    'setCitationSeedArticles',
     'setEditingArticle',
     'setArchivingId',
     'setArchivingIds',

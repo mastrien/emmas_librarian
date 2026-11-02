@@ -7,6 +7,13 @@ import { searchWoS } from './searchApis/wos';
 import { searchEuropePmc } from './searchApis/europePmc';
 import { searchArxiv } from './searchApis/arxiv';
 import { searchIeee } from './searchApis/ieee';
+import {
+  fetchCitationSeed,
+  searchCitingWorks,
+  searchReferencedWorks,
+  type CitationLookup,
+  type CitationSeedInfo,
+} from './searchApis/openAlexCitations';
 
 /**
  * One entry point per bibliographic base, each returning normalized articles (paged up to the limit,
@@ -20,6 +27,18 @@ import { searchIeee } from './searchApis/ieee';
 export class ApiIntegrator {
   searchOpenAlex(filterStr: string, sortBy: SortBy, limit: number = 50, apiKey: string = ''): Promise<PagedResult> {
     return searchOpenAlex(filterStr, sortBy, limit, apiKey);
+  }
+
+  fetchCitationSeed(lookup: CitationLookup, apiKey: string = ''): Promise<CitationSeedInfo | null> {
+    return fetchCitationSeed(lookup, apiKey);
+  }
+
+  searchReferencedWorks(ids: string[], limit: number, apiKey: string = ''): Promise<PagedResult> {
+    return searchReferencedWorks(ids, limit, apiKey);
+  }
+
+  searchCitingWorks(openAlexId: string, limit: number, apiKey: string = ''): Promise<PagedResult> {
+    return searchCitingWorks(openAlexId, limit, apiKey);
   }
 
   searchCrossref(queryStr: string, sortBy: SortBy, limit: number = 50): Promise<PagedResult> {

@@ -16,6 +16,7 @@ export const useProjectModals = () => {
   const [massCitationArticles, setMassCitationArticles] = useState<Article[] | null>(null);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [citationArticle, setCitationArticle] = useState<Article | null>(null);
+  const [citationSeedArticles, setCitationSeedArticles] = useState<Article[] | null>(null);
   const [selectedArticleForDetails, setSelectedArticleForDetails] = useState<Article | null>(null);
   const [attachPdfArticle, setAttachPdfArticle] = useState<{ id: number; title: string } | null>(null);
 
@@ -43,6 +44,8 @@ export const useProjectModals = () => {
     setEditingArticle,
     citationArticle,
     setCitationArticle,
+    citationSeedArticles,
+    setCitationSeedArticles,
     selectedArticleForDetails,
     setSelectedArticleForDetails,
     attachPdfArticle,

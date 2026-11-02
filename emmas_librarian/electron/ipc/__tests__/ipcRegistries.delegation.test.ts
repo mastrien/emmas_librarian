@@ -96,6 +96,22 @@ const cases: DelegationCase[] = [
     outcome: 'passthrough',
   },
   {
+    channel: IpcChannel.SEARCH_PEEK_CITATIONS,
+    args: [[{ articleId: 1, title: 'T' }]],
+    target: () => harness.orchestrator,
+    method: 'peekCitations',
+    forwarded: [[{ articleId: 1, title: 'T' }]],
+    outcome: 'passthrough',
+  },
+  {
+    channel: IpcChannel.SEARCH_PREVIEW_CITATIONS,
+    args: [3, { seeds: [], directions: ['references'], limit: 10 }],
+    target: () => harness.orchestrator,
+    method: 'previewCitations',
+    forwarded: [3, { seeds: [], directions: ['references'], limit: 10 }],
+    outcome: 'passthrough',
+  },
+  {
     channel: IpcChannel.SEARCH_SAVE_PREVIEW,
     args: ['preview-1'],
     target: () => harness.orchestrator,

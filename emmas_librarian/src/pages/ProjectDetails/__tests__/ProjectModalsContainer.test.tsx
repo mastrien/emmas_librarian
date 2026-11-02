@@ -135,6 +135,8 @@ describe('ProjectModalsContainer', () => {
     setIsQuickAccessModalOpen: vi.fn(),
     citationArticle: null,
     setCitationArticle: vi.fn(),
+    citationSeedArticles: null,
+    setCitationSeedArticles: vi.fn(),
     isMassCitationModalOpen: false,
     setIsMassCitationModalOpen: vi.fn(),
     selectedArticleForDetails: null,

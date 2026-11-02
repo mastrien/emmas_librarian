@@ -3,10 +3,11 @@ import type { SearchHistoryItem } from '../types';
 /**
  * Every movement of articles into a project is logged in the search history, even when no search ran: an
  * article added by hand or a batch of PDFs is logged under the base "Manual", a copy from another project under
- * "import". The PRISMA diagram (#50) sends those articles to "Identificação por outros métodos", so the names
- * live here once, for the code that writes the history and the code that reads it.
+ * "import", what citation snowballing found (#51) under "Snowballing", which PRISMA 2020 places among the other
+ * methods as citation searching. The PRISMA diagram (#50) sends those articles to "Identificação por outros métodos",
+ * so the names live here once, for the code that writes the history and the code that reads it.
  */
-export const OUTSIDE_SEARCH_BASES = { manual: 'Manual', projectImport: 'import' } as const;
+export const OUTSIDE_SEARCH_BASES = { manual: 'Manual', projectImport: 'import', snowballing: 'Snowballing' } as const;
 
 const NAMES: readonly string[] = Object.values(OUTSIDE_SEARCH_BASES);
 

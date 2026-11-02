@@ -1,4 +1,5 @@
 import { IpcChannel, type QueryASTNode, type QuerySort } from '../../types';
+import type { CitationRequest, CitationSeed } from '../../../src/types';
 import { queryTranslator } from '../../services/QueryTranslator';
 import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import type { SearchOrchestrator } from '../../services/SearchOrchestrator';
@@ -47,6 +48,10 @@ export function registerSearchHandlers(ipc: IpcRegistrar, db: DatabaseAdapter, o
     ) => orchestrator.preview(projectId, queryMap, limits, sortBy, unifiedQuery, queryState),
   );
   handle(ipc, IpcChannel.SEARCH_SAVE_PREVIEW, (_e, previewId: string) => orchestrator.savePreview(previewId));
+  handle(ipc, IpcChannel.SEARCH_PEEK_CITATIONS, (_e, seeds: CitationSeed[]) => orchestrator.peekCitations(seeds));
+  handle(ipc, IpcChannel.SEARCH_PREVIEW_CITATIONS, (_e, projectId: number, request: CitationRequest) =>
+    orchestrator.previewCitations(projectId, request),
+  );
   handle(ipc, IpcChannel.SEARCH_DISCARD_PREVIEW, (_e, previewId: string) => orchestrator.discardPreview(previewId));
   handle(ipc, IpcChannel.SEARCH_TRANSLATE_QUERY, (_e, ast: QueryASTNode) => queryTranslator.translate(ast));
   handle(ipc, IpcChannel.SEARCH_REVERT, (_e, searchId: number) => db.revertSearch(searchId));
