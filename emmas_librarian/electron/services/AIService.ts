@@ -10,6 +10,7 @@ import { OllamaCloudGateway } from './llm/OllamaCloudGateway';
 import { quotePrompt } from './extraction/extractionPrompts';
 import { anchorEvidence, type AiEvidence, type ExtractionChunk } from './extraction/evidenceAnchoring';
 import { AnthropicGateway } from './llm/AnthropicGateway';
+import type { AskModels } from './projectQuestion/askServices';
 
 export class AIService {
   private db: DatabaseAdapter;
@@ -294,6 +295,28 @@ ${truncatedText}
     return parsed;
   }
 
+  private embeddingSetup(): { embeddingService: EmbeddingService; modelId: string } {
+    const config = new AIModelConfigRepository(this.db.getDB()).getConfig('embeddings');
+    const provider = config?.provider || 'openai';
+    const model_name = config?.model_name || 'text-embedding-3-small';
+    const embeddingService = new EmbeddingService({ provider, model_name } as any, this.getKeys(), this.localModelsDir);
+    return { embeddingService, modelId: `${provider}/${model_name}` };
+  }
+
+  /**
+   * The AI parts of "Perguntar aos projetos" (#53): the configured embedding model, and the extraction model to answer.
+   *
+   * @example buildAskServices(db, ai.askModels());
+   */
+  public askModels(): AskModels {
+    const { embeddingService, modelId } = this.embeddingSetup();
+    return {
+      embedder: embeddingService,
+      complete: (prompt) => this.generateCompletion(prompt, 'extraction'),
+      modelId,
+    };
+  }
+
   public async massiveExtraction(articleId: number, pdfPath: string, questions: string[]): Promise<any[]> {
     const extractionConfig = {
       chunkSize: parseInt(this.db.getSetting('rag_chunk_size') || '1000', 10),
@@ -308,16 +331,7 @@ ${truncatedText}
     );
     // Services imported at the top
 
-    const configRepo = new AIModelConfigRepository(this.db.getDB());
-    const embeddingsConfig = configRepo.getConfig('embeddings');
-    const embeddingService = new EmbeddingService(
-      {
-        provider: embeddingsConfig?.provider || 'openai',
-        model_name: embeddingsConfig?.model_name || 'text-embedding-3-small',
-      } as any,
-      this.getKeys(),
-      this.localModelsDir,
-    );
+    const { embeddingService, modelId } = this.embeddingSetup();
     const vectorStore = new VectorStore(this.db.getDB());
 
     if (questions.length === 0) return [];
@@ -331,7 +345,7 @@ ${truncatedText}
       .get(articleId) as any;
     if (existingChunksCount.count === 0) {
       const embeddings = await embeddingService.embedBatch(extractionResult.chunks.map((c: any) => c.text));
-      vectorStore.indexArticleChunks(articleId, extractionResult.chunks, embeddings);
+      vectorStore.indexArticleChunks(articleId, extractionResult.chunks, embeddings, modelId);
     }
 
     const results = [];

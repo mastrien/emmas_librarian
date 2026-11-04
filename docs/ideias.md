@@ -105,3 +105,9 @@ projeto de precipitação) isso fez a opção de frases numeradas apontar 6 de 7
 rodapés, e errar um número do ERA5 ("de 67% para 77%" virou "para 67%", com a licença no meio da frase). Tirar esse
 texto antes de montar os chunks deixaria as evidências e a busca semântica mais limpas, e poderia reabrir a opção de
 frases numeradas. Muda os chunks e os embeddings da biblioteca (reindexar): medir antes.
+
+## Exportação escolhendo o que vai
+
+Hoje a exportação de projeto leva tudo o que é do projeto, e as conversas de "Perguntar aos projetos" (#53) só
+entram no backup da biblioteca inteira, porque uma conversa pode envolver vários projetos. A ideia é uma exportação
+em que a pessoa escolhe o que vai e o que não vai, incluindo conversas. Depende da complexidade de implementar.

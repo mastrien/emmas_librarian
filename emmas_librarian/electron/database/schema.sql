@@ -308,6 +308,7 @@ CREATE TABLE IF NOT EXISTS pdf_chunks (
     bbox_w REAL,
     bbox_h REAL,
     token_count INTEGER,
+    embedding_model TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE
 );
@@ -347,7 +348,34 @@ CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(project_id, status) W
 -- Índices para tabelas relacionais e anexos
 CREATE INDEX IF NOT EXISTS idx_annotations_article_id ON annotations(article_id) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_highlights_article_id ON highlights(article_id);
+-- "Perguntar aos projetos" (#53). The answer keeps the cited text as JSON, so it outlives the articles it read.
+CREATE TABLE IF NOT EXISTS ask_conversations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ask_conversation_projects (
+    conversation_id INTEGER NOT NULL,
+    project_id INTEGER NOT NULL,
+    PRIMARY KEY(conversation_id, project_id),
+    FOREIGN KEY(conversation_id) REFERENCES ask_conversations(id) ON DELETE CASCADE,
+    FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS ask_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id INTEGER NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
+    content TEXT NOT NULL,
+    answer TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(conversation_id) REFERENCES ask_conversations(id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS idx_pdf_chunks_article_id ON pdf_chunks(article_id);
+CREATE INDEX IF NOT EXISTS idx_ask_messages_conversation ON ask_messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_pdf_chunks_composite ON pdf_chunks(article_id, chunk_index);
 CREATE INDEX IF NOT EXISTS idx_project_documents_project_id ON project_documents(project_id);
 CREATE INDEX IF NOT EXISTS idx_search_history_project_id ON search_history(project_id);

@@ -85,7 +85,8 @@ describe('full library fixture', () => {
   it('compares every table that belongs to a project when checking copies', () => {
     // Exports and merges leave search chunks behind: AIService re-indexes an article without chunks the
     // first time an investigation needs it.
-    const notCopied = new Set(['pdf_chunks']);
+    // Conversations can read several projects, so they go only in the whole library's backup (#53).
+    const notCopied = new Set(['pdf_chunks', 'ask_conversation_projects']);
     const linkedToProject = libraryTables().filter((table) =>
       (db.pragma(`table_info("${table}")`) as { name: string }[]).some(({ name }) =>
         ['project_id', 'article_id', 'category_id', 'investigation_id'].includes(name),

@@ -67,6 +67,7 @@ export function seedFullLibrary(db: Database.Database, files: LibraryFiles): voi
   seedPdfLibrary(db, files.pdfPath);
   seedSemanticIndex(db, thesis);
   seedSearchMonitor(db, thesis);
+  seedAskConversation(db, thesis);
   seedReviewProject(db);
   run(db, "INSERT INTO projects (name, deleted_at) VALUES ('Projeto antigo', '2026-02-01 08:00:00')");
   seedAgenda(db);
@@ -98,6 +99,9 @@ function seedSemanticIndex(db: Database.Database, project: number): void {
   new VectorStore(db).indexArticleChunks(article.id, [chunk], [[0.1, 0.2, 0.3, 0.4]]);
   // The app writes no token count today; older versions may have, so the column is kept filled.
   db.prepare('UPDATE pdf_chunks SET token_count = 12 WHERE article_id = ?').run(article.id);
+  db.prepare("UPDATE pdf_chunks SET embedding_model = 'openai/text-embedding-3-small' WHERE article_id = ?").run(
+    article.id,
+  );
 }
 
 // A monitored search with what its last check left: a notice, a base it missed and what was already shown (#52).
@@ -112,6 +116,15 @@ function seedSearchMonitor(db: Database.Database, project: number): void {
     search.id,
   );
   run(db, "INSERT INTO search_monitor_seen (search_id, article_key) VALUES (?, 'doi:10.1/visto')", search.id);
+}
+
+// A conversation over the project, with the text it cited kept in the answer (#53).
+function seedAskConversation(db: Database.Database, project: number): void {
+  const conversation = run(db, "INSERT INTO ask_conversations (title) VALUES ('Qual a amostra?')");
+  run(db, 'INSERT INTO ask_conversation_projects (conversation_id, project_id) VALUES (?, ?)', conversation, project);
+  const message = db.prepare('INSERT INTO ask_messages (conversation_id, role, content, answer) VALUES (?, ?, ?, ?)');
+  message.run(conversation, 'user', 'Qual a amostra?', null);
+  message.run(conversation, 'assistant', 'n = 30', JSON.stringify({ claims: [{ text: 'n = 30' }], steps: [] }));
 }
 
 // The category types the UI offers besides the thesis' enum, and one of each item kind in the trash.

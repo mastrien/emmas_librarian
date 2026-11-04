@@ -201,6 +201,12 @@ export enum IpcChannel {
   AI_GENERATE_SUMMARY = 'ai:generateSummary',
   AI_MASSIVE_EXTRACTION = 'ai:massiveExtraction',
   AI_EXTRACT_METADATA = 'ai:extractMetadata',
+  ASK_CONVERSATIONS_LIST = 'ask:conversationsList',
+  ASK_CONVERSATION_GET = 'ask:conversationGet',
+  ASK_CONVERSATION_DELETE = 'ask:conversationDelete',
+  ASK_SEND = 'ask:send',
+  ASK_COVERAGE = 'ask:coverage',
+  ASK_INDEX_MISSING = 'ask:indexMissing',
   AI_MODEL_CONFIG_GET_ALL = 'aiModelConfig:getAll',
   AI_MODEL_CONFIG_UPDATE = 'aiModelConfig:update',
   AI_MODEL_CONFIG_RESTORE = 'aiModelConfig:restore',
@@ -710,3 +716,5 @@ export interface UpdateStatusResponse {
   error: string | null;
   state: UpdateStateRecord | null;
 }
+
+export * from './ask';

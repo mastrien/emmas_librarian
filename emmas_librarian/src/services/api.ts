@@ -41,6 +41,11 @@ import type {
   CitationRequest,
   CitationSeed,
   MonitorOverview,
+  AskConversation,
+  AskConversationSummary,
+  AskIndexResult,
+  AskQuestionInput,
+  ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
   OpenAccessOutcome,
@@ -302,6 +307,23 @@ export const projectService: IProjectService = {
   async generateSummary(articleId: number): Promise<{ generalSummary: string; sectionSummary: string }> {
     return safeInvoke(IpcChannel.AI_GENERATE_SUMMARY, articleId);
   },
+
+  getAskConversations: (): Promise<AskConversationSummary[]> => safeInvoke(IpcChannel.ASK_CONVERSATIONS_LIST),
+
+  getAskConversation: (conversationId: number): Promise<AskConversation> =>
+    safeInvoke(IpcChannel.ASK_CONVERSATION_GET, conversationId),
+
+  async deleteAskConversation(conversationId: number): Promise<void> {
+    await safeInvoke(IpcChannel.ASK_CONVERSATION_DELETE, conversationId);
+  },
+
+  sendAskQuestion: (input: AskQuestionInput): Promise<AskConversation> => safeInvoke(IpcChannel.ASK_SEND, input),
+
+  getAskCoverage: (projectIds: number[]): Promise<ProjectIndexCoverage> =>
+    safeInvoke(IpcChannel.ASK_COVERAGE, projectIds),
+
+  indexAskMissing: (projectIds: number[]): Promise<AskIndexResult> =>
+    safeInvoke(IpcChannel.ASK_INDEX_MISSING, projectIds),
 
   async massiveExtraction(
     articleId: number,

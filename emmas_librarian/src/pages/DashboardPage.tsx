@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useProjectService } from '../contexts/ServicesContext';
 import { MonitorNotices } from './Dashboard/components/MonitorNotices';
 import { Project, ScientificVenue, MilestoneStatus } from '../types';
-import { Plus, Download } from 'lucide-react';
+import { MessageSquare, Plus, Download } from 'lucide-react';
 import { DashboardCalendar } from '../components/common/DashboardCalendar';
 import { DeadlineBanner } from '../components/common/DeadlineBanner';
 import { VenueFormModal } from '../components/modals/VenueFormModal';
@@ -228,7 +228,10 @@ export const DashboardPage: React.FC = () => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <Link to="/ask" className="btn-secondary">
+            <MessageSquare size={20} /> Perguntar aos projetos
+          </Link>
           <button
             type="button"
             onClick={async () => {

@@ -19,7 +19,7 @@ export function readerStateBackTo(back: ReaderBack): { backTo: ReaderBack } {
 
 /**
  * The page to return to, read from the reader's router state; null when the reader was opened another way. Only
- * paths inside a project are accepted, so the state can never send the reader elsewhere.
+ * paths inside a project or a conversation are accepted, so the state can never send the reader elsewhere.
  *
  * @example const back = readerBackFrom(useLocation().state);
  */
@@ -28,6 +28,6 @@ export function readerBackFrom(state: unknown): ReaderBack | null {
   const back = (state as Record<string, unknown>).backTo;
   if (!back || typeof back !== 'object') return null;
   const { path, label } = back as Record<string, unknown>;
-  if (typeof path !== 'string' || !/^\/projects\/\d+(\/[\w/-]*)?$/.test(path)) return null;
+  if (typeof path !== 'string' || !/^\/(projects\/\d+(\/[\w/-]*)?|ask\/\d+)$/.test(path)) return null;
   return typeof label === 'string' && label.trim() ? { path, label } : null;
 }

@@ -112,8 +112,10 @@ async function createProject(window, projectName) {
   await window.waitForURL(/.*\/projects\/\d+/);
 }
 
-async function navigateTo(window, target) {
+async function navigateTo(window, label) {
   await dismissChangelog(window);
+  // Case-sensitive, unlike a plain hasText: "Projetos" must not take the dashboard's "Perguntar aos projetos" (#53).
+  const target = new RegExp(label);
 
   // Retry loop to handle DOM detachment from React re-renders during
   // async data loading (e.g. Dashboard's DeadlineBanner "Ver Agenda"
