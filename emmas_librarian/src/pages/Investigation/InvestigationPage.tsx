@@ -1,9 +1,10 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertCircle, ArrowLeft, ChevronsRight, Plus } from 'lucide-react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { SideDrawer } from '../../components/common/SideDrawer';
 import { useInvestigationRunContext } from '../../contexts/InvestigationRunContext';
+import { useFillWindowHeight } from '../../hooks/useFillWindowHeight';
 import { useNarrowWindow } from '../../hooks/useNarrowWindow';
 import { CallsTab } from './CallsTab';
 import { InvestigationDetail } from './InvestigationDetail';
@@ -13,22 +14,6 @@ import { investigationPath, liveCalls } from './investigationView';
 import { useInvestigationPageData } from './useInvestigationPageData';
 import type { InvestigationRunState } from './useInvestigationRun';
 import './investigation.css';
-
-// The page scrolls inside its panes, so it takes what the app's header leaves of the window. It measures when its
-// element appears, not when the component mounts: that is still "Carregando…", and with nothing measured the page
-// grew with its table and the whole window scrolled until the next resize (seen on the first opening, #84).
-function useFillWindowHeight() {
-  const [page, setPage] = useState<HTMLDivElement | null>(null);
-  const [height, setHeight] = useState<number | undefined>(undefined);
-  useLayoutEffect(() => {
-    if (!page) return;
-    const measure = () => setHeight(window.innerHeight - page.getBoundingClientRect().top + window.scrollY);
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [page]);
-  return { setPage, height };
-}
 
 const QuotaNotice: React.FC<{ onClose: () => void }> = ({ onClose }) =>
   createPortal(

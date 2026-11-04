@@ -16,7 +16,10 @@ import type {
   CitationRequest,
   CitationSeed,
   MonitorOverview,
-  ProjectAnswer,
+  AskConversation,
+  AskConversationSummary,
+  AskIndexResult,
+  AskQuestionInput,
   ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
@@ -248,10 +251,16 @@ export interface IProjectService {
 
   // ── AI ────────────────────────────────────────────────────────────
   generateSummary(articleId: number): Promise<ArticleSummary>;
-  /** What a question over the project can read (#53). */
-  getProjectIndexCoverage(projectId: number): Promise<ProjectIndexCoverage>;
-  /** Answers from the indexed PDFs of the project, each statement citing article and page (#53). */
-  askProject(projectId: number, question: string): Promise<ProjectAnswer>;
+  /** The conversations of "Perguntar aos projetos", newest first (#53). */
+  getAskConversations(): Promise<AskConversationSummary[]>;
+  getAskConversation(conversationId: number): Promise<AskConversation>;
+  deleteAskConversation(conversationId: number): Promise<void>;
+  /** Answers from the indexed PDFs of the projects and keeps the exchange; returns the whole conversation. */
+  sendAskQuestion(input: AskQuestionInput): Promise<AskConversation>;
+  /** What a question over these projects can read. */
+  getAskCoverage(projectIds: number[]): Promise<ProjectIndexCoverage>;
+  /** Indexes the PDFs of these projects that a question cannot read yet. */
+  indexAskMissing(projectIds: number[]): Promise<AskIndexResult>;
   massiveExtraction(articleId: number, questions: string[]): Promise<ExtractionAnswer[]>;
   extractMetadata(articleId: number): Promise<ExtractedMetadata>;
 

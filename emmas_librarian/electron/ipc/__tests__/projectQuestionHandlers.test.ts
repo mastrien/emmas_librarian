@@ -1,43 +1,121 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import { VectorStore } from '../../services/VectorStore';
 import { registerProjectQuestionHandlers } from '../handlers/projectQuestionHandlers';
 import { IpcChannel } from '../../types';
-import type { AIService } from '../../services/AIService';
+import type { AskConversation, AskConversationSummary, ProjectIndexCoverage } from '../../../src/types/ask';
+import { FakeAnswerModel, FakeEmbedder } from '../../services/projectQuestion/__tests__/fakes';
 import { FakeIpcMain } from './fakes/FakeIpcMain';
 
 vi.mock('electron', () => ({ safeStorage: {}, app: { isPackaged: false } }));
 
-/** Records what reached the AI service, which has its own tests. */
-class FakeProjectQuestions {
-  projectIndexCoverage = vi.fn((articleIds: number[]) => ({ total: articleIds.length }));
-  askProject = vi.fn(async (question: string, articleIds: number[]) => ({ question, articleIds }));
-}
+vi.mock('../../services/PdfExtractor', () => ({
+  extractTextWithCoordinates: vi.fn(async () => {
+    await pdfRead.wait;
+    return { chunks: [{ text: 'do pdf', page: 1, bbox: { x: 0, y: 0, w: 1, h: 1 } }] };
+  }),
+}));
 
-describe('project question IPC handlers (#53)', () => {
+// Lets a test hold the indexing halfway.
+const pdfRead = vi.hoisted(() => ({ wait: Promise.resolve() as Promise<void> }));
+
+describe('"Perguntar aos projetos" IPC handlers (#53)', () => {
   let ipc: FakeIpcMain;
-  let ai: FakeProjectQuestions;
+  let db: DatabaseAdapter;
+  let embedder: FakeEmbedder;
   let projectId: number;
-  let articleId: number;
+  let indexed: number;
 
   beforeEach(() => {
     ipc = new FakeIpcMain();
-    ai = new FakeProjectQuestions();
-    const db = new DatabaseAdapter(':memory:');
+    db = new DatabaseAdapter(':memory:');
+    embedder = new FakeEmbedder();
+    pdfRead.wait = Promise.resolve();
+    const model = new FakeAnswerModel('{"claims":[{"text":"n = 30","sources":[1]}]}');
     projectId = db.createProject('Revisão').id;
-    const insert = db.getDB().prepare("INSERT INTO articles (project_id, title) VALUES (?, 'A')");
-    articleId = Number(insert.run(projectId).lastInsertRowid);
-    registerProjectQuestionHandlers(ipc, db, ai as unknown as AIService);
+    indexed = addArticle('A', 'a.pdf');
+    new VectorStore(db.getDB()).indexArticleChunks(
+      indexed,
+      [{ text: 't', page: 1, bbox: { x: 0, y: 0, w: 1, h: 1 } }],
+      [[0, 0]],
+      'm',
+    );
+    registerProjectQuestionHandlers(ipc, db, () => ({ embedder, complete: model.complete, modelId: 'm' }));
   });
 
-  it('reports the coverage of the articles of the project', async () => {
-    expect(await ipc.invoke(IpcChannel.AI_PROJECT_INDEX_COVERAGE, projectId)).toEqual({ total: 1 });
-    expect(ai.projectIndexCoverage).toHaveBeenCalledWith([articleId]);
-  });
+  function addArticle(title: string, pdf: string | null): number {
+    const insert = db.getDB().prepare('INSERT INTO articles (project_id, title, local_file_path) VALUES (?, ?, ?)');
+    return Number(insert.run(projectId, title, pdf).lastInsertRowid);
+  }
 
-  it('asks over the articles of the project', async () => {
-    expect(await ipc.invoke(IpcChannel.AI_ASK_PROJECT, projectId, 'Qual a amostra?')).toEqual({
+  const send = () =>
+    ipc.invoke(IpcChannel.ASK_SEND, {
+      conversationId: null,
+      projectIds: [projectId],
       question: 'Qual a amostra?',
-      articleIds: [articleId],
+    }) as Promise<AskConversation>;
+
+  it('answers, keeps and lists a conversation', async () => {
+    const { id, messages } = await send();
+
+    expect(messages[1].content).toBe('n = 30');
+    expect(((await ipc.invoke(IpcChannel.ASK_CONVERSATIONS_LIST)) as AskConversationSummary[])[0].id).toBe(id);
+    expect(((await ipc.invoke(IpcChannel.ASK_CONVERSATION_GET, id)) as AskConversation).messages).toHaveLength(2);
+  });
+
+  it('deletes a conversation', async () => {
+    const { id } = await send();
+
+    await ipc.invoke(IpcChannel.ASK_CONVERSATION_DELETE, id);
+
+    expect(await ipc.invoke(IpcChannel.ASK_CONVERSATIONS_LIST)).toEqual([]);
+  });
+
+  it('reports the coverage of the projects', async () => {
+    addArticle('Falta', 'b.pdf');
+
+    const coverage = (await ipc.invoke(IpcChannel.ASK_COVERAGE, [projectId])) as ProjectIndexCoverage;
+
+    expect(coverage.indexed.map((a) => a.id)).toEqual([indexed]);
+    expect(coverage.withoutIndex.map((a) => a.title)).toEqual(['Falta']);
+  });
+
+  it('indexes what is missing', async () => {
+    addArticle('Falta', 'b.pdf');
+
+    const { coverage, failed } = (await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, [projectId])) as {
+      coverage: ProjectIndexCoverage;
+      failed: unknown[];
+    };
+
+    expect(failed).toEqual([]);
+    expect(coverage.withoutIndex).toEqual([]);
+  });
+
+  it('joins an indexing already running, so nothing is indexed twice', async () => {
+    addArticle('Falta', 'b.pdf');
+    let release: () => void = () => undefined;
+    pdfRead.wait = new Promise<void>((resolve) => (release = resolve));
+
+    const first = ipc.invoke(IpcChannel.ASK_INDEX_MISSING, [projectId]);
+    const second = ipc.invoke(IpcChannel.ASK_INDEX_MISSING, [projectId]);
+    await vi.waitFor(() => expect(embedder.calls).toHaveLength(1));
+    release();
+    await Promise.all([first, second]);
+
+    expect(embedder.batches).toHaveLength(1);
+    expect(db.getDB().prepare("SELECT count(*) AS n FROM pdf_chunks WHERE text_content = 'do pdf'").get()).toEqual({
+      n: 1,
     });
+  });
+
+  it('can index again after the first one ended', async () => {
+    addArticle('Falta', 'b.pdf');
+    await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, [projectId]);
+    addArticle('Outra', 'c.pdf');
+
+    await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, [projectId]);
+
+    expect(embedder.batches).toHaveLength(2);
   });
 });

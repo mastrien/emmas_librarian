@@ -41,7 +41,10 @@ import type {
   CitationRequest,
   CitationSeed,
   MonitorOverview,
-  ProjectAnswer,
+  AskConversation,
+  AskConversationSummary,
+  AskIndexResult,
+  AskQuestionInput,
   ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
@@ -305,11 +308,22 @@ export const projectService: IProjectService = {
     return safeInvoke(IpcChannel.AI_GENERATE_SUMMARY, articleId);
   },
 
-  getProjectIndexCoverage: (projectId: number): Promise<ProjectIndexCoverage> =>
-    safeInvoke(IpcChannel.AI_PROJECT_INDEX_COVERAGE, projectId),
+  getAskConversations: (): Promise<AskConversationSummary[]> => safeInvoke(IpcChannel.ASK_CONVERSATIONS_LIST),
 
-  askProject: (projectId: number, question: string): Promise<ProjectAnswer> =>
-    safeInvoke(IpcChannel.AI_ASK_PROJECT, projectId, question),
+  getAskConversation: (conversationId: number): Promise<AskConversation> =>
+    safeInvoke(IpcChannel.ASK_CONVERSATION_GET, conversationId),
+
+  async deleteAskConversation(conversationId: number): Promise<void> {
+    await safeInvoke(IpcChannel.ASK_CONVERSATION_DELETE, conversationId);
+  },
+
+  sendAskQuestion: (input: AskQuestionInput): Promise<AskConversation> => safeInvoke(IpcChannel.ASK_SEND, input),
+
+  getAskCoverage: (projectIds: number[]): Promise<ProjectIndexCoverage> =>
+    safeInvoke(IpcChannel.ASK_COVERAGE, projectIds),
+
+  indexAskMissing: (projectIds: number[]): Promise<AskIndexResult> =>
+    safeInvoke(IpcChannel.ASK_INDEX_MISSING, projectIds),
 
   async massiveExtraction(
     articleId: number,

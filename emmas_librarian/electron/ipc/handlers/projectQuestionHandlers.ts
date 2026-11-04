@@ -1,20 +1,36 @@
 import { IpcChannel } from '../../types';
 import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import type { AIService } from '../../services/AIService';
+import { buildAskServices, type AskModels, type AskServices } from '../../services/projectQuestion/askServices';
+import type { AskIndexResult, AskQuestionInput } from '../../../src/types/ask';
 import { handle, type IpcRegistrar } from './handle';
 
 /**
- * Asking a question across the articles of a project (#53).
+ * "Perguntar aos projetos" (#53). The models are asked for on each call, because the settings can change between them.
  *
  * Usage:
- *   registerProjectQuestionHandlers(ipcMain, db, aiService);
+ *   registerProjectQuestionHandlers(ipcMain, db, () => ai.askModels());
  */
-export function registerProjectQuestionHandlers(ipc: IpcRegistrar, db: DatabaseAdapter, ai: AIService): void {
-  const articlesOf = (projectId: number) => db.pdfChunkIndexRepo.projectArticleIds(projectId);
-  handle(ipc, IpcChannel.AI_PROJECT_INDEX_COVERAGE, (_e, projectId: number) =>
-    ai.projectIndexCoverage(articlesOf(projectId)),
+export function registerProjectQuestionHandlers(ipc: IpcRegistrar, db: DatabaseAdapter, models: () => AskModels): void {
+  const services = (): AskServices => buildAskServices(db, models());
+  const articlesOf = (projectIds: number[]) => db.pdfChunkIndexRepo.projectsArticleIds(projectIds);
+  const repo = db.askConversationRepo;
+
+  handle(ipc, IpcChannel.ASK_CONVERSATIONS_LIST, () => repo.list());
+  handle(ipc, IpcChannel.ASK_CONVERSATION_GET, (_e, id: number) => services().conversations.read(id));
+  handle(ipc, IpcChannel.ASK_SEND, (_e, input: AskQuestionInput) => services().conversations.send(input));
+  handle(ipc, IpcChannel.ASK_CONVERSATION_DELETE, (_e, id: number) => repo.remove(id));
+  handle(ipc, IpcChannel.ASK_COVERAGE, (_e, projectIds: number[]) =>
+    services().questions.coverage(articlesOf(projectIds)),
   );
-  handle(ipc, IpcChannel.AI_ASK_PROJECT, (_e, projectId: number, question: string) =>
-    ai.askProject(question, articlesOf(projectId)),
-  );
+
+  // Going back and forth on the page must not index the same PDFs twice: a second call joins the first.
+  let running: Promise<AskIndexResult> | null = null;
+  handle(ipc, IpcChannel.ASK_INDEX_MISSING, (_e, projectIds: number[]) => {
+    running ??= services()
+      .indexer.indexMissing(articlesOf(projectIds))
+      .finally(() => {
+        running = null;
+      });
+    return running;
+  });
 }

@@ -5,6 +5,7 @@
 import { Suspense, lazy } from 'react';
 import * as ReactDOMClient from 'react-dom/client';
 import { HashRouter, Routes, Route } from 'react-router-dom';
+import { AskPage } from './pages/Ask/AskPage';
 import { Layout } from './components/common/Layout';
 import { GlobalErrorProvider } from './contexts/GlobalErrorContext';
 import { InvestigationRunProvider } from './contexts/InvestigationRunContext';
@@ -127,6 +128,8 @@ if (rootEl)
                   <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
                   <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
                   <Route path="/projects/:id/review/prisma" element={<SystematicReviewPage tab="prisma" />} />
+                  <Route path="/ask" element={<AskPage />} />
+                  <Route path="/ask/:conversationId" element={<AskPage />} />
                   <Route path="/articles/:id" element={<ArticleReaderPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/terms" element={<TermsOfUsePage />} />

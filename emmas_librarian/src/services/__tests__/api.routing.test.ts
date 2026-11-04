@@ -16,6 +16,7 @@ const results = [{ question: 'q', answer: 'a', quote: null, status: 'success' as
 const venue = { title: 'Conf', category: 'conference' as const, milestones: [] };
 
 const VOID_METHODS = new Set([
+  'deleteAskConversation',
   'dismissMonitorNotice',
   'restoreUpdateSnapshot',
   'updateProject',
@@ -351,16 +352,40 @@ const routes: RouteCase[] = [
   { method: 'getAppVersion', call: () => api.getAppVersion(), channel: IpcChannel.APP_GET_VERSION, args: [] },
   { method: 'generateSummary', call: () => api.generateSummary(2), channel: IpcChannel.AI_GENERATE_SUMMARY, args: [2] },
   {
-    method: 'getProjectIndexCoverage',
-    call: () => api.getProjectIndexCoverage(3),
-    channel: IpcChannel.AI_PROJECT_INDEX_COVERAGE,
-    args: [3],
+    method: 'getAskConversations',
+    call: () => api.getAskConversations(),
+    channel: IpcChannel.ASK_CONVERSATIONS_LIST,
+    args: [],
   },
   {
-    method: 'askProject',
-    call: () => api.askProject(3, 'Qual a amostra?'),
-    channel: IpcChannel.AI_ASK_PROJECT,
-    args: [3, 'Qual a amostra?'],
+    method: 'getAskConversation',
+    call: () => api.getAskConversation(5),
+    channel: IpcChannel.ASK_CONVERSATION_GET,
+    args: [5],
+  },
+  {
+    method: 'deleteAskConversation',
+    call: () => api.deleteAskConversation(5),
+    channel: IpcChannel.ASK_CONVERSATION_DELETE,
+    args: [5],
+  },
+  {
+    method: 'sendAskQuestion',
+    call: () => api.sendAskQuestion({ conversationId: null, projectIds: [3], question: 'q' }),
+    channel: IpcChannel.ASK_SEND,
+    args: [{ conversationId: null, projectIds: [3], question: 'q' }],
+  },
+  {
+    method: 'getAskCoverage',
+    call: () => api.getAskCoverage([3]),
+    channel: IpcChannel.ASK_COVERAGE,
+    args: [[3]],
+  },
+  {
+    method: 'indexAskMissing',
+    call: () => api.indexAskMissing([3]),
+    channel: IpcChannel.ASK_INDEX_MISSING,
+    args: [[3]],
   },
   {
     method: 'massiveExtraction',

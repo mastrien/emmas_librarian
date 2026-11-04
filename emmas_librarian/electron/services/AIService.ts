@@ -10,8 +10,7 @@ import { OllamaCloudGateway } from './llm/OllamaCloudGateway';
 import { quotePrompt } from './extraction/extractionPrompts';
 import { anchorEvidence, type AiEvidence, type ExtractionChunk } from './extraction/evidenceAnchoring';
 import { AnthropicGateway } from './llm/AnthropicGateway';
-import { ProjectQuestionService } from './projectQuestion/ProjectQuestionService';
-import type { ProjectAnswer, ProjectIndexCoverage } from '../../src/types';
+import type { AskModels } from './projectQuestion/askServices';
 
 export class AIService {
   private db: DatabaseAdapter;
@@ -304,33 +303,18 @@ ${truncatedText}
     return { embeddingService, modelId: `${provider}/${model_name}` };
   }
 
-  private projectQuestions(): ProjectQuestionService {
+  /**
+   * The AI parts of "Perguntar aos projetos" (#53): the configured embedding model, and the extraction model to answer.
+   *
+   * @example buildAskServices(db, ai.askModels());
+   */
+  public askModels(): AskModels {
     const { embeddingService, modelId } = this.embeddingSetup();
-    return new ProjectQuestionService(
-      new VectorStore(this.db.getDB()),
-      this.db.pdfChunkIndexRepo,
-      embeddingService,
-      (prompt) => this.generateCompletion(prompt, 'extraction'),
+    return {
+      embedder: embeddingService,
+      complete: (prompt) => this.generateCompletion(prompt, 'extraction'),
       modelId,
-    );
-  }
-
-  /**
-   * What a question over these articles would read (#53).
-   *
-   * @example service.projectIndexCoverage([1, 2]).withoutIndex
-   */
-  public projectIndexCoverage(articleIds: number[]): ProjectIndexCoverage {
-    return this.projectQuestions().coverage(articleIds);
-  }
-
-  /**
-   * Answers from the indexed PDFs of several articles, each statement citing its article and page (#53).
-   *
-   * @example await service.askProject('Qual o tamanho da amostra?', [1, 2]);
-   */
-  public askProject(question: string, articleIds: number[]): Promise<ProjectAnswer> {
-    return this.projectQuestions().ask(question, articleIds);
+    };
   }
 
   public async massiveExtraction(articleId: number, pdfPath: string, questions: string[]): Promise<any[]> {

@@ -1,33 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseAdapter } from '../../../database/DatabaseAdapter';
 import { VectorStore, type SimilarChunk } from '../../VectorStore';
-import { pickSources, ProjectQuestionService, type QuestionEmbedder } from '../ProjectQuestionService';
+import {
+  assertSameVectorSize,
+  pickSources,
+  ProjectQuestionService,
+  withoutCopies,
+  type QuestionEmbedder,
+} from '../ProjectQuestionService';
+import { FakeAnswerModel, FakeEmbedder } from './fakes';
 
 vi.mock('electron', () => ({ safeStorage: {} }));
 
 const MODEL = 'openai/atual';
-
-/** Gives every text the vector the test chose. */
-class FakeEmbedder implements QuestionEmbedder {
-  calls: string[] = [];
-  constructor(private readonly vector: number[] = [0, 0]) {}
-
-  async embed(text: string): Promise<number[]> {
-    this.calls.push(text);
-    return this.vector;
-  }
-}
-
-/** The AI model: answers what the test chose and keeps the prompts. */
-class FakeAnswerModel {
-  prompts: string[] = [];
-  constructor(public answer = '{"claims":[]}') {}
-
-  readonly complete = async (prompt: string): Promise<string> => {
-    this.prompts.push(prompt);
-    return this.answer;
-  };
-}
 
 describe('ProjectQuestionService (#53)', () => {
   let adapter: DatabaseAdapter;
@@ -74,10 +59,10 @@ describe('ProjectQuestionService (#53)', () => {
       ],
     });
 
-    const answer = await service().ask('  Qual a amostra?  ', all());
+    const answer = await service().ask('Qual a amostra?', all());
 
     expect(answer.question).toBe('Qual a amostra?');
-    expect(answer.claims[0].text).toBe('A amostra varia.');
+    expect(answer.claims[0]).toMatchObject({ text: 'A amostra varia.', unverified: null });
     expect(answer.claims[0].citations).toEqual([
       {
         articleId: silva,
@@ -87,6 +72,7 @@ describe('ProjectQuestionService (#53)', () => {
         page: 4,
         bbox: { x: 1, y: 2, w: 3, h: 4 },
         text: 'silva diz',
+        pdfPath: 'a.pdf',
       },
       {
         articleId: souza,
@@ -96,9 +82,11 @@ describe('ProjectQuestionService (#53)', () => {
         page: 9,
         bbox: { x: 1, y: 2, w: 3, h: 4 },
         text: 'souza diz',
+        pdfPath: 'b.pdf',
       },
     ]);
     expect(answer.claims[1].citations.map((c) => c.articleId)).toEqual([souza]);
+    expect(answer).toMatchObject({ chunksRead: 2, articlesRead: 2 });
   });
 
   it('reads only indexed articles, and says which were left out', async () => {
@@ -111,17 +99,29 @@ describe('ProjectQuestionService (#53)', () => {
     expect(answer.coverage.withoutPdf.map((a) => a.id)).toEqual([noPdf]);
   });
 
-  it('discards an answer citing a chunk it did not read, with a clear message', async () => {
-    model.answer = '{"claims":[{"text":"inventado","sources":[3]}]}';
+  it('keeps a statement citing a chunk it did not read, marked', async () => {
+    model.answer = JSON.stringify({
+      claims: [
+        { text: 'conferida', sources: [1] },
+        { text: 'inventada', sources: [3] },
+      ],
+    });
 
-    await expect(service().ask('Qual a amostra?', all())).rejects.toThrow('não está entre os 2 recuperados');
+    const { claims } = await service().ask('Qual a amostra?', all());
+
+    expect(claims[0]).toMatchObject({ text: 'conferida', unverified: null });
+    expect(claims[1]).toMatchObject({
+      text: 'inventada',
+      citations: [],
+      unverified: { kind: 'unknown_source', sources: ['3'], available: 2 },
+    });
   });
 
-  it('says nothing when the chunks do not answer', async () => {
+  it('says nothing when the chunks do not answer, but says what it read', async () => {
     const answer = await service().ask('Qual a amostra?', all());
 
     expect(answer.claims).toEqual([]);
-    expect(answer.coverage.indexed).toHaveLength(2);
+    expect(answer.chunksRead).toBe(2);
   });
 
   it('spends nothing when no article of the question is indexed', async () => {
@@ -129,16 +129,9 @@ describe('ProjectQuestionService (#53)', () => {
 
     const answer = await service(embedder).ask('Qual a amostra?', [noIndex, noPdf]);
 
-    expect(answer.claims).toEqual([]);
+    expect(answer).toMatchObject({ claims: [], chunksRead: 0 });
     expect(embedder.calls).toEqual([]);
     expect(model.prompts).toEqual([]);
-  });
-
-  it('refuses an empty question, spending nothing', async () => {
-    const embedder = new FakeEmbedder();
-
-    await expect(service(embedder).ask('   ', all())).rejects.toThrow('Escreva a pergunta');
-    expect(embedder.calls).toEqual([]);
   });
 
   it('blocks vectors of another size and never touches the index', async () => {
@@ -169,21 +162,47 @@ describe('ProjectQuestionService (#53)', () => {
     expect(model.prompts[0]).toContain('outro diz');
   });
 
+  it('reads a chunk once when an article copied to another project has it twice', async () => {
+    const copy = adapter.getDB().prepare("INSERT INTO articles (project_id, title) VALUES (1, 'Cópia')").run();
+    const copyId = Number(copy.lastInsertRowid);
+    index(copyId, 'silva diz', 4, 0.1);
+
+    const answer = await service().ask('Qual a amostra?', [silva, copyId, souza]);
+
+    expect(answer.chunksRead).toBe(2);
+    expect(model.prompts[0].match(/silva diz/g)).toHaveLength(1);
+  });
+
+  it('continues a conversation: the search looks for the last question too, and the model sees the exchanges', async () => {
+    const embedder = new FakeEmbedder();
+    const turns = [
+      { question: 'Primeira', answer: 'um' },
+      { question: 'Qual a amostra?', answer: 'n = 30' },
+    ];
+
+    await service(embedder).ask('e no Silva?', all(), turns);
+
+    expect(embedder.calls).toEqual(['Qual a amostra?\ne no Silva?']);
+    expect(model.prompts[0]).toContain('Pergunta: Primeira\nResposta: um');
+    expect(model.prompts[0]).toContain('PERGUNTA:\ne no Silva?');
+  });
+
   it('reports the coverage without asking anything', () => {
     expect(service().coverage(all())).toMatchObject({ total: 4 });
     expect(model.prompts).toEqual([]);
   });
 });
 
+const chunk = (articleId: number, chunkId: number, text = String(chunkId)): SimilarChunk => ({
+  chunkId,
+  articleId,
+  text,
+  page: 1,
+  bbox: { x: 0, y: 0, w: 0, h: 0 },
+  similarityScore: chunkId,
+});
+
 describe('pickSources', () => {
-  const chunk = (articleId: number, chunkId: number): SimilarChunk => ({
-    chunkId,
-    articleId,
-    text: '',
-    page: 1,
-    bbox: { x: 0, y: 0, w: 0, h: 0 },
-    similarityScore: chunkId,
-  });
   const fromTwo = [chunk(1, 1), chunk(1, 2), chunk(1, 3), chunk(2, 4), chunk(1, 5), chunk(2, 6)];
 
   it('stops one article from filling the answer', () => {
@@ -196,5 +215,29 @@ describe('pickSources', () => {
 
   it('never passes the maximum', () => {
     expect(pickSources(fromTwo, 1, 5)).toHaveLength(1);
+  });
+});
+
+describe('withoutCopies', () => {
+  it('keeps the first of chunks with the same page and text', () => {
+    expect(withoutCopies([chunk(1, 1, 'a'), chunk(2, 2, 'a'), chunk(2, 3, 'b')]).map((c) => c.chunkId)).toEqual([1, 3]);
+  });
+
+  it('keeps the same text on another page', () => {
+    const other = { ...chunk(1, 2, 'a'), page: 2 };
+
+    expect(withoutCopies([chunk(1, 1, 'a'), other])).toHaveLength(2);
+  });
+});
+
+describe('assertSameVectorSize', () => {
+  it('lets through what can be compared, and an index not created yet', () => {
+    expect(() => assertSameVectorSize(4, 4)).not.toThrow();
+    expect(() => assertSameVectorSize(null, 4)).not.toThrow();
+  });
+
+  it('refuses another size, naming both', () => {
+    expect(() => assertSameVectorSize(1536, 768)).toThrow('1536 dimensões');
+    expect(() => assertSameVectorSize(1536, 768)).toThrow('gera 768');
   });
 });

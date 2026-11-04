@@ -18,6 +18,7 @@ import { registerWindowHandlers } from './handlers/windowHandlers';
 import { registerProjectHandlers, registerSearchHandlers } from './handlers/projectHandlers';
 import { registerSearchMonitorHandlers } from './handlers/searchMonitorHandlers';
 import { registerProjectQuestionHandlers } from './handlers/projectQuestionHandlers';
+import { e2eAskModels } from '../services/projectQuestion/e2eAskModels';
 import { SearchMonitorService } from '../services/SearchMonitorService';
 import { registerArticleHandlers } from './handlers/articleHandlers';
 import { registerAnnotationHandlers } from './handlers/annotationHandlers';
@@ -93,7 +94,9 @@ function registerLibraryServices(
   const orchestrator = new SearchOrchestrator(db, new QueryTranslator(), apiIntegratorFor(process.env));
   const aiService = new AIService(db, path.join(userData, 'models'));
   setupAiIpcHandlers(db, aiService);
-  registerProjectQuestionHandlers(ipcMain, db, aiService);
+  registerProjectQuestionHandlers(ipcMain, db, () =>
+    process.env.E2E_MOCK_AI_ASK === 'true' ? e2eAskModels() : aiService.askModels(),
+  );
 
   registerWindowHandlers(ipcMain);
   registerProjectHandlers(ipcMain, db);

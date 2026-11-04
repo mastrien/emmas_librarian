@@ -1,8 +1,14 @@
 import { AppError } from '../../ipc/errorHandler';
 import type { PdfChunkIndexRepository } from '../../database/PdfChunkIndexRepository';
 import type { SimilarChunk, VectorStore } from '../VectorStore';
-import type { ProjectAnswer, ProjectCitation, ProjectIndexCoverage } from '../../../src/types';
-import { parseProjectAnswer, projectQuestionPrompt, type ParsedClaim } from './projectAnswerPrompt';
+import type {
+  AskClaim,
+  AskCitation,
+  ProjectAnswer,
+  ProjectIndexArticle,
+  ProjectIndexCoverage,
+} from '../../../src/types/ask';
+import { parseProjectAnswer, projectQuestionPrompt, type AskTurn, type ParsedClaim } from './projectAnswerPrompt';
 
 // What the model reads. The candidates leave room for the limit per article to still fill the sources.
 const MAX_SOURCES = 20;
@@ -35,6 +41,50 @@ export function pickSources(chunks: SimilarChunk[], max: number, perArticle: num
 }
 
 /**
+ * Leaves one of each chunk: an article copied to another project has the same chunks, and over both projects they
+ * would take the places of other articles.
+ *
+ * @example withoutCopies(nearest).length // at most nearest.length
+ */
+export function withoutCopies(chunks: SimilarChunk[]): SimilarChunk[] {
+  const seen = new Set<string>();
+  return chunks.filter((chunk) => {
+    const key = `${chunk.page}|${chunk.text}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
+ * Refuses vectors of a size the index cannot compare with. The store's own check clears the index when sizes differ,
+ * which neither a question nor indexing one more PDF may do: changing the model would erase every article's chunks.
+ *
+ * @example assertSameVectorSize(store.indexedDimension(), vector.length);
+ */
+export function assertSameVectorSize(indexed: number | null, size: number): void {
+  if (indexed === null || indexed === size) return;
+  throw new AppError(
+    'ERR_EMBEDDING_DIMENSION',
+    'USER_ERROR',
+    `Os PDFs foram indexados com vetores de ${indexed} dimensões e o modelo de embeddings atual gera ${size}. Volte ao modelo anterior para perguntar; o índice não foi alterado.`,
+  );
+}
+
+function toCitation(source: SimilarChunk, article: ProjectIndexArticle | undefined): AskCitation {
+  return {
+    articleId: source.articleId,
+    title: article?.title ?? '',
+    authors: article?.authors ?? null,
+    year: article?.year ?? null,
+    page: source.page,
+    bbox: source.bbox,
+    text: source.text,
+    pdfPath: article?.pdfPath ?? null,
+  };
+}
+
+/**
  * Answers a question from the indexed PDFs of several articles, each statement with its article and page (#53).
  *
  * @example await new ProjectQuestionService(store, index, embedder, complete, 'openai/x').ask('Qual a amostra?', [1, 2]);
@@ -53,66 +103,44 @@ export class ProjectQuestionService {
     return this.index.coverage(articleIds, this.currentModel);
   }
 
-  async ask(question: string, articleIds: number[]): Promise<ProjectAnswer> {
-    const asked = question.trim();
-    if (!asked) {
-      throw new AppError(
-        'ERR_EMPTY_QUESTION',
-        'VALIDATION_ERROR',
-        `Escreva a pergunta. Valor recebido: ${JSON.stringify(question)}. Esperado: um texto não vazio.`,
-      );
-    }
+  async ask(question: string, articleIds: number[], turns: AskTurn[] = []): Promise<ProjectAnswer> {
     const coverage = this.coverage(articleIds);
-    const unanswered: ProjectAnswer = { question: asked, claims: [], coverage };
-    if (coverage.indexed.length === 0) return unanswered;
+    const nothing: ProjectAnswer = { question, claims: [], chunksRead: 0, articlesRead: 0, coverage };
+    if (coverage.indexed.length === 0) return nothing;
 
-    const sources = await this.retrieve(
-      asked,
-      coverage.indexed.map((article) => article.id),
-    );
-    if (sources.length === 0) return unanswered;
-    const titles = new Map(coverage.indexed.map((article) => [article.id, article]));
-    const prompt = projectQuestionPrompt(
-      asked,
-      sources.map((s) => ({ text: s.text, page: s.page, title: titles.get(s.articleId)?.title ?? '' })),
-    );
-    const claims = parseProjectAnswer(await this.complete(prompt), sources.length);
-    return { ...unanswered, claims: claims.map((claim) => this.withCitations(claim, sources, coverage)) };
+    const sources = await this.retrieve(question, coverage, turns);
+    if (sources.length === 0) return nothing;
+    const prompt = projectQuestionPrompt(question, this.promptSources(sources, coverage), turns);
+    const parsed = parseProjectAnswer(await this.complete(prompt), sources.length);
+    return {
+      ...nothing,
+      claims: parsed.map((claim) => this.withCitations(claim, sources, coverage)),
+      chunksRead: sources.length,
+      articlesRead: new Set(sources.map((s) => s.articleId)).size,
+    };
   }
 
-  private async retrieve(question: string, articleIds: number[]): Promise<SimilarChunk[]> {
-    const vector = await this.embedder.embed(question);
-    this.assertSameSize(vector.length);
-    const nearest = this.store.searchSimilarAcross(vector, CANDIDATES, articleIds);
-    return pickSources(nearest, MAX_SOURCES, MAX_PER_ARTICLE);
+  // A follow-up ("e no Almeida?") says little by itself, so the search also looks for what the last question asked.
+  private async retrieve(question: string, coverage: ProjectIndexCoverage, turns: AskTurn[]): Promise<SimilarChunk[]> {
+    const last = turns[turns.length - 1];
+    const vector = await this.embedder.embed(last ? `${last.question}\n${question}` : question);
+    assertSameVectorSize(this.store.indexedDimension(), vector.length);
+    const ids = coverage.indexed.map((article) => article.id);
+    const nearest = this.store.searchSimilarAcross(vector, CANDIDATES, ids);
+    return pickSources(withoutCopies(nearest), MAX_SOURCES, MAX_PER_ARTICLE);
   }
 
-  // Vectors of different sizes cannot be compared. The store's own check clears the index when sizes differ, which a
-  // question must never do: changing the model and asking something would erase every article's chunks.
-  private assertSameSize(size: number): void {
-    const indexed = this.store.indexedDimension();
-    if (indexed === null || indexed === size) return;
-    throw new AppError(
-      'ERR_EMBEDDING_DIMENSION',
-      'USER_ERROR',
-      `Os PDFs foram indexados com vetores de ${indexed} dimensões e o modelo de embeddings atual gera ${size}. Volte ao modelo anterior para perguntar; o índice não foi alterado.`,
-    );
+  private promptSources(sources: SimilarChunk[], coverage: ProjectIndexCoverage) {
+    const titles = new Map(coverage.indexed.map((article) => [article.id, article.title]));
+    return sources.map((s) => ({ text: s.text, page: s.page, title: titles.get(s.articleId) ?? '' }));
   }
 
-  private withCitations(claim: ParsedClaim, sources: SimilarChunk[], coverage: ProjectIndexCoverage) {
-    const citations = claim.sources.map((number): ProjectCitation => {
+  private withCitations(claim: ParsedClaim, sources: SimilarChunk[], coverage: ProjectIndexCoverage): AskClaim {
+    const articles = new Map(coverage.indexed.map((article) => [article.id, article]));
+    const citations = claim.sources.map((number) => {
       const source = sources[number - 1];
-      const article = coverage.indexed.find((a) => a.id === source.articleId);
-      return {
-        articleId: source.articleId,
-        title: article?.title ?? '',
-        authors: article?.authors ?? null,
-        year: article?.year ?? null,
-        page: source.page,
-        bbox: source.bbox,
-        text: source.text,
-      };
+      return toCitation(source, articles.get(source.articleId));
     });
-    return { text: claim.text, citations };
+    return { text: claim.text, citations, unverified: claim.unverified };
   }
 }

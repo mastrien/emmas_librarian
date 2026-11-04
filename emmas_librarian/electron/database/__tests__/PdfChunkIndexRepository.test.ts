@@ -40,7 +40,9 @@ describe('PdfChunkIndexRepository (#53), on real SQLite', () => {
     const coverage = repo().coverage([indexed, notYet, noPdf], MODEL);
 
     expect(coverage.total).toBe(3);
-    expect(coverage.indexed).toEqual([{ id: indexed, title: 'Indexado', authors: 'Silva', year: 2020 }]);
+    expect(coverage.indexed).toEqual([
+      { id: indexed, title: 'Indexado', authors: 'Silva', year: 2020, pdfPath: 'a.pdf' },
+    ]);
     expect(ids(coverage.withoutIndex)).toEqual([notYet]);
     expect(ids(coverage.withoutPdf)).toEqual([noPdf]);
     expect(coverage.otherModel).toEqual([]);
@@ -65,7 +67,19 @@ describe('PdfChunkIndexRepository (#53), on real SQLite', () => {
     adapter.getDB().prepare("UPDATE articles SET deleted_at = '2026-01-01' WHERE id = ?").run(trashed);
 
     expect(repo().coverage([trashed], MODEL).total).toBe(0);
-    expect(repo().projectArticleIds(projectId)).toEqual([]);
+    expect(repo().projectsArticleIds([projectId])).toEqual([]);
+  });
+
+  it('lists the articles of several projects, leaving out a project in the trash', () => {
+    const mine = addArticle('Meu');
+    const other = adapter.createProject('Outro').id;
+    const insert = adapter.getDB().prepare("INSERT INTO articles (project_id, title) VALUES (?, 'Alheio')");
+    const theirs = Number(insert.run(other).lastInsertRowid);
+    expect(repo().projectsArticleIds([projectId, other])).toEqual([mine, theirs]);
+
+    adapter.deleteProject(other);
+
+    expect(repo().projectsArticleIds([projectId, other])).toEqual([mine]);
   });
 
   it('lists only the articles of the project', () => {
@@ -73,7 +87,7 @@ describe('PdfChunkIndexRepository (#53), on real SQLite', () => {
     const otherProject = adapter.createProject('Outro').id;
     adapter.getDB().prepare("INSERT INTO articles (project_id, title) VALUES (?, 'Alheio')").run(otherProject);
 
-    expect(repo().projectArticleIds(projectId)).toEqual([mine]);
+    expect(repo().projectsArticleIds([projectId])).toEqual([mine]);
   });
 
   it('keeps the model on a copy of the article to another project', () => {

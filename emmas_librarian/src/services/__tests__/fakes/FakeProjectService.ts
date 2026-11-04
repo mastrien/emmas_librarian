@@ -7,7 +7,10 @@ import type {
   CitationRequest,
   CitationSeed,
   MonitorOverview,
-  ProjectAnswer,
+  AskConversation,
+  AskConversationSummary,
+  AskIndexResult,
+  AskQuestionInput,
   ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
@@ -342,8 +345,30 @@ export class FakeProjectService implements IProjectService {
     }),
   );
 
-  getProjectIndexCoverage = vi.fn(
-    async (_projectId: number): Promise<ProjectIndexCoverage> => ({
+  getAskConversations = vi.fn(async (): Promise<AskConversationSummary[]> => []);
+
+  getAskConversation = vi.fn(
+    async (conversationId: number): Promise<AskConversation> => ({
+      id: conversationId,
+      title: '',
+      projects: [],
+      messages: [],
+    }),
+  );
+
+  deleteAskConversation = vi.fn(async (_conversationId: number): Promise<void> => undefined);
+
+  sendAskQuestion = vi.fn(
+    async (input: AskQuestionInput): Promise<AskConversation> => ({
+      id: input.conversationId ?? 1,
+      title: input.question,
+      projects: [],
+      messages: [],
+    }),
+  );
+
+  getAskCoverage = vi.fn(
+    async (_projectIds: number[]): Promise<ProjectIndexCoverage> => ({
       total: 0,
       indexed: [],
       withoutIndex: [],
@@ -353,11 +378,10 @@ export class FakeProjectService implements IProjectService {
     }),
   );
 
-  askProject = vi.fn(
-    async (_projectId: number, question: string): Promise<ProjectAnswer> => ({
-      question,
-      claims: [],
+  indexAskMissing = vi.fn(
+    async (_projectIds: number[]): Promise<AskIndexResult> => ({
       coverage: { total: 0, indexed: [], withoutIndex: [], withoutPdf: [], otherModel: [], unknownModel: [] },
+      failed: [],
     }),
   );
 

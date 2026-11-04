@@ -1,7 +1,7 @@
 import type Database from 'better-sqlite3';
-import type { ProjectIndexArticle, ProjectIndexCoverage } from '../../src/types';
+import type { ProjectIndexArticle, ProjectIndexCoverage } from '../../src/types/ask';
 
-interface CoverageRow extends ProjectIndexArticle {
+interface CoverageRow extends Omit<ProjectIndexArticle, 'pdfPath'> {
   local_file_path: string | null;
   chunks: number;
   embedding_model: string | null;
@@ -16,7 +16,13 @@ const COVERAGE_SQL = `
   WHERE a.deleted_at IS NULL AND a.id IN (SELECT value FROM json_each(?))
   ORDER BY a.id`;
 
-const toArticle = ({ id, title, authors, year }: CoverageRow): ProjectIndexArticle => ({ id, title, authors, year });
+const toArticle = ({ id, title, authors, year, local_file_path }: CoverageRow): ProjectIndexArticle => ({
+  id,
+  title,
+  authors,
+  year,
+  pdfPath: local_file_path,
+});
 
 /**
  * Which articles have their PDF indexed for semantic search, and with which embedding model (#53).
@@ -26,11 +32,15 @@ const toArticle = ({ id, title, authors, year }: CoverageRow): ProjectIndexArtic
 export class PdfChunkIndexRepository {
   constructor(private readonly db: Database.Database) {}
 
-  /** The project's articles, without the ones in the trash. */
-  projectArticleIds(projectId: number): number[] {
+  /** The articles of these projects, without what is in the trash. */
+  projectsArticleIds(projectIds: number[]): number[] {
     const rows = this.db
-      .prepare('SELECT id FROM articles WHERE project_id = ? AND deleted_at IS NULL ORDER BY id')
-      .all(projectId) as { id: number }[];
+      .prepare(
+        `SELECT a.id FROM articles a JOIN projects p ON p.id = a.project_id
+         WHERE a.deleted_at IS NULL AND p.deleted_at IS NULL AND p.id IN (SELECT value FROM json_each(?))
+         ORDER BY a.id`,
+      )
+      .all(JSON.stringify(projectIds)) as { id: number }[];
     return rows.map((row) => row.id);
   }
 
