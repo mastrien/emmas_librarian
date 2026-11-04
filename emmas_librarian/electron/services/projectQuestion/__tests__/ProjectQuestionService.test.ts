@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseAdapter } from '../../../database/DatabaseAdapter';
 import { VectorStore, type SimilarChunk } from '../../VectorStore';
 import {
+  assertIndexedWith,
   assertSameVectorSize,
   pickSources,
   ProjectQuestionService,
@@ -146,7 +147,7 @@ describe('ProjectQuestionService (#53)', () => {
     expect(store.indexedDimension()).toBe(2);
   });
 
-  it('warns about what another model indexed, and still reads it', async () => {
+  it('does not read what another model indexed, and says so', async () => {
     const other = adapter.getDB().prepare("INSERT INTO articles (project_id, title) VALUES (1, 'Outro modelo')").run();
     const otherId = Number(other.lastInsertRowid);
     store.indexArticleChunks(
@@ -158,8 +159,29 @@ describe('ProjectQuestionService (#53)', () => {
 
     const answer = await service().ask('Qual a amostra?', [...all(), otherId]);
 
-    expect(answer.coverage.otherModel.map((a) => a.id)).toEqual([otherId]);
-    expect(model.prompts[0]).toContain('outro diz');
+    expect(answer.coverage.outdated).toEqual([]);
+    expect(answer.coverage.withoutPdf.map((a) => a.id)).toContain(otherId);
+    expect(model.prompts[0]).not.toContain('outro diz');
+  });
+
+  it('spends nothing when all that is indexed came from another model', async () => {
+    const embedder = new FakeEmbedder();
+    const older = adapter
+      .getDB()
+      .prepare("INSERT INTO articles (project_id, title, local_file_path) VALUES (1, 'Antigo', 'd.pdf')");
+    const olderId = Number(older.run().lastInsertRowid);
+    store.indexArticleChunks(olderId, [{ text: 'antigo', page: 1, bbox: { x: 0, y: 0, w: 1, h: 1 } }], [[0, 0]], null);
+
+    const answer = await service(embedder).ask('Qual a amostra?', [olderId]);
+
+    expect(answer.coverage.outdated.map((a) => a.id)).toEqual([olderId]);
+    expect(embedder.calls).toEqual([]);
+  });
+
+  it('refuses a PDF of another model by name, and of an unknown one', () => {
+    expect(() => assertIndexedWith(MODEL, MODEL)).not.toThrow();
+    expect(() => assertIndexedWith('ollama/outro', MODEL)).toThrow('(ollama/outro)');
+    expect(() => assertIndexedWith(null, MODEL)).toThrow('(não registrado)');
   });
 
   it('reads a chunk once when an article copied to another project has it twice', async () => {

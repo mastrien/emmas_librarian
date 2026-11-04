@@ -27,7 +27,7 @@ test('#53 a project is asked from the dashboard, and the answer survives a reloa
     await expect(notice).toBeVisible();
     await expect(window.getByRole('textbox', { name: 'Sua pergunta' })).toHaveAttribute(
       'placeholder',
-      'Nenhum PDF destes projetos foi indexado ainda',
+      'Nenhum PDF destes projetos está indexado com o modelo atual',
     );
     await window.getByRole('button', { name: 'Indexar agora' }).click();
     await expect(notice).toBeHidden({ timeout: 30000 });

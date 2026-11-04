@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { AskIndexResult, AskReadCitation, ProjectIndexCoverage } from '../../types';
+import { pdfCount } from '../../utils/pdfCount';
 import { citationAccessNote, citationReaderState } from './askDisplay';
 
 /**
@@ -50,7 +51,10 @@ export const AskSourcePanel: React.FC<{
   );
 };
 
-const pdfs = (count: number) => (count === 1 ? '1 PDF' : `${count} PDFs`);
+const outdatedText = (count: number): string =>
+  count === 1
+    ? '1 PDF precisa ser recalculado com o modelo de embeddings atual para entrar nas respostas. Isso consome tokens.'
+    : `${count} PDFs precisam ser recalculados com o modelo de embeddings atual para entrar nas respostas. Isso consome tokens.`;
 
 /**
  * Says what the answers leave out, and offers to index it there. It disappears when nothing is missing.
@@ -64,40 +68,36 @@ export const AskIndexNotice: React.FC<{
   onIndex: () => void;
 }> = ({ coverage, indexing, failed, onIndex }) => {
   const missing = coverage?.withoutIndex.length ?? 0;
-  const otherModel = coverage?.otherModel.length ?? 0;
-  if (missing === 0 && otherModel === 0) return null;
+  const outdated = coverage?.outdated.length ?? 0;
+  const pending = missing + outdated;
+  if (pending === 0) return null;
   return (
     <div className="ask-notices">
-      {missing > 0 && (
-        <div className="ask-notice">
-          {indexing ? (
-            <span className="ask-step ask-step--running" role="status">
-              Indexando {pdfs(missing)}…
+      <div className="ask-notice">
+        {indexing ? (
+          <span className="ask-step ask-step--running" role="status">
+            Indexando {pdfCount(pending)}…
+          </span>
+        ) : (
+          <>
+            <span>
+              {missing > 0 && `${pdfCount(missing)} destes projetos ainda não entram nas respostas. `}
+              {outdated > 0 && outdatedText(outdated)}
             </span>
-          ) : (
-            <>
-              <span>{pdfs(missing)} destes projetos ainda não entram nas respostas.</span>
-              <button type="button" className="btn-secondary ask-small" onClick={onIndex}>
-                Indexar agora
-              </button>
-            </>
-          )}
-        </div>
-      )}
+            <button type="button" className="btn-secondary ask-small" onClick={onIndex}>
+              {outdated > 0 ? `Recalcular ${pdfCount(pending)}` : 'Indexar agora'}
+            </button>
+          </>
+        )}
+      </div>
       {failed.length > 0 && !indexing && <FailedList failed={failed} />}
-      {otherModel > 0 && (
-        <div className="ask-notice">
-          {pdfs(otherModel)} foram indexados com outro modelo de embeddings, e a busca neles pode trazer trechos menos
-          relevantes.
-        </div>
-      )}
     </div>
   );
 };
 
 const FailedList: React.FC<{ failed: AskIndexResult['failed'] }> = ({ failed }) => (
   <details className="ask-notice ask-notice--block">
-    <summary>{pdfs(failed.length)} não puderam ser indexados</summary>
+    <summary>{pdfCount(failed.length)} não puderam ser indexados</summary>
     <ul>
       {failed.map((item) => (
         <li key={item.title}>
@@ -110,7 +110,9 @@ const FailedList: React.FC<{ failed: AskIndexResult['failed'] }> = ({ failed }) 
 
 const placeholderFor = (hasScope: boolean, canAsk: boolean): string => {
   if (!hasScope) return 'Escolha ao menos um projeto para perguntar';
-  return canAsk ? 'Pergunte aos artigos destes projetos…' : 'Nenhum PDF destes projetos foi indexado ainda';
+  return canAsk
+    ? 'Pergunte aos artigos destes projetos…'
+    : 'Nenhum PDF destes projetos está indexado com o modelo atual';
 };
 
 /**

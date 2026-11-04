@@ -4,6 +4,7 @@ import { useProjectService } from '../../contexts/ServicesContext';
 import type {
   AskConversation,
   AskConversationSummary,
+  AskIndexPlan,
   AskIndexResult,
   Project,
   ProjectIndexCoverage,
@@ -25,6 +26,7 @@ function useAskIndex(scope: number[], conversationId: number | null) {
   const service = useProjectService();
   const [stored, setStored] = useState<IndexState>(indexStateOf(''));
   const [indexing, setIndexing] = useState(false);
+  const [confirming, setConfirming] = useState<AskIndexPlan | null>(null);
   const key = scope.join(',');
   const { coverage, failed, error } = stored.key === key ? stored : indexStateOf(key);
 
@@ -45,10 +47,10 @@ function useAskIndex(scope: number[], conversationId: number | null) {
     // conversationId: an article may have changed while another conversation was open.
   }, [key, conversationId, service]);
 
-  const indexMissing = async () => {
+  const runIndexing = async (replaceIndex: boolean) => {
     setIndexing(true);
     try {
-      const result = await service.indexAskMissing(scope);
+      const result = await service.indexAskMissing({ projectIds: scope }, replaceIndex);
       setStored({ key, coverage: result.coverage, failed: result.failed, error: null });
     } catch (err) {
       setStored({ key, coverage, failed: [], error: describeError(err) });
@@ -56,7 +58,25 @@ function useAskIndex(scope: number[], conversationId: number | null) {
       setIndexing(false);
     }
   };
-  return { coverage, indexing, failed, indexError: error, indexMissing };
+
+  // Asks only when other PDFs would lose their vectors; the notice on the page already said the rest.
+  const indexMissing = async () => {
+    try {
+      const plan = await service.getAskIndexPlan({ projectIds: scope });
+      if (plan.othersLosingVectors > 0) setConfirming(plan);
+      else await runIndexing(plan.sizeChanged);
+    } catch (err) {
+      setStored({ key, coverage, failed: [], error: describeError(err) });
+    }
+  };
+
+  const confirmIndexing = () => {
+    setConfirming(null);
+    if (confirming) void runIndexing(confirming.sizeChanged);
+  };
+  const dismissIndexing = () => setConfirming(null);
+
+  return { coverage, indexing, failed, indexError: error, indexMissing, confirming, confirmIndexing, dismissIndexing };
 }
 
 // What was loaded or went wrong, kept with the conversation it is about, so opening another one starts clean.

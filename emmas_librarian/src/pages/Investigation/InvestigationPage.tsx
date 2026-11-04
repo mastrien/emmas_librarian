@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { AlertCircle, ArrowLeft, ChevronsRight, Plus } from 'lucide-react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { SideDrawer } from '../../components/common/SideDrawer';
+import { IndexRecalculationModal } from '../../components/modals/IndexRecalculationModal';
 import { useInvestigationRunContext } from '../../contexts/InvestigationRunContext';
 import { useFillWindowHeight } from '../../hooks/useFillWindowHeight';
 import { useNarrowWindow } from '../../hooks/useNarrowWindow';
@@ -13,6 +14,7 @@ import { NewInvestigationView, type InvestigationDraft } from './NewInvestigatio
 import { investigationPath, liveCalls } from './investigationView';
 import { useInvestigationPageData } from './useInvestigationPageData';
 import type { InvestigationRunState } from './useInvestigationRun';
+import { useRecalculationBeforeRun } from './useRecalculationBeforeRun';
 import './investigation.css';
 
 const QuotaNotice: React.FC<{ onClose: () => void }> = ({ onClose }) =>
@@ -75,6 +77,7 @@ export const InvestigationPage: React.FC = () => {
   const { run, start, cancel, dismiss, dismissQuota } = useInvestigationRunContext();
   const ownRun = run?.projectId === projectId ? run : null;
   const data = useInvestigationPageData(projectId, ownRun?.savedId ?? null);
+  const recalculation = useRecalculationBeforeRun();
   const [draftEdits, setDraft] = useState<InvestigationDraft | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -106,11 +109,12 @@ export const InvestigationPage: React.FC = () => {
     setDraft({ questions, selectedIds });
     navigate(investigationPath(projectId, 'new'));
   };
-  const begin = () => {
+  const runDraft = () => {
     void start({ projectId, articles: data.articles, questions: draft.questions, selectedIds: draft.selectedIds });
     setDraft(null);
     navigate(investigationPath(projectId, 'running'));
   };
+  const begin = () => void recalculation.check(draft.selectedIds, runDraft);
   const leaveNew = () => navigate(investigationPath(projectId));
   const sidebar = (inDrawer: boolean) => (
     <InvestigationSidebar
@@ -169,7 +173,7 @@ export const InvestigationPage: React.FC = () => {
               draft={draft}
               onDraftChange={setDraft}
               modelLabel={data.modelLabel}
-              busy={!!run?.isRunning}
+              busy={!!run?.isRunning || recalculation.checking}
               onStart={begin}
               onCancel={leaveNew}
             />
@@ -189,6 +193,15 @@ export const InvestigationPage: React.FC = () => {
         </div>
       </div>
       {ownRun?.quotaHit && <QuotaNotice onClose={dismissQuota} />}
+      {recalculation.plan && (
+        <IndexRecalculationModal
+          plan={recalculation.plan}
+          running={recalculation.running}
+          confirmLabel="Recalcular e investigar"
+          onConfirm={() => void recalculation.confirm()}
+          onClose={recalculation.dismiss}
+        />
+      )}
     </div>
   );
 };

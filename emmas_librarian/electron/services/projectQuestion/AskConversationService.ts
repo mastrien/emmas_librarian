@@ -80,7 +80,7 @@ export class AskConversationService {
     return new AppError(
       'ERR_NOTHING_INDEXED',
       'USER_ERROR',
-      `Nenhum artigo destes projetos tem PDF indexado. Valor recebido: projectIds=${JSON.stringify(projectIds)}. Esperado: ao menos um artigo indexado; indexe os PDFs antes de perguntar.`,
+      `Nenhum artigo destes projetos tem PDF indexado com o modelo de embeddings atual. Valor recebido: projectIds=${JSON.stringify(projectIds)}. Esperado: ao menos um artigo indexado; indexe os PDFs antes de perguntar.`,
     );
   }
 

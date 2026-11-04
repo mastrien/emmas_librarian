@@ -18,7 +18,9 @@ import type {
   MonitorOverview,
   AskConversation,
   AskConversationSummary,
+  AskIndexPlan,
   AskIndexResult,
+  AskIndexTarget,
   AskQuestionInput,
   ProjectIndexCoverage,
   SearchMonitor,
@@ -259,8 +261,10 @@ export interface IProjectService {
   sendAskQuestion(input: AskQuestionInput): Promise<AskConversation>;
   /** What a question over these projects can read. */
   getAskCoverage(projectIds: number[]): Promise<ProjectIndexCoverage>;
-  /** Indexes the PDFs of these projects that a question cannot read yet. */
-  indexAskMissing(projectIds: number[]): Promise<AskIndexResult>;
+  /** What indexing would do, before anything is spent or removed. */
+  getAskIndexPlan(target: AskIndexTarget): Promise<AskIndexPlan>;
+  /** Indexes what a search cannot read yet. Only `replaceIndex`, the person's answer to the plan, may clear the index. */
+  indexAskMissing(target: AskIndexTarget, replaceIndex?: boolean): Promise<AskIndexResult>;
   massiveExtraction(articleId: number, questions: string[]): Promise<ExtractionAnswer[]>;
   extractMetadata(articleId: number): Promise<ExtractedMetadata>;
 

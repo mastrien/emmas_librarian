@@ -11,6 +11,7 @@ import { quotePrompt } from './extraction/extractionPrompts';
 import { anchorEvidence, type AiEvidence, type ExtractionChunk } from './extraction/evidenceAnchoring';
 import { AnthropicGateway } from './llm/AnthropicGateway';
 import type { AskModels } from './projectQuestion/askServices';
+import { assertIndexedWith, assertSameVectorSize } from './projectQuestion/ProjectQuestionService';
 
 export class AIService {
   private db: DatabaseAdapter;
@@ -337,12 +338,16 @@ ${truncatedText}
     if (questions.length === 0) return [];
 
     const firstQueryEmbedding = await embeddingService.embed(questions[0]);
-    vectorStore.ensureDimensionAndClearIfMismatched(firstQueryEmbedding.length);
+    // This used to clear the whole index when the model changed size, with no word to anyone. Only the person can.
+    assertSameVectorSize(vectorStore.indexedDimension(), firstQueryEmbedding.length);
+    vectorStore.ensureVectorTable(firstQueryEmbedding.length);
 
+    // A PDF's chunks are written together, so they all have the same model.
     const existingChunksCount = this.db
       .getDB()
-      .prepare('SELECT count(*) as count FROM pdf_chunks WHERE article_id = ?')
-      .get(articleId) as any;
+      .prepare('SELECT count(*) as count, MIN(embedding_model) as model FROM pdf_chunks WHERE article_id = ?')
+      .get(articleId) as { count: number; model: string | null };
+    if (existingChunksCount.count > 0) assertIndexedWith(existingChunksCount.model, modelId);
     if (existingChunksCount.count === 0) {
       const embeddings = await embeddingService.embedBatch(extractionResult.chunks.map((c: any) => c.text));
       vectorStore.indexArticleChunks(articleId, extractionResult.chunks, embeddings, modelId);

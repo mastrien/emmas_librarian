@@ -26,8 +26,7 @@ const coverage = (extra: Partial<ProjectIndexCoverage> = {}): ProjectIndexCovera
   indexed: [article(1)],
   withoutIndex: [],
   withoutPdf: [],
-  otherModel: [],
-  unknownModel: [],
+  outdated: [],
   ...extra,
 });
 
@@ -338,7 +337,7 @@ describe('AskPage (#53)', () => {
       expect(await screen.findByText('2 PDFs destes projetos ainda não entram nas respostas.')).toBeInTheDocument();
       await press(screen.getByRole('button', { name: 'Indexar agora' }));
 
-      await waitFor(() => expect(service.indexAskMissing).toHaveBeenCalledWith([3]));
+      await waitFor(() => expect(service.indexAskMissing).toHaveBeenCalledWith({ projectIds: [3] }, false));
       await waitFor(() => expect(screen.queryByText(/ainda não entram nas respostas/)).not.toBeInTheDocument());
     });
 
@@ -386,16 +385,99 @@ describe('AskPage (#53)', () => {
       await chooseProject('Revisão');
 
       await waitFor(() =>
-        expect(box()).toHaveAttribute('placeholder', 'Nenhum PDF destes projetos foi indexado ainda'),
+        expect(box()).toHaveAttribute('placeholder', 'Nenhum PDF destes projetos está indexado com o modelo atual'),
       );
     });
 
-    it('warns about another model', async () => {
-      const service = serviceWith({ otherModel: [article(1)] });
-      await open(service);
-      await chooseProject('Revisão');
+    describe('after the embedding model changes', () => {
+      const plan = (extra = {}) => ({ pending: 1, outdated: 1, sizeChanged: false, othersLosingVectors: 0, ...extra });
 
-      expect(await screen.findByText(/1 PDF foram indexados com outro modelo/)).toBeInTheDocument();
+      it('says what must be recalculated and that it costs tokens, and recalculates at the click', async () => {
+        const service = serviceWith({ outdated: [article(1)] });
+        service.getAskIndexPlan.mockResolvedValue(plan());
+        service.indexAskMissing.mockResolvedValue({ coverage: coverage(), failed: [] });
+        await open(service);
+        await chooseProject('Revisão');
+
+        expect(await screen.findByText(/1 PDF precisa ser recalculado.*consome tokens/)).toBeInTheDocument();
+        await press(screen.getByRole('button', { name: 'Recalcular 1 PDF' }));
+
+        await waitFor(() => expect(service.indexAskMissing).toHaveBeenCalledWith({ projectIds: [3] }, false));
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        await waitFor(() => expect(screen.queryByText(/precisa ser recalculado/)).not.toBeInTheDocument());
+      });
+
+      it('counts both kinds on one button', async () => {
+        const service = serviceWith({ outdated: [article(1)], withoutIndex: [article(2), article(3)] });
+        await open(service);
+        await chooseProject('Revisão');
+
+        expect(await screen.findByRole('button', { name: 'Recalcular 3 PDFs' })).toBeInTheDocument();
+      });
+
+      it('cannot ask when all that is indexed came from another model', async () => {
+        const service = serviceWith({ indexed: [], outdated: [article(1)] });
+        await open(service);
+        await chooseProject('Revisão');
+
+        await waitFor(() =>
+          expect(box()).toHaveAttribute('placeholder', 'Nenhum PDF destes projetos está indexado com o modelo atual'),
+        );
+      });
+
+      it('with another size, says how many others lose their vectors before removing anything', async () => {
+        const service = serviceWith({ outdated: [article(1)] });
+        service.getAskIndexPlan.mockResolvedValue(plan({ sizeChanged: true, othersLosingVectors: 190 }));
+        service.indexAskMissing.mockResolvedValue({ coverage: coverage(), failed: [] });
+        await open(service);
+        await chooseProject('Revisão');
+
+        await press(await screen.findByRole('button', { name: 'Recalcular 1 PDF' }));
+
+        expect(within(screen.getByRole('dialog')).getByRole('note')).toHaveTextContent('dos outros 190 PDFs');
+        expect(service.indexAskMissing).not.toHaveBeenCalled();
+        await press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Recalcular' }));
+
+        await waitFor(() => expect(service.indexAskMissing).toHaveBeenCalledWith({ projectIds: [3] }, true));
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+
+      it('removes nothing when the person closes the question', async () => {
+        const service = serviceWith({ outdated: [article(1)] });
+        service.getAskIndexPlan.mockResolvedValue(plan({ sizeChanged: true, othersLosingVectors: 1 }));
+        await open(service);
+        await chooseProject('Revisão');
+        await press(await screen.findByRole('button', { name: 'Recalcular 1 PDF' }));
+
+        await press(screen.getByRole('button', { name: 'Fechar sem recalcular' }));
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(service.indexAskMissing).not.toHaveBeenCalled();
+      });
+
+      it('takes the size change along when no other PDF is at stake', async () => {
+        const service = serviceWith({ outdated: [article(1)] });
+        service.getAskIndexPlan.mockResolvedValue(plan({ sizeChanged: true }));
+        service.indexAskMissing.mockResolvedValue({ coverage: coverage(), failed: [] });
+        await open(service);
+        await chooseProject('Revisão');
+
+        await press(await screen.findByRole('button', { name: 'Recalcular 1 PDF' }));
+
+        await waitFor(() => expect(service.indexAskMissing).toHaveBeenCalledWith({ projectIds: [3] }, true));
+      });
+
+      it('shows why the plan could not be made', async () => {
+        const service = serviceWith({ outdated: [article(1)] });
+        service.getAskIndexPlan.mockRejectedValue(new Error('provedor fora do ar'));
+        await open(service);
+        await chooseProject('Revisão');
+
+        await press(await screen.findByRole('button', { name: 'Recalcular 1 PDF' }));
+
+        expect(await screen.findByRole('alert')).toHaveTextContent('provedor fora do ar');
+        expect(service.indexAskMissing).not.toHaveBeenCalled();
+      });
     });
   });
 

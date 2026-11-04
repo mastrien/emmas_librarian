@@ -83,7 +83,7 @@ describe('"Perguntar aos projetos" IPC handlers (#53)', () => {
   it('indexes what is missing', async () => {
     addArticle('Falta', 'b.pdf');
 
-    const { coverage, failed } = (await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, [projectId])) as {
+    const { coverage, failed } = (await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, { projectIds: [projectId] })) as {
       coverage: ProjectIndexCoverage;
       failed: unknown[];
     };
@@ -97,8 +97,8 @@ describe('"Perguntar aos projetos" IPC handlers (#53)', () => {
     let release: () => void = () => undefined;
     pdfRead.wait = new Promise<void>((resolve) => (release = resolve));
 
-    const first = ipc.invoke(IpcChannel.ASK_INDEX_MISSING, [projectId]);
-    const second = ipc.invoke(IpcChannel.ASK_INDEX_MISSING, [projectId]);
+    const first = ipc.invoke(IpcChannel.ASK_INDEX_MISSING, { projectIds: [projectId] });
+    const second = ipc.invoke(IpcChannel.ASK_INDEX_MISSING, { projectIds: [projectId] });
     await vi.waitFor(() => expect(embedder.calls).toHaveLength(1));
     release();
     await Promise.all([first, second]);
@@ -111,11 +111,43 @@ describe('"Perguntar aos projetos" IPC handlers (#53)', () => {
 
   it('can index again after the first one ended', async () => {
     addArticle('Falta', 'b.pdf');
-    await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, [projectId]);
+    await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, { projectIds: [projectId] });
     addArticle('Outra', 'c.pdf');
 
-    await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, [projectId]);
+    await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, { projectIds: [projectId] });
 
     expect(embedder.batches).toHaveLength(2);
+  });
+
+  it('indexes only the articles asked for, as an investigation does', async () => {
+    const picked = addArticle('Escolhido', 'b.pdf');
+    addArticle('Deixado', 'c.pdf');
+
+    const { coverage } = (await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, { articleIds: [picked] })) as {
+      coverage: ProjectIndexCoverage;
+    };
+
+    expect(coverage.indexed.map((a) => a.id)).toEqual([picked]);
+    expect(embedder.batches).toHaveLength(1);
+  });
+
+  it('plans for projects and for articles', async () => {
+    const picked = addArticle('Escolhido', 'b.pdf');
+    addArticle('Deixado', 'c.pdf');
+
+    expect(await ipc.invoke(IpcChannel.ASK_INDEX_PLAN, { projectIds: [projectId] })).toMatchObject({ pending: 2 });
+    expect(await ipc.invoke(IpcChannel.ASK_INDEX_PLAN, { articleIds: [picked] })).toMatchObject({ pending: 1 });
+  });
+
+  it('removes the rest of the library only when the request says so', async () => {
+    const other = addArticle('Falta', 'b.pdf');
+    embedder = new FakeEmbedder([0, 0, 0]);
+
+    await expect(ipc.invoke(IpcChannel.ASK_INDEX_MISSING, { articleIds: [other] })).rejects.toThrow('2 dimensões');
+    expect(db.getDB().prepare('SELECT count(*) AS n FROM pdf_chunks').get()).toEqual({ n: 1 });
+
+    await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, { articleIds: [other] }, true);
+
+    expect(db.getDB().prepare('SELECT text_content AS t FROM pdf_chunks').all()).toEqual([{ t: 'do pdf' }]);
   });
 });

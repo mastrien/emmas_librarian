@@ -10,14 +10,31 @@ export interface ProjectIndexArticle {
   pdfPath: string | null;
 }
 
-/** What a question can read: indexed articles, those left out and why, and which model indexed them. */
+/**
+ * What a search can read. `indexed` is only what the current embedding model indexed: vectors of different models are
+ * not comparable, so the others stay out until recalculated, in `outdated`. That includes PDFs indexed before the app
+ * recorded the model, since nothing says which model made them.
+ */
 export interface ProjectIndexCoverage {
   total: number;
   indexed: ProjectIndexArticle[];
   withoutIndex: ProjectIndexArticle[];
   withoutPdf: ProjectIndexArticle[];
-  otherModel: ProjectIndexArticle[];
-  unknownModel: ProjectIndexArticle[];
+  outdated: ProjectIndexArticle[];
+}
+
+/** Which articles an indexing is about: the question page thinks in projects, an investigation in articles. */
+export type AskIndexTarget = { projectIds: number[] } | { articleIds: number[] };
+
+/**
+ * What indexing would do, known before anything is spent or removed. The vector table holds one size only, so a model
+ * of another size (`sizeChanged`) also takes out the vectors of the other PDFs of the library.
+ */
+export interface AskIndexPlan {
+  pending: number;
+  outdated: number;
+  sizeChanged: boolean;
+  othersLosingVectors: number;
 }
 
 /** A chunk an answer cites. Its text is kept with the answer, so it stays readable after the article is gone. */

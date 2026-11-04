@@ -383,9 +383,15 @@ const routes: RouteCase[] = [
   },
   {
     method: 'indexAskMissing',
-    call: () => api.indexAskMissing([3]),
+    call: () => api.indexAskMissing({ projectIds: [3] }),
     channel: IpcChannel.ASK_INDEX_MISSING,
-    args: [[3]],
+    args: [{ projectIds: [3] }, false],
+  },
+  {
+    method: 'getAskIndexPlan',
+    call: () => api.getAskIndexPlan({ articleIds: [3] }),
+    channel: IpcChannel.ASK_INDEX_PLAN,
+    args: [{ articleIds: [3] }],
   },
   {
     method: 'massiveExtraction',

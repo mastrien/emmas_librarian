@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AlertCircle, ChevronsRight } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { SideDrawer } from '../../components/common/SideDrawer';
+import { IndexRecalculationModal } from '../../components/modals/IndexRecalculationModal';
 import { useFillWindowHeight } from '../../hooks/useFillWindowHeight';
 import { useNarrowWindow } from '../../hooks/useNarrowWindow';
 import { AskScopeBar } from './AskScopeBar';
@@ -82,6 +83,15 @@ export const AskPage: React.FC = () => {
         ) : (
           <aside className="ask-source-pane">{source}</aside>
         ))}
+      {ask.confirming && (
+        <IndexRecalculationModal
+          plan={ask.confirming}
+          running={false}
+          confirmLabel="Recalcular"
+          onConfirm={ask.confirmIndexing}
+          onClose={ask.dismissIndexing}
+        />
+      )}
     </div>
   );
 };

@@ -9,7 +9,9 @@ import type {
   MonitorOverview,
   AskConversation,
   AskConversationSummary,
+  AskIndexPlan,
   AskIndexResult,
+  AskIndexTarget,
   AskQuestionInput,
   ProjectIndexCoverage,
   SearchMonitor,
@@ -373,14 +375,22 @@ export class FakeProjectService implements IProjectService {
       indexed: [],
       withoutIndex: [],
       withoutPdf: [],
-      otherModel: [],
-      unknownModel: [],
+      outdated: [],
+    }),
+  );
+
+  getAskIndexPlan = vi.fn(
+    async (_target: AskIndexTarget): Promise<AskIndexPlan> => ({
+      pending: 0,
+      outdated: 0,
+      sizeChanged: false,
+      othersLosingVectors: 0,
     }),
   );
 
   indexAskMissing = vi.fn(
-    async (_projectIds: number[]): Promise<AskIndexResult> => ({
-      coverage: { total: 0, indexed: [], withoutIndex: [], withoutPdf: [], otherModel: [], unknownModel: [] },
+    async (_target: AskIndexTarget, _replaceIndex?: boolean): Promise<AskIndexResult> => ({
+      coverage: { total: 0, indexed: [], withoutIndex: [], withoutPdf: [], outdated: [] },
       failed: [],
     }),
   );
