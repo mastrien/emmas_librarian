@@ -65,9 +65,21 @@ export class SearchMonitorService {
 
   private async checkAll(now: Date): Promise<MonitorOverview> {
     for (const monitor of this.db.searchMonitorRepo.listAll().filter((m) => isMonitorDue(m, now))) {
-      await this.checkOne(monitor, now);
+      await this.checkOneSafely(monitor, now);
     }
     return this.overview(now);
+  }
+
+  // One search breaking must not keep the others from being checked, at every opening of the dashboard. It stays due,
+  // so it is tried again next time.
+  private async checkOneSafely(monitor: SearchMonitor, now: Date): Promise<void> {
+    try {
+      await this.checkOne(monitor, now);
+    } catch (err) {
+      console.error(
+        JSON.stringify({ event: 'monitor_search_failed', searchId: monitor.search_id, error: String(err) }),
+      );
+    }
   }
 
   private async checkOne(monitor: SearchMonitor, now: Date): Promise<void> {

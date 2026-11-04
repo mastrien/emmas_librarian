@@ -150,6 +150,13 @@ function parseJsonObject(raw: string | null | undefined): Record<string, unknown
   }
 }
 
+// A state saved in an older format ({"groups":[]}) parses fine but has nothing to run; taking it for a search made
+// the monitored check fail on `selectedDbs` (found by the release tests, #87).
+function usableQueryState(stored: Record<string, unknown> | null): SearchQueryState | null {
+  if (!stored || !Array.isArray(stored.selectedDbs) || !stored.ast || typeof stored.ast !== 'object') return null;
+  return stored as unknown as SearchQueryState;
+}
+
 // Old entries: each base's query becomes a custom query, and the builder starts empty.
 function legacyQueryState(item: SearchHistoryItem): SearchQueryState | null {
   const translated = parseJsonObject(item.translated_queries) ?? {};
@@ -178,7 +185,7 @@ function restoredLimits(state: SearchQueryState, item: SearchHistoryItem): Searc
  *   if (restored) { setAst(restored.state.ast); setSelectedDbs(restored.state.selectedDbs); }
  */
 export function restoreSearch(item: SearchHistoryItem): RestoredSearch | null {
-  const stored = parseJsonObject(item.query_state) as SearchQueryState | null;
+  const stored = usableQueryState(parseJsonObject(item.query_state));
   const state = stored ?? legacyQueryState(item);
   if (!state) return null;
   return {
