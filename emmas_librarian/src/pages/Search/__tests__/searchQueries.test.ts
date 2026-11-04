@@ -78,6 +78,22 @@ describe('buildFinalQueries', () => {
 });
 
 describe('restoreSearch', () => {
+  it.each([
+    ['without bases', '{"groups":[]}'],
+    ['with bases that are not a list', '{"ast":{"type":"group"},"selectedDbs":"openalex"}'],
+    ['without a query', '{"selectedDbs":["openalex"]}'],
+  ])('does not take a saved state %s for a search it can run', (_case, queryState) => {
+    expect(restoreSearch(historyEntry({ query_state: queryState, translated_queries: '{}' }))).toBeNull();
+  });
+
+  it('falls back on the queries of each base when the saved state is of no use', () => {
+    const restored = restoreSearch(
+      historyEntry({ query_state: '{"groups":[]}', translated_queries: '{"openalex":"q"}' }),
+    );
+
+    expect(restored).toMatchObject({ isLegacy: true, state: { selectedDbs: ['openalex'] } });
+  });
+
   const historyEntry = (overrides: Partial<SearchHistoryItem>): SearchHistoryItem => ({
     id: 1,
     unified_query: 'q',

@@ -192,6 +192,33 @@ describe('SearchMonitorService (#52)', () => {
     await expect(service.review(legacy, NOW)).rejects.toThrow(`searchId=${legacy}`);
   });
 
+  // A search kept in an older format has no bases to read: found by the release tests, whose library has one.
+  it('survives a search saved in an older format, and still checks the others', async () => {
+    const old = db.saveSearchHistory(projectId, 'antiga', {}, 0, {}, { queryState: '{"groups":[]}' });
+    db.searchMonitorRepo.setMonitor(old, 7);
+    bases.works = [work('A')];
+
+    const { notices } = await service.checkDue(NOW);
+
+    expect(notices.map((n) => n.searchId)).toEqual([searchId]);
+    expect(db.searchMonitorRepo.listAll().every((m) => m.last_checked_at === NOW.toISOString())).toBe(true);
+  });
+
+  it('checks the others when one search breaks, and tries that one again next time', async () => {
+    const other = saveSearch(['openalex']);
+    db.searchMonitorRepo.setMonitor(other, 7);
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.spyOn(orchestrator, 'fetchForMonitor').mockRejectedValueOnce(new Error('quebrou'));
+
+    await service.checkDue(NOW);
+
+    const checked = (id: number) => db.searchMonitorRepo.listAll().find((m) => m.search_id === id)?.last_checked_at;
+    expect(checked(searchId)).toBeNull();
+    expect(checked(other)).toBe(NOW.toISOString());
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('quebrou'));
+    log.mockRestore();
+  });
+
   describe('reviewing', () => {
     beforeEach(async () => {
       bases.works = [work('A'), work('B')];
