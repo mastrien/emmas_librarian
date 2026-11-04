@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { GlobalErrorProvider } from '../../../contexts/GlobalErrorContext';
 import { InvestigationRunProvider } from '../../../contexts/InvestigationRunContext';
@@ -103,5 +103,8 @@ export function renderInvestigation(service: FakeProjectService, entry: string |
 /** Sets the window width the page reads, and tells it. */
 export function setWindowWidth(width: number) {
   Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: width });
-  window.dispatchEvent(new Event('resize'));
+  // In act: a page still mounted measures itself again, and this also runs from afterEach, before it unmounts.
+  act(() => {
+    window.dispatchEvent(new Event('resize'));
+  });
 }
