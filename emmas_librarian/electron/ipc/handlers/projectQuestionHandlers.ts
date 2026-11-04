@@ -1,7 +1,7 @@
 import { IpcChannel } from '../../types';
 import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import { buildAskServices, type AskModels, type AskServices } from '../../services/projectQuestion/askServices';
-import type { AskIndexResult, AskQuestionInput } from '../../../src/types/ask';
+import type { AskIndexResult, AskIndexTarget, AskQuestionInput } from '../../../src/types/ask';
 import { handle, type IpcRegistrar } from './handle';
 
 /**
@@ -13,6 +13,8 @@ import { handle, type IpcRegistrar } from './handle';
 export function registerProjectQuestionHandlers(ipc: IpcRegistrar, db: DatabaseAdapter, models: () => AskModels): void {
   const services = (): AskServices => buildAskServices(db, models());
   const articlesOf = (projectIds: number[]) => db.pdfChunkIndexRepo.projectsArticleIds(projectIds);
+  const articlesIn = (target: AskIndexTarget) =>
+    'articleIds' in target ? target.articleIds : articlesOf(target.projectIds);
   const repo = db.askConversationRepo;
 
   handle(ipc, IpcChannel.ASK_CONVERSATIONS_LIST, () => repo.list());
@@ -23,11 +25,13 @@ export function registerProjectQuestionHandlers(ipc: IpcRegistrar, db: DatabaseA
     services().questions.coverage(articlesOf(projectIds)),
   );
 
+  handle(ipc, IpcChannel.ASK_INDEX_PLAN, (_e, target: AskIndexTarget) => services().indexer.plan(articlesIn(target)));
+
   // Going back and forth on the page must not index the same PDFs twice: a second call joins the first.
   let running: Promise<AskIndexResult> | null = null;
-  handle(ipc, IpcChannel.ASK_INDEX_MISSING, (_e, projectIds: number[]) => {
+  handle(ipc, IpcChannel.ASK_INDEX_MISSING, (_e, target: AskIndexTarget, replaceIndex = false) => {
     running ??= services()
-      .indexer.indexMissing(articlesOf(projectIds))
+      .indexer.indexMissing(articlesIn(target), replaceIndex === true)
       .finally(() => {
         running = null;
       });

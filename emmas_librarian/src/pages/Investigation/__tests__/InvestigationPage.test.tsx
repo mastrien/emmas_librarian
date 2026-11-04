@@ -1,5 +1,5 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   article,
   answer,
@@ -229,7 +229,10 @@ describe('InvestigationPage (#73): a new investigation', () => {
   const start = async (service: ReturnType<typeof investigationService>) => {
     renderInvestigation(service, '/projects/3/investigation/new');
     fireEvent.change(await screen.findByPlaceholderText('Pergunta 1'), { target: { value: 'Qual o desenho?' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Iniciar investigação' }));
+    // The start first asks what indexing would do, so the run only begins after that answer.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Iniciar investigação' }));
+    });
   };
 
   it('explains when no article has a PDF', async () => {
@@ -316,6 +319,92 @@ describe('InvestigationPage (#73): a new investigation', () => {
     expect(await screen.findByRole('alertdialog', { name: 'Limite de Cota Atingido' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Entendi' }));
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+  });
+});
+
+describe('InvestigationPage: the embedding model changed', () => {
+  const plan = (extra = {}) => ({ pending: 1, outdated: 1, sizeChanged: false, othersLosingVectors: 0, ...extra });
+
+  const start = async (service: ReturnType<typeof investigationService>) => {
+    renderInvestigation(service, '/projects/3/investigation/new');
+    fireEvent.change(await screen.findByPlaceholderText('Pergunta 1'), { target: { value: 'Qual o desenho?' } });
+    // The start first asks what indexing would do, so the run only begins after that answer.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Iniciar investigação' }));
+    });
+  };
+
+  it('asks nothing when no PDF is outdated', async () => {
+    const service = investigationService([article(1)], []);
+    service.getAskIndexPlan.mockResolvedValue(plan({ outdated: 0 }));
+    await start(service);
+
+    await waitFor(() => expect(service.massiveExtraction).toHaveBeenCalled());
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(service.indexAskMissing).not.toHaveBeenCalled();
+  });
+
+  it('recalculates only what was picked, then runs, when the person agrees', async () => {
+    const service = investigationService([article(1)], []);
+    service.getAskIndexPlan.mockResolvedValue(plan());
+    await start(service);
+
+    const dialog = await screen.findByRole('dialog', { name: 'Recalcular os PDFs' });
+    expect(dialog).toHaveTextContent('1 PDF precisa ser calculado');
+    expect(dialog).toHaveTextContent('consome tokens');
+    expect(service.massiveExtraction).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Recalcular e investigar' }));
+
+    await waitFor(() => expect(service.massiveExtraction).toHaveBeenCalled());
+    expect(service.indexAskMissing).toHaveBeenCalledWith({ articleIds: [1] }, false);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('with another size, warns about the rest of the library and allows replacing the index', async () => {
+    const service = investigationService([article(1)], []);
+    service.getAskIndexPlan.mockResolvedValue(plan({ sizeChanged: true, othersLosingVectors: 1 }));
+    await start(service);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByRole('note')).toHaveTextContent('do outro PDF');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Recalcular e investigar' }));
+
+    await waitFor(() => expect(service.indexAskMissing).toHaveBeenCalledWith({ articleIds: [1] }, true));
+  });
+
+  it('runs nothing and removes nothing when the person closes the question', async () => {
+    const service = investigationService([article(1)], []);
+    service.getAskIndexPlan.mockResolvedValue(plan({ sizeChanged: true, othersLosingVectors: 1 }));
+    await start(service);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Fechar sem recalcular' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(service.indexAskMissing).not.toHaveBeenCalled();
+    expect(service.massiveExtraction).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Iniciar investigação' })).toBeEnabled();
+  });
+
+  it('still runs when recalculating fails, each article saying why', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const service = investigationService([article(1)], []);
+    service.getAskIndexPlan.mockResolvedValue(plan());
+    service.indexAskMissing.mockRejectedValue(new Error('provedor fora do ar'));
+    await start(service);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Recalcular e investigar' }));
+
+    await waitFor(() => expect(service.massiveExtraction).toHaveBeenCalled());
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('provedor fora do ar'));
+    log.mockRestore();
+  });
+
+  it('still runs when the plan cannot be made, each article saying why', async () => {
+    const service = investigationService([article(1)], []);
+    service.getAskIndexPlan.mockRejectedValue(new Error('sem chave'));
+    await start(service);
+
+    await waitFor(() => expect(service.massiveExtraction).toHaveBeenCalled());
   });
 });
 

@@ -112,6 +112,145 @@ describe('ProjectIndexer (#53)', () => {
     expect(store.indexedDimension()).toBe(2);
   });
 
+  describe('after the embedding model changes', () => {
+    const OLD = 'openai/antigo';
+    const seed = (articleId: number, text: string, model: string | null) =>
+      store.indexArticleChunks(articleId, [chunkOf(text)], [[0, 0]], model);
+
+    it('recalculates the PDFs of another model and of an unknown one, replacing what they had', async () => {
+      const other = add('Outro', 'a.pdf');
+      const older = add('Antigo', 'b.pdf');
+      seed(other, 'velho a', OLD);
+      seed(older, 'velho b', null);
+
+      const { coverage } = await indexer().indexMissing([other, older]);
+
+      expect(coverage.outdated).toEqual([]);
+      expect(coverage.indexed.map((article) => article.id)).toEqual([other, older]);
+      expect(chunkRows()).toEqual([
+        { t: 'texto a', m: MODEL },
+        { t: 'texto b', m: MODEL },
+      ]);
+    });
+
+    it('keeps the old chunks of a PDF that fails, and it stays pending', async () => {
+      const gone = add('Sumiu', 'sumiu.pdf');
+      seed(gone, 'velho', OLD);
+
+      const { coverage, failed } = await indexer().indexMissing([gone]);
+
+      expect(failed).toHaveLength(1);
+      expect(coverage.outdated.map((article) => article.id)).toEqual([gone]);
+      expect(chunkRows()).toEqual([{ t: 'velho', m: OLD }]);
+    });
+
+    it('on a retry pays only for what is still pending', async () => {
+      const a = add('A', 'a.pdf');
+      const gone = add('Sumiu', 'sumiu.pdf');
+      seed(a, 'velho a', OLD);
+      seed(gone, 'velho b', OLD);
+      const embedder = new FakeEmbedder();
+      await indexer(embedder).indexMissing([a, gone]);
+      pdfs.files['sumiu.pdf'] = ['texto b'];
+      embedder.batches = [];
+
+      await indexer(embedder).indexMissing([a, gone]);
+
+      expect(embedder.batches).toEqual([['texto b']]);
+    });
+
+    it('leaves the PDFs outside the request as they were when the size is the same', async () => {
+      const mine = add('Meu', 'a.pdf');
+      const other = add('Outro', 'b.pdf');
+      seed(mine, 'velho a', OLD);
+      seed(other, 'velho b', OLD);
+
+      await indexer().indexMissing([mine]);
+
+      expect(chunkRows()).toEqual([
+        { t: 'velho b', m: OLD },
+        { t: 'texto a', m: MODEL },
+      ]);
+    });
+
+    it('with another size, removes the rest of the library only when told to', async () => {
+      const mine = add('Meu', 'a.pdf');
+      const other = add('Outro', 'b.pdf');
+      seed(mine, 'velho a', OLD);
+      seed(other, 'velho b', OLD);
+      const larger = () => indexer(new FakeEmbedder([0, 0, 0]));
+
+      await expect(larger().indexMissing([mine])).rejects.toThrow('2 dimensões');
+      expect(chunkRows()).toHaveLength(2);
+
+      await larger().indexMissing([mine], true);
+
+      expect(chunkRows()).toEqual([{ t: 'texto a', m: MODEL }]);
+      expect(store.indexedDimension()).toBe(3);
+    });
+
+    it('with another size, removes nothing when the provider is down', async () => {
+      const mine = add('Meu', 'a.pdf');
+      seed(mine, 'velho a', OLD);
+      const down = new FakeEmbedder([0, 0, 0]);
+      down.failOn = 'texto a';
+
+      const { failed } = await indexer(down).indexMissing([mine], true);
+
+      expect(failed).toHaveLength(1);
+      expect(chunkRows()).toEqual([{ t: 'velho a', m: OLD }]);
+      expect(store.indexedDimension()).toBe(2);
+    });
+
+    describe('the plan', () => {
+      it('counts what is pending, and spends nothing when nothing is', async () => {
+        const embedder = new FakeEmbedder();
+        const current = add('Atual', 'a.pdf');
+        seed(current, 'atual', MODEL);
+
+        const plan = await indexer(embedder).plan([current]);
+
+        expect(plan).toEqual({ pending: 0, outdated: 0, sizeChanged: false, othersLosingVectors: 0 });
+        expect(embedder.calls).toEqual([]);
+      });
+
+      it('says the others keep their vectors when the size is the same', async () => {
+        const mine = add('Meu', 'a.pdf');
+        const missing = add('Falta', 'b.pdf');
+        const other = add('Outro', 'c.pdf');
+        seed(mine, 'velho', OLD);
+        seed(other, 'velho', OLD);
+
+        expect(await indexer().plan([mine, missing])).toEqual({
+          pending: 2,
+          outdated: 1,
+          sizeChanged: false,
+          othersLosingVectors: 0,
+        });
+      });
+
+      it('names how many others lose their vectors when the size changes, changing nothing', async () => {
+        const mine = add('Meu', 'a.pdf');
+        const other = add('Outro', 'c.pdf');
+        seed(mine, 'velho', OLD);
+        seed(other, 'velho', OLD);
+
+        const plan = await indexer(new FakeEmbedder([0, 0, 0])).plan([mine]);
+
+        expect(plan).toEqual({ pending: 1, outdated: 1, sizeChanged: true, othersLosingVectors: 1 });
+        expect(chunkRows()).toHaveLength(2);
+      });
+
+      it('asks the model nothing before the first indexing', async () => {
+        const embedder = new FakeEmbedder();
+        const a = add('A', 'a.pdf');
+
+        expect((await indexer(embedder).plan([a])).sizeChanged).toBe(false);
+        expect(embedder.calls).toEqual([]);
+      });
+    });
+  });
+
   it('spends nothing when nothing is missing', async () => {
     const embedder = new FakeEmbedder();
     const none = add('Sem PDF', null);

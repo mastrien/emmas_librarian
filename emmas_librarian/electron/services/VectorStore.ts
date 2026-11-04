@@ -38,7 +38,12 @@ const toSimilarChunk = (row: SimilarChunkRow): SimilarChunk => ({
 export class VectorStore {
   constructor(private readonly db: Database.Database) {}
 
-  /** Garante que a tabela vec0 exista com a dimensão correta. Retorna true se teve que apagar o cache. */
+  /**
+   * Creates the vector table at this size, clearing the whole index if it holds another size. Only for when the person
+   * asked for it (recalculating with a model of another size): changing a setting or running a search never gets here.
+   *
+   * @example if (store.ensureDimensionAndClearIfMismatched(768)) console.log('índice refeito');
+   */
   ensureDimensionAndClearIfMismatched(dim: number): boolean {
     const tableInfo = this.db
       .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='pdf_chunk_embeddings'")
@@ -57,7 +62,25 @@ export class VectorStore {
     return false;
   }
 
-  /** Indexa chunks de um artigo (chamado na importação). */
+  /**
+   * Makes sure vectors of this size can go in, and refuses when they cannot, keeping the index. A table in the old
+   * format is replaced: it cannot take new rows, and what it holds has no known model, so it would be recalculated.
+   *
+   * @example store.ensureVectorTable(1536);
+   */
+  ensureVectorTable(dim: number): void {
+    const indexed = this.indexedDimension();
+    const oldFormat = this.vectorTableSql()?.toLowerCase().includes('id integer primary key');
+    if (indexed === null || oldFormat) {
+      this.ensureDimensionAndClearIfMismatched(dim);
+      return;
+    }
+    if (indexed !== dim) {
+      throw new Error(`The vector table holds ${indexed} dimensions, got ${dim}. Expected the same size.`);
+    }
+  }
+
+  /** Indexa chunks de um artigo, substituindo os que ele já tenha: ou fica tudo do modelo novo, ou nada muda. */
   indexArticleChunks(
     articleId: number,
     chunks: PdfTextChunk[],
@@ -69,7 +92,7 @@ export class VectorStore {
     }
 
     if (embeddings.length === 0) return;
-    this.ensureDimensionAndClearIfMismatched(embeddings[0].length);
+    this.ensureVectorTable(embeddings[0].length);
 
     const insertChunkStmt = this.db.prepare(`
       INSERT INTO pdf_chunks (article_id, chunk_index, text_content, page_number, bbox_x, bbox_y, bbox_w, bbox_h, token_count, embedding_model)
@@ -82,6 +105,7 @@ export class VectorStore {
     `);
 
     const transaction = this.db.transaction(() => {
+      this.removeArticleChunks(articleId);
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
         const embedding = embeddings[i];
@@ -133,11 +157,15 @@ export class VectorStore {
    * @example store.indexedDimension() // 1536
    */
   indexedDimension(): number | null {
+    const size = this.vectorTableSql()?.match(/float\[(\d+)\]/);
+    return size ? Number(size[1]) : null;
+  }
+
+  private vectorTableSql(): string | undefined {
     const table = this.db
       .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='pdf_chunk_embeddings'")
       .get() as { sql: string } | undefined;
-    const size = table?.sql.match(/float\[(\d+)\]/);
-    return size ? Number(size[1]) : null;
+    return table?.sql;
   }
 
   private nearest(queryEmbedding: number[], topK: number, articleIds: number[]): SimilarChunk[] {

@@ -179,6 +179,42 @@ describe('VectorStore', () => {
     expect(db.prepare('SELECT embedding_model AS m FROM pdf_chunks').get()).toEqual({ m: 'openai/x' });
   });
 
+  it('replaces what the article had, leaving the others', () => {
+    store.indexArticleChunks(first, [chunkAt('velho')], [[0, 0]], 'openai/velho');
+    store.indexArticleChunks(second, [chunkAt('outro')], [[0, 0]], 'openai/velho');
+
+    store.indexArticleChunks(first, [chunkAt('novo')], [[1, 1]], 'openai/novo');
+
+    expect(db.prepare('SELECT text_content AS t, embedding_model AS m FROM pdf_chunks ORDER BY t').all()).toEqual([
+      { t: 'novo', m: 'openai/novo' },
+      { t: 'outro', m: 'openai/velho' },
+    ]);
+    expect(rows('pdf_chunk_embeddings')).toBe(2);
+  });
+
+  it('refuses vectors of another size, keeping the whole index', () => {
+    store.indexArticleChunks(first, [chunkAt('a')], [[0, 0]], 'openai/x');
+
+    expect(() => store.indexArticleChunks(second, [chunkAt('b')], [[0, 0, 0]], 'openai/y')).toThrow(
+      'holds 2 dimensions, got 3',
+    );
+
+    expect(rows('pdf_chunks')).toBe(1);
+    expect(store.indexedDimension()).toBe(2);
+  });
+
+  it('replaces a vector table in the old format, which cannot take new rows', () => {
+    db.exec('DROP TABLE IF EXISTS pdf_chunk_embeddings');
+    db.exec('CREATE VIRTUAL TABLE pdf_chunk_embeddings USING vec0(id integer primary key, embedding float[2])');
+
+    store.ensureVectorTable(2);
+
+    const table = db.prepare("SELECT sql FROM sqlite_master WHERE name = 'pdf_chunk_embeddings'").get() as {
+      sql: string;
+    };
+    expect(table.sql.toLowerCase()).not.toContain('id integer primary key');
+  });
+
   it('removes the chunks of an article and leaves the others', () => {
     indexRow(first, 'a', 2, 0);
     indexRow(second, 'b', 1, 0);

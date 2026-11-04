@@ -45,21 +45,50 @@ describe('PdfChunkIndexRepository (#53), on real SQLite', () => {
     ]);
     expect(ids(coverage.withoutIndex)).toEqual([notYet]);
     expect(ids(coverage.withoutPdf)).toEqual([noPdf]);
-    expect(coverage.otherModel).toEqual([]);
-    expect(coverage.unknownModel).toEqual([]);
+    expect(coverage.outdated).toEqual([]);
   });
 
-  it('tells a different model from one the app did not record', () => {
+  it('counts as readable only what the current model indexed', () => {
+    const current = addArticle('Atual', 'c.pdf');
     const other = addArticle('Outro', 'a.pdf');
-    const older = addArticle('Antigo', 'b.pdf');
+    const older = addArticle('Antigo, sem modelo registrado', 'b.pdf');
+    indexWith(current, MODEL);
     indexWith(other, 'ollama/outro');
     indexWith(older, null);
 
-    const coverage = repo().coverage([other, older], MODEL);
+    const coverage = repo().coverage([current, other, older], MODEL);
 
-    expect(ids(coverage.otherModel)).toEqual([other]);
-    expect(ids(coverage.unknownModel)).toEqual([older]);
-    expect(ids(coverage.indexed)).toEqual([other, older]);
+    expect(ids(coverage.indexed)).toEqual([current]);
+    expect(ids(coverage.outdated)).toEqual([other, older]);
+    expect(coverage.withoutIndex).toEqual([]);
+  });
+
+  it('keeps a PDF of another model whose file is gone apart, since it cannot be recalculated', () => {
+    const gone = addArticle('Sem arquivo');
+    indexWith(gone, 'ollama/outro');
+
+    const coverage = repo().coverage([gone], MODEL);
+
+    expect(ids(coverage.withoutPdf)).toEqual([gone]);
+    expect(coverage.outdated).toEqual([]);
+  });
+
+  it('still reads a PDF of the current model whose file is gone: its text is in the index', () => {
+    const gone = addArticle('Sem arquivo');
+    indexWith(gone, MODEL);
+
+    expect(ids(repo().coverage([gone], MODEL).indexed)).toEqual([gone]);
+  });
+
+  it('counts the other articles that have vectors', () => {
+    const mine = addArticle('Meu', 'a.pdf');
+    const other = addArticle('Outro', 'b.pdf');
+    addArticle('Sem índice', 'c.pdf');
+    indexWith(mine, MODEL);
+    indexWith(other, null);
+
+    expect(repo().indexedArticlesOutside([mine])).toBe(1);
+    expect(repo().indexedArticlesOutside([mine, other])).toBe(0);
   });
 
   it('leaves out what is in the trash', () => {

@@ -43,7 +43,9 @@ import type {
   MonitorOverview,
   AskConversation,
   AskConversationSummary,
+  AskIndexPlan,
   AskIndexResult,
+  AskIndexTarget,
   AskQuestionInput,
   ProjectIndexCoverage,
   SearchMonitor,
@@ -322,8 +324,10 @@ export const projectService: IProjectService = {
   getAskCoverage: (projectIds: number[]): Promise<ProjectIndexCoverage> =>
     safeInvoke(IpcChannel.ASK_COVERAGE, projectIds),
 
-  indexAskMissing: (projectIds: number[]): Promise<AskIndexResult> =>
-    safeInvoke(IpcChannel.ASK_INDEX_MISSING, projectIds),
+  getAskIndexPlan: (target: AskIndexTarget): Promise<AskIndexPlan> => safeInvoke(IpcChannel.ASK_INDEX_PLAN, target),
+
+  indexAskMissing: (target: AskIndexTarget, replaceIndex = false): Promise<AskIndexResult> =>
+    safeInvoke(IpcChannel.ASK_INDEX_MISSING, target, replaceIndex),
 
   async massiveExtraction(
     articleId: number,

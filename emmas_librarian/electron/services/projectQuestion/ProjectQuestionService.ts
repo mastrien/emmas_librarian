@@ -57,8 +57,8 @@ export function withoutCopies(chunks: SimilarChunk[]): SimilarChunk[] {
 }
 
 /**
- * Refuses vectors of a size the index cannot compare with. The store's own check clears the index when sizes differ,
- * which neither a question nor indexing one more PDF may do: changing the model would erase every article's chunks.
+ * Refuses vectors of a size the index cannot compare with. Only recalculating, which the person asks for, may clear the
+ * index: neither a search nor changing the model in the settings can erase what was paid for.
  *
  * @example assertSameVectorSize(store.indexedDimension(), vector.length);
  */
@@ -67,7 +67,22 @@ export function assertSameVectorSize(indexed: number | null, size: number): void
   throw new AppError(
     'ERR_EMBEDDING_DIMENSION',
     'USER_ERROR',
-    `Os PDFs foram indexados com vetores de ${indexed} dimensões e o modelo de embeddings atual gera ${size}. Volte ao modelo anterior para perguntar; o índice não foi alterado.`,
+    `Os PDFs foram indexados com vetores de ${indexed} dimensões e o modelo de embeddings atual gera ${size}. Recalcule os PDFs ou volte ao modelo anterior; o índice não foi alterado.`,
+  );
+}
+
+/**
+ * Refuses to search a PDF indexed by another model: the vectors fit, but the nearest ones would mean nothing, with no
+ * error to show for it. `model` is null for what was indexed before the app recorded it.
+ *
+ * @example assertIndexedWith('openai/antigo', 'openai/novo'); // throws
+ */
+export function assertIndexedWith(model: string | null, current: string): void {
+  if (model === current) return;
+  throw new AppError(
+    'ERR_EMBEDDING_MODEL',
+    'USER_ERROR',
+    `Este PDF foi indexado com outro modelo de embeddings (${model ?? 'não registrado'}) e o atual é ${current}. Recalcule os PDFs para usá-lo; o índice não foi alterado.`,
   );
 }
 

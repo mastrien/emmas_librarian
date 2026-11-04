@@ -22,6 +22,11 @@ vi.mock('../../database/AIModelConfigRepository', () => ({
   })),
 }));
 
+const { mockClearIndex, mockIndexedDimension } = vi.hoisted(() => ({
+  mockClearIndex: vi.fn(),
+  mockIndexedDimension: vi.fn().mockReturnValue(null),
+}));
+
 vi.mock('../VectorStore', () => ({
   VectorStore: vi.fn().mockImplementation(() => ({
     indexArticleChunks: vi.fn(),
@@ -29,7 +34,9 @@ vi.mock('../VectorStore', () => ({
       { text: 'Mocked context chunk 1', page: 1, bbox: { x: 0, y: 0, w: 100, h: 10 } },
       { text: 'Mocked context chunk 2', page: 2, bbox: { x: 0, y: 0, w: 100, h: 10 } },
     ]),
-    ensureDimensionAndClearIfMismatched: vi.fn(),
+    ensureDimensionAndClearIfMismatched: mockClearIndex,
+    ensureVectorTable: vi.fn(),
+    indexedDimension: mockIndexedDimension,
   })),
 }));
 
@@ -66,6 +73,9 @@ vi.mock('fs', () => {
   };
 });
 
+// What the mocked configuration below names.
+const CURRENT_MODEL = 'openai/gpt-4o-mini';
+
 describe('AIService', () => {
   let dbMock: any;
   let aiService: AIService;
@@ -85,7 +95,7 @@ describe('AIService', () => {
       updateArticleAiSummary: vi.fn(),
       getDB: vi.fn().mockReturnValue({
         prepare: vi.fn().mockReturnValue({
-          get: vi.fn().mockReturnValue({ count: 1 }),
+          get: vi.fn().mockReturnValue({ count: 1, model: CURRENT_MODEL }),
         }),
       }),
     } as unknown as DatabaseAdapter;
@@ -192,6 +202,32 @@ describe('AIService', () => {
       'context chunk 2',
       'Mocked context chunk 1',
     ]);
+  });
+
+  describe('when the embedding model changed', () => {
+    const indexedBy = (model: string | null) =>
+      dbMock.getDB.mockReturnValue({ prepare: vi.fn().mockReturnValue({ get: () => ({ count: 1, model }) }) });
+
+    // It used to clear the index of the whole library, with no word to anyone.
+    it('refuses a model of another size and never clears the index', async () => {
+      mockIndexedDimension.mockReturnValueOnce(1536);
+
+      await expect(aiService.massiveExtraction(1, 'fake/path.pdf', ['Q1?'])).rejects.toThrow('1536 dimensões');
+
+      expect(mockClearIndex).not.toHaveBeenCalled();
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['another model', 'ollama/outro', '(ollama/outro)'],
+      ['a model the app did not record', null, '(não registrado)'],
+    ])('refuses a PDF indexed by %s, spending nothing on the answer', async (_case, model, shown) => {
+      indexedBy(model);
+
+      await expect(aiService.massiveExtraction(1, 'fake/path.pdf', ['Q1?'])).rejects.toThrow(shown);
+
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
   });
 
   // Regression: the local embedding model was cached inside app.asar; AIService must pass the models folder on.

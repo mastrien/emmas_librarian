@@ -207,6 +207,7 @@ export enum IpcChannel {
   ASK_SEND = 'ask:send',
   ASK_COVERAGE = 'ask:coverage',
   ASK_INDEX_MISSING = 'ask:indexMissing',
+  ASK_INDEX_PLAN = 'ask:indexPlan',
   AI_MODEL_CONFIG_GET_ALL = 'aiModelConfig:getAll',
   AI_MODEL_CONFIG_UPDATE = 'aiModelConfig:update',
   AI_MODEL_CONFIG_RESTORE = 'aiModelConfig:restore',
