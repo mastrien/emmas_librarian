@@ -21,6 +21,7 @@ const article = (overrides: Partial<Article>): Article => ({
 const NONE: ArticleFilterCriteria = {
   searchTerm: '',
   onlyWithPdf: false,
+  onlyWithoutPdf: false,
   onlyOpenAccess: false,
   statusFilter: 'new',
   databases: [],
@@ -100,5 +101,22 @@ describe('activeFilters and withoutFilter', () => {
 
   it('clears every filter but keeps the search text', () => {
     expect(clearedFilters(criteria)).toEqual({ ...NONE, searchTerm: 'radar' });
+  });
+});
+
+describe('"Sem PDF" (validation of epic #44)', () => {
+  const withPdf = { id: 1, title: 'Com', local_file_path: 'a.pdf', status: 'new' } as Article;
+  const without = { id: 2, title: 'Sem', local_file_path: null, status: 'new' } as unknown as Article;
+
+  it('keeps only the articles still without a PDF', () => {
+    expect([withPdf, without].filter((a) => matchesFilters(a, { ...NONE, onlyWithoutPdf: true }))).toEqual([without]);
+  });
+
+  it('shows as a chip that can be removed, and goes with "Limpar filtros"', () => {
+    const on = { ...NONE, onlyWithoutPdf: true };
+
+    expect(activeFilters(on)).toContainEqual({ key: 'noPdf', label: 'Sem PDF' });
+    expect(withoutFilter(on, 'noPdf').onlyWithoutPdf).toBe(false);
+    expect(clearedFilters(on).onlyWithoutPdf).toBe(false);
   });
 });

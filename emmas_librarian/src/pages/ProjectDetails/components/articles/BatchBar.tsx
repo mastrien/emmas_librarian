@@ -3,7 +3,8 @@ import { Archive, CheckCircle, CopyPlus, Globe, Network, X } from 'lucide-react'
 
 interface BatchBarProps {
   selectedCount: number;
-  allOnPageSelected: boolean;
+  /** Whether every article of the filtered list, on every page, is selected. */
+  allSelected: boolean;
   onToggleAll: () => void;
   onMarkRead: () => void;
   onArchive: () => void;
@@ -38,11 +39,11 @@ const DownloadProgress: React.FC<{ progress: { done: number; total: number }; on
  * Takes the place of the result line while multi-select is on: how many articles are selected and
  * what can be done to all of them at once.
  *
- * @example {selecting && <BatchBar selectedCount={3} allOnPageSelected={false} ... />}
+ * @example {selecting && <BatchBar selectedCount={3} allSelected={false} ... />}
  */
 export const BatchBar: React.FC<BatchBarProps> = ({
   selectedCount,
-  allOnPageSelected,
+  allSelected,
   onToggleAll,
   onMarkRead,
   onArchive,
@@ -61,7 +62,7 @@ export const BatchBar: React.FC<BatchBarProps> = ({
         {none ? 'Nenhum selecionado' : `${selectedCount} ${selectedCount === 1 ? 'selecionado' : 'selecionados'}`}
       </span>
       <button type="button" onClick={onToggleAll}>
-        {allOnPageSelected ? 'Desmarcar todos' : 'Selecionar todos'}
+        {allSelected ? 'Desmarcar todos' : 'Selecionar todos'}
       </button>
       <button type="button" onClick={onMarkRead} disabled={none}>
         <CheckCircle size={15} /> Marcar como lido

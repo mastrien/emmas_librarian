@@ -103,7 +103,9 @@ const PaginatedArticles: React.FC<ProjectArticlesTabProps> = (props) => {
   const { activeArticles, paginatedArticles, criteria, applyCriteria, currentPage, totalPages, setCurrentPage } =
     filtering;
   const selection = useArticleSelection(activeArticles);
-  const allOnPageSelected = paginatedArticles.length > 0 && paginatedArticles.every((a) => selection.isSelected(a.id));
+  // Every article the filters keep, on every page: selecting a page at a time was the slow part of a batch (validation
+  // of epic #44).
+  const allSelected = activeArticles.length > 0 && activeArticles.every((a) => selection.isSelected(a.id));
   const selectedIds = selection.selected.map((a) => a.id);
   // "N de M": M is what the current status filter holds before any other filter or search.
   const total = filtering.countFor({
@@ -117,8 +119,8 @@ const PaginatedArticles: React.FC<ProjectArticlesTabProps> = (props) => {
       {selection.selecting ? (
         <BatchBar
           selectedCount={selection.selected.length}
-          allOnPageSelected={allOnPageSelected}
-          onToggleAll={() => selection.setMany(paginatedArticles, !allOnPageSelected)}
+          allSelected={allSelected}
+          onToggleAll={() => selection.setMany(activeArticles, !allSelected)}
           onMarkRead={() => props.onStatusChangeMany(selectedIds, 'read')}
           onArchive={() => modals.setArchivingIds(selectedIds)}
           onExploreCitations={() => modals.setCitationSeedArticles(selection.selected)}

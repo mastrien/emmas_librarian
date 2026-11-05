@@ -74,8 +74,16 @@ const AvailabilityGroup: React.FC<{ criteria: ArticleFilterCriteria; apply: Appl
       type="checkbox"
       label="Com PDF"
       checked={criteria.onlyWithPdf}
-      count={countFor({ onlyWithPdf: true })}
-      onChange={() => apply({ onlyWithPdf: !criteria.onlyWithPdf })}
+      count={countFor({ onlyWithPdf: true, onlyWithoutPdf: false })}
+      onChange={() => apply({ onlyWithPdf: !criteria.onlyWithPdf, onlyWithoutPdf: false })}
+    />
+    {/* The two PDF filters exclude each other: both on would show nothing. */}
+    <FilterOption
+      type="checkbox"
+      label="Sem PDF"
+      checked={criteria.onlyWithoutPdf}
+      count={countFor({ onlyWithoutPdf: true, onlyWithPdf: false })}
+      onChange={() => apply({ onlyWithoutPdf: !criteria.onlyWithoutPdf, onlyWithPdf: false })}
     />
     <FilterOption
       type="checkbox"

@@ -7,6 +7,8 @@ export type StatusFilter = 'new' | 'read' | 'archived' | 'all';
 export interface ArticleFilterCriteria {
   searchTerm: string;
   onlyWithPdf: boolean;
+  /** The other side of "Com PDF", for finding what still lacks one (validation of epic #44). */
+  onlyWithoutPdf: boolean;
   onlyOpenAccess: boolean;
   statusFilter: StatusFilter;
   databases: string[];
@@ -15,7 +17,7 @@ export interface ArticleFilterCriteria {
 }
 
 /** The key of one removable filter chip: a field, or "database:<name>" for one selected base. */
-export type FilterKey = 'status' | 'pdf' | 'oa' | 'docType' | 'keyword' | `database:${string}`;
+export type FilterKey = 'status' | 'pdf' | 'noPdf' | 'oa' | 'docType' | 'keyword' | `database:${string}`;
 
 export interface ActiveFilter {
   key: FilterKey;
@@ -62,6 +64,7 @@ export function matchesFilters(article: Article, c: ArticleFilterCriteria): bool
   return (
     matchesText(article, c.searchTerm) &&
     (!c.onlyWithPdf || !!article.local_file_path) &&
+    (!c.onlyWithoutPdf || !article.local_file_path) &&
     (!c.onlyOpenAccess || article.is_oa === 1) &&
     matchesStatus(article, c.statusFilter) &&
     (c.databases.length === 0 ||
@@ -98,6 +101,7 @@ export function activeFilters(
   const filters: ActiveFilter[] = [];
   if (c.statusFilter !== 'new') filters.push({ key: 'status', label: STATUS_LABELS[c.statusFilter] });
   if (c.onlyWithPdf) filters.push({ key: 'pdf', label: 'Com PDF' });
+  if (c.onlyWithoutPdf) filters.push({ key: 'noPdf', label: 'Sem PDF' });
   if (c.onlyOpenAccess) filters.push({ key: 'oa', label: 'Acesso aberto' });
   c.databases.forEach((db) => filters.push({ key: `database:${db}`, label: db }));
   if (c.docType) filters.push({ key: 'docType', label: docTypeLabel(c.docType) });
@@ -113,6 +117,7 @@ export function activeFilters(
 export function withoutFilter(c: ArticleFilterCriteria, key: FilterKey): ArticleFilterCriteria {
   if (key === 'status') return { ...c, statusFilter: 'new' };
   if (key === 'pdf') return { ...c, onlyWithPdf: false };
+  if (key === 'noPdf') return { ...c, onlyWithoutPdf: false };
   if (key === 'oa') return { ...c, onlyOpenAccess: false };
   if (key === 'docType') return { ...c, docType: '' };
   if (key === 'keyword') return { ...c, keyword: '' };
@@ -125,6 +130,7 @@ export function clearedFilters(c: ArticleFilterCriteria): ArticleFilterCriteria 
   return {
     ...c,
     onlyWithPdf: false,
+    onlyWithoutPdf: false,
     onlyOpenAccess: false,
     statusFilter: 'new',
     databases: [],
