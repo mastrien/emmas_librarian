@@ -21,6 +21,8 @@ export interface ProjectIndexCoverage {
   withoutIndex: ProjectIndexArticle[];
   withoutPdf: ProjectIndexArticle[];
   outdated: ProjectIndexArticle[];
+  /** The model most of `outdated` came from, when known: going back to it spares recalculating them. */
+  previousModel: string | null;
 }
 
 /** Which articles an indexing is about: the question page thinks in projects, an investigation in articles. */
@@ -35,6 +37,8 @@ export interface AskIndexPlan {
   outdated: number;
   sizeChanged: boolean;
   othersLosingVectors: number;
+  /** The model the vectors at stake came from, when known: going back to it spares recalculating them. */
+  previousModel: string | null;
 }
 
 /** A chunk an answer cites. Its text is kept with the answer, so it stays readable after the article is gone. */

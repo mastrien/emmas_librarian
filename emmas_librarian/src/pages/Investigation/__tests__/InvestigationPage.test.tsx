@@ -323,7 +323,14 @@ describe('InvestigationPage (#73): a new investigation', () => {
 });
 
 describe('InvestigationPage: the embedding model changed', () => {
-  const plan = (extra = {}) => ({ pending: 1, outdated: 1, sizeChanged: false, othersLosingVectors: 0, ...extra });
+  const plan = (extra = {}) => ({
+    pending: 1,
+    outdated: 1,
+    sizeChanged: false,
+    othersLosingVectors: 0,
+    previousModel: null,
+    ...extra,
+  });
 
   const start = async (service: ReturnType<typeof investigationService>) => {
     renderInvestigation(service, '/projects/3/investigation/new');
@@ -342,6 +349,14 @@ describe('InvestigationPage: the embedding model changed', () => {
     await waitFor(() => expect(service.massiveExtraction).toHaveBeenCalled());
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(service.indexAskMissing).not.toHaveBeenCalled();
+  });
+
+  it('says going back to the previous model spares recalculating', async () => {
+    const service = investigationService([article(1)], []);
+    service.getAskIndexPlan.mockResolvedValue(plan({ previousModel: 'ollama/nomic-embed-text' }));
+    await start(service);
+
+    expect(await screen.findByTestId('previous-model')).toHaveTextContent('nomic-embed-text (Ollama)');
   });
 
   it('recalculates only what was picked, then runs, when the person agrees', async () => {

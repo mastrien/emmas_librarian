@@ -43,7 +43,8 @@ export class ProjectIndexer {
   async plan(articleIds: number[]): Promise<AskIndexPlan> {
     const coverage = this.index.coverage(articleIds, this.modelId);
     const pending = pendingOf(coverage);
-    const same = { pending: pending.length, outdated: coverage.outdated.length };
+    const previousModel = coverage.previousModel ?? this.index.mostUsedModelBesides(this.modelId);
+    const same = { pending: pending.length, outdated: coverage.outdated.length, previousModel };
     if (pending.length === 0 || !(await this.sizeChanged())) {
       return { ...same, sizeChanged: false, othersLosingVectors: 0 };
     }

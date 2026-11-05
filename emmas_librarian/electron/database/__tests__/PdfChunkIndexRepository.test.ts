@@ -63,6 +63,39 @@ describe('PdfChunkIndexRepository (#53), on real SQLite', () => {
     expect(coverage.withoutIndex).toEqual([]);
   });
 
+  it('names the model most outdated PDFs came from, leaving out those of no known model', () => {
+    const [a, b, c, d] = ['a', 'b', 'c', 'd'].map((name) => addArticle(name, `${name}.pdf`));
+    indexWith(a, 'ollama/velho');
+    indexWith(b, 'ollama/velho');
+    indexWith(c, 'gemini/outro');
+    indexWith(d, null);
+
+    expect(repo().coverage([a, b, c, d], MODEL).previousModel).toBe('ollama/velho');
+    expect(repo().coverage([d], MODEL).previousModel).toBeNull();
+  });
+
+  it('names no previous model when nothing is outdated', () => {
+    const current = addArticle('Atual', 'a.pdf');
+    indexWith(current, MODEL);
+
+    expect(repo().coverage([current], MODEL).previousModel).toBeNull();
+  });
+
+  it('finds the model most of the library used, besides the current one', () => {
+    const [a, b, c, d] = ['a', 'b', 'c', 'd'].map((name) => addArticle(name, `${name}.pdf`));
+    indexWith(a, MODEL);
+    indexWith(b, 'ollama/velho');
+    indexWith(c, 'ollama/velho');
+    indexWith(d, null);
+
+    expect(repo().mostUsedModelBesides(MODEL)).toBe('ollama/velho');
+    expect(repo().mostUsedModelBesides('ollama/velho')).toBe(MODEL);
+  });
+
+  it('finds no model in an empty library', () => {
+    expect(repo().mostUsedModelBesides(MODEL)).toBeNull();
+  });
+
   it('keeps a PDF of another model whose file is gone apart, since it cannot be recalculated', () => {
     const gone = addArticle('Sem arquivo');
     indexWith(gone, 'ollama/outro');

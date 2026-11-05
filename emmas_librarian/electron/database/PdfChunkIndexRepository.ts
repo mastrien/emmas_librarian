@@ -24,6 +24,13 @@ const toArticle = ({ id, title, authors, year, local_file_path }: CoverageRow): 
   pdfPath: local_file_path,
 });
 
+/** The value most rows share; the first of a tie, in the order given. */
+function mostCommon(models: string[]): string | null {
+  const counts = new Map<string, number>();
+  for (const model of models) counts.set(model, (counts.get(model) ?? 0) + 1);
+  return [...counts].reduce<[string | null, number]>((best, now) => (now[1] > best[1] ? now : best), [null, 0])[0];
+}
+
 /**
  * Which articles have their PDF indexed for semantic search, and with which embedding model (#53).
  *
@@ -53,13 +60,32 @@ export class PdfChunkIndexRepository {
     const isCurrent = (row: CoverageRow) => row.chunks > 0 && row.embedding_model === currentModel;
     const left = rows.filter((row) => !isCurrent(row));
     const withFile = left.filter((row) => row.local_file_path);
+    const outdated = withFile.filter((row) => row.chunks > 0);
     return {
       total: rows.length,
       indexed: rows.filter(isCurrent).map(toArticle),
       withoutIndex: withFile.filter((row) => row.chunks === 0).map(toArticle),
       withoutPdf: left.filter((row) => !row.local_file_path).map(toArticle),
-      outdated: withFile.filter((row) => row.chunks > 0).map(toArticle),
+      outdated: outdated.map(toArticle),
+      previousModel: mostCommon(outdated.flatMap((row) => row.embedding_model ?? [])),
     };
+  }
+
+  /**
+   * The model most of the library was indexed with, other than this one and when known. For when the articles asked
+   * about have no vectors, but a model of another size would take out the others'.
+   *
+   * @example repo.mostUsedModelBesides('openai/novo') // 'ollama/nomic-embed-text'
+   */
+  mostUsedModelBesides(currentModel: string): string | null {
+    const row = this.db
+      .prepare(
+        `SELECT embedding_model AS model FROM pdf_chunks
+         WHERE embedding_model IS NOT NULL AND embedding_model != ?
+         GROUP BY embedding_model ORDER BY count(DISTINCT article_id) DESC, embedding_model LIMIT 1`,
+      )
+      .get(currentModel) as { model: string } | undefined;
+    return row?.model ?? null;
   }
 
   /**
