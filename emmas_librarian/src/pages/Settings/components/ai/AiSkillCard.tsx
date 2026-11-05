@@ -1,5 +1,6 @@
 import React from 'react';
 import type { AIModelConfig, AISkill, AIProvider } from '../../../../types';
+import { MULTILINGUAL_LOCAL_MODEL } from '../../aiModelSuggestions';
 import { smallLabelStyle, settingsInputStyle } from './AiSettingsFields';
 
 const SKILL_TITLES: Record<AISkill, string> = {
@@ -87,6 +88,11 @@ export const AiSkillCard: React.FC<AiSkillCardProps> = ({ config, suggestions, o
       </div>
     </div>
     {config.skill === 'embeddings' && <EmbeddingsRecommendation />}
+    {config.skill === 'embeddings' && config.provider === 'local' && config.model_name === MULTILINGUAL_LOCAL_MODEL && (
+      <p role="note" style={{ margin: '0.6rem 0 0', fontSize: '0.82rem', lineHeight: 1.4 }}>
+        Baixa cerca de 118 MB no primeiro uso e lê até 128 tokens de cada texto, então resumos longos são cortados.
+      </p>
+    )}
   </div>
 );
 

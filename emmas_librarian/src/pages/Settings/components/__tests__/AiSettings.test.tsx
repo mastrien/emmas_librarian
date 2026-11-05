@@ -111,6 +111,18 @@ describe('AiSettings per-skill configuration', () => {
     expect(screen.getAllByText(/Aviso de Recomendação/)).toHaveLength(1);
   });
 
+  it('says what the multilingual local model costs, only when it is the one chosen', () => {
+    renderSettings({ aiConfigs: [config('embeddings', 'local', 'paraphrase-multilingual-MiniLM-L12-v2')] });
+
+    expect(screen.getByRole('note')).toHaveTextContent('cerca de 118 MB');
+  });
+
+  it('says nothing of it with the default local model', () => {
+    renderSettings({ aiConfigs: [config('embeddings', 'local', 'all-MiniLM-L6-v2')] });
+
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  });
+
   it('reports provider and model edits for the right skill', () => {
     const props = renderSettings({ aiConfigs: configs });
     const summary = skillCard('📝 Geração de Resumos');
