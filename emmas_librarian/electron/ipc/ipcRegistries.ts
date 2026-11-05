@@ -31,6 +31,7 @@ import { registerCategoryAndInvestigationHandlers } from './handlers/categoryHan
 import { registerAuditHandlers } from './handlers/auditHandlers';
 import { registerScreeningHandlers } from './handlers/screeningHandlers';
 import { registerScreeningSuggestionHandlers } from './handlers/screeningSuggestionHandlers';
+import { registerScreeningOrderHandlers } from './handlers/screeningOrderHandlers';
 import { e2eScreeningModel } from '../services/screening/e2eScreeningModel';
 import { registerPrismaHandlers } from './handlers/prismaHandlers';
 import { registerBackupHandlers, scheduleStartupBackup } from './handlers/backupHandlers';
@@ -111,6 +112,9 @@ function registerLibraryServices(
   registerExportHandlers(ipcMain, db, new ExportService());
   registerAuditHandlers(ipcMain, db);
   registerScreeningHandlers(ipcMain, db);
+  registerScreeningOrderHandlers(ipcMain, db, () =>
+    process.env.E2E_MOCK_AI_ASK === 'true' ? e2eAskModels() : aiService.askModels(),
+  );
   registerScreeningSuggestionHandlers(ipcMain, db, () =>
     process.env.E2E_MOCK_AI_ASK === 'true' ? e2eScreeningModel() : aiService.screeningModel(),
   );

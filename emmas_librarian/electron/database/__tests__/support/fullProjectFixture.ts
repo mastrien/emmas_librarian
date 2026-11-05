@@ -22,7 +22,7 @@ const run = (db: Database.Database, sql: string, ...params: unknown[]) =>
 export function seedFullProject(db: Database.Database, files: { pdfPath: string; docPath: string }): number {
   const project = run(
     db,
-    "INSERT INTO projects (name, writing_pad, last_executed_at, screening_inclusion, screening_exclusion) VALUES ('Tese', 'rascunho', '2026-01-02 10:00:00', 'adultos', 'internados')",
+    "INSERT INTO projects (name, writing_pad, last_executed_at, screening_inclusion, screening_exclusion, screening_predicted_order) VALUES ('Tese', 'rascunho', '2026-01-02 10:00:00', 'adultos', 'internados', 1)",
   );
   const search = run(
     db,

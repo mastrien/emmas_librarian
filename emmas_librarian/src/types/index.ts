@@ -212,6 +212,12 @@ export enum IpcChannel {
   SCREENING_SUGGESTIONS_LIST = 'screening:suggestionsList',
   SCREENING_SUGGEST = 'screening:suggest',
   SCREENING_ENGINE = 'screening:engine',
+  SCREENING_ORDER_GET = 'screening:orderGet',
+  SCREENING_ORDER_SET = 'screening:orderSet',
+  SCREENING_VECTORS_PLAN = 'screening:vectorsPlan',
+  SCREENING_VECTORS_GENERATE = 'screening:vectorsGenerate',
+  SCREENING_RANK = 'screening:rank',
+  SCREENING_SIMULATE = 'screening:simulate',
   ASK_INDEX_PLAN = 'ask:indexPlan',
   AI_MODEL_CONFIG_GET_ALL = 'aiModelConfig:getAll',
   AI_MODEL_CONFIG_UPDATE = 'aiModelConfig:update',
@@ -725,3 +731,4 @@ export interface UpdateStatusResponse {
 
 export * from './ask';
 export * from './screeningSuggestion';
+export * from './screeningOrder';

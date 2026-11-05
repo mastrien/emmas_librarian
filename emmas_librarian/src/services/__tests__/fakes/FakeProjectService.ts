@@ -16,6 +16,10 @@ import type {
   ScreeningCriteria,
   ScreeningEngineInfo,
   ScreeningSuggestion,
+  ArticleVectorPlan,
+  ArticleVectorStep,
+  ScreeningRank,
+  ScreeningSimulation,
   ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
@@ -410,6 +414,37 @@ export class FakeProjectService implements IProjectService {
       ({ id: articleId, article_id: articleId }) as ScreeningSuggestion,
   );
   getScreeningEngine = vi.fn(async (): Promise<ScreeningEngineInfo> => ({ id: 'ollama/llama3.1', provider: 'ollama' }));
+
+  isScreeningOrderOn = vi.fn(async (_projectId: number): Promise<boolean> => false);
+  setScreeningOrderOn = vi.fn(async (_projectId: number, _turnedOn: boolean): Promise<void> => undefined);
+  getArticleVectorPlan = vi.fn(
+    async (_projectId: number): Promise<ArticleVectorPlan> => ({
+      total: 0,
+      pending: 0,
+      provider: 'ollama',
+      previousModel: null,
+    }),
+  );
+  generateArticleVectors = vi.fn(
+    async (_projectId: number): Promise<ArticleVectorStep> => ({ generated: 0, pending: 0 }),
+  );
+  rankScreening = vi.fn(
+    async (_projectId: number): Promise<ScreeningRank> => ({
+      order: [],
+      learnedFrom: 0,
+      needRelevant: 3,
+      needExcluded: 3,
+    }),
+  );
+  simulateScreening = vi.fn(
+    async (_projectId: number): Promise<ScreeningSimulation> => ({
+      articles: 0,
+      relevant: 0,
+      predicted: [],
+      original: [],
+      withoutVector: 0,
+    }),
+  );
 
   massiveExtraction = vi.fn(async (_articleId: number, _questions: string[]): Promise<ExtractionAnswer[]> => []);
 

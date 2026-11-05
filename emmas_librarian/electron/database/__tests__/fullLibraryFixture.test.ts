@@ -86,7 +86,8 @@ describe('full library fixture', () => {
     // Exports and merges leave search chunks behind: AIService re-indexes an article without chunks the
     // first time an investigation needs it.
     // Conversations can read several projects, so they go only in the whole library's backup (#53).
-    const notCopied = new Set(['pdf_chunks', 'ask_conversation_projects']);
+    // Vectors of title and abstract go the same way as the chunks: generating them again is one click (#55).
+    const notCopied = new Set(['pdf_chunks', 'ask_conversation_projects', 'article_vectors']);
     const linkedToProject = libraryTables().filter((table) =>
       (db.pragma(`table_info("${table}")`) as { name: string }[]).some(({ name }) =>
         ['project_id', 'article_id', 'category_id', 'investigation_id'].includes(name),

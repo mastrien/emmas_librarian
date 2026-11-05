@@ -8,6 +8,7 @@ import { GuidedDecisionPanel } from './GuidedDecisionPanel';
 import { articleMeta, databasesOf } from './reviewText';
 import { CriteriaModal } from './CriteriaModal';
 import { SuggestionBlock } from './SuggestionBlock';
+import { ScreeningOrderStrip, useScreeningOrder } from './ScreeningOrderStrip';
 import { useScreeningSuggestions } from './useScreeningSuggestions';
 import { hasCriteria } from '../../utils/screeningCriteria';
 import { readerStateBackTo } from '../../utils/readerReturn';
@@ -211,7 +212,8 @@ const Finished: React.FC<{ guided: GuidedScreening; projectId: number }> = ({ gu
 export const GuidedScreeningPage: React.FC = () => {
   const projectId = Number(useParams<{ id: string }>().id);
   const screening = useScreening(projectId);
-  const guided = useGuidedScreening(screening, projectId);
+  const order = useScreeningOrder(projectId, screening.decisions);
+  const guided = useGuidedScreening(screening, projectId, order.queue);
   const suggestions = useScreeningSuggestions(projectId);
   const [writingCriteria, setWritingCriteria] = useState(false);
   if (screening.loading) return <div className="review review-muted">Carregando a triagem…</div>;
@@ -235,6 +237,9 @@ export const GuidedScreeningPage: React.FC = () => {
         <StageTabs guided={guided} />
       </div>
       <ProgressLine guided={guided} />
+      {guided.stage === 'title' && (
+        <ScreeningOrderStrip order={order} decisions={screening.decisions} labels={screening.labels} />
+      )}
       {guided.finished || !article ? (
         <Finished guided={guided} projectId={projectId} />
       ) : (

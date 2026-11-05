@@ -50,6 +50,10 @@ import type {
   ScreeningCriteria,
   ScreeningEngineInfo,
   ScreeningSuggestion,
+  ArticleVectorPlan,
+  ArticleVectorStep,
+  ScreeningRank,
+  ScreeningSimulation,
   ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
@@ -345,6 +349,22 @@ export const projectService: IProjectService = {
     safeInvoke(IpcChannel.SCREENING_SUGGEST, articleId),
 
   getScreeningEngine: (): Promise<ScreeningEngineInfo> => safeInvoke(IpcChannel.SCREENING_ENGINE),
+
+  isScreeningOrderOn: (projectId: number): Promise<boolean> => safeInvoke(IpcChannel.SCREENING_ORDER_GET, projectId),
+
+  setScreeningOrderOn: (projectId: number, turnedOn: boolean): Promise<void> =>
+    safeInvoke(IpcChannel.SCREENING_ORDER_SET, projectId, turnedOn),
+
+  getArticleVectorPlan: (projectId: number): Promise<ArticleVectorPlan> =>
+    safeInvoke(IpcChannel.SCREENING_VECTORS_PLAN, projectId),
+
+  generateArticleVectors: (projectId: number): Promise<ArticleVectorStep> =>
+    safeInvoke(IpcChannel.SCREENING_VECTORS_GENERATE, projectId),
+
+  rankScreening: (projectId: number): Promise<ScreeningRank> => safeInvoke(IpcChannel.SCREENING_RANK, projectId),
+
+  simulateScreening: (projectId: number): Promise<ScreeningSimulation> =>
+    safeInvoke(IpcChannel.SCREENING_SIMULATE, projectId),
 
   async massiveExtraction(
     articleId: number,
