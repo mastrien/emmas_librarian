@@ -5,6 +5,7 @@ import type {
   AskConversation,
   AskConversationSummary,
   AskIndexPlan,
+  AskIndexProgress,
   AskIndexResult,
   Project,
   ProjectIndexCoverage,
@@ -20,6 +21,32 @@ interface IndexState {
 }
 
 const indexStateOf = (key: string): IndexState => ({ key, coverage: null, failed: [], error: null });
+
+const PROGRESS_EVERY_MS = 700;
+
+/** While `indexing`, how far it got, asked of the main process every so often. */
+function useIndexProgress(indexing: boolean): AskIndexProgress | null {
+  const service = useProjectService();
+  const [progress, setProgress] = useState<AskIndexProgress | null>(null);
+  useEffect(() => {
+    if (!indexing) return;
+    let alive = true;
+    const ask = () =>
+      service
+        .getAskIndexProgress()
+        .then((now) => {
+          if (alive) setProgress(now);
+        })
+        .catch(() => undefined);
+    const timer = setInterval(ask, PROGRESS_EVERY_MS);
+    void ask();
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [indexing, service]);
+  return indexing ? progress : null;
+}
 
 /** The PDFs a question cannot read yet, and how indexing them is going. */
 function useAskIndex(scope: number[], conversationId: number | null) {
@@ -76,7 +103,18 @@ function useAskIndex(scope: number[], conversationId: number | null) {
   };
   const dismissIndexing = () => setConfirming(null);
 
-  return { coverage, indexing, failed, indexError: error, indexMissing, confirming, confirmIndexing, dismissIndexing };
+  const progress = useIndexProgress(indexing);
+  return {
+    coverage,
+    indexing,
+    progress,
+    failed,
+    indexError: error,
+    indexMissing,
+    confirming,
+    confirmIndexing,
+    dismissIndexing,
+  };
 }
 
 // What was loaded or went wrong, kept with the conversation it is about, so opening another one starts clean.

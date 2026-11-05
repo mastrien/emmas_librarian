@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { AskIndexResult, AskReadCitation, ProjectIndexCoverage } from '../../types';
+import type { AskIndexProgress, AskIndexResult, AskReadCitation, ProjectIndexCoverage } from '../../types';
 import { embeddingModelName, pdfCount } from '../../utils/pdfCount';
 import { citationAccessNote, citationReaderState } from './askDisplay';
 
@@ -59,14 +59,15 @@ const outdatedText = (count: number): string =>
 /**
  * Says what the answers leave out, and offers to index it there. It disappears when nothing is missing.
  *
- * @example <AskIndexNotice coverage={coverage} indexing={false} failed={[]} onIndex={index} />
+ * @example <AskIndexNotice coverage={coverage} indexing={false} progress={null} failed={[]} onIndex={index} />
  */
 export const AskIndexNotice: React.FC<{
   coverage: ProjectIndexCoverage | null;
   indexing: boolean;
+  progress?: AskIndexProgress | null;
   failed: AskIndexResult['failed'];
   onIndex: () => void;
-}> = ({ coverage, indexing, failed, onIndex }) => {
+}> = ({ coverage, indexing, progress = null, failed, onIndex }) => {
   const missing = coverage?.withoutIndex.length ?? 0;
   const outdated = coverage?.outdated.length ?? 0;
   const pending = missing + outdated;
@@ -76,7 +77,9 @@ export const AskIndexNotice: React.FC<{
       <div className="ask-notice">
         {indexing ? (
           <span className="ask-step ask-step--running" role="status">
-            Indexando {pdfCount(pending)}…
+            {progress && progress.total > 0
+              ? `Indexando ${progress.done + 1 > progress.total ? progress.total : progress.done + 1} de ${pdfCount(progress.total)}${progress.current ? `: ${progress.current}` : ''}…`
+              : `Indexando ${pdfCount(pending)}…`}
           </span>
         ) : (
           <>

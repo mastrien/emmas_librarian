@@ -44,6 +44,7 @@ import type {
   AskConversation,
   AskConversationSummary,
   AskIndexPlan,
+  AskIndexProgress,
   AskIndexResult,
   AskIndexTarget,
   AskQuestionInput,
@@ -332,6 +333,8 @@ export const projectService: IProjectService = {
     safeInvoke(IpcChannel.ASK_COVERAGE, projectIds),
 
   getAskIndexPlan: (target: AskIndexTarget): Promise<AskIndexPlan> => safeInvoke(IpcChannel.ASK_INDEX_PLAN, target),
+
+  getAskIndexProgress: (): Promise<AskIndexProgress | null> => safeInvoke(IpcChannel.ASK_INDEX_PROGRESS),
 
   indexAskMissing: (target: AskIndexTarget, replaceIndex = false): Promise<AskIndexResult> =>
     safeInvoke(IpcChannel.ASK_INDEX_MISSING, target, replaceIndex),

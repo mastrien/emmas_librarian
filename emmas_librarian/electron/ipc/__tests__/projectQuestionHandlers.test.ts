@@ -109,6 +109,22 @@ describe('"Perguntar aos projetos" IPC handlers (#53)', () => {
     });
   });
 
+  it('tells how far the indexing got while it runs, and nothing once it is over', async () => {
+    addArticle('Falta', 'b.pdf');
+    let release: () => void = () => undefined;
+    pdfRead.wait = new Promise<void>((resolve) => (release = resolve));
+    expect(await ipc.invoke(IpcChannel.ASK_INDEX_PROGRESS)).toBeNull();
+
+    const indexing = ipc.invoke(IpcChannel.ASK_INDEX_MISSING, { projectIds: [projectId] });
+    await vi.waitFor(async () =>
+      expect(await ipc.invoke(IpcChannel.ASK_INDEX_PROGRESS)).toEqual({ done: 0, total: 1, current: 'Falta' }),
+    );
+    release();
+    await indexing;
+
+    expect(await ipc.invoke(IpcChannel.ASK_INDEX_PROGRESS)).toBeNull();
+  });
+
   it('can index again after the first one ended', async () => {
     addArticle('Falta', 'b.pdf');
     await ipc.invoke(IpcChannel.ASK_INDEX_MISSING, { projectIds: [projectId] });

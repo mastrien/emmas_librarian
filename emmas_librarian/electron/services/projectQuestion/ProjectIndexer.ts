@@ -1,7 +1,13 @@
 import type { PdfChunkIndexRepository } from '../../database/PdfChunkIndexRepository';
 import type { PdfTextChunk } from '../PdfExtractor';
 import type { VectorStore } from '../VectorStore';
-import type { AskIndexPlan, AskIndexResult, ProjectIndexArticle, ProjectIndexCoverage } from '../../../src/types/ask';
+import type {
+  AskIndexPlan,
+  AskIndexProgress,
+  AskIndexResult,
+  ProjectIndexArticle,
+  ProjectIndexCoverage,
+} from '../../../src/types/ask';
 import { assertSameVectorSize, type QuestionEmbedder } from './ProjectQuestionService';
 
 /** Vectors for many texts at once; the app's EmbeddingService is one. */
@@ -55,16 +61,22 @@ export class ProjectIndexer {
   /**
    * Indexes what is pending. `replaceIndex` is the person's answer to the plan: without it a model of another size is
    * refused, keeping the index. With it, the old vectors only leave once the first PDF has its new ones, so a provider
-   * that is down costs nothing.
+   * that is down costs nothing. `onProgress` hears of each PDF before it is read, so the screen can say how far it got.
    */
-  async indexMissing(articleIds: number[], replaceIndex = false): Promise<AskIndexResult> {
+  async indexMissing(
+    articleIds: number[],
+    replaceIndex = false,
+    onProgress: (progress: AskIndexProgress) => void = () => undefined,
+  ): Promise<AskIndexResult> {
     const pending = pendingOf(this.index.coverage(articleIds, this.modelId));
     if (pending.length > 0 && !replaceIndex) await this.assertSameModelSize();
     const failed: AskIndexResult['failed'] = [];
-    for (const article of pending) {
+    for (const [done, article] of pending.entries()) {
+      onProgress({ done, total: pending.length, current: article.title });
       const reason = await this.indexOne(article, replaceIndex);
       if (reason) failed.push({ title: article.title, reason });
     }
+    onProgress({ done: pending.length, total: pending.length, current: null });
     return { coverage: this.index.coverage(articleIds, this.modelId), failed };
   }
 

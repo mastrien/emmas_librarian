@@ -460,6 +460,12 @@ const routes: RouteCase[] = [
     args: [{ projectIds: [3] }, false],
   },
   {
+    method: 'getAskIndexProgress',
+    call: () => api.getAskIndexProgress(),
+    channel: IpcChannel.ASK_INDEX_PROGRESS,
+    args: [],
+  },
+  {
     method: 'getAskIndexPlan',
     call: () => api.getAskIndexPlan({ articleIds: [3] }),
     channel: IpcChannel.ASK_INDEX_PLAN,
