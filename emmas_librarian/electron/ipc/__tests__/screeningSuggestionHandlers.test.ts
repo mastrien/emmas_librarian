@@ -21,7 +21,9 @@ describe('screening suggestion IPC handlers (#54)', () => {
     projectId = db.createProject('Revisão').id;
     const insert = db
       .getDB()
-      .prepare("INSERT INTO articles (project_id, title, abstract) VALUES (?, 'Artigo', 'um resumo qualquer')");
+      .prepare(
+        "INSERT INTO articles (project_id, title, abstract, year) VALUES (?, 'Artigo', 'um resumo qualquer', 2021)",
+      );
     articleId = Number(insert.run(projectId).lastInsertRowid);
     const complete = async (prompt: string) => {
       prompts.push(prompt);
@@ -48,6 +50,7 @@ describe('screening suggestion IPC handlers (#54)', () => {
     const suggestion = (await ipc.invoke(IpcChannel.SCREENING_SUGGEST, articleId)) as ScreeningSuggestion;
 
     expect(prompts[0]).toContain('um resumo qualquer');
+    expect(prompts[0]).toContain('Ano: 2021');
     expect(suggestion).toMatchObject({ engine: 'gemini/x', quote: 'resumo', quote_found: 1 });
     expect(await ipc.invoke(IpcChannel.SCREENING_SUGGESTIONS_LIST, projectId)).toEqual([suggestion]);
   });

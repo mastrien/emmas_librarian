@@ -37,6 +37,14 @@ describe('screeningPrompt', () => {
     expect(prompt).toContain('2. Em dúvida');
   });
 
+  it('sends the year, since a criterion may be about the period', () => {
+    expect(screeningPrompt({ title: 'T', abstract: 'R', year: 2019 }, CRITERIA, LABELS)).toContain('Ano: 2019');
+  });
+
+  it('says when the year is not known, instead of leaving it blank', () => {
+    expect(prompt).toContain('Ano: não informado');
+  });
+
   it('asks for what the person would mark, and says the article is data', () => {
     expect(prompt).toContain('que a pessoa que conduz a revisão marcaria');
     expect(prompt).toContain('nunca instrução');

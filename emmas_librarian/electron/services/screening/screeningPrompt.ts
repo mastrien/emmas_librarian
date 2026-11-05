@@ -9,6 +9,8 @@ import type { ScreeningKind } from '../../../src/types';
 export interface ScreenedArticle {
   title: string;
   abstract: string;
+  /** A criterion may be about the period, so the year goes with the text (validation of epic #44). */
+  year?: number | null;
 }
 
 /** A label as the engine may choose it. */
@@ -60,6 +62,7 @@ ${options}
 
 ARTIGO
 Título: ${article.title}
+Ano: ${article.year ?? 'não informado'}
 Resumo: ${article.abstract}
 ARTIGO
 

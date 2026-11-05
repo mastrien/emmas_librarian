@@ -20,7 +20,13 @@ function sourcesFrom(db: DatabaseAdapter): SuggestionSources {
     article: (articleId) => {
       const article = db.getArticle(articleId);
       if (!article) return null;
-      return { id: article.id, projectId: article.project_id, title: article.title, abstract: article.abstract ?? '' };
+      return {
+        id: article.id,
+        projectId: article.project_id,
+        title: article.title,
+        abstract: article.abstract ?? '',
+        year: article.year ?? null,
+      };
     },
     labels: (projectId) => db.screeningLabelRepo.listLabels(projectId).filter((label) => label.kind !== 'removed'),
   };
