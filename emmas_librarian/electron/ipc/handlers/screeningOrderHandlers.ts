@@ -5,6 +5,7 @@ import {
   type ScreeningOrderSources,
   type TextEmbedder,
 } from '../../services/screening/ScreeningOrderService';
+import { ClassifierEvaluationService } from '../../services/screening/ClassifierEvaluationService';
 import { handle, type IpcRegistrar } from './handle';
 
 /** The embedding model set in the settings. */
@@ -49,4 +50,16 @@ export function registerScreeningOrderHandlers(
   handle(ipc, IpcChannel.SCREENING_VECTORS_GENERATE, (_e, projectId: number) => service().generateNext(projectId));
   handle(ipc, IpcChannel.SCREENING_RANK, (_e, projectId: number) => service().rank(projectId));
   handle(ipc, IpcChannel.SCREENING_SIMULATE, (_e, projectId: number) => service().simulate(projectId));
+  handle(ipc, IpcChannel.SCREENING_EVALUATE_CLASSIFIER, (_e, projectId: number) =>
+    new ClassifierEvaluationService(
+      db.articleVectorRepo,
+      db.screeningSuggestionRepo,
+      {
+        ...sourcesFrom(db),
+        labels: (id) => db.screeningLabelRepo.listLabels(id).filter((label) => label.kind !== 'removed'),
+        criteria: (id) => db.screeningSuggestionRepo.criteria(id),
+      },
+      embedding().modelId,
+    ).evaluate(projectId),
+  );
 }

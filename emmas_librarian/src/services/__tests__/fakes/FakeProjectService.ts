@@ -446,6 +446,8 @@ export class FakeProjectService implements IProjectService {
     }),
   );
 
+  evaluateClassifier = vi.fn(async (_projectId: number): Promise<ScreeningSuggestion[]> => []);
+
   massiveExtraction = vi.fn(async (_articleId: number, _questions: string[]): Promise<ExtractionAnswer[]> => []);
 
   extractMetadata = vi.fn(async (_articleId: number): Promise<ExtractedMetadata> => ({}));
