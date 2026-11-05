@@ -12,6 +12,7 @@ import { ManageLabelsModal } from './ManageLabelsModal';
 import { PrismaTab } from './prisma/PrismaTab';
 import { CriteriaModal } from './CriteriaModal';
 import { EvaluationTab } from './EvaluationTab';
+import { SimulationSection } from './SimulationSection';
 import './review.css';
 
 // Sections start open, except those the person closed during this visit.
@@ -167,7 +168,12 @@ export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'scr
       />
       <ReviewTabs projectId={projectId} tab={tab} />
       {tab === 'prisma' && <PrismaTab projectId={projectId} screening={screening} />}
-      {tab === 'evaluation' && <EvaluationTab key={criteriaEdits} projectId={projectId} screening={screening} />}
+      {tab === 'evaluation' && (
+        <>
+          <EvaluationTab key={criteriaEdits} projectId={projectId} screening={screening} />
+          <SimulationSection projectId={projectId} />
+        </>
+      )}
       {tab === 'screening' && <ReviewBody screening={screening} onCite={setCiting} />}
       {screening.lastChange && <UndoToast change={screening.lastChange} />}
       <ManageLabelsModal

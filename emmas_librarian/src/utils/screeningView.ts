@@ -128,3 +128,35 @@ export function decisionAt(
 ): ScreeningDecision | null {
   return decisions.find((d) => d.article_id === articleId && d.stage === stage) ?? null;
 }
+
+/**
+ * The pool in the order the classifier predicts: what is decided first, in its place, then the pending likeliest first,
+ * then those it has no vector for, so no article ever leaves the queue (#55).
+ *
+ * @example predictedOrder(pool, [3, 1], decisions) // decided, then 3, then 1, then the rest
+ */
+export function predictedOrder(pool: Article[], order: number[], decisions: ScreeningDecision[]): Article[] {
+  const undecided = (article: Article) => decisionAt(decisions, article.id, 'title') === null;
+  const position = new Map(order.map((id, i) => [id, i]));
+  const ranked = pool
+    .filter((article) => undecided(article) && position.has(article.id))
+    .sort((a, b) => (position.get(a.id) as number) - (position.get(b.id) as number));
+  const unranked = pool.filter((article) => undecided(article) && !position.has(article.id));
+  return [...pool.filter((article) => !undecided(article)), ...ranked, ...unranked];
+}
+
+/**
+ * Of the last decisions at title and abstract, how many were relevant. A fact, shown instead of an estimate of how many
+ * are left, which would look safer than it is (author's decision, #55). Duplicates are not a screening decision.
+ *
+ * @example recentRelevant(decisions, labels, 50) // { relevant: 3, looked: 50 }
+ */
+export function recentRelevant(decisions: ScreeningDecision[], labels: ScreeningLabel[], size: number) {
+  const kindOf = new Map(labels.map((label) => [label.id, label.kind]));
+  const recent = decisions
+    .filter((d) => d.stage === 'title' && kindOf.get(d.label_id) !== 'removed')
+    .sort((a, b) => b.decided_at.localeCompare(a.decided_at) || b.id - a.id)
+    .slice(0, size);
+  const relevant = recent.filter((d) => ['include', 'maybe'].includes(kindOf.get(d.label_id) ?? '')).length;
+  return { relevant, looked: recent.length };
+}

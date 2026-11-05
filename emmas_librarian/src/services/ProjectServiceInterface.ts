@@ -25,6 +25,10 @@ import type {
   ScreeningCriteria,
   ScreeningEngineInfo,
   ScreeningSuggestion,
+  ArticleVectorPlan,
+  ArticleVectorStep,
+  ScreeningRank,
+  ScreeningSimulation,
   ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
@@ -275,6 +279,15 @@ export interface IProjectService {
   /** Asks the engine about one article, unless it already answered with these criteria. Never decides. */
   suggestScreening(articleId: number): Promise<ScreeningSuggestion>;
   getScreeningEngine(): Promise<ScreeningEngineInfo>;
+  /** Whether the project orders its screening by predicted relevance (#55). Off until the person turns it on. */
+  isScreeningOrderOn(projectId: number): Promise<boolean>;
+  setScreeningOrderOn(projectId: number, turnedOn: boolean): Promise<void>;
+  /** What generating the vectors of title and abstract would do, before anything is spent. */
+  getArticleVectorPlan(projectId: number): Promise<ArticleVectorPlan>;
+  /** Generates the next batch of vectors; call until nothing is pending. */
+  generateArticleVectors(projectId: number): Promise<ArticleVectorStep>;
+  rankScreening(projectId: number): Promise<ScreeningRank>;
+  simulateScreening(projectId: number): Promise<ScreeningSimulation>;
   massiveExtraction(articleId: number, questions: string[]): Promise<ExtractionAnswer[]>;
   extractMetadata(articleId: number): Promise<ExtractedMetadata>;
 

@@ -102,6 +102,9 @@ function seedSemanticIndex(db: Database.Database, project: number): void {
   db.prepare("UPDATE pdf_chunks SET embedding_model = 'openai/text-embedding-3-small' WHERE article_id = ?").run(
     article.id,
   );
+  db.prepare(
+    "INSERT INTO article_vectors (article_id, model, vector, text_hash, created_at) VALUES (?, 'ollama/x', ?, 'abc', '2026-10-30 09:00:00')",
+  ).run(article.id, Buffer.from(new Float32Array([0.1, 0.2]).buffer));
 }
 
 // A monitored search with what its last check left: a notice, a base it missed and what was already shown (#52).

@@ -382,6 +382,42 @@ const routes: RouteCase[] = [
     args: [[3]],
   },
   {
+    method: 'isScreeningOrderOn',
+    call: () => api.isScreeningOrderOn(3),
+    channel: IpcChannel.SCREENING_ORDER_GET,
+    args: [3],
+  },
+  {
+    method: 'setScreeningOrderOn',
+    call: () => api.setScreeningOrderOn(3, true),
+    channel: IpcChannel.SCREENING_ORDER_SET,
+    args: [3, true],
+  },
+  {
+    method: 'getArticleVectorPlan',
+    call: () => api.getArticleVectorPlan(3),
+    channel: IpcChannel.SCREENING_VECTORS_PLAN,
+    args: [3],
+  },
+  {
+    method: 'generateArticleVectors',
+    call: () => api.generateArticleVectors(3),
+    channel: IpcChannel.SCREENING_VECTORS_GENERATE,
+    args: [3],
+  },
+  {
+    method: 'rankScreening',
+    call: () => api.rankScreening(3),
+    channel: IpcChannel.SCREENING_RANK,
+    args: [3],
+  },
+  {
+    method: 'simulateScreening',
+    call: () => api.simulateScreening(3),
+    channel: IpcChannel.SCREENING_SIMULATE,
+    args: [3],
+  },
+  {
     method: 'getScreeningCriteria',
     call: () => api.getScreeningCriteria(3),
     channel: IpcChannel.SCREENING_CRITERIA_GET,

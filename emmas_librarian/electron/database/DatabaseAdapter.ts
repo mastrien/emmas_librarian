@@ -17,6 +17,7 @@ import { SearchMonitorRepository } from './SearchMonitorRepository';
 import { PdfChunkIndexRepository } from './PdfChunkIndexRepository';
 import { AskConversationRepository } from './AskConversationRepository';
 import { ScreeningSuggestionRepository } from './ScreeningSuggestionRepository';
+import { ArticleVectorRepository } from './ArticleVectorRepository';
 import { PrismaStudyRepository } from './PrismaStudyRepository';
 import { initializeSchema } from './schemaMigrations';
 import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
@@ -82,6 +83,7 @@ export class DatabaseAdapter {
   public pdfChunkIndexRepo: PdfChunkIndexRepository;
   public askConversationRepo: AskConversationRepository;
   public screeningSuggestionRepo: ScreeningSuggestionRepository;
+  public articleVectorRepo: ArticleVectorRepository;
   public prismaStudyRepo: PrismaStudyRepository;
 
   // A constructor that throws leaves no adapter to close, so the file would stay locked (Windows) for
@@ -108,6 +110,7 @@ export class DatabaseAdapter {
       this.pdfChunkIndexRepo = new PdfChunkIndexRepository(this.db);
       this.askConversationRepo = new AskConversationRepository(this.db);
       this.screeningSuggestionRepo = new ScreeningSuggestionRepository(this.db);
+      this.articleVectorRepo = new ArticleVectorRepository(this.db);
       this.prismaStudyRepo = new PrismaStudyRepository(this.db);
       this.initSchema();
     } catch (err) {

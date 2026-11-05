@@ -233,6 +233,18 @@ CREATE TABLE IF NOT EXISTS screening_decisions (
 
 CREATE INDEX IF NOT EXISTS idx_screening_labels_project ON screening_labels(project_id);
 
+-- Vectors of title and abstract for the predicted order (#55), one per article and model, so vectors of different
+-- models never meet and going back to a model finds its own. text_hash tells when the text they read has changed.
+CREATE TABLE IF NOT EXISTS article_vectors (
+    article_id INTEGER NOT NULL,
+    model TEXT NOT NULL,
+    vector BLOB NOT NULL,
+    text_hash TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(article_id, model),
+    FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE
+);
+
 -- What an engine suggested for an article (#54), apart from the decision: it never becomes one by itself. Kept because
 -- it cost tokens, one per article and engine, so engines can be compared. `criteria` is what the engine read.
 CREATE TABLE IF NOT EXISTS screening_suggestions (

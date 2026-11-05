@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSessionState } from '../../hooks/useSessionState';
 import type { Article, ScreeningDecision, ScreeningKind, ScreeningLabel, ScreeningStage } from '../../types';
 import { KINDS_BY_STAGE } from '../../utils/screeningPresets';
-import { decisionAt, guidedPool } from '../../utils/screeningView';
+import { decisionAt, guidedPool, predictedOrder } from '../../utils/screeningView';
 import type { ScreeningState } from './useScreening';
 
 /** One decision made in the guided screening, with what was there before, for "Desfazer" (Z). */
@@ -61,14 +61,20 @@ function tallyAt(pool: Article[], s: ScreeningState, stage: ScreeningStage): Sta
  *   const guided = useGuidedScreening(screening, projectId);
  *   await guided.decide(label, note);
  */
-export function useGuidedScreening(s: ScreeningState, projectId: number): GuidedScreening {
+export function useGuidedScreening(
+  s: ScreeningState,
+  projectId: number,
+  predicted: number[] | null = null,
+): GuidedScreening {
   const [stage, setStageState] = useSessionState<ScreeningStage>(`guidedScreening.${projectId}.stage`, 'title');
   const [currentId, setCurrentId] = useSessionState<number | null>(`guidedScreening.${projectId}.current`, null);
   const [onlyPending, setOnlyPending] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [steps, setSteps] = useState<GuidedStep[]>([]);
 
-  const pool = guidedPool(s.articles, s.labels, s.decisions, stage);
+  const ordered = stage === 'title' && predicted !== null;
+  const walked = guidedPool(s.articles, s.labels, s.decisions, stage);
+  const pool = ordered ? predictedOrder(walked, predicted, s.decisions) : walked;
   const undecided = (a: Article) => decisionAt(s.decisions, a.id, stage) === null;
   const queue = onlyPending ? pool.filter((a) => undecided(a) || a.id === currentId) : pool;
   // Until the person moves, the screening opens on the first article still without a decision at this stage.
@@ -81,6 +87,8 @@ export function useGuidedScreening(s: ScreeningState, projectId: number): Guided
   const pending = pool.filter(undecided).length;
 
   const nextUndecidedAfter = (articleId: number) => {
+    // In the predicted order the next is always the likeliest left, wherever the current one is.
+    if (ordered) return pool.find((a) => undecided(a) && a.id !== articleId)?.id ?? articleId;
     const from = pool.findIndex((a) => a.id === articleId);
     return pool.find((a, i) => i > from && undecided(a) && a.id !== articleId)?.id ?? articleId;
   };
