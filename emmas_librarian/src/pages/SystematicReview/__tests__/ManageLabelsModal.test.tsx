@@ -109,7 +109,7 @@ describe('ManageLabelsModal (#49)', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Apagar Excluído' }));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
     expect(within(dialog).queryByRole('alertdialog')).toBeNull();
-    fireEvent.click(within(dialog).getAllByRole('button', { name: 'Fechar' })[1]);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Fechar' }));
 
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(service.deleteScreeningLabel).not.toHaveBeenCalled();

@@ -1,6 +1,6 @@
+import { Modal } from '../../components/common/Modal';
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronUp, Trash2, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import type { ScreeningKind, ScreeningLabel } from '../../types';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { SCREENING_PRESETS } from '../../utils/screeningPresets';
@@ -243,33 +243,14 @@ const ManageLabelsContent: React.FC<Omit<ManageLabelsModalProps, 'isOpen'>> = ({
   const current = [...currentDecisions(screening.decisions).values()];
   const countOf = (labelId: number) => current.filter((d) => d.label_id === labelId).length;
   return (
-    <div
-      role="dialog"
-      aria-label="Rótulos de triagem"
-      className="card fade-in"
-      style={{
-        width: 'min(760px, 100%)',
-        maxHeight: '90vh',
-        overflowY: 'auto',
-        background: 'var(--bg-surface)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1rem',
-        padding: '1.5rem',
-      }}
+    <Modal
+      label="Rótulos de triagem"
+      title="Rótulos de triagem"
+      description="O nome é livre; o tipo diz como o rótulo conta. Um rótulo de exclusão arquiva o artigo no projeto e usa o nome do rótulo como motivo."
+      width={760}
+      className="review-modal"
+      onClose={onClose}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
-        <div>
-          <h2 style={{ margin: 0 }}>Rótulos de triagem</h2>
-          <p className="review-muted" style={{ margin: '0.3rem 0 0' }}>
-            O nome é livre; o tipo diz como o rótulo conta. Um rótulo de exclusão arquiva o artigo no projeto e usa o
-            nome do rótulo como motivo.
-          </p>
-        </div>
-        <button type="button" className="review-quiet" aria-label="Fechar" onClick={onClose}>
-          <X size={18} aria-hidden="true" />
-        </button>
-      </div>
       {error && (
         <div role="alert" className="review-chip review-chip--exclude" style={{ whiteSpace: 'normal' }}>
           {error}
@@ -309,12 +290,7 @@ const ManageLabelsContent: React.FC<Omit<ManageLabelsModalProps, 'isOpen'>> = ({
       )}
       <NewLabelForm projectId={projectId} run={run} />
       <PresetBox projectId={projectId} labels={screening.labels} run={run} />
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button type="button" className="btn-secondary" onClick={onClose}>
-          Fechar
-        </button>
-      </div>
-    </div>
+    </Modal>
   );
 };
 
@@ -326,22 +302,5 @@ const ManageLabelsContent: React.FC<Omit<ManageLabelsModalProps, 'isOpen'>> = ({
  */
 export const ManageLabelsModal: React.FC<ManageLabelsModalProps> = ({ isOpen, ...rest }) => {
   if (!isOpen) return null;
-  return createPortal(
-    <div
-      className="review-modal"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 99999,
-        padding: '1rem',
-      }}
-    >
-      <ManageLabelsContent {...rest} />
-    </div>,
-    document.body,
-  );
+  return <ManageLabelsContent {...rest} />;
 };
