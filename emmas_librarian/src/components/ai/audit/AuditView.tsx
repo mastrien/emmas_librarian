@@ -8,7 +8,7 @@ import { auditStats, drawStratifiedSample } from '../../../utils/auditSampling';
 import { auditQuestionRows, sampledInOrder } from '../../../utils/auditQuestions';
 import { evidencesOf, type AuditEvidenceItem } from '../../../utils/auditEvidence';
 import { parseJsonList } from '../../../utils/parseJsonList';
-import { readerStateForAudit } from '../../../utils/auditReturn';
+import { readerStateForAudit, readerStateForAuditArticle } from '../../../utils/auditReturn';
 import { useInvestigationAudit } from './useInvestigationAudit';
 import { AuditSetup } from './AuditSetup';
 import { AuditEstimate } from './AuditEstimate';
@@ -31,7 +31,7 @@ export interface AuditViewProps {
   initialResultId?: number;
 }
 
-// A, E and R mark the item in view and P opens its first evidence; never while typing.
+// A, E and R mark the item in view and P opens its first evidence, or its PDF when it cited nothing; never while typing.
 function useAuditKeys(handle: (key: 'a' | 'e' | 'r' | 'p') => void) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -96,11 +96,25 @@ export const AuditView: React.FC<AuditViewProps> = (props) => {
       }),
     });
 
+  // An answer that cited nothing can only be checked in the PDF, so P opens it (validation of epic #44).
+  const openArticle = (r: InvestigationResult | null) => {
+    if (!r || !articleOf(r)?.local_file_path) return undefined;
+    return () =>
+      navigate(`/articles/${r.article_id}`, {
+        state: readerStateForAuditArticle({
+          projectId: projectId ?? 0,
+          investigationId: investigation.id,
+          resultId: r.id,
+        }),
+      });
+  };
+
   useAuditKeys((key) => {
     if (!inView || editing) return;
     if (key === 'p') {
       const first = evidencesOf(inView)[0];
       if (first) openEvidence(inView)(first);
+      else openArticle(inView)?.();
     } else if (key === 'e') setEditing(true);
     else review(inView)({ status: key === 'a' ? 'accepted' : 'rejected' });
   });
@@ -116,6 +130,7 @@ export const AuditView: React.FC<AuditViewProps> = (props) => {
       onEdit={setEditing}
       onReview={review(inView)}
       onOpenEvidence={inView ? openEvidence(inView) : () => undefined}
+      onOpenArticle={openArticle(inView)}
     />
   );
 
@@ -154,6 +169,7 @@ export const AuditView: React.FC<AuditViewProps> = (props) => {
               onEdit={setEditing}
               onReview={review(nextPending)}
               onOpenEvidence={nextPending ? openEvidence(nextPending) : () => undefined}
+              onOpenArticle={openArticle(nextPending)}
               onBack={() => setView('table')}
             />
           ) : (

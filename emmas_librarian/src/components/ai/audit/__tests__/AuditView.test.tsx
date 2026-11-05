@@ -191,6 +191,45 @@ describe('AuditView (#48)', () => {
     });
   });
 
+  describe('an answer that cited nothing (validation of epic #44)', () => {
+    const uncited = (id: number) =>
+      result(id, 'Qual o desenho?', {
+        answer: JSON.stringify({ question: 'Q', synthesizedAnswer: 'Sem trecho', confidenceScore: 0.5, evidences: [] }),
+      });
+    const withPdf = (pdf: string | null) =>
+      [{ id: 1, title: 'Estudo 1', status: 'new', project_id: 1, local_file_path: pdf }] as Article[];
+
+    it('opens the PDF with P in the review in sequence, with the way back', async () => {
+      renderAudit(fullDraw, { results: [uncited(1)], articles: withPdf('a.pdf') });
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Revisar em sequência' }));
+      fireEvent.keyDown(window, { key: 'p' });
+
+      expect(JSON.parse(screen.getByTestId('reader').textContent!)).toEqual({
+        returnTo: { projectId: 1, investigationId: 19, resultId: 1 },
+      });
+    });
+
+    it('offers the PDF by a button too', async () => {
+      renderAudit(fullDraw, { results: [uncited(1)], articles: withPdf('a.pdf') });
+      await openFirstItem();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Abrir o PDF (P)' }));
+
+      expect(screen.getByTestId('reader')).toBeInTheDocument();
+    });
+
+    it('does nothing without a PDF, and offers no button', async () => {
+      renderAudit(fullDraw, { results: [uncited(1)], articles: withPdf(null) });
+      fireEvent.click(await screen.findByRole('button', { name: 'Revisar em sequência' }));
+
+      fireEvent.keyDown(window, { key: 'p' });
+
+      expect(screen.queryByTestId('reader')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Abrir o PDF (P)' })).not.toBeInTheDocument();
+    });
+  });
+
   it('reviews in sequence: the next pending item, its evidence beside it', async () => {
     const { onReview } = renderAudit(fullDraw);
 

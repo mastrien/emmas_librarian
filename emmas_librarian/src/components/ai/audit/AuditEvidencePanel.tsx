@@ -14,6 +14,7 @@ export interface AuditEvidencePanelProps {
   onEdit: (open: boolean) => void;
   onReview: (review: ResultReview) => void;
   onOpenEvidence: (evidence: AuditEvidenceItem) => void;
+  onOpenArticle?: () => void;
 }
 
 /**
@@ -24,7 +25,7 @@ export interface AuditEvidencePanelProps {
  *   <AuditEvidencePanel result={selected} article={article} editing={editing} onEdit={...} onReview={...} onOpenEvidence={...} />
  */
 export const AuditEvidencePanel: React.FC<AuditEvidencePanelProps> = (props) => {
-  const { result, questionNumber, article, editing, onEdit, onReview, onOpenEvidence } = props;
+  const { result, questionNumber, article, editing, onEdit, onReview, onOpenEvidence, onOpenArticle } = props;
   if (!result) {
     return (
       <aside className="audit-panel audit-side">
@@ -60,7 +61,7 @@ export const AuditEvidencePanel: React.FC<AuditEvidencePanelProps> = (props) => 
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div className="audit-eyebrow">O que ela citou</div>
-          <AuditEvidenceList result={result} onOpen={onOpenEvidence} />
+          <AuditEvidenceList result={result} onOpen={onOpenEvidence} onOpenArticle={onOpenArticle} />
         </div>
         <AuditVerdict result={result} editing={editing} onEdit={onEdit} onReview={onReview} />
       </div>
