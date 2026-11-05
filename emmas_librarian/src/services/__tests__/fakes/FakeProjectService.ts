@@ -13,6 +13,9 @@ import type {
   AskIndexResult,
   AskIndexTarget,
   AskQuestionInput,
+  ScreeningCriteria,
+  ScreeningEngineInfo,
+  ScreeningSuggestion,
   ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
@@ -394,6 +397,17 @@ export class FakeProjectService implements IProjectService {
       failed: [],
     }),
   );
+
+  getScreeningCriteria = vi.fn(
+    async (_projectId: number): Promise<ScreeningCriteria> => ({ inclusion: '', exclusion: '' }),
+  );
+  saveScreeningCriteria = vi.fn(async (_projectId: number, _criteria: ScreeningCriteria): Promise<void> => undefined);
+  getScreeningSuggestions = vi.fn(async (_projectId: number): Promise<ScreeningSuggestion[]> => []);
+  suggestScreening = vi.fn(
+    async (articleId: number): Promise<ScreeningSuggestion> =>
+      ({ id: articleId, article_id: articleId }) as ScreeningSuggestion,
+  );
+  getScreeningEngine = vi.fn(async (): Promise<ScreeningEngineInfo> => ({ id: 'ollama/llama3.1', provider: 'ollama' }));
 
   massiveExtraction = vi.fn(async (_articleId: number, _questions: string[]): Promise<ExtractionAnswer[]> => []);
 

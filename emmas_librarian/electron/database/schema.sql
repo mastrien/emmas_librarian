@@ -233,6 +233,26 @@ CREATE TABLE IF NOT EXISTS screening_decisions (
 
 CREATE INDEX IF NOT EXISTS idx_screening_labels_project ON screening_labels(project_id);
 
+-- What an engine suggested for an article (#54), apart from the decision: it never becomes one by itself. Kept because
+-- it cost tokens, one per article and engine, so engines can be compared. `criteria` is what the engine read.
+CREATE TABLE IF NOT EXISTS screening_suggestions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    article_id INTEGER NOT NULL,
+    label_id INTEGER NOT NULL,
+    engine TEXT NOT NULL,
+    criteria TEXT NOT NULL,
+    confidence REAL,
+    reason TEXT NOT NULL,
+    quote TEXT,
+    quote_found INTEGER NOT NULL DEFAULT 0,
+    elapsed_ms INTEGER NOT NULL DEFAULT 0,
+    tokens_estimated INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(article_id, engine),
+    FOREIGN KEY(article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    FOREIGN KEY(label_id) REFERENCES screening_labels(id) ON DELETE CASCADE
+);
+
 -- PRISMA diagram (#50). No number is typed by hand: the "other methods" column counts the articles that came
 -- from outside the searches by the source each one was found in, and the studies are the included publications
 -- minus those marked as of the same study.
@@ -294,7 +314,8 @@ INSERT OR IGNORE INTO ai_model_config (skill, provider, model_name) VALUES
     ('metadata', 'gemini', 'gemini-2.5-flash'),
     ('summary', 'gemini', 'gemini-2.5-flash'),
     ('extraction', 'gemini', 'gemini-2.5-flash'),
-    ('embeddings', 'ollama', 'nomic-embed-text');
+    ('embeddings', 'ollama', 'nomic-embed-text'),
+    ('screening', 'ollama', 'llama3.1');
 
 -- Metadados dos chunks (relacional)
 CREATE TABLE IF NOT EXISTS pdf_chunks (

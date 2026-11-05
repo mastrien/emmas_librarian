@@ -166,6 +166,12 @@ function importScreening(ctx: ImportContext, rows: ProjectRows): void {
       label_id: remap(ctx, 'label', decision.label_id),
     });
   }
+  for (const suggestion of rows.screeningSuggestions ?? []) {
+    copyLinkedRow(ctx, 'screening_suggestions', suggestion, {
+      article_id: remap(ctx, 'article', suggestion.article_id),
+      label_id: remap(ctx, 'label', suggestion.label_id),
+    });
+  }
 }
 
 // Origins and study links point at copied articles and sources, so they follow the article and source maps.

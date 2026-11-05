@@ -1,5 +1,5 @@
 import type { SearchLimits } from '../utils/searchLimits';
-export type AISkill = 'metadata' | 'summary' | 'extraction' | 'embeddings';
+export type AISkill = 'metadata' | 'summary' | 'extraction' | 'embeddings' | 'screening';
 export type AIProvider = 'openai' | 'gemini' | 'anthropic' | 'ollama' | 'ollama_cloud' | 'llama_cpp' | 'local';
 
 export interface AIModelConfig {
@@ -207,6 +207,11 @@ export enum IpcChannel {
   ASK_SEND = 'ask:send',
   ASK_COVERAGE = 'ask:coverage',
   ASK_INDEX_MISSING = 'ask:indexMissing',
+  SCREENING_CRITERIA_GET = 'screening:criteriaGet',
+  SCREENING_CRITERIA_SAVE = 'screening:criteriaSave',
+  SCREENING_SUGGESTIONS_LIST = 'screening:suggestionsList',
+  SCREENING_SUGGEST = 'screening:suggest',
+  SCREENING_ENGINE = 'screening:engine',
   ASK_INDEX_PLAN = 'ask:indexPlan',
   AI_MODEL_CONFIG_GET_ALL = 'aiModelConfig:getAll',
   AI_MODEL_CONFIG_UPDATE = 'aiModelConfig:update',
@@ -719,3 +724,4 @@ export interface UpdateStatusResponse {
 }
 
 export * from './ask';
+export * from './screeningSuggestion';

@@ -160,7 +160,7 @@ export class AIService {
 
   private async generateCompletion(
     prompt: string,
-    skill: 'metadata' | 'summary' | 'extraction' = 'metadata',
+    skill: 'metadata' | 'summary' | 'extraction' | 'screening' = 'metadata',
   ): Promise<string> {
     const keys = this.getKeys();
     const configRepo = new AIModelConfigRepository(this.db.getDB());
@@ -315,6 +315,19 @@ ${truncatedText}
       embedder: embeddingService,
       complete: (prompt) => this.generateCompletion(prompt, 'extraction'),
       modelId,
+    };
+  }
+
+  /**
+   * The model set for screening suggestions (#54), and how to ask it.
+   *
+   * @example const { complete, modelId } = ai.screeningModel();
+   */
+  public screeningModel(): { complete: (prompt: string) => Promise<string>; modelId: string } {
+    const config = new AIModelConfigRepository(this.db.getDB()).getConfig('screening');
+    return {
+      complete: (prompt) => this.generateCompletion(prompt, 'screening'),
+      modelId: `${config?.provider ?? 'ollama'}/${config?.model_name ?? 'llama3.1'}`,
     };
   }
 

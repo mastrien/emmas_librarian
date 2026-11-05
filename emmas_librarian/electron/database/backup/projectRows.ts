@@ -27,6 +27,7 @@ export interface ProjectRows {
   /** Screening labels and decisions (#49); files from before them lack the lists. */
   screeningLabels?: SqlRow[];
   screeningDecisions?: SqlRow[];
+  screeningSuggestions?: SqlRow[];
   /** PRISMA sources, article origins and same-study links (#50); files from before them lack the lists. */
   prismaSources?: SqlRow[];
   prismaArticleOrigins?: SqlRow[];
@@ -77,6 +78,7 @@ export function readProjectRows(
     investigationAudits: db.prepare(AUDITS_SQL).all(projectId) as SqlRow[],
     screeningLabels: byProject('screening_labels'),
     screeningDecisions: byArticle('screening_decisions'),
+    screeningSuggestions: byArticle('screening_suggestions'),
     prismaSources: byProject('prisma_sources'),
     prismaArticleOrigins: byArticle('prisma_article_origins'),
     prismaStudyLinks: byArticle('prisma_study_links'),

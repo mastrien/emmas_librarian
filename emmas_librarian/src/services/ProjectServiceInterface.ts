@@ -22,6 +22,9 @@ import type {
   AskIndexResult,
   AskIndexTarget,
   AskQuestionInput,
+  ScreeningCriteria,
+  ScreeningEngineInfo,
+  ScreeningSuggestion,
   ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
@@ -265,6 +268,13 @@ export interface IProjectService {
   getAskIndexPlan(target: AskIndexTarget): Promise<AskIndexPlan>;
   /** Indexes what a search cannot read yet. Only `replaceIndex`, the person's answer to the plan, may clear the index. */
   indexAskMissing(target: AskIndexTarget, replaceIndex?: boolean): Promise<AskIndexResult>;
+  /** The inclusion and exclusion criteria a project wrote (#54). */
+  getScreeningCriteria(projectId: number): Promise<ScreeningCriteria>;
+  saveScreeningCriteria(projectId: number, criteria: ScreeningCriteria): Promise<void>;
+  getScreeningSuggestions(projectId: number): Promise<ScreeningSuggestion[]>;
+  /** Asks the engine about one article, unless it already answered with these criteria. Never decides. */
+  suggestScreening(articleId: number): Promise<ScreeningSuggestion>;
+  getScreeningEngine(): Promise<ScreeningEngineInfo>;
   massiveExtraction(articleId: number, questions: string[]): Promise<ExtractionAnswer[]>;
   extractMetadata(articleId: number): Promise<ExtractedMetadata>;
 

@@ -16,6 +16,7 @@ import { PrismaOriginRepository } from './PrismaOriginRepository';
 import { SearchMonitorRepository } from './SearchMonitorRepository';
 import { PdfChunkIndexRepository } from './PdfChunkIndexRepository';
 import { AskConversationRepository } from './AskConversationRepository';
+import { ScreeningSuggestionRepository } from './ScreeningSuggestionRepository';
 import { PrismaStudyRepository } from './PrismaStudyRepository';
 import { initializeSchema } from './schemaMigrations';
 import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
@@ -80,6 +81,7 @@ export class DatabaseAdapter {
   public searchMonitorRepo: SearchMonitorRepository;
   public pdfChunkIndexRepo: PdfChunkIndexRepository;
   public askConversationRepo: AskConversationRepository;
+  public screeningSuggestionRepo: ScreeningSuggestionRepository;
   public prismaStudyRepo: PrismaStudyRepository;
 
   // A constructor that throws leaves no adapter to close, so the file would stay locked (Windows) for
@@ -105,6 +107,7 @@ export class DatabaseAdapter {
       this.searchMonitorRepo = new SearchMonitorRepository(this.db);
       this.pdfChunkIndexRepo = new PdfChunkIndexRepository(this.db);
       this.askConversationRepo = new AskConversationRepository(this.db);
+      this.screeningSuggestionRepo = new ScreeningSuggestionRepository(this.db);
       this.prismaStudyRepo = new PrismaStudyRepository(this.db);
       this.initSchema();
     } catch (err) {

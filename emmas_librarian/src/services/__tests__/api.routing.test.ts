@@ -382,6 +382,36 @@ const routes: RouteCase[] = [
     args: [[3]],
   },
   {
+    method: 'getScreeningCriteria',
+    call: () => api.getScreeningCriteria(3),
+    channel: IpcChannel.SCREENING_CRITERIA_GET,
+    args: [3],
+  },
+  {
+    method: 'saveScreeningCriteria',
+    call: () => api.saveScreeningCriteria(3, { inclusion: 'a', exclusion: 'b' }),
+    channel: IpcChannel.SCREENING_CRITERIA_SAVE,
+    args: [3, { inclusion: 'a', exclusion: 'b' }],
+  },
+  {
+    method: 'getScreeningSuggestions',
+    call: () => api.getScreeningSuggestions(3),
+    channel: IpcChannel.SCREENING_SUGGESTIONS_LIST,
+    args: [3],
+  },
+  {
+    method: 'suggestScreening',
+    call: () => api.suggestScreening(7),
+    channel: IpcChannel.SCREENING_SUGGEST,
+    args: [7],
+  },
+  {
+    method: 'getScreeningEngine',
+    call: () => api.getScreeningEngine(),
+    channel: IpcChannel.SCREENING_ENGINE,
+    args: [],
+  },
+  {
     method: 'indexAskMissing',
     call: () => api.indexAskMissing({ projectIds: [3] }),
     channel: IpcChannel.ASK_INDEX_MISSING,
