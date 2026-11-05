@@ -123,3 +123,10 @@ export interface AskIndexResult {
   coverage: ProjectIndexCoverage;
   failed: { title: string; reason: string }[];
 }
+
+/** How far an indexing got: PDFs done of the total, and the one being read now. */
+export interface AskIndexProgress {
+  done: number;
+  total: number;
+  current: string | null;
+}

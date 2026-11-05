@@ -1,7 +1,7 @@
 import { IpcChannel } from '../../types';
 import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import { buildAskServices, type AskModels, type AskServices } from '../../services/projectQuestion/askServices';
-import type { AskIndexResult, AskIndexTarget, AskQuestionInput } from '../../../src/types/ask';
+import type { AskIndexProgress, AskIndexResult, AskIndexTarget, AskQuestionInput } from '../../../src/types/ask';
 import { handle, type IpcRegistrar } from './handle';
 
 /**
@@ -29,12 +29,18 @@ export function registerProjectQuestionHandlers(ipc: IpcRegistrar, db: DatabaseA
 
   // Going back and forth on the page must not index the same PDFs twice: a second call joins the first.
   let running: Promise<AskIndexResult> | null = null;
+  // The indexing runs in one call; the screen asks how far it got while waiting (validation of epic #44).
+  let progress: AskIndexProgress | null = null;
   handle(ipc, IpcChannel.ASK_INDEX_MISSING, (_e, target: AskIndexTarget, replaceIndex = false) => {
     running ??= services()
-      .indexer.indexMissing(articlesIn(target), replaceIndex === true)
+      .indexer.indexMissing(articlesIn(target), replaceIndex === true, (now) => {
+        progress = now;
+      })
       .finally(() => {
         running = null;
+        progress = null;
       });
     return running;
   });
+  handle(ipc, IpcChannel.ASK_INDEX_PROGRESS, () => progress);
 }

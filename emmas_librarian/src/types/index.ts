@@ -220,6 +220,7 @@ export enum IpcChannel {
   SCREENING_SIMULATE = 'screening:simulate',
   SCREENING_EVALUATE_CLASSIFIER = 'screening:evaluateClassifier',
   ASK_INDEX_PLAN = 'ask:indexPlan',
+  ASK_INDEX_PROGRESS = 'ask:indexProgress',
   AI_MODEL_CONFIG_GET_ALL = 'aiModelConfig:getAll',
   AI_MODEL_CONFIG_UPDATE = 'aiModelConfig:update',
   AI_MODEL_CONFIG_RESTORE = 'aiModelConfig:restore',

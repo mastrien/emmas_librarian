@@ -65,6 +65,7 @@ export const AskPage: React.FC = () => {
         <AskIndexNotice
           coverage={ask.coverage}
           indexing={ask.indexing}
+          progress={ask.progress}
           failed={ask.failed}
           onIndex={ask.indexMissing}
         />

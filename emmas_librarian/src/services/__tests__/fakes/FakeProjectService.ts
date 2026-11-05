@@ -10,6 +10,7 @@ import type {
   AskConversation,
   AskConversationSummary,
   AskIndexPlan,
+  AskIndexProgress,
   AskIndexResult,
   AskIndexTarget,
   AskQuestionInput,
@@ -386,6 +387,8 @@ export class FakeProjectService implements IProjectService {
       previousModel: null,
     }),
   );
+
+  getAskIndexProgress = vi.fn(async (): Promise<AskIndexProgress | null> => null);
 
   getAskIndexPlan = vi.fn(
     async (_target: AskIndexTarget): Promise<AskIndexPlan> => ({

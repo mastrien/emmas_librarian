@@ -19,6 +19,7 @@ import type {
   AskConversation,
   AskConversationSummary,
   AskIndexPlan,
+  AskIndexProgress,
   AskIndexResult,
   AskIndexTarget,
   AskQuestionInput,
@@ -270,6 +271,8 @@ export interface IProjectService {
   getAskCoverage(projectIds: number[]): Promise<ProjectIndexCoverage>;
   /** What indexing would do, before anything is spent or removed. */
   getAskIndexPlan(target: AskIndexTarget): Promise<AskIndexPlan>;
+  /** How far the indexing in progress got; null when none runs. */
+  getAskIndexProgress(): Promise<AskIndexProgress | null>;
   /** Indexes what a search cannot read yet. Only `replaceIndex`, the person's answer to the plan, may clear the index. */
   indexAskMissing(target: AskIndexTarget, replaceIndex?: boolean): Promise<AskIndexResult>;
   /** The inclusion and exclusion criteria a project wrote (#54). */

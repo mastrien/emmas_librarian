@@ -74,6 +74,20 @@ describe('ProjectIndexer (#53)', () => {
     expect(coverage.withoutPdf.map((article) => article.id)).toEqual([none]);
   });
 
+  it('says which PDF it is reading and how many are done, then that it is over', async () => {
+    const a = add('A', 'a.pdf');
+    const b = add('B', 'b.pdf');
+    const heard: unknown[] = [];
+
+    await indexer().indexMissing([a, b], false, (progress) => heard.push(progress));
+
+    expect(heard).toEqual([
+      { done: 0, total: 2, current: 'A' },
+      { done: 1, total: 2, current: 'B' },
+      { done: 2, total: 2, current: null },
+    ]);
+  });
+
   it('goes on after a PDF fails, naming it and why', async () => {
     const gone = add('Sumiu', 'sumiu.pdf');
     const a = add('A', 'a.pdf');

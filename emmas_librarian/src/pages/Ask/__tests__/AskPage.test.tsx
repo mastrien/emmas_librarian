@@ -353,6 +353,18 @@ describe('AskPage (#53)', () => {
       expect(await screen.findByRole('status')).toHaveTextContent('Indexando 2 PDFs');
     });
 
+    it('says which PDF it is on, of how many', async () => {
+      const service = missing();
+      service.indexAskMissing.mockImplementation(() => new Promise(() => undefined));
+      service.getAskIndexProgress.mockResolvedValue({ done: 2, total: 12, current: 'Silva 2020' });
+      await open(service);
+      await chooseProject('Revisão');
+
+      await press(await screen.findByRole('button', { name: 'Indexar agora' }));
+
+      expect(await screen.findByText('Indexando 3 de 12 PDFs: Silva 2020…')).toBeInTheDocument();
+    });
+
     it('names what could not be indexed, and the notice stays', async () => {
       const service = missing();
       service.indexAskMissing.mockResolvedValue({
