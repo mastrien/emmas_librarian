@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { AskIndexResult, AskReadCitation, ProjectIndexCoverage } from '../../types';
-import { pdfCount } from '../../utils/pdfCount';
+import { embeddingModelName, pdfCount } from '../../utils/pdfCount';
 import { citationAccessNote, citationReaderState } from './askDisplay';
 
 /**
@@ -83,6 +83,13 @@ export const AskIndexNotice: React.FC<{
             <span>
               {missing > 0 && `${pdfCount(missing)} destes projetos ainda não entram nas respostas. `}
               {outdated > 0 && outdatedText(outdated)}
+              {outdated > 0 && coverage?.previousModel && (
+                <>
+                  {' '}
+                  Prefere não recalcular? Eles vieram de {embeddingModelName(coverage.previousModel)}: volte a esse
+                  modelo em <Link to="/settings">Configurações</Link>.
+                </>
+              )}
             </span>
             <button type="button" className="btn-secondary ask-small" onClick={onIndex}>
               {outdated > 0 ? `Recalcular ${pdfCount(pending)}` : 'Indexar agora'}

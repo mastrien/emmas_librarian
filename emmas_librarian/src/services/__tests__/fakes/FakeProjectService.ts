@@ -379,6 +379,7 @@ export class FakeProjectService implements IProjectService {
       withoutIndex: [],
       withoutPdf: [],
       outdated: [],
+      previousModel: null,
     }),
   );
 
@@ -388,12 +389,13 @@ export class FakeProjectService implements IProjectService {
       outdated: 0,
       sizeChanged: false,
       othersLosingVectors: 0,
+      previousModel: null,
     }),
   );
 
   indexAskMissing = vi.fn(
     async (_target: AskIndexTarget, _replaceIndex?: boolean): Promise<AskIndexResult> => ({
-      coverage: { total: 0, indexed: [], withoutIndex: [], withoutPdf: [], outdated: [] },
+      coverage: { total: 0, indexed: [], withoutIndex: [], withoutPdf: [], outdated: [], previousModel: null },
       failed: [],
     }),
   );

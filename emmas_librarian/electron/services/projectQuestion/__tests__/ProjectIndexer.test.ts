@@ -210,7 +210,13 @@ describe('ProjectIndexer (#53)', () => {
 
         const plan = await indexer(embedder).plan([current]);
 
-        expect(plan).toEqual({ pending: 0, outdated: 0, sizeChanged: false, othersLosingVectors: 0 });
+        expect(plan).toEqual({
+          pending: 0,
+          outdated: 0,
+          sizeChanged: false,
+          othersLosingVectors: 0,
+          previousModel: null,
+        });
         expect(embedder.calls).toEqual([]);
       });
 
@@ -226,6 +232,7 @@ describe('ProjectIndexer (#53)', () => {
           outdated: 1,
           sizeChanged: false,
           othersLosingVectors: 0,
+          previousModel: OLD,
         });
       });
 
@@ -237,8 +244,24 @@ describe('ProjectIndexer (#53)', () => {
 
         const plan = await indexer(new FakeEmbedder([0, 0, 0])).plan([mine]);
 
-        expect(plan).toEqual({ pending: 1, outdated: 1, sizeChanged: true, othersLosingVectors: 1 });
+        expect(plan).toEqual({
+          pending: 1,
+          outdated: 1,
+          sizeChanged: true,
+          othersLosingVectors: 1,
+          previousModel: OLD,
+        });
         expect(chunkRows()).toHaveLength(2);
+      });
+
+      it('names the model of the rest of the library when the PDFs asked about have none', async () => {
+        const fresh = add('Novo', 'a.pdf');
+        const other = add('Outro', 'c.pdf');
+        seed(other, 'velho', OLD);
+
+        const plan = await indexer(new FakeEmbedder([0, 0, 0])).plan([fresh]);
+
+        expect(plan).toMatchObject({ outdated: 0, previousModel: OLD, othersLosingVectors: 1 });
       });
 
       it('asks the model nothing before the first indexing', async () => {

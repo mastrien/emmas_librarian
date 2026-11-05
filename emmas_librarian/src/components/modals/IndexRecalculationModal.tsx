@@ -2,7 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import type { AskIndexPlan } from '../../types';
-import { pdfCount } from '../../utils/pdfCount';
+import { embeddingModelName, pdfCount } from '../../utils/pdfCount';
 
 /**
  * Asks before recalculating with the current embedding model: it costs tokens and, with a model of another size, also
@@ -58,6 +58,12 @@ export const IndexRecalculationModal: React.FC<{
             O modelo atual usa vetores de outro tamanho, então os vetores{' '}
             {plan.othersLosingVectors === 1 ? 'do outro PDF' : `dos outros ${plan.othersLosingVectors} PDFs`} da
             biblioteca também serão apagados e precisarão ser recalculados quando você usá-los.
+          </p>
+        )}
+        {plan.previousModel && (
+          <p className="muted" data-testid="previous-model">
+            Prefere não recalcular? Os vetores atuais vieram de {embeddingModelName(plan.previousModel)}. Volte a esse
+            modelo em Configurações de IA, e só os PDFs ainda sem índice serão processados.
           </p>
         )}
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

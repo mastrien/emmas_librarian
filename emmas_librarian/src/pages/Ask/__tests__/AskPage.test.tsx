@@ -27,6 +27,7 @@ const coverage = (extra: Partial<ProjectIndexCoverage> = {}): ProjectIndexCovera
   withoutIndex: [],
   withoutPdf: [],
   outdated: [],
+  previousModel: null,
   ...extra,
 });
 
@@ -390,7 +391,14 @@ describe('AskPage (#53)', () => {
     });
 
     describe('after the embedding model changes', () => {
-      const plan = (extra = {}) => ({ pending: 1, outdated: 1, sizeChanged: false, othersLosingVectors: 0, ...extra });
+      const plan = (extra = {}) => ({
+        pending: 1,
+        outdated: 1,
+        sizeChanged: false,
+        othersLosingVectors: 0,
+        previousModel: null,
+        ...extra,
+      });
 
       it('says what must be recalculated and that it costs tokens, and recalculates at the click', async () => {
         const service = serviceWith({ outdated: [article(1)] });
@@ -405,6 +413,39 @@ describe('AskPage (#53)', () => {
         await waitFor(() => expect(service.indexAskMissing).toHaveBeenCalledWith({ projectIds: [3] }, false));
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
         await waitFor(() => expect(screen.queryByText(/precisa ser recalculado/)).not.toBeInTheDocument());
+      });
+
+      it('says going back to the previous model spares recalculating, with the way to the settings', async () => {
+        const service = serviceWith({ outdated: [article(1)], previousModel: 'ollama/nomic-embed-text' });
+        await open(service);
+        await chooseProject('Revisão');
+
+        expect(await screen.findByText(/Eles vieram de nomic-embed-text \(Ollama\)/)).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Configurações' })).toHaveAttribute('href', '/settings');
+      });
+
+      it('says nothing of a previous model it does not know', async () => {
+        const service = serviceWith({ outdated: [article(1)] });
+        await open(service);
+        await chooseProject('Revisão');
+
+        await screen.findByRole('button', { name: 'Recalcular 1 PDF' });
+        expect(screen.queryByText(/Prefere não recalcular/)).not.toBeInTheDocument();
+      });
+
+      it('says it again before removing the vectors of the others', async () => {
+        const service = serviceWith({ outdated: [article(1)] });
+        service.getAskIndexPlan.mockResolvedValue(
+          plan({ sizeChanged: true, othersLosingVectors: 2, previousModel: 'local/all-MiniLM-L6-v2' }),
+        );
+        await open(service);
+        await chooseProject('Revisão');
+
+        await press(await screen.findByRole('button', { name: 'Recalcular 1 PDF' }));
+
+        expect(within(screen.getByRole('dialog')).getByTestId('previous-model')).toHaveTextContent(
+          'all-MiniLM-L6-v2 (Local Embutido)',
+        );
       });
 
       it('counts both kinds on one button', async () => {
