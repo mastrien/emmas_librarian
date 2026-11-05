@@ -5,6 +5,8 @@ import { evidencesOf, type AuditEvidenceItem } from '../../../utils/auditEvidenc
 interface AuditEvidenceListProps {
   result: InvestigationResult;
   onOpen: (evidence: AuditEvidenceItem) => void;
+  /** Opens the article's PDF, when it has one: with nothing cited, it is the only place to check the answer. */
+  onOpenArticle?: () => void;
 }
 
 /**
@@ -14,12 +16,24 @@ interface AuditEvidenceListProps {
  * Usage:
  *   <AuditEvidenceList result={r} onOpen={(e) => openInReader(r, e)} />
  */
-export const AuditEvidenceList: React.FC<AuditEvidenceListProps> = ({ result, onOpen }) => {
+export const AuditEvidenceList: React.FC<AuditEvidenceListProps> = ({ result, onOpen, onOpenArticle }) => {
   const evidences = evidencesOf(result);
   if (evidences.length === 0) {
     return (
       <div className="audit-warn">
         A IA não citou nenhum trecho para esta resposta. Confira no PDF antes de marcar como correta.
+        {onOpenArticle && (
+          <div style={{ marginTop: 6 }}>
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ fontSize: '0.78rem', padding: '2px 8px' }}
+              onClick={onOpenArticle}
+            >
+              Abrir o PDF (P)
+            </button>
+          </div>
+        )}
       </div>
     );
   }

@@ -14,6 +14,7 @@ export interface AuditQueueProps {
   onEdit: (open: boolean) => void;
   onReview: (review: ResultReview) => void;
   onOpenEvidence: (evidence: AuditEvidenceItem) => void;
+  onOpenArticle?: () => void;
   onBack: () => void;
 }
 
@@ -25,7 +26,18 @@ export interface AuditQueueProps {
  *   <AuditQueue current={next} pending={left} ... onBack={() => setView('table')} />
  */
 export const AuditQueue: React.FC<AuditQueueProps> = (props) => {
-  const { current, pending, questionNumber, article, editing, onEdit, onReview, onOpenEvidence, onBack } = props;
+  const {
+    current,
+    pending,
+    questionNumber,
+    article,
+    editing,
+    onEdit,
+    onReview,
+    onOpenEvidence,
+    onOpenArticle,
+    onBack,
+  } = props;
   const head = (
     <div className="audit-row audit-spread">
       <button type="button" className="btn-secondary" onClick={onBack}>
@@ -72,7 +84,7 @@ export const AuditQueue: React.FC<AuditQueueProps> = (props) => {
         </div>
         <div>
           <div className="audit-eyebrow">O que ela citou</div>
-          <AuditEvidenceList result={current} onOpen={onOpenEvidence} />
+          <AuditEvidenceList result={current} onOpen={onOpenEvidence} onOpenArticle={onOpenArticle} />
         </div>
       </section>
     </>

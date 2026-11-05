@@ -30,6 +30,15 @@ export function readerStateForAudit(evidence: { text: string; page?: number }, b
 }
 
 /**
+ * The reader's state for an answer that cited nothing: the PDF from its start, with the way back to the audit.
+ *
+ * @example navigate(`/articles/${id}`, { state: readerStateForAuditArticle(back) });
+ */
+export function readerStateForAuditArticle(back: AuditReturn) {
+  return { returnTo: back };
+}
+
+/**
  * The audit to return to, read from the reader's router state; null when the reader was opened another way.
  *
  * Usage:
