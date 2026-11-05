@@ -111,3 +111,10 @@ frases numeradas. Muda os chunks e os embeddings da biblioteca (reindexar): medi
 Hoje a exportação de projeto leva tudo o que é do projeto, e as conversas de "Perguntar aos projetos" (#53) só
 entram no backup da biblioteca inteira, porque uma conversa pode envolver vários projetos. A ideia é uma exportação
 em que a pessoa escolhe o que vai e o que não vai, incluindo conversas. Depende da complexidade de implementar.
+
+## Ligar os artigos pelas citações encontradas no snowballing
+
+Sugerido pelo autor na validação final da epic #44 (2026-11-05). Quando "Explorar citações" (#51) encontra que um artigo do
+projeto cita outro, ou é citado por ele, essa ligação poderia ficar visível dentro do app: no modal de detalhes do artigo,
+ir direto para quem o cita e para quem ele cita, entre os artigos já salvos. Hoje a exploração só traz artigos novos e
+esquece a ligação. Precisaria guardar os pares encontrados, que hoje não ficam salvos.
