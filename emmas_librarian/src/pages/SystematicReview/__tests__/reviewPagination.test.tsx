@@ -29,14 +29,20 @@ const articles = (from: number, count: number, name: string) =>
 
 const rowsIn = (region: HTMLElement) => within(region).queryAllByTestId('review-row');
 
+// getByRole walks the accessibility tree of the whole page, which is slow in jsdom with hundreds of rows; these look
+// for buttons by their text instead, which is what makes the tests take seconds, not the app.
+const buttonIn = (root: HTMLElement, text: string) => within(root).getByText(text, { selector: 'button' });
+const regionNamed = (name: string) => document.querySelector(`section[aria-label="${name}"]`) as HTMLElement;
+
 describe('the review page pages each group on its own (validation of epic #44)', () => {
-  // 120 included, 60 in doubt, 55 excluded, 1010 undecided: 1245 articles, as in the validation.
+  // 120 included, 60 in doubt, 55 excluded; 1010 undecided make the 1245 articles of the validation. The other tests
+  // keep 120 undecided, enough for three pages: rendering 1245 rows in jsdom is slow, and the scale is the first test's.
   const included = articles(1, 120, 'Incluído');
   const doubt = articles(1001, 60, 'Dúvida');
   const excluded = articles(2001, 55, 'Excluído');
-  const pending = articles(3001, 1010, 'Pendente');
-  const service = () =>
-    screeningService(
+  const service = (undecided = 120) => {
+    const pending = articles(3001, undecided, 'Pendente');
+    return screeningService(
       [...included, ...doubt, ...excluded.map((a) => ({ ...a, status: 'archived' as const })), ...pending],
       [
         ...included.map((a) => storedDecision(a.id, INCLUDED)),
@@ -44,37 +50,38 @@ describe('the review page pages each group on its own (validation of epic #44)',
         ...excluded.map((a) => storedDecision(a.id, EXCLUDED)),
       ],
     );
+  };
 
-  it('shows at most one page of each group, and every group shows', async () => {
-    await openReview(service());
+  it('shows at most one page of each group, and every group shows, with the 1245 articles of the validation', async () => {
+    await openReview(service(1010));
 
-    expect(rowsIn(screen.getByRole('region', { name: 'Incluso (120)' }))).toHaveLength(50);
-    expect(rowsIn(screen.getByRole('region', { name: 'Em dúvida (60)' }))).toHaveLength(50);
-    expect(rowsIn(screen.getByRole('region', { name: 'Excluídos (55)' }))).toHaveLength(50);
+    expect(rowsIn(regionNamed('Incluso (120)'))).toHaveLength(50);
+    expect(rowsIn(regionNamed('Em dúvida (60)'))).toHaveLength(50);
+    expect(rowsIn(regionNamed('Excluídos (55)'))).toHaveLength(50);
     expect(screen.getAllByTestId('review-row')).toHaveLength(200);
-  });
+  }, 30000);
 
   it('turns the pages of one group, leaving the others where they are', async () => {
     await openReview(service());
-    const inclusion = screen.getByRole('region', { name: 'Incluso (120)' });
+    const inclusion = regionNamed('Incluso (120)');
 
-    fireEvent.click(within(inclusion).getByRole('button', { name: 'Página 3' }));
+    fireEvent.click(within(inclusion).getByLabelText('Página 3'));
 
     expect(rowsIn(inclusion)).toHaveLength(20);
     expect(within(inclusion).getByText('Incluído 101')).toBeInTheDocument();
-    expect(within(inclusion).getByRole('button', { name: 'Página 3' })).toHaveAttribute('aria-current', 'page');
-    expect(within(screen.getByRole('region', { name: 'Em dúvida (60)' })).getByText('Dúvida 1')).toBeInTheDocument();
+    expect(within(inclusion).getByLabelText('Página 3')).toHaveAttribute('aria-current', 'page');
+    expect(within(regionNamed('Em dúvida (60)')).getByText('Dúvida 1')).toBeInTheDocument();
   });
 
   it('pages the undecided, and "Selecionar todos" takes them all, not one page', async () => {
     const svc = service();
     await openReview(svc);
 
-    expect(screen.getByRole('navigation', { name: 'Páginas de Sem decisão' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Selecionar' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Selecionar todos' }));
+    expect(screen.getByLabelText('Páginas de Sem decisão')).toBeInTheDocument();
+    fireEvent.click(buttonIn(document.body, 'Selecionar'));
+    fireEvent.click(buttonIn(document.body, 'Selecionar todos'));
 
-    expect(screen.getByText('1010 selecionados')).toBeInTheDocument();
+    expect(screen.getByText('120 selecionados')).toBeInTheDocument();
   });
 
   it('shows no pages for a group that fits in one', async () => {
