@@ -47,6 +47,9 @@ import type {
   AskIndexResult,
   AskIndexTarget,
   AskQuestionInput,
+  ScreeningCriteria,
+  ScreeningEngineInfo,
+  ScreeningSuggestion,
   ProjectIndexCoverage,
   SearchMonitor,
   CitationSeedCount,
@@ -328,6 +331,20 @@ export const projectService: IProjectService = {
 
   indexAskMissing: (target: AskIndexTarget, replaceIndex = false): Promise<AskIndexResult> =>
     safeInvoke(IpcChannel.ASK_INDEX_MISSING, target, replaceIndex),
+
+  getScreeningCriteria: (projectId: number): Promise<ScreeningCriteria> =>
+    safeInvoke(IpcChannel.SCREENING_CRITERIA_GET, projectId),
+
+  saveScreeningCriteria: (projectId: number, criteria: ScreeningCriteria): Promise<void> =>
+    safeInvoke(IpcChannel.SCREENING_CRITERIA_SAVE, projectId, criteria),
+
+  getScreeningSuggestions: (projectId: number): Promise<ScreeningSuggestion[]> =>
+    safeInvoke(IpcChannel.SCREENING_SUGGESTIONS_LIST, projectId),
+
+  suggestScreening: (articleId: number): Promise<ScreeningSuggestion> =>
+    safeInvoke(IpcChannel.SCREENING_SUGGEST, articleId),
+
+  getScreeningEngine: (): Promise<ScreeningEngineInfo> => safeInvoke(IpcChannel.SCREENING_ENGINE),
 
   async massiveExtraction(
     articleId: number,

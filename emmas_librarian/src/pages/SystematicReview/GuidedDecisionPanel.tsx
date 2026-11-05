@@ -9,13 +9,17 @@ interface GuidedDecisionPanelProps {
   onDecide: (label: ScreeningLabel, note: string) => void;
   onMove: (step: -1 | 1) => void;
   onUndo: () => void;
+  /** What the AI suggests, at the stage that has suggestions (#54). */
+  suggestion?: React.ReactNode;
+  suggestedLabelId?: number | null;
+  onSuggest?: () => void;
 }
 
 const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
   (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.tagName === 'SELECT');
 
-// The keys of the guided screening: 1-9 decide, D duplicate, ← → move, Z undo, N writes a note. While typing a
+// The keys of the guided screening: 1-9 decide, D duplicate, ← → move, Z undo, S asks for a suggestion, N writes a note. While typing a
 // note the keys type; Escape leaves the note.
 function useGuidedKeys(
   props: GuidedDecisionPanelProps,
@@ -36,6 +40,7 @@ function useGuidedKeys(
       else if (e.key.toLowerCase() === 'd' && props.duplicate) props.onDecide(props.duplicate, note);
       else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') props.onMove(e.key === 'ArrowLeft' ? -1 : 1);
       else if (e.key.toLowerCase() === 'z') props.onUndo();
+      else if (e.key.toLowerCase() === 's') props.onSuggest?.();
       else if (e.key.toLowerCase() === 'n') {
         e.preventDefault();
         noteRef.current?.focus();
@@ -71,7 +76,7 @@ const Key: React.FC<{ children: React.ReactNode }> = ({ children }) => (
  * @example <GuidedDecisionPanel key={article.id} stage="title" options={options} … />
  */
 export const GuidedDecisionPanel: React.FC<GuidedDecisionPanelProps> = (props) => {
-  const { stage, options, duplicate, decision, onDecide } = props;
+  const { stage, options, duplicate, decision, onDecide, suggestion, suggestedLabelId } = props;
   const [note, setNote] = useState(decision?.note ?? '');
   const noteRef = useRef<HTMLTextAreaElement>(null);
   useGuidedKeys(props, note, noteRef);
@@ -89,6 +94,7 @@ export const GuidedDecisionPanel: React.FC<GuidedDecisionPanelProps> = (props) =
       }}
     >
       <strong>{stage === 'title' ? 'Decisão (título e resumo)' : 'Decisão (texto completo)'}</strong>
+      {suggestion}
       {options.map((label, i) => (
         <button
           key={label.id}
@@ -105,6 +111,7 @@ export const GuidedDecisionPanel: React.FC<GuidedDecisionPanelProps> = (props) =
           {i < 9 && <Key>{i + 1}</Key>}
           <span className={`review-dot review-dot--${label.kind}`} aria-hidden="true" />
           <span>{label.name}</span>
+          {suggestedLabelId === label.id && <span className="review-suggested">sugerido</span>}
         </button>
       ))}
       {duplicate && (

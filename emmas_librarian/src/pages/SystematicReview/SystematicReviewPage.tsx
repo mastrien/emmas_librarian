@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Play, Tag } from 'lucide-react';
+import { ArrowLeft, ListChecks, Play, Tag } from 'lucide-react';
 import type { Article, ScreeningLabel } from '../../types';
 import { listStage, type ReviewRow } from '../../utils/screeningView';
 import { MassCitationModal } from '../../components/modals/MassCitationModal';
@@ -10,6 +10,8 @@ import { PendingList } from './PendingList';
 import { ReviewCountsBar, UndoToast } from './ReviewBits';
 import { ManageLabelsModal } from './ManageLabelsModal';
 import { PrismaTab } from './prisma/PrismaTab';
+import { CriteriaModal } from './CriteriaModal';
+import { EvaluationTab } from './EvaluationTab';
 import './review.css';
 
 // Sections start open, except those the person closed during this visit.
@@ -39,11 +41,12 @@ function rowActions(screening: ScreeningState): RowActions {
   };
 }
 
-const ReviewHeader: React.FC<{ projectId: number; projectName: string; onManageLabels: () => void }> = ({
-  projectId,
-  projectName,
-  onManageLabels,
-}) => (
+const ReviewHeader: React.FC<{
+  projectId: number;
+  projectName: string;
+  onManageLabels: () => void;
+  onWriteCriteria: () => void;
+}> = ({ projectId, projectName, onManageLabels, onWriteCriteria }) => (
   <div className="review-header">
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-start' }}>
       <Link to={`/projects/${projectId}`} className="review-back">
@@ -53,6 +56,9 @@ const ReviewHeader: React.FC<{ projectId: number; projectName: string; onManageL
       <h1 className="review-title">Revisão sistemática</h1>
     </div>
     <div className="review-actions">
+      <button type="button" className="review-quiet" onClick={onWriteCriteria}>
+        <ListChecks size={16} aria-hidden="true" /> Critérios
+      </button>
       <button type="button" className="review-quiet" onClick={onManageLabels}>
         <Tag size={16} aria-hidden="true" /> Gerenciar rótulos
       </button>
@@ -113,8 +119,8 @@ const ReviewBody: React.FC<{ screening: ScreeningState; onCite: (articles: Artic
  * Usage:
  *   <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
  */
-/** The two tabs of the review page (#50): the screening and the PRISMA diagram, each with its own address. */
-export type ReviewTab = 'screening' | 'prisma';
+/** The tabs of the review page (#50, #54), each with its own address. */
+export type ReviewTab = 'screening' | 'prisma' | 'evaluation';
 
 const ReviewTabs: React.FC<{ projectId: number; tab: ReviewTab }> = ({ projectId, tab }) => (
   <nav aria-label="Abas da revisão" className="review-tabs">
@@ -132,6 +138,13 @@ const ReviewTabs: React.FC<{ projectId: number; tab: ReviewTab }> = ({ projectId
     >
       Diagrama PRISMA
     </Link>
+    <Link
+      to={`/projects/${projectId}/review/evaluation`}
+      className={tab === 'evaluation' ? 'review-tab review-tab--on' : 'review-tab'}
+      aria-current={tab === 'evaluation' ? 'page' : undefined}
+    >
+      Avaliar sugestões
+    </Link>
   </nav>
 );
 
@@ -139,6 +152,9 @@ export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'scr
   const projectId = Number(useParams<{ id: string }>().id);
   const screening = useScreening(projectId);
   const [managing, setManaging] = useState(false);
+  const [writingCriteria, setWritingCriteria] = useState(false);
+  // Criteria written from the header change what the evaluation compares, so it reads them again.
+  const [criteriaEdits, setCriteriaEdits] = useState(0);
   const [citing, setCiting] = useState<Article[] | null>(null);
   if (screening.loading) return <div className="review review-muted">Carregando a revisão…</div>;
   return (
@@ -147,13 +163,12 @@ export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'scr
         projectId={projectId}
         projectName={screening.project?.name ?? ''}
         onManageLabels={() => setManaging(true)}
+        onWriteCriteria={() => setWritingCriteria(true)}
       />
       <ReviewTabs projectId={projectId} tab={tab} />
-      {tab === 'prisma' ? (
-        <PrismaTab projectId={projectId} screening={screening} />
-      ) : (
-        <ReviewBody screening={screening} onCite={setCiting} />
-      )}
+      {tab === 'prisma' && <PrismaTab projectId={projectId} screening={screening} />}
+      {tab === 'evaluation' && <EvaluationTab key={criteriaEdits} projectId={projectId} screening={screening} />}
+      {tab === 'screening' && <ReviewBody screening={screening} onCite={setCiting} />}
       {screening.lastChange && <UndoToast change={screening.lastChange} />}
       <ManageLabelsModal
         isOpen={managing}
@@ -161,6 +176,15 @@ export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'scr
         projectId={projectId}
         screening={screening}
       />
+      {writingCriteria && (
+        <CriteriaModal
+          projectId={projectId}
+          onClose={() => {
+            setWritingCriteria(false);
+            setCriteriaEdits((n) => n + 1);
+          }}
+        />
+      )}
       <MassCitationModal isOpen={citing !== null} onClose={() => setCiting(null)} articles={citing ?? []} />
     </div>
   );

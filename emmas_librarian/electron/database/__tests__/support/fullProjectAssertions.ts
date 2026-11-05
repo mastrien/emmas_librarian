@@ -17,6 +17,10 @@ export function expectFullProjectCopied(db: Database.Database, projectId: number
   const other = one(db, "SELECT id FROM articles WHERE project_id = ? AND title = 'B'", projectId);
   const search = one(db, 'SELECT * FROM search_history WHERE project_id = ?', projectId);
   expect(one(db, 'SELECT writing_pad FROM projects WHERE id = ?', projectId).writing_pad).toBe('rascunho');
+  expect(one(db, 'SELECT screening_inclusion, screening_exclusion FROM projects WHERE id = ?', projectId)).toEqual({
+    screening_inclusion: 'adultos',
+    screening_exclusion: 'internados',
+  });
   expect(search).toMatchObject({ sort_by: 'date', limit_val: 20 });
   expect(article).toMatchObject({
     abstract: 'resumo',
@@ -64,6 +68,13 @@ function expectScreeningCopied(db: Database.Database, projectId: number, article
     stage: 'full',
     note: 'só radar',
     status_before: 'read',
+  });
+  expect(one(db, 'SELECT * FROM screening_suggestions WHERE article_id = ?', articleId)).toMatchObject({
+    label_id: label.id,
+    engine: 'ollama/llama3.1',
+    criteria: 'Incluir: x',
+    quote_found: 1,
+    tokens_estimated: 340,
   });
 }
 

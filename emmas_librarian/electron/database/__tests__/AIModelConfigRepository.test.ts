@@ -22,7 +22,7 @@ describe('AIModelConfigRepository', () => {
 
   it('should return default configs when getting all', () => {
     const configs = repo.getAllConfigs();
-    expect(configs).toHaveLength(4);
+    expect(configs).toHaveLength(5);
 
     const extractionConfig = configs.find((c) => c.skill === 'extraction');
     expect(extractionConfig).toBeDefined();
@@ -88,7 +88,7 @@ describe('AIModelConfigRepository', () => {
     repo.restoreDefaults();
 
     const configs = repo.getAllConfigs();
-    expect(configs).toHaveLength(4);
+    expect(configs).toHaveLength(5);
 
     const extractionConfig = configs.find((c) => c.skill === 'extraction');
     expect(extractionConfig?.provider).toBe('gemini');

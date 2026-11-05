@@ -30,6 +30,8 @@ import { registerDiaryAndTrashHandlers } from './handlers/diaryHandlers';
 import { registerCategoryAndInvestigationHandlers } from './handlers/categoryHandlers';
 import { registerAuditHandlers } from './handlers/auditHandlers';
 import { registerScreeningHandlers } from './handlers/screeningHandlers';
+import { registerScreeningSuggestionHandlers } from './handlers/screeningSuggestionHandlers';
+import { e2eScreeningModel } from '../services/screening/e2eScreeningModel';
 import { registerPrismaHandlers } from './handlers/prismaHandlers';
 import { registerBackupHandlers, scheduleStartupBackup } from './handlers/backupHandlers';
 import { registerAgendaHandlers } from './handlers/agendaHandlers';
@@ -109,6 +111,9 @@ function registerLibraryServices(
   registerExportHandlers(ipcMain, db, new ExportService());
   registerAuditHandlers(ipcMain, db);
   registerScreeningHandlers(ipcMain, db);
+  registerScreeningSuggestionHandlers(ipcMain, db, () =>
+    process.env.E2E_MOCK_AI_ASK === 'true' ? e2eScreeningModel() : aiService.screeningModel(),
+  );
   registerPrismaHandlers(ipcMain, db);
   registerDialogHandlers(ipcMain);
   registerDocumentHandlers(ipcMain, db);

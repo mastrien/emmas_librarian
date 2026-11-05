@@ -7,6 +7,7 @@ const SKILL_TITLES: Record<AISkill, string> = {
   summary: '📝 Geração de Resumos',
   extraction: '🔍 Investigação Massiva (RAG)',
   embeddings: '🧮 Embeddings (Vetorização)',
+  screening: '🧭 Sugestão de triagem',
 };
 
 const PROVIDERS: [AIProvider, string][] = [

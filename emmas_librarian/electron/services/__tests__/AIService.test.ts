@@ -230,6 +230,17 @@ describe('AIService', () => {
     });
   });
 
+  it('names the model set for screening suggestions, and asks it with that setting', async () => {
+    mockGetConfig.mockReturnValueOnce({ provider: 'openai', model_name: 'gpt-triagem' });
+    const { complete, modelId } = aiService.screeningModel();
+    expect(modelId).toBe('openai/gpt-triagem');
+
+    mockGetConfig.mockClear();
+    await complete('um prompt');
+
+    expect(mockGetConfig).toHaveBeenCalledWith('screening');
+  });
+
   // Regression: the local embedding model was cached inside app.asar; AIService must pass the models folder on.
   it('passes the local models folder to the EmbeddingService it creates', async () => {
     const answer = '{"question": "Q1?", "synthesizedAnswer": "A1", "confidenceScore": 0.9, "evidences": []}';

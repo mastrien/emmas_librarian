@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import type { Article, ScreeningStage } from '../../types';
@@ -6,6 +6,10 @@ import { useScreening } from './useScreening';
 import { useGuidedScreening, type GuidedScreening } from './useGuidedScreening';
 import { GuidedDecisionPanel } from './GuidedDecisionPanel';
 import { articleMeta, databasesOf } from './reviewText';
+import { CriteriaModal } from './CriteriaModal';
+import { SuggestionBlock } from './SuggestionBlock';
+import { useScreeningSuggestions } from './useScreeningSuggestions';
+import { hasCriteria } from '../../utils/screeningCriteria';
 import { readerStateBackTo } from '../../utils/readerReturn';
 import './review.css';
 
@@ -74,7 +78,24 @@ const ProgressLine: React.FC<{ guided: GuidedScreening }> = ({ guided }) => {
   );
 };
 
-const ArticleCard: React.FC<{ article: Article; guided: GuidedScreening }> = ({ article, guided }) => (
+// The words the suggestion leans on, marked in place so the person reads them in context.
+const Abstract: React.FC<{ text: string; quote: string | null }> = ({ text, quote }) => {
+  const at = quote ? text.indexOf(quote) : -1;
+  if (!quote || at < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, at)}
+      <mark>{quote}</mark>
+      {text.slice(at + quote.length)}
+    </>
+  );
+};
+
+const ArticleCard: React.FC<{ article: Article; guided: GuidedScreening; quote: string | null }> = ({
+  article,
+  guided,
+  quote,
+}) => (
   <article
     className="review-section"
     style={{
@@ -113,7 +134,9 @@ const ArticleCard: React.FC<{ article: Article; guided: GuidedScreening }> = ({ 
     <h3 className="review-menu-title" style={{ padding: 0, marginTop: '0.4rem' }}>
       Resumo
     </h3>
-    <p style={{ margin: 0, lineHeight: 1.65, maxWidth: '72ch' }}>{article.abstract || 'Sem resumo cadastrado.'}</p>
+    <p style={{ margin: 0, lineHeight: 1.65, maxWidth: '72ch' }}>
+      {article.abstract ? <Abstract text={article.abstract} quote={quote} /> : 'Sem resumo cadastrado.'}
+    </p>
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.4rem' }}>
       <button type="button" className="review-small" onClick={() => guided.go(-1)} disabled={guided.position === 0}>
         ← Anterior
@@ -189,8 +212,15 @@ export const GuidedScreeningPage: React.FC = () => {
   const projectId = Number(useParams<{ id: string }>().id);
   const screening = useScreening(projectId);
   const guided = useGuidedScreening(screening, projectId);
+  const suggestions = useScreeningSuggestions(projectId);
+  const [writingCriteria, setWritingCriteria] = useState(false);
   if (screening.loading) return <div className="review review-muted">Carregando a triagem…</div>;
   const article = guided.current;
+  // Suggestions read title and abstract, so they belong to that stage only.
+  const suggesting = guided.stage === 'title' && article !== null;
+  const suggestion = suggesting ? suggestions.forArticle(article.id) : null;
+  const canAsk = suggesting && !!article.abstract?.trim() && hasCriteria(suggestions.criteria);
+  const asking = canAsk && suggestions.running === null && (!suggestion || suggestions.isStale(suggestion));
   return (
     <div className="review fade-in">
       <div className="review-header" style={{ alignItems: 'center' }}>
@@ -209,7 +239,7 @@ export const GuidedScreeningPage: React.FC = () => {
         <Finished guided={guided} projectId={projectId} />
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.1rem', alignItems: 'flex-start' }}>
-          <ArticleCard article={article} guided={guided} />
+          <ArticleCard article={article} guided={guided} quote={suggestion?.quote_found ? suggestion.quote : null} />
           <GuidedDecisionPanel
             key={`${guided.stage}-${article.id}`}
             stage={guided.stage}
@@ -219,8 +249,33 @@ export const GuidedScreeningPage: React.FC = () => {
             onDecide={(label, note) => void guided.decide(label, note)}
             onMove={guided.go}
             onUndo={() => void guided.undo()}
+            suggestedLabelId={suggestion?.label_id ?? null}
+            onSuggest={asking ? () => void suggestions.suggest(article.id) : undefined}
+            suggestion={
+              suggesting && (
+                <SuggestionBlock
+                  suggestion={suggestion}
+                  stale={!!suggestion && suggestions.isStale(suggestion)}
+                  running={suggestions.running === article.id}
+                  failure={suggestions.failureOf(article.id)}
+                  hasCriteria={hasCriteria(suggestions.criteria)}
+                  hasAbstract={!!article.abstract?.trim()}
+                  labels={screening.labels}
+                  provider={suggestions.engine?.provider ?? null}
+                  onSuggest={() => void suggestions.suggest(article.id)}
+                  onWriteCriteria={() => setWritingCriteria(true)}
+                />
+              )
+            }
           />
         </div>
+      )}
+      {writingCriteria && (
+        <CriteriaModal
+          projectId={projectId}
+          onClose={() => setWritingCriteria(false)}
+          onSaved={suggestions.setCriteria}
+        />
       )}
     </div>
   );

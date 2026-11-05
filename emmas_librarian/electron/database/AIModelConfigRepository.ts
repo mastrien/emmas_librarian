@@ -43,6 +43,7 @@ export class AIModelConfigRepository {
       { skill: 'summary', provider: 'gemini', model_name: 'gemini-2.5-flash' },
       { skill: 'extraction', provider: 'gemini', model_name: 'gemini-2.5-flash' },
       { skill: 'embeddings', provider: 'ollama', model_name: 'nomic-embed-text' },
+      { skill: 'screening', provider: 'ollama', model_name: 'llama3.1' },
     ];
 
     const stmt = this.db.prepare(`

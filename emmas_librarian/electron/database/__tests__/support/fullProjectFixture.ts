@@ -22,7 +22,7 @@ const run = (db: Database.Database, sql: string, ...params: unknown[]) =>
 export function seedFullProject(db: Database.Database, files: { pdfPath: string; docPath: string }): number {
   const project = run(
     db,
-    "INSERT INTO projects (name, writing_pad, last_executed_at) VALUES ('Tese', 'rascunho', '2026-01-02 10:00:00')",
+    "INSERT INTO projects (name, writing_pad, last_executed_at, screening_inclusion, screening_exclusion) VALUES ('Tese', 'rascunho', '2026-01-02 10:00:00', 'adultos', 'internados')",
   );
   const search = run(
     db,
@@ -129,6 +129,12 @@ function seedScreening(db: Database.Database, project: number, article: number):
     article,
     label,
   );
+  run(
+    db,
+    "INSERT INTO screening_suggestions (article_id, label_id, engine, criteria, confidence, reason, quote, quote_found, elapsed_ms, tokens_estimated, created_at) VALUES (?, ?, 'ollama/llama3.1', 'Incluir: x', 0.8, 'fora do tema', 'um trecho', 1, 1200, 340, '2026-10-30 09:00:00')",
+    article,
+    label,
+  );
 }
 
 function seedReadingNotes(db: Database.Database, project: number, article: number): void {
@@ -192,6 +198,7 @@ const PROJECT_SCOPE: Record<string, string> = {
   investigation_audits: 'investigation_id IN (SELECT id FROM massive_investigations WHERE project_id = @project)',
   screening_labels: 'project_id = @project',
   screening_decisions: ARTICLES_OF_PROJECT,
+  screening_suggestions: ARTICLES_OF_PROJECT,
   prisma_sources: 'project_id = @project',
   prisma_article_origins: ARTICLES_OF_PROJECT,
   prisma_study_links: ARTICLES_OF_PROJECT,
