@@ -4,6 +4,9 @@ import type { ReviewRow } from '../../utils/screeningView';
 import { KINDS_BY_STAGE } from '../../utils/screeningPresets';
 import { LabelMenu } from './LabelMenu';
 import { ReviewArticleRow } from './ReviewArticleRow';
+import { NumberedPages } from '../../components/common/NumberedPages';
+import { usePagedRows } from '../../hooks/usePagedRows';
+import { REVIEW_PAGE_SIZE } from './ReviewSections';
 
 interface PendingListProps {
   rows: ReviewRow[];
@@ -80,6 +83,8 @@ const BatchBar: React.FC<{ selection: Selection; labels: ScreeningLabel[]; onPic
  */
 export const PendingList: React.FC<PendingListProps> = ({ rows, labels, onPick }) => {
   const selection = useSelection(rows);
+  // "Selecionar todos" takes every pending article, not only this page.
+  const paged = usePagedRows(rows, REVIEW_PAGE_SIZE);
   const read = rows.filter((r) => r.article.status === 'read').length;
   return (
     <>
@@ -97,7 +102,7 @@ export const PendingList: React.FC<PendingListProps> = ({ rows, labels, onPick }
         </div>
       )}
       <div className="review-list">
-        {rows.map((row) => (
+        {paged.rows.map((row) => (
           <ReviewArticleRow
             key={row.article.id}
             row={row}
@@ -119,6 +124,7 @@ export const PendingList: React.FC<PendingListProps> = ({ rows, labels, onPick }
         ))}
         {rows.length === 0 && <div className="review-empty">Todos os artigos já têm decisão.</div>}
       </div>
+      <NumberedPages label="Páginas de Sem decisão" page={paged.page} pages={paged.pages} onPage={paged.setPage} />
     </>
   );
 };
