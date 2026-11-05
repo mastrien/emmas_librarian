@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loadLocalEmbeddingExtractor, LOCAL_EMBEDDING_MODEL } from '../localEmbeddingModel';
+import { loadLocalEmbeddingExtractor, localModelRepository, LOCAL_EMBEDDING_MODEL } from '../localEmbeddingModel';
 import { FakeTransformersRuntime } from './fakes/FakeTransformersRuntime';
 
 describe('loadLocalEmbeddingExtractor', () => {
@@ -8,6 +8,18 @@ describe('loadLocalEmbeddingExtractor', () => {
     await loadLocalEmbeddingExtractor('/userData/models', runtime);
     expect(runtime.cacheDirAtLoad).toBe('/userData/models');
     expect(runtime.requestedModels).toEqual([LOCAL_EMBEDDING_MODEL]);
+  });
+
+  it('loads the model named in the settings', async () => {
+    const runtime = new FakeTransformersRuntime([0.5]);
+
+    await loadLocalEmbeddingExtractor('/m', runtime, 'paraphrase-multilingual-MiniLM-L12-v2');
+
+    expect(runtime.requestedModels).toEqual(['Xenova/paraphrase-multilingual-MiniLM-L12-v2']);
+  });
+
+  it.each([[undefined], [''], ['um-nome-qualquer']])('keeps the default for %s', (name) => {
+    expect(localModelRepository(name)).toBe(LOCAL_EMBEDDING_MODEL);
   });
 
   it("keeps the library's own cache folder when none is given", async () => {

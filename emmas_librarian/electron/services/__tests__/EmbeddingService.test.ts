@@ -183,13 +183,31 @@ describe('EmbeddingService', () => {
     await expect(service.embed('test')).rejects.toThrow('Provedor de embedding unknown não suportado.');
   });
 
-  // The only test that loads the local model: EmbeddingService keeps the loaded extractor in a static field.
+  // The only test that loads this model: EmbeddingService keeps each loaded extractor in a static field.
   it('loads the local ONNX model with its cache in the given models folder', async () => {
     const config = { ...mockConfig, provider: 'local' as const, model_name: 'all-MiniLM-L6-v2' };
     const runtime = new FakeTransformersRuntime([0.25, 0.5]);
     const service = new EmbeddingService(config, {}, '/userData/models', async () => runtime);
     expect(await service.embed('texto local')).toEqual([0.25, 0.5]);
     expect(runtime.cacheDirAtLoad).toBe('/userData/models');
+  });
+
+  // It used to load the default whatever the settings said, and recorded the vectors under the name chosen.
+  it('loads the model chosen in the settings, keeping each one loaded', async () => {
+    const config = {
+      ...mockConfig,
+      provider: 'local' as const,
+      model_name: 'paraphrase-multilingual-MiniLM-L12-v2',
+    };
+    const runtime = new FakeTransformersRuntime([0.75]);
+    const load = vi.fn(async () => runtime);
+    const service = new EmbeddingService(config, {}, '/m', load);
+
+    expect(await service.embed('um')).toEqual([0.75]);
+    await service.embed('dois');
+
+    expect(runtime.requestedModels).toEqual(['Xenova/paraphrase-multilingual-MiniLM-L12-v2']);
+    expect(load).toHaveBeenCalledTimes(1);
   });
 
   it('should support local ONNX provider', async () => {

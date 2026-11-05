@@ -25,3 +25,12 @@ describe('suggestedModelFor', () => {
     expect(suggestedModelFor('embeddings', 'anthropic', 'text-embedding-3-small')).toBe('text-embedding-3-small');
   });
 });
+
+describe('the multilingual local model (#55)', () => {
+  it('is offered for local embeddings, after the default', () => {
+    expect(modelSuggestions('embeddings', 'local')).toEqual([
+      'all-MiniLM-L6-v2',
+      'paraphrase-multilingual-MiniLM-L12-v2',
+    ]);
+  });
+});

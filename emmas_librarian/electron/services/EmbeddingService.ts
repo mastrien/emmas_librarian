@@ -3,13 +3,14 @@ import { AppError } from '../ipc/errorHandler';
 import {
   importTransformers,
   loadLocalEmbeddingExtractor,
-  LOCAL_EMBEDDING_MODEL,
+  localModelRepository,
   type LocalEmbeddingExtractor,
   type TransformersRuntime,
 } from './localEmbeddingModel';
 
 export class EmbeddingService {
-  private static transformerExtractor: LocalEmbeddingExtractor | null = null;
+  // One per model: the settings can change while the app is open, and vectors must come from the model they name.
+  private static readonly transformerExtractors = new Map<string, LocalEmbeddingExtractor>();
 
   constructor(
     private readonly config: AIModelConfig,
@@ -238,12 +239,8 @@ export class EmbeddingService {
 
     if (this.config.provider === 'local' || this.config.provider === 'llama_cpp') {
       try {
-        if (!EmbeddingService.transformerExtractor) {
-          console.log(`[EmbeddingService] Inicializando motor local de vetorização ONNX (${LOCAL_EMBEDDING_MODEL})...`);
-          const runtime = await this.loadTransformers();
-          EmbeddingService.transformerExtractor = await loadLocalEmbeddingExtractor(this.localModelsDir, runtime);
-        }
-        const output = await EmbeddingService.transformerExtractor(text, { pooling: 'mean', normalize: true });
+        const extract = await this.localExtractor();
+        const output = await extract(text, { pooling: 'mean', normalize: true });
         return Array.from(output.data) as number[];
       } catch (err: any) {
         throw new AppError(
@@ -267,6 +264,17 @@ export class EmbeddingService {
       'USER_ERROR',
       `Provedor de embedding ${this.config.provider} não suportado.`,
     );
+  }
+
+  private async localExtractor(): Promise<LocalEmbeddingExtractor> {
+    const repository = localModelRepository(this.config.model_name);
+    const known = EmbeddingService.transformerExtractors.get(repository);
+    if (known) return known;
+    console.log(`[EmbeddingService] Inicializando motor local de vetorização ONNX (${repository})...`);
+    const runtime = await this.loadTransformers();
+    const extract = await loadLocalEmbeddingExtractor(this.localModelsDir, runtime, this.config.model_name);
+    EmbeddingService.transformerExtractors.set(repository, extract);
+    return extract;
   }
 
   async embedBatch(texts: string[]): Promise<number[][]> {

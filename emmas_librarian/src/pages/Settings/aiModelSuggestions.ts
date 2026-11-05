@@ -13,12 +13,15 @@ const TEXT_MODEL_SUGGESTIONS: SuggestionTable = {
 };
 
 const EMBEDDING_MODEL_SUGGESTIONS: SuggestionTable = {
-  local: ['all-MiniLM-L6-v2'],
+  local: ['all-MiniLM-L6-v2', 'paraphrase-multilingual-MiniLM-L12-v2'],
   llama_cpp: ['all-MiniLM-L6-v2'],
   gemini: ['text-embedding-004'],
   openai: ['text-embedding-3-small', 'text-embedding-3-large'],
   ollama: ['nomic-embed-text', 'all-minilm'],
 };
+
+/** What the multilingual local model costs, said before it is chosen. Checked on its page, 2026-11-05 (#55). */
+export const MULTILINGUAL_LOCAL_MODEL = 'paraphrase-multilingual-MiniLM-L12-v2';
 
 /**
  * Model names offered in the settings autocomplete for a skill/provider pair.
