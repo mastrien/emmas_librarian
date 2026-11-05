@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { Article } from '../../types';
+import { useProjectService } from '../../contexts/ServicesContext';
+import { describeError } from '../../utils/describeError';
+import type { Article, ScreeningSuggestion } from '../../types';
 import { criteriaSnapshot, hasCriteria, providerName } from '../../utils/screeningCriteria';
 import { evaluateEngines, rateText, sampleArticles, type EngineEvaluation } from '../../utils/screeningEvaluation';
 import { decisionAt } from '../../utils/screeningView';
@@ -97,6 +99,54 @@ const SmallSampleNote: React.FC<{ evaluation: EngineEvaluation }> = ({ evaluatio
       pontos. Trate o número como uma indicação.
     </p>
   ) : null;
+
+/**
+ * The local classifier as one more engine in the table (#54). It needs no criteria and calls no provider. Each article
+ * is judged by a round that did not learn from it, or it would look far better than it is.
+ */
+const ClassifierEvaluation: React.FC<{ projectId: number; onDone: (suggestions: ScreeningSuggestion[]) => void }> = ({
+  projectId,
+  onDone,
+}) => {
+  const service = useProjectService();
+  const [outcome, setOutcome] = useState<string | null>(null);
+  const [running, setRunning] = useState(false);
+
+  const evaluate = async () => {
+    setRunning(true);
+    try {
+      const saved = await service.evaluateClassifier(projectId);
+      onDone(saved);
+      setOutcome(
+        saved.length === 0
+          ? 'Ainda não dá para medir: é preciso ter vetores de artigos decididos, com ao menos 3 relevantes e 3 excluídos. Os vetores são gerados na simulação, abaixo.'
+          : null,
+      );
+    } catch (err) {
+      setOutcome(describeError(err));
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
+      <p className="review-muted" style={{ margin: 0, maxWidth: '72ch' }}>
+        O classificador local aprende com as suas decisões e roda neste computador, sem consumir tokens. Cada artigo é
+        julgado por uma rodada que não aprendeu com ele. Ele não escreve justificativa, então por enquanto só aparece
+        aqui, para comparar.
+      </p>
+      <button type="button" className="review-small" disabled={running} onClick={() => void evaluate()}>
+        {running ? 'Medindo…' : 'Medir o classificador local'}
+      </button>
+      {outcome && (
+        <p role="note" style={{ margin: 0 }}>
+          {outcome}
+        </p>
+      )}
+    </div>
+  );
+};
 
 /** Who can be measured: decided at title and abstract, not a duplicate, and with an abstract to read. */
 function articlesToEvaluate(screening: ScreeningState): number[] {
@@ -202,6 +252,7 @@ export const EvaluationTab: React.FC<{ projectId: number; screening: ScreeningSt
           {evaluation.problem}
         </p>
       )}
+      <ClassifierEvaluation projectId={projectId} onDone={(saved) => saved.forEach(suggestions.keep)} />
       {evaluations.length > 0 && <EnginesTable evaluations={evaluations} />}
       {current && <SmallSampleNote evaluation={current} />}
       {current && current.missed.length > 0 && <MissedList evaluation={current} articles={screening.articles} />}

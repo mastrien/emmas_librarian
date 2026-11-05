@@ -218,6 +218,7 @@ export enum IpcChannel {
   SCREENING_VECTORS_GENERATE = 'screening:vectorsGenerate',
   SCREENING_RANK = 'screening:rank',
   SCREENING_SIMULATE = 'screening:simulate',
+  SCREENING_EVALUATE_CLASSIFIER = 'screening:evaluateClassifier',
   ASK_INDEX_PLAN = 'ask:indexPlan',
   AI_MODEL_CONFIG_GET_ALL = 'aiModelConfig:getAll',
   AI_MODEL_CONFIG_UPDATE = 'aiModelConfig:update',

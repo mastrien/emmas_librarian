@@ -55,6 +55,19 @@ describe('screening order IPC handlers (#55)', () => {
     expect(rank.learnedFrom).toBe(6);
   });
 
+  it('measures the classifier on what was decided, as an engine of its own', async () => {
+    const yes = Array.from({ length: 6 }, (_, i) => add(`Sim ${i}`));
+    const no = Array.from({ length: 6 }, (_, i) => add(`Não ${i}`));
+    await ipc.invoke(IpcChannel.SCREENING_VECTORS_GENERATE, projectId);
+    db.screeningDecisionRepo.decide(yes, labelOf('include'), 'title');
+    db.screeningDecisionRepo.decide(no, labelOf('exclude'), 'title');
+
+    const saved = (await ipc.invoke(IpcChannel.SCREENING_EVALUATE_CLASSIFIER, projectId)) as { engine: string }[];
+
+    expect(saved).toHaveLength(12);
+    expect(saved[0].engine).toBe('classificador-local/ollama/x');
+  });
+
   it('simulates what was decided', async () => {
     const id = add('Sim 1');
     await ipc.invoke(IpcChannel.SCREENING_VECTORS_GENERATE, projectId);

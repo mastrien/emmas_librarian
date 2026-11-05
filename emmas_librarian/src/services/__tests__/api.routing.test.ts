@@ -412,6 +412,12 @@ const routes: RouteCase[] = [
     args: [3],
   },
   {
+    method: 'evaluateClassifier',
+    call: () => api.evaluateClassifier(3),
+    channel: IpcChannel.SCREENING_EVALUATE_CLASSIFIER,
+    args: [3],
+  },
+  {
     method: 'simulateScreening',
     call: () => api.simulateScreening(3),
     channel: IpcChannel.SCREENING_SIMULATE,

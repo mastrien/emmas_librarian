@@ -366,6 +366,9 @@ export const projectService: IProjectService = {
   simulateScreening: (projectId: number): Promise<ScreeningSimulation> =>
     safeInvoke(IpcChannel.SCREENING_SIMULATE, projectId),
 
+  evaluateClassifier: (projectId: number): Promise<ScreeningSuggestion[]> =>
+    safeInvoke(IpcChannel.SCREENING_EVALUATE_CLASSIFIER, projectId),
+
   async massiveExtraction(
     articleId: number,
     questions: string[],

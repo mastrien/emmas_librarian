@@ -288,6 +288,8 @@ export interface IProjectService {
   generateArticleVectors(projectId: number): Promise<ArticleVectorStep>;
   rankScreening(projectId: number): Promise<ScreeningRank>;
   simulateScreening(projectId: number): Promise<ScreeningSimulation>;
+  /** Measures the local classifier on what was decided. No provider is called, and nothing shows in the screening. */
+  evaluateClassifier(projectId: number): Promise<ScreeningSuggestion[]>;
   massiveExtraction(articleId: number, questions: string[]): Promise<ExtractionAnswer[]>;
   extractMetadata(articleId: number): Promise<ExtractedMetadata>;
 

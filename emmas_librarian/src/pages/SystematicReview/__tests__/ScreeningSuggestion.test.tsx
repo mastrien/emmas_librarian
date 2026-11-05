@@ -383,6 +383,50 @@ describe('evaluating the suggestions (#54)', () => {
     expect(service.suggestScreening).toHaveBeenCalledTimes(50);
   });
 
+  describe('the local classifier', () => {
+    const verdict = (articleId: number, labelId: number) =>
+      suggestionOf(articleId, { id: 100 + articleId, label_id: labelId, engine: 'classificador-local/ollama/x' });
+
+    it('joins the table when measured, asking no provider', async () => {
+      const service = evaluationService();
+      service.evaluateClassifier.mockResolvedValue([verdict(1, INCLUDED), verdict(2, EXCLUDED)]);
+      await openEvaluation(service);
+
+      await press(screen.getByRole('button', { name: 'Medir o classificador local' }));
+
+      expect(screen.getByRole('row', { name: /classificador-local/ })).toHaveTextContent('50% (1 de 2)');
+      expect(service.suggestScreening).not.toHaveBeenCalled();
+    });
+
+    it('says what is missing when there is nothing to measure yet', async () => {
+      const service = evaluationService();
+      await openEvaluation(service);
+
+      await press(screen.getByRole('button', { name: 'Medir o classificador local' }));
+
+      expect(screen.getByRole('note')).toHaveTextContent('ao menos 3 relevantes e 3 excluídos');
+    });
+
+    it('shows why it could not measure', async () => {
+      const service = evaluationService();
+      service.evaluateClassifier.mockRejectedValue(new Error('banco ocupado'));
+      await openEvaluation(service);
+
+      await press(screen.getByRole('button', { name: 'Medir o classificador local' }));
+
+      expect(screen.getByRole('note')).toHaveTextContent('banco ocupado');
+    });
+
+    it('does not appear in the guided screening', async () => {
+      const service = screeningService([reviewArticle(1, 'ConvLSTM', { abstract: ABSTRACT })]);
+      service.getScreeningCriteria.mockResolvedValue(CRITERIA);
+      service.getScreeningSuggestions.mockResolvedValue([verdict(1, INCLUDED)]);
+      await renderAt(service, '/projects/1/review/guided');
+
+      expect(screen.queryByText(/A IA sugere/)).not.toBeInTheDocument();
+    });
+  });
+
   it('says what is missing before it can evaluate', async () => {
     const service = screeningService([reviewArticle(1, 'ConvLSTM')]);
     await openEvaluation(service);
