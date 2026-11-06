@@ -201,7 +201,7 @@ const ellipsis: React.CSSProperties = { whiteSpace: 'nowrap', overflow: 'hidden'
 const categoryBadgeStyle: React.CSSProperties = {
   fontSize: '0.7rem',
   padding: '0.1rem 0.4rem',
-  borderRadius: 'var(--radius-xs, 4px)',
+  borderRadius: 'var(--radius-xs)',
   background: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
   color: 'var(--color-primary)',
   fontWeight: 500,

@@ -19,7 +19,7 @@ const UpdateProgressBar: React.FC<{ percent: number; speed: number }> = ({ perce
       <span>Baixando atualização... {percent.toFixed(0)}%</span>
       <span>{(speed / (1024 * 1024)).toFixed(2)} MB/s</span>
     </div>
-    <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px' }}>
+    <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-main)', borderRadius: '4px' }}>
       <div
         style={{
           width: `${Math.min(100, Math.max(0, percent))}%`,
@@ -54,7 +54,7 @@ const ReleaseNotesView: React.FC<{ notes?: string }> = ({ notes }) => {
             marginTop: '0.5rem',
             padding: '0.75rem',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'var(--bg-secondary)',
+            backgroundColor: 'var(--bg-main)',
             fontSize: '0.85rem',
             whiteSpace: 'pre-wrap',
           }}
@@ -75,7 +75,7 @@ const UpdateNotAppliedNotice: React.FC<{ targetVersion?: string; currentVersion:
     style={{
       padding: '0.75rem 1rem',
       borderRadius: 'var(--radius-md)',
-      backgroundColor: 'var(--bg-warning-subtle, rgba(245, 158, 11, 0.12))',
+      backgroundColor: 'var(--color-warning-subtle)',
       display: 'flex',
       alignItems: 'flex-start',
       gap: '0.5rem',
@@ -162,7 +162,7 @@ export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
             style={{
               padding: '0.75rem 1rem',
               borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--bg-secondary)',
+              backgroundColor: 'var(--bg-main)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
@@ -180,7 +180,7 @@ export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
               padding: '1rem',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-secondary)',
+              backgroundColor: 'var(--bg-main)',
             }}
           >
             <div
@@ -232,7 +232,7 @@ export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
             style={{
               padding: '1rem',
               borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--bg-secondary)',
+              backgroundColor: 'var(--bg-main)',
               border: '1px solid var(--border-color)',
             }}
           >
@@ -269,7 +269,7 @@ export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
             style={{
               padding: '0.75rem 1rem',
               borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--bg-danger-subtle, rgba(239, 68, 68, 0.1))',
+              backgroundColor: 'var(--color-danger-subtle)',
               color: 'var(--color-danger, #ef4444)',
               display: 'flex',
               alignItems: 'center',
