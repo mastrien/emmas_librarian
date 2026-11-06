@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import { useProjectService } from '../contexts/ServicesContext';
 import type { Article } from '../types';
 import { useProjectData } from './ProjectDetails/hooks/useProjectData';
@@ -22,6 +21,7 @@ import { DiarySection } from '../components/common/DiarySection';
 import { SearchHistoryModal } from '../components/modals/SearchHistoryModal';
 import { outsideSearchIds } from '../utils/outsideSearchEntries';
 import { useOpenAccessPdfs } from './ProjectDetails/hooks/useOpenAccessPdfs';
+import { BackLink } from '../components/common/BackLink';
 
 const ARTICLES_PER_PAGE = 50;
 
@@ -69,18 +69,9 @@ export const ProjectDetailsPage: React.FC = () => {
       {...pdfImport.dropZone}
     >
       {pdfImport.isDragging && <PdfDropOverlay />}
-      <Link
-        to="/"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          marginBottom: '1.5rem',
-          color: 'var(--text-muted)',
-        }}
-      >
-        <ArrowLeft size={18} /> Voltar para Projetos
-      </Link>
+      <BackLink to="/" className="page-back">
+        Voltar aos projetos
+      </BackLink>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
         <ProjectHeader

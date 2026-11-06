@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import type { AskConversationSummary } from '../../types';
+import { BackLink } from '../../components/common/BackLink';
 
 const projectCount = (count: number) => (count === 1 ? '1 projeto' : `${count} projetos`);
 
@@ -55,9 +56,7 @@ export const AskSidebar: React.FC<{
   onPick: () => void;
 }> = ({ conversations, onRemove, onPick }) => (
   <nav className="ask-side" aria-label="Conversas">
-    <Link to="/" className="ask-back">
-      <ArrowLeft size={16} aria-hidden="true" /> Voltar aos projetos
-    </Link>
+    <BackLink to="/">Voltar aos projetos</BackLink>
     <Link to="/ask" className="btn-primary ask-new" onClick={onPick}>
       <Plus size={16} aria-hidden="true" /> Nova conversa
     </Link>

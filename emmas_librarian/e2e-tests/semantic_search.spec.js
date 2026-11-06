@@ -53,7 +53,7 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
 
     await review.getByRole('button', { name: /Descartar/ }).click();
     await expect(review).toBeHidden();
-    await window.click('text="Voltar para o Projeto"');
+    await window.getByRole('link', { name: 'Voltar ao projeto' }).click();
     await expect(window.getByText('Nova busca')).toBeVisible();
     await expect(resultRow).toHaveCount(0);
 

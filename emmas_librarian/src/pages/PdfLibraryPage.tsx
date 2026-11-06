@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Link2, Search, AlertTriangle, ExternalLink, ArrowLeft, Info, Upload } from 'lucide-react';
+import { Trash2, Link2, Search, AlertTriangle, ExternalLink, Info, Upload } from 'lucide-react';
 import { useProjectService } from '../contexts/ServicesContext';
 import { Article, Project } from '../types';
+import { BackLink } from '../components/common/BackLink';
 
 interface PdfFileRecord {
   id: number;
@@ -171,22 +172,7 @@ export const PdfLibraryPage: React.FC = () => {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button
-            onClick={() => navigate('/')}
-            title="Voltar"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              padding: '0.4rem',
-              cursor: 'pointer',
-              color: 'var(--text-main)',
-              display: 'flex',
-              alignItems: 'center',
-              borderRadius: 'var(--radius-md)',
-            }}
-          >
-            <ArrowLeft size={22} />
-          </button>
+          <BackLink to="/" label="Voltar aos projetos" />
           <div>
             <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 800 }}>Biblioteca Global de PDFs</h1>
             <p style={{ color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>
