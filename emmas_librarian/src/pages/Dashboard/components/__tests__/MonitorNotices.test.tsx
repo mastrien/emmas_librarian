@@ -60,6 +60,8 @@ describe('MonitorNotices (#52)', () => {
     expect(await section()).toHaveTextContent('5 artigos novos em Revisão');
     expect(await section()).toHaveTextContent('Busca #7: Título contém "radar"');
     await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+    // Release 1.3.0: monitoring was only seen without new results, so it says it is experimental.
+    expect(within(await section()).getByText('Experimental')).toBeInTheDocument();
   });
 
   it('shows what the last check found without checking again', async () => {

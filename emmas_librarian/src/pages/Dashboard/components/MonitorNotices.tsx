@@ -4,6 +4,8 @@ import { SearchSummaryModal } from '../../../components/modals/SearchSummaryModa
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { MonitorNotice, SearchPreview } from '../../../types';
 import { describeError } from '../../../utils/describeError';
+import { ExperimentalTag } from '../../../components/common/ExperimentalTag';
+import { MONITOR_EXPERIMENTAL_REASON } from '../../../components/modals/searchHistory/SearchMonitorControl';
 
 const cardStyle: React.CSSProperties = {
   padding: '0.9rem 1rem',
@@ -149,7 +151,10 @@ export const MonitorNotices: React.FC = () => {
           <div
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}
           >
-            <strong style={{ color: 'var(--text-heading)' }}>Novidades nas buscas monitoradas</strong>
+            <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+              <strong style={{ color: 'var(--text-heading)' }}>Novidades nas buscas monitoradas</strong>
+              <ExperimentalTag reason={MONITOR_EXPERIMENTAL_REASON} />
+            </span>
             <button
               type="button"
               aria-label="Dispensar o aviso"

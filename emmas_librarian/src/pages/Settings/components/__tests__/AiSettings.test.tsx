@@ -115,6 +115,7 @@ describe('AiSettings per-skill configuration', () => {
     renderSettings({ aiConfigs: [config('embeddings', 'local', 'paraphrase-multilingual-MiniLM-L12-v2')] });
 
     expect(screen.getByRole('note')).toHaveTextContent('cerca de 118 MB');
+    expect(within(screen.getByRole('note')).getByText('Experimental')).toBeInTheDocument();
   });
 
   it('says nothing of it with the default local model', () => {

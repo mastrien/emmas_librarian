@@ -279,6 +279,9 @@ describe('evaluating the suggestions (#54)', () => {
 
     expect(screen.getByText(/de 3 artigos para Ollama \(local\). Isso consome tokens/)).toBeInTheDocument();
     expect(service.suggestScreening).not.toHaveBeenCalled();
+    expect(
+      within(screen.getByRole('region', { name: 'Avaliar sugestões' })).getByText('Experimental'),
+    ).toBeInTheDocument();
   });
 
   it('asks about what was decided and has an abstract, then shows the measures', async () => {
