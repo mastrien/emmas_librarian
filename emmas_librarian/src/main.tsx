@@ -5,6 +5,8 @@
 import { Suspense, lazy } from 'react';
 import * as ReactDOMClient from 'react-dom/client';
 import { HashRouter, Routes, Route } from 'react-router-dom';
+import { readAppearance } from './theme/appearance';
+import { commitAppearance, windowAppearanceDeps } from './theme/useAppearance';
 import { AskPage } from './pages/Ask/AskPage';
 import { AppShell } from './AppShell';
 import { GlobalErrorProvider } from './contexts/GlobalErrorContext';
@@ -93,16 +95,8 @@ const InvestigationPage = lazy(() =>
 );
 const AgendaPage = lazy(() => import('./pages/AgendaPage').then((module) => ({ default: module.AgendaPage })));
 
-// Initialize theme and accent
-const savedTheme = localStorage.getItem('theme') || 'light';
-const savedAccent = localStorage.getItem('accent') || 'blue';
-document.documentElement.setAttribute('data-theme', savedTheme);
-document.documentElement.setAttribute('data-accent', savedAccent);
-
-const winApi = (window as any).electronAPI;
-if (winApi) {
-  winApi.invoke('UPDATE_TITLE_BAR', savedTheme);
-}
+// Theme, tone and accent go on <html> before the first render, so the app never flashes the default colours.
+commitAppearance(windowAppearanceDeps(), readAppearance(localStorage));
 
 import { ReactErrorBoundary } from './components/common/ErrorBoundary';
 
