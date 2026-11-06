@@ -38,6 +38,39 @@ export const REVIEW_HELP: { title: string; content: React.ReactNode } = {
           Primeiro título e resumo; quem passa segue para o texto completo, onde se decide de vez.
         </Term>
       </ul>
+      <h3 style={{ fontSize: '1rem', margin: '1rem 0 0' }}>Ajuda da IA na triagem</h3>
+      <p style={{ margin: '0.5rem 0 0' }}>
+        Nada disso decide por você: a IA só sugere um rótulo ou muda a ordem da fila, e a decisão continua sendo o botão
+        que você aperta. As funções marcadas como experimentais ainda não foram medidas numa triagem real.
+      </p>
+      <ul style={LIST}>
+        <Term name="Critérios">
+          O que o projeto inclui e exclui, escrito por você no botão "Critérios". Vão junto com o título, o ano e o
+          resumo em cada sugestão, então sem eles não há sugestão.
+        </Term>
+        <Term name="Sugestão de triagem">
+          Na triagem guiada, em título e resumo, "Sugerir" (ou a tecla S) pede à IA o rótulo que você marcaria, com a
+          justificativa e o trecho do resumo marcado. A sugestão fica guardada, porque gastou tokens. Se o trecho citado
+          não estiver no resumo, ela aparece com um aviso: a IA pode ter inventado.
+        </Term>
+        <Term name="Ordem prevista">
+          Na triagem guiada, um classificador aprende com as suas decisões e traz para a frente os artigos mais
+          parecidos com os que você manteve. Começa depois de 3 relevantes e 3 excluídos, e nenhum artigo sai da fila. A
+          faixa mostra só o que aconteceu ("nos últimos 50 artigos, 3 relevantes"), nunca uma estimativa de quantos
+          faltam, porque esse número pareceria seguro sem ser.
+        </Term>
+        <Term name="Avaliar sugestões">
+          Compara os motores com as decisões que você já tomou, sem mostrar essas decisões à IA. O recall diz quantos
+          dos artigos que você manteve (incluídos e em dúvida) o motor também manteria; perder um desses é o erro caro.
+          A precisão diz quantos dos que o motor manteria você manteve. O acerto compara com o tipo que você marcou,
+          então sugerir "incluir" onde você marcou "em dúvida" não perde o artigo, mas conta como erro. Com poucos
+          relevantes, cada erro pesa muito, e a aba avisa.
+        </Term>
+        <Term name="Simular a ordenação">
+          Refaz a triagem no computador, com as suas decisões como resposta, para mostrar quantos relevantes a ordem
+          prevista teria encontrado antes da ordem original. Vale para este projeto, não garante o mesmo em outro.
+        </Term>
+      </ul>
       <h3 style={{ fontSize: '1rem', margin: '1rem 0 0' }}>Termos da PRISMA</h3>
       <ul style={LIST}>
         <Term name="Registro">

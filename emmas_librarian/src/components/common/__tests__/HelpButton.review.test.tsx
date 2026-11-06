@@ -34,6 +34,22 @@ describe('HelpButton on the systematic review page (#50)', () => {
     );
   });
 
+  // Release 1.3.0: the suggestion, the predicted order and the evaluation explain themselves, numbers included.
+  it.each(['/projects/1/review/guided', '/projects/1/review/evaluation'])('explains the AI help on %s', (path) => {
+    openHelp(path);
+
+    for (const term of [
+      'Critérios:',
+      'Sugestão de triagem:',
+      'Ordem prevista:',
+      'Avaliar sugestões:',
+      'Simular a ordenação:',
+    ]) {
+      expect(screen.getByText(term)).toBeInTheDocument();
+    }
+    expect(screen.getByText(/O recall diz quantos dos artigos que você manteve/)).toBeInTheDocument();
+  });
+
   it('keeps the project guide on the project page', () => {
     openHelp('/projects/1');
 
