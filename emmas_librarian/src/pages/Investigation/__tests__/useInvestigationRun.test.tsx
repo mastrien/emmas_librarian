@@ -123,6 +123,16 @@ describe('describeExtractionModel', () => {
     expect(await describeExtractionModel(service)).toBe('Ollama (gpt-oss:120b)');
   });
 
+  // The 1.3.0 tutorial captures showed "ollama_cloud (gpt-oss:120b)" in the investigation header.
+  it('names Ollama Cloud by its name, not its id', async () => {
+    const service = new FakeProjectService();
+    service.getAiModelConfigs.mockResolvedValue([
+      { skill: 'extraction', provider: 'ollama_cloud', model_name: 'gpt-oss:120b' },
+    ] as never);
+
+    expect(await describeExtractionModel(service)).toBe('Ollama Cloud (gpt-oss:120b)');
+  });
+
   it('names a provider it has no display name for by its id, and leaves out a missing model', async () => {
     const service = new FakeProjectService();
     service.getAiModelConfigs.mockResolvedValue([
