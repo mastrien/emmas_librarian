@@ -9,6 +9,7 @@ import { decisionAt } from '../../utils/screeningView';
 import { CriteriaModal } from './CriteriaModal';
 import { useScreeningEvaluation } from './useScreeningEvaluation';
 import { useScreeningSuggestions } from './useScreeningSuggestions';
+import { ExperimentalTag } from '../../components/common/ExperimentalTag';
 import type { ScreeningState } from './useScreening';
 
 const SAMPLE_SIZE = 50;
@@ -189,6 +190,7 @@ export const EvaluationTab: React.FC<{ projectId: number; screening: ScreeningSt
 
   return (
     <section className="review-section review-evaluation" aria-label="Avaliar sugestões">
+      <ExperimentalTag reason="A avaliação ainda não foi usada numa triagem real. Os números valem para este projeto e dependem de quantos relevantes ele tem." />
       <p style={{ margin: 0, maxWidth: '72ch' }}>
         Compara os motores com as suas decisões de título e resumo. A IA não vê essas decisões, só título, resumo e
         critérios. Para comparar outro motor, troque o modelo em <Link to="/settings">Configurações</Link> e avalie de

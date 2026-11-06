@@ -58,6 +58,9 @@ describe('the predicted order in the guided screening (#55)', () => {
     expect(await heading('Primeiro')).toBeInTheDocument();
     expect(service.getArticleVectorPlan).not.toHaveBeenCalled();
     expect(service.rankScreening).not.toHaveBeenCalled();
+    expect(
+      within(screen.getByRole('group', { name: 'Ordem da triagem' })).getByText('Experimental'),
+    ).toBeInTheDocument();
   });
 
   it('remembers the choice of the project, and opens on the likeliest', async () => {
@@ -231,6 +234,9 @@ describe('simulating the order (#55)', () => {
     service.simulateScreening.mockResolvedValue(simulation);
     await evaluation(service);
     expect(service.simulateScreening).not.toHaveBeenCalled();
+    expect(
+      within(screen.getByRole('region', { name: 'Simular a ordenação' })).getByText('Experimental'),
+    ).toBeInTheDocument();
 
     await press(screen.getByRole('button', { name: 'Simular' }));
 

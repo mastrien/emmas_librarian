@@ -9,6 +9,11 @@ import {
   type MonitorInterval,
 } from '../../../utils/searchMonitor';
 import { restoreSearch } from '../../../pages/Search/searchQueries';
+import { ExperimentalTag } from '../../../components/common/ExperimentalTag';
+
+/** Said wherever monitoring shows (release 1.3.0): it was only seen without new results so far. */
+export const MONITOR_EXPERIMENTAL_REASON =
+  'O monitoramento ainda não foi visto encontrando um artigo novo de verdade: até agora, só verificações sem novidades.';
 
 /**
  * The project's monitored searches, read once and changed as the person marks them.
@@ -91,6 +96,7 @@ export const SearchMonitorControl: React.FC<{
         />
         Monitorar esta busca
       </label>
+      <ExperimentalTag reason={MONITOR_EXPERIMENTAL_REASON} />
       {monitor && (
         <>
           <select

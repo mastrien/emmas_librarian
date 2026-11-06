@@ -48,6 +48,13 @@ describe('SearchMonitorControl (#52)', () => {
     expect(screen.queryByLabelText('Intervalo da verificação')).not.toBeInTheDocument();
   });
 
+  it('says monitoring is experimental, and why', async () => {
+    open(new FakeProjectService());
+    await box();
+
+    expect(screen.getByText('Experimental')).toHaveAttribute('title', expect.stringContaining('artigo novo'));
+  });
+
   it('marking asks for a week, says what a check spends and offers the three intervals', async () => {
     const service = new FakeProjectService();
     service.setSearchMonitor.mockResolvedValue([monitor()]);

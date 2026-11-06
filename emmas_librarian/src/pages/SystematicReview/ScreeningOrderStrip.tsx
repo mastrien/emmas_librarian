@@ -7,6 +7,10 @@ import { describeError } from '../../utils/describeError';
 import { providerName } from '../../utils/screeningCriteria';
 import { recentRelevant } from '../../utils/screeningView';
 import { useArticleVectors } from './useArticleVectors';
+import { ExperimentalTag } from '../../components/common/ExperimentalTag';
+
+const ORDER_REASON =
+  'Ainda não foi medido, numa triagem real, quanto a ordem prevista ajuda. Ela muda só a ordem: nenhum artigo sai da fila e nada é decidido.';
 
 const articles = (count: number) => (count === 1 ? '1 artigo' : `${count} artigos`);
 
@@ -153,9 +157,12 @@ export const ScreeningOrderStrip: React.FC<{
       aria-label="Ordem da triagem"
     >
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', justifyContent: 'space-between' }}>
-        <strong>
-          {order.queue ? `Ordem prevista, aprendida com ${rank?.learnedFrom} decisões.` : 'Ordem original.'}
-        </strong>
+        <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+          <strong>
+            {order.queue ? `Ordem prevista, aprendida com ${rank?.learnedFrom} decisões.` : 'Ordem original.'}
+          </strong>
+          <ExperimentalTag reason={ORDER_REASON} />
+        </span>
         <Toggle order={order} />
       </div>
       {enabled && failure && (

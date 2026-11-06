@@ -7,6 +7,7 @@ import { describeError } from '../../utils/describeError';
 import { embeddingModelName } from '../../utils/pdfCount';
 import { providerName } from '../../utils/screeningCriteria';
 import { useArticleVectors } from './useArticleVectors';
+import { ExperimentalTag } from '../../components/common/ExperimentalTag';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
@@ -140,7 +141,10 @@ export const SimulationSection: React.FC<{ projectId: number }> = ({ projectId }
   const failure = problem ?? vectors.error;
   return (
     <section className="review-section review-evaluation" aria-label="Simular a ordenação">
-      <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Simular a ordenação</h2>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+        <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Simular a ordenação</h2>
+        <ExperimentalTag reason="A simulação ainda não foi comparada com uma triagem real feita com a ordem prevista." />
+      </div>
       <p style={{ margin: 0, maxWidth: '72ch' }}>
         Refaz a triagem no computador, usando as suas decisões como resposta, para mostrar quanto a ordem prevista teria
         ajudado. Não muda nenhuma decisão, e o resultado se repete.

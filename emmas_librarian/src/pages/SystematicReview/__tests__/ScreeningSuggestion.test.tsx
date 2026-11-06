@@ -29,6 +29,9 @@ const suggestionOf = (articleId: number, extra: Partial<ScreeningSuggestion> = {
   ...extra,
 });
 
+// The guided screening also tags the predicted order, so the suggestion's tag is looked for in its own panel.
+const decisionPanel = () => screen.getByRole('complementary', { name: 'Decisão' });
+
 const settle = () =>
   act(async () => {
     await new Promise((resolve) => setTimeout(resolve));
@@ -72,6 +75,7 @@ describe('asking for a suggestion in the guided screening (#54)', () => {
 
     expect(service.suggestScreening).not.toHaveBeenCalled();
     expect(screen.getByText('Envia título, resumo e critérios para Ollama (local).')).toBeInTheDocument();
+    expect(within(decisionPanel()).getByText('Experimental')).toBeInTheDocument();
   });
 
   it('shows the suggestion when asked, marks the quote and the label, and decides nothing', async () => {
@@ -83,6 +87,10 @@ describe('asking for a suggestion in the guided screening (#54)', () => {
 
     expect(service.suggestScreening).toHaveBeenCalledWith(1);
     expect(screen.getByText('A IA sugere: Incluso')).toBeInTheDocument();
+    expect(within(decisionPanel()).getByText('Experimental')).toHaveAttribute(
+      'title',
+      expect.stringContaining('relevantes'),
+    );
     expect(screen.getByText('confiança 88%')).toBeInTheDocument();
     expect(screen.getByText(QUOTE).tagName).toBe('MARK');
     expect(screen.getByRole('button', { name: /Incluso.*sugerido/ })).toBeInTheDocument();
@@ -279,6 +287,9 @@ describe('evaluating the suggestions (#54)', () => {
 
     expect(screen.getByText(/de 3 artigos para Ollama \(local\). Isso consome tokens/)).toBeInTheDocument();
     expect(service.suggestScreening).not.toHaveBeenCalled();
+    expect(
+      within(screen.getByRole('region', { name: 'Avaliar sugestões' })).getByText('Experimental'),
+    ).toBeInTheDocument();
   });
 
   it('asks about what was decided and has an abstract, then shows the measures', async () => {
