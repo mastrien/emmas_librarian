@@ -31,10 +31,10 @@ export const CHANGELOG_RELEASES: ChangelogRelease[] = [
         avisado de artigos novos é experimental.
       </>,
       <>
-        <strong>Ajuda da IA na triagem:</strong> com os critérios do projeto escritos, a triagem guiada sugere um
-        rótulo, com a justificativa e o trecho do resumo. A ordem prevista, que traz primeiro os artigos mais parecidos
-        com os que você manteve, e a aba &quot;Avaliar sugestões&quot; são experimentais. A decisão continua sendo
-        sempre sua.
+        <strong>Ajuda da IA na triagem (experimental):</strong> com os critérios do projeto escritos, a triagem guiada
+        sugere um rótulo, com a justificativa e o trecho do resumo. A ordem prevista traz primeiro os artigos mais
+        parecidos com os que você manteve, e a aba &quot;Avaliar sugestões&quot; mede as sugestões com as suas decisões.
+        A decisão continua sendo sempre sua.
       </>,
       <>
         <strong>Modelo de embeddings:</strong> trocar o modelo não apaga mais o índice, e o aviso diz de qual modelo

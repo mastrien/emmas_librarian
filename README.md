@@ -55,7 +55,7 @@ Acompanhe as últimas novidades, melhorias e correções recentes do **Emma's Li
 - **Investigação com IA:** virou uma página, com as respostas em grade, revisão de cada resposta (aceitar, editar, rejeitar), auditoria por amostra com intervalo de confiança e evidências copiadas do trecho lido pela IA.
 - **Perguntar aos projetos:** conversa sobre os PDFs de um ou mais projetos, com artigo e página em cada afirmação e os pontos não conferidos marcados.
 - **Buscas:** relatório da estratégia de busca (XLSX e Markdown), refazer uma busca com "Publicados desde" e explorar citações. O monitoramento de buscas é experimental.
-- **Ajuda da IA na triagem:** sugestão de rótulo a partir dos critérios do projeto. A ordem prevista e a avaliação das sugestões são experimentais; a decisão é sempre sua.
+- **Ajuda da IA na triagem (experimental):** sugestão de rótulo a partir dos critérios do projeto, ordem prevista e avaliação das sugestões com as suas decisões. A decisão é sempre sua.
 - **Modelo de embeddings:** trocar o modelo não apaga o índice, e o aviso diz de qual modelo vieram os vetores. Novo modelo local multilíngue (experimental).
 - **Página do projeto:** filtro "Sem PDF", "Selecionar todos" em todas as páginas e modelos prontos de categorias em JSON.
 - **Linux (experimental):** primeira versão em AppImage.
