@@ -17,6 +17,7 @@ export function useProjectViewState<T>(projectId: number | null, name: string, i
 export const useProjectFiltering = (articles: Article[], itemsPerPage: number, projectId: number | null = null) => {
   const [searchTerm, setSearchTerm] = useProjectViewState(projectId, 'searchTerm', '');
   const [onlyWithPdf, setOnlyWithPdf] = useProjectViewState(projectId, 'onlyWithPdf', false);
+  const [onlyWithoutPdf, setOnlyWithoutPdf] = useProjectViewState(projectId, 'onlyWithoutPdf', false);
   const [onlyOpenAccess, setOnlyOpenAccess] = useProjectViewState(projectId, 'onlyOpenAccess', false);
   const [statusFilter, setStatusFilter] = useProjectViewState<'new' | 'read' | 'archived' | 'all'>(
     projectId,
@@ -72,13 +73,23 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
     () => ({
       searchTerm,
       onlyWithPdf,
+      onlyWithoutPdf,
       onlyOpenAccess,
       statusFilter,
       databases: selectedDatabases,
       docType: selectedDocType,
       keyword: selectedKeyword,
     }),
-    [searchTerm, onlyWithPdf, onlyOpenAccess, statusFilter, selectedDatabases, selectedDocType, selectedKeyword],
+    [
+      searchTerm,
+      onlyWithPdf,
+      onlyWithoutPdf,
+      onlyOpenAccess,
+      statusFilter,
+      selectedDatabases,
+      selectedDocType,
+      selectedKeyword,
+    ],
   );
 
   // Applies a whole set of filters at once (a chip removed, "Limpar filtros") and goes back to page 1.
@@ -86,6 +97,7 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
     (next: ArticleFilterCriteria) => {
       setSearchTerm(next.searchTerm);
       setOnlyWithPdf(next.onlyWithPdf);
+      setOnlyWithoutPdf(next.onlyWithoutPdf);
       setOnlyOpenAccess(next.onlyOpenAccess);
       setStatusFilter(next.statusFilter);
       setSelectedDatabases(next.databases);
@@ -96,6 +108,7 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
     [
       setSearchTerm,
       setOnlyWithPdf,
+      setOnlyWithoutPdf,
       setOnlyOpenAccess,
       setStatusFilter,
       setSelectedDatabases,

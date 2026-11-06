@@ -293,6 +293,18 @@ describe('ProjectArticlesTab multi-select', () => {
     expect(onStatusChangeMany).toHaveBeenCalledWith([3, 1], 'read');
   });
 
+  // Validation of epic #44: "Selecionar todos" took only the page, so a batch meant going page by page.
+  it('selects every article of the filtered list, on every page, and unselects them again', () => {
+    renderTab({ articles, pageSize: 1 });
+    start();
+
+    fireEvent.click(bar().getByRole('button', { name: 'Selecionar todos' }));
+    expect(bar().getByText('3 selecionados')).toBeInTheDocument();
+
+    fireEvent.click(bar().getByRole('button', { name: 'Desmarcar todos' }));
+    expect(bar().getByText('Nenhum selecionado')).toBeInTheDocument();
+  });
+
   it('selects every article on the page and unselects them again', () => {
     renderTab({ articles });
     start();
