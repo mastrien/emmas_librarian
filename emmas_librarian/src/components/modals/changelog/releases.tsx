@@ -8,6 +8,50 @@ export interface ChangelogRelease {
 /** Release notes shown after an update, newest first. Add new releases at the top. */
 export const CHANGELOG_RELEASES: ChangelogRelease[] = [
   {
+    title: 'Versão 1.3.0 — Revisão sistemática e IA',
+    items: [
+      <>
+        <strong>Revisão sistemática:</strong> uma página própria, aberta pelo projeto, com rótulos de inclusão,
+        exclusão, dúvida e duplicado, triagem guiada em duas etapas (título e resumo, depois texto completo) e o
+        diagrama PRISMA 2020, com a coluna de outros métodos e a exportação dos números e das publicações excluídas.
+        Excluir na triagem arquiva o artigo no projeto, com o rótulo como motivo.
+      </>,
+      <>
+        <strong>Investigação com IA:</strong> a investigação em massa virou uma página, com as respostas em grade. Cada
+        resposta pode ser aceita, editada ou rejeitada, e a auditoria por amostra estima o acerto da IA com intervalo de
+        confiança. As evidências agora são copiadas do trecho que a IA leu.
+      </>,
+      <>
+        <strong>Perguntar aos projetos:</strong> uma conversa sobre os PDFs de um ou mais projetos, aberta pelo
+        dashboard. Cada afirmação traz artigo e página, e os pontos que não puderam ser conferidos ficam marcados.
+      </>,
+      <>
+        <strong>Buscas:</strong> o relatório da estratégia de busca (XLSX e Markdown), refazer uma busca com
+        &quot;Publicados desde&quot; e explorar citações a partir dos artigos do projeto. Monitorar uma busca e ser
+        avisado de artigos novos é experimental.
+      </>,
+      <>
+        <strong>Ajuda da IA na triagem (experimental):</strong> com os critérios do projeto escritos, a triagem guiada
+        sugere um rótulo, com a justificativa e o trecho do resumo. A ordem prevista traz primeiro os artigos mais
+        parecidos com os que você manteve, e a aba &quot;Avaliar sugestões&quot; mede as sugestões com as suas decisões.
+        A decisão continua sendo sempre sua.
+      </>,
+      <>
+        <strong>Modelo de embeddings:</strong> trocar o modelo não apaga mais o índice, e o aviso diz de qual modelo
+        vieram os vetores, para você poder voltar a ele sem recalcular. Há também um modelo local multilíngue
+        (experimental, cerca de 118 MB).
+      </>,
+      <>
+        <strong>Página do projeto:</strong> o filtro &quot;Sem PDF&quot;, &quot;Selecionar todos&quot; valendo para
+        todas as páginas e modelos prontos de categorias (PICO, características do estudo, qualidade), que podem ser
+        exportados e importados em JSON.
+      </>,
+      <>
+        <strong>Linux (experimental):</strong> a primeira versão também sai em AppImage para Linux.
+      </>,
+    ],
+  },
+  {
     title: 'Versão 1.2.2 — Correção da abertura do programa',
     items: [
       <>
