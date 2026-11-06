@@ -94,7 +94,7 @@ describe('AiSettings per-skill configuration', () => {
     const cards = [
       ['📄 Extração de Metadados', 'gemini', 'gemini-2.5-flash'],
       ['📝 Geração de Resumos', 'openai', 'gpt-4o'],
-      ['🔍 Investigação Massiva (RAG)', 'anthropic', 'claude'],
+      ['🔍 Investigação com IA', 'anthropic', 'claude'],
       ['🧮 Embeddings (Vetorização)', 'ollama', 'nomic-embed-text'],
     ];
     for (const [title, provider, model] of cards) {

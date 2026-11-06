@@ -7,7 +7,8 @@ import { smallLabelStyle, settingsInputStyle } from './AiSettingsFields';
 const SKILL_TITLES: Record<AISkill, string> = {
   metadata: '📄 Extração de Metadados',
   summary: '📝 Geração de Resumos',
-  extraction: '🔍 Investigação Massiva (RAG)',
+  // The investigation became a page named "Investigação com IA" (#73); the card says the same.
+  extraction: '🔍 Investigação com IA',
   embeddings: '🧮 Embeddings (Vetorização)',
   screening: '🧭 Sugestão de triagem',
 };
