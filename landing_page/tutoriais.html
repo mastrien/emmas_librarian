@@ -76,14 +76,14 @@
                     <li>baixar de uma vez os PDFs dos artigos que são de acesso aberto;</li>
                     <li>ler e anotar os artigos dentro da própria plataforma;</li>
                     <li>categorizar os artigos com critérios definidos por você e exportar essa categorização como planilha;</li>
-                    <li>fazer uma <strong>investigação massiva</strong>, que é fazer várias perguntas para vários artigos de uma vez.</li>
+                    <li>fazer uma <strong>investigação com IA</strong>, que é fazer várias perguntas para vários artigos de uma vez.</li>
                 </ul>
 
                 <h3>Pra que serve um diário de pesquisa?</h3>
                 <p>Sabe quando alguém pergunta na reunião "e aí, o que você fez essa semana?" e dá branco? O diário existe pra isso. Cada projeto tem o seu, e a ideia é você registrar ali as decisões importantes (por que tal artigo foi excluído, por que a string de busca mudou), os <em>insights</em> que tiver durante a leitura e qualquer outra coisa que possa ser útil lembrar depois. Na hora de falar numa reunião, escrever a metodologia de um artigo ou montar um relatório, você não depende da memória, está tudo lá com data.</p>
 
                 <h3>E se a IA inventar uma resposta?</h3>
-                <p>Essa é uma preocupação válida, e foi levada a sério. Na investigação massiva, cada resposta vem acompanhada dos trechos do artigo que foram usados pra gerá-la (os <em>top-k</em> trechos mais relevantes que o RAG encontrou), junto com o quão relevante cada trecho foi considerado. Ou seja, você não precisa confiar na resposta às cegas, pode ir até a evidência e conferir se ela realmente diz aquilo.</p>
+                <p>Essa é uma preocupação válida, e foi levada a sério. Na investigação com IA, cada resposta vem acompanhada dos trechos do artigo que foram usados pra gerá-la (os <em>top-k</em> trechos mais relevantes que o RAG encontrou), junto com o quão relevante cada trecho foi considerado. Ou seja, você não precisa confiar na resposta às cegas, pode ir até a evidência e conferir se ela realmente diz aquilo.</p>
                 <p>Se RAG e <em>top-k</em> ainda soam estranhos, não se preocupe, o <a href="#ia-rag">Capítulo 5</a> explica isso com calma. Também vale dizer que os recursos de IA são opcionais: você escolhe o provedor (Ollama, rodando no seu próprio computador, ou Gemini, OpenAI e Anthropic, com a sua chave de API), e dá pra usar todo o resto da ferramenta sem configurar nenhum.</p>
 
                 <h3 id="como-instalar">Como instalar</h3>
@@ -160,7 +160,7 @@
                 <img class="tutorial-img" src="assets/tutoriais/cap1-novo-projeto.png" alt="Tela Novo Projeto com o nome preenchido" width="1424" height="892" loading="lazy">
 
                 <h3>Importando um projeto (.emmapcarc)</h3>
-                <p>Ao lado do Novo Projeto tem o botão <strong>Importar</strong>. Ele serve pra abrir um projeto que foi exportado de outro Emma's Librarian, num arquivo com a extensão <code>.emmapcarc</code>. Esse arquivo é gerado de dentro de um projeto, na opção de exportação <strong>Pacote .emmapcarc (com PDFs)</strong>, e leva o projeto praticamente inteiro: os artigos com os PDFs, o histórico de buscas, as categorias e a classificação de cada artigo, as marcações e anotações feitas na leitura, o diário, os links e documentos do acesso rápido e as investigações massivas com as respostas. O que fica de fora são os prazos da agenda, que não pertencem a um projeto específico.</p>
+                <p>Ao lado do Novo Projeto tem o botão <strong>Importar</strong>. Ele serve pra abrir um projeto que foi exportado de outro Emma's Librarian, num arquivo com a extensão <code>.emmapcarc</code>. Esse arquivo é gerado de dentro de um projeto, na opção de exportação <strong>Pacote .emmapcarc (com PDFs)</strong>, e leva o projeto praticamente inteiro: os artigos com os PDFs, o histórico de buscas, as categorias e a classificação de cada artigo, as marcações e anotações feitas na leitura, o diário, os links e documentos do acesso rápido e as investigações com IA e as respostas. O que fica de fora são os prazos da agenda, que não pertencem a um projeto específico.</p>
                 <p>Na prática, isso é útil em duas situações: quando você quer passar um projeto pra outra pessoa (o orientador ou um colega do grupo de pesquisa, por exemplo), ou quando está trocando de computador e quer levar o projeto junto.</p>
                 <p>Pra importar, clique em <strong>Importar</strong> e escolha o arquivo. Se preferir, também dá pra arrastar o arquivo <code>.emmapcarc</code> direto pra cima do dashboard e soltar. Depois de importado, o projeto já abre sozinho, com "(Importado)" no fim do nome, pra você não confundir com algum projeto de mesmo nome que já exista na sua biblioteca.</p>
                 <blockquote>
@@ -516,7 +516,7 @@
                 <p>Todo artigo tem a opção <strong>Editar Metadados</strong> (no menu <strong>⋯</strong> da lista do projeto e na barra de cima do leitor), que abre a janela <strong>Editar Metadados do Artigo</strong>, onde você pode corrigir qualquer campo à mão. Quando o artigo tem PDF vinculado, essa janela também tem o botão <strong>Preencher com IA</strong>, que lê o começo do PDF e tenta extrair título, autores, ano, DOI, revista e resumo.</p>
                 <p>E se a IA errar algum dado que já estava certo? Ela não mexe nos campos que já estão preenchidos, só completa os que estão vazios. Além disso, nada é salvo sozinho: os valores aparecem no formulário, você confere e só então clica pra salvar.</p>
 
-                <p>Com o leitor você já consegue fazer o fichamento completo de um artigo. Só que, com 96 artigos, ler tudo do começo ao fim nem sempre é viável, e é aí que a investigação massiva, do próximo capítulo, ajuda bastante.</p>
+                <p>Com o leitor você já consegue fazer o fichamento completo de um artigo. Só que, com 96 artigos, ler tudo do começo ao fim nem sempre é viável, e é aí que a investigação com IA, do próximo capítulo, ajuda bastante.</p>
 
                 <div class="chapter-pagination">
                     <a href="#gestao-artigos" class="chapter-btn prev">← Capítulo 3 - Triagem & Categorias</a>
@@ -551,7 +551,7 @@
 
                 <h3>Como funciona por dentro</h3>
                 <p>Aqui vale entender o que acontece, porque é isso que permite conferir as respostas depois. A técnica usada se chama <strong>RAG</strong>, de <em>Retrieval-Augmented Generation</em> (Geração Aumentada por Recuperação), proposta por Lewis et al. (2020). A ideia é, em vez de mandar o artigo inteiro pro modelo de linguagem e torcer pra ele achar a resposta, primeiro <strong>recuperar</strong> os trechos que interessam e só então <strong>gerar</strong> a resposta a partir deles.</p>
-                <p>Pra isso, a investigação massiva usa dois modelos diferentes: um que encontra os trechos e outro que escreve a resposta a partir deles.</p>
+                <p>Pra isso, a investigação com IA usa dois modelos diferentes: um que encontra os trechos e outro que escreve a resposta a partir deles.</p>
 
                 <h4>O modelo de <em>embedding</em></h4>
                 <p>Um <em>embedding</em> é uma representação de um texto como uma lista de números (um vetor), feita de um jeito que textos com significado parecido viram vetores próximos. Isso vem de uma linha de trabalho sobre representações de frases, como o Sentence-BERT (Reimers; Gurevych, 2019), e sobre recuperação de trechos com vetores densos (Karpukhin et al., 2020). O processo é o seguinte:</p>
