@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import type { Article, ScreeningStage } from '../../types';
 import { useScreening } from './useScreening';
 import { useGuidedScreening, type GuidedScreening } from './useGuidedScreening';
@@ -13,6 +12,7 @@ import { useScreeningSuggestions } from './useScreeningSuggestions';
 import { hasCriteria } from '../../utils/screeningCriteria';
 import { readerStateBackTo } from '../../utils/readerReturn';
 import './review.css';
+import { BackLink } from '../../components/common/BackLink';
 
 const STAGES: { id: ScreeningStage; label: string }[] = [
   { id: 'title', label: 'Título e resumo' },
@@ -227,9 +227,7 @@ export const GuidedScreeningPage: React.FC = () => {
     <div className="review fade-in">
       <div className="review-header" style={{ alignItems: 'center' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.9rem', alignItems: 'center' }}>
-          <Link to={`/projects/${projectId}/review`} className="review-back">
-            <ArrowLeft size={18} aria-hidden="true" /> Voltar à revisão
-          </Link>
+          <BackLink to={`/projects/${projectId}/review`}>Voltar à revisão</BackLink>
           <h1 className="review-title" style={{ fontSize: '1.4rem' }}>
             Triagem guiada · PRISMA 2020
           </h1>

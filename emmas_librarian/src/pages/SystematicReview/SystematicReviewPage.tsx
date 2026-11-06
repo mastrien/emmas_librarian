@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ListChecks, Play, Tag } from 'lucide-react';
+import { ListChecks, Play, Tag } from 'lucide-react';
 import type { Article, ScreeningLabel } from '../../types';
 import { listStage, type ReviewRow } from '../../utils/screeningView';
 import { MassCitationModal } from '../../components/modals/MassCitationModal';
@@ -14,6 +14,7 @@ import { CriteriaModal } from './CriteriaModal';
 import { EvaluationTab } from './EvaluationTab';
 import { SimulationSection } from './SimulationSection';
 import './review.css';
+import { BackLink } from '../../components/common/BackLink';
 
 // Sections start open, except those the person closed during this visit.
 function useOpenSections() {
@@ -50,9 +51,7 @@ const ReviewHeader: React.FC<{
 }> = ({ projectId, projectName, onManageLabels, onWriteCriteria }) => (
   <div className="review-header">
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-start' }}>
-      <Link to={`/projects/${projectId}`} className="review-back">
-        <ArrowLeft size={18} aria-hidden="true" /> Voltar ao projeto
-      </Link>
+      <BackLink to={`/projects/${projectId}`}>Voltar ao projeto</BackLink>
       <span className="review-muted">{projectName}</span>
       <h1 className="review-title">Revisão sistemática</h1>
     </div>

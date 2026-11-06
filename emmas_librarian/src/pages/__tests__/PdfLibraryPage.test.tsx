@@ -379,9 +379,8 @@ describe('PdfLibraryPage', () => {
       expect(screen.queryByText('Carregando Biblioteca de PDFs...')).not.toBeInTheDocument();
     });
 
-    // navigate back
-    fireEvent.click(screen.getByTitle('Voltar'));
-    expect(navigateMock).toHaveBeenCalledWith('/');
+    // back is a link to the projects now (BackLink, Arca 134), not a navigate() call
+    expect(screen.getByRole('link', { name: 'Voltar aos projetos' })).toHaveAttribute('href', '/');
 
     // navigate to article reader (button)
     fireEvent.click(screen.getAllByTitle('Visualizar no Leitor')[0]);
