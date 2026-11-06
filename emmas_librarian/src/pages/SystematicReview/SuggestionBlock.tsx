@@ -1,6 +1,11 @@
 import React from 'react';
 import type { ScreeningLabel, ScreeningSuggestion } from '../../types';
 import { providerName } from '../../utils/screeningCriteria';
+import { ExperimentalTag } from '../../components/common/ExperimentalTag';
+
+// Decided with the author for 1.3.0: how often it errs was not measured on a real screening yet.
+const SUGGESTION_REASON =
+  'Ainda não foi medido, numa triagem real, quantos artigos relevantes a sugestão deixaria de fora. Confira cada uma.';
 
 interface SuggestionBlockProps {
   suggestion: ScreeningSuggestion | null;
@@ -30,7 +35,10 @@ const Asked: React.FC<SuggestionBlockProps & { suggestion: ScreeningSuggestion }
   return (
     <div className={stale || unchecked ? 'review-suggestion review-suggestion--warn' : 'review-suggestion'}>
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '0.5rem' }}>
-        <strong>A IA sugere: {label?.name}</strong>
+        <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+          <strong>A IA sugere: {label?.name}</strong>
+          <ExperimentalTag reason={SUGGESTION_REASON} />
+        </span>
         <span className="review-muted">{confidenceText(suggestion.confidence)}</span>
       </div>
       {suggestion.reason && <p style={{ margin: 0 }}>{suggestion.reason}</p>}
@@ -97,6 +105,7 @@ export const SuggestionBlock: React.FC<SuggestionBlockProps> = (props) => {
       {provider && (
         <span className="review-muted">Envia título, resumo e critérios para {providerName(provider)}.</span>
       )}
+      <ExperimentalTag reason={SUGGESTION_REASON} />
     </div>
   );
 };
