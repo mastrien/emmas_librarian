@@ -100,7 +100,7 @@ describe('SettingsPage', () => {
         <SettingsPage />
       </BrowserRouter>,
     );
-    const provider = await screen.findByRole('combobox', { name: /Provedor: .*Investigação Massiva/ });
+    const provider = await screen.findByRole('combobox', { name: /Provedor: .*Investigação com IA/ });
 
     fireEvent.change(provider, { target: { value: 'anthropic' } });
 

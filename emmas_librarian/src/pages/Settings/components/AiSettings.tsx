@@ -132,7 +132,7 @@ const AdvancedAiSettings: React.FC<AiSettingsProps> = (props) => (
       ))}
       <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
         <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-heading)' }}>
-          Parâmetros Avançados de RAG (Investigação Massiva)
+          Parâmetros Avançados de RAG (Investigação com IA)
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
           <NumberSetting
