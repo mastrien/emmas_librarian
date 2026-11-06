@@ -273,7 +273,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
                     border: '1px solid var(--border-color)',
                     borderRadius: 'var(--radius-sm)',
                     fontSize: '0.85rem',
-                    background: 'var(--bg-input)',
+                    background: 'var(--bg-surface)',
                     color: 'var(--text-main)',
                   }}
                 />
