@@ -3,6 +3,7 @@ import { useProjectService } from '../../contexts/ServicesContext';
 import type { IProjectService, ExtractionAnswer } from '../../services/ProjectServiceInterface';
 import type { Article } from '../../types';
 import { investigationStatus } from '../../utils/investigationStatus';
+import { providerDisplayName } from '../../utils/providerNames';
 
 export interface ArticleExtraction {
   article: Article;
@@ -31,13 +32,6 @@ export interface InvestigationRunRequest {
   questions: string[];
   selectedIds: number[];
 }
-
-const PROVIDER_NAMES: Record<string, string> = {
-  openai: 'OpenAI',
-  gemini: 'Gemini',
-  anthropic: 'Anthropic',
-  ollama: 'Ollama',
-};
 
 /**
  * Runs the same questions over each selected article, one at a time, then persists the run. A quota error stops
@@ -203,7 +197,7 @@ export async function describeExtractionModel(service: IProjectService): Promise
   try {
     const config = (await service.getAiModelConfigs()).find((c) => c.skill === 'extraction');
     if (!config) return 'Desconhecido';
-    const providerName = PROVIDER_NAMES[config.provider] || config.provider;
+    const providerName = providerDisplayName(config.provider);
     return config.model_name ? `${providerName} (${config.model_name})` : providerName;
   } catch {
     return 'Desconhecido';

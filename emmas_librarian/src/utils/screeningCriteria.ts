@@ -1,4 +1,5 @@
 import type { ScreeningCriteria } from '../types/screeningSuggestion';
+import { providerDisplayName } from './providerNames';
 
 /**
  * The criteria as an engine reads them, and as they are compared: a suggestion made with other ones says so.
@@ -16,17 +17,11 @@ export const criteriaSnapshot = ({ inclusion, exclusion }: ScreeningCriteria): s
 export const hasCriteria = ({ inclusion, exclusion }: ScreeningCriteria): boolean =>
   inclusion.trim() !== '' || exclusion.trim() !== '';
 
-const PROVIDER_NAMES: Record<string, string> = {
-  ollama: 'Ollama (local)',
-  ollama_cloud: 'Ollama Cloud',
-  gemini: 'Google Gemini',
-  openai: 'OpenAI',
-  anthropic: 'Anthropic',
-};
-
 /**
- * The provider as a sentence names it, for saying where the text goes.
+ * The provider as a sentence names it, for saying where the text goes: a local Ollama says so, since then the text
+ * stays on the computer.
  *
  * @example providerName('gemini') // 'Google Gemini'
  */
-export const providerName = (provider: string): string => PROVIDER_NAMES[provider] ?? provider;
+export const providerName = (provider: string): string =>
+  provider === 'ollama' ? 'Ollama (local)' : providerDisplayName(provider);
