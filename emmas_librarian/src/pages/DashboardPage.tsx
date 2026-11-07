@@ -14,10 +14,15 @@ import { DashboardProjectsList } from './Dashboard/components/DashboardProjectsL
 import { DashboardGlobalStats } from './Dashboard/components/DashboardGlobalStats';
 import { droppedFilePath } from '../utils/droppedFilePath';
 import './Dashboard/dashboard.css';
+import { useDialogs } from '../components/common/dialogs/DialogProvider';
+
+// What went wrong, as the import error message always showed it: the error's text, or the value itself.
+const errorText = (err: unknown): string => (err instanceof Error && err.message ? err.message : String(err));
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const projectService = useProjectService();
+  const { inform } = useDialogs();
   const [projects, setProjects] = useState<Project[]>([]);
   const [venues, setVenues] = useState<ScientificVenue[]>([]);
   const [loading, setLoading] = useState(true);
@@ -162,8 +167,8 @@ export const DashboardPage: React.FC = () => {
           window.location.href = `#/projects/${newId}`;
           break;
         }
-      } catch (err: any) {
-        alert(`Erro ao importar ${file.name}: ` + (err.message || err));
+      } catch (err) {
+        await inform({ title: 'Erro ao importar', message: `Erro ao importar ${file.name}: ${errorText(err)}` });
       }
     }
   };
@@ -215,8 +220,8 @@ export const DashboardPage: React.FC = () => {
               try {
                 const newId = await projectService.importProject();
                 if (newId) window.location.href = `#/projects/${newId}`;
-              } catch (err: any) {
-                alert('Erro ao importar projeto: ' + (err.message || err));
+              } catch (err) {
+                await inform({ title: 'Erro ao importar', message: `Erro ao importar projeto: ${errorText(err)}` });
               }
             }}
             className="btn-secondary"
