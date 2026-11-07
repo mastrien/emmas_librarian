@@ -1,8 +1,9 @@
 # Visual comparison (redesign, Arca 134)
 
 The redesign's phases 1 to 3 move styles into classes and components without changing how a screen looks. This
-spec captures every route of the app (13 screens, light and dark, 1440 and 1000 px wide: 52 images) and compares a
-run of the new code with a baseline taken from the old code.
+spec captures every route of the app and compares a run of the new code with a baseline taken from the old code:
+14 screens (the agenda twice, as cards and as the deadline list), light and dark, 1440 and 1000 px wide, so 56
+images. Two sample agenda events, all dated 2025, are added to the example project.
 
 The images show the example project's data, so they live outside the repository and are never committed.
 
@@ -21,7 +22,7 @@ Then check out the change and run `npm run visual:compare`. Each screen that dif
 
 ## What keeps it repeatable
 
-Five comparisons in a row on the same code gave zero differences. What had to be handled:
+Five comparisons in a row on the same code gave zero differences (again after the agenda events were added). What had to be handled:
 
 - **One import.** The baseline run imports the project once into `<VISUAL_SNAPSHOT_DIR>/data-template`; every
   comparison starts from a copy of it. Importing again changed the PDFs' "added" second.
@@ -30,8 +31,8 @@ Five comparisons in a row on the same code gave zero differences. What had to be
   Playwright's `clock` was tried first and failed now and then on the Electron window.
 - **Each screen waits** until the page height holds still (data arrives over IPC after the route changes), with the
   pointer moved to a corner (no hover).
-- **A warm-up screen** after each theme reload and resize, and the sticky top bar captured without its
-  `translateZ(0)` layer, which was sometimes composited a pixel off.
+- **A warm-up screen** after each theme reload and resize, scroll at 0, and the title bar and header captured static
+  and without the `translateZ(0)` layer: both are sticky and were sometimes drawn a pixel lower than the page.
 
 ## Tolerance
 

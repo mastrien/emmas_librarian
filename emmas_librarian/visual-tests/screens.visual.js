@@ -19,15 +19,57 @@ const SCREENS = [
   ['configuracoes', '/settings'],
   ['pdfs', '/pdfs'],
   ['agenda', '/agenda'],
+  ['agenda-lista', '/agenda', (window) => window.getByRole('button', { name: 'Lista de Prazos' }).click()],
   ['termos', '/terms'],
 ];
+// The example project has no agenda. Two events with every kind of deadline (date, time, range, done), all in 2025:
+// past deadlines are not "próximos", so the dashboard's deadline notice does not change with the day.
+const SAMPLE_VENUES = [
+  {
+    title: 'Simpósio Brasileiro de Sensoriamento Remoto',
+    acronym: 'SBSR',
+    category: 'symposium',
+    url: 'https://example.org/sbsr',
+    color: '#db2777',
+    milestones: [
+      {
+        label: 'Submissão',
+        field_type: 'date',
+        target_date: '2025-03-10',
+        has_time: true,
+        target_time: '23:59',
+        status: 'completed',
+      },
+      {
+        label: 'Evento',
+        field_type: 'range',
+        target_date: '2025-04-06',
+        end_date: '2025-04-09',
+        has_time: false,
+        status: 'pending',
+      },
+    ],
+  },
+  {
+    title: 'Revista Brasileira de Meteorologia',
+    category: 'journal',
+    milestones: [
+      { label: 'Chamada especial', field_type: 'date', target_date: '2025-02-01', has_time: false, status: 'pending' },
+    ],
+  },
+];
+
 // What changes with the day or the run, hidden in every screen: the clock and the month calendar (dashboard, agenda),
 // the PDF library's "Data de Adição" (the import time) and the backup Settings lists (made when the app opened).
 // (Freezing the page clock was tried first: Playwright's clock failed on this Electron window now and then.)
 const ALWAYS_MASKED = ['[data-testid="dashboard-clock"]', '[data-testid="date-calendar"]'];
-// The sticky top bar is its own GPU layer (.glass-panel has translateZ(0), style.css) and was now and then composited
-// a pixel lower than the page under it. Without the transform it is drawn with the page, the same in every run.
-const CAPTURE_STYLE = '.glass-panel { transform: none !important; }';
+// The title bar and the header are sticky, and the header its own GPU layer (.glass-panel has translateZ(0)); now
+// and then both were drawn a pixel lower than the page under them. At scroll 0 static puts them in the same place,
+// so the capture draws them static and without the layer, the same in every run.
+const CAPTURE_STYLE = [
+  '.glass-panel { transform: none !important; }',
+  '.native-titlebar, header.glass-panel { position: static !important; }',
+].join(' ');
 const MASKS = {
   pdfs: (window) => [window.locator('table tbody tr td:nth-child(3)')],
   configuracoes: (window) => [window.getByText('Histórico de Backups Automáticos').locator('xpath=..')],
@@ -88,11 +130,16 @@ async function warmUp(window) {
   await window.waitForTimeout(2000);
 }
 
-async function shoot(window, name, route, projectId) {
+async function shoot(window, name, route, projectId, prepare) {
   await window.evaluate((r) => (window.location.hash = r), route.replace('ID', String(projectId)));
   await waitForStableLayout(window);
+  if (prepare) {
+    await prepare(window);
+    await waitForStableLayout(window);
+  }
   // The pointer stays where the last click happened and would leave a hover state on whatever is under it.
   await window.mouse.move(0, 0);
+  await window.evaluate(() => window.scrollTo(0, 0));
   // Soft, so one changed screen does not hide the others.
   const screen = name.split('-').slice(0, -2).join('-');
   const mask = [...ALWAYS_MASKED.map((selector) => window.locator(selector)), ...(MASKS[screen]?.(window) ?? [])];
@@ -109,7 +156,11 @@ async function buildTemplate() {
   fs.mkdirSync(TEMPLATE_DIR, { recursive: true });
   const electronApp = await launchApp({ E2E_MOCK_PROJECT_FILE: projectFile() }, { userDataDir: TEMPLATE_DIR });
   try {
-    const projectId = await importProject(await getFirstWindow(electronApp));
+    const window = await getFirstWindow(electronApp);
+    const projectId = await importProject(window);
+    await window.evaluate(async (venues) => {
+      for (const venue of venues) await window.electronAPI.invoke('scientificVenue:create', venue);
+    }, SAMPLE_VENUES);
     fs.writeFileSync(TEMPLATE_META, JSON.stringify({ projectId }));
   } finally {
     await electronApp.close();
@@ -129,9 +180,9 @@ async function shootEverything(electronApp, window, projectId) {
     for (const width of WIDTHS) {
       await setWidth(electronApp, window, width);
       await warmUp(window);
-      for (const [screen, route] of SCREENS) {
+      for (const [screen, route, prepare] of SCREENS) {
         const name = `${screen}-${theme.name}-${width}`;
-        await test.step(name, () => shoot(window, name, route, projectId));
+        await test.step(name, () => shoot(window, name, route, projectId, prepare));
       }
     }
   }
