@@ -54,7 +54,13 @@ const SAMPLE_VENUES = [
     title: 'Revista Brasileira de Meteorologia',
     category: 'journal',
     milestones: [
-      { label: 'Chamada especial', field_type: 'single', target_date: '2025-02-01', has_time: false, status: 'pending' },
+      {
+        label: 'Chamada especial',
+        field_type: 'single',
+        target_date: '2025-02-01',
+        has_time: false,
+        status: 'pending',
+      },
     ],
   },
 ];
@@ -139,7 +145,11 @@ async function shoot(window, name, route, projectId, prepare) {
   }
   // The pointer stays where the last click happened and would leave a hover state on whatever is under it.
   await window.mouse.move(0, 0);
-  await window.evaluate(() => window.scrollTo(0, 0));
+  // After a reload the focus sometimes lands on the first link (the logo) and draws its focus ring.
+  await window.evaluate(() => {
+    window.scrollTo(0, 0);
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  });
   // Soft, so one changed screen does not hide the others.
   const screen = name.split('-').slice(0, -2).join('-');
   const mask = [...ALWAYS_MASKED.map((selector) => window.locator(selector)), ...(MASKS[screen]?.(window) ?? [])];
@@ -161,6 +171,12 @@ async function buildTemplate() {
     await window.evaluate(async (venues) => {
       for (const venue of venues) await window.electronAPI.invoke('scientificVenue:create', venue);
     }, SAMPLE_VENUES);
+    // Something in the trash, so Settings shows its list instead of "A lixeira está vazia". Its deletion date is
+    // written once, into the template, and stays the same in every comparison.
+    await window.evaluate(async () => {
+      const project = await window.electronAPI.invoke('projects:create', 'Projeto excluído de exemplo');
+      await window.electronAPI.invoke('projects:delete', project.id);
+    });
     fs.writeFileSync(TEMPLATE_META, JSON.stringify({ projectId }));
   } finally {
     await electronApp.close();
