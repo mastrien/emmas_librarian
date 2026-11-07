@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { DeadlineBanner } from '../common/DeadlineBanner';
+import { DeadlineBanner } from '../common/deadlines/DeadlineBanner';
 import { ScientificVenue } from '../../types';
 
 const MOCK_VENUES: ScientificVenue[] = [

@@ -5,7 +5,7 @@ import { MonitorNotices } from './Dashboard/components/MonitorNotices';
 import { Project, ScientificVenue, MilestoneStatus } from '../types';
 import { MessageSquare, Plus, Download } from 'lucide-react';
 import { DashboardCalendar } from '../components/common/DashboardCalendar';
-import { DeadlineBanner } from '../components/common/DeadlineBanner';
+import { DeadlineBanner } from '../components/common/deadlines/DeadlineBanner';
 import { VenueFormModal } from '../components/modals/VenueFormModal';
 
 import { DashboardClock } from './Dashboard/components/DashboardClock';
@@ -13,6 +13,7 @@ import { DashboardDragDropOverlay } from './Dashboard/components/DashboardDragDr
 import { DashboardProjectsList } from './Dashboard/components/DashboardProjectsList';
 import { DashboardGlobalStats } from './Dashboard/components/DashboardGlobalStats';
 import { droppedFilePath } from '../utils/droppedFilePath';
+import './Dashboard/dashboard.css';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -168,25 +169,12 @@ export const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', minHeight: '100vh' }}
-    >
+    <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className="dashboard">
       {isDragging && <DashboardDragDropOverlay />}
 
       {/* Seção da Agenda no Topo */}
-      <div
-        className="fade-in"
-        style={{
-          marginBottom: '2.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1.25rem',
-        }}
-      >
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 320px', gap: '1.5rem', alignItems: 'center' }}>
+      <div className="fade-in dashboard-agenda">
+        <div className="dashboard-agenda-top">
           <DashboardClock />
           <div>
             <DashboardCalendar
@@ -211,24 +199,13 @@ export const DashboardPage: React.FC = () => {
       <MonitorNotices />
 
       {/* Cabeçalho dos Projetos */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem',
-        }}
-      >
+      <div className="dashboard-projects-head">
         <div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'var(--text-heading)' }}>
-            Seus Projetos
-          </h1>
-          <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-            Gerencie e acompanhe suas revisões sistemáticas da literatura.
-          </p>
+          <h1>Seus Projetos</h1>
+          <p>Gerencie e acompanhe suas revisões sistemáticas da literatura.</p>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        <div className="dashboard-actions">
           <Link to="/ask" className="btn-secondary">
             <MessageSquare size={20} /> Perguntar aos projetos
           </Link>
@@ -254,44 +231,17 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {loading ? (
-        <div
-          data-testid="dashboard-loading-skeleton"
-          className="fade-in"
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}
-        >
+        <div data-testid="dashboard-loading-skeleton" className="fade-in dashboard-skeleton">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              style={{
-                height: '180px',
-                backgroundColor: 'var(--bg-surface)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-color)',
-                animation: 'pulse 1.5s infinite ease-in-out',
-              }}
-            ></div>
+            <div key={i} className="dashboard-skeleton-card" />
           ))}
         </div>
       ) : (
         <>
           <DashboardProjectsList projects={projects} />
 
-          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-            <Link
-              to="/terms"
-              style={{
-                color: 'var(--text-muted)',
-                textDecoration: 'none',
-                fontSize: '0.85rem',
-                padding: '0.5rem 1rem',
-                borderRadius: 'var(--radius-md)',
-                transition: 'background-color var(--transition-fast)',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-surface)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              Ao usar o sistema, você concorda com os Termos de Uso
-            </Link>
+          <div className="dashboard-terms">
+            <Link to="/terms">Ao usar o sistema, você concorda com os Termos de Uso</Link>
           </div>
 
           {!loading && projects.length > 0 && hasData && (

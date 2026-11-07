@@ -1,0 +1,255 @@
+/* The dashboard (DashboardPage, DashboardClock, DashboardDragDropOverlay, DashboardProjectsList). Values carried
+   over from the inline styles they replace (Arca 134). */
+.dashboard {
+  position: relative;
+  max-width: 1200px;
+  min-height: 100vh;
+  margin: 0 auto;
+}
+
+.dashboard-agenda {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.dashboard-agenda-top {
+  display: grid;
+  grid-template-columns: 1.4fr 320px;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.dashboard-projects-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-projects-head h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-heading);
+}
+
+.dashboard-projects-head p {
+  margin: 0.25rem 0 0 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.dashboard-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.dashboard-skeleton-card {
+  height: 180px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.dashboard-terms {
+  margin-top: 3rem;
+  text-align: center;
+}
+
+.dashboard-terms a {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+.dashboard-terms a:hover {
+  background-color: var(--bg-surface);
+  color: var(--text-muted);
+}
+
+/* DashboardClock */
+.dashboard-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  text-align: center;
+}
+
+.dashboard-clock-time {
+  color: var(--text-heading);
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 3.75rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.dashboard-clock-date {
+  margin-top: 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* DashboardDragDropOverlay */
+.dashboard-drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 3px dashed var(--color-primary);
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  pointer-events: none;
+}
+
+.dashboard-drop-overlay svg {
+  color: var(--color-primary);
+}
+
+.dashboard-drop-overlay h2 {
+  margin-top: 1.5rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.dashboard-drop-overlay p {
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+/* DashboardProjectsList */
+.project-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.project-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.project-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.project-card-icon {
+  padding: 0.8rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-main);
+  color: var(--color-primary);
+}
+
+.project-card-chevron {
+  margin-top: 0.5rem;
+  color: var(--border-color);
+}
+
+.project-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  color: var(--text-heading);
+}
+
+.project-card-date {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.project-card-stats {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.85rem;
+}
+
+.project-card-stat {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.project-card-stat span {
+  color: var(--text-muted);
+}
+
+.project-card-stat--active strong {
+  color: var(--color-primary);
+}
+
+.project-card-stat--read strong {
+  color: var(--color-success);
+}
+
+.project-card-stat--archived strong {
+  color: var(--text-muted);
+}
+
+.projects-empty {
+  grid-column: 1 / -1;
+  padding: 4rem 2rem;
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.projects-empty-icon {
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+  opacity: 0.8;
+}
+
+.projects-empty h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  color: var(--text-heading);
+}
+
+.projects-empty p {
+  margin: 0 0 1.5rem 0;
+  color: var(--text-muted);
+}
+
+/* The card is a link: without this, the global a:hover would recolour all of its text (inline "inherit" won before). */
+.project-card:hover {
+  color: inherit;
+}
