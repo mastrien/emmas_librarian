@@ -3,6 +3,8 @@ import { RefreshCw, Download, ArrowUpCircle, ShieldCheck, AlertTriangle, CheckCi
 import type { UpdateStatusResponse } from '../../../types';
 import { canOfferSnapshotRestore } from '../snapshotRestoreWindow';
 import { showsNotAppliedNotice } from '../updateNotice';
+import { SettingsCard } from './SettingsCard';
+import './updateSettings.css';
 
 interface UpdateSettingsProps {
   currentVersion: string;
@@ -13,55 +15,35 @@ interface UpdateSettingsProps {
   onRestoreSnapshot?: () => Promise<void>;
 }
 
-const UpdateProgressBar: React.FC<{ percent: number; speed: number }> = ({ percent, speed }) => (
-  <div style={{ marginTop: '1rem' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-      <span>Baixando atualização... {percent.toFixed(0)}%</span>
-      <span>{(speed / (1024 * 1024)).toFixed(2)} MB/s</span>
+type UpdateInfo = NonNullable<UpdateStatusResponse['updateInfo']>;
+type Snapshot = NonNullable<UpdateStatusResponse['state']>;
+
+const UpdateProgressBar: React.FC<{ percent: number; speed: number }> = ({ percent, speed }) => {
+  // The width is the download's progress: a CSS variable, not an inline rule.
+  const progress = { '--progress': `${Math.min(100, Math.max(0, percent))}%` } as React.CSSProperties;
+  return (
+    <div className="update-progress">
+      <div className="update-progress-head">
+        <span>Baixando atualização... {percent.toFixed(0)}%</span>
+        <span>{(speed / (1024 * 1024)).toFixed(2)} MB/s</span>
+      </div>
+      <div className="update-progress-track">
+        <div className="update-progress-fill" style={progress} />
+      </div>
     </div>
-    <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-main)', borderRadius: '4px' }}>
-      <div
-        style={{
-          width: `${Math.min(100, Math.max(0, percent))}%`,
-          height: '100%',
-          backgroundColor: 'var(--color-primary)',
-          borderRadius: '4px',
-          transition: 'width 0.2s ease',
-        }}
-      />
-    </div>
-  </div>
-);
+  );
+};
 
 const ReleaseNotesView: React.FC<{ notes?: string }> = ({ notes }) => {
   const [showNotes, setShowNotes] = useState(false);
   if (!notes) return null;
-
   return (
-    <div style={{ marginTop: '0.75rem' }}>
-      <button
-        type="button"
-        onClick={() => setShowNotes(!showNotes)}
-        className="btn-ghost"
-        style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.25rem 0.5rem' }}
-      >
+    <div className="update-notes">
+      <button type="button" onClick={() => setShowNotes(!showNotes)} className="btn-ghost update-notes-toggle">
         <FileText size={14} />
         {showNotes ? 'Ocultar notas da versão' : 'Ver notas da versão'}
       </button>
-      {showNotes && (
-        <div
-          style={{
-            marginTop: '0.5rem',
-            padding: '0.75rem',
-            borderRadius: 'var(--radius-md)',
-            backgroundColor: 'var(--bg-main)',
-            fontSize: '0.85rem',
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {notes}
-        </div>
-      )}
+      {showNotes && <div className="update-notes-text">{notes}</div>}
     </div>
   );
 };
@@ -70,18 +52,8 @@ const UpdateNotAppliedNotice: React.FC<{ targetVersion?: string; currentVersion:
   targetVersion,
   currentVersion,
 }) => (
-  <div
-    role="alert"
-    style={{
-      padding: '0.75rem 1rem',
-      borderRadius: 'var(--radius-md)',
-      backgroundColor: 'var(--color-warning-subtle)',
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: '0.5rem',
-    }}
-  >
-    <AlertTriangle size={18} color="var(--color-warning, #f59e0b)" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
+  <div role="alert" className="update-warning">
+    <AlertTriangle size={18} className="update-warning-icon" />
     <span>
       A atualização para a v{targetVersion ?? '...'} foi iniciada, mas não foi aplicada: você continua na v
       {currentVersion}. Isso acontece, por exemplo, quando o app é aberto de novo enquanto o instalador ainda trabalha.
@@ -90,222 +62,145 @@ const UpdateNotAppliedNotice: React.FC<{ targetVersion?: string; currentVersion:
   </div>
 );
 
-export const UpdateSettings: React.FC<UpdateSettingsProps> = ({
-  currentVersion,
-  updateStatus,
-  onCheckForUpdates,
-  onDownloadUpdate,
-  onInstallUpdate,
-  onRestoreSnapshot,
-}) => {
-  const [loading, setLoading] = useState(false);
-  const status = updateStatus.status;
-  const info = updateStatus.updateInfo;
-  const snapshotToRestore = canOfferSnapshotRestore(updateStatus.state) ? updateStatus.state : null;
+const VersionRow: React.FC<{ currentVersion: string; checking: boolean; busy: boolean; onCheck: () => void }> = (
+  props,
+) => (
+  <div className="update-version-row">
+    <div>
+      <div className="update-version">Versão Instalada: v{props.currentVersion || '...'}</div>
+      <div className="update-channel">Canal de release estável via GitHub Releases</div>
+    </div>
+    <button
+      type="button"
+      className="btn btn-secondary settings-icon-button"
+      onClick={props.onCheck}
+      disabled={props.busy}
+    >
+      <RefreshCw size={16} className={props.checking ? 'spin' : ''} />
+      {props.checking ? 'Verificando...' : 'Verificar Atualizações'}
+    </button>
+  </div>
+);
 
+const UpToDate: React.FC = () => (
+  <div className="update-notice">
+    <CheckCircle size={18} className="update-icon-success" />
+    <span>Você está utilizando a versão mais recente do Emma&apos;s Librarian.</span>
+  </div>
+);
+
+const UpdateAvailable: React.FC<{ info: UpdateInfo; onDownload: () => void }> = ({ info, onDownload }) => (
+  <div className="update-box">
+    <div className="update-box-row">
+      <div>
+        <span className="update-box-title">Nova Versão Disponível: v{info.version}</span>
+        {info.releaseDate && <span className="update-box-date">({info.releaseDate})</span>}
+      </div>
+      <button type="button" className="btn btn-primary settings-icon-button" onClick={onDownload}>
+        <Download size={16} /> Baixar Atualização
+      </button>
+    </div>
+    <ReleaseNotesView notes={info.releaseNotes} />
+  </div>
+);
+
+const UpdateDownloaded: React.FC<{ onInstall: () => void }> = ({ onInstall }) => (
+  <div className="update-box">
+    <div className="update-box-head">
+      <ShieldCheck size={20} className="update-icon-primary" />
+      <span>Atualização pronta para instalação</span>
+    </div>
+    <p className="update-box-text">
+      Um snapshot de segurança do seu banco de dados será gerado automaticamente antes da instalação. Se a nova versão
+      não abrir a biblioteca, o app oferece restaurar esse snapshot. A restauração devolve só os dados: a versão
+      instalada não muda, e voltar a uma versão anterior exige instalá-la de novo.
+    </p>
+    <button type="button" className="btn btn-primary settings-icon-button" onClick={onInstall}>
+      <RefreshCw size={16} /> Reiniciar e Instalar Atualização
+    </button>
+  </div>
+);
+
+const UpdateError: React.FC<{ error: string }> = ({ error }) => (
+  <div className="update-error">
+    <AlertTriangle size={18} />
+    <span>Erro ao processar atualização: {error}</span>
+  </div>
+);
+
+const SnapshotRollback: React.FC<{ snapshot: Snapshot; onRestore: () => void }> = ({ snapshot, onRestore }) => (
+  <div className="update-rollback">
+    <h3>Rollback de Emergência</h3>
+    <p className="update-rollback-text">
+      Snapshot de {describeSnapshotDate(snapshot.timestamp)}, salvo em: <code>{snapshot.snapshotPath}</code>
+    </p>
+    <p className="update-rollback-text">
+      Restaurar desfaz o que foi feito depois dessa data. O banco atual é guardado em <code>backups/</code> antes, e o
+      app reinicia.
+    </p>
+    <button type="button" className="btn btn-secondary settings-icon-button" onClick={onRestore}>
+      <ShieldCheck size={16} /> Restaurar Dados do Snapshot Pré-Atualização
+    </button>
+  </div>
+);
+
+// One status at a time, as the updater reports it.
+const UpdateStatusPanel: React.FC<{ props: UpdateSettingsProps }> = ({ props }) => {
+  const { updateStatus, currentVersion } = props;
+  const { status, updateInfo: info, downloadProgress: progress } = updateStatus;
+  return (
+    <>
+      {showsNotAppliedNotice(updateStatus, currentVersion) && (
+        <UpdateNotAppliedNotice targetVersion={updateStatus.state?.targetVersion} currentVersion={currentVersion} />
+      )}
+      {status === 'not-available' && <UpToDate />}
+      {status === 'available' && info && <UpdateAvailable info={info} onDownload={props.onDownloadUpdate} />}
+      {status === 'downloading' && progress && (
+        <UpdateProgressBar percent={progress.percent} speed={progress.bytesPerSecond} />
+      )}
+      {status === 'downloaded' && <UpdateDownloaded onInstall={props.onInstallUpdate} />}
+      {status === 'error' && updateStatus.error && <UpdateError error={updateStatus.error} />}
+    </>
+  );
+};
+
+/**
+ * Settings → Atualizações e Contingências: the installed version, the update flow (check, download, install) and,
+ * after a failed update, restoring the pre-update snapshot.
+ *
+ * @example <UpdateSettings currentVersion="1.3.1" updateStatus={status} onCheckForUpdates={check} … />
+ */
+export const UpdateSettings: React.FC<UpdateSettingsProps> = (props) => {
+  const [loading, setLoading] = useState(false);
+  const status = props.updateStatus.status;
+  const snapshot = canOfferSnapshotRestore(props.updateStatus.state) ? props.updateStatus.state : null;
   const handleCheck = async () => {
     setLoading(true);
     try {
-      await onCheckForUpdates();
+      await props.onCheckForUpdates();
     } finally {
       setLoading(false);
     }
   };
-
   return (
-    <div className="card" style={{ padding: '2rem' }}>
-      <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <ArrowUpCircle size={24} color="var(--color-primary)" /> Atualizações e Contingências
-      </h2>
-      <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-        Gerencie as atualizações do sistema de forma segura e com controle total. Nenhuma atualização é aplicada sem a
-        sua aprovação.
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '1rem',
-          }}
-        >
-          <div>
-            <div style={{ fontWeight: 600, color: 'var(--text-heading)' }}>
-              Versão Instalada: v{currentVersion || '...'}
-            </div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-              Canal de release estável via GitHub Releases
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleCheck}
-            disabled={loading || status === 'checking' || status === 'downloading'}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            <RefreshCw size={16} className={loading || status === 'checking' ? 'spin' : ''} />
-            {loading || status === 'checking' ? 'Verificando...' : 'Verificar Atualizações'}
-          </button>
-        </div>
-
-        {showsNotAppliedNotice(updateStatus, currentVersion) && (
-          <UpdateNotAppliedNotice targetVersion={updateStatus.state?.targetVersion} currentVersion={currentVersion} />
-        )}
-
-        {status === 'not-available' && (
-          <div
-            style={{
-              padding: '0.75rem 1rem',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--bg-main)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: 'var(--text-main)',
-            }}
-          >
-            <CheckCircle size={18} color="var(--color-success, #10b981)" />
-            <span>Você está utilizando a versão mais recente do Emma's Librarian.</span>
-          </div>
-        )}
-
-        {status === 'available' && info && (
-          <div
-            style={{
-              padding: '1rem',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-main)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '0.5rem',
-              }}
-            >
-              <div>
-                <span style={{ fontWeight: 600, color: 'var(--text-heading)' }}>
-                  Nova Versão Disponível: v{info.version}
-                </span>
-                {info.releaseDate && (
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
-                    ({info.releaseDate})
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={onDownloadUpdate}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  backgroundColor: 'var(--color-primary)',
-                }}
-              >
-                <Download size={16} /> Baixar Atualização
-              </button>
-            </div>
-            <ReleaseNotesView notes={info.releaseNotes} />
-          </div>
-        )}
-
-        {status === 'downloading' && updateStatus.downloadProgress && (
-          <UpdateProgressBar
-            percent={updateStatus.downloadProgress.percent}
-            speed={updateStatus.downloadProgress.bytesPerSecond}
-          />
-        )}
-
-        {status === 'downloaded' && (
-          <div
-            style={{
-              padding: '1rem',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--bg-main)',
-              border: '1px solid var(--border-color)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                marginBottom: '0.5rem',
-                color: 'var(--text-heading)',
-              }}
-            >
-              <ShieldCheck size={20} color="var(--color-primary)" />
-              <span style={{ fontWeight: 600 }}>Atualização pronta para instalação</span>
-            </div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              Um snapshot de segurança do seu banco de dados será gerado automaticamente antes da instalação. Se a nova
-              versão não abrir a biblioteca, o app oferece restaurar esse snapshot. A restauração devolve só os dados: a
-              versão instalada não muda, e voltar a uma versão anterior exige instalá-la de novo.
-            </p>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={onInstallUpdate}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-primary)' }}
-            >
-              <RefreshCw size={16} /> Reiniciar e Instalar Atualização
-            </button>
-          </div>
-        )}
-
-        {status === 'error' && updateStatus.error && (
-          <div
-            style={{
-              padding: '0.75rem 1rem',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--color-danger-subtle)',
-              color: 'var(--color-danger, #ef4444)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-          >
-            <AlertTriangle size={18} />
-            <span>Erro ao processar atualização: {updateStatus.error}</span>
-          </div>
-        )}
-
-        {snapshotToRestore && onRestoreSnapshot && (
-          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem', color: 'var(--text-heading)' }}>
-              Rollback de Emergência
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-              Snapshot de {describeSnapshotDate(snapshotToRestore.timestamp)}, salvo em:{' '}
-              <code>{snapshotToRestore.snapshotPath}</code>
-            </p>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-              Restaurar desfaz o que foi feito depois dessa data. O banco atual é guardado em <code>backups/</code>{' '}
-              antes, e o app reinicia.
-            </p>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={onRestoreSnapshot}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-            >
-              <ShieldCheck size={16} /> Restaurar Dados do Snapshot Pré-Atualização
-            </button>
-          </div>
+    <SettingsCard
+      title="Atualizações e Contingências"
+      icon={<ArrowUpCircle size={24} />}
+      description="Gerencie as atualizações do sistema de forma segura e com controle total. Nenhuma atualização é aplicada sem a sua aprovação."
+    >
+      <div className="update-panel">
+        <VersionRow
+          currentVersion={props.currentVersion}
+          checking={loading || status === 'checking'}
+          busy={loading || status === 'checking' || status === 'downloading'}
+          onCheck={handleCheck}
+        />
+        <UpdateStatusPanel props={props} />
+        {snapshot && props.onRestoreSnapshot && (
+          <SnapshotRollback snapshot={snapshot} onRestore={props.onRestoreSnapshot} />
         )}
       </div>
-    </div>
+    </SettingsCard>
   );
 };
 

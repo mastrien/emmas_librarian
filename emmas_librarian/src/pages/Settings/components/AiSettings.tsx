@@ -2,7 +2,10 @@ import React from 'react';
 import { Brain, ShieldAlert, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { AIModelConfig, AISkill, AIProvider } from '../../../types';
-import { KeyField, NumberSetting } from './ai/AiSettingsFields';
+import { NumberSetting } from './ai/AiSettingsFields';
+import { KeyField } from './KeyField';
+import { SettingsCard } from './SettingsCard';
+import './ai/aiSettings.css';
 import type { AutosaveStatus } from '../useSettingsAutosave';
 import { AiSkillCard } from './ai/AiSkillCard';
 
@@ -38,38 +41,22 @@ interface AiSettingsProps {
  *   <AiSettings openaiKey={k} setOpenaiKey={setK} ... autosaveStatus={autosave.status} />
  */
 export const AiSettings: React.FC<AiSettingsProps> = (props) => (
-  <div className="card" style={{ padding: '2rem' }}>
-    <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-      <Brain size={24} color="var(--color-primary)" /> Integrações de Inteligência Artificial
-    </h2>
+  <SettingsCard title="Integrações de Inteligência Artificial" icon={<Brain size={24} />} spacing="wide">
     <DataSharingNotice />
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div className="settings-stack settings-stack--wide">
       <ProviderKeys {...props} />
       <AdvancedAiSettings {...props} />
     </div>
-  </div>
+  </SettingsCard>
 );
 
 const DataSharingNotice: React.FC = () => (
-  <div
-    style={{
-      padding: '1rem',
-      background: 'rgba(234, 179, 8, 0.1)',
-      border: '1px solid rgba(234, 179, 8, 0.3)',
-      borderRadius: 'var(--radius-md)',
-      marginBottom: '2rem',
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: '0.75rem',
-    }}
-  >
-    <ShieldAlert size={20} color="var(--color-warning)" style={{ flexShrink: 0, marginTop: '2px' }} />
-    <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+  <div className="ai-sharing-notice">
+    <ShieldAlert size={20} className="ai-sharing-icon" />
+    <p className="ai-sharing-text">
       Ao usar funcionalidades de Inteligência Artificial, dados podem ser enviados para provedores externos.
       <br />
-      <Link to="/terms" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
-        Leia os Termos de Uso e IA completos aqui.
-      </Link>
+      <Link to="/terms">Leia os Termos de Uso e IA completos aqui.</Link>
     </p>
   </div>
 );
@@ -93,10 +80,7 @@ const ProviderKeys: React.FC<AiSettingsProps> = (props) => (
     <KeyField
       label={
         <>
-          Ollama URL (Local){' '}
-          <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 'normal' }}>
-            (Ex: http://127.0.0.1:11434/v1)
-          </span>
+          Ollama URL (Local) <span className="settings-label-aside">(Ex: http://127.0.0.1:11434/v1)</span>
         </>
       }
       value={props.ollamaUrl}
@@ -114,14 +98,12 @@ const ProviderKeys: React.FC<AiSettingsProps> = (props) => (
 );
 
 const AdvancedAiSettings: React.FC<AiSettingsProps> = (props) => (
-  <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--border-color)' }}>
-    <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: 'var(--text-heading)' }}>
-      Configurações Avançadas por Funcionalidade
-    </h3>
-    <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+  <div className="ai-advanced">
+    <h3>Configurações Avançadas por Funcionalidade</h3>
+    <p className="ai-advanced-text">
       Personalize qual provedor e modelo devem ser utilizados para cada tipo de funcionalidade.
     </p>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div className="settings-stack">
       {props.aiConfigs.map((config) => (
         <AiSkillCard
           key={config.skill}
@@ -130,11 +112,9 @@ const AdvancedAiSettings: React.FC<AiSettingsProps> = (props) => (
           onUpdate={props.handleUpdateAiConfig}
         />
       ))}
-      <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-        <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-heading)' }}>
-          Parâmetros Avançados de RAG (Investigação com IA)
-        </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+      <div className="ai-rag">
+        <h4>Parâmetros Avançados de RAG (Investigação com IA)</h4>
+        <div className="ai-rag-grid">
           <NumberSetting
             label="Tamanho do Chunk (caracteres)"
             value={props.ragChunkSize}
@@ -148,13 +128,9 @@ const AdvancedAiSettings: React.FC<AiSettingsProps> = (props) => (
           <NumberSetting label="Chunks Recuperados (Top K)" value={props.ragTopK} onChange={props.setRagTopK} />
         </div>
       </div>
-      <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button
-          onClick={props.handleRestoreAiDefaults}
-          className="btn-secondary"
-          style={{ color: 'var(--color-danger)', fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-        >
-          <RotateCcw size={14} style={{ marginRight: '0.4rem' }} /> Restaurar Padrões
+      <div className="ai-footer">
+        <button onClick={props.handleRestoreAiDefaults} className="btn-secondary ai-restore-button">
+          <RotateCcw size={14} /> Restaurar Padrões
         </button>
       </div>
     </div>
