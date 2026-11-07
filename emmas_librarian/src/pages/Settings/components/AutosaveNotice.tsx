@@ -1,5 +1,6 @@
 import React from 'react';
 import type { AutosaveStatus } from '../useSettingsAutosave';
+import './settings.css';
 
 const TEXT: Record<AutosaveStatus, string> = {
   idle: 'As alterações são salvas automaticamente.',
@@ -18,11 +19,7 @@ export const AutosaveNotice: React.FC<{ status: AutosaveStatus }> = ({ status })
   <span
     role="status"
     aria-live="polite"
-    style={{
-      marginLeft: 'auto',
-      fontSize: '0.85rem',
-      color: status === 'error' ? 'var(--color-danger)' : 'var(--text-muted)',
-    }}
+    className={status === 'error' ? 'autosave-notice autosave-notice--error' : 'autosave-notice'}
   >
     {TEXT[status]}
   </span>
