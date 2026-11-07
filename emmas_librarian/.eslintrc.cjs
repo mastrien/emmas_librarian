@@ -52,6 +52,8 @@ module.exports = {
         'build-db.js',
         'playwright.config.js',
         'playwright.release.config.js',
+        'playwright.visual.config.js',
+        'visual-tests/**/*.js',
         'scripts/**/*.js',
         'performance-tests/performance-harness.js',
       ],

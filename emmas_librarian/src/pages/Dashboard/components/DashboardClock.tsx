@@ -17,6 +17,7 @@ export const DashboardClock: React.FC = () => {
 
   return (
     <div
+      data-testid="dashboard-clock"
       style={{
         display: 'flex',
         flexDirection: 'column',
