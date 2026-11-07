@@ -18,7 +18,8 @@ export VISUAL_SNAPSHOT_DIR=/path/outside/the/repo            # default: <tmp>/em
 npm run visual:baseline
 ```
 
-Then check out the change and run `npm run visual:compare`. Each screen that differs is reported with its name, and
+Then check out the change and run `npm run visual:compare`. For a change to the calendar, set
+`VISUAL_KEEP_CALENDAR=1` for both runs, taken on the same day: the calendar is then compared instead of masked. Each screen that differs is reported with its name, and
 `test-results/` holds the expected, actual and diff images. Afterwards, `npm run rebuild:node` before unit tests.
 
 ## What keeps it repeatable
@@ -27,8 +28,8 @@ Five comparisons in a row on the same code gave zero differences (again after th
 
 - **One import.** The baseline run imports the project once into `<VISUAL_SNAPSHOT_DIR>/data-template`; every
   comparison starts from a copy of it. Importing again changed the PDFs' "added" second.
-- **Dates of the day or of the run are masked:** the dashboard clock and the month calendar (`data-testid` in
-  `DashboardClock` and `DashboardCalendar`), the PDF library's "Data de Adição" and the backup list in Settings.
+- **Dates of the day or of the run are masked:** the dashboard clock, the month calendar and the deadline badges'
+  day counts (`data-testid` in `DashboardClock`, `DashboardCalendar` and `DeadlineBanner`), the PDF library's "Data de Adição" and the backup list in Settings.
   Playwright's `clock` was tried first and failed now and then on the Electron window.
 - **Each screen waits** until the page height holds still (data arrives over IPC after the route changes), with the
   pointer moved to a corner (no hover) and nothing focused (a reload sometimes focused the logo link).

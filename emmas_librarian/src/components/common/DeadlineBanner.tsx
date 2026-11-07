@@ -209,6 +209,7 @@ export const DeadlineBanner: React.FC<DeadlineBannerProps> = ({ venues, onToggle
                 <VenueTag venue={venue} />
 
                 <span
+                  data-testid="deadline-badge"
                   style={{
                     fontSize: '0.7rem',
                     fontWeight: 700,
