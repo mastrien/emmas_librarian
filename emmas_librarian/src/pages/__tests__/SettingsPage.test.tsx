@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { SettingsPage } from '../SettingsPage';
+import { FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
@@ -23,7 +24,9 @@ describe('SettingsPage', () => {
 
     render(
       <BrowserRouter>
-        <SettingsPage />
+        <FakeDialogsProvider>
+          <SettingsPage />
+        </FakeDialogsProvider>
       </BrowserRouter>,
     );
 
@@ -38,7 +41,9 @@ describe('SettingsPage', () => {
     );
     render(
       <BrowserRouter>
-        <SettingsPage />
+        <FakeDialogsProvider>
+          <SettingsPage />
+        </FakeDialogsProvider>
       </BrowserRouter>,
     );
     const field = await screen.findByLabelText(/OpenAlex API Key/);
@@ -52,7 +57,9 @@ describe('SettingsPage', () => {
   it('saves the IEEE Xplore key on its own, with no save button to press', async () => {
     render(
       <BrowserRouter>
-        <SettingsPage />
+        <FakeDialogsProvider>
+          <SettingsPage />
+        </FakeDialogsProvider>
       </BrowserRouter>,
     );
 
@@ -67,7 +74,9 @@ describe('SettingsPage', () => {
   it('warns next to the IEEE Xplore key that the integration is experimental', async () => {
     render(
       <BrowserRouter>
-        <SettingsPage />
+        <FakeDialogsProvider>
+          <SettingsPage />
+        </FakeDialogsProvider>
       </BrowserRouter>,
     );
 
@@ -80,7 +89,9 @@ describe('SettingsPage', () => {
     ]);
     render(
       <BrowserRouter>
-        <SettingsPage />
+        <FakeDialogsProvider>
+          <SettingsPage />
+        </FakeDialogsProvider>
       </BrowserRouter>,
     );
     const provider = await screen.findByRole('combobox', { name: 'Provedor: 📝 Geração de Resumos' });
@@ -97,7 +108,9 @@ describe('SettingsPage', () => {
     ]);
     render(
       <BrowserRouter>
-        <SettingsPage />
+        <FakeDialogsProvider>
+          <SettingsPage />
+        </FakeDialogsProvider>
       </BrowserRouter>,
     );
     const provider = await screen.findByRole('combobox', { name: /Provedor: .*Investigação com IA/ });
@@ -113,7 +126,9 @@ describe('SettingsPage', () => {
   it('saves what was still waiting when the person leaves the page', async () => {
     const { unmount } = render(
       <BrowserRouter>
-        <SettingsPage />
+        <FakeDialogsProvider>
+          <SettingsPage />
+        </FakeDialogsProvider>
       </BrowserRouter>,
     );
     fireEvent.change(await screen.findByLabelText('IEEE Xplore API Key (experimental)'), {
@@ -130,7 +145,9 @@ describe('SettingsPage', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
       <BrowserRouter>
-        <SettingsPage />
+        <FakeDialogsProvider>
+          <SettingsPage />
+        </FakeDialogsProvider>
       </BrowserRouter>,
     );
 

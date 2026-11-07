@@ -4,6 +4,13 @@ Paths are relative to `emmas_librarian/`. Prefer these over new ad-hoc mocks.
 
 ## Renderer (src/)
 
+### FakeDialogs — `src/components/common/dialogs/__tests__/fakes/FakeDialogs.tsx`
+Stands in for the app's confirm/message windows (`useDialogs`). Render with `<FakeDialogsProvider dialogs={dialogs}>`.
+`confirmMessage` and `informMessage` are `vi.fn`s that receive the message, as `window.confirm`/`window.alert`
+spies did: `dialogs.confirmMessage.mockReturnValue(false)` declines, `expect(dialogs.informMessage).toHaveBeenCalledWith(…)`
+checks a message. `asked`/`informed` keep the full options (title, button names). E2E specs answer the real windows
+with `answerAppDialog(window, title, button)` from `e2e-tests/helpers.js`.
+
 ### FakeProjectService — `src/services/__tests__/fakes/FakeProjectService.ts`
 Implements `IProjectService` with a `vi.fn()` per method and sensible defaults. Inject it through the provider:
 

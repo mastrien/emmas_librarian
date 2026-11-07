@@ -159,6 +159,22 @@ async function clickAddArticlesOption(window, optionText) {
   await menuItem.click();
 }
 
+/**
+ * Answers one of the app's own confirm/message windows (DialogProvider, Arca 103/134) and returns its message.
+ * Native dialogs are accepted by getFirstWindow on their own; these are part of the page and must be clicked.
+ *
+ * Usage:
+ *   await window.getByRole('button', { name: 'Criar Backup Completo' }).click();
+ *   expect(await answerAppDialog(window, 'Backup criado', 'Entendi')).toContain('Backup completo criado');
+ */
+async function answerAppDialog(window, title, buttonName) {
+  const dialog = window.getByRole('dialog', { name: title });
+  await dialog.waitFor({ timeout: 15000 });
+  const message = await dialog.locator('.app-dialog-message').textContent();
+  await dialog.getByRole('button', { name: buttonName, exact: true }).click();
+  return message;
+}
+
 module.exports = {
   launchApp,
   runAppUntilExit,
@@ -167,4 +183,5 @@ module.exports = {
   navigateTo,
   clickAddArticlesOption,
   dismissChangelog,
+  answerAppDialog,
 };
