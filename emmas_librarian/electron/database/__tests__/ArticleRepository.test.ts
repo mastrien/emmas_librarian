@@ -361,6 +361,20 @@ describe('ArticleRepository', () => {
       expect((stored[0] as any).articles[0].article_title).toBe('A1');
     });
 
+    // Every PDF of one project import gets the same created_at second; ordered by that alone, the list followed the
+    // insertion order, which changes between imports (found by the redesign's screenshot comparison, Arca 134).
+    it('lists PDFs added in the same second in name order, newest second first', () => {
+      const insert = db.prepare(
+        'INSERT INTO pdf_files (file_path, file_hash, filename, file_size, created_at) VALUES (?, ?, ?, 1, ?)',
+      );
+      for (const name of ['b.pdf', 'c.pdf', 'a.pdf']) insert.run(`/${name}`, `h-${name}`, name, '2026-08-07 15:01:49');
+      insert.run('/novo.pdf', 'h-novo', 'novo.pdf', '2026-08-07 15:02:00');
+
+      const names = (pdfs.getStoredPdfs() as { filename: string }[]).map((p) => p.filename);
+
+      expect(names).toEqual(['novo.pdf', 'a.pdf', 'b.pdf', 'c.pdf']);
+    });
+
     it('should get articles for pdf', () => {
       const a1 = repo.saveArticle(projectId, { title: 'A1' } as any);
       repo.updateArticleFilePath(a1, '/test.pdf');

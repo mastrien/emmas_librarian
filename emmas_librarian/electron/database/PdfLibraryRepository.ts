@@ -12,6 +12,8 @@ import crypto from 'crypto';
 export class PdfLibraryRepository {
   constructor(private db: Database) {}
 
+  // created_at has one-second resolution and a project import adds all its PDFs in the same second: the filename
+  // breaks the tie, or the list would follow the insertion order, which changes between imports.
   public getStoredPdfs(): unknown[] {
     const query = `
       SELECT p.file_path, p.file_hash, p.filename, p.file_size, p.created_at,
@@ -21,7 +23,7 @@ export class PdfLibraryRepository {
               WHERE LOWER(REPLACE(a.local_file_path, '/', '\\')) = LOWER(REPLACE(p.file_path, '/', '\\')) AND a.deleted_at IS NULL AND pr.deleted_at IS NULL
              ) as articles_json
       FROM pdf_files p
-      ORDER BY p.created_at DESC
+      ORDER BY p.created_at DESC, p.filename ASC
     `;
     const rows = this.db.prepare(query).all();
     return rows.map((r: any) => {
