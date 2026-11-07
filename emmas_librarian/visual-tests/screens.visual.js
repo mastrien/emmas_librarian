@@ -34,7 +34,7 @@ const SAMPLE_VENUES = [
     milestones: [
       {
         label: 'Submissão',
-        field_type: 'date',
+        field_type: 'single',
         target_date: '2025-03-10',
         has_time: true,
         target_time: '23:59',
@@ -54,7 +54,7 @@ const SAMPLE_VENUES = [
     title: 'Revista Brasileira de Meteorologia',
     category: 'journal',
     milestones: [
-      { label: 'Chamada especial', field_type: 'date', target_date: '2025-02-01', has_time: false, status: 'pending' },
+      { label: 'Chamada especial', field_type: 'single', target_date: '2025-02-01', has_time: false, status: 'pending' },
     ],
   },
 ];
