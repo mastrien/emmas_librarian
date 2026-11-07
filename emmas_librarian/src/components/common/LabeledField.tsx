@@ -1,4 +1,5 @@
-import React, { useId } from 'react';
+import React from 'react';
+import { TextArea, TextField } from './fields';
 
 interface LabeledFieldProps {
   label: string;
@@ -16,69 +17,22 @@ interface LabeledFieldProps {
   compact?: boolean;
 }
 
-const labelStyle = (compact: boolean): React.CSSProperties => ({
-  display: 'block',
-  fontSize: '0.85rem',
-  fontWeight: compact ? undefined : 600,
-  marginBottom: '0.3rem',
-  color: 'var(--text-muted)',
-});
-
-const controlStyle = (compact: boolean, multiline: boolean, textareaHeight: string): React.CSSProperties => ({
-  width: '100%',
-  padding: compact ? '0.5rem' : '0.6rem 0.8rem',
-  borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--border-color)',
-  background: 'var(--bg-surface)',
-  color: 'var(--text-main)',
-  ...(compact ? {} : { outline: 'none', fontFamily: 'inherit' }),
-  ...(multiline ? { height: textareaHeight, resize: 'none' } : {}),
-});
-
-const hintStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '0.75rem',
-  color: 'var(--text-muted)',
-  marginTop: '0.25rem',
-  lineHeight: '1.2',
-};
-
 /**
- * Label + text input (or textarea) with the app's form styling and an optional hint below.
+ * Label + text input (or textarea) taking the value as a string, for the article metadata editors. Built on
+ * TextField/TextArea (Arca 134), so it shares their look; new forms can use those directly.
  *
  * Usage:
  *   <LabeledField label="Autores" value={authors} onChange={setAuthors} hint="Separe com ;" />
  */
 export const LabeledField: React.FC<LabeledFieldProps> = ({
-  label,
-  value,
   onChange,
-  name,
   type = 'text',
-  placeholder,
-  required,
-  hint,
   multiline = false,
   textareaHeight = '100px',
-  compact = false,
+  ...shared
 }) => {
-  const id = useId();
-  const common = {
-    id,
-    name,
-    value,
-    placeholder,
-    required,
-    style: controlStyle(compact, multiline, textareaHeight),
-    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange(e.target.value),
-  };
-  return (
-    <div>
-      <label htmlFor={id} style={labelStyle(compact)}>
-        {label}
-      </label>
-      {multiline ? <textarea {...common} /> : <input type={type} {...common} />}
-      {hint && <span style={hintStyle}>{hint}</span>}
-    </div>
-  );
+  if (multiline) {
+    return <TextArea {...shared} height={textareaHeight} onChange={(e) => onChange(e.target.value)} />;
+  }
+  return <TextField {...shared} type={type} onChange={(e) => onChange(e.target.value)} />;
 };
