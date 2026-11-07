@@ -77,4 +77,29 @@ test.describe('Agenda & Prazos E2E Tests', () => {
     const deadlineBanner = window.locator('text=Próximos Prazos');
     await expect(deadlineBanner).toBeVisible();
   });
+
+  // Arca 103/134: deleting an event asks with the app's own dialog, not window.confirm (which the harness would
+  // accept silently). Cancel keeps the event, the named red button deletes it.
+  test('deletes an event through the app dialog, after a cancel that keeps it', async () => {
+    const nativeDialogs = [];
+    window.on('dialog', (d) => nativeDialogs.push(d.message()));
+    await navigateTo(window, 'Agenda');
+    await window.locator('button', { hasText: 'Novo Evento' }).first().click();
+    const title = 'Evento para excluir ' + Date.now();
+    await window.fill('input[placeholder*="Simpósio Brasileiro"]', title);
+    await window.fill('input[placeholder*="SBBD 2026"]', 'EX' + Date.now().toString().slice(-5));
+    await window.locator('button', { hasText: 'Salvar Evento' }).click();
+    await expect(window.getByText(title)).toBeVisible({ timeout: 10000 });
+
+    await window.getByTitle('Excluir Evento').first().click();
+    const dialog = window.getByRole('dialog', { name: 'Excluir evento' });
+    await dialog.getByRole('button', { name: 'Cancelar' }).click();
+    await expect(dialog).toBeHidden();
+    await expect(window.getByText(title)).toBeVisible();
+
+    await window.getByTitle('Excluir Evento').first().click();
+    await dialog.getByRole('button', { name: 'Excluir evento' }).click();
+    await expect(window.getByText(title)).toBeHidden();
+    expect(nativeDialogs).toEqual([]);
+  });
 });

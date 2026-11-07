@@ -1,5 +1,6 @@
-import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, act, fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { DialogProvider } from '../../components/common/dialogs/DialogProvider';
 import { AgendaPage } from '../AgendaPage';
 import { ServicesProvider } from '../../contexts/ServicesContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
@@ -36,16 +37,27 @@ describe('AgendaPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     fakeService = FakeProjectService.create();
-    vi.spyOn(window, 'confirm').mockImplementation(() => true);
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   const renderPage = () => {
     return render(
       <ServicesProvider apiService={fakeService}>
-        <AgendaPage />
+        <DialogProvider>
+          <AgendaPage />
+        </DialogProvider>
       </ServicesProvider>,
     );
+  };
+
+  // Deleting asks with the app's own dialog (Arca 103/134); answers it with the given button.
+  const answerDeleteDialog = async (button: 'Excluir evento' | 'Cancelar') => {
+    fireEvent.click(screen.getByText('Delete Venue'));
+    const dialog = await screen.findByRole('dialog', { name: 'Excluir evento' });
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: button }));
+    });
+    return dialog;
   };
 
   it('loads and displays venues', async () => {
@@ -181,17 +193,15 @@ describe('AgendaPage', () => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
 
-    await act(async () => {
-      fireEvent.click(screen.getByText('Delete Venue'));
-    });
+    const dialog = await answerDeleteDialog('Excluir evento');
 
-    expect(window.confirm).toHaveBeenCalled();
+    expect(dialog).toHaveTextContent('O evento e todos os seus prazos serão excluídos.');
+
     expect(fakeService.deleteScientificVenue).toHaveBeenCalledWith(1);
     expect(fakeService.getScientificVenues).toHaveBeenCalledTimes(2);
   });
 
   it('cancels delete venue', async () => {
-    vi.spyOn(window, 'confirm').mockImplementation(() => false);
     fakeService.getScientificVenues.mockResolvedValue([]);
     renderPage();
 
@@ -199,11 +209,9 @@ describe('AgendaPage', () => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
 
-    await act(async () => {
-      fireEvent.click(screen.getByText('Delete Venue'));
-    });
+    await answerDeleteDialog('Cancelar');
 
-    expect(window.confirm).toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(fakeService.deleteScientificVenue).not.toHaveBeenCalled();
     expect(fakeService.getScientificVenues).toHaveBeenCalledTimes(1);
   });
@@ -217,9 +225,7 @@ describe('AgendaPage', () => {
       expect(screen.getByTestId('mock-agenda-view')).toBeInTheDocument();
     });
 
-    await act(async () => {
-      fireEvent.click(screen.getByText('Delete Venue'));
-    });
+    await answerDeleteDialog('Excluir evento');
 
     expect(console.error).toHaveBeenCalledWith('Erro ao excluir evento:', expect.any(Error));
   });
