@@ -1,24 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { copyCitations, type CitationClipboard } from '../citationClipboard';
-
-class FakeClipboardItem {
-  constructor(readonly items: Record<string, Blob>) {}
-}
-
-class FakeCitationClipboard implements CitationClipboard {
-  richWrites: FakeClipboardItem[][] = [];
-  texts: string[] = [];
-  rejectRich = false;
-
-  async write(items: ClipboardItem[]) {
-    if (this.rejectRich) throw new Error('ClipboardItem not supported');
-    this.richWrites.push(items as unknown as FakeClipboardItem[]);
-  }
-
-  async writeText(text: string) {
-    this.texts.push(text);
-  }
-}
+import { copyCitations } from '../citationClipboard';
+import { FakeCitationClipboard, FakeClipboardItem } from './fakes/FakeCitationClipboard';
 
 // jsdom's Blob has no text().
 const readBlob = (blob: Blob) =>

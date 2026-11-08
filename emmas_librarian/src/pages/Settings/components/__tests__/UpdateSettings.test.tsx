@@ -88,6 +88,30 @@ describe('UpdateSettings Component', () => {
     expect(screen.getByText('2.00 MB/s')).toBeInTheDocument();
   });
 
+  // The fill reads --progress; a percent outside 0-100 from the updater must not overflow or invert the bar.
+  it.each([
+    [64, '64%'],
+    [150, '100%'],
+    [-5, '0%'],
+  ])('sizes the progress fill for %s%% as %s', (percent, width) => {
+    const { container } = render(
+      <UpdateSettings
+        currentVersion="1.2.0"
+        updateStatus={{
+          ...baseStatus,
+          status: 'downloading',
+          downloadProgress: { percent, bytesPerSecond: 1, transferred: 1, total: 1 },
+        }}
+        onCheckForUpdates={vi.fn()}
+        onDownloadUpdate={vi.fn()}
+        onInstallUpdate={vi.fn()}
+      />,
+    );
+
+    const fill = container.querySelector('.update-progress-fill') as HTMLElement;
+    expect(fill.style.getPropertyValue('--progress')).toBe(width);
+  });
+
   it('displays safety snapshot notice and install button when status is downloaded', () => {
     const onInstall = vi.fn().mockResolvedValue(undefined);
     render(
