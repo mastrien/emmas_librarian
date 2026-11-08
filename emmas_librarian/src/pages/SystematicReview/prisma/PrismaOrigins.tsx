@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Article, PrismaRecords, PrismaSource, PrismaSourceInput, PrismaSourceMethod } from '../../../types';
 import { brazilianDate, METHOD_NAMES } from '../../../utils/prismaFlow';
-import { PANEL_FIELD, PANEL_LABEL } from './panelFieldStyles';
+import './prisma.css';
 
 /** What the origin editor can change; each call answers the records as they now are. */
 export interface OriginActions {
@@ -33,14 +33,13 @@ const OriginRow: React.FC<{
   return (
     <li className="prisma-origin">
       <input type="checkbox" checked={checked} onChange={onCheck} aria-label={`Selecionar ${article.title}`} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', minWidth: 0, flex: 1 }}>
-        <span style={{ overflowWrap: 'anywhere' }}>{article.title}</span>
+      <div className="prisma-col prisma-gap-30 prisma-shrink prisma-grow">
+        <span className="prisma-wrap">{article.title}</span>
         <span className="review-muted">{via}</span>
-        <label style={PANEL_LABEL}>
+        <label className="prisma-field-label">
           Origem
           <select
-            className="input-field input-compact"
-            style={PANEL_FIELD}
+            className="input-field input-compact prisma-field"
             value={current ?? ''}
             onChange={(e) => onPick(e.target.value ? Number(e.target.value) : null)}
           >
@@ -60,12 +59,11 @@ const BulkOrigin: React.FC<{ records: PrismaRecords; count: number; onApply: (so
 }) => {
   const [sourceId, setSourceId] = useState('');
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', alignItems: 'flex-end' }}>
-      <label style={{ ...PANEL_LABEL, flex: '1 1 10rem', minWidth: 0 }}>
+    <div className="prisma-row-bottom">
+      <label className="prisma-field-label prisma-field-label--grow">
         Marcar os selecionados ({count}) como
         <select
-          className="input-field input-compact"
-          style={PANEL_FIELD}
+          className="input-field input-compact prisma-field"
           value={sourceId}
           onChange={(e) => setSourceId(e.target.value)}
         >
@@ -107,7 +105,7 @@ export const ArticleOrigins: React.FC<{
   return (
     <section className="prisma-editor" aria-label="Origem dos artigos de fora das buscas">
       <strong>Artigos de fora das buscas ({articles.length})</strong>
-      <p className="review-muted" style={{ margin: 0 }}>
+      <p className="review-muted prisma-m0">
         Entraram por adição manual, importação de PDFs ou importação de outro projeto. Diga de onde cada um veio; o app
         conta sozinho por método.
       </p>
@@ -152,26 +150,25 @@ const SourceForm: React.FC<{
     setDraft({ ...draft, [field]: e.target.value });
   return (
     <form
+      className="prisma-col prisma-gap-45"
       aria-label={initial.id === undefined ? 'Nova fonte' : `Editar fonte ${initial.name}`}
-      style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}
       onSubmit={(e) => {
         e.preventDefault();
         if (draft.name.trim()) void onSave(draft);
       }}
     >
-      <label style={PANEL_LABEL}>
+      <label className="prisma-field-label">
         Nome
         <input
-          className="input-field input-compact"
-          style={PANEL_FIELD}
+          className="input-field input-compact prisma-field"
           value={draft.name}
           onChange={set('name')}
           placeholder="Ex.: Google Scholar"
         />
       </label>
-      <label style={PANEL_LABEL}>
+      <label className="prisma-field-label">
         Método
-        <select className="input-field input-compact" style={PANEL_FIELD} value={draft.method} onChange={set('method')}>
+        <select className="input-field input-compact prisma-field" value={draft.method} onChange={set('method')}>
           {METHODS.map((m) => (
             <option key={m} value={m}>
               {METHOD_NAMES[m]}
@@ -179,28 +176,26 @@ const SourceForm: React.FC<{
           ))}
         </select>
       </label>
-      <label style={PANEL_LABEL}>
+      <label className="prisma-field-label">
         Endereço (opcional)
         <input
-          className="input-field input-compact"
-          style={PANEL_FIELD}
+          className="input-field input-compact prisma-field"
           type="url"
           value={draft.url ?? ''}
           onChange={set('url')}
           placeholder="https://"
         />
       </label>
-      <label style={PANEL_LABEL}>
+      <label className="prisma-field-label">
         Consultada em
         <input
-          className="input-field input-compact"
-          style={PANEL_FIELD}
+          className="input-field input-compact prisma-field"
           type="date"
           value={draft.consulted_on ?? ''}
           onChange={set('consulted_on')}
         />
       </label>
-      <div style={{ display: 'flex', gap: '0.4rem' }}>
+      <div className="prisma-row-tight">
         <button type="submit" className="review-small">
           Salvar fonte
         </button>
@@ -218,7 +213,7 @@ const SourceItem: React.FC<{ source: PrismaSource; count: number; onEdit: () => 
   onEdit,
 }) => (
   <li className="prisma-item">
-    <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflowWrap: 'anywhere' }}>
+    <span className="prisma-col prisma-shrink prisma-wrap">
       <span>{source.name}</span>
       <span className="review-muted">
         {METHOD_NAMES[source.method]}
@@ -226,7 +221,7 @@ const SourceItem: React.FC<{ source: PrismaSource; count: number; onEdit: () => 
         {source.url ? ` · ${source.url}` : ''}
       </span>
     </span>
-    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: 'none' }}>
+    <span className="prisma-row-tight prisma-center prisma-fixed">
       <span className="review-muted">{count}</span>
       <button type="button" className="review-small" aria-label={`Editar fonte ${source.name}`} onClick={onEdit}>
         Editar
@@ -274,12 +269,7 @@ export const ProjectSources: React.FC<{ records: PrismaRecords; onSave: OriginAc
       {open === 'new' ? (
         form(EMPTY)
       ) : (
-        <button
-          type="button"
-          className="review-small"
-          style={{ alignSelf: 'flex-start' }}
-          onClick={() => setOpen('new')}
-        >
+        <button type="button" className="review-small prisma-self-start" onClick={() => setOpen('new')}>
           + Nova fonte
         </button>
       )}

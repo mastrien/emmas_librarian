@@ -11,6 +11,7 @@ import {
 import { baseName } from '../../../utils/prismaSearches';
 import { ArticleOrigins, ProjectSources, type OriginActions } from './PrismaOrigins';
 import { StudyGrouping, type StudyActions } from './PrismaStudies';
+import './prisma.css';
 
 const SHOWN = 8;
 
@@ -26,13 +27,14 @@ interface PrismaPanelProps {
   actions: PrismaPanelActions;
 }
 
-const MAY = { background: 'var(--review-may-bg)', color: 'var(--review-may-text)', border: '1px solid #d97706' };
-const WARNING_STYLE: Record<PrismaWarning['kind'], React.CSSProperties> = {
-  mismatch: MAY,
-  pending: MAY,
-  partial: MAY,
-  nodata: { background: 'var(--review-rem-bg)', color: 'var(--review-rem-text)', border: '1px solid #0284c7' },
-};
+/**
+ * The tone of a panel warning in prisma.css: "may" (amber) for what may be wrong, "rem" (blue) for missing data.
+ *
+ * @example warningTone('nodata') // 'rem'
+ */
+export function warningTone(kind: PrismaWarning['kind']): 'may' | 'rem' {
+  return kind === 'nodata' ? 'rem' : 'may';
+}
 
 const COLUMN_NAMES: Record<PrismaColumn, string> = {
   databases: 'Bases de dados e repositórios',
@@ -46,10 +48,8 @@ const DUPLICATE_HELP =
 
 const ItemRow: React.FC<{ label: string; detail: string }> = ({ label, detail }) => (
   <li className="prisma-item">
-    <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{label}</span>
-    <span className="review-muted" style={{ flex: 'none' }}>
-      {detail}
-    </span>
+    <span className="prisma-shrink prisma-wrap">{label}</span>
+    <span className="review-muted prisma-fixed">{detail}</span>
   </li>
 );
 
@@ -127,23 +127,17 @@ export const PrismaPanel: React.FC<PrismaPanelProps> = (props) => {
   const { box, flow, articles } = props;
   return (
     <aside aria-label="De onde vem o número" className="review-section prisma-panel">
-      <span className="review-menu-title" style={{ padding: 0 }}>
-        De onde vem o número
-      </span>
+      <span className="review-menu-title prisma-p0">De onde vem o número</span>
       <span className="review-muted">{COLUMN_NAMES[box.column]}</span>
-      <h2 style={{ margin: 0, fontSize: '1.15rem' }}>{box.title}</h2>
-      <strong style={{ fontSize: '1.6rem' }}>n = {box.n}</strong>
-      <p style={{ margin: 0, lineHeight: 1.55 }}>{box.how}</p>
+      <h2 className="prisma-m0 prisma-title-sm">{box.title}</h2>
+      <strong className="prisma-title-lg">n = {box.n}</strong>
+      <p className="prisma-text">{box.how}</p>
       {box.warnings.map((w) => (
-        <div key={w.text} role="note" className="prisma-warning" style={WARNING_STYLE[w.kind]}>
+        <div key={w.text} role="note" className={`prisma-warning prisma-warning--${warningTone(w.kind)}`}>
           {w.text}
         </div>
       ))}
-      {box.key === 'removed' && (
-        <p className="review-muted" style={{ margin: 0, lineHeight: 1.55 }}>
-          {DUPLICATE_HELP}
-        </p>
-      )}
+      {box.key === 'removed' && <p className="review-muted prisma-text">{DUPLICATE_HELP}</p>}
       <Editors {...props} />
       <Lines lines={box.lines} label="Linhas da caixa" />
       <Lines lines={box.details} label="Detalhes" />
