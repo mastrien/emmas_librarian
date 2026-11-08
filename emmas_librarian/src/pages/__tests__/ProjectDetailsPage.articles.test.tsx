@@ -144,8 +144,8 @@ describe('ProjectDetailsPage read and archived sections', () => {
     const readSection = () => screen.getByText('Artigos Lidos (1)').closest('details') as HTMLElement;
 
     fireEvent.click(within(readSection()).getByRole('button', { name: 'Citar' }));
-    expect(await screen.findByText('Gerar Citação')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Gerar Citação').nextElementSibling as HTMLElement);
+    const citation = await screen.findByRole('dialog', { name: 'Gerar Citação' });
+    fireEvent.click(within(citation).getByRole('button', { name: 'Fechar' }));
 
     fireEvent.click(within(readSection()).getByRole('button', { name: /Citação em Massa/ }));
     expect(await screen.findByText(/Citação em Massa/, { selector: 'h2, h3' })).toBeInTheDocument();

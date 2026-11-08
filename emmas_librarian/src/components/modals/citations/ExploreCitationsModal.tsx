@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Loader2, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { Article, CitationDirection, CitationSeedCount, SearchPreview } from '../../../types';
 import {
@@ -11,6 +10,7 @@ import {
 } from '../../../utils/citationSeeds';
 import { describeError } from '../../../utils/describeError';
 import { SearchSummaryModal } from '../SearchSummaryModal';
+import { Modal } from '../../common/Modal';
 
 interface ExploreCitationsModalProps {
   projectId: number;
@@ -19,28 +19,6 @@ interface ExploreCitationsModalProps {
   /** Called after the results were saved, to reload the project. */
   onSaved: () => void;
 }
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 9999,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: 'rgba(0,0,0,0.5)',
-};
-
-const cardStyle: React.CSSProperties = {
-  width: '620px',
-  maxWidth: '95%',
-  maxHeight: '90vh',
-  overflowY: 'auto',
-  padding: '1.5rem',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '1rem',
-  background: 'var(--bg-main)',
-};
 
 const mutedStyle: React.CSSProperties = { margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' };
 
@@ -162,103 +140,86 @@ export const ExploreCitationsModal: React.FC<ExploreCitationsModalProps> = ({
       />
     );
   }
-  return createPortal(
-    <div style={overlayStyle}>
-      <div className="card fade-in" role="dialog" aria-modal="true" aria-label="Explorar citações" style={cardStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
-          <div>
-            <h2 style={{ margin: '0 0 0.25rem' }}>Explorar citações</h2>
-            <p style={mutedStyle}>
-              Busca no OpenAlex o que estes artigos citam e quem os cita. Nada entra no projeto antes da sua revisão.
-            </p>
-          </div>
-          <button
-            type="button"
-            aria-label="Fechar"
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-          >
-            <X size={22} aria-hidden="true" />
-          </button>
+  return (
+    <Modal
+      label="Explorar citações"
+      title="Explorar citações"
+      description="Busca no OpenAlex o que estes artigos citam e quem os cita. Nada entra no projeto antes da sua revisão."
+      onClose={onClose}
+      busy={run.busy}
+      width={620}
+    >
+      {missing > 0 && (
+        <div role="note" style={mutedStyle}>
+          {seeds.length === 0
+            ? NO_CITATION_LOOKUP
+            : `${missing} ${missing === 1 ? 'artigo fica' : 'artigos ficam'} de fora. ${NO_CITATION_LOOKUP}`}
         </div>
-        {missing > 0 && (
-          <div role="note" style={mutedStyle}>
-            {seeds.length === 0
-              ? NO_CITATION_LOOKUP
-              : `${missing} ${missing === 1 ? 'artigo fica' : 'artigos ficam'} de fora. ${NO_CITATION_LOOKUP}`}
-          </div>
-        )}
-        {seeds.length > 0 && !counts && !run.error && (
-          <div role="status" style={mutedStyle}>
-            <Loader2 size={16} className="spin" aria-hidden="true" /> Consultando o OpenAlex…
-          </div>
-        )}
-        {counts && (
-          <ul style={{ margin: 0, paddingLeft: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {counts.map((c) => (
-              <CountLine key={c.articleId} count={c} />
-            ))}
-          </ul>
-        )}
-        {counts && (
-          <>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <DirectionChoice
-                label="Referências"
-                hint="O que estes artigos citam."
-                checked={references}
-                onChange={setReferences}
-              />
-              <DirectionChoice
-                label="Citações"
-                hint="Quem cita estes artigos."
-                checked={citedBy}
-                onChange={setCitedBy}
-              />
-            </div>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              Baixar no máximo
-              <input
-                type="number"
-                className="input-field"
-                min={1}
-                max={SNOWBALL_MAX_LIMIT}
-                value={Number.isNaN(limit) ? '' : limit}
-                onChange={(e) => setLimit(e.target.valueAsNumber)}
-                style={{ width: '10rem' }}
-              />
-            </label>
-            <p role="status" style={mutedStyle}>
-              {!limitValid
-                ? `Escolha um número de 1 a ${SNOWBALL_MAX_LIMIT}.`
-                : volume === 0
-                  ? 'Não há nada para baixar nas direções escolhidas.'
-                  : volume > limit
-                    ? `São ${volume} trabalhos; só os ${limit} primeiros serão baixados.`
-                    : `São ${volume} trabalhos.`}
-            </p>
-          </>
-        )}
-        {run.error && (
-          <div role="alert" style={{ ...mutedStyle, color: 'var(--color-danger)' }}>
-            {run.error}
-          </div>
-        )}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-          <button type="button" className="btn-secondary" onClick={onClose}>
-            Cancelar
-          </button>
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={!canSearch}
-            onClick={() => void run.search(directions, limit)}
-          >
-            {run.busy ? <Loader2 size={16} className="spin" aria-hidden="true" /> : null} Buscar
-          </button>
+      )}
+      {seeds.length > 0 && !counts && !run.error && (
+        <div role="status" style={mutedStyle}>
+          <Loader2 size={16} className="spin" aria-hidden="true" /> Consultando o OpenAlex…
         </div>
+      )}
+      {counts && (
+        <ul style={{ margin: 0, paddingLeft: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {counts.map((c) => (
+            <CountLine key={c.articleId} count={c} />
+          ))}
+        </ul>
+      )}
+      {counts && (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <DirectionChoice
+              label="Referências"
+              hint="O que estes artigos citam."
+              checked={references}
+              onChange={setReferences}
+            />
+            <DirectionChoice label="Citações" hint="Quem cita estes artigos." checked={citedBy} onChange={setCitedBy} />
+          </div>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            Baixar no máximo
+            <input
+              type="number"
+              className="input-field"
+              min={1}
+              max={SNOWBALL_MAX_LIMIT}
+              value={Number.isNaN(limit) ? '' : limit}
+              onChange={(e) => setLimit(e.target.valueAsNumber)}
+              style={{ width: '10rem' }}
+            />
+          </label>
+          <p role="status" style={mutedStyle}>
+            {!limitValid
+              ? `Escolha um número de 1 a ${SNOWBALL_MAX_LIMIT}.`
+              : volume === 0
+                ? 'Não há nada para baixar nas direções escolhidas.'
+                : volume > limit
+                  ? `São ${volume} trabalhos; só os ${limit} primeiros serão baixados.`
+                  : `São ${volume} trabalhos.`}
+          </p>
+        </>
+      )}
+      {run.error && (
+        <div role="alert" style={{ ...mutedStyle, color: 'var(--color-danger)' }}>
+          {run.error}
+        </div>
+      )}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+        <button type="button" className="btn-secondary" onClick={onClose}>
+          Cancelar
+        </button>
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={!canSearch}
+          onClick={() => void run.search(directions, limit)}
+        >
+          {run.busy ? <Loader2 size={16} className="spin" aria-hidden="true" /> : null} Buscar
+        </button>
       </div>
-    </div>,
-    document.body,
+    </Modal>
   );
 };
