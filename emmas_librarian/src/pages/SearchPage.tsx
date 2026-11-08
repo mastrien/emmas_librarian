@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { QueryBuilder } from '../components/common/QueryBuilder';
 import { useProjectService } from '../contexts/ServicesContext';
 import { Project, QueryASTNode, DatabaseTranslationMap, QuerySort, SearchHistoryItem, SearchPreview } from '../types';
 import { withPublishedSince } from '../utils/publishedSince';
-import { Search, Loader2, ArrowLeft } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { SearchSummaryModal } from '../components/modals/SearchSummaryModal';
 import { useDebounce } from '../hooks/useDebounce';
 import { describeError } from '../utils/describeError';
@@ -27,6 +27,7 @@ import { DatabaseSelector } from './Search/DatabaseSelector';
 import { QueryTranslationCard } from './Search/QueryTranslationCard';
 import { SearchOptionsCard } from './Search/SearchOptionsCard';
 import { ApiKeyRequiredDialog } from './Search/ApiKeyRequiredDialog';
+import { BackLink } from '../components/common/BackLink';
 
 const TRANSLATION_DEBOUNCE_MS = 600;
 
@@ -189,18 +190,9 @@ export const SearchPage: React.FC = () => {
 
   return (
     <div className="fade-in" style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '4rem' }}>
-      <Link
-        to={`/projects/${id}`}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          marginBottom: '1.5rem',
-          color: 'var(--text-muted)',
-        }}
-      >
-        <ArrowLeft size={18} /> Voltar para o Projeto
-      </Link>
+      <BackLink to={`/projects/${id}`} className="page-back">
+        Voltar ao projeto
+      </BackLink>
 
       <div style={{ marginBottom: '2.5rem' }}>
         <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>Fazer Nova Busca</h1>

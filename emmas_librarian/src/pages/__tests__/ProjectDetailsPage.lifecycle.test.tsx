@@ -35,7 +35,7 @@ describe('ProjectDetailsPage loading', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Voltar para Projetos')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Voltar aos projetos' })).toBeInTheDocument();
     expect(screen.queryByTestId('project-details-container')).not.toBeInTheDocument();
     release();
     expect(await screen.findByRole('heading', { name: 'Tese' })).toBeInTheDocument();
