@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import { droppedFilePath } from '../../../utils/droppedFilePath';
+import { useDialogs } from '../../../components/common/dialogs/DialogProvider';
 
 interface PdfImportOptions {
   projectId: number | null;
@@ -18,16 +19,19 @@ interface PdfImportOptions {
  */
 export function useProjectPdfImport({ projectId, onImported, isDropBlocked }: PdfImportOptions) {
   const projectService = useProjectService();
+  const { inform } = useDialogs();
   const [isDragging, setIsDragging] = useState(false);
+  const informFailure = (err: unknown) =>
+    inform({ title: 'Erro ao importar', message: `Erro ao importar PDFs: ${(err as Error)?.message || err}` });
 
   const importPaths = async (filePaths: string[]) => {
     if (projectId === null || filePaths.length === 0) return;
     try {
       const count = await projectService.createArticlesFromPdfs(projectId, filePaths);
-      alert(`${count} artigo(s) importado(s) com sucesso.`);
       await onImported();
+      await inform({ title: 'PDFs importados', message: `${count} artigo(s) importado(s) com sucesso.` });
     } catch (err) {
-      alert(`Erro ao importar PDFs: ${(err as Error)?.message || err}`);
+      await informFailure(err);
     }
   };
 
@@ -37,7 +41,7 @@ export function useProjectPdfImport({ projectId, onImported, isDropBlocked }: Pd
       const filePaths = await projectService.openMultiplePdfsDialog();
       await importPaths(filePaths ?? []);
     } catch (err) {
-      alert(`Erro ao importar PDFs: ${(err as Error)?.message || err}`);
+      await informFailure(err);
     }
   };
 

@@ -4,7 +4,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { expect } = require('@playwright/test');
-const { clickAddArticlesOption } = require('./helpers');
+const { clickAddArticlesOption, answerAppDialog } = require('./helpers');
 const { METADATA, SENTINELS } = require('./fixtures/articleContent.cjs');
 
 const FIXTURE_PDF = path.join(__dirname, 'fixtures', 'artigo-teste-emma.pdf');
@@ -24,9 +24,8 @@ function copyFixturePdf() {
 
 /** Imports the fixture through "Importar PDFs em Lote" and waits for the confirmation and the table row. */
 async function importFixturePdf(window) {
-  const confirmation = window.waitForEvent('dialog');
   await clickAddArticlesOption(window, 'Importar PDFs em Lote');
-  expect((await confirmation).message()).toBe('1 artigo(s) importado(s) com sucesso.');
+  expect(await answerAppDialog(window, 'PDFs importados', 'Entendi')).toBe('1 artigo(s) importado(s) com sucesso.');
   await expect(window.locator('table').getByText(IMPORTED_TITLE)).toBeVisible({ timeout: 15000 });
 }
 

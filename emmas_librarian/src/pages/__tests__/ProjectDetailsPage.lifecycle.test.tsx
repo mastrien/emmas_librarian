@@ -1,16 +1,13 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ProjectDetailsPage } from '../ProjectDetailsPage';
 import { ServicesProvider } from '../../contexts/ServicesContext';
 import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
+import { FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 import { givenProject, renderProjectPage, article, PROJECT } from './support/projectPageHarness';
 import type { SearchHistoryItem } from '../../types';
-
-beforeEach(() => {
-  vi.spyOn(window, 'alert').mockImplementation(() => undefined);
-});
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -27,9 +24,11 @@ describe('ProjectDetailsPage loading', () => {
       <MemoryRouter initialEntries={['/projects/1']}>
         <ServicesProvider apiService={service}>
           <GlobalErrorProvider>
-            <Routes>
-              <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-            </Routes>
+            <FakeDialogsProvider>
+              <Routes>
+                <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+              </Routes>
+            </FakeDialogsProvider>
           </GlobalErrorProvider>
         </ServicesProvider>
       </MemoryRouter>,
@@ -66,9 +65,11 @@ describe('ProjectDetailsPage loading', () => {
       <MemoryRouter initialEntries={['/projects/9']}>
         <ServicesProvider apiService={service}>
           <GlobalErrorProvider>
-            <Routes>
-              <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-            </Routes>
+            <FakeDialogsProvider>
+              <Routes>
+                <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+              </Routes>
+            </FakeDialogsProvider>
           </GlobalErrorProvider>
         </ServicesProvider>
       </MemoryRouter>,
@@ -144,12 +145,12 @@ describe('ProjectDetailsPage search history', () => {
     const service = givenProject();
     service.getSearchHistory.mockResolvedValue([entry]);
     service.revertSearch.mockRejectedValue(new Error('locked'));
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
     fireEvent.click(screen.getByTestId('tab-history'));
 
     fireEvent.click(await screen.findByRole('button', { name: /Desfazer Busca/ }));
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao desfazer a busca'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao desfazer a busca'));
   });
 });
 
@@ -196,34 +197,33 @@ describe('ProjectDetailsPage rename', () => {
   it('alerts when the rename fails and keeps editing', async () => {
     const service = givenProject();
     service.updateProject.mockRejectedValue(new Error('dup'));
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
 
     fireEvent.click(renameButton());
     fireEvent.change(screen.getByDisplayValue('Tese'), { target: { value: 'X' } });
     fireEvent.click(screen.getByDisplayValue('X').nextElementSibling as HTMLElement);
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao atualizar nome do projeto'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao atualizar nome do projeto'));
     expect(screen.getByDisplayValue('X')).toBeInTheDocument();
   });
 });
 
 describe('ProjectDetailsPage delete', () => {
   it('deletes after confirmation and returns to the project list', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const service = givenProject();
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
 
     fireEvent.click(deleteButton());
 
     expect(await screen.findByText('Lista de projetos')).toBeInTheDocument();
-    expect(confirm.mock.calls[0][0]).toContain('excluir o projeto "Tese"');
+    expect(dialogs.confirmMessage.mock.calls[0][0]).toContain('excluir o projeto "Tese"');
     expect(service.deleteProject).toHaveBeenCalledWith(1);
   });
 
   it('keeps the project when the user declines', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
     const service = givenProject();
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
+    dialogs.confirmMessage.mockReturnValue(false);
 
     fireEvent.click(deleteButton());
 
@@ -234,14 +234,13 @@ describe('ProjectDetailsPage delete', () => {
   });
 
   it('alerts when deletion fails', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const service = givenProject();
     service.deleteProject.mockRejectedValue(new Error('locked'));
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
 
     fireEvent.click(deleteButton());
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao excluir projeto'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao excluir projeto'));
     expect(screen.queryByText('Lista de projetos')).not.toBeInTheDocument();
   });
 });

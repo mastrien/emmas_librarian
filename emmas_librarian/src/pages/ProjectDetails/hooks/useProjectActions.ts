@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjectService } from '../../../contexts/ServicesContext';
+import { useDialogs, type Dialogs } from '../../../components/common/dialogs/DialogProvider';
 import type { Article, Project } from '../../../types';
 import type { ProjectModals } from './useProjectModals';
 
@@ -18,7 +19,7 @@ interface ProjectActionsOptions {
 
 /**
  * User actions of the project page (rename/delete the project, change article status,
- * PDF links, search revert, article forms). Each failure is reported with an alert.
+ * PDF links, search revert, article forms). Each failure is reported in the app's message window (Arca 134).
  *
  * Usage:
  *   const actions = useProjectActions({ projectId, project, setProject, articles, setArticles, modals, reload });
@@ -26,6 +27,7 @@ interface ProjectActionsOptions {
 export function useProjectActions(options: ProjectActionsOptions) {
   const { projectId, articles, setArticles, modals, reload } = options;
   const projectService = useProjectService();
+  const { confirm, inform } = useDialogs();
 
   const changeStatus = useCallback(
     async (articleId: number, status: ArticleStatus, note?: string) => {
@@ -33,10 +35,13 @@ export function useProjectActions(options: ProjectActionsOptions) {
         await projectService.updateArticleStatus(articleId, status, note);
         setArticles((prev) => prev.map((a) => (a.id === articleId ? { ...a, status, archive_note: note } : a)));
       } catch (e) {
-        alert(`Erro ao atualizar status do artigo: ${(e as Error).message}`);
+        await inform({
+          title: 'Erro ao atualizar',
+          message: `Erro ao atualizar status do artigo: ${(e as Error).message}`,
+        });
       }
     },
-    [projectService, setArticles],
+    [projectService, setArticles, inform],
   );
 
   // Multi-select: one request for all, then the same local update as changeStatus.
@@ -47,24 +52,31 @@ export function useProjectActions(options: ProjectActionsOptions) {
         const ids = new Set(articleIds);
         setArticles((prev) => prev.map((a) => (ids.has(a.id) ? { ...a, status, archive_note: note } : a)));
       } catch (e) {
-        alert(`Erro ao atualizar status dos artigos: ${(e as Error).message}`);
+        await inform({
+          title: 'Erro ao atualizar',
+          message: `Erro ao atualizar status dos artigos: ${(e as Error).message}`,
+        });
       }
     },
-    [projectService, setArticles],
+    [projectService, setArticles, inform],
   );
 
   const unlinkPdf = useCallback(
     async (articleId: number) => {
-      const confirmed = window.confirm(
-        'Deseja realmente desvincular o PDF deste artigo? O arquivo físico será removido do armazenamento local.',
-      );
+      const confirmed = await confirm({
+        title: 'Desvincular PDF',
+        message:
+          'Deseja realmente desvincular o PDF deste artigo? O arquivo físico será removido do armazenamento local.',
+        confirmLabel: 'Desvincular',
+        danger: true,
+      });
       if (!confirmed) return;
-      await alertOnFailure('Erro ao desvincular o PDF', async () => {
+      await informOnFailure(inform, 'Erro ao desvincular o PDF', async () => {
         await projectService.unlinkPdf(articleId);
         await reload();
       });
     },
-    [projectService, reload],
+    [projectService, reload, confirm, inform],
   );
 
   const attachPdf = useCallback(
@@ -76,7 +88,7 @@ export function useProjectActions(options: ProjectActionsOptions) {
   );
 
   const revertSearch = (searchId: number) =>
-    alertOnFailure('Erro ao desfazer a busca', async () => {
+    informOnFailure(inform, 'Erro ao desfazer a busca', async () => {
       await projectService.revertSearch(searchId);
       await reload();
     });
@@ -120,6 +132,7 @@ export function useProjectActions(options: ProjectActionsOptions) {
 function useProjectHeaderActions({ projectId, project, setProject }: ProjectActionsOptions) {
   const projectService = useProjectService();
   const navigate = useNavigate();
+  const { confirm, inform } = useDialogs();
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -130,7 +143,7 @@ function useProjectHeaderActions({ projectId, project, setProject }: ProjectActi
   const saveName = async () => {
     const trimmed = newName.trim();
     if (projectId === null || !trimmed) return;
-    await alertOnFailure('Erro ao atualizar nome do projeto', async () => {
+    await informOnFailure(inform, 'Erro ao atualizar nome do projeto', async () => {
       await projectService.updateProject(projectId, trimmed);
       setProject((prev) => (prev ? { ...prev, name: trimmed } : null));
       setIsEditingName(false);
@@ -140,8 +153,8 @@ function useProjectHeaderActions({ projectId, project, setProject }: ProjectActi
   const deleteProject = async () => {
     if (projectId === null || !project) return;
     const message = `Tem certeza que deseja excluir o projeto "${project.name}"? Todos os artigos e anotações serão perdidos permanentemente.`;
-    if (!window.confirm(message)) return;
-    await alertOnFailure('Erro ao excluir projeto', async () => {
+    if (!(await confirm({ title: 'Excluir projeto', message, confirmLabel: 'Excluir', danger: true }))) return;
+    await informOnFailure(inform, 'Erro ao excluir projeto', async () => {
       await projectService.deleteProject(projectId);
       navigate('/');
     });
@@ -150,10 +163,11 @@ function useProjectHeaderActions({ projectId, project, setProject }: ProjectActi
   return { isEditingName, setIsEditingName, newName, setNewName, saveName, deleteProject };
 }
 
-async function alertOnFailure(message: string, action: () => Promise<void>): Promise<void> {
+/** Runs the action; if it throws, tells the person `message` in the app's window. */
+async function informOnFailure(inform: Dialogs['inform'], message: string, action: () => Promise<void>): Promise<void> {
   try {
     await action();
   } catch {
-    alert(message);
+    await inform({ title: 'Algo deu errado', message });
   }
 }

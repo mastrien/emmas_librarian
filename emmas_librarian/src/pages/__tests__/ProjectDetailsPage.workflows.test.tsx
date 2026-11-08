@@ -1,10 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { screen, fireEvent, waitFor, within, createEvent } from '@testing-library/react';
 import { givenProject, renderProjectPage, article, mainTable } from './support/projectPageHarness';
-
-beforeEach(() => {
-  vi.spyOn(window, 'alert').mockImplementation(() => undefined);
-});
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -34,12 +30,12 @@ describe('ProjectDetailsPage batch PDF import', () => {
     const service = givenProject();
     service.openMultiplePdfsDialog.mockResolvedValue(['/in/a.pdf', '/in/b.pdf']);
     service.createArticlesFromPdfs.mockResolvedValue(2);
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
 
     openAddMenu();
     fireEvent.click(screen.getByRole('button', { name: /Importar PDFs em Lote/ }));
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('2 artigo(s) importado(s) com sucesso.'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('2 artigo(s) importado(s) com sucesso.'));
     expect(service.createArticlesFromPdfs).toHaveBeenCalledWith(1, ['/in/a.pdf', '/in/b.pdf']);
     await waitFor(() => expect(service.getArticles).toHaveBeenCalledTimes(2));
   });
@@ -50,26 +46,26 @@ describe('ProjectDetailsPage batch PDF import', () => {
   ])('does nothing when the dialog is %s', async (_label, selection) => {
     const service = givenProject();
     service.openMultiplePdfsDialog.mockResolvedValue(selection as never);
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
 
     openAddMenu();
     fireEvent.click(screen.getByRole('button', { name: /Importar PDFs em Lote/ }));
 
     await waitFor(() => expect(service.openMultiplePdfsDialog).toHaveBeenCalled());
     expect(service.createArticlesFromPdfs).not.toHaveBeenCalled();
-    expect(window.alert).not.toHaveBeenCalled();
+    expect(dialogs.informMessage).not.toHaveBeenCalled();
   });
 
   it('alerts when the import fails', async () => {
     const service = givenProject();
     service.openMultiplePdfsDialog.mockResolvedValue(['/in/a.pdf']);
     service.createArticlesFromPdfs.mockRejectedValue(new Error('disk full'));
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
 
     openAddMenu();
     fireEvent.click(screen.getByRole('button', { name: /Importar PDFs em Lote/ }));
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao importar PDFs: disk full'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao importar PDFs: disk full'));
   });
 });
 
@@ -109,12 +105,12 @@ describe('ProjectDetailsPage drag and drop', () => {
     vi.spyOn(window.electronAPI, 'getPathForFile').mockImplementation((file) => `/dropped/${file.name}`);
     const service = givenProject();
     service.createArticlesFromPdfs.mockResolvedValue(1);
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
     dragOverWith(['Files']);
 
     dropFiles([pdf('paper.PDF'), new File(['x'], 'notes.txt')]);
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('1 artigo(s) importado(s) com sucesso.'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('1 artigo(s) importado(s) com sucesso.'));
     expect(service.createArticlesFromPdfs).toHaveBeenCalledWith(1, ['/dropped/paper.PDF']);
     expect(screen.queryByText('Solte seus PDFs aqui para importar')).not.toBeInTheDocument();
   });
@@ -144,11 +140,11 @@ describe('ProjectDetailsPage drag and drop', () => {
   it('alerts when a dropped import fails', async () => {
     const service = givenProject();
     service.createArticlesFromPdfs.mockRejectedValue('offline');
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
 
     dropFiles([pdf('a.pdf')]);
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao importar PDFs: offline'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao importar PDFs: offline'));
   });
 });
 
