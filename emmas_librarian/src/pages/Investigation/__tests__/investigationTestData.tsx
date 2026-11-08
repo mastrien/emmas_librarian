@@ -5,6 +5,7 @@ import { GlobalErrorProvider } from '../../../contexts/GlobalErrorContext';
 import { InvestigationRunProvider } from '../../../contexts/InvestigationRunContext';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
+import { FakeDialogs, FakeDialogsProvider } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 import type { Article, InvestigationHistoryRecord, InvestigationResult, MassiveInvestigation } from '../../../types';
 import { InvestigationPage } from '../InvestigationPage';
 
@@ -82,18 +83,25 @@ const Where: React.FC = () => {
 };
 
 /** The page at an address, with the routes it links to and the run provider it needs. */
-export function renderInvestigation(service: FakeProjectService, entry: string | { pathname: string; state: unknown }) {
+/** The app's confirm/message windows answer through `dialogs` (by default, a fresh FakeDialogs that confirms). */
+export function renderInvestigation(
+  service: FakeProjectService,
+  entry: string | { pathname: string; state: unknown },
+  dialogs: FakeDialogs = new FakeDialogs(),
+) {
   return render(
     <MemoryRouter initialEntries={[entry]}>
       <GlobalErrorProvider>
         <ServicesProvider apiService={service}>
-          <InvestigationRunProvider>
-            <Routes>
-              <Route path="/projects/:id/investigation" element={<InvestigationPage />} />
-              <Route path="/projects/:id/investigation/:view" element={<InvestigationPage />} />
-              <Route path="*" element={<Where />} />
-            </Routes>
-          </InvestigationRunProvider>
+          <FakeDialogsProvider dialogs={dialogs}>
+            <InvestigationRunProvider>
+              <Routes>
+                <Route path="/projects/:id/investigation" element={<InvestigationPage />} />
+                <Route path="/projects/:id/investigation/:view" element={<InvestigationPage />} />
+                <Route path="*" element={<Where />} />
+              </Routes>
+            </InvestigationRunProvider>
+          </FakeDialogsProvider>
         </ServicesProvider>
       </GlobalErrorProvider>
     </MemoryRouter>,
