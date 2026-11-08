@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { DashboardPage } from '../DashboardPage';
+import { FakeDialogs, FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
 import { ServicesContext } from '../../contexts/ServicesContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 
@@ -25,7 +28,9 @@ const renderDashboard = () => {
   return render(
     <BrowserRouter>
       <ServicesContext.Provider value={fakeService as any}>
-        <DashboardPage />
+        <FakeDialogsProvider dialogs={dialogs}>
+          <DashboardPage />
+        </FakeDialogsProvider>
       </ServicesContext.Provider>
     </BrowserRouter>,
   );
@@ -33,6 +38,7 @@ const renderDashboard = () => {
 
 describe('DashboardPage', () => {
   beforeEach(() => {
+    dialogs = new FakeDialogs();
     vi.clearAllMocks();
     fakeService.reset();
   });
@@ -197,7 +203,7 @@ describe('DashboardPage', () => {
     fakeService.getProjects.mockResolvedValue([]);
     fakeService.getScientificVenues.mockResolvedValue([]);
     fakeService.importProject.mockRejectedValue(new Error('Import fail'));
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const alertSpy = dialogs.informMessage;
 
     renderDashboard();
 
@@ -211,7 +217,6 @@ describe('DashboardPage', () => {
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Import fail'));
     });
-    alertSpy.mockRestore();
   });
 
   it('handles drag and drop for import', async () => {
@@ -306,7 +311,7 @@ describe('DashboardPage', () => {
     fakeService.getProjects.mockResolvedValue([]);
     fakeService.getScientificVenues.mockResolvedValue([]);
     fakeService.importProject.mockRejectedValue(new Error('Bad file'));
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const alertSpy = dialogs.informMessage;
 
     const { container } = renderDashboard();
 
@@ -324,6 +329,5 @@ describe('DashboardPage', () => {
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Bad file'));
     });
-    alertSpy.mockRestore();
   });
 });
