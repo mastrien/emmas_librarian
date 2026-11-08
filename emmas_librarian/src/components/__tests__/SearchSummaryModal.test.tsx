@@ -202,5 +202,26 @@ describe('SearchSummaryModal', () => {
 
     expect(screen.getByRole('button', { name: /Salvar .*no projeto/ })).toBeDisabled();
     expect(screen.getByRole('button', { name: /Descartar/ })).toBeDisabled();
+    // The X discards too, so it waits for the save as well.
+    expect(screen.getByRole('button', { name: 'Fechar e descartar' })).toBeDisabled();
+  });
+
+  it('marks each base by how it went: failed, stopped early or fine', () => {
+    renderModal({
+      preview: {
+        ...preview,
+        breakdown: {
+          openalex: { count: 3 },
+          wos: { count: 1, warning: 'parou cedo' },
+          scopus: { count: 0, error: 'HTTP 503' },
+        },
+      },
+    });
+
+    const byBase = within(screen.getByRole('region', { name: 'Resultados por base' }));
+    const row = (name: string) => byBase.getByText(name).closest('.search-breakdown-row');
+    expect(row('OpenAlex')).toHaveClass('search-breakdown-row--ok');
+    expect(row('Web of Science')).toHaveClass('search-breakdown-row--warning');
+    expect(row('Scopus')).toHaveClass('search-breakdown-row--error');
   });
 });
