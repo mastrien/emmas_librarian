@@ -2,8 +2,8 @@
 
 The redesign's phases 1 to 3 move styles into classes and components without changing how a screen looks. This
 spec captures every route of the app and compares a run of the new code with a baseline taken from the old code:
-14 screens (the agenda twice, as cards and as the deadline list), light and dark, 1440 and 1000 px wide, so 56
-images. Two sample agenda events, all dated 2025, and a deleted project (for the trash list in Settings) are
+17 screens (the agenda twice, as cards and as the deadline list; the project page with its articles, statistics,
+categories and history tabs), light and dark, 1440 and 1000 px wide, so 68 images. Two sample agenda events, all dated 2025, and a deleted project (for the trash list in Settings) are
 added to the example project.
 
 The images show the example project's data, so they live outside the repository and are never committed.

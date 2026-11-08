@@ -9,6 +9,10 @@ const { visualDir } = require('./visualPaths');
 const SCREENS = [
   ['dashboard', '/'],
   ['projeto', '/projects/ID'],
+  // The project page's other tabs (Arca 134: they hold half of its styles).
+  ['projeto-estatisticas', '/projects/ID', (window) => window.getByTestId('tab-overview').click()],
+  ['projeto-categorias', '/projects/ID', (window) => window.getByTestId('tab-categories').click()],
+  ['projeto-historico', '/projects/ID', (window) => window.getByTestId('tab-history').click()],
   ['busca', '/projects/ID/search'],
   ['investigacao', '/projects/ID/investigation'],
   ['revisao', '/projects/ID/review'],
