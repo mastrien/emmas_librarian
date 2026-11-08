@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { SearchHistoryItem, SearchMonitor } from '../../../types';
 import { describeError } from '../../../utils/describeError';
+import { baseName } from '../../../utils/prismaSearches';
 import {
   isMonitorResult,
   MONITOR_INTERVAL_NAMES,
@@ -51,7 +52,9 @@ const DEFAULT_INTERVAL: MonitorInterval = 7;
 
 const basesOf = (item: SearchHistoryItem): string => {
   try {
-    return Object.keys(JSON.parse(item.results_breakdown || '{}') as object).join(', ');
+    return Object.keys(JSON.parse(item.results_breakdown || '{}') as object)
+      .map(baseName)
+      .join(', ');
   } catch {
     return '';
   }

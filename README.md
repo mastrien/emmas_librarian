@@ -50,6 +50,11 @@ Se você é um desenvolvedor e deseja rodar o projeto localmente, contribuir com
 
 Acompanhe as últimas novidades, melhorias e correções recentes do **Emma's Librarian**:
 
+### v1.3.1
+- **Nomes nas telas:** o cartão de IA da investigação nas Configurações se chama "Investigação com IA", a investigação mostra "Ollama Cloud" e o aviso do monitoramento de buscas mostra o nome das bases, não os códigos.
+- **Etiqueta Experimental:** não estica mais na largura toda na aba "Avaliar sugestões" e na sugestão da triagem guiada.
+- **Copiar citação:** copiar de novo antes de o "Copiado!" sumir não corta mais o aviso.
+
 ### v1.3.0
 - **Revisão sistemática:** página própria com rótulos, triagem guiada em duas etapas e o diagrama PRISMA 2020, com a coluna de outros métodos e a exportação. Excluir na triagem arquiva o artigo no projeto, com o rótulo como motivo.
 - **Investigação com IA:** virou uma página, com as respostas em grade, revisão de cada resposta (aceitar, editar, rejeitar), auditoria por amostra com intervalo de confiança e evidências copiadas do trecho lido pela IA.
