@@ -4,6 +4,10 @@ Paths are relative to `emmas_librarian/`. Prefer these over new ad-hoc mocks.
 
 ## Renderer (src/)
 
+### FakeCitationClipboard — `src/utils/__tests__/fakes/FakeCitationClipboard.ts`
+Records what citation code copies (`texts`, `richWrites`; `rejectRich = true` makes rich copy fail). Pass it to
+`copyCitations(…, clipboard)` or `useCitationCopy(clipboard)`; stub `ClipboardItem` with `FakeClipboardItem`.
+
 ### FakeProjectService — `src/services/__tests__/fakes/FakeProjectService.ts`
 Implements `IProjectService` with a `vi.fn()` per method and sensible defaults. Inject it through the provider:
 
