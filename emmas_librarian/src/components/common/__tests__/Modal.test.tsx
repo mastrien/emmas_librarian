@@ -57,6 +57,16 @@ describe('Modal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('ignores Esc when asked to, and still closes with its X', () => {
+    const onClose = open({ closeOnEscape: false });
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('cannot be closed while something runs', () => {
     const onClose = open({ busy: true });
 

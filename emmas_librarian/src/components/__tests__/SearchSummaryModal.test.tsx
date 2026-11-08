@@ -179,6 +179,18 @@ describe('SearchSummaryModal', () => {
     expect(onDiscard).toHaveBeenCalledTimes(2);
   });
 
+  // Discarding loses results that cost API calls; Esc may also be meant for the metadata window above.
+  it('keeps the results when Esc is pressed, with or without the metadata open', () => {
+    const { onDiscard } = renderModal();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.click(screen.getByRole('button', { name: 'Aprendizado de máquina na revisão' }));
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(onDiscard).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog', { name: 'Busca Concluída' })).toBeInTheDocument();
+  });
+
   it('shows a save error inside the dialog', () => {
     renderModal({ saveError: 'disco cheio' });
 

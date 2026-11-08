@@ -13,6 +13,11 @@ interface ModalProps {
   closeLabel?: string;
   /** While something runs, the window cannot be closed. */
   busy?: boolean;
+  /**
+   * False where closing throws work away (the search summary discards its results): Esc is easy to press by
+   * accident, or meant for a window opened over this one. The X still closes.
+   */
+  closeOnEscape?: boolean;
   /** Widest the window gets, in pixels; it never passes the screen. */
   width?: number;
   /** Extra classes on the window, for styles of the page it belongs to (portaled, it leaves the page). */
@@ -29,13 +34,15 @@ interface ModalProps {
  */
 export const Modal: React.FC<ModalProps> = (props) => {
   const { label, title, description, onClose, closeLabel = 'Fechar', busy = false, width = 620, className } = props;
+  const closeOnEscape = props.closeOnEscape ?? true;
   useEffect(() => {
+    if (!closeOnEscape) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !busy) onClose();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, busy]);
+  }, [onClose, busy, closeOnEscape]);
   return createPortal(
     <div className="app-modal-overlay" data-testid="app-modal-overlay">
       <div
