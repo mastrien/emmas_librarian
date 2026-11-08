@@ -1,5 +1,6 @@
 import React from 'react';
 import { Archive, CheckCircle, CopyPlus, Globe, Network, X } from 'lucide-react';
+import './articlesList.css';
 
 interface BatchBarProps {
   selectedCount: number;
@@ -26,7 +27,7 @@ const DownloadProgress: React.FC<{ progress: { done: number; total: number }; on
     <span className="batch-bar__progress" role="status">
       Baixando {Math.min(progress.done + 1, progress.total)} de {progress.total}…
       <span className="batch-bar__meter" aria-hidden="true">
-        <span style={{ width: `${Math.round((progress.done / progress.total) * 100)}%` }} />
+        <span style={{ '--done': `${Math.round((progress.done / progress.total) * 100)}%` } as React.CSSProperties} />
       </span>
     </span>
     <button type="button" onClick={onCancel}>

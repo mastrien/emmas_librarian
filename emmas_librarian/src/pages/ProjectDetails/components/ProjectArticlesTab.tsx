@@ -68,11 +68,11 @@ function useArticleSelection(listed: Article[]) {
 export const ProjectArticlesTab: React.FC<ProjectArticlesTabProps> = (props) => {
   const { filtering, modals, isSidebarOpen, onToggleSidebar } = props;
   return (
-    <div className="custom-controls">
+    <div className="custom-controls project-articles">
       <ArticlesFilterBar filtering={filtering} isSidebarOpen={isSidebarOpen} onToggleSidebar={onToggleSidebar} />
-      <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', width: '100%' }}>
+      <div className="project-articles-layout">
         {isSidebarOpen && <FiltersPanel filtering={filtering} />}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="project-articles-main">
           <ReadArticlesSection
             articles={filtering.readArticles}
             isOpen={filtering.isReadArticlesOpen}

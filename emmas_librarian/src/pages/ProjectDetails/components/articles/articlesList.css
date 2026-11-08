@@ -1,0 +1,215 @@
+/* The project's article list (ProjectArticlesList, ArticleStatusSections, ArticlesPagination, ProjectArticlesTab,
+   BatchBar, ArticleRowMenu). Values carried over from the inline styles they replace (Arca 134). The table's
+   container queries and selection colour stay in style.css. Rules that change a btn-* button start with
+   .project-articles, so they win over style.css whatever order the CSS loads in. */
+.project-articles-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  width: 100%;
+}
+
+.project-articles-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.card.articles-table-container {
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  border: none;
+}
+
+.articles-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.articles-table thead tr {
+  border-bottom: 2px solid var(--border-color);
+  background: var(--bg-main);
+}
+
+.articles-table th {
+  padding: 1rem 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+/* No header text: the browser's default cell padding, as before. */
+.articles-table th.articles-th-select {
+  width: 1%;
+  padding: 1px;
+}
+
+.articles-table th.articles-th-actions {
+  text-align: right;
+}
+
+.articles-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background var(--transition-fast);
+}
+
+.articles-table tbody tr:hover {
+  background: var(--bg-main);
+}
+
+.articles-table .articles-cell {
+  padding: 1.25rem 1.5rem;
+}
+
+.articles-table .articles-cell--select {
+  padding-right: 0;
+}
+
+.articles-table .articles-cell--authors {
+  max-width: 220px;
+  font-size: 0.9rem;
+}
+
+.articles-table .articles-cell--actions {
+  width: 1%;
+  padding: 1rem 1.25rem;
+}
+
+.articles-bases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.articles-bases-empty {
+  color: var(--text-muted);
+}
+
+.articles-empty {
+  padding: 3rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Read and archived sections */
+.article-accordion {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.article-accordion summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  outline: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.article-accordion--read summary {
+  color: var(--color-primary);
+}
+
+.article-accordion--archived summary {
+  color: var(--color-danger);
+}
+
+.article-accordion-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.article-accordion-body {
+  margin-top: 1rem;
+}
+
+.article-accordion-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.article-accordion-body tr {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.article-accordion-body td {
+  padding: 0.75rem 1rem;
+}
+
+.article-accordion-body td.article-accordion-actions--wide {
+  width: 320px;
+}
+
+.article-accordion-body td.article-accordion-actions--narrow {
+  width: 150px;
+}
+
+.article-accordion-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.project-articles .article-small-button {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.project-articles .mass-citation-button {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.archived-title {
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.archived-reason {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Pagination */
+.articles-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.project-articles .articles-pagination button {
+  padding: 0.4rem 0.8rem;
+}
+
+.articles-pagination span {
+  padding: 0 1rem;
+  color: var(--text-muted);
+}
+
+/* BatchBar: --done is the downloaded share, set by the component. */
+.batch-bar__meter span {
+  width: var(--done, 0%);
+}
+
+/* ArticleRowMenu: --menu-top/--menu-left place it under its button; hidden until measured. */
+.row-menu {
+  top: var(--menu-top, 0);
+  left: var(--menu-left, 0);
+}
+
+.row-menu.is-unplaced {
+  visibility: hidden;
+}
