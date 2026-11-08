@@ -1,5 +1,6 @@
 import React from 'react';
-import { formatBytes, libraryMetrics, type PdfFileRecord } from './pdfLibraryData';
+import { libraryMetrics, type PdfFileRecord } from './pdfLibraryData';
+import { formatBytes } from '../../utils/formatters';
 
 const Metric: React.FC<{
   label: string;
