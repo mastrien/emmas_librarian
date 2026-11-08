@@ -28,10 +28,9 @@ import { QueryTranslationCard } from './Search/QueryTranslationCard';
 import { SearchOptionsCard } from './Search/SearchOptionsCard';
 import { ApiKeyRequiredDialog } from './Search/ApiKeyRequiredDialog';
 import { BackLink } from '../components/common/BackLink';
+import './Search/search.css';
 
 const TRANSLATION_DEBOUNCE_MS = 600;
-
-const sectionLabelStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--text-heading)', fontSize: '1.1rem' };
 
 /**
  * Builds a boolean query, shows its translation per database, runs the search and lets the user
@@ -41,16 +40,7 @@ const sectionLabelStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--
  *   <Route path="/projects/:id/search" element={<SearchPage />} />
  */
 const RestoredSearchNotice: React.FC<{ searchId: number; isLegacy: boolean }> = ({ searchId, isLegacy }) => (
-  <div
-    role="status"
-    style={{
-      marginBottom: '2rem',
-      padding: '1rem 1.25rem',
-      borderRadius: 'var(--radius-md)',
-      border: '1px solid var(--color-primary)',
-      background: 'rgba(79, 70, 229, 0.08)',
-    }}
-  >
+  <div role="status" className="search-restored">
     Busca #{searchId} carregada do histórico. Ajuste o que quiser e clique em <strong>Fazer Busca</strong>.
     {isLegacy &&
       ' Essa busca é de antes do construtor visual ser salvo junto, então a query de cada base veio como query customizada.'}
@@ -189,42 +179,33 @@ export const SearchPage: React.FC = () => {
   if (!project) return null;
 
   return (
-    <div className="fade-in" style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '4rem' }}>
+    <div className="fade-in search-page">
       <BackLink to={`/projects/${id}`} className="page-back">
         Voltar ao projeto
       </BackLink>
 
-      <div style={{ marginBottom: '2.5rem' }}>
-        <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>Fazer Nova Busca</h1>
-        <p style={{ margin: 0, color: 'var(--text-muted)' }}>Projeto: {project.name}</p>
+      <div className="search-head">
+        <h1>Fazer Nova Busca</h1>
+        <p>Projeto: {project.name}</p>
       </div>
 
       {restoredFrom && <RestoredSearchNotice searchId={restoredFrom.id} isLegacy={restoredFrom.isLegacy} />}
 
-      <form onSubmit={handleSearch} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <form onSubmit={handleSearch} className="search-form">
         <DatabaseSelector selected={selectedDbs} onToggle={toggleDb} />
 
-        <div className="card" style={{ padding: '2rem' }}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={sectionLabelStyle}>Construtor Visual (Árvore Lógica)</label>
+        <div className="card search-card">
+          <div className="search-builder-head">
+            <label className="search-section-label">Construtor Visual (Árvore Lógica)</label>
           </div>
-          <div
-            style={{
-              background: 'var(--bg-main)',
-              padding: '1.5rem',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-color)',
-            }}
-          >
+          <div className="search-builder">
             <QueryBuilder node={ast} onChange={setAst} />
           </div>
         </div>
 
-        <div className="card" style={{ padding: '2rem' }}>
-          <label style={{ ...sectionLabelStyle, display: 'block', marginBottom: '1.5rem' }}>
-            Tradução e Transparência
-          </label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="card search-card">
+          <label className="search-section-label search-section-label--block">Tradução e Transparência</label>
+          <div className="search-translations">
             {selectedDbs.map((dbId) => (
               <QueryTranslationCard
                 key={dbId}
@@ -247,31 +228,12 @@ export const SearchPage: React.FC = () => {
           onPublishedSinceChange={setPublishedSince}
         />
 
-        {error && (
-          <div
-            style={{
-              color: '#ef4444',
-              background: '#fee2e2',
-              padding: '1rem',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid #fca5a5',
-            }}
-          >
-            {error}
-          </div>
-        )}
+        {error && <div className="search-error">{error}</div>}
 
         <button
           type="submit"
           disabled={loading || selectedDbs.length === 0 || limitsBlocked}
-          className="btn-primary"
-          style={{
-            width: '100%',
-            padding: '1.25rem',
-            fontSize: '1.2rem',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.7 : 1,
-          }}
+          className={`btn-primary search-submit${loading ? ' is-loading' : ''}`}
         >
           {loading ? <Loader2 className="animate-spin" /> : <Search size={22} />}
           {loading ? 'Pesquisando e extraindo dados (isso pode levar alguns minutos)...' : 'Fazer Busca'}

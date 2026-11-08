@@ -3,6 +3,7 @@ import type { QuerySort } from '../../types';
 import type { SearchLimits } from '../../utils/searchLimits';
 import { publishedSinceNote } from '../../utils/publishedSince';
 import { SearchLimitsField } from './SearchLimitsField';
+import './search.css';
 
 interface SearchOptionsCardProps {
   sortBy: QuerySort;
@@ -14,31 +15,6 @@ interface SearchOptionsCardProps {
   publishedSince: string;
   onPublishedSinceChange: (date: string) => void;
 }
-
-const headingStyle: React.CSSProperties = {
-  display: 'block',
-  marginBottom: '0.5rem',
-  fontWeight: 600,
-  color: 'var(--text-heading)',
-  fontSize: '1.1rem',
-};
-
-const controlStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '0.8rem 1rem',
-  fontSize: '1rem',
-  border: '1px solid var(--border-color)',
-  borderRadius: 'var(--radius-md)',
-  background: 'var(--bg-main)',
-  color: 'var(--text-main)',
-  outline: 'none',
-  transition: 'border-color var(--transition-fast)',
-};
-
-const focusHighlight = {
-  onFocus: (e: React.FocusEvent<HTMLElement>) => (e.currentTarget.style.borderColor = 'var(--color-primary)'),
-  onBlur: (e: React.FocusEvent<HTMLElement>) => (e.currentTarget.style.borderColor = 'var(--border-color)'),
-};
 
 /**
  * Sort order and how many results to ask of each base (a common value with per-base adjustments).
@@ -55,25 +31,20 @@ export const SearchOptionsCard: React.FC<SearchOptionsCardProps> = ({
   publishedSince,
   onPublishedSinceChange,
 }) => (
-  <div className="card" style={{ padding: '2rem' }}>
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '2rem' }}>
+  <div className="card search-card">
+    <div className="search-options-grid">
       <div>
-        <label style={headingStyle}>Critério de Ordenação</label>
-        <select
-          value={sortBy}
-          onChange={(e) => onSortByChange(e.target.value as QuerySort)}
-          style={controlStyle}
-          {...focusHighlight}
-        >
+        <label className="search-section-label search-section-label--field">Critério de Ordenação</label>
+        <select value={sortBy} onChange={(e) => onSortByChange(e.target.value as QuerySort)} className="search-control">
           <option value="relevance">Mais Relevantes (Padrão)</option>
           <option value="citations">Mais Citados (Maior Impacto)</option>
           <option value="date">Mais Recentes</option>
         </select>
       </div>
-      <SearchLimitsField limits={limits} selected={selected} onChange={onLimitsChange} inputStyle={controlStyle} />
+      <SearchLimitsField limits={limits} selected={selected} onChange={onLimitsChange} />
     </div>
-    <div style={{ marginTop: '1.5rem' }}>
-      <label htmlFor="published-since" style={headingStyle}>
+    <div className="search-published-since">
+      <label htmlFor="published-since" className="search-section-label search-section-label--field">
         Publicados desde (opcional)
       </label>
       <input
@@ -81,11 +52,10 @@ export const SearchOptionsCard: React.FC<SearchOptionsCardProps> = ({
         type="date"
         value={publishedSince}
         onChange={(e) => onPublishedSinceChange(e.target.value)}
-        style={{ ...controlStyle, width: 'auto' }}
-        {...focusHighlight}
+        className="search-control search-control--auto"
       />
       {publishedSince && publishedSinceNote(selected) && (
-        <p role="note" style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+        <p role="note" className="search-note">
           {publishedSinceNote(selected)}
         </p>
       )}

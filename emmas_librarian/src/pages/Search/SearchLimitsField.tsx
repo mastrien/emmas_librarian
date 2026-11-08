@@ -10,14 +10,13 @@ import {
   type SearchLimits,
 } from '../../utils/searchLimits';
 import { SEARCH_DATABASES } from './searchQueries';
+import './search.css';
 
 interface SearchLimitsFieldProps {
   limits: SearchLimits;
   /** The chosen bases, by id. */
   selected: string[];
   onChange: (limits: SearchLimits) => void;
-  /** Shared look of the page's inputs. */
-  inputStyle: React.CSSProperties;
 }
 
 const label = (base: SearchBaseId) => SEARCH_DATABASES.find((d) => d.id === base)?.label ?? base;
@@ -47,9 +46,9 @@ const parse = (raw: string): number => (raw.trim() === '' ? NaN : Number(raw));
  * a base's ceiling are listed as problems; the page blocks the search while there are any.
  *
  * Usage:
- *   <SearchLimitsField limits={limits} selected={['openalex', 'wos']} onChange={setLimits} inputStyle={controlStyle} />
+ *   <SearchLimitsField limits={limits} selected={['openalex', 'wos']} onChange={setLimits} />
  */
-export const SearchLimitsField: React.FC<SearchLimitsFieldProps> = ({ limits, selected, onChange, inputStyle }) => {
+export const SearchLimitsField: React.FC<SearchLimitsFieldProps> = ({ limits, selected, onChange }) => {
   const commonId = useId();
   const bases = selected.filter(isSearchBase);
   const problems = limitProblems(limits, bases);
@@ -64,7 +63,7 @@ export const SearchLimitsField: React.FC<SearchLimitsFieldProps> = ({ limits, se
 
   return (
     <div>
-      <label htmlFor={commonId} style={headingStyle}>
+      <label htmlFor={commonId} className="search-section-label search-section-label--field">
         Máximo de resultados por base
       </label>
       <input
@@ -73,29 +72,23 @@ export const SearchLimitsField: React.FC<SearchLimitsFieldProps> = ({ limits, se
         min="1"
         value={Number.isNaN(limits.common) ? '' : limits.common}
         onChange={(e) => onChange({ ...limits, common: parse(e.target.value) })}
-        style={inputStyle}
+        className="search-control"
       />
       {bases.length > 0 && (
-        <p style={noteStyle} aria-label="Resultados pedidos a cada base">
+        <p className="search-note" aria-label="Resultados pedidos a cada base">
           {bases.map((base) => `${label(base)} ${count(effectiveLimit(limits, base))}`).join(' · ')}
         </p>
       )}
-      <details open={adjusting} onToggle={(e) => setAdjusting(e.currentTarget.open)} style={{ marginTop: '0.5rem' }}>
-        <summary style={summaryStyle}>Ajustar por base</summary>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.75rem' }}>
+      <details open={adjusting} onToggle={(e) => setAdjusting(e.currentTarget.open)} className="search-limits-adjust">
+        <summary>Ajustar por base</summary>
+        <div className="search-limits-rows">
           {bases.map((base) => (
-            <BaseRow
-              key={base}
-              base={base}
-              limits={limits}
-              onChange={(raw) => setBase(base, raw)}
-              inputStyle={inputStyle}
-            />
+            <BaseRow key={base} base={base} limits={limits} onChange={(raw) => setBase(base, raw)} />
           ))}
         </div>
       </details>
       {problems.length > 0 && (
-        <ul role="alert" style={problemListStyle}>
+        <ul role="alert" className="search-limits-problems">
           {problems.map((p) => (
             <li key={p.base}>{problemText(p)}</li>
           ))}
@@ -109,17 +102,14 @@ interface BaseRowProps {
   base: SearchBaseId;
   limits: SearchLimits;
   onChange: (raw: string) => void;
-  inputStyle: React.CSSProperties;
 }
 
-const BaseRow: React.FC<BaseRowProps> = ({ base, limits, onChange, inputStyle }) => {
+const BaseRow: React.FC<BaseRowProps> = ({ base, limits, onChange }) => {
   const id = useId();
   const own = limits.perBase[base];
   return (
-    <div style={rowStyle}>
-      <label htmlFor={id} style={{ fontWeight: 600 }}>
-        {label(base)}
-      </label>
+    <div className="search-limits-row">
+      <label htmlFor={id}>{label(base)}</label>
       <input
         id={id}
         type="number"
@@ -127,34 +117,9 @@ const BaseRow: React.FC<BaseRowProps> = ({ base, limits, onChange, inputStyle })
         value={own === undefined || Number.isNaN(own) ? '' : own}
         placeholder={`${limits.common} (comum)`}
         onChange={(e) => onChange(e.target.value)}
-        style={{ ...inputStyle, padding: '0.5rem 0.7rem' }}
+        className="search-control search-control--small"
       />
-      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-        {costText(base, effectiveLimit(limits, base))}
-      </span>
+      <span className="search-limits-cost">{costText(base, effectiveLimit(limits, base))}</span>
     </div>
   );
-};
-
-const headingStyle: React.CSSProperties = {
-  display: 'block',
-  marginBottom: '0.5rem',
-  fontWeight: 600,
-  color: 'var(--text-heading)',
-  fontSize: '1.1rem',
-};
-const noteStyle: React.CSSProperties = { margin: '0.5rem 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' };
-const summaryStyle: React.CSSProperties = { cursor: 'pointer', color: 'var(--color-primary)', fontWeight: 600 };
-const rowStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '8.5rem 10rem 1fr',
-  gap: '0.75rem',
-  alignItems: 'center',
-};
-const problemListStyle: React.CSSProperties = {
-  margin: '0.75rem 0 0',
-  paddingLeft: '1.1rem',
-  color: 'var(--color-danger)',
-  fontSize: '0.85rem',
-  fontWeight: 600,
 };
