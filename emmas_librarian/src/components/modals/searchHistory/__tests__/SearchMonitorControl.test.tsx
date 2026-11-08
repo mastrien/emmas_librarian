@@ -11,7 +11,7 @@ const entry = (extra: Partial<SearchHistoryItem> = {}): SearchHistoryItem => ({
   unified_query: 'Título contém "radar"',
   translated_queries: JSON.stringify({ openalex: 'q' }),
   total_results: 3,
-  results_breakdown: JSON.stringify({ openalex: { count: 3 }, scopus: { count: 0 } }),
+  results_breakdown: JSON.stringify({ openalex: { count: 3 }, wos: { count: 0 } }),
   created_at: '2026-09-12 10:00:00',
   ...extra,
 });
@@ -69,7 +69,9 @@ describe('SearchMonitorControl (#52)', () => {
       'Toda semana',
       'A cada 2 semanas',
     ]);
-    expect(screen.getByText(/Cada verificação roda esta busca em openalex, scopus/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Cada verificação roda esta busca em OpenAlex, Web of Science e gasta/),
+    ).toBeInTheDocument();
     expect(screen.getByText('Primeira verificação na próxima abertura do app')).toBeInTheDocument();
   });
 
