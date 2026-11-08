@@ -366,20 +366,29 @@ describe('UPDATE_TITLE_BAR', () => {
     harness.windows.fromWebContents.mockReturnValue(window);
   });
 
-  it.each([
-    ['dark', { color: '#0f172a', symbolColor: '#e2e8f0' }],
-    ['light', { color: '#f8fafc', symbolColor: '#334155' }],
-  ])('applies the %s palette to the sender window', async (theme, overlay) => {
-    await invoke('UPDATE_TITLE_BAR', theme);
+  // The colours come from the renderer's tokens, so any tone (Arca 134) reaches the bar unchanged.
+  it('applies the colours the renderer sends to the sender window', async () => {
+    const warmDark = { color: '#161413', symbolColor: '#e7e5e4' };
+
+    await invoke('UPDATE_TITLE_BAR', warmDark);
 
     expect(harness.windows.fromWebContents).toHaveBeenCalledWith(harness.ipcMain.sender);
-    expect(window.setTitleBarOverlay).toHaveBeenCalledWith(overlay);
+    expect(window.setTitleBarOverlay).toHaveBeenCalledWith(warmDark);
   });
+
+  it.each([['dark'], [{ color: 'red', symbolColor: '#e4e4e7' }], [null]])(
+    'refuses %j, which is not a pair of #rrggbb colours',
+    async (colors) => {
+      await expect(invoke('UPDATE_TITLE_BAR', colors)).rejects.toThrow('Cores da barra de título inválidas');
+
+      expect(window.setTitleBarOverlay).not.toHaveBeenCalled();
+    },
+  );
 
   it('ignores senders without a window', async () => {
     harness.windows.fromWebContents.mockReturnValue(null);
 
-    await expect(invoke('UPDATE_TITLE_BAR', 'dark')).resolves.toBeUndefined();
+    await expect(invoke('UPDATE_TITLE_BAR', { color: '#141416', symbolColor: '#e4e4e7' })).resolves.toBeUndefined();
   });
 });
 
