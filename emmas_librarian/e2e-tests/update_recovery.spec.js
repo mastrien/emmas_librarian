@@ -3,7 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const zlib = require('zlib');
-const { launchApp, runAppUntilExit, getFirstWindow, createProject, navigateTo } = require('./helpers');
+const { launchApp, runAppUntilExit, getFirstWindow, createProject, navigateTo, answerAppDialog } = require('./helpers');
 
 /**
  * Recovery after an update, through the real main process (main.ts and preload are not covered by unit
@@ -107,8 +107,9 @@ test.describe('Recovery after an update', () => {
       await createProject(window, 'Depois da Atualização');
       await navigateTo(window, 'Configurações');
       const exited = app.waitForEvent('close');
-      // getFirstWindow accepts the confirm(); the restore then exits (relaunch is left to the test under E2E).
+      // The question is the app's own window; confirming restores and exits (relaunch is left to the test).
       await window.getByRole('button', { name: 'Restaurar Dados do Snapshot Pré-Atualização' }).click();
+      await answerAppDialog(window, 'Restaurar snapshot', 'Restaurar snapshot');
       await exited;
 
       expect(readState(ws)).toMatchObject({ status: 'failed', rolledBack: true });

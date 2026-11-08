@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { SettingsPage } from '../SettingsPage';
+import { FakeDialogs, FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 import type { UpdateStatusResponse } from '../../types';
 
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
@@ -21,10 +22,14 @@ const statusWith = (overrides: Partial<UpdateStatusResponse>): UpdateStatusRespo
   ...overrides,
 });
 
+let dialogs = new FakeDialogs();
+
 const renderPage = async () => {
   const view = render(
     <BrowserRouter>
-      <SettingsPage />
+      <FakeDialogsProvider dialogs={dialogs}>
+        <SettingsPage />
+      </FakeDialogsProvider>
     </BrowserRouter>,
   );
   await waitFor(() => expect(fakeService.getAppVersion).toHaveBeenCalled());
@@ -33,12 +38,13 @@ const renderPage = async () => {
 const clickButton = async (name: string) => fireEvent.click(await screen.findByRole('button', { name }));
 
 describe('SettingsPage updates', () => {
-  let confirmSpy: MockInstance<(message?: string) => boolean>;
+  let confirmSpy: FakeDialogs['confirmMessage'];
 
   beforeEach(() => {
     Object.assign(projectService, fakeService);
     fakeService.reset();
-    confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    dialogs = new FakeDialogs();
+    confirmSpy = dialogs.confirmMessage;
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
   });
 

@@ -3,7 +3,7 @@ const AdmZip = require('adm-zip');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { launchApp, getFirstWindow, createProject, navigateTo } = require('./helpers');
+const { launchApp, getFirstWindow, createProject, navigateTo, answerAppDialog } = require('./helpers');
 
 test('F-09 Trigger data backup creation', async () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'playwright-backup-'));
@@ -16,10 +16,11 @@ test('F-09 Trigger data backup creation', async () => {
     await createProject(window, 'Backup Project ' + Date.now());
     await navigateTo(window, 'Configurações');
 
-    // Awaiting the dialog (instead of asserting inside a handler) fails the test when no confirmation appears.
-    const confirmation = window.waitForEvent('dialog');
+    // The confirmation is the app's own window (DialogProvider): waiting for it fails the test when none appears.
     await window.click('button:has-text("Criar Backup Completo")');
-    expect((await confirmation).message()).toBe(`Backup completo criado com sucesso em:\n${backupPath}`);
+    expect(await answerAppDialog(window, 'Backup criado', 'Entendi')).toBe(
+      `Backup completo criado com sucesso em:\n${backupPath}`,
+    );
 
     // The archive is a real backup: the database plus metadata counting the project just created.
     const zip = new AdmZip(backupPath);

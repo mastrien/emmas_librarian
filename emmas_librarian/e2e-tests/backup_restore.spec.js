@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { launchApp, getFirstWindow, createProject, navigateTo } = require('./helpers');
+const { launchApp, getFirstWindow, createProject, navigateTo, answerAppDialog } = require('./helpers');
 const { IMPORTED_TITLE, copyFixturePdf, importFixturePdf, openReader } = require('./articleFixture');
 
 /** A temp folder the spec owns: app data folders (kept across relaunches) and the backup file. */
@@ -17,10 +17,10 @@ function workspace() {
   };
 }
 
-async function clickAndReadAlert(window, buttonName) {
-  const alert = window.waitForEvent('dialog');
+// The messages are the app's own windows (DialogProvider, Arca 103/134), answered by their title.
+async function clickAndReadMessage(window, buttonName, title) {
   await window.getByRole('button', { name: buttonName }).click();
-  return (await alert).message();
+  return answerAppDialog(window, title, 'Entendi');
 }
 
 /** Creates a project with the fixture article (and its stored PDF), then writes a full backup. */
@@ -30,7 +30,9 @@ async function createLibraryAndBackup(env, userDataDir, projectName) {
   await createProject(window, projectName);
   await importFixturePdf(window);
   await navigateTo(window, 'Configurações');
-  expect(await clickAndReadAlert(window, 'Criar Backup Completo')).toContain('Backup completo criado com sucesso');
+  expect(await clickAndReadMessage(window, 'Criar Backup Completo', 'Backup criado')).toContain(
+    'Backup completo criado com sucesso',
+  );
   return { app, window };
 }
 
@@ -62,8 +64,10 @@ test.describe('Full backup restore', () => {
       fs.rmSync(path.join(dataDir, 'storage', 'pdfs'), { recursive: true, force: true });
       await navigateTo(window, 'Configurações');
       const exited = app.waitForEvent('close');
-      // Confirming the "SOBRESCREVER" warning restores and exits (relaunch is left to the test under E2E).
+      // Confirming the "SOBRESCREVER" warning (the app's own window) restores and exits; relaunch is left to the
+      // test under E2E.
       await window.getByRole('button', { name: 'Restaurar e Sobrescrever' }).click();
+      await answerAppDialog(window, 'Restaurar e sobrescrever', 'Restaurar e sobrescrever');
       await exited;
 
       const relaunched = await launchApp(env, { userDataDir: dataDir });
@@ -104,6 +108,7 @@ test.describe('Full backup restore', () => {
       await navigateTo(window, 'Configurações');
       const exited = app.waitForEvent('close');
       await window.getByRole('button', { name: 'Restaurar e Sobrescrever' }).click();
+      await answerAppDialog(window, 'Restaurar e sobrescrever', 'Restaurar e sobrescrever');
       await exited;
 
       const relaunched = await launchApp(env, { userDataDir: newComputer });
@@ -136,7 +141,7 @@ test.describe('Full backup restore', () => {
         await createProject(window, 'Projeto Local');
         await navigateTo(window, 'Configurações');
 
-        expect(await clickAndReadAlert(window, 'Importar e Mesclar')).toBe(
+        expect(await clickAndReadMessage(window, 'Importar e Mesclar', 'Backup mesclado')).toBe(
           '1 projeto novo foi importado e mesclado com sucesso!',
         );
         await navigateTo(window, 'Projetos');
@@ -147,7 +152,9 @@ test.describe('Full backup restore', () => {
         await window.goBack();
         await window.waitForURL(/\/projects\/\d+/);
         await navigateTo(window, 'Configurações');
-        expect(await clickAndReadAlert(window, 'Importar e Mesclar')).toMatch(/^Nenhum projeto novo encontrado/);
+        expect(await clickAndReadMessage(window, 'Importar e Mesclar', 'Nada para mesclar')).toMatch(
+          /^Nenhum projeto novo encontrado/,
+        );
       } finally {
         await app.close();
       }

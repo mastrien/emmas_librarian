@@ -4,6 +4,16 @@ Paths are relative to `emmas_librarian/`. Prefer these over new ad-hoc mocks.
 
 ## Renderer (src/)
 
+### FakeDialogs — `src/components/common/dialogs/__tests__/fakes/FakeDialogs.tsx`
+Stands in for the app's confirm/message windows (`useDialogs`). Render with `<FakeDialogsProvider dialogs={dialogs}>`.
+`confirmMessage` and `informMessage` are `vi.fn`s that receive the message, as `window.confirm`/`window.alert`
+spies did: `dialogs.confirmMessage.mockReturnValue(false)` declines, `expect(dialogs.informMessage).toHaveBeenCalledWith(…)`
+checks a message. `asked`/`informed` keep the full options (title, button names). E2E specs answer the real windows
+with `answerAppDialog(window, title, button)` from `e2e-tests/helpers.js`.
+The answer is a promise: to check that a declined question did nothing, wait for `dialogs.asked` to have the
+question and flush with `await act(async () => {})` first; asserting right after the click passes even when the
+check is gone (it did in `SettingsPage`, Arca 134).
+
 ### FakeCitationClipboard — `src/utils/__tests__/fakes/FakeCitationClipboard.ts`
 Records what citation code copies (`texts`, `richWrites`; `rejectRich = true` makes rich copy fail). Pass it to
 `copyCitations(…, clipboard)` or `useCitationCopy(clipboard)`; stub `ClipboardItem` with `FakeClipboardItem`.

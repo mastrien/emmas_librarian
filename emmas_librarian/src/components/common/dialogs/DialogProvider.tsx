@@ -37,7 +37,8 @@ interface PendingDialog {
   settle: (confirmed: boolean) => void;
 }
 
-const DialogsContext = createContext<Dialogs | null>(null);
+// Exported for tests, which put a FakeDialogs here (components/common/dialogs/__tests__/fakes).
+export const DialogsContext = createContext<Dialogs | null>(null);
 
 type DialogRequest = Omit<PendingDialog, 'id'>;
 

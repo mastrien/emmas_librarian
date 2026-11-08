@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { SettingsPage } from '../SettingsPage';
+import { FakeDialogs, FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
 
 const fakeService = FakeProjectService.create();
+let dialogs = new FakeDialogs();
 vi.mock('../../services/api', () => ({
   projectService: {},
 }));
@@ -14,7 +16,9 @@ vi.mock('../../services/api', () => ({
 const renderPage = async () => {
   render(
     <BrowserRouter>
-      <SettingsPage />
+      <FakeDialogsProvider dialogs={dialogs}>
+        <SettingsPage />
+      </FakeDialogsProvider>
     </BrowserRouter>,
   );
   // The page loads settings, the trash and the auto-backup list on mount; wait for the last step.
@@ -26,8 +30,7 @@ describe('SettingsPage backups', () => {
   beforeEach(() => {
     Object.assign(projectService, fakeService);
     fakeService.reset();
-    vi.spyOn(window, 'alert').mockImplementation(() => undefined);
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    dialogs = new FakeDialogs();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
   });
 
@@ -85,22 +88,9 @@ describe('SettingsPage backups', () => {
 
       fireEvent.click(within(row).getByRole('button', { name: /Restaurar/ }));
 
-      const warning = vi.mocked(window.confirm).mock.calls[0][0];
+      const warning = dialogs.confirmMessage.mock.calls[0][0];
       expect(warning).toContain('Os PDFs e documentos guardados não são alterados');
       expect(warning).not.toContain('PDFs, etc');
-    });
-
-    it('does not restore an automatic backup when the warning is declined', async () => {
-      fakeService.listAutoBackups.mockResolvedValue([
-        { filename: 'emma_backup_2026-09-28.db.gz', date: '2026-09-28', sizeBytes: 2048 },
-      ]);
-      vi.mocked(window.confirm).mockReturnValue(false);
-      await renderPage();
-      const row = (await screen.findByText('2026-09-28')).closest('div')!.parentElement!;
-
-      fireEvent.click(within(row).getByRole('button', { name: /Restaurar/ }));
-
-      expect(fakeService.restoreAutoBackup).not.toHaveBeenCalled();
     });
 
     it('alerts when an automatic backup cannot be restored', async () => {
@@ -113,7 +103,7 @@ describe('SettingsPage backups', () => {
 
       fireEvent.click(within(row).getByRole('button', { name: /Restaurar/ }));
 
-      await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao restaurar backup automático.'));
+      await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao restaurar backup automático.'));
     });
   });
 
@@ -125,7 +115,7 @@ describe('SettingsPage backups', () => {
       click('Criar Backup Completo');
 
       await waitFor(() =>
-        expect(window.alert).toHaveBeenCalledWith(
+        expect(dialogs.informMessage).toHaveBeenCalledWith(
           'Backup completo criado com sucesso em:\nC:\\Backups\\backup_2026-09-28.emmabak',
         ),
       );
@@ -137,7 +127,7 @@ describe('SettingsPage backups', () => {
       click('Criar Backup Completo');
 
       await waitFor(() => expect(fakeService.exportBackup).toHaveBeenCalled());
-      expect(window.alert).not.toHaveBeenCalled();
+      expect(dialogs.informMessage).not.toHaveBeenCalled();
     });
 
     it('alerts when the full backup fails', async () => {
@@ -146,26 +136,17 @@ describe('SettingsPage backups', () => {
 
       click('Criar Backup Completo');
 
-      await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao criar backup completo.'));
+      await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao criar backup completo.'));
     });
   });
 
   describe('restore and overwrite', () => {
-    it('does nothing when the overwrite warning is declined', async () => {
-      vi.mocked(window.confirm).mockReturnValue(false);
-      await renderPage();
-
-      click('Restaurar e Sobrescrever');
-
-      expect(fakeService.restoreBackupOverride).not.toHaveBeenCalled();
-    });
-
     it('says the restore was cancelled when no file is chosen', async () => {
       await renderPage();
 
       click('Restaurar e Sobrescrever');
 
-      await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Restauração cancelada pelo usuário.'));
+      await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Restauração cancelada pelo usuário.'));
     });
 
     it('stays quiet while the app restarts after a restore', async () => {
@@ -175,7 +156,7 @@ describe('SettingsPage backups', () => {
       click('Restaurar e Sobrescrever');
 
       await waitFor(() => expect(fakeService.restoreBackupOverride).toHaveBeenCalled());
-      expect(window.alert).not.toHaveBeenCalled();
+      expect(dialogs.informMessage).not.toHaveBeenCalled();
     });
 
     it('alerts when the restore fails', async () => {
@@ -184,7 +165,7 @@ describe('SettingsPage backups', () => {
 
       click('Restaurar e Sobrescrever');
 
-      await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao restaurar backup.'));
+      await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao restaurar backup.'));
     });
   });
 
@@ -196,7 +177,9 @@ describe('SettingsPage backups', () => {
       click('Importar e Mesclar');
 
       await waitFor(() =>
-        expect(window.alert).toHaveBeenCalledWith('2 projetos novos foram importados e mesclados com sucesso!'),
+        expect(dialogs.informMessage).toHaveBeenCalledWith(
+          '2 projetos novos foram importados e mesclados com sucesso!',
+        ),
       );
     });
 
@@ -207,7 +190,7 @@ describe('SettingsPage backups', () => {
       click('Importar e Mesclar');
 
       await waitFor(() =>
-        expect(window.alert).toHaveBeenCalledWith('1 projeto novo foi importado e mesclado com sucesso!'),
+        expect(dialogs.informMessage).toHaveBeenCalledWith('1 projeto novo foi importado e mesclado com sucesso!'),
       );
     });
 
@@ -219,7 +202,7 @@ describe('SettingsPage backups', () => {
       click('Importar e Mesclar');
 
       await waitFor(() => expect(fakeService.restoreBackupMerge).toHaveBeenCalled());
-      expect(window.alert).not.toHaveBeenCalled();
+      expect(dialogs.informMessage).not.toHaveBeenCalled();
     });
 
     it('says when every project of the backup already exists', async () => {
@@ -227,7 +210,9 @@ describe('SettingsPage backups', () => {
 
       click('Importar e Mesclar');
 
-      await waitFor(() => expect(window.alert).toHaveBeenCalledWith(expect.stringMatching(/^Nenhum projeto novo/)));
+      await waitFor(() =>
+        expect(dialogs.informMessage).toHaveBeenCalledWith(expect.stringMatching(/^Nenhum projeto novo/)),
+      );
     });
 
     it('alerts when the merge fails', async () => {
@@ -236,7 +221,7 @@ describe('SettingsPage backups', () => {
 
       click('Importar e Mesclar');
 
-      await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao mesclar backup.'));
+      await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao mesclar backup.'));
     });
   });
 });

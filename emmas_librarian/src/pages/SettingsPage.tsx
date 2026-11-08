@@ -13,9 +13,12 @@ import { TrashSettings } from './Settings/components/TrashSettings';
 import { modelSuggestions, suggestedModelFor } from './Settings/aiModelSuggestions';
 import { TYPING_DELAY_MS, useSettingsAutosave } from './Settings/useSettingsAutosave';
 import { AutosaveNotice } from './Settings/components/AutosaveNotice';
+import { useDialogs } from '../components/common/dialogs/DialogProvider';
 
 export const SettingsPage: React.FC = () => {
   const projectService = useProjectService();
+  // The app's own windows, not window.confirm/alert (Arca 103/134).
+  const { confirm, inform } = useDialogs();
   const [scopusKey, setScopusKey] = useState('');
   const [wosKey, setWosKey] = useState('');
   const [openAlexKey, setOpenAlexKey] = useState('');
@@ -127,7 +130,12 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleRestoreAiDefaults = async () => {
-    if (confirm('Restaurar as configurações avançadas de IA para os padrões originais?')) {
+    const confirmed = await confirm({
+      title: 'Restaurar padrões de IA',
+      message: 'Restaurar as configurações avançadas de IA para os padrões originais?',
+      confirmLabel: 'Restaurar padrões',
+    });
+    if (confirmed) {
       autosave.cancel('ai_model:');
       await projectService.restoreAiModelConfigDefaults();
       const configs = await projectService.getAiModelConfigs();
@@ -179,7 +187,13 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handlePermanentDelete = async (type: 'project' | 'article' | 'annotation', id: number) => {
-    if (confirm('Tem certeza que deseja excluir permanentemente este item? Esta ação não pode ser desfeita.')) {
+    const confirmed = await confirm({
+      title: 'Excluir permanentemente',
+      message: 'Tem certeza que deseja excluir permanentemente este item? Esta ação não pode ser desfeita.',
+      confirmLabel: 'Excluir permanentemente',
+      danger: true,
+    });
+    if (confirmed) {
       try {
         await projectService.deleteTrashItemPermanent(type, id);
         await loadTrash();
@@ -190,7 +204,13 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleEmptyTrash = async () => {
-    if (confirm('Tem certeza que deseja esvaziar a lixeira? Todos os itens serão apagados permanentemente.')) {
+    const confirmed = await confirm({
+      title: 'Esvaziar lixeira',
+      message: 'Tem certeza que deseja esvaziar a lixeira? Todos os itens serão apagados permanentemente.',
+      confirmLabel: 'Esvaziar lixeira',
+      danger: true,
+    });
+    if (confirmed) {
       try {
         await projectService.emptyTrash();
         await loadTrash();
@@ -201,19 +221,21 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleRestoreAutoBackup = async (filename: string) => {
-    if (
-      confirm(
-        `ATENÇÃO: Isso irá SOBRESCREVER o banco de dados atual (projetos, artigos, anotações, diário) com o backup automático "${filename}". Tudo o que foi feito depois dessa data será PERDIDO permanentemente. Os PDFs e documentos guardados não são alterados. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?`,
-      )
-    ) {
+    const confirmed = await confirm({
+      title: 'Restaurar backup automático',
+      message: `ATENÇÃO: Isso irá SOBRESCREVER o banco de dados atual (projetos, artigos, anotações, diário) com o backup automático "${filename}". Tudo o que foi feito depois dessa data será PERDIDO permanentemente. Os PDFs e documentos guardados não são alterados. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?`,
+      confirmLabel: 'Restaurar backup',
+      danger: true,
+    });
+    if (confirmed) {
       try {
         const success = await projectService.restoreAutoBackup(filename);
         if (!success) {
-          alert('Restauração cancelada.');
+          await inform({ title: 'Restauração cancelada', message: 'Restauração cancelada.' });
         }
       } catch (err) {
         console.error('Failed to restore auto backup:', err);
-        alert('Erro ao restaurar backup automático.');
+        await inform({ title: 'Erro ao restaurar', message: 'Erro ao restaurar backup automático.' });
       }
     }
   };
@@ -222,28 +244,31 @@ export const SettingsPage: React.FC = () => {
     try {
       const backupPath = await projectService.exportBackup();
       if (backupPath) {
-        alert(`Backup completo criado com sucesso em:\n${backupPath}`);
+        await inform({ title: 'Backup criado', message: `Backup completo criado com sucesso em:\n${backupPath}` });
       }
     } catch (err) {
       console.error('Failed to export backup:', err);
-      alert('Erro ao criar backup completo.');
+      await inform({ title: 'Erro no backup', message: 'Erro ao criar backup completo.' });
     }
   };
 
   const handleRestoreBackupOverride = async () => {
-    if (
-      confirm(
+    const confirmed = await confirm({
+      title: 'Restaurar e sobrescrever',
+      message:
         'ATENÇÃO: Isso irá SOBRESCREVER todos os dados atuais (projetos, artigos, PDFs, etc) com as informações do backup. Todos os dados atuais não salvos em backups serão PERDIDOS permanentemente. O aplicativo será fechado e reiniciado para concluir. Deseja continuar?',
-      )
-    ) {
+      confirmLabel: 'Restaurar e sobrescrever',
+      danger: true,
+    });
+    if (confirmed) {
       try {
         const success = await projectService.restoreBackupOverride();
         if (!success) {
-          alert('Restauração cancelada pelo usuário.');
+          await inform({ title: 'Restauração cancelada', message: 'Restauração cancelada pelo usuário.' });
         }
       } catch (err) {
         console.error('Failed to restore backup:', err);
-        alert('Erro ao restaurar backup.');
+        await inform({ title: 'Erro ao restaurar', message: 'Erro ao restaurar backup.' });
       }
     }
   };
@@ -252,17 +277,22 @@ export const SettingsPage: React.FC = () => {
     try {
       const count = await projectService.restoreBackupMerge();
       if (count === 1) {
-        alert('1 projeto novo foi importado e mesclado com sucesso!');
+        await inform({ title: 'Backup mesclado', message: '1 projeto novo foi importado e mesclado com sucesso!' });
       } else if (count !== null && count > 1) {
-        alert(`${count} projetos novos foram importados e mesclados com sucesso!`);
+        await inform({
+          title: 'Backup mesclado',
+          message: `${count} projetos novos foram importados e mesclados com sucesso!`,
+        });
       } else if (count === 0) {
-        alert(
-          'Nenhum projeto novo encontrado no backup para importar (todos os projetos já existem no seu banco atual).',
-        );
+        await inform({
+          title: 'Nada para mesclar',
+          message:
+            'Nenhum projeto novo encontrado no backup para importar (todos os projetos já existem no seu banco atual).',
+        });
       }
     } catch (err) {
       console.error('Failed to merge backup:', err);
-      alert('Erro ao mesclar backup.');
+      await inform({ title: 'Erro ao mesclar', message: 'Erro ao mesclar backup.' });
     }
   };
 
@@ -284,7 +314,13 @@ export const SettingsPage: React.FC = () => {
   const handleRestoreSnapshot = async () => {
     const takenAt = describeSnapshotDate(updateStatus.state?.timestamp);
     const question = `Voltar a biblioteca para como estava em ${takenAt}? O banco atual é guardado em backups/ antes, e o app reinicia.`;
-    if (!confirm(question)) return;
+    const confirmed = await confirm({
+      title: 'Restaurar snapshot',
+      message: question,
+      confirmLabel: 'Restaurar snapshot',
+      danger: true,
+    });
+    if (!confirmed) return;
     await projectService.restoreUpdateSnapshot();
   };
 
