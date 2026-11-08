@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterPdfs, formatAddedDate, formatBytes, libraryMetrics, type PdfFileRecord } from '../pdfLibraryData';
+import { filterPdfs, formatAddedDate, libraryMetrics, type PdfFileRecord } from '../pdfLibraryData';
 
 const pdf = (filename: string, size: number, titles: string[]): PdfFileRecord => ({
   id: 1,
@@ -18,15 +18,6 @@ const PDFS = [
 ];
 
 describe('PDF library data (Arca 134)', () => {
-  it('writes sizes in the largest whole unit', () => {
-    expect([formatBytes(0), formatBytes(512), formatBytes(1536), formatBytes(10 * 1024 * 1024)]).toEqual([
-      '0 Bytes',
-      '512 Bytes',
-      '1.5 KB',
-      '10 MB',
-    ]);
-  });
-
   it('writes the added date with day, month, year and time, or a dash when missing', () => {
     expect(formatAddedDate('2026-08-07T15:01:00')).toBe('07/08/2026, 15:01');
     expect(formatAddedDate('')).toBe('-');

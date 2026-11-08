@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { X as XIcon, Loader2, Save, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { Loader2, Save, Sparkles } from 'lucide-react';
 import { Article } from '../../types';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { useGlobalError } from '../../contexts/GlobalErrorContext';
@@ -8,71 +7,42 @@ import { describeError } from '../../utils/describeError';
 import type { FrontendAppError } from '../../utils/AppError';
 import { LabeledField } from '../common/LabeledField';
 import { AUTHORS_SEPARATOR_HINT } from '../common/articleFieldHints';
+import { Modal } from '../common/Modal';
+import { useDialogs } from '../common/dialogs/DialogProvider';
+import {
+  articleFromForm,
+  fieldsFromArticle,
+  fillEmptyFields,
+  TITLE_REQUIRED,
+  type ArticleFormFields,
+} from './articleForm/articleFormData';
 
-export const EditArticleModal = ({
-  isOpen,
-  onClose,
-  article,
-  onSubmit,
-}: {
+interface EditArticleModalProps {
   isOpen: boolean;
   onClose: () => void;
   article: Article;
-  onSubmit: (data: Partial<import('../../types').Article>) => Promise<void>;
-}) => {
+  onSubmit: (data: Partial<Article>) => Promise<void>;
+}
+
+// Mounted per opening and per article (key), so the form always starts from the article it edits.
+const EditArticleForm: React.FC<Omit<EditArticleModalProps, 'isOpen'>> = ({ onClose, article, onSubmit }) => {
   const projectService = useProjectService();
   const { showError } = useGlobalError();
-  const [title, setTitle] = useState('');
-  const [authors, setAuthors] = useState('');
-  const [year, setYear] = useState('');
-  const [doi, setDoi] = useState('');
-  const [journal, setJournal] = useState('');
-  const [volume, setVolume] = useState('');
-  const [issue, setIssue] = useState('');
-  const [pages, setPages] = useState('');
-  const [abstract, setAbstract] = useState('');
+  const { inform } = useDialogs();
+  const [fields, setFields] = useState<ArticleFormFields>(() => fieldsFromArticle(article));
   const [submitting, setSubmitting] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && article) {
-      setTitle(article.title || '');
-      setAuthors(article.authors || '');
-      setYear(article.year ? article.year.toString() : '');
-      setDoi(article.doi || '');
-      setJournal(article.journal || '');
-      setVolume(article.volume || '');
-      setIssue(article.issue || '');
-      setPages(article.pages || '');
-      setAbstract(article.abstract || '');
-      setSubmitting(false);
-    }
-  }, [isOpen, article]);
-
-  if (!isOpen) return null;
+  const set = (key: keyof ArticleFormFields) => (value: string) => setFields((f) => ({ ...f, [key]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
-      alert('O título é obrigatório.');
-      return;
-    }
+    if (!fields.title.trim()) return void inform({ title: 'Editar artigo', message: TITLE_REQUIRED });
     setSubmitting(true);
     try {
-      await onSubmit({
-        title: title.trim(),
-        authors: authors.trim(),
-        year: year.trim() ? parseInt(year.trim()) : undefined,
-        doi: doi.trim() || undefined,
-        journal: journal.trim() || undefined,
-        volume: volume.trim() || undefined,
-        issue: issue.trim() || undefined,
-        pages: pages.trim() || undefined,
-        abstract: abstract.trim() || undefined,
-      });
+      await onSubmit(articleFromForm(fields));
       onClose();
     } catch (err: unknown) {
-      alert(`Erro ao editar artigo: ${describeError(err)}`);
+      await inform({ title: 'Erro ao editar', message: `Erro ao editar artigo: ${describeError(err)}` });
     } finally {
       setSubmitting(false);
     }
@@ -83,139 +53,95 @@ export const EditArticleModal = ({
     setIsExtracting(true);
     try {
       const data = await projectService.extractMetadata(article.id);
-      if (data) {
-        setTitle((prev) => (prev.trim() ? prev : data.title || prev));
-        setAuthors((prev) => (prev.trim() ? prev : data.authors || prev));
-        setYear((prev) => (prev.trim() ? prev : data.year ? data.year.toString() : prev));
-        setDoi((prev) => (prev.trim() ? prev : data.doi || prev));
-        setJournal((prev) => (prev.trim() ? prev : data.journal || prev));
-        setVolume((prev) => (prev.trim() ? prev : data.volume || prev));
-        setIssue((prev) => (prev.trim() ? prev : data.issue || prev));
-        setPages((prev) => (prev.trim() ? prev : data.pages || prev));
-        setAbstract((prev) => (prev.trim() ? prev : data.abstract || prev));
-      }
+      if (data) setFields((f) => fillEmptyFields(f, data));
     } catch (err: unknown) {
       // Typed, user-actionable errors (e.g. missing API key) get the global error modal.
       const appError = err as Partial<FrontendAppError> | null;
-      if (appError?.isAppError && appError.code !== 'ERR_INTERNAL') {
-        showError(err);
-      } else {
-        alert(`Erro ao extrair metadados: ${describeError(err)}`);
-      }
+      if (appError?.isAppError && appError.code !== 'ERR_INTERNAL') showError(err);
+      else await inform({ title: 'Erro na IA', message: `Erro ao extrair metadados: ${describeError(err)}` });
     } finally {
       setIsExtracting(false);
     }
   };
 
-  return createPortal(
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 99999,
-      }}
+  return (
+    <Modal
+      label="Editar Metadados do Artigo"
+      title="Editar Metadados do Artigo"
+      onClose={onClose}
+      busy={submitting}
+      width={550}
     >
-      <div
-        className="card fade-in"
-        style={{
-          width: '550px',
-          maxWidth: '95%',
-          maxHeight: '90vh',
-          background: 'var(--bg-main)',
-          borderRadius: 'var(--radius-lg)',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <div
+      {article.local_file_path && (
+        <button
+          type="button"
+          onClick={handleExtractWithAI}
+          disabled={isExtracting}
+          className="btn-secondary"
           style={{
-            padding: '2rem',
-            overflowY: 'auto',
             display: 'flex',
-            flexDirection: 'column',
-            flex: 1,
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.4rem 0.8rem',
+            fontSize: '0.85rem',
+            alignSelf: 'flex-start',
           }}
         >
-          <div
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}
-          >
-            <h3 style={{ margin: 0 }}>Editar Metadados do Artigo</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              {article.local_file_path && (
-                <button
-                  type="button"
-                  onClick={handleExtractWithAI}
-                  disabled={isExtracting}
-                  className="btn-secondary"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.4rem 0.8rem',
-                    fontSize: '0.85rem',
-                  }}
-                >
-                  {isExtracting ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Sparkles size={14} style={{ color: 'var(--color-primary)' }} />
-                  )}
-                  Preencher com IA
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={onClose}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-              >
-                <XIcon size={20} />
-              </button>
-            </div>
-          </div>
+          {isExtracting ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Sparkles size={14} style={{ color: 'var(--color-primary)' }} />
+          )}
+          Preencher com IA
+        </button>
+      )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <LabeledField label="Título *" value={title} onChange={setTitle} required />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <LabeledField label="Autores" value={authors} onChange={setAuthors} hint={AUTHORS_SEPARATOR_HINT} />
-              <LabeledField label="Ano" type="number" value={year} onChange={setYear} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <LabeledField label="DOI" value={doi} onChange={setDoi} />
-              <LabeledField label="Revista / Periódico" value={journal} onChange={setJournal} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-              <LabeledField label="Volume" value={volume} onChange={setVolume} />
-              <LabeledField label="Edição (Issue)" value={issue} onChange={setIssue} />
-              <LabeledField label="Páginas" value={pages} onChange={setPages} />
-            </div>
-            <LabeledField label="Resumo" value={abstract} onChange={setAbstract} multiline />
-
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
-              <button type="button" onClick={onClose} disabled={submitting} className="btn-secondary">
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="btn-primary"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-              >
-                {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                Salvar Alterações
-              </button>
-            </div>
-          </form>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <LabeledField label="Título *" value={fields.title} onChange={set('title')} required />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <LabeledField
+            label="Autores"
+            value={fields.authors}
+            onChange={set('authors')}
+            hint={AUTHORS_SEPARATOR_HINT}
+          />
+          <LabeledField label="Ano" type="number" value={fields.year} onChange={set('year')} />
         </div>
-      </div>
-    </div>,
-    document.body,
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <LabeledField label="DOI" value={fields.doi} onChange={set('doi')} />
+          <LabeledField label="Revista / Periódico" value={fields.journal} onChange={set('journal')} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+          <LabeledField label="Volume" value={fields.volume} onChange={set('volume')} />
+          <LabeledField label="Edição (Issue)" value={fields.issue} onChange={set('issue')} />
+          <LabeledField label="Páginas" value={fields.pages} onChange={set('pages')} />
+        </div>
+        <LabeledField label="Resumo" value={fields.abstract} onChange={set('abstract')} multiline />
+
+        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+          <button type="button" onClick={onClose} disabled={submitting} className="btn-secondary">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
+
+/**
+ * Edits an article's metadata; "Preencher com IA" reads the attached PDF and fills only the empty fields.
+ * Opened fresh for each article (the callers mount it while editing), so the form starts from that article.
+ *
+ * @example {editing && <EditArticleModal isOpen article={editing} onClose={close} onSubmit={save} />}
+ */
+export const EditArticleModal: React.FC<EditArticleModalProps> = ({ isOpen, ...props }) =>
+  isOpen ? <EditArticleForm key={props.article.id} {...props} /> : null;

@@ -40,3 +40,15 @@ export const formatDate = (dateString?: string): string => {
  *   fileNameFromPath('C:\\docs\\edital.pdf'); // 'edital.pdf'
  */
 export const fileNameFromPath = (path: string): string => path.split(/[\\/]/).pop() ?? path;
+
+/**
+ * A file size for people: bytes, KB, MB or GB, with up to two decimals.
+ *
+ * @example formatBytes(1536) // '1.5 KB'
+ */
+export function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+}

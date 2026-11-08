@@ -50,7 +50,7 @@ test('F-15 Cross-project Article Sharing and Search History Traceability', async
 
     // 4. Click "Importar de outro projeto" to open sharing modal
     await clickAddArticlesOption(window, 'Importar de outro projeto');
-    await expect(window.locator('h3:has-text("Importar Artigos de Outro Projeto")')).toBeVisible();
+    await expect(window.getByRole('dialog', { name: 'Importar Artigos de Outro Projeto' })).toBeVisible();
 
     // 5. Select Source Project in the dropdown
     await window.waitForSelector(`select[id="source-project-select"] option:has-text("${sourceProjectName}")`, {

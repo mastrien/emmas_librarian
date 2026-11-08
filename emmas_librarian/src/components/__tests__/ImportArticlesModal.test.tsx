@@ -4,6 +4,10 @@ import { ImportArticlesModal } from '../modals/ImportArticlesModal';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
 import type { Article } from '../../types';
+import { FakeDialogs, withFakeDialogs } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+
+const dialogs = new FakeDialogs();
+const renderWithDialogs = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
 
 const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
@@ -21,14 +25,16 @@ describe('ImportArticlesModal', () => {
   });
 
   it('does not render when isOpen is false', () => {
-    const { container } = render(
+    const { container } = renderWithDialogs(
       <ImportArticlesModal isOpen={false} destProjectId={1} onClose={vi.fn()} onImportComplete={vi.fn()} />,
     );
     expect(container.innerHTML).toBe('');
   });
 
   it('offers every other project as a source, excluding the destination', async () => {
-    render(<ImportArticlesModal isOpen={true} destProjectId={1} onClose={vi.fn()} onImportComplete={vi.fn()} />);
+    renderWithDialogs(
+      <ImportArticlesModal isOpen={true} destProjectId={1} onClose={vi.fn()} onImportComplete={vi.fn()} />,
+    );
 
     expect(screen.getByText('Importar Artigos de Outro Projeto')).toBeInTheDocument();
     expect(await screen.findByRole('option', { name: 'Origem' })).toBeInTheDocument();
@@ -40,7 +46,7 @@ describe('ImportArticlesModal', () => {
     const modal = (isOpen: boolean) => (
       <ImportArticlesModal isOpen={isOpen} destProjectId={1} onClose={vi.fn()} onImportComplete={vi.fn()} />
     );
-    const { rerender } = render(modal(false));
+    const { rerender } = renderWithDialogs(modal(false));
 
     rerender(modal(true));
 
@@ -68,7 +74,7 @@ describe('ImportArticlesModal copying articles', () => {
   });
 
   const openWithSource = async (handlers = { onClose: vi.fn(), onImportComplete: vi.fn() }) => {
-    render(<ImportArticlesModal isOpen destProjectId={1} {...handlers} />);
+    renderWithDialogs(<ImportArticlesModal isOpen destProjectId={1} {...handlers} />);
     await screen.findByRole('option', { name: 'Origem' });
     fireEvent.change(screen.getByRole('combobox'), { target: { value: '2' } });
     await screen.findByText('Redes neurais');
@@ -87,6 +93,19 @@ describe('ImportArticlesModal copying articles', () => {
     expect(fakeService.getArticles).toHaveBeenCalledWith(2);
     expect(fakeService.importArticlesFromProject).toHaveBeenCalledWith(2, 1, [10, 12]);
     expect(onImportComplete).toHaveBeenCalled();
+  });
+
+  // The window is a Modal (Arca 134): while the copy runs, its X and Esc wait for it.
+  it('locks the window while the copy runs', async () => {
+    fakeService.importArticlesFromProject.mockReturnValue(new Promise(() => {}));
+    const { onClose } = await openWithSource();
+
+    fireEvent.click(screen.getByText('Redes neurais'));
+    fireEvent.click(confirm());
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Fechar' })).toBeDisabled());
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('keeps "Confirmar Importação" disabled until an article is selected', async () => {
@@ -113,15 +132,15 @@ describe('ImportArticlesModal copying articles', () => {
 
   it('alerts and stays open when the copy fails', async () => {
     fakeService.importArticlesFromProject.mockRejectedValue(new Error('projeto removido'));
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
     const { onClose, onImportComplete } = await openWithSource();
 
     fireEvent.click(screen.getByText('Redes neurais'));
     fireEvent.click(confirm());
 
-    await waitFor(() => expect(alertSpy).toHaveBeenCalledWith('Erro ao importar artigos: Error: projeto removido'));
+    await waitFor(() =>
+      expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao importar artigos: Error: projeto removido'),
+    );
     expect(onClose).not.toHaveBeenCalled();
     expect(onImportComplete).not.toHaveBeenCalled();
-    alertSpy.mockRestore();
   });
 });

@@ -4,6 +4,10 @@ import { ManualArticleModal } from '../modals/ManualArticleModal';
 
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
+import { FakeDialogs, withFakeDialogs } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const renderWithDialogs = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
 
 const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
@@ -14,16 +18,16 @@ describe('ManualArticleModal', () => {
   beforeEach(() => {
     Object.assign(projectService, fakeService);
     fakeService.reset();
-    vi.spyOn(window, 'alert').mockImplementation(() => {});
+    dialogs = new FakeDialogs();
   });
 
   it('does not render when isOpen is false', () => {
-    const { container } = render(<ManualArticleModal isOpen={false} onClose={vi.fn()} onSubmit={vi.fn()} />);
+    const { container } = renderWithDialogs(<ManualArticleModal isOpen={false} onClose={vi.fn()} onSubmit={vi.fn()} />);
     expect(container.innerHTML).toBe('');
   });
 
   it('renders inputs and registers typed values', () => {
-    render(<ManualArticleModal isOpen={true} onClose={vi.fn()} onSubmit={vi.fn()} />);
+    renderWithDialogs(<ManualArticleModal isOpen={true} onClose={vi.fn()} onSubmit={vi.fn()} />);
 
     expect(screen.getByText('Adicionar Artigo Avulso')).toBeInTheDocument();
 
@@ -51,19 +55,19 @@ describe('ManualArticleModal', () => {
 
   it('alerts if title is missing on submit', async () => {
     const onSubmit = vi.fn();
-    render(<ManualArticleModal isOpen={true} onClose={vi.fn()} onSubmit={onSubmit} />);
+    renderWithDialogs(<ManualArticleModal isOpen={true} onClose={vi.fn()} onSubmit={onSubmit} />);
 
     const form = screen.getByText('Salvar Artigo').closest('form');
     fireEvent.submit(form!);
 
-    expect(window.alert).toHaveBeenCalledWith('O título é obrigatório.');
+    expect(dialogs.informMessage).toHaveBeenCalledWith('O título é obrigatório.');
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('calls onSubmit with form values when submitted successfully', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const onClose = vi.fn();
-    render(<ManualArticleModal isOpen={true} onClose={onClose} onSubmit={onSubmit} />);
+    renderWithDialogs(<ManualArticleModal isOpen={true} onClose={onClose} onSubmit={onSubmit} />);
 
     const titleInput = screen.getByPlaceholderText('Ex: A New Approach to Bibliometrics');
     fireEvent.change(titleInput, { target: { value: 'Manual Test Title' } });
@@ -90,7 +94,7 @@ describe('ManualArticleModal', () => {
   it('allows selecting and removing a PDF file', async () => {
     fakeService.openPdfDialog.mockResolvedValue('C:\\path\\to\\file.pdf');
 
-    render(<ManualArticleModal isOpen={true} onClose={vi.fn()} onSubmit={vi.fn()} />);
+    renderWithDialogs(<ManualArticleModal isOpen={true} onClose={vi.fn()} onSubmit={vi.fn()} />);
 
     const selectPdfBtn = screen.getByText('Selecionar PDF');
     fireEvent.click(selectPdfBtn);
