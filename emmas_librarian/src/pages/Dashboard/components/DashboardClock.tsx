@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import '../dashboard.css';
 
 export const DashboardClock: React.FC = () => {
   const [now, setNow] = useState(new Date());
@@ -16,41 +17,9 @@ export const DashboardClock: React.FC = () => {
   const currentDateStr = `${weekday}, ${day} ${monthShort} ${year}`;
 
   return (
-    <div
-      data-testid="dashboard-clock"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        padding: '1rem',
-      }}
-    >
-      <div
-        style={{
-          fontSize: '3.75rem',
-          fontWeight: 700,
-          color: 'var(--text-heading)',
-          fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-          fontVariantNumeric: 'tabular-nums',
-          letterSpacing: '-0.03em',
-          lineHeight: 1,
-        }}
-      >
-        {currentTimeStr}
-      </div>
-      <div
-        style={{
-          fontSize: '0.95rem',
-          color: 'var(--text-muted)',
-          fontWeight: 500,
-          textTransform: 'capitalize',
-          marginTop: '0.6rem',
-        }}
-      >
-        {currentDateStr}
-      </div>
+    <div data-testid="dashboard-clock" className="dashboard-clock">
+      <div className="dashboard-clock-time">{currentTimeStr}</div>
+      <div className="dashboard-clock-date">{currentDateStr}</div>
     </div>
   );
 };

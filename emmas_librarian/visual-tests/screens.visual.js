@@ -22,8 +22,8 @@ const SCREENS = [
   ['agenda-lista', '/agenda', (window) => window.getByRole('button', { name: 'Lista de Prazos' }).click()],
   ['termos', '/terms'],
 ];
-// The example project has no agenda. Two events with every kind of deadline (date, time, range, done), all in 2025:
-// past deadlines are not "próximos", so the dashboard's deadline notice does not change with the day.
+// The example project has no agenda. Two events with every kind of deadline (single, time, range, done), all in
+// 2025. The dashboard lists the pending ones as overdue; their day counts are masked (ALWAYS_MASKED).
 const SAMPLE_VENUES = [
   {
     title: 'Simpósio Brasileiro de Sensoriamento Remoto',
@@ -68,7 +68,14 @@ const SAMPLE_VENUES = [
 // What changes with the day or the run, hidden in every screen: the clock and the month calendar (dashboard, agenda),
 // the PDF library's "Data de Adição" (the import time) and the backup Settings lists (made when the app opened).
 // (Freezing the page clock was tried first: Playwright's clock failed on this Electron window now and then.)
-const ALWAYS_MASKED = ['[data-testid="dashboard-clock"]', '[data-testid="date-calendar"]'];
+// The deadline badges count days from today ("Venceu há 644 d"): the sample deadlines are past, so they are shown
+// as overdue on the dashboard. VISUAL_KEEP_CALENDAR=1 leaves the month calendar visible, for a baseline and a
+// comparison taken on the same day (the calendar's own code is then compared too).
+const ALWAYS_MASKED = [
+  '[data-testid="dashboard-clock"]',
+  '[data-testid="deadline-badge"]',
+  ...(process.env.VISUAL_KEEP_CALENDAR === '1' ? [] : ['[data-testid="date-calendar"]']),
+];
 // The title bar and the header are sticky, and the header its own GPU layer (.glass-panel has translateZ(0)); now
 // and then both were drawn a pixel lower than the page under them. At scroll 0 static puts them in the same place,
 // so the capture draws them static and without the layer, the same in every run.

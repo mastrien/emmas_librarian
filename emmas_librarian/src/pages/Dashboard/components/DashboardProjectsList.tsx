@@ -2,112 +2,67 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Calendar, ChevronRight, Plus } from 'lucide-react';
 import { Project } from '../../../types';
+import '../dashboard.css';
 
 interface DashboardProjectsListProps {
   projects: Project[];
 }
 
-export const DashboardProjectsList: React.FC<DashboardProjectsListProps> = ({ projects }) => {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-      {projects.map((project) => (
-        <Link
-          key={project.id}
-          to={`/projects/${project.id}`}
-          className="card hover-lift fade-in"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '1.5rem',
-            textDecoration: 'none',
-            color: 'inherit',
-            cursor: 'pointer',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              marginBottom: '1rem',
-            }}
-          >
-            <div
-              style={{
-                padding: '0.8rem',
-                background: 'var(--bg-main)',
-                color: 'var(--color-primary)',
-                borderRadius: 'var(--radius-md)',
-              }}
-            >
-              <BookOpen size={24} />
-            </div>
-            <ChevronRight size={20} color="var(--border-color)" style={{ marginTop: '0.5rem' }} />
-          </div>
-          <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', color: 'var(--text-heading)' }}>{project.name}</h3>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              color: 'var(--text-muted)',
-              fontSize: '0.875rem',
-            }}
-          >
-            <Calendar size={14} />
-            Criado em {new Date(project.created_at).toLocaleDateString()}
-          </div>
-
-          {project.stats && (
-            <div
-              style={{
-                display: 'flex',
-                gap: '0.75rem',
-                marginTop: '1.25rem',
-                paddingTop: '1rem',
-                borderTop: '1px solid var(--border-color)',
-                fontSize: '0.85rem',
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
-                <span style={{ color: 'var(--text-muted)' }}>Ativos</span>
-                <strong style={{ color: 'var(--color-primary)' }}>{project.stats.active}</strong>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
-                <span style={{ color: 'var(--text-muted)' }}>Lidos</span>
-                <strong style={{ color: 'var(--color-success, #10b981)' }}>{project.stats.read}</strong>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
-                <span style={{ color: 'var(--text-muted)' }}>Arquivados</span>
-                <strong style={{ color: 'var(--text-muted)' }}>{project.stats.archived}</strong>
-              </div>
-            </div>
-          )}
-        </Link>
-      ))}
-
-      {projects.length === 0 && (
-        <div
-          className="glass-panel"
-          style={{
-            gridColumn: '1 / -1',
-            textAlign: 'center',
-            padding: '4rem 2rem',
-            borderRadius: 'var(--radius-lg)',
-          }}
-        >
-          <BookOpen size={48} color="var(--color-primary)" style={{ opacity: 0.8, marginBottom: '1rem' }} />
-          <h3 style={{ fontSize: '1.25rem', color: 'var(--text-heading)', margin: '0 0 0.5rem 0' }}>
-            Nenhum projeto encontrado
-          </h3>
-          <p style={{ color: 'var(--text-muted)', margin: '0 0 1.5rem 0' }}>
-            Crie seu primeiro projeto para começar a importar e analisar artigos científicos.
-          </p>
-          <Link to="/new-project" className="btn-primary">
-            <Plus size={20} /> Criar Primeiro Projeto
-          </Link>
-        </div>
-      )}
+const ProjectStats: React.FC<{ stats: NonNullable<Project['stats']> }> = ({ stats }) => (
+  <div className="project-card-stats">
+    <div className="project-card-stat project-card-stat--active">
+      <span>Ativos</span>
+      <strong>{stats.active}</strong>
     </div>
-  );
-};
+    <div className="project-card-stat project-card-stat--read">
+      <span>Lidos</span>
+      <strong>{stats.read}</strong>
+    </div>
+    <div className="project-card-stat project-card-stat--archived">
+      <span>Arquivados</span>
+      <strong>{stats.archived}</strong>
+    </div>
+  </div>
+);
+
+const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
+  <Link to={`/projects/${project.id}`} className="card hover-lift fade-in project-card">
+    <div className="project-card-top">
+      <div className="project-card-icon">
+        <BookOpen size={24} />
+      </div>
+      <ChevronRight size={20} className="project-card-chevron" />
+    </div>
+    <h3>{project.name}</h3>
+    <div className="project-card-date">
+      <Calendar size={14} />
+      Criado em {new Date(project.created_at).toLocaleDateString()}
+    </div>
+    {project.stats && <ProjectStats stats={project.stats} />}
+  </Link>
+);
+
+const NoProjects: React.FC = () => (
+  <div className="glass-panel projects-empty">
+    <BookOpen size={48} className="projects-empty-icon" />
+    <h3>Nenhum projeto encontrado</h3>
+    <p>Crie seu primeiro projeto para começar a importar e analisar artigos científicos.</p>
+    <Link to="/new-project" className="btn-primary">
+      <Plus size={20} /> Criar Primeiro Projeto
+    </Link>
+  </div>
+);
+
+/**
+ * The dashboard's project cards, with each project's article counts, or the invitation to create the first one.
+ *
+ * @example <DashboardProjectsList projects={projects} />
+ */
+export const DashboardProjectsList: React.FC<DashboardProjectsListProps> = ({ projects }) => (
+  <div className="project-cards">
+    {projects.map((project) => (
+      <ProjectCard key={project.id} project={project} />
+    ))}
+    {projects.length === 0 && <NoProjects />}
+  </div>
+);
