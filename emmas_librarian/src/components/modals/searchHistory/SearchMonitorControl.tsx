@@ -10,6 +10,7 @@ import {
 } from '../../../utils/searchMonitor';
 import { restoreSearch } from '../../../pages/Search/searchQueries';
 import { ExperimentalTag } from '../../../components/common/ExperimentalTag';
+import './searchHistory.css';
 
 /** Said wherever monitoring shows (release 1.3.0): it was only seen without new results so far. */
 export const MONITOR_EXPERIMENTAL_REASON =
@@ -75,20 +76,8 @@ export const SearchMonitorControl: React.FC<{
 }> = ({ item, monitor, onChange }) => {
   if (!restoreSearch(item) || isMonitorResult(item)) return null;
   return (
-    <div
-      className="custom-controls"
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: '0.5rem 0.9rem',
-        marginTop: '0.6rem',
-        paddingTop: '0.6rem',
-        borderTop: '1px dashed var(--border-color)',
-        fontSize: '0.85rem',
-      }}
-    >
-      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+    <div className="custom-controls history-monitor">
+      <label>
         <input
           type="checkbox"
           checked={!!monitor}
@@ -111,8 +100,8 @@ export const SearchMonitorControl: React.FC<{
               </option>
             ))}
           </select>
-          <span style={{ color: 'var(--text-muted)' }}>{lastCheckText(monitor.last_checked_at)}</span>
-          <span style={{ flexBasis: '100%', color: 'var(--text-muted)' }}>
+          <span className="history-monitor-muted">{lastCheckText(monitor.last_checked_at)}</span>
+          <span className="history-monitor-muted history-monitor-cost">
             Cada verificação roda esta busca em {basesOf(item)} e gasta a cota das suas chaves: ao menos uma requisição
             por base. Só acontece com o app aberto.
           </span>

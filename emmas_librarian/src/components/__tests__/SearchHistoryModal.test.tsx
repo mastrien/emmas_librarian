@@ -1,7 +1,14 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import React from 'react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { SearchHistoryModal } from '../modals/SearchHistoryModal';
+import { FakeDialogs, FakeDialogsProvider } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const withDialogs = ({ children }: { children: React.ReactNode }) => (
+  <FakeDialogsProvider dialogs={dialogs}>{children}</FakeDialogsProvider>
+);
 
 describe('SearchHistoryModal', () => {
   const mockHistory = [
@@ -22,7 +29,7 @@ describe('SearchHistoryModal', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(window, 'confirm').mockImplementation(() => true);
+    dialogs = new FakeDialogs();
   });
 
   it('does not render when isOpen is false', () => {
@@ -35,11 +42,12 @@ describe('SearchHistoryModal', () => {
     expect(screen.getByText('Nenhuma busca registrada ainda.')).toBeInTheDocument();
   });
 
-  it('renders history content in modal mode', () => {
+  it('renders history content in modal mode', async () => {
     const onClose = vi.fn();
     const onRevertSearch = vi.fn();
     render(
       <SearchHistoryModal isOpen={true} onClose={onClose} history={mockHistory} onRevertSearch={onRevertSearch} />,
+      { wrapper: withDialogs },
     );
 
     expect(screen.getAllByText('Histórico de Buscas')[0]).toBeInTheDocument();
@@ -53,12 +61,10 @@ describe('SearchHistoryModal', () => {
 
     const revertBtn = screen.getByText('Desfazer Busca');
     fireEvent.click(revertBtn);
-    expect(window.confirm).toHaveBeenCalled();
-    expect(onRevertSearch).toHaveBeenCalledWith(1);
+    await waitFor(() => expect(onRevertSearch).toHaveBeenCalledWith(1));
+    expect(dialogs.asked[0]).toMatchObject({ title: 'Desfazer Busca', danger: true });
 
-    const closeBtn = screen.getByRole('button', { name: '' }); // the X button
-    // It has X SVG inside. Let's find button with top: 1.5rem
-    fireEvent.click(closeBtn);
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -163,7 +169,7 @@ describe('SearchHistoryModal', () => {
   });
 
   // #67: undoing an entry from outside the searches removes articles PRISMA must know were never identified.
-  it('warns about PRISMA before undoing an article added by hand, and keeps the usual question for a search', () => {
+  it('warns about PRISMA before undoing an article added by hand, and keeps the usual question for a search', async () => {
     const onRevertSearch = vi.fn();
     const manual = {
       ...mockHistory[0],
@@ -181,12 +187,15 @@ describe('SearchHistoryModal', () => {
           onRevertSearch={onRevertSearch}
         />
       </MemoryRouter>,
+      { wrapper: withDialogs },
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Desfazer inclusão/ }));
-    expect(vi.mocked(window.confirm).mock.calls[0][0]).toContain('Atenção (PRISMA)');
+    await waitFor(() => expect(onRevertSearch).toHaveBeenCalledTimes(1));
+    expect(dialogs.confirmMessage.mock.calls[0][0]).toContain('Atenção (PRISMA)');
     fireEvent.click(screen.getByRole('button', { name: /Desfazer Busca/ }));
-    expect(vi.mocked(window.confirm).mock.calls[1][0]).not.toContain('PRISMA');
+    await waitFor(() => expect(onRevertSearch).toHaveBeenCalledTimes(2));
+    expect(dialogs.confirmMessage.mock.calls[1][0]).not.toContain('PRISMA');
     expect(onRevertSearch.mock.calls).toEqual([[9], [1]]);
   });
 });

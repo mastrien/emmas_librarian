@@ -128,7 +128,6 @@ describe('ProjectDetailsPage search history', () => {
   };
 
   it('reverts a search and reloads the project', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const service = givenProject();
     service.getSearchHistory.mockResolvedValue([entry]);
     await renderProjectPage(service);
@@ -141,7 +140,6 @@ describe('ProjectDetailsPage search history', () => {
   });
 
   it('alerts when reverting fails', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const service = givenProject();
     service.getSearchHistory.mockResolvedValue([entry]);
     service.revertSearch.mockRejectedValue(new Error('locked'));

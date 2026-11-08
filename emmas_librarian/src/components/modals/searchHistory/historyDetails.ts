@@ -48,3 +48,15 @@ export function requestsText(breakdown: SearchBreakdown): string | null {
     .map(([db, outcome]) => `${label(db)} ${count(outcome.requests!)}`);
   return parts.length ? parts.join(' · ') : null;
 }
+
+const SORT_LABELS: Record<string, string> = { relevance: 'Relevância', citations: 'Citações', date: 'Data' };
+
+/**
+ * The name of the order a search asked its bases for; an unknown value is shown as stored.
+ *
+ * Usage:
+ *   sortLabel('citations'); // "Citações"
+ */
+export function sortLabel(sortBy: string): string {
+  return SORT_LABELS[sortBy] ?? sortBy;
+}

@@ -1,23 +1,16 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { X, Calendar, Search, ChevronRight, RotateCcw, Pencil, RefreshCw } from 'lucide-react';
-import { createPortal } from 'react-dom';
-import type { SearchBreakdown, SearchHistoryItem, SearchReportFormat } from '../../types';
-import { restoreSearch } from '../../pages/Search/searchQueries';
-import { HistoryBreakdown } from './searchHistory/HistoryBreakdown';
-import { SearchMonitorControl, useSearchMonitors } from './searchHistory/SearchMonitorControl';
-import { isMonitorResult } from '../../utils/searchMonitor';
-import { historyLimitText, parseStoredObject } from './searchHistory/historyDetails';
-import { databaseLabel } from './searchSummary/SearchBreakdownList';
+import { RotateCcw } from 'lucide-react';
+import type { SearchHistoryItem, SearchReportFormat } from '../../types';
+import { Modal } from '../common/Modal';
+import { useSearchMonitors } from './searchHistory/SearchMonitorControl';
 import { SearchStrategyExport } from './searchHistory/SearchStrategyExport';
-import { undoTexts } from './searchHistory/undoTexts';
-
-type HistoryItem = SearchHistoryItem;
+import { HistoryEntry } from './searchHistory/HistoryEntry';
+import './searchHistory/searchHistory.css';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  history: HistoryItem[];
+  history: SearchHistoryItem[];
   embedded?: boolean;
   onRevertSearch?: (searchId: number) => void;
   // Enables "Nova busca a partir desta", which opens the search page preloaded with that search.
@@ -28,373 +21,74 @@ interface Props {
 
 type HistoryContentProps = Pick<Props, 'history' | 'onRevertSearch' | 'projectId'>;
 
-const historyLinkStyle: React.CSSProperties = {
-  background: 'rgba(79, 70, 229, 0.1)',
-  color: 'var(--color-primary)',
-  padding: '0.2rem 0.6rem',
-  borderRadius: 'var(--radius-md)',
-  fontSize: '0.8rem',
-  fontWeight: 600,
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.3rem',
-  textDecoration: 'none',
-};
-
-// Only database searches can be rebuilt; imports and manual additions have no query to reuse.
-const RerunSearchLink: React.FC<{ projectId: number; item: HistoryItem }> = ({ projectId, item }) =>
-  restoreSearch(item) ? (
-    <Link
-      to={`/projects/${projectId}/search?from=${item.id}&rerun=1`}
-      title="Rodar esta busca de novo, olhando o que saiu depois dela"
-      style={historyLinkStyle}
-    >
-      <RefreshCw size={12} /> Rodar de novo
-    </Link>
-  ) : null;
-
-const NewSearchFromLink: React.FC<{ projectId: number; item: HistoryItem }> = ({ projectId, item }) =>
-  restoreSearch(item) ? (
-    <Link
-      to={`/projects/${projectId}/search?from=${item.id}`}
-      title="Abrir o construtor de busca com esta query"
-      style={historyLinkStyle}
-    >
-      <Pencil size={12} /> Nova busca a partir desta
-    </Link>
-  ) : null;
+const DESCRIPTION = 'Registro de todas as buscas realizadas neste projeto.';
 
 const HistoryContent: React.FC<HistoryContentProps> = ({ history, onRevertSearch, projectId }) => {
   const monitoring = useSearchMonitors(projectId);
   return (
-    <div style={{ flex: 1, overflowY: 'auto', paddingRight: '1rem' }}>
+    <div className="history-content">
       {monitoring.error && (
-        <div role="alert" style={{ marginBottom: '0.75rem', fontSize: '0.85rem', color: 'var(--color-danger)' }}>
+        <div role="alert" className="history-monitor-error">
           {monitoring.error}
         </div>
       )}
       {history.length === 0 ? (
-        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-          Nenhuma busca registrada ainda.
-        </div>
+        <div className="history-empty">Nenhuma busca registrada ainda.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {history.map((item) => {
-            const breakdown = parseStoredObject<SearchBreakdown>(item.results_breakdown);
-            const translated = parseStoredObject<Record<string, string>>(item.translated_queries);
-            const limitText = historyLimitText(item);
-
-            return (
-              <div
-                key={item.id}
-                style={{
-                  border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '1.5rem',
-                  background: 'var(--bg-main)',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '1rem',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      color: 'var(--text-muted)',
-                      fontSize: '0.9rem',
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    <span
-                      style={{
-                        background: 'rgba(79, 70, 229, 0.1)',
-                        color: 'var(--color-primary)',
-                        padding: '0.15rem 0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                        border: '1px solid rgba(79, 70, 229, 0.2)',
-                      }}
-                    >
-                      ID: #{item.id}
-                    </span>
-                    <Calendar size={14} /> {new Date(item.created_at).toLocaleString()}
-                    {item.sort_by && (
-                      <>
-                        <span style={{ margin: '0 0.5rem', color: 'var(--border-color)' }}>|</span>
-                        <span>
-                          Ordenação:{' '}
-                          <strong>
-                            {item.sort_by === 'relevance'
-                              ? 'Relevância'
-                              : item.sort_by === 'citations'
-                                ? 'Citações'
-                                : item.sort_by === 'date'
-                                  ? 'Data'
-                                  : item.sort_by}
-                          </strong>
-                        </span>
-                      </>
-                    )}
-                    {limitText && (
-                      <>
-                        <span style={{ margin: '0 0.5rem', color: 'var(--border-color)' }}>|</span>
-                        <span>
-                          Limite: <strong>{limitText}</strong>
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    {projectId !== undefined && <RerunSearchLink projectId={projectId} item={item} />}
-                    {projectId !== undefined && <NewSearchFromLink projectId={projectId} item={item} />}
-                    {onRevertSearch && (
-                      <button
-                        onClick={() => {
-                          if (window.confirm(undoTexts(item).confirm)) onRevertSearch(item.id);
-                        }}
-                        title={undoTexts(item).title}
-                        style={{
-                          background: 'rgba(239, 68, 68, 0.1)',
-                          color: 'var(--color-danger)',
-                          border: 'none',
-                          padding: '0.2rem 0.6rem',
-                          borderRadius: 'var(--radius-md)',
-                          fontSize: '0.8rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.3rem',
-                          transition: 'all var(--transition-fast)',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'var(--color-danger)';
-                          e.currentTarget.style.color = 'white';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                          e.currentTarget.style.color = 'var(--color-danger)';
-                        }}
-                      >
-                        <RotateCcw size={12} /> {undoTexts(item).label}
-                      </button>
-                    )}
-                    <div
-                      style={{
-                        background: 'var(--color-primary)',
-                        color: 'white',
-                        padding: '0.2rem 0.75rem',
-                        borderRadius: 'var(--radius-xl)',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {item.total_results} artigos salvos
-                    </div>
-                  </div>
-                </div>
-
-                {isMonitorResult(item) && (
-                  <div
-                    style={{
-                      marginBottom: '0.75rem',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      color: 'var(--color-primary)',
-                    }}
-                  >
-                    Resultado do monitoramento
-                  </div>
-                )}
-                {projectId !== undefined && (
-                  <div style={{ marginBottom: '1rem' }}>
-                    <SearchMonitorControl
-                      item={item as SearchHistoryItem}
-                      monitor={monitoring.monitors.find((m) => m.search_id === item.id)}
-                      onChange={(days) => void monitoring.set(item.id, days)}
-                    />
-                  </div>
-                )}
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <div
-                    style={{
-                      fontWeight: 600,
-                      color: 'var(--text-heading)',
-                      marginBottom: '0.5rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                    }}
-                  >
-                    <Search size={16} /> Query Unificada
-                  </div>
-                  <div
-                    style={{
-                      padding: '0.75rem',
-                      background: 'var(--bg-surface)',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border-color)',
-                      fontStyle: 'italic',
-                      color: 'var(--text-main)',
-                    }}
-                  >
-                    {item.unified_query}
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                  <HistoryBreakdown breakdown={breakdown} uniqueResults={item.unique_results} />
-
-                  <div>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        color: 'var(--text-heading)',
-                        marginBottom: '0.75rem',
-                        fontSize: '0.9rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.4rem',
-                      }}
-                    >
-                      <ChevronRight size={14} /> Queries Traduzidas
-                    </div>
-                    <details style={{ fontSize: '0.8rem', cursor: 'pointer' }}>
-                      <summary style={{ color: 'var(--color-primary)', fontWeight: 500 }}>
-                        Ver detalhes da tradução
-                      </summary>
-                      <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                        {Object.entries(translated).map(([db, q]) => (
-                          <div
-                            key={db}
-                            style={{
-                              padding: '0.5rem',
-                              background: 'var(--bg-surface)',
-                              borderRadius: 'var(--radius-sm)',
-                              fontFamily: 'monospace',
-                              wordBreak: 'break-all',
-                            }}
-                          >
-                            <strong>{databaseLabel(db)}:</strong> {q}
-                          </div>
-                        ))}
-                      </div>
-                    </details>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div className="history-list">
+          {history.map((item) => (
+            <HistoryEntry
+              key={item.id}
+              item={item}
+              onRevertSearch={onRevertSearch}
+              projectId={projectId}
+              monitor={monitoring.monitors.find((m) => m.search_id === item.id)}
+              onMonitorChange={(days) => void monitoring.set(item.id, days)}
+            />
+          ))}
         </div>
       )}
     </div>
   );
 };
 
-export const SearchHistoryModal: React.FC<Props> = ({
-  isOpen,
-  onClose,
-  history,
-  embedded,
-  onRevertSearch,
-  projectId,
-  onExportStrategy,
-}) => {
+/**
+ * The project's search history: every search, import and manual addition, with undo, re-run and monitoring.
+ * Shown as the project's "Histórico" tab (embedded) or in a window.
+ *
+ * @example <SearchHistoryModal isOpen embedded history={history} projectId={4} onRevertSearch={revert} onClose={close} />
+ */
+export const SearchHistoryModal: React.FC<Props> = (props) => {
+  const { isOpen, onClose, history, embedded, onRevertSearch, projectId, onExportStrategy } = props;
   if (!isOpen) return null;
+  const exportButtons = onExportStrategy && <SearchStrategyExport onExport={onExportStrategy} />;
+  const content = <HistoryContent history={history} onRevertSearch={onRevertSearch} projectId={projectId} />;
 
-  // Embedded mode: render inline without portal
   if (embedded) {
     return (
       <div className="fade-in">
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h2
-            style={{
-              fontSize: '1.5rem',
-              margin: '0 0 0.5rem 0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-            }}
-          >
+        <div className="history-heading">
+          <h2>
             <RotateCcw size={24} /> Histórico de Buscas
           </h2>
-          <p style={{ color: 'var(--text-muted)', margin: 0 }}>Registro de todas as buscas realizadas neste projeto.</p>
-          {onExportStrategy && <SearchStrategyExport onExport={onExportStrategy} />}
+          <p>{DESCRIPTION}</p>
+          {exportButtons}
         </div>
-        <HistoryContent history={history} onRevertSearch={onRevertSearch} projectId={projectId} />
+        {content}
       </div>
     );
   }
 
-  // Modal mode: render in portal
-  return createPortal(
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        backdropFilter: 'blur(4px)',
-      }}
+  return (
+    <Modal
+      label="Histórico de Buscas"
+      title="Histórico de Buscas"
+      description={DESCRIPTION}
+      onClose={onClose}
+      width={900}
     >
-      <div
-        className="card fade-in"
-        style={{
-          width: '90%',
-          maxWidth: '900px',
-          maxHeight: '85vh',
-          background: 'var(--bg-surface)',
-          padding: '2.5rem',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '1.5rem',
-            right: '1.5rem',
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-          }}
-        >
-          <X size={24} />
-        </button>
-
-        <div style={{ marginBottom: '2rem' }}>
-          <h2
-            style={{
-              fontSize: '1.8rem',
-              margin: '0 0 0.5rem 0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-            }}
-          >
-            <RotateCcw size={28} /> Histórico de Buscas
-          </h2>
-          <p style={{ color: 'var(--text-muted)', margin: 0 }}>Registro de todas as buscas realizadas neste projeto.</p>
-          {onExportStrategy && <SearchStrategyExport onExport={onExportStrategy} />}
-        </div>
-
-        <HistoryContent history={history} onRevertSearch={onRevertSearch} projectId={projectId} />
-      </div>
-    </div>,
-    document.body,
+      {exportButtons}
+      {content}
+    </Modal>
   );
 };

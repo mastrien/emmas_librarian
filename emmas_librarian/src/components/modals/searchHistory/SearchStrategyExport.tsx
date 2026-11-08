@@ -2,6 +2,7 @@ import React from 'react';
 import { Download } from 'lucide-react';
 import type { SearchReportFormat } from '../../../types';
 import { exportWithFeedback } from '../../../utils/exportWithFeedback';
+import './searchHistory.css';
 
 interface SearchStrategyExportProps {
   /** Saves the report and answers the path, or null when the save dialog was cancelled. */
@@ -21,14 +22,13 @@ const FORMATS: { format: SearchReportFormat; label: string }[] = [
  *   <SearchStrategyExport onExport={(format) => projectService.exportSearchReport(project.id, format)} />
  */
 export const SearchStrategyExport: React.FC<SearchStrategyExportProps> = ({ onExport }) => (
-  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+  <div className="history-export">
     {FORMATS.map(({ format, label }) => (
       <button
         key={format}
         type="button"
-        className="btn-secondary"
+        className="btn-secondary history-export-button"
         onClick={() => exportWithFeedback(() => onExport(format), `Estratégia de busca (${label})`)}
-        style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
       >
         <Download size={16} /> Exportar estratégia de busca ({label})
       </button>

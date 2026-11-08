@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { SearchHistoryItem } from '../../../../types';
-import { historyLimitText, parseStoredObject, requestsText } from '../historyDetails';
+import { historyLimitText, parseStoredObject, requestsText, sortLabel } from '../historyDetails';
 
 const entry = (overrides: Partial<SearchHistoryItem>): SearchHistoryItem => ({
   id: 1,
@@ -40,5 +40,16 @@ describe('requestsText', () => {
   it('lists the requests of each base that recorded them', () => {
     expect(requestsText({ openalex: { count: 1000, requests: 10 }, crossref: { count: 3 } })).toBe('OpenAlex 10');
     expect(requestsText({ crossref: { count: 3 } })).toBeNull();
+  });
+});
+
+describe('sortLabel', () => {
+  it('names the known orders and shows an unknown one as stored', () => {
+    expect([sortLabel('relevance'), sortLabel('citations'), sortLabel('date'), sortLabel('year')]).toEqual([
+      'Relevância',
+      'Citações',
+      'Data',
+      'year',
+    ]);
   });
 });
