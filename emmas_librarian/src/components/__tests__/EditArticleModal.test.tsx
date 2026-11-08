@@ -6,6 +6,10 @@ import { ServicesProvider } from '../../contexts/ServicesContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { FrontendAppError } from '../../utils/AppError';
 import type { Article } from '../../types';
+import { FakeDialogs, withFakeDialogs } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const renderWithDialogs = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
 
 const article = {
   id: 1,
@@ -44,7 +48,7 @@ function GlobalErrorProbe(): React.ReactNode {
 function renderModal(overrides: Partial<React.ComponentProps<typeof EditArticleModal>> = {}) {
   const onClose = vi.fn();
   const onSubmit = vi.fn().mockResolvedValue(undefined);
-  render(
+  renderWithDialogs(
     <ServicesProvider apiService={service}>
       <GlobalErrorProvider>
         <EditArticleModal isOpen={true} onClose={onClose} article={article} onSubmit={onSubmit} {...overrides} />
@@ -63,7 +67,7 @@ const aiButton = () => screen.getByRole('button', { name: /Preencher com IA/ });
 
 beforeEach(() => {
   service = FakeProjectService.create();
-  vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+  dialogs = new FakeDialogs();
 });
 
 afterEach(() => vi.restoreAllMocks());
@@ -78,7 +82,7 @@ describe('EditArticleModal visibility', () => {
   it('closes from the X and Cancelar buttons without submitting', () => {
     const { onClose, onSubmit } = renderModal();
 
-    fireEvent.click(screen.getByText('Editar Metadados do Artigo').nextElementSibling!.lastElementChild!);
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 
     expect(onClose).toHaveBeenCalledTimes(2);
@@ -86,7 +90,7 @@ describe('EditArticleModal visibility', () => {
   });
 
   it('refills the form when reopened for another article', () => {
-    const { rerender } = render(
+    const { rerender } = renderWithDialogs(
       <ServicesProvider apiService={service}>
         <GlobalErrorProvider>
           <EditArticleModal isOpen={true} onClose={vi.fn()} article={article} onSubmit={vi.fn()} />
@@ -144,7 +148,7 @@ describe('EditArticleModal submit', () => {
 
     submit();
 
-    expect(window.alert).toHaveBeenCalledWith('O título é obrigatório.');
+    expect(dialogs.informMessage).toHaveBeenCalledWith('O título é obrigatório.');
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
@@ -176,7 +180,7 @@ describe('EditArticleModal submit', () => {
 
     submit();
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith(`Erro ao editar artigo: ${message}`));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith(`Erro ao editar artigo: ${message}`));
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Cancelar' })).toBeEnabled();
   });
@@ -255,7 +259,7 @@ describe('EditArticleModal AI fill', () => {
     fireEvent.click(aiButton());
 
     expect(await screen.findByRole('status')).toHaveTextContent('Configure a chave');
-    expect(window.alert).not.toHaveBeenCalled();
+    expect(dialogs.informMessage).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -270,7 +274,7 @@ describe('EditArticleModal AI fill', () => {
 
     fireEvent.click(aiButton());
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith(`Erro ao extrair metadados: ${message}`));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith(`Erro ao extrair metadados: ${message}`));
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });
