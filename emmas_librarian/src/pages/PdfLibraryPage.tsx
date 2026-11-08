@@ -7,6 +7,7 @@ import { PdfMetrics } from './PdfLibrary/PdfMetrics';
 import { PdfTable } from './PdfLibrary/PdfTable';
 import { PdfLinkDialog } from './PdfLibrary/PdfLinkDialog';
 import { usePdfLink } from './PdfLibrary/usePdfLink';
+import { useDialogs } from '../components/common/dialogs/DialogProvider';
 import './PdfLibrary/pdfLibrary.css';
 
 const LibraryHeader: React.FC<{ onUpload: () => void }> = ({ onUpload }) => (
@@ -67,7 +68,9 @@ function useStoredPdfs() {
 export const PdfLibraryPage: React.FC = () => {
   const { pdfs, loading, loadData, projectService } = useStoredPdfs();
   const [searchTerm, setSearchTerm] = useState('');
-  const link = usePdfLink(projectService, loadData, (message) => alert(message));
+  // The app's own windows, not window.confirm/alert (Arca 103/134).
+  const { confirm, inform } = useDialogs();
+  const link = usePdfLink(projectService, loadData, (message) => void inform({ title: 'Erro ao vincular', message }));
 
   const handleUploadDirectPdf = async () => {
     try {
@@ -77,7 +80,7 @@ export const PdfLibraryPage: React.FC = () => {
         loadData();
       }
     } catch (err) {
-      alert('Erro ao realizar upload do PDF: ' + err);
+      await inform({ title: 'Erro no upload', message: 'Erro ao realizar upload do PDF: ' + err });
     }
   };
 
@@ -86,12 +89,18 @@ export const PdfLibraryPage: React.FC = () => {
     const warningMsg = isShared
       ? `Atenção: Este PDF está sendo usado em ${pdf.articles.length} artigo(s). Excluí-lo removerá permanentemente o arquivo físico e limpará cascata de destaques, anotações e indexadores de IA em todos os projetos associados. Deseja mesmo prosseguir?`
       : 'Deseja excluir permanentemente este PDF do sistema? Esta ação não pode ser desfeita.';
-    if (window.confirm(warningMsg)) {
+    const confirmed = await confirm({
+      title: 'Excluir PDF',
+      message: warningMsg,
+      confirmLabel: 'Excluir PDF',
+      danger: true,
+    });
+    if (confirmed) {
       try {
         await projectService.deletePdfLibraryRecord(pdf.file_path);
         loadData();
       } catch (err) {
-        alert('Erro ao excluir PDF: ' + err);
+        await inform({ title: 'Erro ao excluir', message: 'Erro ao excluir PDF: ' + err });
       }
     }
   };

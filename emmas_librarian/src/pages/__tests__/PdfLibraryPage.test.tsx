@@ -1,7 +1,10 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { PdfLibraryPage } from '../PdfLibraryPage';
+import { FakeDialogs, FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
 import { ServicesContext } from '../../contexts/ServicesContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 
@@ -20,7 +23,9 @@ const renderPage = () => {
   return render(
     <BrowserRouter>
       <ServicesContext.Provider value={fakeService as any}>
-        <PdfLibraryPage />
+        <FakeDialogsProvider dialogs={dialogs}>
+          <PdfLibraryPage />
+        </FakeDialogsProvider>
       </ServicesContext.Provider>
     </BrowserRouter>,
   );
@@ -28,6 +33,7 @@ const renderPage = () => {
 
 describe('PdfLibraryPage', () => {
   beforeEach(() => {
+    dialogs = new FakeDialogs();
     vi.clearAllMocks();
     fakeService.reset();
   });
@@ -157,7 +163,7 @@ describe('PdfLibraryPage', () => {
   it('handles upload direct pdf error', async () => {
     fakeService.getStoredPdfs.mockResolvedValue([]);
     fakeService.openPdfDialog.mockRejectedValue(new Error('Dialog fail'));
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const alertSpy = dialogs.informMessage;
 
     renderPage();
 
@@ -170,7 +176,6 @@ describe('PdfLibraryPage', () => {
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith('Erro ao realizar upload do PDF: Error: Dialog fail');
     });
-    alertSpy.mockRestore();
   });
 
   it('handles delete pdf for orphan file', async () => {
@@ -185,7 +190,7 @@ describe('PdfLibraryPage', () => {
         articles: [],
       },
     ]);
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirmSpy = dialogs.confirmMessage;
 
     renderPage();
 
@@ -203,7 +208,6 @@ describe('PdfLibraryPage', () => {
       expect(fakeService.deletePdfLibraryRecord).toHaveBeenCalledWith('orphan.pdf');
       expect(fakeService.getStoredPdfs).toHaveBeenCalledTimes(2);
     });
-    confirmSpy.mockRestore();
   });
 
   it('handles delete pdf for shared file', async () => {
@@ -218,7 +222,7 @@ describe('PdfLibraryPage', () => {
         articles: [{ article_id: 1, article_title: 'A', project_id: 1, project_name: 'P' }],
       },
     ]);
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirmSpy = dialogs.confirmMessage;
 
     renderPage();
 
@@ -235,7 +239,6 @@ describe('PdfLibraryPage', () => {
       );
       expect(fakeService.deletePdfLibraryRecord).toHaveBeenCalledWith('shared.pdf');
     });
-    confirmSpy.mockRestore();
   });
 
   it('handles delete pdf error', async () => {
@@ -250,9 +253,8 @@ describe('PdfLibraryPage', () => {
         articles: [],
       },
     ]);
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     fakeService.deletePdfLibraryRecord.mockRejectedValue(new Error('Delete fail'));
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const alertSpy = dialogs.informMessage;
 
     renderPage();
 
@@ -265,8 +267,6 @@ describe('PdfLibraryPage', () => {
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith('Erro ao excluir PDF: Error: Delete fail');
     });
-    confirmSpy.mockRestore();
-    alertSpy.mockRestore();
   });
 
   it('handles link modal open, load projects, and confirm link', async () => {
@@ -393,5 +393,46 @@ describe('PdfLibraryPage', () => {
     // navigate to project (text)
     fireEvent.click(screen.getByText(/Projeto:/).closest('span')!);
     expect(navigateMock).toHaveBeenCalledWith('/projects/88');
+  });
+
+  const ORPHAN = {
+    id: 1,
+    file_path: 'orphan.pdf',
+    file_hash: 'h',
+    filename: 'orphan.pdf',
+    file_size: 1,
+    created_at: '',
+    articles: [],
+  };
+
+  // The answer is a promise (Arca 134): check only after the question was answered, or a missing check passes.
+  it('keeps the PDF when the deletion is declined', async () => {
+    fakeService.getStoredPdfs.mockResolvedValue([ORPHAN]);
+    dialogs.confirmMessage.mockReturnValue(false);
+    renderPage();
+    fireEvent.click((await screen.findAllByTitle('Excluir PDF'))[0]);
+
+    await waitFor(() => expect(dialogs.asked).toHaveLength(1));
+    await act(async () => {});
+
+    expect(fakeService.deletePdfLibraryRecord).not.toHaveBeenCalled();
+  });
+
+  it('tells a failed link in the app window', async () => {
+    fakeService.getStoredPdfs.mockResolvedValue([ORPHAN]);
+    fakeService.getProjects.mockResolvedValue([{ id: 100, name: 'Project 100', created_at: '' }]);
+    fakeService.getArticles.mockResolvedValue([
+      { id: 200, title: 'Article 200', project_id: 100, status: 'new' } as never,
+    ]);
+    fakeService.linkPdfToArticle.mockRejectedValue('disco cheio');
+    renderPage();
+    fireEvent.click((await screen.findAllByTitle('Vincular a outro Artigo'))[0]);
+    fireEvent.change((await screen.findAllByRole('combobox'))[0], { target: { value: '100' } });
+    await waitFor(() => expect(screen.getAllByRole('combobox')).toHaveLength(2));
+    fireEvent.change(screen.getAllByRole('combobox')[1], { target: { value: '200' } });
+
+    fireEvent.click(screen.getByText('Vincular PDF'));
+
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao vincular PDF: disco cheio'));
   });
 });
