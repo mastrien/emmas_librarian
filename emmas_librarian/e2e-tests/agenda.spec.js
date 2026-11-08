@@ -26,7 +26,7 @@ test.describe('Agenda & Prazos E2E Tests', () => {
     await addVenueBtn.click();
 
     // 3. Fill venue modal form with unique title & acronym to avoid database strict mode collisions
-    const modalTitle = window.locator('h3', { hasText: 'Novo Evento / Periódico' });
+    const modalTitle = window.getByRole('dialog', { name: 'Novo Evento / Periódico' });
     await expect(modalTitle).toBeVisible();
 
     const timestamp = Date.now();

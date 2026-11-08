@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { X, Tag, Loader2 } from 'lucide-react';
+import { Tag, Loader2 } from 'lucide-react';
+import { Modal } from '../common/Modal';
 import { useProjectService } from '../../contexts/ServicesContext';
 import type { ProjectCategory } from '../../types';
 import { describeError } from '../../utils/describeError';
@@ -20,25 +20,6 @@ interface ProjectCategoriesModalProps {
 // 720px, approved in the validation of epic #44: at 500px the name field, the import/export buttons and long
 // option names were cramped. The modal becomes a full page later; until then only its look changes.
 export const CATEGORIES_MODAL_WIDTH = 720;
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0,0,0,0.5)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 99999,
-};
-
-const cardStyle: React.CSSProperties = {
-  padding: '2rem',
-  width: `${CATEGORIES_MODAL_WIDTH}px`,
-  maxWidth: '95%',
-  maxHeight: '90vh',
-  overflowY: 'auto',
-  background: 'var(--bg-main)',
-};
 
 // The project's categories and the calls that change them; a failure is said in the modal, not in the console only.
 function useProjectCategories(projectId: number, isOpen: boolean) {
@@ -73,24 +54,6 @@ function useProjectCategories(projectId: number, isOpen: boolean) {
   };
   return { service, categories, loading, failure, clearFailure: () => setFailure(null), load, change };
 }
-
-const ModalHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-    <div>
-      <h2
-        id="categories-modal-title"
-        style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-      >
-        <Tag className="text-primary" size={24} />
-        Categorias do Projeto
-      </h2>
-      <p style={{ margin: 0, color: 'var(--text-muted)' }}>Crie campos personalizados para classificar os artigos.</p>
-    </div>
-    <button type="button" className="categories-icon-button" onClick={onClose} title="Fechar" aria-label="Fechar">
-      <X size={24} />
-    </button>
-  </div>
-);
 
 const EmptyList: React.FC<{ loading: boolean }> = ({ loading }) => (
   <div className="categories-row" style={{ justifyContent: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
@@ -154,32 +117,33 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
     ),
   );
 
-  return createPortal(
-    <div style={overlayStyle}>
-      <div
-        className="card fade-in"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="categories-modal-title"
-        style={cardStyle}
-      >
-        <ModalHeader onClose={onClose} />
-        <CategoryTemplatesPanel
-          categories={categories}
-          applySet={(entries) => service.applyCategorySet(projectId, entries)}
-          readSetFile={service.readCategorySetFile}
-          saveFile={service.saveExportedFile}
-          onApplied={project.load}
-        />
-        <NewCategoryForm adding={adding} onCreate={create} />
-        <section aria-label="Categorias do projeto" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <h3 className="categories-section-title">Categorias do projeto ({categories.length})</h3>
-          {failure && <CategoriesNotice notice={failure} onDismiss={project.clearFailure} />}
-          {/* The spinner only stands for an empty list: a reload after a change keeps the rows on screen. */}
-          {categories.length === 0 ? <EmptyList loading={loading} /> : rows}
-        </section>
-      </div>
-    </div>,
-    document.body,
+  return (
+    <Modal
+      label="Categorias do Projeto"
+      title={
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Tag className="text-primary" size={24} />
+          Categorias do Projeto
+        </span>
+      }
+      description="Crie campos personalizados para classificar os artigos."
+      onClose={onClose}
+      width={CATEGORIES_MODAL_WIDTH}
+    >
+      <CategoryTemplatesPanel
+        categories={categories}
+        applySet={(entries) => service.applyCategorySet(projectId, entries)}
+        readSetFile={service.readCategorySetFile}
+        saveFile={service.saveExportedFile}
+        onApplied={project.load}
+      />
+      <NewCategoryForm adding={adding} onCreate={create} />
+      <section aria-label="Categorias do projeto" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <h3 className="categories-section-title">Categorias do projeto ({categories.length})</h3>
+        {failure && <CategoriesNotice notice={failure} onDismiss={project.clearFailure} />}
+        {/* The spinner only stands for an empty list: a reload after a change keeps the rows on screen. */}
+        {categories.length === 0 ? <EmptyList loading={loading} /> : rows}
+      </section>
+    </Modal>
   );
 };

@@ -34,3 +34,38 @@ test('a modal darkens the whole screen and its window is padded', async () => {
     await electronApp.close();
   }
 });
+
+// Validation of epic #44: the review page's guide grew past the window and its middle could not be read. On the
+// shared Modal (Arca 134) the window is capped and only the guide's text scrolls; title and "Entendi" stay in view.
+test('the help window fits the screen and only its text scrolls', async () => {
+  const electronApp = await launchApp();
+  const window = await getFirstWindow(electronApp);
+
+  try {
+    await createProject(window, 'Ajuda ' + Date.now());
+    await window.getByRole('link', { name: /Revisão sistemática/ }).click();
+    await window.getByTitle('Ajuda sobre esta página').click();
+
+    const dialog = window.getByRole('dialog', { name: 'Guia da Revisão Sistemática' });
+    await expect(dialog).toBeVisible();
+    const viewportHeight = await window.evaluate(() => window.innerHeight);
+    const box = await dialog.boundingBox();
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(viewportHeight);
+
+    const layout = await dialog.evaluate((el) => {
+      const body = el.querySelector('[data-testid="help-modal-body"]');
+      return {
+        windowScrolls: el.scrollHeight > el.clientHeight + 1,
+        bodyScrolls: body.scrollHeight > body.clientHeight,
+      };
+    });
+    expect(layout.windowScrolls).toBe(false);
+    await expect(dialog.getByRole('heading', { name: 'Guia da Revisão Sistemática' })).toBeInViewport();
+    await expect(dialog.getByRole('button', { name: 'Entendi' })).toBeInViewport();
+    // The review guide is longer than the window, so this is the case the validation hit.
+    expect(layout.bodyScrolls).toBe(true);
+  } finally {
+    await electronApp.close();
+  }
+});

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { HelpCircle, X } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import { createPortal } from 'react-dom';
 import { REVIEW_HELP } from './help/reviewHelp';
+import { Modal } from './Modal';
 
 const tutorials: Record<string, { title: string; content: React.ReactNode }> = {
   review: REVIEW_HELP,
@@ -330,55 +330,12 @@ export const HelpModal: React.FC<{ isOpen: boolean; onClose: () => void; pageKey
 
   // The card never grows past the window: the title and "Entendi" stay put and only the text scrolls (the review
   // page's guide overflowed the window and its middle could not be read, validation of epic #44).
-  return createPortal(
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        backdropFilter: 'blur(4px)',
-        padding: '1rem',
-      }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="help-modal-title"
-        className="card fade-in"
-        style={{
-          width: '100%',
-          maxWidth: '600px',
-          maxHeight: 'calc(100vh - 2rem)',
-          display: 'flex',
-          flexDirection: 'column',
-          background: 'var(--bg-surface)',
-          padding: '2.5rem',
-          position: 'relative',
-          boxSizing: 'border-box',
-        }}
-      >
-        <button
-          onClick={onClose}
-          aria-label="Fechar ajuda"
-          style={{
-            position: 'absolute',
-            top: '1.5rem',
-            right: '1.5rem',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--text-muted)',
-          }}
-        >
-          <X size={24} />
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', flex: 'none' }}>
-          <div
+  return (
+    <Modal
+      label={tutorial.title}
+      title={
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span
             style={{
               background: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
               color: 'var(--color-primary)',
@@ -388,27 +345,27 @@ export const HelpModal: React.FC<{ isOpen: boolean; onClose: () => void; pageKey
             }}
           >
             <HelpCircle size={28} />
-          </div>
-          <h2 id="help-modal-title" style={{ fontSize: '1.5rem', margin: 0, color: 'var(--text-heading)' }}>
-            {tutorial.title}
-          </h2>
-        </div>
-
-        <div
-          data-testid="help-modal-body"
-          style={{ color: 'var(--text-main)', lineHeight: '1.6', overflowY: 'auto', minHeight: 0, flex: '1 1 auto' }}
-        >
-          {tutorial.content}
-        </div>
-
-        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', flex: 'none' }}>
-          <button onClick={onClose} className="btn-primary" style={{ padding: '0.5rem 1.5rem' }}>
-            Entendi
-          </button>
-        </div>
+          </span>
+          {tutorial.title}
+        </span>
+      }
+      onClose={onClose}
+      closeLabel="Fechar ajuda"
+      width={600}
+    >
+      <div
+        data-testid="help-modal-body"
+        style={{ color: 'var(--text-main)', lineHeight: '1.6', overflowY: 'auto', minHeight: 0, flex: '1 1 auto' }}
+      >
+        {tutorial.content}
       </div>
-    </div>,
-    document.body,
+
+      <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end', flex: 'none' }}>
+        <button onClick={onClose} className="btn-primary" style={{ padding: '0.5rem 1.5rem' }}>
+          Entendi
+        </button>
+      </div>
+    </Modal>
   );
 };
 

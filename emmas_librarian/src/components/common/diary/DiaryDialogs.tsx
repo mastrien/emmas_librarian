@@ -1,5 +1,5 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
+import { Modal } from '../Modal';
 import { formatDiaryDate } from './diaryDates';
 
 export interface DiaryVersion {
@@ -9,57 +9,6 @@ export interface DiaryVersion {
 }
 
 const PREVIEW_LENGTH = 150;
-
-const DiaryDialog: React.FC<{ cardStyle: React.CSSProperties; children: React.ReactNode }> = ({
-  cardStyle,
-  children,
-}) =>
-  createPortal(
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        backdropFilter: 'blur(4px)',
-      }}
-    >
-      <div className="card fade-in" style={{ padding: '2rem', background: 'var(--bg-surface)', ...cardStyle }}>
-        {children}
-      </div>
-    </div>,
-    document.body,
-  );
-
-/**
- * Confirmation before permanently deleting a diary page.
- *
- * Usage:
- *   {confirming && <DeleteDiaryPageDialog date={date} onCancel={cancel} onConfirm={remove} />}
- */
-export const DeleteDiaryPageDialog: React.FC<{ date: string; onCancel: () => void; onConfirm: () => void }> = ({
-  date,
-  onCancel,
-  onConfirm,
-}) => (
-  <DiaryDialog cardStyle={{ maxWidth: '400px', textAlign: 'center' }}>
-    <h3 style={{ margin: '0 0 1rem 0' }}>Excluir página?</h3>
-    <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-      A página de <strong>{formatDiaryDate(date)}</strong> será excluída permanentemente.
-    </p>
-    <div style={{ display: 'flex', gap: '1rem' }}>
-      <button onClick={onCancel} className="btn-secondary" style={{ flex: 1 }}>
-        Cancelar
-      </button>
-      <button onClick={onConfirm} className="btn-primary" style={{ flex: 1, background: 'var(--color-danger)' }}>
-        Excluir
-      </button>
-    </div>
-  </DiaryDialog>
-);
 
 interface DiaryHistoryDialogProps {
   date: string;
@@ -75,13 +24,17 @@ interface DiaryHistoryDialogProps {
  *   {showHistory && <DiaryHistoryDialog date={date} versions={versions} onRestore={restore} onClose={close} />}
  */
 export const DiaryHistoryDialog: React.FC<DiaryHistoryDialogProps> = ({ date, versions, onRestore, onClose }) => (
-  <DiaryDialog
-    cardStyle={{ width: '500px', maxWidth: '90%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}
+  <Modal
+    label="Histórico de Versões"
+    title="Histórico de Versões"
+    description={
+      <>
+        Selecione uma versão anterior para restaurar no diário de <strong>{formatDiaryDate(date)}</strong>.
+      </>
+    }
+    onClose={onClose}
+    width={500}
   >
-    <h3 style={{ margin: '0 0 1rem 0', color: 'var(--text-heading)' }}>Histórico de Versões</h3>
-    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-      Selecione uma versão anterior para restaurar no diário de <strong>{formatDiaryDate(date)}</strong>.
-    </p>
     <div
       style={{
         flex: 1,
@@ -99,12 +52,7 @@ export const DiaryHistoryDialog: React.FC<DiaryHistoryDialogProps> = ({ date, ve
         versions.map((v) => <VersionCard key={v.id} version={v} onRestore={onRestore} />)
       )}
     </div>
-    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-      <button onClick={onClose} className="btn-secondary" style={{ padding: '0.5rem 1.5rem' }}>
-        Fechar
-      </button>
-    </div>
-  </DiaryDialog>
+  </Modal>
 );
 
 const NoVersions: React.FC = () => (

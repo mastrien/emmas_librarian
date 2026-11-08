@@ -94,13 +94,15 @@ describe('VenueFormModal initial state', () => {
 });
 
 describe('VenueFormModal closing', () => {
-  it('closes from the X button, the footer and the backdrop but not from the panel', () => {
+  // The shared Modal (Arca 134): the X, Esc and Cancelar close it; a click inside, or on the backdrop, does not.
+  it('closes from the X, Esc and the footer, not from a click on the window', () => {
     renderModal();
 
-    fireEvent.click(screen.getByTitle('Fechar'));
-    fireEvent.click(screen.getAllByRole('button', { name: 'Cancelar' }).at(-1)!);
     fireEvent.click(screen.getByText('Novo Evento / Periódico'));
-    fireEvent.click(document.body.lastElementChild as HTMLElement);
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Cancelar' }).at(-1)!);
 
     expect(onClose).toHaveBeenCalledTimes(3);
   });

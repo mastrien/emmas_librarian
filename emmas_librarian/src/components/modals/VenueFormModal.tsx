@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { X, Plus, Calendar, AlertCircle } from 'lucide-react';
+import { Plus, Calendar, AlertCircle } from 'lucide-react';
 import { ScientificVenue, ScientificMilestone, MilestoneFieldType } from '../../types';
 import {
   EMPTY_VENUE_DETAILS,
@@ -17,6 +16,7 @@ import {
 import { VenueDetailsFields } from './venueForm/VenueDetailsFields';
 import { MilestoneEditor } from './venueForm/MilestoneEditor';
 import { CustomMilestoneForm } from './venueForm/CustomMilestoneForm';
+import { Modal } from '../common/Modal';
 
 interface VenueFormModalProps {
   isOpen: boolean;
@@ -25,35 +25,6 @@ interface VenueFormModalProps {
   initialData?: ScientificVenue | null;
   initialDate?: string | null;
 }
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(0, 0, 0, 0.65)',
-  backdropFilter: 'blur(4px)',
-  zIndex: 99999,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '1.5rem',
-  overflow: 'hidden',
-};
-
-const panelStyle: React.CSSProperties = {
-  width: '100%',
-  maxWidth: '620px',
-  maxHeight: '90vh',
-  display: 'flex',
-  flexDirection: 'column',
-  backgroundColor: 'var(--bg-surface)',
-  borderRadius: 'var(--radius-lg)',
-  border: '1px solid var(--border-color)',
-  boxShadow: 'var(--shadow-lg)',
-  overflow: 'hidden',
-};
 
 /**
  * Create or edit a conference/journal and its deadlines for the agenda.
@@ -101,89 +72,50 @@ export const VenueFormModal: React.FC<VenueFormModalProps> = ({
     onClose();
   };
 
-  return createPortal(
-    <div style={overlayStyle} onClick={onClose}>
-      <div className="glass-panel" style={panelStyle} onClick={(e) => e.stopPropagation()}>
-        <VenueFormHeader isEditing={!!initialData} onClose={onClose} />
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1 }}>
-          <div
-            className="modal-body"
-            style={{
-              padding: '1.5rem',
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1.25rem',
-              flex: 1,
-            }}
-          >
-            {errorMsg && <VenueFormError message={errorMsg} />}
-            <VenueDetailsFields details={details} onChange={(changes) => setDetails({ ...details, ...changes })} />
-            <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0.25rem 0' }} />
-            <div>
-              <MilestonesHeader onAdd={() => setShowAddCustom(true)} />
-              {showAddCustom && (
-                <CustomMilestoneForm
-                  onConfirm={addCustomMilestone}
-                  onMissingLabel={() => setErrorMsg('Informe o nome do novo campo/prazo.')}
-                  onCancel={() => setShowAddCustom(false)}
+  const title = initialData ? 'Editar Evento / Periódico' : 'Novo Evento / Periódico';
+  return (
+    <Modal
+      label={title}
+      title={
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <Calendar size={20} color="var(--color-primary)" />
+          {title}
+        </span>
+      }
+      onClose={onClose}
+      width={620}
+    >
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {errorMsg && <VenueFormError message={errorMsg} />}
+          <VenueDetailsFields details={details} onChange={(changes) => setDetails({ ...details, ...changes })} />
+          <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0.25rem 0' }} />
+          <div>
+            <MilestonesHeader onAdd={() => setShowAddCustom(true)} />
+            {showAddCustom && (
+              <CustomMilestoneForm
+                onConfirm={addCustomMilestone}
+                onMissingLabel={() => setErrorMsg('Informe o nome do novo campo/prazo.')}
+                onCancel={() => setShowAddCustom(false)}
+              />
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {milestones.map((m, idx) => (
+                <MilestoneEditor
+                  key={idx}
+                  milestone={m}
+                  onChange={(changes) => updateMilestone(idx, changes)}
+                  onRemove={() => setMilestones((prev) => prev.filter((_, i) => i !== idx))}
                 />
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {milestones.map((m, idx) => (
-                  <MilestoneEditor
-                    key={idx}
-                    milestone={m}
-                    onChange={(changes) => updateMilestone(idx, changes)}
-                    onRemove={() => setMilestones((prev) => prev.filter((_, i) => i !== idx))}
-                  />
-                ))}
-              </div>
+              ))}
             </div>
           </div>
-          <VenueFormFooter onClose={onClose} />
-        </form>
-      </div>
-    </div>,
-    document.body,
+        </div>
+        <VenueFormFooter onClose={onClose} />
+      </form>
+    </Modal>
   );
 };
-
-const VenueFormHeader: React.FC<{ isEditing: boolean; onClose: () => void }> = ({ isEditing, onClose }) => (
-  <div
-    style={{
-      padding: '1.25rem 1.5rem',
-      borderBottom: '1px solid var(--border-color)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    }}
-  >
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-      <Calendar size={20} color="var(--color-primary)" />
-      <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-heading)' }}>
-        {isEditing ? 'Editar Evento / Periódico' : 'Novo Evento / Periódico'}
-      </h3>
-    </div>
-    <button
-      type="button"
-      onClick={onClose}
-      style={{
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        color: 'var(--text-muted)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '0.25rem',
-      }}
-      title="Fechar"
-    >
-      <X size={20} />
-    </button>
-  </div>
-);
 
 const VenueFormError: React.FC<{ message: string }> = ({ message }) => (
   <div
@@ -221,16 +153,7 @@ const MilestonesHeader: React.FC<{ onAdd: () => void }> = ({ onAdd }) => (
 );
 
 const VenueFormFooter: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <div
-    style={{
-      padding: '1rem 1.5rem',
-      borderTop: '1px solid var(--border-color)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      gap: '0.75rem',
-      backgroundColor: 'var(--bg-surface)',
-    }}
-  >
+  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
     <button type="button" onClick={onClose} className="btn-secondary">
       Cancelar
     </button>

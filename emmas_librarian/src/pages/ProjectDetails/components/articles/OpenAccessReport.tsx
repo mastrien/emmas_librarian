@@ -1,6 +1,6 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
 import { AlertTriangle, CheckCircle, Minus, XCircle } from 'lucide-react';
+import { Modal } from '../../../../components/common/Modal';
 import type { OpenAccessBatchReport } from '../../hooks/useOpenAccessPdfs';
 import { openAccessMessage, reportGroups, type OpenAccessMessage, type ReportEntry } from './openAccessText';
 
@@ -49,29 +49,19 @@ function heading(report: OpenAccessBatchReport): string {
 export const OpenAccessReport: React.FC<{ report: OpenAccessBatchReport; onClose: () => void }> = ({
   report,
   onClose,
-}) =>
-  createPortal(
-    <div className="oa-report__overlay">
-      <div className="card fade-in oa-report" role="dialog" aria-modal="true" aria-labelledby="oa-report-title">
-        <h3 id="oa-report-title">{heading(report)}</h3>
-        {reportGroups(report.entries).map((group) => (
-          <section key={group.label} aria-label={group.label}>
-            <h4>
-              {group.label} ({group.entries.length})
-            </h4>
-            <ul>
-              {group.entries.map((entry) => (
-                <EntryRow key={entry.articleId} entry={entry} />
-              ))}
-            </ul>
-          </section>
-        ))}
-        <div className="oa-report__actions">
-          <button type="button" className="btn-primary" onClick={onClose}>
-            Fechar
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body,
-  );
+}) => (
+  <Modal label={heading(report)} title={heading(report)} onClose={onClose} width={640} className="oa-report">
+    {reportGroups(report.entries).map((group) => (
+      <section key={group.label} aria-label={group.label}>
+        <h4>
+          {group.label} ({group.entries.length})
+        </h4>
+        <ul>
+          {group.entries.map((entry) => (
+            <EntryRow key={entry.articleId} entry={entry} />
+          ))}
+        </ul>
+      </section>
+    ))}
+  </Modal>
+);

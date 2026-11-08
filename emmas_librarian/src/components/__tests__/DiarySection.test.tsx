@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act, waitFor, within } from '@testing-library/react';
 import { DiarySection } from '../common/DiarySection';
 import { ServicesProvider } from '../../contexts/ServicesContext';
+import { DialogProvider } from '../common/dialogs/DialogProvider';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import type { DiaryEntry } from '../../types';
 import { localIsoDate } from '../../utils/localDate';
@@ -47,7 +48,9 @@ function givenEntries(...entries: DiaryEntry[]): void {
 function renderDiary() {
   return render(
     <ServicesProvider apiService={service}>
-      <DiarySection projectId={PROJECT_ID} />
+      <DialogProvider>
+        <DiarySection projectId={PROJECT_ID} />
+      </DialogProvider>
     </ServicesProvider>,
   );
 }
@@ -207,7 +210,8 @@ describe('DiarySection deletion', () => {
     await openEntry(PAST, 'a');
 
     fireEvent.click(deleteButton());
-    expect(screen.getByText('Excluir página?')).toBeInTheDocument();
+    // The app's own question (Arca 134), with the page's date.
+    expect(await screen.findByRole('dialog', { name: 'Excluir página?' })).toHaveTextContent(longDate(PAST));
     fireEvent.click(screen.getByRole('button', { name: 'Excluir' }));
 
     await screen.findByText('Diário do Projeto');
@@ -221,9 +225,9 @@ describe('DiarySection deletion', () => {
     await openEntry(PAST, 'a');
 
     fireEvent.click(deleteButton());
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancelar' }));
 
-    expect(screen.queryByText('Excluir página?')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Excluir página?')).not.toBeInTheDocument());
     expect(service.deleteDiaryEntry).not.toHaveBeenCalled();
   });
 });
