@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { CopyPlus } from 'lucide-react';
+import '../projectPage.css';
 
 /**
  * Full-screen hint shown while PDFs are dragged over the project page. It ignores pointer
@@ -11,24 +12,8 @@ import { CopyPlus } from 'lucide-react';
  */
 export const PdfDropOverlay: React.FC = () =>
   createPortal(
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 99999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '4px dashed var(--color-primary)',
-        pointerEvents: 'none',
-      }}
-    >
-      <h2 style={{ color: 'white', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+    <div className="pdf-drop-overlay">
+      <h2>
         <CopyPlus size={40} /> Solte seus PDFs aqui para importar
       </h2>
     </div>,

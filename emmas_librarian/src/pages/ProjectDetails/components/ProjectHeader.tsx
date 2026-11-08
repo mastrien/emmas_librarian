@@ -1,6 +1,7 @@
 import React from 'react';
 import { Edit2, Trash2, Check, X as XIcon } from 'lucide-react';
 import { Project } from '../../../types';
+import '../projectPage.css';
 
 interface ProjectHeaderProps {
   project: Project;
@@ -26,24 +27,14 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   return (
     <div>
       {isEditingName ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+        <div className="project-name-row project-name-row--editing">
           <input
+            className="project-name-input"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            style={{
-              fontSize: '2rem',
-              fontWeight: 700,
-              background: 'var(--bg-main)',
-              border: '1px solid var(--color-primary)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--text-heading)',
-              padding: '0.2rem 0.5rem',
-              width: '100%',
-              maxWidth: '600px',
-            }}
             autoFocus
           />
-          <button onClick={handleUpdateName} className="btn-primary" style={{ padding: '0.5rem' }}>
+          <button onClick={handleUpdateName} className="btn-primary project-name-confirm">
             <Check size={20} />
           </button>
           <button
@@ -51,44 +42,23 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               setIsEditingName(false);
               setNewName(project.name);
             }}
-            className="btn-secondary"
-            style={{ padding: '0.5rem' }}
+            className="btn-secondary project-name-confirm"
           >
             <XIcon size={20} />
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-          <h1 style={{ margin: 0, fontSize: '2rem' }}>{project.name}</h1>
-          <button
-            onClick={() => setIsEditingName(true)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              padding: '0.2rem',
-              display: 'flex',
-            }}
-          >
+        <div className="project-name-row">
+          <h1>{project.name}</h1>
+          <button onClick={() => setIsEditingName(true)} className="project-icon-button">
             <Edit2 size={20} />
           </button>
-          <button
-            onClick={handleDeleteProject}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--color-danger)',
-              cursor: 'pointer',
-              padding: '0.2rem',
-              display: 'flex',
-            }}
-          >
+          <button onClick={handleDeleteProject} className="project-icon-button project-icon-button--danger">
             <Trash2 size={20} />
           </button>
         </div>
       )}
-      <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+      <p className="project-meta">
         Criado em {new Date(project.created_at).toLocaleDateString()} &middot; {articlesCount} artigos no total
       </p>
     </div>
