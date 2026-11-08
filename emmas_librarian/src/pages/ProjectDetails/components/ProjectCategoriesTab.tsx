@@ -1,140 +1,99 @@
 import React from 'react';
 import { Tags, Download } from 'lucide-react';
-import { Project, Article } from '../../../types';
+import { Project, Article, ProjectCategory } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import { exportWithFeedback } from '../../../utils/exportWithFeedback';
+import { categoryCellText, type ProjectArticleCategory } from './categoriesTab/categoryCells';
+import './categoriesTab/categoriesTab.css';
 
 interface ProjectCategoriesTabProps {
   project: Project;
-  projectCategories: any[];
-  articleCategories: any[];
+  projectCategories: ProjectCategory[];
+  articleCategories: ProjectArticleCategory[];
   nonArchivedArticles: Article[];
   onCategorySaved?: () => void;
 }
 
-export const ProjectCategoriesTab: React.FC<ProjectCategoriesTabProps> = ({
-  project,
-  projectCategories,
-  articleCategories,
-  nonArchivedArticles,
-}) => {
+const CategoriesHead: React.FC<{ projectId: number }> = ({ projectId }) => {
   const projectService = useProjectService();
   return (
-    <div className="card fade-in" style={{ padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2 style={{ margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Tags size={24} color="var(--color-primary)" /> Categorias e Extrações
-        </h2>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button
-            className="btn-secondary"
-            onClick={() => exportWithFeedback(() => projectService.exportCsv(project.id), 'CSV')}
-          >
-            <Download size={18} /> Exportar CSV
-          </button>
-          <button
-            className="btn-secondary"
-            onClick={() => exportWithFeedback(() => projectService.exportXlsx(project.id), 'XLSX')}
-          >
-            <Download size={18} /> Exportar XLSX
-          </button>
-        </div>
-      </div>
-
-      <div style={{ overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-          <thead>
-            <tr style={{ background: 'var(--bg-main)', borderBottom: '2px solid var(--border-color)' }}>
-              <th
-                style={{
-                  padding: '1rem 1.5rem',
-                  color: 'var(--text-muted)',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                }}
-              >
-                ARTIGO
-              </th>
-              {projectCategories.map((cat) => (
-                <th
-                  key={cat.id}
-                  style={{
-                    padding: '1rem 1.5rem',
-                    color: 'var(--text-muted)',
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {cat.name}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {nonArchivedArticles.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={projectCategories.length + 1}
-                  style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}
-                >
-                  Nenhum artigo encontrado.
-                </td>
-              </tr>
-            ) : (
-              nonArchivedArticles.map((article) => (
-                <tr
-                  key={article.id}
-                  style={{
-                    borderBottom: '1px solid var(--border-color)',
-                    transition: 'background var(--transition-fast)',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-main)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <td style={{ padding: '1rem 1.5rem', maxWidth: '300px' }}>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        color: 'var(--text-heading)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        marginBottom: '0.25rem',
-                      }}
-                      title={article.title}
-                    >
-                      {article.title}
-                    </div>
-                  </td>
-                  {projectCategories.map((cat) => {
-                    const articleCat = articleCategories.find(
-                      (ac) => Number(ac.article_id) === Number(article.id) && Number(ac.category_id) === Number(cat.id),
-                    );
-                    return (
-                      <td
-                        key={cat.id}
-                        style={{
-                          padding: '1rem 1.5rem',
-                          minWidth: '150px',
-                          color: 'var(--text-main)',
-                          fontSize: '0.85rem',
-                        }}
-                      >
-                        {articleCat?.value === 'true'
-                          ? 'Sim'
-                          : articleCat?.value === 'false'
-                            ? 'Não'
-                            : articleCat?.value || '-'}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+    <div className="categories-tab-head">
+      <h2>
+        <Tags size={24} /> Categorias e Extrações
+      </h2>
+      <div className="categories-tab-exports">
+        <button
+          className="btn-secondary"
+          onClick={() => exportWithFeedback(() => projectService.exportCsv(projectId), 'CSV')}
+        >
+          <Download size={18} /> Exportar CSV
+        </button>
+        <button
+          className="btn-secondary"
+          onClick={() => exportWithFeedback(() => projectService.exportXlsx(projectId), 'XLSX')}
+        >
+          <Download size={18} /> Exportar XLSX
+        </button>
       </div>
     </div>
   );
 };
+
+const ArticleRow: React.FC<{ article: Article; categories: ProjectCategory[]; values: ProjectArticleCategory[] }> = (
+  props,
+) => (
+  <tr>
+    <td className="categories-cell-title">
+      <div title={props.article.title}>{props.article.title}</div>
+    </td>
+    {props.categories.map((cat) => (
+      <td key={cat.id} className="categories-cell-value">
+        {categoryCellText(props.values, props.article.id, cat.id)}
+      </td>
+    ))}
+  </tr>
+);
+
+/**
+ * The project's categories tab: every non-archived article with its value in each category, and the CSV/XLSX
+ * exports.
+ *
+ * @example <ProjectCategoriesTab project={p} projectCategories={cats} articleCategories={values} nonArchivedArticles={a} />
+ */
+export const ProjectCategoriesTab: React.FC<ProjectCategoriesTabProps> = (props) => (
+  <div className="card fade-in categories-tab">
+    <CategoriesHead projectId={props.project.id} />
+    <div className="categories-table-wrap">
+      <table className="categories-table">
+        <thead>
+          <tr>
+            <th>ARTIGO</th>
+            {props.projectCategories.map((cat) => (
+              <th key={cat.id} className="categories-th-category">
+                {cat.name}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {props.nonArchivedArticles.length === 0 ? (
+            <tr>
+              <td colSpan={props.projectCategories.length + 1} className="categories-empty">
+                Nenhum artigo encontrado.
+              </td>
+            </tr>
+          ) : (
+            props.nonArchivedArticles.map((article) => (
+              <ArticleRow
+                key={article.id}
+                article={article}
+                categories={props.projectCategories}
+                values={props.articleCategories}
+              />
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
