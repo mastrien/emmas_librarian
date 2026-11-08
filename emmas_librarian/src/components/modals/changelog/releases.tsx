@@ -8,6 +8,25 @@ export interface ChangelogRelease {
 /** Release notes shown after an update, newest first. Add new releases at the top. */
 export const CHANGELOG_RELEASES: ChangelogRelease[] = [
   {
+    title: 'Versão 1.3.1 — Correções pequenas',
+    items: [
+      <>
+        <strong>Nomes nas telas:</strong> o cartão de IA da investigação, nas Configurações, agora se chama
+        &quot;Investigação com IA&quot;, como a página. A página da investigação mostra &quot;Ollama Cloud&quot; em vez
+        do código interno do provedor, e o aviso de custo do monitoramento de buscas mostra o nome das bases
+        (&quot;OpenAlex, Web of Science&quot;) em vez dos códigos.
+      </>,
+      <>
+        <strong>Etiqueta Experimental:</strong> na aba &quot;Avaliar sugestões&quot; e na sugestão da triagem guiada,
+        ela esticava na largura toda. Agora fica do tamanho da palavra.
+      </>,
+      <>
+        <strong>Copiar citação:</strong> copiar de novo antes de o &quot;Copiado!&quot; sumir não corta mais o aviso
+        pela metade.
+      </>,
+    ],
+  },
+  {
     title: 'Versão 1.3.0 — Revisão sistemática e IA',
     items: [
       <>
