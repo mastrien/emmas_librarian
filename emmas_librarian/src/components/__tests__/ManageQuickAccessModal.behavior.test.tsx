@@ -4,6 +4,13 @@ import { ManageQuickAccessModal } from '../modals/ManageQuickAccessModal';
 import { ServicesProvider } from '../../contexts/ServicesContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import type { ProjectDocument } from '../../types';
+import { FakeDialogs, withFakeDialogs } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const renderWithDialogs = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
+beforeEach(() => {
+  dialogs = new FakeDialogs();
+});
 
 class FakeDataTransfer {
   private store = new Map<string, string>();
@@ -42,7 +49,7 @@ const modal = (documents: ProjectDocument[], isOpen = true, onClose = vi.fn()) =
   </ServicesProvider>
 );
 
-const renderModal = (documents: ProjectDocument[]) => render(modal(documents));
+const renderModal = (documents: ProjectDocument[]) => renderWithDialogs(modal(documents));
 const titleInput = () => screen.getByPlaceholderText('Ex: Trello do Projeto, Edital CAPES');
 const urlInput = () => screen.getByPlaceholderText('https://');
 const form = () => titleInput().closest('form') as HTMLFormElement;
@@ -53,7 +60,6 @@ const gaps = () => screen.queryAllByTestId('quick-access-drop-gap');
 beforeEach(() => {
   service = FakeProjectService.create();
   onDocumentsChanged = vi.fn();
-  vi.spyOn(window, 'alert').mockImplementation(() => undefined);
 });
 
 afterEach(() => {
@@ -62,7 +68,7 @@ afterEach(() => {
 
 describe('ManageQuickAccessModal lifecycle', () => {
   it('can be opened after rendering closed', () => {
-    const { rerender } = render(modal([doc(1)], false));
+    const { rerender } = renderWithDialogs(modal([doc(1)], false));
 
     rerender(modal([doc(1)], true));
 
@@ -71,9 +77,9 @@ describe('ManageQuickAccessModal lifecycle', () => {
 
   it('closes from the X button', () => {
     const onClose = vi.fn();
-    render(modal([], true, onClose));
+    renderWithDialogs(modal([], true, onClose));
 
-    fireEvent.click(screen.getByText('Gerenciar Acesso Rápido').nextElementSibling as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -131,7 +137,7 @@ describe('ManageQuickAccessModal PDF attachment', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Anexar PDF/ }));
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao selecionar o arquivo PDF'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao selecionar o arquivo PDF'));
   });
 
   it('disables attaching while a url is typed', () => {
@@ -175,7 +181,7 @@ describe('ManageQuickAccessModal submit validation', () => {
 
     fireEvent.submit(form());
 
-    expect(window.alert).toHaveBeenCalledWith('O título é obrigatório.');
+    expect(dialogs.informMessage).toHaveBeenCalledWith('O título é obrigatório.');
     expect(service.createProjectDocument).not.toHaveBeenCalled();
   });
 
@@ -185,7 +191,7 @@ describe('ManageQuickAccessModal submit validation', () => {
 
     fireEvent.submit(form());
 
-    expect(window.alert).toHaveBeenCalledWith('Por favor, escolha apenas um: Link (URL) ou Arquivo PDF.');
+    expect(dialogs.informMessage).toHaveBeenCalledWith('Por favor, escolha apenas um: Link (URL) ou Arquivo PDF.');
     expect(service.updateProjectDocument).not.toHaveBeenCalled();
   });
 
@@ -197,7 +203,7 @@ describe('ManageQuickAccessModal submit validation', () => {
 
     fireEvent.submit(form());
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao salvar documento: disk full'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao salvar documento: disk full'));
     expect(titleInput()).toHaveValue('T');
     expect(onDocumentsChanged).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Adicionar' })).toBeEnabled();
@@ -218,7 +224,7 @@ describe('ManageQuickAccessModal editing and deleting', () => {
   });
 
   it('does nothing when deletion is not confirmed', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    dialogs.confirmMessage.mockReturnValue(false);
     renderModal([doc(1)]);
 
     fireEvent.click(screen.getByTitle('Remover item'));
@@ -227,7 +233,6 @@ describe('ManageQuickAccessModal editing and deleting', () => {
   });
 
   it('deletes the item being edited and resets the form', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     renderModal([doc(1), doc(2)]);
     fireEvent.click(screen.getAllByTitle('Editar item')[1]);
 
@@ -239,7 +244,6 @@ describe('ManageQuickAccessModal editing and deleting', () => {
   });
 
   it('keeps editing another item when deleting a different one', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     renderModal([doc(1), doc(2)]);
     fireEvent.click(screen.getAllByTitle('Editar item')[0]);
 
@@ -250,13 +254,12 @@ describe('ManageQuickAccessModal editing and deleting', () => {
   });
 
   it('alerts when deletion fails', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     service.deleteProjectDocument.mockRejectedValue(new Error('locked'));
     renderModal([doc(1)]);
 
     fireEvent.click(screen.getByTitle('Remover item'));
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao remover documento: locked'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao remover documento: locked'));
     expect(onDocumentsChanged).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import { X as XIcon } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { ProjectDocument } from '../../types';
 import { describeError } from '../../utils/describeError';
@@ -9,6 +7,8 @@ import { useDocumentDrag } from './quickAccess/useDocumentDrag';
 import { useQuickAccessForm } from './quickAccess/useQuickAccessForm';
 import { QuickAccessDocumentList } from './quickAccess/QuickAccessDocumentList';
 import { QuickAccessForm } from './quickAccess/QuickAccessForm';
+import { Modal } from '../common/Modal';
+import { useDialogs } from '../common/dialogs/DialogProvider';
 
 interface ManageQuickAccessModalProps {
   isOpen: boolean;
@@ -17,29 +17,6 @@ interface ManageQuickAccessModalProps {
   documents: ProjectDocument[];
   onDocumentsChanged: () => void;
 }
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: 'rgba(0,0,0,0.5)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 99999,
-};
-
-const cardStyle: React.CSSProperties = {
-  padding: '2rem',
-  width: '640px',
-  maxWidth: '95%',
-  maxHeight: '90vh',
-  display: 'flex',
-  flexDirection: 'column',
-  background: 'var(--bg-main)',
-};
 
 const distinctCategories = (documents: ProjectDocument[]) =>
   Array.from(new Set(documents.map((d) => d.category?.trim()).filter((c): c is string => Boolean(c))));
@@ -58,6 +35,7 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({
   onDocumentsChanged,
 }) => {
   const projectService = useProjectService();
+  const { confirm, inform } = useDialogs();
   // Local copy so a drag shows the new order before the database confirms it.
   const [localDocs, setLocalDocs] = useState<ProjectDocument[]>([]);
   const form = useQuickAccessForm({ projectId, onSaved: onDocumentsChanged });
@@ -91,58 +69,38 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({
   if (!isOpen) return null;
 
   const remove = async (id: number) => {
-    if (!window.confirm('Tem certeza que deseja remover este documento de acesso rápido?')) return;
+    const message = 'Tem certeza que deseja remover este documento de acesso rápido?';
+    if (!(await confirm({ title: 'Remover documento', message, confirmLabel: 'Remover', danger: true }))) return;
     try {
       await projectService.deleteProjectDocument(id);
       if (form.editingId === id) form.reset();
       onDocumentsChanged();
     } catch (err: unknown) {
-      alert(`Erro ao remover documento: ${describeError(err)}`);
+      await inform({ title: 'Erro ao remover', message: `Erro ao remover documento: ${describeError(err)}` });
     }
   };
 
-  return createPortal(
-    <div style={overlayStyle}>
-      <div className="card fade-in" style={cardStyle}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '1.5rem',
-            flexShrink: 0,
-          }}
-        >
-          <h3 style={{ margin: 0 }}>Gerenciar Acesso Rápido</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-          >
-            <XIcon size={20} />
-          </button>
-        </div>
-        <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1.5rem', paddingRight: '0.5rem' }}>
-          <QuickAccessDocumentList
-            documents={localDocs}
-            editingId={form.editingId}
-            drag={drag}
-            onEdit={form.startEditing}
-            onDelete={remove}
-          />
-        </div>
-        <QuickAccessForm
-          draft={form.draft}
-          isEditing={form.editingId !== null}
-          submitting={form.submitting}
-          categories={categories}
-          onChange={form.update}
-          onSelectFile={form.selectFile}
-          onCancelEdit={form.reset}
-          onSubmit={form.submit}
+  return (
+    <Modal label="Gerenciar Acesso Rápido" title="Gerenciar Acesso Rápido" onClose={onClose} width={640}>
+      <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1.5rem', paddingRight: '0.5rem' }}>
+        <QuickAccessDocumentList
+          documents={localDocs}
+          editingId={form.editingId}
+          drag={drag}
+          onEdit={form.startEditing}
+          onDelete={remove}
         />
       </div>
-    </div>,
-    document.body,
+      <QuickAccessForm
+        draft={form.draft}
+        isEditing={form.editingId !== null}
+        submitting={form.submitting}
+        categories={categories}
+        onChange={form.update}
+        onSelectFile={form.selectFile}
+        onCancelEdit={form.reset}
+        onSubmit={form.submit}
+      />
+    </Modal>
   );
 };

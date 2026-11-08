@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { ProjectDocument } from '../../../types';
 import { describeError } from '../../../utils/describeError';
+import { useDialogs } from '../../common/dialogs/DialogProvider';
 
 export interface QuickAccessDraft {
   title: string;
@@ -44,6 +45,7 @@ interface QuickAccessFormOptions {
  */
 export function useQuickAccessForm({ projectId, onSaved }: QuickAccessFormOptions) {
   const projectService = useProjectService();
+  const { inform } = useDialogs();
   const [draft, setDraft] = useState<QuickAccessDraft>(EMPTY_DRAFT);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -66,7 +68,7 @@ export function useQuickAccessForm({ projectId, onSaved }: QuickAccessFormOption
       const selected = await projectService.openPdfDialog();
       if (selected) update({ filePath: selected });
     } catch {
-      alert('Erro ao selecionar o arquivo PDF');
+      await inform({ title: 'Documento PDF', message: 'Erro ao selecionar o arquivo PDF' });
     }
   };
 
@@ -78,14 +80,14 @@ export function useQuickAccessForm({ projectId, onSaved }: QuickAccessFormOption
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const error = validationError(draft);
-    if (error) return alert(error);
+    if (error) return void inform({ title: 'Acesso rápido', message: error });
     setSubmitting(true);
     try {
       await persist();
       reset();
       onSaved();
     } catch (err: unknown) {
-      alert(`Erro ao salvar documento: ${describeError(err)}`);
+      await inform({ title: 'Erro ao salvar', message: `Erro ao salvar documento: ${describeError(err)}` });
     } finally {
       setSubmitting(false);
     }

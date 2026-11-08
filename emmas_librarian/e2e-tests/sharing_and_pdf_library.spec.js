@@ -113,7 +113,7 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
     await window.waitForSelector('button:has-text("Upload do Computador")', { timeout: 5000 });
     await window.click('button:has-text("Upload do Computador")');
     await window.waitForSelector('text="Visualizar PDF"', { timeout: 10000 });
-    await window.click('button:has-text("Fechar")');
+    await window.getByRole('dialog', { name: 'Detalhes do artigo' }).getByRole('button', { name: 'Fechar' }).click();
 
     // 2. Go to PDF Library Page
     await navigateTo(window, 'Biblioteca de PDFs');
@@ -163,7 +163,7 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
     });
     await window.click(`div:has-text("${pdfFilename}") button[title="Vincular este PDF"]`);
     await window.waitForSelector('text="Visualizar PDF"', { timeout: 10000 });
-    await window.click('button:has-text("Fechar")');
+    await window.getByRole('dialog', { name: 'Detalhes do artigo' }).getByRole('button', { name: 'Fechar' }).click();
 
     // 4. Return to PDF Library and verify reference count is 2 (scoped to unique pdfRow)
     await navigateTo(window, 'Biblioteca de PDFs');

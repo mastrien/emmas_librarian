@@ -5,6 +5,13 @@ import { MemoryRouter } from 'react-router-dom';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
 import type { SearchHistoryItem } from '../../../types';
+import { FakeDialogs, withFakeDialogs } from '../../common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const renderWithDialogs = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
+beforeEach(() => {
+  dialogs = new FakeDialogs();
+});
 
 const mockArticle: any = {
   id: 1,
@@ -48,12 +55,10 @@ describe('ArticleDetailsModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     fakeService = FakeProjectService.create();
-    vi.spyOn(window, 'confirm').mockImplementation(() => true);
-    vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
   const renderModal = (props = {}) => {
-    return render(
+    return renderWithDialogs(
       <ServicesProvider apiService={fakeService}>
         <MemoryRouter>
           <ArticleDetailsModal isOpen={true} onClose={vi.fn()} article={mockArticle} history={mockHistory} {...props} />
@@ -129,24 +134,22 @@ describe('ArticleDetailsModal', () => {
     const onClose = vi.fn();
     renderModal({ onClose });
 
-    const fecharButton = screen.getByText('Fechar');
+    const fecharButton = screen.getByRole('button', { name: 'Fechar' });
     await act(async () => {
       fireEvent.click(fecharButton);
     });
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('calls onClose when overlay is clicked', async () => {
+  // The shared Modal closes with Esc, not with a click on the backdrop.
+  it('calls onClose on Esc', async () => {
     const onClose = vi.fn();
     renderModal({ onClose });
 
-    const overlay = document.body.lastElementChild as Element;
-    if (overlay) {
-      await act(async () => {
-        fireEvent.click(overlay);
-      });
-      expect(onClose).toHaveBeenCalled();
-    }
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'Escape' });
+    });
+    expect(onClose).toHaveBeenCalled();
   });
 
   it('navigates to search when origin search button is clicked', async () => {
@@ -185,14 +188,14 @@ describe('ArticleDetailsModal', () => {
       fireEvent.click(unlinkButton);
     });
 
-    expect(window.confirm).toHaveBeenCalled();
+    expect(dialogs.confirmMessage).toHaveBeenCalled();
     expect(fakeService.unlinkPdf).toHaveBeenCalledWith(1);
     expect(onArticleUpdated).toHaveBeenCalled();
   });
 
   it('handles unlink pdf rejection', async () => {
     const onArticleUpdated = vi.fn();
-    vi.spyOn(window, 'confirm').mockImplementation(() => false);
+    dialogs.confirmMessage.mockReturnValue(false);
     renderModal({ onArticleUpdated });
 
     const unlinkButton = screen.getByText('Desvincular PDF');
@@ -200,7 +203,7 @@ describe('ArticleDetailsModal', () => {
       fireEvent.click(unlinkButton);
     });
 
-    expect(window.confirm).toHaveBeenCalled();
+    expect(dialogs.confirmMessage).toHaveBeenCalled();
     expect(fakeService.unlinkPdf).not.toHaveBeenCalled();
     expect(onArticleUpdated).not.toHaveBeenCalled();
   });
@@ -214,7 +217,9 @@ describe('ArticleDetailsModal', () => {
       fireEvent.click(unlinkButton);
     });
 
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Erro ao desvincular o PDF: Network error'));
+    expect(dialogs.informMessage).toHaveBeenCalledWith(
+      expect.stringContaining('Erro ao desvincular o PDF: Network error'),
+    );
   });
 
   it('calls onAttachPdf when click attach pdf button', async () => {

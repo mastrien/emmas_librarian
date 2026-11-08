@@ -5,6 +5,13 @@ import { ArticleDetailsModal } from '../ArticleDetailsModal';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
 import type { Article, SearchHistoryItem } from '../../../types';
+import { FakeDialogs, withFakeDialogs } from '../../common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const renderWithDialogs = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
+beforeEach(() => {
+  dialogs = new FakeDialogs();
+});
 
 const baseArticle = { id: 1, project_id: 1, title: 'Paper', status: 'new' } as Article;
 
@@ -18,7 +25,7 @@ const modal = (article: Article | null, isOpen = true, history: SearchHistoryIte
   </ServicesProvider>
 );
 
-const renderArticle = (overrides: Partial<Article>) => render(modal({ ...baseArticle, ...overrides }));
+const renderArticle = (overrides: Partial<Article>) => renderWithDialogs(modal({ ...baseArticle, ...overrides }));
 const valueUnder = (label: string) => screen.getByText(label).nextElementSibling as HTMLElement;
 
 beforeEach(() => {
@@ -32,7 +39,7 @@ afterEach(() => {
 describe('ArticleDetailsModal lifecycle', () => {
   it('opens after rendering closed without a hook order warning', () => {
     const consoleError = vi.spyOn(console, 'error');
-    const { rerender } = render(modal(null, false));
+    const { rerender } = renderWithDialogs(modal(null, false));
 
     rerender(modal(baseArticle, true));
 
@@ -86,14 +93,12 @@ describe('ArticleDetailsModal metadata', () => {
     expect(link.style.textDecoration).toBe('none');
   });
 
-  it('highlights the close button on hover', () => {
+  // The window is the shared Modal (Arca 134): its X is named, and the title is the article's.
+  it('takes the article title as the window title, with a named X', () => {
     renderArticle({});
-    const close = screen.getByText('Paper').parentElement!.nextElementSibling as HTMLElement;
 
-    fireEvent.mouseEnter(close);
-    expect(close.style.background).toBe('var(--bg-surface)');
-    fireEvent.mouseLeave(close);
-    expect(close.style.background).toBe('transparent');
+    expect(screen.getByRole('dialog', { name: 'Detalhes do artigo' })).toHaveTextContent('Paper');
+    expect(screen.getByRole('button', { name: 'Fechar' })).toBeInTheDocument();
   });
 });
 
@@ -129,13 +134,11 @@ describe('ArticleDetailsModal sections', () => {
   });
 
   it('reports the unlink failure message', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    vi.spyOn(window, 'alert').mockImplementation(() => undefined);
     service.unlinkPdf.mockRejectedValue(new Error('locked'));
     renderArticle({ local_file_path: '/a.pdf' });
 
     fireEvent.click(screen.getByText('Desvincular PDF'));
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao desvincular o PDF: locked'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao desvincular o PDF: locked'));
   });
 });
