@@ -10,6 +10,7 @@ import { SettingsPage } from '../SettingsPage';
 import { TermsOfUsePage } from '../TermsOfUsePage';
 import { ArticleReaderPage } from '../ArticleReaderPage';
 import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
+import { FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
@@ -70,11 +71,13 @@ describe('Page Rendering Coverage', () => {
   const renderAndWait = async (element: React.ReactElement, initialEntry: string, routePath: string) => {
     const { container } = render(
       <GlobalErrorProvider>
-        <MemoryRouter initialEntries={[initialEntry]}>
-          <Routes>
-            <Route path={routePath} element={element} />
-          </Routes>
-        </MemoryRouter>
+        <FakeDialogsProvider>
+          <MemoryRouter initialEntries={[initialEntry]}>
+            <Routes>
+              <Route path={routePath} element={element} />
+            </Routes>
+          </MemoryRouter>
+        </FakeDialogsProvider>
       </GlobalErrorProvider>,
     );
 
