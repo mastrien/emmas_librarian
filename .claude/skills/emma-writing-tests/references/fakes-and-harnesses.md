@@ -10,6 +10,13 @@ Stands in for the app's confirm/message windows (`useDialogs`). Render with `<Fa
 spies did: `dialogs.confirmMessage.mockReturnValue(false)` declines, `expect(dialogs.informMessage).toHaveBeenCalledWith(…)`
 checks a message. `asked`/`informed` keep the full options (title, button names). E2E specs answer the real windows
 with `answerAppDialog(window, title, button)` from `e2e-tests/helpers.js`.
+The answer is a promise: to check that a declined question did nothing, wait for `dialogs.asked` to have the
+question and flush with `await act(async () => {})` first; asserting right after the click passes even when the
+check is gone (it did in `SettingsPage`, Arca 134).
+
+### FakeCitationClipboard — `src/utils/__tests__/fakes/FakeCitationClipboard.ts`
+Records what citation code copies (`texts`, `richWrites`; `rejectRich = true` makes rich copy fail). Pass it to
+`copyCitations(…, clipboard)` or `useCitationCopy(clipboard)`; stub `ClipboardItem` with `FakeClipboardItem`.
 
 ### FakeProjectService — `src/services/__tests__/fakes/FakeProjectService.ts`
 Implements `IProjectService` with a `vi.fn()` per method and sensible defaults. Inject it through the provider:
