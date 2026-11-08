@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import './articlesList.css';
 
 export interface RowMenuItem {
   label: string;
@@ -92,9 +93,11 @@ export const ArticleRowMenu: React.FC<ArticleRowMenuProps> = ({ anchor, groups, 
     <div
       ref={menuRef}
       role="menu"
-      className="row-menu"
+      className={position ? 'row-menu' : 'row-menu is-unplaced'}
       onKeyDown={onKeyDown}
-      style={{ top: position?.top ?? 0, left: position?.left ?? 0, visibility: position ? 'visible' : 'hidden' }}
+      style={
+        { '--menu-top': `${position?.top ?? 0}px`, '--menu-left': `${position?.left ?? 0}px` } as React.CSSProperties
+      }
     >
       {groups.map((group) => (
         <div key={group.label} className="row-menu__group" role="group" aria-label={group.label}>

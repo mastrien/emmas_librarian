@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import './articlesList.css';
 
 interface PaginationProps {
   currentPage: number;
@@ -17,23 +18,17 @@ const next = (totalPages: number) => (page: number) => Math.min(totalPages, page
  *   <PaginationControls currentPage={p} totalPages={t} onPageChange={setPage} />
  */
 export const PaginationControls: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => (
-  <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', alignItems: 'center', marginBottom: '2rem' }}>
-    <button
-      onClick={() => onPageChange(previous)}
-      disabled={currentPage === 1}
-      className="btn-secondary"
-      style={{ padding: '0.4rem 0.8rem' }}
-    >
+  <div className="articles-pagination">
+    <button onClick={() => onPageChange(previous)} disabled={currentPage === 1} className="btn-secondary">
       <ChevronLeft size={16} /> Anterior
     </button>
-    <span style={{ padding: '0 1rem', color: 'var(--text-muted)' }}>
+    <span>
       {currentPage} / {totalPages}
     </span>
     <button
       onClick={() => onPageChange(next(totalPages))}
       disabled={currentPage === totalPages}
       className="btn-secondary"
-      style={{ padding: '0.4rem 0.8rem' }}
     >
       Próxima <ChevronRight size={16} />
     </button>

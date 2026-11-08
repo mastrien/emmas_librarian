@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronRight, CopyPlus } from 'lucide-react';
 import type { Article } from '../../../../types';
 
-const smallButton: React.CSSProperties = { padding: '0.3rem 0.5rem', fontSize: '0.75rem' };
-const cell: React.CSSProperties = { padding: '0.75rem 1rem' };
+import './articlesList.css';
 
 interface ReadArticlesSectionProps {
   articles: Article[];
@@ -32,8 +31,7 @@ export const ReadArticlesSection: React.FC<ReadArticlesSectionProps> = (props) =
         e.preventDefault();
         onOpenMassCitation();
       }}
-      className="btn-primary"
-      style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+      className="btn-primary mass-citation-button"
     >
       <CopyPlus size={12} /> Citação em Massa
     </button>
@@ -41,26 +39,26 @@ export const ReadArticlesSection: React.FC<ReadArticlesSectionProps> = (props) =
   return (
     <ArticleAccordion
       label={`Artigos Lidos (${articles.length})`}
-      color="var(--color-primary)"
+      tone="read"
       isOpen={isOpen}
       onToggle={onToggle}
       action={massCitationButton}
     >
       {articles.map((article) => (
-        <tr key={article.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-          <td style={cell}>{article.title}</td>
-          <td style={{ ...cell, width: '320px' }}>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <Link to={`/articles/${article.id}`} className="btn-secondary" style={smallButton}>
+        <tr key={article.id}>
+          <td>{article.title}</td>
+          <td className="article-accordion-actions--wide">
+            <div className="article-accordion-buttons">
+              <Link to={`/articles/${article.id}`} className="btn-secondary article-small-button">
                 Ver
               </Link>
-              <button onClick={() => onShowDetails(article)} className="btn-secondary" style={smallButton}>
+              <button onClick={() => onShowDetails(article)} className="btn-secondary article-small-button">
                 Detalhes
               </button>
-              <button onClick={() => onCite(article)} className="btn-secondary" style={smallButton}>
+              <button onClick={() => onCite(article)} className="btn-secondary article-small-button">
                 Citar
               </button>
-              <button onClick={() => onMarkUnread(article.id)} className="btn-secondary" style={smallButton}>
+              <button onClick={() => onMarkUnread(article.id)} className="btn-secondary article-small-button">
                 Desmarcar
               </button>
             </div>
@@ -94,20 +92,18 @@ export const ArchivedArticlesSection: React.FC<ArchivedArticlesSectionProps> = (
   return (
     <ArticleAccordion
       label={`Artigos Arquivados (${articles.length})`}
-      color="var(--color-danger)"
+      tone="archived"
       isOpen={isOpen}
       onToggle={onToggle}
     >
       {articles.map((article) => (
-        <tr key={article.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-          <td style={cell}>
-            <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{article.title}</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>
-              Motivo: {article.archive_note}
-            </div>
+        <tr key={article.id}>
+          <td>
+            <div className="archived-title">{article.title}</div>
+            <div className="archived-reason">Motivo: {article.archive_note}</div>
           </td>
-          <td style={{ ...cell, width: '150px' }}>
-            <button onClick={() => onRestore(article.id)} className="btn-secondary" style={smallButton}>
+          <td className="article-accordion-actions--narrow">
+            <button onClick={() => onRestore(article.id)} className="btn-secondary article-small-button">
               Restaurar
             </button>
           </td>
@@ -119,45 +115,28 @@ export const ArchivedArticlesSection: React.FC<ArchivedArticlesSectionProps> = (
 
 interface ArticleAccordionProps {
   label: string;
-  color: string;
+  tone: 'read' | 'archived';
   isOpen: boolean;
   onToggle: (open: boolean) => void;
   action?: React.ReactNode;
   children: React.ReactNode;
 }
 
-const ArticleAccordion: React.FC<ArticleAccordionProps> = ({ label, color, isOpen, onToggle, action, children }) => (
+const ArticleAccordion: React.FC<ArticleAccordionProps> = ({ label, tone, isOpen, onToggle, action, children }) => (
   <details
-    className="custom-accordion"
+    className={`custom-accordion article-accordion article-accordion--${tone}`}
     open={isOpen}
     onToggle={(e) => onToggle((e.target as HTMLDetailsElement).open)}
-    style={{
-      marginBottom: '1rem',
-      background: 'var(--bg-surface)',
-      borderRadius: 'var(--radius-md)',
-      border: '1px solid var(--border-color)',
-      padding: '1rem',
-    }}
   >
-    <summary
-      style={{
-        fontWeight: 600,
-        color,
-        cursor: 'pointer',
-        outline: 'none',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+    <summary>
+      <div className="article-accordion-label">
         {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         <span>{label}</span>
       </div>
       {action}
     </summary>
-    <div style={{ marginTop: '1rem' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+    <div className="article-accordion-body">
+      <table>
         <tbody>{children}</tbody>
       </table>
     </div>
