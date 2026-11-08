@@ -126,10 +126,11 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
 
     // The link dialog's overlay must cover the whole window. A transform left on <main> by the
     // fade-in animation used to make <main> its containing block, pushing the dialog off-screen.
+    // Since Arca 134 the dialog is the shared Modal: the overlay is its backdrop, the dialog the box inside.
     await pdfRow.getByTitle('Vincular a outro Artigo').click();
     const linkDialog = window.getByRole('dialog', { name: 'Vincular PDF a um Artigo' });
     await expect(linkDialog).toBeVisible();
-    const overlayBox = await linkDialog.boundingBox();
+    const overlayBox = await window.getByTestId('app-modal-overlay').boundingBox();
     const viewport = await window.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }));
     expect(overlayBox).toEqual({ x: 0, y: 0, width: viewport.width, height: viewport.height });
     await linkDialog.getByRole('button', { name: 'Cancelar' }).click();
