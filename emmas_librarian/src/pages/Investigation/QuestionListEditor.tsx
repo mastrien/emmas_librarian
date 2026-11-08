@@ -25,31 +25,29 @@ export const QuestionListEditor: React.FC<QuestionListEditorProps> = ({ question
   const canSave = filled(questions).length > 0;
   return (
     <>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div className="inv-question-list">
         {questions.map((q, idx) => (
-          <div key={idx} style={{ display: 'flex', gap: '0.5rem' }}>
+          <div key={idx} className="inv-question-row">
             <input
               type="text"
               value={q}
               onChange={(e) => update(idx, e.target.value)}
               className="input-field"
               placeholder={`Pergunta ${idx + 1}`}
-              style={{ flex: 1 }}
             />
             <button
               type="button"
               onClick={() => remove(idx)}
               aria-label={`Remover a pergunta ${idx + 1}`}
-              className="btn-secondary"
-              style={{ color: 'var(--color-danger)', padding: '0.5rem' }}
+              className="btn-secondary inv-question-remove"
             >
               <Trash2 size={16} />
             </button>
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button onClick={() => onChange([...questions, ''])} className="btn-secondary" style={{ fontSize: '0.85rem' }}>
+      <div className="inv-question-actions">
+        <button onClick={() => onChange([...questions, ''])} className="btn-secondary">
           + Adicionar Pergunta
         </button>
         <button
@@ -57,7 +55,6 @@ export const QuestionListEditor: React.FC<QuestionListEditorProps> = ({ question
           onClick={onSaveAsSet}
           disabled={!canSave}
           title={canSave ? 'Salvar perguntas atuais como novo conjunto' : 'Adicione perguntas acima para salvar'}
-          style={{ fontSize: '0.85rem' }}
         >
           + Salvar Atual
         </button>

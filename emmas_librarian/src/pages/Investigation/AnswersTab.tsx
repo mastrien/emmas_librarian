@@ -175,11 +175,10 @@ const AnswersToolbar: React.FC<{
       </button>
     ))}
     <select
-      className="input-field input-compact"
+      className="input-field input-compact inv-question-filter"
       aria-label="Pergunta"
       value={view.question}
       onChange={(e) => view.setQuestion(e.target.value)}
-      style={{ maxWidth: '20rem' }}
     >
       <option value="all">Todas as perguntas</option>
       {questions.map((q, i) => (

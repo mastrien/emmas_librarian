@@ -3,6 +3,7 @@
    width (at 1920px it went from 570px to 1226px). The review page keeps its margins: it is vertical and gains little. */
 .inv-page {
   --inv-edge: 12px;
+  height: var(--fill-height, auto);
   margin: calc(var(--inv-edge) - 2rem) calc(var(--inv-edge) - 2rem) -2rem;
   min-height: 0;
   box-sizing: border-box;
@@ -187,6 +188,7 @@
 }
 .inv-bar > i {
   display: block;
+  width: var(--progress, 0%);
   height: 100%;
   background: var(--color-primary);
   transition: width 0.3s;
@@ -286,6 +288,7 @@
 }
 .inv-call-grid {
   display: grid;
+  grid-template-columns: repeat(var(--inv-columns, 1), 1fr);
   gap: 3px;
   max-width: 560px;
 }
@@ -491,25 +494,47 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
 }
-.inv-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
-.inv-modal {
-  width: 400px;
-  max-width: 95%;
-  padding: 2rem;
-  text-align: center;
-  background: var(--bg-main);
-}
 @media (max-width: 1100px) {
   .inv-new-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Inline styles moved here (Arca 134). */
+.inv-shrink {
+  min-width: 0;
+}
+.inv-danger {
+  color: var(--color-danger);
+}
+.inv-wrap-anywhere {
+  overflow-wrap: anywhere;
+}
+.inv-question-filter {
+  max-width: 20rem;
+}
+.inv-question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.inv-question-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.inv-question-row .input-field {
+  flex: 1;
+}
+.inv-question-row .inv-question-remove {
+  padding: 0.5rem;
+  color: var(--color-danger);
+}
+.inv-question-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.inv-question-actions .btn-secondary {
+  font-size: 0.85rem;
 }

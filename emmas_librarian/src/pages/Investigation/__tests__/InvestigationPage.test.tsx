@@ -42,7 +42,8 @@ describe('InvestigationPage (#73): where it opens', () => {
 
     const page = await screen.findByTestId('investigation-page');
 
-    expect(page).toHaveStyle({ height: `${window.innerHeight}px` });
+    // The class reads it as height: var(--fill-height); jsdom does not resolve variables, so the variable is checked.
+    expect(page.style.getPropertyValue('--fill-height')).toBe(`${window.innerHeight}px`);
   });
 
   it('opens on a new investigation when the project has none, and says it in the list', async () => {
@@ -316,9 +317,9 @@ describe('InvestigationPage (#73): a new investigation', () => {
     service.massiveExtraction.mockRejectedValue(new Error('429 QUOTA_EXCEEDED'));
     await start(service);
 
-    expect(await screen.findByRole('alertdialog', { name: 'Limite de Cota Atingido' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Limite de Cota Atingido' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Entendi' }));
-    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 });
 

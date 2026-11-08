@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useState, type CSSProperties } from 'react';
 
 /**
  * For a page that scrolls inside its panes: the height the app's header leaves of the window. It measures when the
@@ -18,4 +18,14 @@ export function useFillWindowHeight() {
     return () => window.removeEventListener('resize', measure);
   }, [page]);
   return { setPage, height };
+}
+
+/**
+ * The measured height as the page's style: a CSS variable the page's class reads (Arca 134: no inline layout), unset
+ * until the first measure.
+ *
+ * @example <div ref={setPage} className="inv-page" style={fillHeightStyle(height)} />
+ */
+export function fillHeightStyle(height: number | undefined): CSSProperties | undefined {
+  return height === undefined ? undefined : ({ '--fill-height': `${height}px` } as CSSProperties);
 }

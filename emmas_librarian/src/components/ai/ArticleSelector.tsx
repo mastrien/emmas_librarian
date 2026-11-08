@@ -1,8 +1,20 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, ArrowUpDown, FileText } from 'lucide-react';
+import { Search, Filter, ArrowUpDown } from 'lucide-react';
 import { type Article, type SearchHistoryItem } from '../../types';
+import {
+  matchesSearch,
+  matchesTerm,
+  parseSearchFilter,
+  searchFilterOptions,
+  sortArticles,
+  type SearchFilter,
+  type SearchFilterOption,
+  type SortOption,
+} from './articleSelector/articleSelectorQueries';
+import { ArticleOption } from './articleSelector/ArticleOption';
+import './articleSelector/articleSelector.css';
 
-export type SortOption = 'title-asc' | 'title-desc' | 'year-desc' | 'year-asc' | 'authors-asc' | 'search-id';
+export type { SortOption } from './articleSelector/articleSelectorQueries';
 
 export interface ArticleSelectorProps {
   articles: Article[];
@@ -12,434 +24,168 @@ export interface ArticleSelectorProps {
   disabled?: boolean;
 }
 
-/**
- * Filter article by search term against title, authors, year, journal, doi.
- */
-function filterArticleByTerm(article: Article, term: string): boolean {
-  if (!term.trim()) return true;
-  const q = term.toLowerCase();
-  const title = (article.title || '').toLowerCase();
-  const authors = (article.authors || '').toLowerCase();
-  const journal = (article.journal || article.publisher || '').toLowerCase();
-  const doi = (article.doi || '').toLowerCase();
-  const year = article.year ? String(article.year) : '';
-  return title.includes(q) || authors.includes(q) || journal.includes(q) || doi.includes(q) || year.includes(q);
+interface ControlsProps {
+  term: string;
+  onTerm: (term: string) => void;
+  searchFilter: SearchFilter;
+  onSearchFilter: (filter: SearchFilter) => void;
+  options: SearchFilterOption[];
+  sortBy: SortOption;
+  onSortBy: (sort: SortOption) => void;
+  disabled: boolean;
 }
 
-/**
- * Filter article by selected search history ID.
- */
-function filterArticleBySearchId(article: Article, targetSearchId: number | 'all' | 'none'): boolean {
-  if (targetSearchId === 'all') return true;
-  if (targetSearchId === 'none') return !article.search_id;
-  return article.search_id === targetSearchId;
+const SelectorControls: React.FC<ControlsProps> = (props) => (
+  <div className="article-selector-controls">
+    <div className="article-selector-control article-selector-control--wide">
+      <Search size={14} />
+      <input
+        type="text"
+        className="input-field"
+        value={props.term}
+        onChange={(e) => props.onTerm(e.target.value)}
+        placeholder="Buscar por título, autor, ano..."
+        disabled={props.disabled}
+      />
+    </div>
+    <div className="article-selector-control">
+      <Filter size={14} />
+      <select
+        className="input-field"
+        value={props.searchFilter}
+        onChange={(e) => props.onSearchFilter(parseSearchFilter(e.target.value))}
+        disabled={props.disabled}
+      >
+        <option value="all">Todas as buscas do histórico ({props.options.length})</option>
+        {props.options.map((opt) => (
+          <option key={String(opt.id)} value={opt.id}>
+            {opt.label} ({opt.count} com PDF)
+          </option>
+        ))}
+      </select>
+    </div>
+    <div className="article-selector-control">
+      <ArrowUpDown size={14} />
+      <select
+        className="input-field"
+        value={props.sortBy}
+        onChange={(e) => props.onSortBy(e.target.value as SortOption)}
+        disabled={props.disabled}
+      >
+        <option value="title-asc">Título (A-Z)</option>
+        <option value="title-desc">Título (Z-A)</option>
+        <option value="year-desc">Ano (Mais recente)</option>
+        <option value="year-asc">Ano (Mais antigo)</option>
+        <option value="authors-asc">Autores (A-Z)</option>
+        <option value="search-id">Busca de Origem</option>
+      </select>
+    </div>
+  </div>
+);
+
+interface SelectionBarProps {
+  selectedIds: number[];
+  setSelectedIds: (ids: number[]) => void;
+  allIds: number[];
+  visibleIds: number[];
+  disabled: boolean;
 }
 
-/**
- * Sort articles list based on chosen sort option.
- */
-function sortArticles(articles: Article[], sortBy: SortOption): Article[] {
-  const list = [...articles];
-  return list.sort((a, b) => {
-    if (sortBy === 'title-asc') return a.title.localeCompare(b.title);
-    if (sortBy === 'title-desc') return b.title.localeCompare(a.title);
-    if (sortBy === 'year-desc') return (b.year || 0) - (a.year || 0);
-    if (sortBy === 'year-asc') return (a.year || 0) - (b.year || 0);
-    if (sortBy === 'authors-asc') return (a.authors || '').localeCompare(b.authors || '');
-    if (sortBy === 'search-id') return (b.search_id || 0) - (a.search_id || 0);
-    return 0;
-  });
-}
+const SelectionBar: React.FC<SelectionBarProps> = ({ selectedIds, setSelectedIds, allIds, visibleIds, disabled }) => {
+  const filtered = visibleIds.length !== allIds.length;
+  const visible = new Set(visibleIds);
+  return (
+    <div className="article-selector-bar">
+      <span className="article-selector-count">
+        <strong>{selectedIds.length}</strong> de <strong>{allIds.length}</strong> selecionados
+        {filtered && <span> ({visibleIds.length} visíveis no filtro)</span>}
+      </span>
+      {!disabled && (
+        <div className="article-selector-bulk">
+          {filtered && (
+            <>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setSelectedIds(Array.from(new Set([...selectedIds, ...visibleIds])))}
+                title="Selecionar todos os artigos visíveis pelo filtro"
+              >
+                Selecionar Visíveis
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setSelectedIds(selectedIds.filter((id) => !visible.has(id)))}
+                title="Desmarcar artigos visíveis pelo filtro"
+              >
+                Desmarcar Visíveis
+              </button>
+            </>
+          )}
+          <button type="button" className="btn-secondary" onClick={() => setSelectedIds(allIds)}>
+            Selecionar Todos
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => setSelectedIds([])}>
+            Desmarcar Todos
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 /**
- * Formats search origin badge label for an article.
+ * Picks the articles an investigation runs on: search by text, narrow to one search of the history, sort, and tick
+ * one by one or all (visible) at once.
+ *
+ * @example <ArticleSelector articles={withPdf} selectedIds={ids} setSelectedIds={setIds} searchHistory={history} />
  */
-function getSearchBadgeLabel(searchId: number | undefined, searchHistory: SearchHistoryItem[]): string {
-  if (!searchId) return 'Manual / Importação';
-  const found = searchHistory.find((h) => h.id === searchId);
-  if (!found) return `Busca #${searchId}`;
-  const queryPreview =
-    found.unified_query.length > 25 ? `${found.unified_query.substring(0, 25)}...` : found.unified_query;
-  return `#${searchId}: ${queryPreview}`;
-}
-
-export const ArticleSelector: React.FC<ArticleSelectorProps> = ({
-  articles,
-  selectedIds,
-  setSelectedIds,
-  searchHistory = [],
-  disabled = false,
-}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSearchFilter, setSelectedSearchFilter] = useState<number | 'all' | 'none'>('all');
+export const ArticleSelector: React.FC<ArticleSelectorProps> = (props) => {
+  const { articles, selectedIds, setSelectedIds, searchHistory = [], disabled = false } = props;
+  const [term, setTerm] = useState('');
+  const [searchFilter, setSearchFilter] = useState<SearchFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('title-asc');
-
-  // Build complete list of search history filter options (all project searches + manual/imported)
-  const searchFilterOptions = useMemo(() => {
-    const options: Array<{ id: number | 'none'; label: string; count: number }> = [];
-    const knownIds = new Set<number>();
-
-    // Add all project search history items
-    searchHistory.forEach((h) => {
-      knownIds.add(h.id);
-      const count = articles.filter((a) => a.search_id === h.id).length;
-      const queryPreview = h.unified_query.length > 25 ? `${h.unified_query.substring(0, 25)}...` : h.unified_query;
-      options.push({
-        id: h.id,
-        label: `#${h.id}: ${queryPreview}`,
-        count,
-      });
-    });
-
-    // Add any search_id present in articles that wasn't in searchHistory
-    articles.forEach((a) => {
-      if (a.search_id && !knownIds.has(a.search_id)) {
-        knownIds.add(a.search_id);
-        const count = articles.filter((art) => art.search_id === a.search_id).length;
-        options.push({
-          id: a.search_id,
-          label: `Busca #${a.search_id}`,
-          count,
-        });
-      }
-    });
-
-    // Add option for articles without a search_id
-    const manualCount = articles.filter((a) => !a.search_id).length;
-    if (manualCount > 0) {
-      options.push({
-        id: 'none',
-        label: 'Manual / Sem busca no histórico',
-        count: manualCount,
-      });
-    }
-
-    return options;
-  }, [articles, searchHistory]);
-
-  // Filtered and sorted article list
-  const filteredArticles = useMemo(() => {
-    const filtered = articles.filter(
-      (a) => filterArticleByTerm(a, searchTerm) && filterArticleBySearchId(a, selectedSearchFilter),
-    );
-    return sortArticles(filtered, sortBy);
-  }, [articles, searchTerm, selectedSearchFilter, sortBy]);
-
-  const visibleIds = useMemo(() => filteredArticles.map((a) => a.id), [filteredArticles]);
-
-  const handleSelectVisible = () => {
-    const newSelected = Array.from(new Set([...selectedIds, ...visibleIds]));
-    setSelectedIds(newSelected);
-  };
-
-  const handleDeselectVisible = () => {
-    const visibleSet = new Set(visibleIds);
-    setSelectedIds(selectedIds.filter((id) => !visibleSet.has(id)));
-  };
-
-  const handleSelectAll = () => {
-    setSelectedIds(articles.map((a) => a.id));
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedIds([]);
-  };
-
-  const handleToggleArticle = (id: number) => {
-    if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter((i) => i !== id));
-    } else {
-      setSelectedIds([...selectedIds, id]);
-    }
-  };
+  const options = useMemo(() => searchFilterOptions(articles, searchHistory), [articles, searchHistory]);
+  const shown = useMemo(
+    () =>
+      sortArticles(
+        articles.filter((a) => matchesTerm(a, term) && matchesSearch(a, searchFilter)),
+        sortBy,
+      ),
+    [articles, term, searchFilter, sortBy],
+  );
+  const toggle = (id: number) =>
+    setSelectedIds(selectedIds.includes(id) ? selectedIds.filter((i) => i !== id) : [...selectedIds, id]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      {/* Controls Bar: Search, Search History Filter, Sort */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-          gap: '0.5rem',
-        }}
-      >
-        {/* Search input */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gridColumn: '1 / -1' }}>
-          <Search size={14} style={{ position: 'absolute', left: '0.6rem', color: 'var(--text-muted)' }} />
-          <input
-            type="text"
-            className="input-field"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por título, autor, ano..."
-            disabled={disabled}
-            style={{
-              paddingLeft: '2rem',
-              paddingRight: '0.5rem',
-              fontSize: '0.75rem',
-              width: '100%',
-              height: '36px',
-              lineHeight: '1.2',
-            }}
-          />
-        </div>
-
-        {/* Search History Filter Dropdown */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <Filter size={14} style={{ position: 'absolute', left: '0.6rem', color: 'var(--text-muted)' }} />
-          <select
-            className="input-field"
-            value={selectedSearchFilter}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === 'all') setSelectedSearchFilter('all');
-              else if (val === 'none') setSelectedSearchFilter('none');
-              else setSelectedSearchFilter(Number(val));
-            }}
-            disabled={disabled}
-            style={{
-              paddingLeft: '2rem',
-              paddingRight: '0.5rem',
-              fontSize: '0.75rem',
-              width: '100%',
-              height: '36px',
-              lineHeight: '1.2',
-            }}
-          >
-            <option value="all">Todas as buscas do histórico ({searchFilterOptions.length})</option>
-            {searchFilterOptions.map((opt) => (
-              <option key={String(opt.id)} value={opt.id}>
-                {opt.label} ({opt.count} com PDF)
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Sort Dropdown */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <ArrowUpDown size={14} style={{ position: 'absolute', left: '0.6rem', color: 'var(--text-muted)' }} />
-          <select
-            className="input-field"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
-            disabled={disabled}
-            style={{
-              paddingLeft: '2rem',
-              paddingRight: '0.5rem',
-              fontSize: '0.75rem',
-              width: '100%',
-              height: '36px',
-              lineHeight: '1.2',
-            }}
-          >
-            <option value="title-asc">Título (A-Z)</option>
-            <option value="title-desc">Título (Z-A)</option>
-            <option value="year-desc">Ano (Mais recente)</option>
-            <option value="year-asc">Ano (Mais antigo)</option>
-            <option value="authors-asc">Autores (A-Z)</option>
-            <option value="search-id">Busca de Origem</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Bulk Action Buttons & Counters */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          fontSize: '0.8rem',
-        }}
-      >
-        <span style={{ color: 'var(--text-muted)' }}>
-          <strong>{selectedIds.length}</strong> de <strong>{articles.length}</strong> selecionados
-          {filteredArticles.length !== articles.length && <span> ({filteredArticles.length} visíveis no filtro)</span>}
-        </span>
-
-        {!disabled && (
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
-            {filteredArticles.length !== articles.length && (
-              <>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
-                  onClick={handleSelectVisible}
-                  title="Selecionar todos os artigos visíveis pelo filtro"
-                >
-                  Selecionar Visíveis
-                </button>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
-                  onClick={handleDeselectVisible}
-                  title="Desmarcar artigos visíveis pelo filtro"
-                >
-                  Desmarcar Visíveis
-                </button>
-              </>
-            )}
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
-              onClick={handleSelectAll}
-            >
-              Selecionar Todos
-            </button>
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
-              onClick={handleDeselectAll}
-            >
-              Desmarcar Todos
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Articles Cards Grid Container */}
-      <div
-        style={{
-          maxHeight: '260px',
-          overflowY: 'auto',
-          border: '1px solid var(--border-color)',
-          borderRadius: 'var(--radius-sm)',
-          padding: '0.5rem',
-          background: 'var(--bg-main)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem',
-        }}
-      >
-        {filteredArticles.length === 0 ? (
-          <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1.5rem', fontSize: '0.85rem' }}>
-            Nenhum artigo encontrado com os filtros aplicados.
-          </div>
+    <div className="article-selector">
+      <SelectorControls
+        {...{ term, searchFilter, options, sortBy, disabled }}
+        onTerm={setTerm}
+        onSearchFilter={setSearchFilter}
+        onSortBy={setSortBy}
+      />
+      <SelectionBar
+        selectedIds={selectedIds}
+        setSelectedIds={setSelectedIds}
+        allIds={articles.map((a) => a.id)}
+        visibleIds={shown.map((a) => a.id)}
+        disabled={disabled}
+      />
+      <div className="article-selector-list">
+        {shown.length === 0 ? (
+          <div className="article-selector-empty">Nenhum artigo encontrado com os filtros aplicados.</div>
         ) : (
-          filteredArticles.map((art) => {
-            const isSelected = selectedIds.includes(art.id);
-            return (
-              <label
-                key={art.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '0.6rem',
-                  cursor: disabled ? 'default' : 'pointer',
-                  padding: '0.6rem',
-                  borderRadius: 'var(--radius-sm)',
-                  background: isSelected
-                    ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)'
-                    : 'var(--bg-surface)',
-                  border: isSelected ? '1px solid var(--color-primary)' : '1px solid var(--border-color)',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => !disabled && handleToggleArticle(art.id)}
-                  disabled={disabled}
-                  style={{ marginTop: '0.25rem' }}
-                />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      color: 'var(--text-main)',
-                      lineHeight: '1.3',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {art.title}
-                  </div>
-
-                  {/* Metadata Row: Authors, Year, Journal */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      fontSize: '0.75rem',
-                      color: 'var(--text-muted)',
-                      marginTop: '0.25rem',
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    {art.authors && (
-                      <span
-                        style={{
-                          maxWidth: '220px',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {art.authors}
-                      </span>
-                    )}
-                    {art.year && <span>• {art.year}</span>}
-                    {(art.journal || art.publisher) && (
-                      <span
-                        style={{
-                          maxWidth: '180px',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        • {art.journal || art.publisher}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Badges Row */}
-                  <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.35rem', flexWrap: 'wrap' }}>
-                    <span
-                      style={{
-                        fontSize: '0.7rem',
-                        padding: '0.1rem 0.4rem',
-                        borderRadius: 'var(--radius-xs)',
-                        background: 'var(--bg-main)',
-                        border: '1px solid var(--border-color)',
-                        color: 'var(--text-muted)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.2rem',
-                      }}
-                    >
-                      🔍 {getSearchBadgeLabel(art.search_id, searchHistory)}
-                    </span>
-                    {art.local_file_path && (
-                      <span
-                        style={{
-                          fontSize: '0.7rem',
-                          padding: '0.1rem 0.4rem',
-                          borderRadius: 'var(--radius-xs)',
-                          background: 'color-mix(in srgb, var(--color-success, #10b981) 15%, transparent)',
-                          color: 'var(--color-success, #10b981)',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.2rem',
-                        }}
-                      >
-                        <FileText size={10} /> PDF Anexado
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </label>
-            );
-          })
+          shown.map((art) => (
+            <ArticleOption
+              key={art.id}
+              article={art}
+              selected={selectedIds.includes(art.id)}
+              disabled={disabled}
+              searchHistory={searchHistory}
+              onToggle={() => toggle(art.id)}
+            />
+          ))
         )}
       </div>
     </div>

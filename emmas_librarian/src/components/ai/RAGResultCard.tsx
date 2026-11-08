@@ -3,68 +3,53 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { EvidenceCard } from './EvidenceCard';
 import { type RAGExtractionResult } from '../../types';
+import './answerCards.css';
 
 export interface RAGResultCardProps {
   result: RAGExtractionResult;
   onViewDocument?: (evidence: RAGExtractionResult['evidences'][0]) => void;
 }
 
-export const RAGResultCard: React.FC<RAGResultCardProps> = ({ result, onViewDocument }) => {
-  // Determine color based on confidence score (0 to 1)
-  const confidenceColor =
-    result.confidenceScore > 0.8
-      ? 'var(--color-success)'
-      : result.confidenceScore > 0.5
-        ? '#f59e0b'
-        : 'var(--color-danger)';
-  const confidencePercentage = Math.round(result.confidenceScore * 100);
+/**
+ * The colour band of the AI's confidence (0 to 1): above 0.8 high, above 0.5 medium, otherwise low.
+ *
+ * @example confidenceLevel(0.9) // 'high'
+ */
+export function confidenceLevel(score: number): 'high' | 'medium' | 'low' {
+  if (score > 0.8) return 'high';
+  return score > 0.5 ? 'medium' : 'low';
+}
 
-  return (
-    <div
-      style={{
-        background: 'var(--bg-main)',
-        padding: '1rem',
-        borderRadius: 'var(--radius-sm)',
-      }}
-    >
+/**
+ * One RAG answer: the question, the AI's confidence, the synthesized answer and each evidence with its page.
+ *
+ * @example <RAGResultCard result={rag} onViewDocument={open} />
+ */
+export const RAGResultCard: React.FC<RAGResultCardProps> = ({ result, onViewDocument }) => (
+  <div className="rag-card">
+    <div className="rag-card-head">
+      <div className="rag-card-question">Q: {result.question}</div>
       <div
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}
+        className={`rag-card-confidence rag-card-confidence--${confidenceLevel(result.confidenceScore)}`}
+        title="Nível de confiança da IA"
       >
-        <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-heading)', flex: 1 }}>
-          Q: {result.question}
-        </div>
-        <div
-          style={{
-            fontSize: '0.75rem',
-            padding: '0.2rem 0.5rem',
-            borderRadius: '12px',
-            background: confidenceColor,
-            color: 'white',
-            fontWeight: 'bold',
-            marginLeft: '1rem',
-          }}
-          title="Nível de confiança da IA"
-        >
-          {confidencePercentage}% Confiança
-        </div>
+        {Math.round(result.confidenceScore * 100)}% Confiança
       </div>
-
-      <div className="markdown-body" style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '1rem' }}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.synthesizedAnswer}</ReactMarkdown>
-      </div>
-
-      {result.evidences && result.evidences.length > 0 && (
-        <div style={{ marginTop: '1rem' }}>
-          <h6 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-heading)', fontSize: '0.85rem' }}>
-            Evidências ({result.evidences.length}):
-          </h6>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {result.evidences.map((evidence, idx) => (
-              <EvidenceCard key={idx} evidence={evidence} onViewDocument={onViewDocument} />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
-  );
-};
+
+    <div className="markdown-body">
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.synthesizedAnswer}</ReactMarkdown>
+    </div>
+
+    {result.evidences && result.evidences.length > 0 && (
+      <div className="rag-card-evidences">
+        <h6>Evidências ({result.evidences.length}):</h6>
+        <div className="rag-card-evidence-list">
+          {result.evidences.map((evidence, idx) => (
+            <EvidenceCard key={idx} evidence={evidence} onViewDocument={onViewDocument} />
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+);
