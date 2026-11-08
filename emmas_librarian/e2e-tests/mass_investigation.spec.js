@@ -2,13 +2,14 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { launchApp, getFirstWindow, createProject, clickAddArticlesOption } = require('./helpers');
+const { launchApp, getFirstWindow, createProject, clickAddArticlesOption, answerAppDialog } = require('./helpers');
 
 async function triggerImport(window) {
   window.on('dialog', async (dialog) => {
     await dialog.accept().catch(() => {});
   });
   await clickAddArticlesOption(window, 'Importar PDFs em Lote');
+  await answerAppDialog(window, 'PDFs importados', 'Entendi');
 }
 
 // #73: without the app's side margins (12px kept at the edge), and with nothing spilling sideways.
