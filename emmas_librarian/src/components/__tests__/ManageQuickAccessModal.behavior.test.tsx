@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, createEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor, createEvent } from '@testing-library/react';
 import { ManageQuickAccessModal } from '../modals/ManageQuickAccessModal';
 import { ServicesProvider } from '../../contexts/ServicesContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
@@ -223,11 +223,14 @@ describe('ManageQuickAccessModal editing and deleting', () => {
     expect(urlInput()).toHaveValue('');
   });
 
-  it('does nothing when deletion is not confirmed', () => {
+  it('does nothing when deletion is not confirmed', async () => {
     dialogs.confirmMessage.mockReturnValue(false);
     renderModal([doc(1)]);
 
     fireEvent.click(screen.getByTitle('Remover item'));
+    // The answer is a promise: check only once the question was answered, or a missing check passes.
+    await waitFor(() => expect(dialogs.asked).toHaveLength(1));
+    await act(async () => {});
 
     expect(service.deleteProjectDocument).not.toHaveBeenCalled();
   });
