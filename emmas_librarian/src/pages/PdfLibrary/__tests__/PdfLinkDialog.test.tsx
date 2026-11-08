@@ -3,7 +3,15 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Article, Project } from '../../../types';
 import { PdfLinkDialog, type PdfLinkDialogProps } from '../PdfLinkDialog';
 
-const PDF = { id: 1, file_path: '/a.pdf', file_hash: 'h', filename: 'a.pdf', file_size: 1, created_at: '', articles: [] };
+const PDF = {
+  id: 1,
+  file_path: '/a.pdf',
+  file_hash: 'h',
+  filename: 'a.pdf',
+  file_size: 1,
+  created_at: '',
+  articles: [],
+};
 const PROJECT = { id: 3, name: 'Tese', created_at: '' } as Project;
 const ARTICLE = { id: 9, title: 'Artigo sem PDF' } as Article;
 
