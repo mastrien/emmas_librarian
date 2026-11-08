@@ -4,6 +4,13 @@ import { CitationModal } from '../modals/CitationModal';
 import { ServicesProvider } from '../../contexts/ServicesContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import type { Article } from '../../types';
+import { FakeDialogs, withFakeDialogs } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const renderWithDialogs = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
+beforeEach(() => {
+  dialogs = new FakeDialogs();
+});
 
 // Deterministic stand-in for citation-js so assertions target the modal, not CSL formatting.
 vi.mock('../../services/citationService', () => ({
@@ -39,7 +46,7 @@ let service: FakeProjectService;
 function renderModal(props: Partial<React.ComponentProps<typeof CitationModal>> = {}) {
   const onClose = vi.fn();
   const onArticleUpdated = vi.fn();
-  const utils = render(
+  const utils = renderWithDialogs(
     <ServicesProvider apiService={service}>
       <CitationModal
         isOpen={true}
@@ -70,7 +77,6 @@ beforeEach(() => {
   clipboard.writeText.mockReset().mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'clipboard', { value: clipboard, configurable: true });
   vi.stubGlobal('ClipboardItem', FakeClipboardItem);
-  vi.spyOn(window, 'alert').mockImplementation(() => undefined);
 });
 
 afterEach(() => {
@@ -194,7 +200,7 @@ describe('CitationModal saving', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Salvar Metadados/ }));
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Metadados salvos com sucesso!'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Metadados salvos com sucesso!'));
     expect(service.updateArticleMetadata).toHaveBeenCalledWith(7, {
       title: 'Deep Nets',
       authors: 'Ana Lima',
@@ -239,7 +245,7 @@ describe('CitationModal saving', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Salvar Metadados/ }));
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao salvar metadados.'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao salvar metadados.'));
     expect(consoleError).toHaveBeenCalledWith('Erro ao salvar metadados:', expect.any(Error));
     expect(onArticleUpdated).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: /Salvar Metadados/ })).toBeEnabled();

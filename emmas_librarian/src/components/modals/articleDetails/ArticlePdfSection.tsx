@@ -6,6 +6,7 @@ import { useProjectService } from '../../../contexts/ServicesContext';
 import { describeError } from '../../../utils/describeError';
 import { sectionCaptionStyle, sectionStyle } from './sectionStyles';
 import { useDialogs } from '../../common/dialogs/DialogProvider';
+import { UNLINK_PDF_QUESTION } from '../../common/dialogs/unlinkPdfQuestion';
 
 interface ArticlePdfSectionProps {
   article: Article;
@@ -24,9 +25,6 @@ const actionStyle: React.CSSProperties = {
   gap: '0.4rem',
 };
 
-const UNLINK_CONFIRMATION =
-  'Deseja realmente desvincular o PDF deste artigo? O arquivo físico será removido do armazenamento local.';
-
 /**
  * Open, unlink or attach the article's PDF.
  *
@@ -43,8 +41,7 @@ export const ArticlePdfSection: React.FC<ArticlePdfSectionProps> = ({
   const { confirm, inform } = useDialogs();
 
   const unlinkPdf = async () => {
-    const asked = { title: 'Desvincular PDF', message: UNLINK_CONFIRMATION, confirmLabel: 'Desvincular', danger: true };
-    if (!(await confirm(asked))) return;
+    if (!(await confirm(UNLINK_PDF_QUESTION))) return;
     try {
       await projectService.unlinkPdf(article.id);
       onArticleUpdated?.();

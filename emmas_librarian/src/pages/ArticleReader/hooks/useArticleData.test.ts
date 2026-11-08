@@ -3,6 +3,10 @@ import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { useArticleData } from './useArticleData';
 import { projectService } from '../../../services/api';
 import * as pdfTextSearch from '../../../utils/pdfTextSearch';
+import { FakeDialogs, withFakeDialogs } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const renderWithDialogs = <T>(hook: () => T) => renderHook(hook, { wrapper: withFakeDialogs(dialogs) });
 
 vi.mock('../../../services/api', async () => {
   const { FakeProjectService } = await import('../../../services/__tests__/fakes/FakeProjectService');
@@ -20,13 +24,12 @@ describe('useArticleData', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal('confirm', () => true);
-    vi.stubGlobal('alert', vi.fn());
+    dialogs = new FakeDialogs();
     global.URL.createObjectURL = vi.fn(() => 'blob:url');
   });
 
   it('initializes correctly', () => {
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
     expect(result.current.article).toBeNull();
@@ -38,7 +41,7 @@ describe('useArticleData', () => {
     (projectService.getProjectCategories as Mock).mockResolvedValue([{ id: 1, name: 'Cat 1' }]);
     (projectService.getArticleCategories as Mock).mockResolvedValue([1]);
 
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
@@ -69,7 +72,7 @@ describe('useArticleData', () => {
     (projectService.getProjectCategories as Mock).mockResolvedValue([]);
     (projectService.getArticleCategories as Mock).mockResolvedValue([]);
 
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
@@ -107,7 +110,7 @@ describe('useArticleData', () => {
       unanchoredHighlights: [{ id: 888, comment: 'C', quote: 'Q' }],
     });
 
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
@@ -136,7 +139,7 @@ describe('useArticleData', () => {
 
     (pdfTextSearch.anchorPendingHighlights as Mock).mockRejectedValue(new Error('fail'));
 
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
@@ -150,7 +153,7 @@ describe('useArticleData', () => {
 
   it('handles file upload', async () => {
     (projectService.openPdfDialog as Mock).mockResolvedValue('/new-path.pdf');
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
@@ -172,7 +175,7 @@ describe('useArticleData', () => {
     (projectService.getPdfBuffer as Mock).mockResolvedValue(new ArrayBuffer(8));
     (projectService.getPendingHighlights as Mock).mockResolvedValue([]);
 
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
@@ -194,7 +197,7 @@ describe('useArticleData', () => {
   });
 
   it('does not unlink if not confirmed', async () => {
-    vi.stubGlobal('confirm', () => false);
+    dialogs.confirmMessage.mockReturnValue(false);
 
     (projectService.getArticle as Mock).mockResolvedValue({ id: 1, project_id: 10, local_file_path: '/path.pdf' });
     (projectService.getHighlights as Mock).mockResolvedValue([]);
@@ -206,7 +209,7 @@ describe('useArticleData', () => {
     (projectService.getPdfBuffer as Mock).mockResolvedValue(new ArrayBuffer(8));
     (projectService.getPendingHighlights as Mock).mockResolvedValue([]);
 
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
@@ -228,7 +231,7 @@ describe('useArticleData', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     (projectService.getArticle as Mock).mockRejectedValue(new Error('fail'));
 
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
@@ -244,7 +247,7 @@ describe('useArticleData', () => {
     (projectService.openPdfDialog as Mock).mockResolvedValue('/new-path.pdf');
     (projectService.uploadPdf as Mock).mockRejectedValue(new Error('fail'));
 
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
@@ -252,13 +255,13 @@ describe('useArticleData', () => {
       await result.current.handleFileUpload();
     });
 
-    expect(window.alert).toHaveBeenCalledWith('Erro ao vincular PDF');
+    expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao vincular PDF');
   });
 
   it('handles error in handleUnlinkClick', async () => {
     (projectService.unlinkPdf as Mock).mockRejectedValue(new Error('fail'));
 
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
@@ -270,14 +273,14 @@ describe('useArticleData', () => {
       await result.current.handleUnlinkClick();
     });
 
-    expect(window.alert).toHaveBeenCalledWith('Erro ao desvincular o PDF');
+    expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao desvincular o PDF');
   });
 
   it('handles error in fetchCategories', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     (projectService.getProjectCategories as Mock).mockRejectedValue(new Error('fail'));
 
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 
@@ -308,7 +311,7 @@ describe('useArticleData', () => {
     (projectService.getProjectCategories as Mock).mockResolvedValue([]);
     (projectService.getArticleCategories as Mock).mockResolvedValue([]);
 
-    const { result } = renderHook(() =>
+    const { result } = renderWithDialogs(() =>
       useArticleData('1', setHighlights, setStandaloneAnnotations, setAnchoringStatus),
     );
 

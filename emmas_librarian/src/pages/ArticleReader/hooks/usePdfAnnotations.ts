@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { Annotation } from '../../../types';
 import { toViewerHighlight, withNote, type ViewerHighlight } from '../viewerHighlight';
+import { useDialogs } from '../../../components/common/dialogs/DialogProvider';
 type IHighlight = {
   position: unknown;
   color?: string;
@@ -11,6 +12,7 @@ type IHighlight = {
 
 export function usePdfAnnotations(id: string | undefined) {
   const projectService = useProjectService();
+  const { confirm, inform } = useDialogs();
   const [highlights, setHighlights] = useState<ViewerHighlight[]>([]);
   const [standaloneAnnotations, setStandaloneAnnotations] = useState<Annotation[]>([]);
   const [newAnnotationText, setNewAnnotationText] = useState('');
@@ -56,14 +58,16 @@ export function usePdfAnnotations(id: string | undefined) {
 
   const handleDeleteHighlight = async (highlightId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Deseja realmente excluir este destaque?')) {
+    const message = 'Deseja realmente excluir este destaque?';
+    if (await confirm({ title: 'Excluir destaque', message, confirmLabel: 'Excluir', danger: true })) {
       await projectService.deleteHighlight(parseInt(highlightId));
       setHighlights(highlights.filter((h) => h.id !== highlightId));
     }
   };
 
   const handleDeleteStandaloneAnnotation = async (annId: string) => {
-    if (confirm('Deseja realmente excluir esta anotação?')) {
+    const message = 'Deseja realmente excluir esta anotação?';
+    if (await confirm({ title: 'Excluir anotação', message, confirmLabel: 'Excluir', danger: true })) {
       await projectService.deleteAnnotation(parseInt(annId));
       setStandaloneAnnotations(standaloneAnnotations.filter((a) => a.id.toString() !== annId.toString()));
     }
@@ -72,7 +76,10 @@ export function usePdfAnnotations(id: string | undefined) {
   const handleEditHighlightAnnotation = async (h: ViewerHighlight, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!h.annotation_id) {
-      alert('Este destaque não possui uma anotação vinculada inicial. Crie um novo destaque com texto.');
+      await inform({
+        title: 'Editar anotação',
+        message: 'Este destaque não possui uma anotação vinculada inicial. Crie um novo destaque com texto.',
+      });
       return;
     }
     setEditingId(h.id);
@@ -100,7 +107,7 @@ export function usePdfAnnotations(id: string | undefined) {
       setEditContent('');
     } catch (e) {
       console.error('Erro ao salvar edição', e);
-      alert('Erro ao salvar edição.');
+      await inform({ title: 'Erro ao salvar', message: 'Erro ao salvar edição.' });
     }
   };
 

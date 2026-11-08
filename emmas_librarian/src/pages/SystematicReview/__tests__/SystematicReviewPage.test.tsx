@@ -5,15 +5,18 @@ import { SystematicReviewPage } from '../SystematicReviewPage';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import type { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
 import { EXCLUDED, INCLUDED, MAYBE, reviewArticle, screeningService, storedDecision } from './screeningTestData';
+import { FakeDialogsProvider } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 
 function renderReview(service: FakeProjectService) {
   render(
     <MemoryRouter initialEntries={['/projects/1/review']}>
       <ServicesProvider apiService={service}>
-        <Routes>
-          <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
-          <Route path="/projects/:id" element={<div>Página do projeto</div>} />
-        </Routes>
+        <FakeDialogsProvider>
+          <Routes>
+            <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
+            <Route path="/projects/:id" element={<div>Página do projeto</div>} />
+          </Routes>
+        </FakeDialogsProvider>
       </ServicesProvider>
     </MemoryRouter>,
   );

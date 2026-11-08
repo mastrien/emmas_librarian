@@ -6,6 +6,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ArticleReaderPage } from '../ArticleReaderPage';
 import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
+import { FakeDialogs, withFakeDialogs } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 import type { Article } from '../../types';
 
 /** Props the mocked PdfHighlighter last received, so tests can inspect the mapped highlights. */
@@ -56,6 +57,7 @@ const renderReader = () =>
         </Routes>
       </GlobalErrorProvider>
     </MemoryRouter>,
+    { wrapper: withFakeDialogs(new FakeDialogs()) },
   );
 
 const article = (overrides: Partial<Article> = {}) =>

@@ -29,9 +29,11 @@ import type { Annotation } from '../types';
 import { ArticleReaderToolbar } from './ArticleReader/components/ArticleReaderToolbar';
 import { ArticleReaderModals } from './ArticleReader/components/ArticleReaderModals';
 import { ArticleReaderPdfView } from './ArticleReader/components/ArticleReaderPdfView';
+import { useDialogs } from '../components/common/dialogs/DialogProvider';
 
 export const ArticleReaderPage: React.FC = () => {
   const projectService = useProjectService();
+  const { inform } = useDialogs();
   const { id } = useParams<{ id: string }>();
 
   // Toolbars and Modals State
@@ -206,7 +208,7 @@ export const ArticleReaderPage: React.FC = () => {
       deleteAnnotation: projectService.deleteAnnotation,
     });
     if (outcome !== 'anchored') {
-      alert(RETRY_ANCHOR_MESSAGES[outcome]);
+      await inform({ title: 'Ancorar citação', message: RETRY_ANCHOR_MESSAGES[outcome] });
       return;
     }
     await reloadHighlightsAndNotes();
@@ -238,7 +240,7 @@ export const ArticleReaderPage: React.FC = () => {
       if (err.message?.includes('QUOTA_EXCEEDED')) {
         setShowQuotaModal(true);
       } else {
-        alert('Erro ao gerar resumo da IA.');
+        await inform({ title: 'Erro na IA', message: 'Erro ao gerar resumo da IA.' });
       }
     } finally {
       setIsGeneratingAi(false);
