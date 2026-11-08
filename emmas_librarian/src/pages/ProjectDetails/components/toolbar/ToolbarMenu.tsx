@@ -24,21 +24,34 @@ interface ToolbarMenuProps {
  * A toolbar button that opens a list of actions below it ("Adicionar Artigos", "Exportar"). Choosing one closes the
  * list first. Hover and outside clicks are handled by the page, which owns `open`.
  *
+ * The props are destructured: with the ref inside a props object, react-hooks/refs flags every read of that object
+ * during render.
+ *
  * @example <ToolbarMenu variant="secondary" icon={<Download size={18} />} label="Exportar" open={o} items={items} … />
  */
-export const ToolbarMenu: React.FC<ToolbarMenuProps> = (props) => (
-  <div ref={props.menuRef} onMouseEnter={props.onMouseEnter} onMouseLeave={props.onMouseLeave} className="toolbar-menu">
-    <button onClick={() => props.onOpenChange(!props.open)} className={`btn-${props.variant} toolbar-button`}>
-      {props.icon} {props.label} <ChevronDown size={14} />
+export const ToolbarMenu: React.FC<ToolbarMenuProps> = ({
+  variant,
+  icon,
+  label,
+  open,
+  onOpenChange,
+  items,
+  menuRef,
+  onMouseEnter,
+  onMouseLeave,
+}) => (
+  <div ref={menuRef} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} className="toolbar-menu">
+    <button onClick={() => onOpenChange(!open)} className={`btn-${variant} toolbar-button`}>
+      {icon} {label} <ChevronDown size={14} />
     </button>
-    {props.open && (
+    {open && (
       <div className="glass-panel toolbar-menu-list">
-        {props.items.map((item, i) => (
+        {items.map((item, i) => (
           <button
             key={i}
             className="menu-dropdown-item"
             onClick={() => {
-              props.onOpenChange(false);
+              onOpenChange(false);
               item.onSelect();
             }}
           >
