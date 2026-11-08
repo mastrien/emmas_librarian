@@ -1,8 +1,14 @@
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectToolbar } from '../components/ProjectToolbar';
 import { MemoryRouter } from 'react-router-dom';
 import { projectService } from '../../../services/api';
+import { FakeDialogs, withFakeDialogs } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+beforeEach(() => {
+  dialogs = new FakeDialogs();
+});
 
 vi.mock('../../../services/api', async () => {
   const { FakeProjectService } = await import('../../../services/__tests__/fakes/FakeProjectService');
@@ -39,6 +45,7 @@ describe('ProjectToolbar', () => {
       <MemoryRouter>
         <ProjectToolbar {...defaultProps} {...props} />
       </MemoryRouter>,
+      { wrapper: withFakeDialogs(dialogs) },
     );
   };
 
@@ -128,16 +135,6 @@ describe('ProjectToolbar', () => {
     { item: 'Pacote .emmapcarc (com PDFs)', method: 'exportProject' as const, kind: 'Pacote .emmapcarc' },
     { item: 'Biblioshiny', method: 'exportBiblioshiny' as const, kind: 'CSV do Biblioshiny' },
   ])('export menu: $item', ({ item, method, kind }) => {
-    let alertSpy: ReturnType<typeof vi.spyOn>;
-
-    beforeEach(() => {
-      alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
-    });
-
-    afterEach(() => {
-      alertSpy.mockRestore();
-    });
-
     it('tells where the file was saved', async () => {
       vi.mocked(projectService[method]).mockResolvedValueOnce('C:\\Exportados\\tese.file');
       renderComponent({ isExportMenuOpen: true });
@@ -145,7 +142,9 @@ describe('ProjectToolbar', () => {
       fireEvent.click(screen.getByText(item));
 
       await waitFor(() =>
-        expect(alertSpy).toHaveBeenCalledWith(`${kind} exportado com sucesso para: C:\\Exportados\\tese.file`),
+        expect(dialogs.informMessage).toHaveBeenCalledWith(
+          `${kind} exportado com sucesso para: C:\\Exportados\\tese.file`,
+        ),
       );
     });
 
@@ -155,7 +154,7 @@ describe('ProjectToolbar', () => {
 
       fireEvent.click(screen.getByText(item));
 
-      await waitFor(() => expect(alertSpy).toHaveBeenCalledWith(`Erro ao exportar ${kind}: disco cheio`));
+      await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith(`Erro ao exportar ${kind}: disco cheio`));
     });
 
     it('stays quiet when the save dialog is cancelled', async () => {
@@ -165,7 +164,7 @@ describe('ProjectToolbar', () => {
       fireEvent.click(screen.getByText(item));
 
       await waitFor(() => expect(projectService[method]).toHaveBeenCalledWith(1));
-      expect(alertSpy).not.toHaveBeenCalled();
+      expect(dialogs.informMessage).not.toHaveBeenCalled();
     });
   });
 

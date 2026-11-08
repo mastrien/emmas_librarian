@@ -4,6 +4,10 @@ import { CategoryCell } from '../common/CategoryCell';
 
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
+import { FakeDialogs, withFakeDialogs } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+
+const dialogs = new FakeDialogs();
+const renderCell = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
 
 const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
@@ -17,7 +21,7 @@ describe('CategoryCell', () => {
   });
 
   it('renders text category and allows editing', async () => {
-    render(
+    renderCell(
       <CategoryCell
         articleId={1}
         category={{ id: 10, project_id: 1, name: 'Method', type: 'text' }}
@@ -41,7 +45,7 @@ describe('CategoryCell', () => {
   });
 
   it('renders boolean category as select', async () => {
-    render(
+    renderCell(
       <CategoryCell
         articleId={2}
         category={{ id: 11, project_id: 1, name: 'Reviewed', type: 'boolean' }}
@@ -73,7 +77,7 @@ describe('CategoryCell', () => {
       ],
     };
 
-    render(<CategoryCell articleId={3} category={category} initialValue="To Do" />);
+    renderCell(<CategoryCell articleId={3} category={category} initialValue="To Do" />);
 
     const select = screen.getByRole('combobox');
     expect(select).toHaveValue('To Do');
@@ -99,5 +103,20 @@ describe('CategoryCell', () => {
       // And then set the article category
       expect(fakeService.setArticleCategory).toHaveBeenCalledWith(3, 12, 'Done');
     });
+  });
+
+  it('tells in the app window when the new option cannot be saved', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    fakeService.updateProjectCategory.mockRejectedValue(new Error('locked'));
+    const category = { id: 12, project_id: 1, name: 'Status', type: 'enum', parsedOptions: [{ id: 1, name: 'To Do' }] };
+    renderCell(<CategoryCell articleId={3} category={category} initialValue="To Do" />);
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: '__ADD_NEW__' } });
+    const input = screen.getByPlaceholderText('Nova opção...');
+    fireEvent.change(input, { target: { value: 'Done' } });
+    fireEvent.blur(input);
+
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao adicionar opção.'));
+    expect(fakeService.setArticleCategory).not.toHaveBeenCalled();
   });
 });

@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { launchApp, getFirstWindow, createProject } = require('./helpers');
+const { launchApp, getFirstWindow, createProject, answerAppDialog } = require('./helpers');
 const { IMPORTED_TITLE, copyFixturePdf, importFixturePdf, openReader } = require('./articleFixture');
 
 // Export in one installation, delete it, import in another: the PDF must travel inside the .emmapcarc.
@@ -27,9 +27,10 @@ test('F-17 a project shared as .emmapcarc opens in another installation with its
 
       // The menu opens on hover; a click after the hover would toggle it closed again.
       await window.getByRole('button', { name: 'Exportar', exact: true }).hover();
-      const confirmation = window.waitForEvent('dialog');
       await window.getByRole('button', { name: /Pacote \.emmapcarc/ }).click();
-      expect((await confirmation).message()).toBe(`Pacote .emmapcarc exportado com sucesso para: ${packagePath}`);
+      expect(await answerAppDialog(window, 'Exportação concluída', 'Entendi')).toBe(
+        `Pacote .emmapcarc exportado com sucesso para: ${packagePath}`,
+      );
     } finally {
       await sender.close();
     }

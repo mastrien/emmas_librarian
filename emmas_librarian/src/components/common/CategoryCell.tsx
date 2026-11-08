@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ProjectCategory } from '../../types';
 import { useProjectService } from '../../contexts/ServicesContext';
+import { useDialogs } from './dialogs/DialogProvider';
 
 interface CategoryCellProps {
   articleId: number;
@@ -11,6 +12,7 @@ interface CategoryCellProps {
 
 export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category, initialValue, onCategorySaved }) => {
   const projectService = useProjectService();
+  const { inform } = useDialogs();
   const [value, setValue] = useState(initialValue);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -93,7 +95,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
             handleSave(trimmed);
           } catch (err) {
             console.error(err);
-            alert('Erro ao adicionar opção.');
+            void inform({ title: 'Categorias', message: 'Erro ao adicionar opção.' });
           }
         } else {
           handleSave(trimmed);
@@ -204,7 +206,7 @@ export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category,
             saveWithoutClosing(newSelected.join(', '));
           } catch (err) {
             console.error(err);
-            alert('Erro ao adicionar opção.');
+            void inform({ title: 'Categorias', message: 'Erro ao adicionar opção.' });
           }
         } else {
           if (!selectedValues.includes(trimmed)) {
