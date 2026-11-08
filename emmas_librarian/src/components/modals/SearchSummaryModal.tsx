@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { CheckCircle, Loader2, Save, Trash2, X } from 'lucide-react';
+import { Loader2, Save, Trash2 } from 'lucide-react';
 import type { SearchPreview, SearchPreviewItem } from '../../types';
+import { Modal } from '../common/Modal';
 import { ArticleDetailsModal } from './ArticleDetailsModal';
 import { previewItemToArticle } from './searchSummary/previewItemToArticle';
 import { saveButtonLabel, searchCounts, type SearchCounts } from './searchSummary/searchCounts';
 import { SearchBreakdownList } from './searchSummary/SearchBreakdownList';
 import { SearchPreviewList } from './searchSummary/SearchPreviewList';
+import './searchSummary/searchSummary.css';
 
 interface SearchSummaryModalProps {
   preview: SearchPreview;
@@ -19,34 +20,23 @@ interface SearchSummaryModalProps {
   onDiscard: () => void;
 }
 
-const statBoxStyle: React.CSSProperties = {
-  background: 'var(--bg-main)',
-  padding: '1rem',
-  borderRadius: 'var(--radius-lg)',
-  textAlign: 'center',
-};
-
-const StatBox: React.FC<{ label: string; value: number; color?: string }> = ({ label, value, color }) => (
-  <div style={statBoxStyle}>
-    <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.4rem' }}>{label}</div>
-    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: color ?? 'var(--text-heading)' }}>{value}</div>
+const StatBox: React.FC<{ label: string; value: number; isNew?: boolean }> = ({ label, value, isNew }) => (
+  <div className="search-summary-stat">
+    <div className="search-summary-stat-label">{label}</div>
+    <div className={`search-summary-stat-value${isNew ? ' search-summary-stat-value--new' : ''}`}>{value}</div>
   </div>
 );
 
 // The four numbers read as a subtraction, so the user sees where each found article went.
 const SummaryCounts: React.FC<{ counts: SearchCounts }> = ({ counts }) => (
-  <div style={{ marginBottom: '1.5rem' }}>
-    <div
-      role="group"
-      aria-label="Contagem da busca"
-      style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}
-    >
+  <div>
+    <div role="group" aria-label="Contagem da busca" className="search-summary-counts">
       <StatBox label="Encontrados" value={counts.found} />
       <StatBox label="Repetidos" value={counts.repeated} />
       <StatBox label="Já no projeto" value={counts.alreadyInProject} />
-      <StatBox label="Novos" value={counts.added} color="var(--color-primary)" />
+      <StatBox label="Novos" value={counts.added} isNew />
     </div>
-    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.6rem 0 0 0' }}>
+    <p className="search-summary-explain">
       Encontrados soma o que cada base devolveu. Repetidos são as cópias do mesmo artigo vindas de mais de uma base
       (mesmo DOI ou mesmo título). Novos são os que entram no projeto ao salvar; os que já estão nele só ganham a base
       nova na lista de origem.
@@ -54,41 +44,24 @@ const SummaryCounts: React.FC<{ counts: SearchCounts }> = ({ counts }) => (
   </div>
 );
 
-const SummaryHeader: React.FC = () => (
-  <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-    <div
-      style={{
-        background: 'var(--color-success)',
-        color: 'white',
-        width: '56px',
-        height: '56px',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: '0 auto 1rem',
-      }}
-    >
-      <CheckCircle size={34} />
-    </div>
-    <h2 style={{ fontSize: '1.8rem', margin: '0 0 0.5rem 0' }}>Busca Concluída!</h2>
-    <p style={{ color: 'var(--text-muted)', margin: 0 }}>
-      Nada foi salvo ainda. Revise os resultados e escolha se eles entram no projeto.
-    </p>
-  </div>
-);
-
 type SummaryActionsProps = Omit<SearchSummaryModalProps, 'preview' | 'saveError'> & { added: number };
 
 const SummaryActions: React.FC<SummaryActionsProps> = ({ isSaving, onSave, onDiscard, added }) => (
-  <div style={{ display: 'flex', gap: '1rem' }}>
-    <button onClick={onDiscard} disabled={isSaving} className="btn-secondary" style={{ flex: 1, padding: '1rem' }}>
+  <div className="search-summary-actions">
+    <button onClick={onDiscard} disabled={isSaving} className="btn-secondary">
       <Trash2 size={18} /> Descartar
     </button>
-    <button onClick={onSave} disabled={isSaving} className="btn-primary" style={{ flex: 2, padding: '1rem' }}>
+    <button onClick={onSave} disabled={isSaving} className="btn-primary">
       {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {saveButtonLabel(added)}
     </button>
   </div>
+);
+
+const OnlyNewToggle: React.FC<{ known: number; checked: boolean; onChange: (checked: boolean) => void }> = (props) => (
+  <label className="search-summary-only-new">
+    <input type="checkbox" checked={props.checked} onChange={(e) => props.onChange(e.target.checked)} />
+    Mostrar só o que não está no projeto ({props.known} já {props.known === 1 ? 'está' : 'estão'})
+  </label>
 );
 
 /**
@@ -97,90 +70,46 @@ const SummaryActions: React.FC<SummaryActionsProps> = ({ isSaving, onSave, onDis
  *
  * @example <SearchSummaryModal preview={preview} isSaving={false} onSave={save} onDiscard={discard} />
  */
-export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = ({
-  preview,
-  isSaving,
-  saveError,
-  startOnlyNew = false,
-  onSave,
-  onDiscard,
-}) => {
-  const [onlyNew, setOnlyNew] = useState(startOnlyNew);
+export const SearchSummaryModal: React.FC<SearchSummaryModalProps> = (props) => {
+  const { preview, isSaving, saveError, onSave, onDiscard } = props;
+  const [onlyNew, setOnlyNew] = useState(props.startOnlyNew ?? false);
   const known = preview.results.filter((r) => r.alreadyInProject).length;
   const shown = onlyNew ? preview.results.filter((r) => !r.alreadyInProject) : preview.results;
   const counts = searchCounts(preview);
   const [detailsItem, setDetailsItem] = useState<SearchPreviewItem | null>(null);
 
-  return createPortal(
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Busca Concluída"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        backdropFilter: 'blur(4px)',
-      }}
-    >
-      <div
-        className="card fade-in"
-        style={{
-          width: '100%',
-          maxWidth: '680px',
-          maxHeight: '92vh',
-          overflowY: 'auto',
-          background: 'var(--bg-surface)',
-          padding: '2rem 2.5rem',
-          position: 'relative',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
-        }}
+  return (
+    <>
+      {/* Closing is the same as discarding: nothing half-saved is left behind. Esc does not close, so a key meant
+          for the metadata window above, or pressed by accident, never throws the results away. */}
+      <Modal
+        label="Busca Concluída"
+        title="Busca Concluída!"
+        description="Nada foi salvo ainda. Revise os resultados e escolha se eles entram no projeto."
+        onClose={onDiscard}
+        closeLabel="Fechar e descartar"
+        busy={isSaving}
+        closeOnEscape={false}
+        width={680}
       >
-        {/* Closing is the same as discarding: nothing half-saved is left behind. */}
-        <button
-          onClick={onDiscard}
-          disabled={isSaving}
-          aria-label="Fechar e descartar"
-          style={{
-            position: 'absolute',
-            top: '1.5rem',
-            right: '1.5rem',
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-          }}
-        >
-          <X size={24} />
-        </button>
-        <SummaryHeader />
         <SummaryCounts counts={counts} />
         <SearchBreakdownList breakdown={preview.breakdown} />
-        {known > 0 && (
-          <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <input type="checkbox" checked={onlyNew} onChange={(e) => setOnlyNew(e.target.checked)} />
-            Mostrar só o que não está no projeto ({known} já {known === 1 ? 'está' : 'estão'})
-          </label>
-        )}
+        {known > 0 && <OnlyNewToggle known={known} checked={onlyNew} onChange={setOnlyNew} />}
         <SearchPreviewList results={shown} onOpenDetails={setDetailsItem} />
         {saveError && (
-          <p role="alert" style={{ color: 'var(--color-danger)', margin: '0 0 1rem 0' }}>
+          <p role="alert" className="search-summary-error">
             {saveError}
           </p>
         )}
         <SummaryActions isSaving={isSaving} onSave={onSave} onDiscard={onDiscard} added={counts.added} />
-      </div>
+      </Modal>
+      {/* After the Modal, so its window lands above the summary. */}
       <ArticleDetailsModal
         isOpen={detailsItem !== null}
         onClose={() => setDetailsItem(null)}
         article={detailsItem ? previewItemToArticle(detailsItem) : null}
         isSearchResult
       />
-    </div>,
-    document.body,
+    </>
   );
 };
