@@ -26,6 +26,8 @@
     "test:playwright": "npm run rebuild:electron && tsc -p tsconfig.electron.json && concurrently --kill-others --success first \"vite\" \"wait-on http://localhost:5173 && npx playwright test e2e-tests/ --config=playwright.config.js --workers=1\"",
     "test:performance": "npm run test:performance:smoke",
     "test:e2e": "npm run test:playwright",
+    "visual:baseline": "npm run rebuild:electron && tsc -p tsconfig.electron.json && concurrently --kill-others --success first \"vite\" \"wait-on http://localhost:5173 && npx playwright test --config=playwright.visual.config.js --update-snapshots\"",
+    "visual:compare": "npm run rebuild:electron && tsc -p tsconfig.electron.json && concurrently --kill-others --success first \"vite\" \"wait-on http://localhost:5173 && npx playwright test --config=playwright.visual.config.js\"",
     "test:all": "npm test && npm run test:performance && npm run test:e2e",
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint .",

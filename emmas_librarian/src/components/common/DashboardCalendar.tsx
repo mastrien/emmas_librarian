@@ -128,7 +128,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ diarySet, 
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div data-testid="date-calendar" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <CalendarIcon size={16} color="var(--color-primary)" />
