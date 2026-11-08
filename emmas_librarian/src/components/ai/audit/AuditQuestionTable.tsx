@@ -26,7 +26,7 @@ const titleOf = (articles: Article[], id: number) => articles.find((a) => a.id =
 export const AuditQuestionTable: React.FC<AuditQuestionTableProps> = (props) => {
   const { rows, articles, open, selectedId, onToggle, onSelect } = props;
   return (
-    <div className="audit-panel" style={{ overflowX: 'auto' }}>
+    <div className="audit-panel audit-scroll-x">
       <table className="audit-table">
         <thead>
           <tr>
@@ -34,7 +34,7 @@ export const AuditQuestionTable: React.FC<AuditQuestionTableProps> = (props) => 
             <th className="right">Respostas</th>
             <th className="right">Marcados</th>
             <th>Acerto</th>
-            <th style={{ width: '30%' }}>IC 95%</th>
+            <th className="audit-col-30">IC 95%</th>
           </tr>
         </thead>
         <tbody>
@@ -64,8 +64,8 @@ export const AuditQuestionTable: React.FC<AuditQuestionTableProps> = (props) => 
             </React.Fragment>
           ))}
           <tr>
-            <td colSpan={4} style={{ borderBottom: 'none' }} />
-            <td style={{ borderBottom: 'none', paddingTop: 4 }}>
+            <td className="audit-no-rule" colSpan={4} />
+            <td className="audit-no-rule audit-axis-cell">
               <AxisScale />
             </td>
           </tr>
@@ -95,11 +95,7 @@ const QuestionRow: React.FC<{ row: AuditQuestionRow; isOpen: boolean; onToggle: 
       </td>
       <td className="right audit-num">
         {row.answered}
-        {row.failed > 0 && (
-          <div className="audit-muted" style={{ fontSize: '0.75rem' }}>
-            +{row.failed} com erro
-          </div>
-        )}
+        {row.failed > 0 && <div className="audit-muted audit-text-xs">+{row.failed} com erro</div>}
       </td>
       <td className="right audit-num">
         {nothing ? (

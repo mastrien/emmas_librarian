@@ -18,34 +18,32 @@ interface AuditModelComparisonProps {
  */
 export const AuditModelComparison: React.FC<AuditModelComparisonProps> = ({ rows, currentId, onHelp }) => (
   <section className="audit-panel" aria-label="Comparação por modelo">
-    <div className="audit-row audit-spread" style={{ padding: '14px 16px 6px' }}>
-      <div className="audit-row" style={{ gap: 6 }}>
-        <h3 style={{ margin: 0 }}>Comparação por modelo</h3>
+    <div className="audit-row audit-spread audit-compare-head">
+      <div className="audit-row audit-gap-6">
+        <h3 className="audit-m0">Comparação por modelo</h3>
         <AuditHelpButton onClick={onHelp} label="Como ler os intervalos" />
       </div>
-      <span className="audit-muted" style={{ fontSize: '0.75rem' }}>
-        investigações auditadas deste projeto
-      </span>
+      <span className="audit-muted audit-text-xs">investigações auditadas deste projeto</span>
     </div>
     {rows.length < 2 ? (
-      <p className="audit-muted" style={{ padding: '0 16px 14px', margin: 0, fontSize: '0.85rem' }}>
+      <p className="audit-muted audit-compare-note">
         Audite outra investigação deste projeto, de outro modelo, para comparar aqui.
       </p>
     ) : (
-      <div style={{ overflowX: 'auto' }}>
+      <div className="audit-scroll-x">
         <table className="audit-table">
           <thead>
             <tr>
               <th>Modelo</th>
               <th className="right">Marcados</th>
               <th>Acerto</th>
-              <th style={{ width: '40%' }}>IC 95%</th>
+              <th className="audit-col-40">IC 95%</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.investigationId}>
-                <td style={{ color: 'var(--text-heading)', fontWeight: row.investigationId === currentId ? 600 : 400 }}>
+                <td className={`audit-model-cell${row.investigationId === currentId ? ' is-current' : ''}`}>
                   {row.model} <span className="audit-muted">#{row.investigationId}</span>
                 </td>
                 <td className="right audit-num">
@@ -60,14 +58,14 @@ export const AuditModelComparison: React.FC<AuditModelComparisonProps> = ({ rows
               </tr>
             ))}
             <tr>
-              <td colSpan={3} style={{ borderBottom: 'none' }} />
-              <td style={{ borderBottom: 'none', paddingTop: 4 }}>
+              <td className="audit-no-rule" colSpan={3} />
+              <td className="audit-no-rule audit-axis-cell">
                 <AxisScale />
               </td>
             </tr>
           </tbody>
         </table>
-        <p className="audit-muted" style={{ padding: '0 16px 14px', margin: 0, fontSize: '0.75rem' }}>
+        <p className="audit-muted audit-compare-note audit-text-xs">
           Intervalos que se sobrepõem não mostram diferença clara entre os modelos.
         </p>
       </div>

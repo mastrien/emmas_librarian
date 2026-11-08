@@ -22,14 +22,14 @@ export const AuditEstimate: React.FC<AuditEstimateProps> = ({ stats, onReviewInS
   return (
     <section className="audit-panel audit-estimate" aria-label="Acerto estimado">
       <div>
-        <div className="audit-row" style={{ gap: 6 }}>
+        <div className="audit-row audit-gap-6">
           <span className="audit-eyebrow">Acerto estimado</span>
           <AuditHelpButton onClick={onHelp} label="O que é o acerto estimado e o IC 95%" />
         </div>
         <div className="audit-big audit-num">{interval ? percent(interval.estimate) : '—'}</div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-        <span className="audit-muted" style={{ fontSize: '0.8rem' }}>
+      <div className="audit-stack-6">
+        <span className="audit-muted audit-text-sm">
           {interval
             ? `IC 95%: ${percent(interval.low)} a ${percent(interval.high)} · ${correct} de ${marked} corretos`
             : 'Marque itens da amostra para ver a estimativa'}
@@ -38,11 +38,11 @@ export const AuditEstimate: React.FC<AuditEstimateProps> = ({ stats, onReviewInS
         <AxisScale />
       </div>
       <div className="audit-done">
-        <span className="audit-num" style={{ fontSize: '0.85rem' }}>
+        <span className="audit-num audit-text-md">
           <b>{marked}</b> de {sampled} marcados
         </span>
         <div className="audit-bar" role="progressbar" aria-valuemin={0} aria-valuemax={sampled} aria-valuenow={marked}>
-          <span style={{ width: `${sampled ? (marked / sampled) * 100 : 0}%` }} />
+          <span style={{ '--progress': `${sampled ? (marked / sampled) * 100 : 0}%` } as React.CSSProperties} />
         </div>
         <button type="button" className="btn-primary" disabled={marked >= sampled} onClick={onReviewInSequence}>
           Revisar em sequência

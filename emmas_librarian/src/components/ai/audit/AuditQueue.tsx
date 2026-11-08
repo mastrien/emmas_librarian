@@ -43,9 +43,7 @@ export const AuditQueue: React.FC<AuditQueueProps> = (props) => {
       <button type="button" className="btn-secondary" onClick={onBack}>
         ← Voltar para a tabela
       </button>
-      <span className="audit-muted audit-num" style={{ fontSize: '0.8rem' }}>
-        {pending} pendentes na amostra
-      </span>
+      <span className="audit-muted audit-num audit-text-sm">{pending} pendentes na amostra</span>
     </div>
   );
   if (!current) {
@@ -53,8 +51,7 @@ export const AuditQueue: React.FC<AuditQueueProps> = (props) => {
       <>
         {head}
         <div className="audit-panel audit-empty">
-          <h3 style={{ margin: '0 0 6px' }}>Amostra toda marcada</h3>A estimativa acima já é o resultado desta
-          auditoria.
+          <h3 className="audit-done-title">Amostra toda marcada</h3>A estimativa acima já é o resultado desta auditoria.
         </div>
       </>
     );
@@ -69,15 +66,11 @@ export const AuditQueue: React.FC<AuditQueueProps> = (props) => {
           </span>
           <div className="audit-queue-question">{current.question}</div>
           <div>
-            <div className="audit-eyebrow" style={{ marginBottom: 4 }}>
-              Resposta da IA
-            </div>
-            <div className="audit-answer" style={{ fontSize: '1.05rem' }}>
-              {aiAnswerText(current) || '—'}
-            </div>
+            <div className="audit-eyebrow audit-mb-4">Resposta da IA</div>
+            <div className="audit-answer audit-text-lg">{aiAnswerText(current) || '—'}</div>
           </div>
           <AuditVerdict result={current} editing={editing} onEdit={onEdit} onReview={onReview} />
-          <span className="audit-muted" style={{ fontSize: '0.75rem' }}>
+          <span className="audit-muted audit-text-xs">
             Teclas: <span className="audit-kbd">A</span> correto · <span className="audit-kbd">E</span> corrigir ·{' '}
             <span className="audit-kbd">R</span> incorreto · <span className="audit-kbd">P</span> abrir no PDF
           </span>
