@@ -2,8 +2,18 @@ import React from 'react';
 import { Pie, Bar } from 'react-chartjs-2';
 import { Article } from '../../../types';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from 'chart.js';
+import {
+  articlesByDatabase,
+  articlesByYear,
+  doiCompleteness,
+  openAccessSplit,
+  topPublishers,
+  type ChartSeries,
+} from './overview/projectStats';
+import './overview/overview.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
+
 interface ProjectOverviewTabProps {
   activeArticles: Article[];
   readArticles: Article[];
@@ -11,269 +21,106 @@ interface ProjectOverviewTabProps {
   filteredArticles: Article[];
 }
 
-export const ProjectOverviewTab: React.FC<ProjectOverviewTabProps> = ({
-  activeArticles,
-  readArticles,
-  archivedArticles,
-  filteredArticles,
-}) => {
+const BAR_COLOR = '#8b5cf6';
+const SPLIT_COLORS = ['#10b981', '#ef4444'];
+const DATABASE_COLORS = [
+  '#10b981',
+  '#3b82f6',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
+  '#6366f1',
+  '#14b8a6',
+  '#f43f5e',
+  '#a855f7',
+];
+const STATUS_COLORS = ['#3b82f6', '#10b981', '#6b7280'];
+
+const PIE_WITH_LEGEND = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: true, position: 'bottom' as const } },
+};
+const BAR_OPTIONS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } },
+};
+
+const pieData = (series: ChartSeries, colors: string[]) => ({
+  labels: series.labels,
+  datasets: [{ data: series.data, backgroundColor: colors, borderWidth: 0 }],
+});
+
+const barData = (series: ChartSeries) => ({
+  labels: series.labels,
+  datasets: [{ label: 'Quantidade', data: series.data, backgroundColor: BAR_COLOR, borderRadius: 4 }],
+});
+
+const ChartCard: React.FC<{ title: string; children: React.ReactNode; footer?: React.ReactNode }> = (props) => (
+  <div className="card overview-card">
+    <h3>{props.title}</h3>
+    <div className="overview-chart">{props.children}</div>
+    {props.footer}
+  </div>
+);
+
+const StatusChart: React.FC<{ counts: [number, number, number] }> = ({ counts }) => {
+  const labels = ['Ativos', 'Lidos', 'Arquivados'];
+  const legend = (
+    <div className="overview-legend">
+      {labels.map((label, i) => (
+        <div key={label} className="overview-legend-item">
+          <div className={`overview-legend-dot overview-legend-dot--${i}`} /> {label} ({counts[i]})
+        </div>
+      ))}
+    </div>
+  );
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '70%',
+    plugins: {
+      legend: { display: false },
+      tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 },
+    },
+  };
   return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        <div
-          className="card"
-          style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-        >
-          <h3 style={{ margin: '0 0 1rem 0' }}>Status dos Artigos</h3>
-          <div style={{ width: '100%', height: '300px', position: 'relative' }}>
-            <Pie
-              data={{
-                labels: ['Ativos', 'Lidos', 'Arquivados'],
-                datasets: [
-                  {
-                    data: [activeArticles.length, readArticles.length, archivedArticles.length],
-                    backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],
-                    borderWidth: 0,
-                  },
-                ],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                  legend: { display: false },
-                  tooltip: {
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    padding: 12,
-                    cornerRadius: 8,
-                  },
-                },
-              }}
-            />
-          </div>
-          <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#3b82f6' }} /> Ativos (
-              {activeArticles.length})
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#10b981' }} /> Lidos (
-              {readArticles.length})
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#6b7280' }} /> Arquivados (
-              {archivedArticles.length})
-            </div>
-          </div>
-        </div>
+    <ChartCard title="Status dos Artigos" footer={legend}>
+      <Pie data={pieData({ labels, data: counts }, STATUS_COLORS)} options={options} />
+    </ChartCard>
+  );
+};
 
-        <div
-          className="card"
-          style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-        >
-          <h3 style={{ margin: '0 0 1rem 0' }}>Artigos por Ano</h3>
-          <div style={{ width: '100%', height: '300px', position: 'relative' }}>
-            <Bar
-              data={{
-                labels: Object.entries(
-                  filteredArticles.reduce((acc: Record<string, number>, art) => {
-                    const year = art.year ? art.year.toString() : 'N/A';
-                    acc[year] = (acc[year] || 0) + 1;
-                    return acc;
-                  }, {}),
-                )
-                  .sort(([a], [b]) => a.localeCompare(b))
-                  .map(([year]) => year),
-                datasets: [
-                  {
-                    label: 'Quantidade',
-                    data: Object.entries(
-                      filteredArticles.reduce((acc: Record<string, number>, art) => {
-                        const year = art.year ? art.year.toString() : 'N/A';
-                        acc[year] = (acc[year] || 0) + 1;
-                        return acc;
-                      }, {}),
-                    )
-                      .sort(([a], [b]) => a.localeCompare(b))
-                      .map(([, count]) => count),
-                    backgroundColor: '#8b5cf6',
-                    borderRadius: 4,
-                  },
-                ],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { display: false },
-                },
-                scales: {
-                  y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-                  x: { grid: { display: false } },
-                },
-              }}
-            />
-          </div>
-        </div>
-
-        <div
-          className="card"
-          style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-        >
-          <h3 style={{ margin: '0 0 1rem 0' }}>Acesso Aberto (Open Access)</h3>
-          <div style={{ width: '100%', height: '300px', position: 'relative' }}>
-            <Pie
-              data={(() => {
-                const oa = filteredArticles.filter((a) => a.is_oa === 1).length;
-                const nonOa = filteredArticles.length - oa;
-                return {
-                  labels: ['Open Access', 'Closed / Não especificado'],
-                  datasets: [
-                    {
-                      data: [oa, nonOa],
-                      backgroundColor: ['#10b981', '#ef4444'],
-                      borderWidth: 0,
-                    },
-                  ],
-                };
-              })()}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { display: true, position: 'bottom' },
-                },
-              }}
-            />
-          </div>
-        </div>
-
-        <div
-          className="card"
-          style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-        >
-          <h3 style={{ margin: '0 0 1rem 0' }}>Artigos por Base de Dados</h3>
-          <div style={{ width: '100%', height: '300px', position: 'relative' }}>
-            <Pie
-              data={(() => {
-                const counts = filteredArticles.reduce((acc: Record<string, number>, art) => {
-                  let db = art.source_databases || 'Desconhecido';
-                  try {
-                    const parsed = JSON.parse(db);
-                    if (Array.isArray(parsed) && parsed.length > 0) db = parsed[0];
-                  } catch {
-                    /* ignore */
-                  }
-                  acc[db] = (acc[db] || 0) + 1;
-                  return acc;
-                }, {});
-                return {
-                  labels: Object.keys(counts),
-                  datasets: [
-                    {
-                      data: Object.values(counts),
-                      backgroundColor: [
-                        '#10b981',
-                        '#3b82f6',
-                        '#f59e0b',
-                        '#ef4444',
-                        '#8b5cf6',
-                        '#6366f1',
-                        '#14b8a6',
-                        '#f43f5e',
-                        '#a855f7',
-                      ],
-                      borderWidth: 0,
-                    },
-                  ],
-                };
-              })()}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { display: true, position: 'bottom' },
-                },
-              }}
-            />
-          </div>
-        </div>
+/**
+ * The project's statistics tab: status, years, open access, databases, publishers and DOI completeness.
+ *
+ * @example <ProjectOverviewTab activeArticles={a} readArticles={r} archivedArticles={x} filteredArticles={f} />
+ */
+export const ProjectOverviewTab: React.FC<ProjectOverviewTabProps> = (props) => {
+  const articles = props.filteredArticles;
+  return (
+    <div className="fade-in overview">
+      <div className="overview-grid">
+        <StatusChart counts={[props.activeArticles.length, props.readArticles.length, props.archivedArticles.length]} />
+        <ChartCard title="Artigos por Ano">
+          <Bar data={barData(articlesByYear(articles))} options={BAR_OPTIONS} />
+        </ChartCard>
+        <ChartCard title="Acesso Aberto (Open Access)">
+          <Pie data={pieData(openAccessSplit(articles), SPLIT_COLORS)} options={PIE_WITH_LEGEND} />
+        </ChartCard>
+        <ChartCard title="Artigos por Base de Dados">
+          <Pie data={pieData(articlesByDatabase(articles), DATABASE_COLORS)} options={PIE_WITH_LEGEND} />
+        </ChartCard>
       </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        <div
-          className="card"
-          style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-        >
-          <h3 style={{ margin: '0 0 1rem 0' }}>Top 10 Editoras / Publishers</h3>
-          <div style={{ width: '100%', height: '300px', position: 'relative' }}>
-            <Bar
-              data={(() => {
-                const counts = filteredArticles.reduce((acc: Record<string, number>, art) => {
-                  const pub = art.publisher || 'Desconhecido';
-                  acc[pub] = (acc[pub] || 0) + 1;
-                  return acc;
-                }, {});
-                const sorted = Object.entries(counts)
-                  .sort((a, b) => b[1] - a[1])
-                  .slice(0, 10);
-                return {
-                  labels: sorted.map((i) => (i[0].length > 15 ? i[0].substring(0, 15) + '...' : i[0])),
-                  datasets: [
-                    {
-                      label: 'Quantidade',
-                      data: sorted.map((i) => i[1]),
-                      backgroundColor: '#8b5cf6',
-                      borderRadius: 4,
-                    },
-                  ],
-                };
-              })()}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                  y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-                  x: { grid: { display: false } },
-                },
-              }}
-            />
-          </div>
-        </div>
-
-        <div
-          className="card"
-          style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-        >
-          <h3 style={{ margin: '0 0 1rem 0' }}>Completude de DOI</h3>
-          <div style={{ width: '100%', height: '300px', position: 'relative' }}>
-            <Pie
-              data={(() => {
-                const comDoi = filteredArticles.filter((a) => a.doi && a.doi.trim().length > 0).length;
-                const semDoi = filteredArticles.length - comDoi;
-                return {
-                  labels: ['Com DOI', 'Sem DOI'],
-                  datasets: [
-                    {
-                      data: [comDoi, semDoi],
-                      backgroundColor: ['#10b981', '#ef4444'],
-                      borderWidth: 0,
-                    },
-                  ],
-                };
-              })()}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { display: true, position: 'bottom' },
-                },
-              }}
-            />
-          </div>
-        </div>
+      <div className="overview-grid">
+        <ChartCard title="Top 10 Editoras / Publishers">
+          <Bar data={barData(topPublishers(articles))} options={BAR_OPTIONS} />
+        </ChartCard>
+        <ChartCard title="Completude de DOI">
+          <Pie data={pieData(doiCompleteness(articles), SPLIT_COLORS)} options={PIE_WITH_LEGEND} />
+        </ChartCard>
       </div>
     </div>
   );

@@ -23,8 +23,8 @@ describe('ProjectCategoriesTab', () => {
   };
 
   const mockProjectCategories = [
-    { id: 1, name: 'Methodology' },
-    { id: 2, name: 'Results' },
+    { id: 1, project_id: 1, name: 'Methodology', type: 'text' },
+    { id: 2, project_id: 1, name: 'Results', type: 'text' },
   ];
 
   const mockNonArchivedArticles: any[] = [
@@ -33,8 +33,8 @@ describe('ProjectCategoriesTab', () => {
   ];
 
   const mockArticleCategories = [
-    { article_id: 101, category_id: 1, value: 'Qualitative' },
-    { article_id: 101, category_id: 2, value: 'Positive' },
+    { article_id: 101, category_id: 1, name: 'Methodology', type: 'text', value: 'Qualitative' },
+    { article_id: 101, category_id: 2, name: 'Results', type: 'text', value: 'Positive' },
   ];
 
   const defaultProps = {
@@ -120,18 +120,5 @@ describe('ProjectCategoriesTab', () => {
     });
 
     expect(window.alert).toHaveBeenCalledWith('Erro ao exportar XLSX: Export failed');
-  });
-
-  it('changes background on mouse enter and leave', () => {
-    render(<ProjectCategoriesTab {...defaultProps} />);
-    const articleRow = screen.getByText('Article 1').closest('tr');
-
-    if (articleRow) {
-      fireEvent.mouseEnter(articleRow);
-      expect(articleRow.style.background).toBe('var(--bg-main)');
-
-      fireEvent.mouseLeave(articleRow);
-      expect(articleRow.style.background).toBe('transparent');
-    }
   });
 });

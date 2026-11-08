@@ -316,6 +316,8 @@ export interface ProjectCategory {
 }
 
 export interface ArticleCategory {
+  /** Present when the values are listed for a whole project (one row per article and category). */
+  article_id?: number;
   category_id: number;
   name: string;
   type: string;
