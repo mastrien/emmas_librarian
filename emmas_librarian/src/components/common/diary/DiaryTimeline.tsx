@@ -60,7 +60,7 @@ const TimelineItem: React.FC<{
       padding: '0.75rem 1rem',
       borderRadius: 'var(--radius-md)',
       border: 'none',
-      background: isSelected ? 'rgba(var(--color-primary-rgb, 79, 70, 229), 0.1)' : 'transparent',
+      background: isSelected ? 'var(--color-primary-subtle)' : 'transparent',
       borderLeft: isSelected ? '3px solid var(--color-primary)' : '3px solid transparent',
       cursor: 'pointer',
       textAlign: 'left',

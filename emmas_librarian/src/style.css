@@ -1,4 +1,6 @@
-:root {
+:root,
+/* Also on [data-theme='light'], so a nested preview (the tone swatches in Settings) gets the light tokens back. */
+[data-theme='light'] {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
 
@@ -8,6 +10,9 @@
   --color-danger: #ef4444; /* Red 500 */
   --color-success: #10b981; /* Emerald 500 */
   --color-warning: #d97706; /* Amber 600: a base that stopped early, results kept */
+  /* The accent used as text (links); dark mode lightens it, the filled accent stays for buttons. */
+  --color-primary-text: var(--color-primary);
+  --color-primary-text-hover: var(--color-primary-hover);
 
   --bg-main: #f8fafc; /* Slate 50 */
   --bg-surface: #ffffff;
@@ -23,25 +28,76 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-hover: 0 20px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
+  --radius-xs: 0.25rem;
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
+  --radius-full: 999px;
+
+  /* Spacing scale (Arca 134): components take their gaps and paddings from here instead of loose rem values. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* Hover fill of a surface row or menu item; mixed from the text colour, so it follows every tone. */
+  --bg-surface-hover: color-mix(in srgb, var(--text-main) 6%, var(--bg-surface));
+  /* Backdrop behind modals and drawers. */
+  --overlay-backdrop: rgba(0, 0, 0, 0.5);
+
+  /* Status fills behind a notice: the status colour at low opacity, readable in light and dark. */
+  --color-info: #3b82f6; /* Blue 500 */
+  --color-primary-subtle: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --color-danger-subtle: rgba(239, 68, 68, 0.1);
+  --color-warning-subtle: rgba(245, 158, 11, 0.12);
+  --color-success-subtle: rgba(16, 185, 129, 0.1);
+  --color-info-subtle: rgba(59, 130, 246, 0.1);
 
   --transition-fast: 150ms ease;
   --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Tones (Arca 134, chosen by the author): light mode is white or warm white, dark mode neutral or warm graphite.
+   data-tone holds the tone of the mode in use (src/theme/appearance.ts). */
+[data-tone='warm']:not([data-theme='dark']) {
+  --bg-main: #f7f5f1;
+  --bg-surface: #fffdf9;
+  --bg-surface-glass: rgba(255, 253, 249, 0.85);
+  --text-main: #44403c; /* Stone 700 */
+  --text-heading: #1c1917; /* Stone 900 */
+  --text-muted: #6f6964;
+  --border-color: #e7e2da;
+}
+
+/* Neutral graphite: the earlier Slate dark was navy, and the accent as text read at 2.3:1 on it. */
 [data-theme='dark'] {
-  --bg-main: #0f172a; /* Slate 900 */
-  --bg-surface: #1e293b; /* Slate 800 */
-  --bg-surface-glass: rgba(15, 23, 42, 0.85);
-  --text-main: #e2e8f0; /* Slate 200 */
-  --text-heading: #f8fafc; /* Slate 50 */
-  --text-muted: #94a3b8; /* Slate 400 */
-  --border-color: #334155; /* Slate 700 */
-  --color-warning: #fbbf24; /* Amber 400, readable on slate */
+  --bg-main: #141416;
+  --bg-surface: #1d1d21;
+  --bg-surface-glass: rgba(20, 20, 22, 0.85);
+  --text-main: #e4e4e7; /* Zinc 200 */
+  --text-heading: #fafafa;
+  --text-muted: #a1a1aa; /* Zinc 400 */
+  --border-color: #2f2f35;
+  --color-warning: #fbbf24; /* Amber 400, readable on graphite */
+  --color-primary-text: #a5b4fc;
+  --color-primary-text-hover: #c7d2fe;
+}
+
+[data-theme='dark'][data-tone='warm'] {
+  --bg-main: #161413;
+  --bg-surface: #211e1c;
+  --bg-surface-glass: rgba(22, 20, 19, 0.85);
+  --text-main: #e7e5e4; /* Stone 200 */
+  --text-heading: #fafaf9;
+  --text-muted: #a8a29e; /* Stone 400 */
+  --border-color: #37322e;
 }
 
 /* Accent Colors */
@@ -81,6 +137,32 @@
   --color-secondary: #f87171;
 }
 
+/* The accent as text on dark backgrounds: the 300 shade of each accent, 200 on hover. */
+[data-theme='dark'][data-accent='pink'] {
+  --color-primary-text: #f9a8d4;
+  --color-primary-text-hover: #fbcfe8;
+}
+
+[data-theme='dark'][data-accent='green'] {
+  --color-primary-text: #6ee7b7;
+  --color-primary-text-hover: #a7f3d0;
+}
+
+[data-theme='dark'][data-accent='purple'] {
+  --color-primary-text: #c4b5fd;
+  --color-primary-text-hover: #ddd6fe;
+}
+
+[data-theme='dark'][data-accent='orange'] {
+  --color-primary-text: #fdba74;
+  --color-primary-text-hover: #fed7aa;
+}
+
+[data-theme='dark'][data-accent='red'] {
+  --color-primary-text: #fca5a5;
+  --color-primary-text-hover: #fecaca;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -107,12 +189,12 @@ h6 {
 
 a {
   text-decoration: none;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--color-primary-hover);
+  color: var(--color-primary-text-hover);
 }
 
 button,

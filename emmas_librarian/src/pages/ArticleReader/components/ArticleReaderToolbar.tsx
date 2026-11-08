@@ -1,10 +1,11 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { auditReturnFrom } from '../../../utils/auditReturn';
 import { readerBackFrom } from '../../../utils/readerReturn';
-import { ArrowLeft, Edit2, CopyPlus, Loader2, Upload, ZoomOut, ZoomIn, X as XIcon } from 'lucide-react';
+import { Edit2, CopyPlus, Loader2, Upload, ZoomOut, ZoomIn, X as XIcon } from 'lucide-react';
 import { HelpButton } from '../../../components/common/HelpButton';
 import type { Article } from '../../../types';
+import { BackLink } from '../../../components/common/BackLink';
 
 interface ArticleReaderToolbarProps {
   article: Article;
@@ -53,26 +54,15 @@ export const ArticleReaderToolbar: React.FC<ArticleReaderToolbarProps> = ({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
-        <Link
+        <BackLink
           to={
             backToAudit
               ? `/projects/${backToAudit.projectId}/investigation/${backToAudit.investigationId}`
               : (backToPage?.path ?? `/projects/${article.project_id}`)
           }
           state={backToAudit ? { openAudit: backToAudit } : undefined}
-          title={backLabel}
-          aria-label={backLabel}
-          style={{
-            textDecoration: 'none',
-            color: 'var(--text-muted)',
-            flexShrink: 0,
-            transition: 'color var(--transition-fast)',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-main)')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-        >
-          <ArrowLeft size={20} />
-        </Link>
+          label={backLabel}
+        />
         <h2
           style={{
             margin: 0,

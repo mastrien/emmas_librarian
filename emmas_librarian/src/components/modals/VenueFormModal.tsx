@@ -189,8 +189,8 @@ const VenueFormError: React.FC<{ message: string }> = ({ message }) => (
   <div
     style={{
       backgroundColor: 'rgba(239, 68, 68, 0.1)',
-      border: '1px solid var(--color-error)',
-      color: 'var(--color-error)',
+      border: '1px solid var(--color-danger)',
+      color: 'var(--color-danger)',
       padding: '0.75rem 1rem',
       borderRadius: 'var(--radius-md)',
       fontSize: '0.85rem',

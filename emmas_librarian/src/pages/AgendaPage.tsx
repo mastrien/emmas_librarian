@@ -3,9 +3,11 @@ import { useProjectService } from '../contexts/ServicesContext';
 import { ScientificVenue, MilestoneStatus } from '../types';
 import { ScientificAgendaView } from '../components/common/ScientificAgendaView';
 import { VenueFormModal } from '../components/modals/VenueFormModal';
+import { useDialogs } from '../components/common/dialogs/DialogProvider';
 
 export const AgendaPage: React.FC = () => {
   const projectService = useProjectService();
+  const { confirm } = useDialogs();
   const [venues, setVenues] = useState<ScientificVenue[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVenue, setSelectedVenue] = useState<ScientificVenue | null>(null);
@@ -51,7 +53,13 @@ export const AgendaPage: React.FC = () => {
   };
 
   const handleDeleteVenue = async (id: number) => {
-    if (!window.confirm('Tem certeza que deseja excluir este evento e todos os seus prazos?')) return;
+    const confirmed = await confirm({
+      title: 'Excluir evento',
+      message: 'O evento e todos os seus prazos serão excluídos.',
+      confirmLabel: 'Excluir evento',
+      danger: true,
+    });
+    if (!confirmed) return;
     try {
       await projectService.deleteScientificVenue(id);
       await loadVenues();

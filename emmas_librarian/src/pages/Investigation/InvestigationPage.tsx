@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertCircle, ArrowLeft, ChevronsRight, Plus } from 'lucide-react';
+import { AlertCircle, ChevronsRight, Plus } from 'lucide-react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { SideDrawer } from '../../components/common/SideDrawer';
 import { IndexRecalculationModal } from '../../components/modals/IndexRecalculationModal';
@@ -16,6 +16,7 @@ import { useInvestigationPageData } from './useInvestigationPageData';
 import type { InvestigationRunState } from './useInvestigationRun';
 import { useRecalculationBeforeRun } from './useRecalculationBeforeRun';
 import './investigation.css';
+import { BackLink } from '../../components/common/BackLink';
 
 const QuotaNotice: React.FC<{ onClose: () => void }> = ({ onClose }) =>
   createPortal(
@@ -132,9 +133,7 @@ export const InvestigationPage: React.FC = () => {
     <div ref={setPage} className="inv-page" style={{ height }} data-testid="investigation-page">
       <header className="inv-page-head">
         <div style={{ minWidth: 0 }}>
-          <Link to={`/projects/${projectId}`} className="inv-back">
-            <ArrowLeft size={16} aria-hidden="true" /> Voltar ao projeto
-          </Link>
+          <BackLink to={`/projects/${projectId}`}>Voltar ao projeto</BackLink>
           <h1>Investigação com IA</h1>
           <span className="inv-muted">{data.project.name}</span>
         </div>

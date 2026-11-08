@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { BackLink } from '../../../components/common/BackLink';
 
 const pulse = (height: string, width: string, radius = 'var(--radius-md)'): React.CSSProperties => ({
   height,
@@ -17,17 +17,9 @@ const pulse = (height: string, width: string, radius = 'var(--radius-md)'): Reac
  */
 export const ProjectDetailsSkeleton: React.FC = () => (
   <div className="fade-in" style={{ maxWidth: '1200px', margin: '0 auto', minHeight: '80vh' }}>
-    <div
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        marginBottom: '1.5rem',
-        color: 'var(--text-muted)',
-      }}
-    >
-      <ArrowLeft size={18} /> Voltar para Projetos
-    </div>
+    <BackLink to="/" className="page-back">
+      Voltar aos projetos
+    </BackLink>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={pulse('38px', '40%')} />

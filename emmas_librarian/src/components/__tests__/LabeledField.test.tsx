@@ -25,7 +25,7 @@ describe('LabeledField', () => {
 
     const textarea = screen.getByLabelText('Resumo');
     expect(textarea.tagName).toBe('TEXTAREA');
-    expect(textarea.style.height).toBe('100px');
+    expect(textarea.style.getPropertyValue('--field-height')).toBe('100px');
     fireEvent.change(textarea, { target: { value: 'novo' } });
     expect(onChange).toHaveBeenCalledWith('novo');
   });
@@ -33,7 +33,7 @@ describe('LabeledField', () => {
   it('accepts a custom textarea height', () => {
     render(<LabeledField label="Resumo" value="" onChange={vi.fn()} multiline textareaHeight="80px" />);
 
-    expect(screen.getByLabelText('Resumo').style.height).toBe('80px');
+    expect(screen.getByLabelText('Resumo').style.getPropertyValue('--field-height')).toBe('80px');
   });
 
   it('passes the input type through', () => {
@@ -59,9 +59,9 @@ describe('LabeledField', () => {
       </>,
     );
 
-    expect(screen.getByLabelText('Normal').style.padding).toBe('0.6rem 0.8rem');
-    expect(screen.getByText('Normal').style.fontWeight).toBe('600');
-    expect(screen.getByLabelText('Denso').style.padding).toBe('0.5rem');
-    expect(screen.getByText('Denso').style.fontWeight).toBe('');
+    // The look lives in fields.css and style.css now (Arca 134); the classes are the contract.
+    expect(screen.getByLabelText('Normal')).not.toHaveClass('input-compact');
+    expect(screen.getByLabelText('Denso')).toHaveClass('input-field', 'input-compact');
+    expect(screen.getByText('Denso').parentElement).toHaveClass('field', 'field--compact');
   });
 });

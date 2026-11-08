@@ -1,14 +1,12 @@
 import React from 'react';
-import { Shield, ExternalLink, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Shield, ExternalLink } from 'lucide-react';
+import { BackLink } from '../components/common/BackLink';
 
 export const TermsOfUsePage: React.FC = () => {
   return (
     <div className="fade-in" style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '3rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-        <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none', display: 'flex' }}>
-          <ArrowLeft size={24} />
-        </Link>
+        <BackLink to="/" label="Voltar aos projetos" />
         <div
           style={{
             background: 'var(--color-primary)',
