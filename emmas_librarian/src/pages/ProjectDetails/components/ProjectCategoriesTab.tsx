@@ -5,6 +5,7 @@ import { useProjectService } from '../../../contexts/ServicesContext';
 import { exportWithFeedback } from '../../../utils/exportWithFeedback';
 import { categoryCellText, type ProjectArticleCategory } from './categoriesTab/categoryCells';
 import './categoriesTab/categoriesTab.css';
+import { useDialogs } from '../../../components/common/dialogs/DialogProvider';
 
 interface ProjectCategoriesTabProps {
   project: Project;
@@ -16,6 +17,7 @@ interface ProjectCategoriesTabProps {
 
 const CategoriesHead: React.FC<{ projectId: number }> = ({ projectId }) => {
   const projectService = useProjectService();
+  const { inform } = useDialogs();
   return (
     <div className="categories-tab-head">
       <h2>
@@ -24,13 +26,13 @@ const CategoriesHead: React.FC<{ projectId: number }> = ({ projectId }) => {
       <div className="categories-tab-exports">
         <button
           className="btn-secondary"
-          onClick={() => exportWithFeedback(() => projectService.exportCsv(projectId), 'CSV')}
+          onClick={() => exportWithFeedback(() => projectService.exportCsv(projectId), 'CSV', inform)}
         >
           <Download size={18} /> Exportar CSV
         </button>
         <button
           className="btn-secondary"
-          onClick={() => exportWithFeedback(() => projectService.exportXlsx(projectId), 'XLSX')}
+          onClick={() => exportWithFeedback(() => projectService.exportXlsx(projectId), 'XLSX', inform)}
         >
           <Download size={18} /> Exportar XLSX
         </button>

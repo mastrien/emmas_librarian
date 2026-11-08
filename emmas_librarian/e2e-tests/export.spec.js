@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const xlsx = require('xlsx');
-const { launchApp, getFirstWindow, createProject, clickAddArticlesOption } = require('./helpers');
+const { launchApp, getFirstWindow, createProject, clickAddArticlesOption, answerAppDialog } = require('./helpers');
 
 const TITLE = 'Revisão sobre métodos de avaliação';
 const BOM = '﻿';
@@ -15,11 +15,10 @@ async function addManualArticle(window, title) {
   await window.click('button[type="submit"]');
 }
 
-/** Clicks the export control and waits for the confirmation alert, which is only shown once the file is written. */
+/** Clicks the export control and answers the app's confirmation, which only shows once the file is written. */
 async function exportAndConfirm(window, click, expectedMessage) {
-  const confirmation = window.waitForEvent('dialog');
   await click();
-  expect((await confirmation).message()).toBe(expectedMessage);
+  expect(await answerAppDialog(window, 'Exportação concluída', 'Entendi')).toBe(expectedMessage);
 }
 
 test('F-06 exports the project articles to CSV, XLSX and Biblioshiny', async () => {

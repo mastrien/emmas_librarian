@@ -4,6 +4,10 @@ import { CategoryCell } from '../common/CategoryCell';
 
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
+import { FakeDialogs, withFakeDialogs } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+
+const dialogs = new FakeDialogs();
+const renderCell = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
 
 const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
@@ -17,7 +21,7 @@ describe('CategoryCell', () => {
   });
 
   it('renders text category and allows editing', async () => {
-    render(
+    renderCell(
       <CategoryCell
         articleId={1}
         category={{ id: 10, project_id: 1, name: 'Method', type: 'text' }}
@@ -41,7 +45,7 @@ describe('CategoryCell', () => {
   });
 
   it('renders boolean category as select', async () => {
-    render(
+    renderCell(
       <CategoryCell
         articleId={2}
         category={{ id: 11, project_id: 1, name: 'Reviewed', type: 'boolean' }}
@@ -73,7 +77,7 @@ describe('CategoryCell', () => {
       ],
     };
 
-    render(<CategoryCell articleId={3} category={category} initialValue="To Do" />);
+    renderCell(<CategoryCell articleId={3} category={category} initialValue="To Do" />);
 
     const select = screen.getByRole('combobox');
     expect(select).toHaveValue('To Do');

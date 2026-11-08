@@ -34,3 +34,14 @@ export class FakeDialogs implements Dialogs {
 export const FakeDialogsProvider: React.FC<{ dialogs?: Dialogs; children: ReactNode }> = ({ dialogs, children }) => (
   <DialogsContext.Provider value={dialogs ?? new FakeDialogs()}>{children}</DialogsContext.Provider>
 );
+
+/**
+ * A `wrapper` for render(): every component it draws asks through `dialogs`.
+ *
+ * @example render(<ProjectToolbar … />, { wrapper: withFakeDialogs(dialogs) })
+ */
+export function withFakeDialogs(dialogs: Dialogs): React.FC<{ children: ReactNode }> {
+  return function FakeDialogsWrapper({ children }) {
+    return <FakeDialogsProvider dialogs={dialogs}>{children}</FakeDialogsProvider>;
+  };
+}

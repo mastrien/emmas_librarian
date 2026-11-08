@@ -7,6 +7,7 @@ import { exportWithFeedback } from '../../../utils/exportWithFeedback';
 import { ToolbarMenu, type ToolbarMenuItem } from './toolbar/ToolbarMenu';
 import { QuickAccessPanel } from './toolbar/QuickAccessPanel';
 import './toolbar/projectToolbar.css';
+import { useDialogs, type Dialogs } from '../../../components/common/dialogs/DialogProvider';
 
 interface ProjectToolbarProps {
   project: Project;
@@ -38,16 +39,20 @@ const addItems = (props: ProjectToolbarProps): ToolbarMenuItem[] => [
   { icon: <Plus size={16} />, label: 'Artigo Manual', onSelect: () => props.setIsManualModalOpen(true) },
 ];
 
-const exportItems = (projectId: number, service: ReturnType<typeof useProjectService>): ToolbarMenuItem[] => [
+const exportItems = (
+  projectId: number,
+  service: ReturnType<typeof useProjectService>,
+  inform: Dialogs['inform'],
+): ToolbarMenuItem[] => [
   {
     icon: <Download size={16} />,
     label: 'Biblioshiny',
-    onSelect: () => void exportWithFeedback(() => service.exportBiblioshiny(projectId), 'CSV do Biblioshiny'),
+    onSelect: () => void exportWithFeedback(() => service.exportBiblioshiny(projectId), 'CSV do Biblioshiny', inform),
   },
   {
     icon: <Download size={16} />,
     label: 'Pacote .emmapcarc (com PDFs)',
-    onSelect: () => void exportWithFeedback(() => service.exportProject(projectId), 'Pacote .emmapcarc'),
+    onSelect: () => void exportWithFeedback(() => service.exportProject(projectId), 'Pacote .emmapcarc', inform),
   },
 ];
 
@@ -59,6 +64,7 @@ const exportItems = (projectId: number, service: ReturnType<typeof useProjectSer
  */
 export const ProjectToolbar: React.FC<ProjectToolbarProps> = (props) => {
   const projectService = useProjectService();
+  const { inform } = useDialogs();
   const id = props.project.id;
   return (
     <>
@@ -91,7 +97,7 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = (props) => {
           label="Exportar"
           open={props.isExportMenuOpen}
           onOpenChange={props.setIsExportMenuOpen}
-          items={exportItems(id, projectService)}
+          items={exportItems(id, projectService, inform)}
           menuRef={props.exportMenuRef}
           onMouseEnter={props.handleExportMenuMouseEnter}
           onMouseLeave={props.handleExportMenuMouseLeave}
