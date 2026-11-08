@@ -1,6 +1,7 @@
 import React, { useId } from 'react';
 import { Key } from 'lucide-react';
 import { IEEE_EXPERIMENTAL_NOTE } from '../../Search/searchQueries';
+import { SettingsCard } from './SettingsCard';
 
 interface ApiKeysSettingsProps {
   scopusKey: string;
@@ -26,42 +27,23 @@ const ApiKeyField: React.FC<ApiKeyFieldProps> = ({ label, placeholder, value, on
   const id = useId();
   return (
     <div>
-      <label
-        htmlFor={id}
-        style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}
-      >
+      <label htmlFor={id} className="settings-label">
         {label}
       </label>
-      <div style={{ position: 'relative' }}>
-        <div
-          style={{
-            position: 'absolute',
-            left: '1rem',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: 'var(--text-muted)',
-          }}
-        >
+      <div className="api-key-input-wrap">
+        <div className="api-key-icon">
           <Key size={18} />
         </div>
         <input
           id={id}
           type="password"
+          className="api-key-input"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          style={{
-            width: '100%',
-            padding: '0.8rem 1rem 0.8rem 2.8rem',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-color)',
-            background: 'var(--bg-main)',
-            color: 'var(--text-main)',
-            outline: 'none',
-          }}
         />
       </div>
-      {hint && <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '0.4rem 0 0' }}>{hint}</p>}
+      {hint && <p className="settings-hint">{hint}</p>}
     </div>
   );
 };
@@ -73,53 +55,39 @@ const ApiKeyField: React.FC<ApiKeyFieldProps> = ({ label, placeholder, value, on
  * Usage:
  *   <ApiKeysSettings scopusKey={s} setScopusKey={setS} wosKey={w} setWosKey={setW} openAlexKey={o} setOpenAlexKey={setO} />
  */
-export const ApiKeysSettings: React.FC<ApiKeysSettingsProps> = (props) => {
-  return (
-    <div className="card" style={{ padding: '2rem' }}>
-      <h2
-        style={{
-          fontSize: '1.5rem',
-          marginBottom: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-        }}
-      >
-        Chaves de API
-      </h2>
-      <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-        Insira suas chaves de API para habilitar buscas no Scopus, na Web of Science e na IEEE Xplore. As chaves são
-        armazenadas localmente no seu banco de dados.
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <ApiKeyField
-          label="Scopus API Key"
-          placeholder="Insira sua chave Scopus..."
-          value={props.scopusKey}
-          onChange={props.setScopusKey}
-        />
-        <ApiKeyField
-          label="Web of Science API Key"
-          placeholder="Insira sua chave WoS..."
-          value={props.wosKey}
-          onChange={props.setWosKey}
-        />
-        <ApiKeyField
-          label="OpenAlex API Key (opcional)"
-          placeholder="Insira sua chave OpenAlex..."
-          value={props.openAlexKey}
-          onChange={props.setOpenAlexKey}
-          hint="A OpenAlex funciona sem chave. Com a chave gratuita, o limite diário de buscas fica 10 vezes maior."
-        />
-        <ApiKeyField
-          label="IEEE Xplore API Key (experimental)"
-          placeholder="Insira sua chave IEEE..."
-          value={props.ieeeKey}
-          onChange={props.setIeeeKey}
-          hint={`Gratuita, com cadastro em developer.ieee.org. A IEEE aprova cada chave manualmente. ${IEEE_EXPERIMENTAL_NOTE}`}
-        />
-      </div>
+export const ApiKeysSettings: React.FC<ApiKeysSettingsProps> = (props) => (
+  <SettingsCard
+    title="Chaves de API"
+    spacing="wide"
+    description="Insira suas chaves de API para habilitar buscas no Scopus, na Web of Science e na IEEE Xplore. As chaves são armazenadas localmente no seu banco de dados."
+  >
+    <div className="settings-stack settings-stack--wide">
+      <ApiKeyField
+        label="Scopus API Key"
+        placeholder="Insira sua chave Scopus..."
+        value={props.scopusKey}
+        onChange={props.setScopusKey}
+      />
+      <ApiKeyField
+        label="Web of Science API Key"
+        placeholder="Insira sua chave WoS..."
+        value={props.wosKey}
+        onChange={props.setWosKey}
+      />
+      <ApiKeyField
+        label="OpenAlex API Key (opcional)"
+        placeholder="Insira sua chave OpenAlex..."
+        value={props.openAlexKey}
+        onChange={props.setOpenAlexKey}
+        hint="A OpenAlex funciona sem chave. Com a chave gratuita, o limite diário de buscas fica 10 vezes maior."
+      />
+      <ApiKeyField
+        label="IEEE Xplore API Key (experimental)"
+        placeholder="Insira sua chave IEEE..."
+        value={props.ieeeKey}
+        onChange={props.setIeeeKey}
+        hint={`Gratuita, com cadastro em developer.ieee.org. A IEEE aprova cada chave manualmente. ${IEEE_EXPERIMENTAL_NOTE}`}
+      />
     </div>
-  );
-};
+  </SettingsCard>
+);

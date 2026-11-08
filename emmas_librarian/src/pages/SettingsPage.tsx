@@ -4,6 +4,7 @@ import { useProjectService } from '../contexts/ServicesContext';
 import type { AIModelConfig, AISkill, AIProvider, UpdateStatusResponse } from '../types';
 
 import { AppearanceSettings } from './Settings/components/AppearanceSettings';
+import './Settings/components/settings.css';
 import { ApiKeysSettings } from './Settings/components/ApiKeysSettings';
 import { AiSettings } from './Settings/components/AiSettings';
 import { BackupSettings } from './Settings/components/BackupSettings';
@@ -288,24 +289,16 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-        <div
-          style={{
-            background: 'var(--color-primary)',
-            color: 'white',
-            padding: '0.75rem',
-            borderRadius: 'var(--radius-lg)',
-            display: 'flex',
-          }}
-        >
+    <div className="fade-in settings-page">
+      <div className="settings-head">
+        <div className="settings-head-icon">
           <Settings size={28} />
         </div>
-        <h1 style={{ margin: 0, fontSize: '2.5rem' }}>Configurações</h1>
+        <h1>Configurações</h1>
         <AutosaveNotice status={autosave.status} />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <div className="settings-sections">
         <AppearanceSettings />
 
         <ApiKeysSettings
@@ -370,7 +363,7 @@ export const SettingsPage: React.FC = () => {
         />
 
         {/* App Info Section */}
-        <div style={{ textAlign: 'center', marginTop: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+        <div className="settings-version">
           <p>Emma's Librarian {appVersion ? `v${appVersion}` : ''}</p>
         </div>
       </div>
