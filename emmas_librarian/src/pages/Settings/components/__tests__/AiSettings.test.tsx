@@ -158,8 +158,9 @@ describe('AiSettings per-skill configuration', () => {
 
     const current = screen.getByRole('button', { name: 'gemini-2.5-flash' });
     const other = screen.getByRole('button', { name: 'gemini-2.5-pro' });
-    expect(current).toHaveStyle({ fontWeight: '600' });
-    expect(other).toHaveStyle({ fontWeight: '400' });
+    // The highlight is a class driven by aria-pressed now (Arca 134), which also tells a screen reader.
+    expect(current).toHaveAttribute('aria-pressed', 'true');
+    expect(other).toHaveAttribute('aria-pressed', 'false');
 
     fireEvent.click(other);
 
