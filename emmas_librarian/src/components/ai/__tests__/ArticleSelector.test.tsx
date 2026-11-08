@@ -170,4 +170,14 @@ describe('ArticleSelector', () => {
     fireEvent.click(checkboxes[1]);
     expect(setSelectedIds).toHaveBeenCalledWith([1, 2]);
   });
+
+  it('"Desmarcar Visíveis" unticks only what the filter shows', () => {
+    const setSelectedIds = vi.fn();
+    render(<ArticleSelector articles={mockArticles} selectedIds={[1, 2, 3]} setSelectedIds={setSelectedIds} />);
+
+    fireEvent.change(screen.getByPlaceholderText('Buscar por título, autor, ano...'), { target: { value: 'Beta' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Desmarcar Visíveis' }));
+
+    expect(setSelectedIds).toHaveBeenCalledWith([1, 3]);
+  });
 });

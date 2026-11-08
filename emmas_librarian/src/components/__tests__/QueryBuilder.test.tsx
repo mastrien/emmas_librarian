@@ -71,4 +71,16 @@ describe('QueryBuilder AST', () => {
       children: [node.children[1]], // first one is removed
     });
   });
+
+  // A group always keeps one rule: its only child offers no "Remover".
+  it('does not offer to remove the only rule of a group', () => {
+    const node: QueryGroupNode = {
+      type: 'group',
+      logicalOperator: 'AND',
+      children: [{ type: 'rule', field: 'all', operator: 'contains', value: 'radar' }],
+    };
+    render(<QueryBuilder node={node} onChange={vi.fn()} />);
+
+    expect(screen.queryByTitle('Remover')).not.toBeInTheDocument();
+  });
 });
