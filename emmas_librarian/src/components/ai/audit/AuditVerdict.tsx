@@ -25,7 +25,7 @@ export const AuditVerdict: React.FC<AuditVerdictProps> = ({ result, editing, onE
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className="audit-stack-8">
       <div className="audit-verdict">
         <button
           type="button"
@@ -63,8 +63,7 @@ export const AuditVerdict: React.FC<AuditVerdictProps> = ({ result, editing, onE
       {!editing && result.review_status !== 'pending' && (
         <button
           type="button"
-          className="btn-secondary"
-          style={{ alignSelf: 'flex-start' }}
+          className="btn-secondary audit-self-start"
           onClick={() => onReview({ status: 'pending' })}
         >
           Desfazer marcação

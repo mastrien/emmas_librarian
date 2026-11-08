@@ -45,21 +45,19 @@ export const AuditEvidencePanel: React.FC<AuditEvidencePanelProps> = (props) => 
           </span>
           <span className={`audit-chip ${chip.className}`}>{chip.label}</span>
         </div>
-        <strong style={{ color: 'var(--text-heading)', overflowWrap: 'anywhere' }}>{result.question}</strong>
+        <strong className="audit-question-strong">{result.question}</strong>
       </div>
       <div className="audit-side-body">
         <div>
-          <div className="audit-eyebrow" style={{ marginBottom: 4 }}>
-            Resposta da IA
-          </div>
+          <div className="audit-eyebrow audit-mb-4">Resposta da IA</div>
           <div className="audit-answer">{aiAnswerText(result) || '—'}</div>
           {result.review_status === 'edited' && (
-            <p style={{ margin: '6px 0 0', fontSize: '0.85rem' }}>
+            <p className="audit-correction">
               <strong>Sua correção:</strong> {finalAnswerText(result)}
             </p>
           )}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="audit-stack-8">
           <div className="audit-eyebrow">O que ela citou</div>
           <AuditEvidenceList result={result} onOpen={onOpenEvidence} onOpenArticle={onOpenArticle} />
         </div>

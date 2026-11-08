@@ -6,6 +6,7 @@ import { AuditView, type AuditViewProps } from '../AuditView';
 import { ServicesProvider } from '../../../../contexts/ServicesContext';
 import { FakeProjectService } from '../../../../services/__tests__/fakes/FakeProjectService';
 import type { Article, InvestigationAudit, InvestigationResult } from '../../../../types';
+import { FakeDialogsProvider } from '../../../common/dialogs/__tests__/fakes/FakeDialogs';
 
 const rag = (answer: string, quote: string) =>
   JSON.stringify({
@@ -67,29 +68,31 @@ function renderAudit(audit: InvestigationAudit | null, overrides: Partial<AuditV
   render(
     <MemoryRouter initialEntries={['/projects/1']}>
       <ServicesProvider apiService={service}>
-        <Routes>
-          <Route
-            path="/projects/1"
-            element={
-              <AuditView
-                investigation={{
-                  id: 19,
-                  created_at: '',
-                  model_used: 'Gemini 2.5 Flash',
-                  questions: JSON.stringify(QUESTIONS),
-                }}
-                projectId={1}
-                articles={articles}
-                results={results}
-                history={[{ id: 19, created_at: '', model_used: 'Gemini 2.5 Flash' }]}
-                getInvestigationResults={async () => results}
-                onReview={onReview}
-                {...overrides}
-              />
-            }
-          />
-          <Route path="/articles/:id" element={<LocationProbe />} />
-        </Routes>
+        <FakeDialogsProvider>
+          <Routes>
+            <Route
+              path="/projects/1"
+              element={
+                <AuditView
+                  investigation={{
+                    id: 19,
+                    created_at: '',
+                    model_used: 'Gemini 2.5 Flash',
+                    questions: JSON.stringify(QUESTIONS),
+                  }}
+                  projectId={1}
+                  articles={articles}
+                  results={results}
+                  history={[{ id: 19, created_at: '', model_used: 'Gemini 2.5 Flash' }]}
+                  getInvestigationResults={async () => results}
+                  onReview={onReview}
+                  {...overrides}
+                />
+              }
+            />
+            <Route path="/articles/:id" element={<LocationProbe />} />
+          </Routes>
+        </FakeDialogsProvider>
       </ServicesProvider>
     </MemoryRouter>,
   );

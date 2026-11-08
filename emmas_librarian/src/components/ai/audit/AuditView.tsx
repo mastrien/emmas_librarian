@@ -136,10 +136,10 @@ export const AuditView: React.FC<AuditViewProps> = (props) => {
 
   return (
     <div className="audit">
-      <div className="audit-row audit-spread" style={{ alignItems: 'flex-end' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-          <h3 style={{ margin: 0 }}>Auditoria da investigação #{investigation.id}</h3>
-          <span className="audit-muted" style={{ fontSize: '0.8rem' }}>
+      <div className="audit-row audit-spread audit-items-end">
+        <div className="audit-stack-4">
+          <h3 className="audit-m0">Auditoria da investigação #{investigation.id}</h3>
+          <span className="audit-muted audit-text-sm">
             {investigation.model_used || 'Modelo desconhecido'} · {rows.length} perguntas · amostra de {sampled.length}{' '}
             itens
           </span>

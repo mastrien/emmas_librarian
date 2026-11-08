@@ -23,13 +23,8 @@ export const AuditEvidenceList: React.FC<AuditEvidenceListProps> = ({ result, on
       <div className="audit-warn">
         A IA não citou nenhum trecho para esta resposta. Confira no PDF antes de marcar como correta.
         {onOpenArticle && (
-          <div style={{ marginTop: 6 }}>
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ fontSize: '0.78rem', padding: '2px 8px' }}
-              onClick={onOpenArticle}
-            >
+          <div className="audit-mt-6">
+            <button type="button" className="btn-secondary audit-mini-button" onClick={onOpenArticle}>
               Abrir o PDF (P)
             </button>
           </div>
@@ -42,16 +37,11 @@ export const AuditEvidenceList: React.FC<AuditEvidenceListProps> = ({ result, on
       {evidences.map((evidence, i) => (
         <div key={i} className="audit-evidence">
           <div className="audit-row audit-spread">
-            <span className="audit-muted" style={{ fontSize: '0.72rem' }}>
+            <span className="audit-muted audit-text-2xs">
               Evidência {i + 1}
               {evidence.page ? ` · página ${evidence.page}` : ''}
             </span>
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ fontSize: '0.78rem', padding: '2px 8px' }}
-              onClick={() => onOpen(evidence)}
-            >
+            <button type="button" className="btn-secondary audit-mini-button" onClick={() => onOpen(evidence)}>
               Abrir no PDF ↗
             </button>
           </div>

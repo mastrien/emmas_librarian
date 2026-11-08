@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { InvestigationAudit } from '../../../types';
 import { newAuditSeed, type AuditParams } from '../../../utils/auditSampling';
+import { useDialogs } from '../../common/dialogs/DialogProvider';
 
 interface AuditSetupProps {
   audit: InvestigationAudit | null;
@@ -17,18 +18,15 @@ const DEFAULTS = { samplePercent: 10, minPerQuestion: 2 };
  *   <AuditSetup audit={audit} onDraw={draw} />
  */
 export const AuditSetup: React.FC<AuditSetupProps> = ({ audit, onDraw }) => {
+  const { confirm } = useDialogs();
   const [samplePercent, setPercent] = useState(audit?.sample_percent ?? DEFAULTS.samplePercent);
   const [minPerQuestion, setMin] = useState(audit?.min_per_question ?? DEFAULTS.minPerQuestion);
   const valid = samplePercent > 0 && samplePercent <= 100 && Number.isInteger(minPerQuestion) && minPerQuestion >= 1;
 
-  const draw = () => {
-    const again = audit !== null;
-    if (
-      again &&
-      !window.confirm(
-        'Sortear de novo troca os itens da amostra. As marcações já feitas continuam salvas como revisão, mas só entram na taxa se forem sorteadas de novo. Continuar?',
-      )
-    )
+  const draw = async () => {
+    const message =
+      'Sortear de novo troca os itens da amostra. As marcações já feitas continuam salvas como revisão, mas só entram na taxa se forem sorteadas de novo. Continuar?';
+    if (audit !== null && !(await confirm({ title: 'Sortear de novo', message, confirmLabel: 'Sortear de novo' })))
       return;
     onDraw({ seed: newAuditSeed(), samplePercent, minPerQuestion });
   };
@@ -52,12 +50,15 @@ export const AuditSetup: React.FC<AuditSetupProps> = ({ audit, onDraw }) => {
       {audit && (
         <span className="audit-field">
           Semente
-          <span className="audit-num" style={{ fontSize: '0.85rem', color: 'var(--text-main)', padding: '5px 0' }}>
-            {audit.seed}
-          </span>
+          <span className="audit-num audit-plain-line">{audit.seed}</span>
         </span>
       )}
-      <button type="button" className={audit ? 'btn-secondary' : 'btn-primary'} disabled={!valid} onClick={draw}>
+      <button
+        type="button"
+        className={audit ? 'btn-secondary' : 'btn-primary'}
+        disabled={!valid}
+        onClick={() => void draw()}
+      >
         {audit ? 'Sortear de novo' : 'Sortear amostra'}
       </button>
     </div>
