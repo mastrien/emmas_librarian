@@ -4,6 +4,7 @@ import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ProjectDetailsPage } from '../ProjectDetailsPage';
 import { ServicesProvider } from '../../contexts/ServicesContext';
 import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
+import { FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 import { article, givenProject } from './support/projectPageHarness';
 import type { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 
@@ -15,10 +16,12 @@ async function renderPageWithReader(service: FakeProjectService): Promise<void> 
     <MemoryRouter initialEntries={['/projects/1']}>
       <ServicesProvider apiService={service}>
         <GlobalErrorProvider>
-          <Routes>
-            <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-            <Route path="/articles/:id" element={<ReaderStub />} />
-          </Routes>
+          <FakeDialogsProvider>
+            <Routes>
+              <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+              <Route path="/articles/:id" element={<ReaderStub />} />
+            </Routes>
+          </FakeDialogsProvider>
         </GlobalErrorProvider>
       </ServicesProvider>
     </MemoryRouter>,

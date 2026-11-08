@@ -1,10 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { act, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { givenProject, renderProjectPage, article, mainTable } from './support/projectPageHarness';
-
-beforeEach(() => {
-  vi.spyOn(window, 'alert').mockImplementation(() => undefined);
-});
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -191,11 +187,13 @@ describe('ProjectDetailsPage status changes from the main list', () => {
   it('alerts and keeps the article when the status update fails', async () => {
     const service = givenProject([article({ id: 1, title: 'Artigo novo' })]);
     service.updateArticleStatus.mockRejectedValue(new Error('locked'));
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
 
     fireEvent.click(inRow('Artigo novo').getByTitle('Marcar como Lido'));
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao atualizar status do artigo: locked'));
+    await waitFor(() =>
+      expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao atualizar status do artigo: locked'),
+    );
     expect(screen.queryByText('Artigos Lidos (1)')).not.toBeInTheDocument();
   });
 });
@@ -246,12 +244,14 @@ describe('ProjectDetailsPage multi-select', () => {
   it('alerts and keeps the articles when the batch update fails', async () => {
     const service = givenProject(articles);
     service.updateArticlesStatus.mockRejectedValue(new Error('SQLITE_BUSY'));
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
     selectArticles('Artigo dois');
 
     fireEvent.click(bar().getByRole('button', { name: /Marcar como lido/ }));
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao atualizar status dos artigos: SQLITE_BUSY'));
+    await waitFor(() =>
+      expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao atualizar status dos artigos: SQLITE_BUSY'),
+    );
     expect(within(mainTable()).getByText('Artigo dois')).toBeInTheDocument();
   });
 });
@@ -260,35 +260,37 @@ describe('ProjectDetailsPage PDF links', () => {
   const withPdf = [article({ id: 1, title: 'Artigo com PDF', local_file_path: '/lib/a.pdf' })];
 
   it('unlinks after confirmation and reloads', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const service = givenProject(withPdf);
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
 
     chooseFromRowMenu('Artigo com PDF', 'Desvincular PDF');
 
     await waitFor(() => expect(service.unlinkPdf).toHaveBeenCalledWith(1));
     await waitFor(() => expect(service.getArticles).toHaveBeenCalledTimes(2));
+    expect(dialogs.asked[0]).toMatchObject({ title: 'Desvincular PDF', confirmLabel: 'Desvincular', danger: true });
   });
 
   it('does nothing when the user declines', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
     const service = givenProject(withPdf);
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
+    dialogs.confirmMessage.mockReturnValue(false);
 
     chooseFromRowMenu('Artigo com PDF', 'Desvincular PDF');
+    // The answer is a promise: check only once the question was answered, or a missing check passes.
+    await waitFor(() => expect(dialogs.asked).toHaveLength(1));
+    await act(async () => {});
 
     expect(service.unlinkPdf).not.toHaveBeenCalled();
   });
 
   it('alerts when unlinking fails', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const service = givenProject(withPdf);
     service.unlinkPdf.mockRejectedValue(new Error('EBUSY'));
-    await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service);
 
     chooseFromRowMenu('Artigo com PDF', 'Desvincular PDF');
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao desvincular o PDF'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao desvincular o PDF'));
   });
 
   it('opens the attach dialog for an article without a PDF', async () => {

@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { launchApp, getFirstWindow, createProject, clickAddArticlesOption } = require('./helpers');
+const { launchApp, getFirstWindow, createProject, clickAddArticlesOption, answerAppDialog } = require('./helpers');
 
 const PDF_CONTENT = 'PDF dummy content';
 
@@ -27,9 +27,8 @@ test('F-04 Import article via PDF', async () => {
     const projectName = 'PDF Import Project ' + Date.now();
     await createProject(window, projectName);
 
-    const confirmation = window.waitForEvent('dialog');
     await clickAddArticlesOption(window, 'Importar PDFs em Lote');
-    expect((await confirmation).message()).toBe('1 artigo(s) importado(s) com sucesso.');
+    expect(await answerAppDialog(window, 'PDFs importados', 'Entendi')).toBe('1 artigo(s) importado(s) com sucesso.');
 
     const articleRow = window.locator('table >> text=E2E_Import_Test_Article');
     await expect(articleRow).toBeVisible({ timeout: 10000 });

@@ -5,6 +5,7 @@ import { ProjectDetailsPage } from '../../ProjectDetailsPage';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import { GlobalErrorProvider, useGlobalError } from '../../../contexts/GlobalErrorContext';
 import { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
+import { FakeDialogs, FakeDialogsProvider } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 import type { Article } from '../../../types';
 
 /**
@@ -45,21 +46,26 @@ function GlobalErrorProbe(): React.ReactNode {
   return currentError ? <output data-testid="global-error">{currentError.message}</output> : null;
 }
 
-export async function renderProjectPage(service: FakeProjectService, path = '/projects/1'): Promise<void> {
+/** Renders the page; the returned FakeDialogs answers (and records) its confirm/message windows. */
+export async function renderProjectPage(service: FakeProjectService, path = '/projects/1'): Promise<FakeDialogs> {
+  const dialogs = new FakeDialogs();
   render(
     <MemoryRouter initialEntries={[path]}>
       <ServicesProvider apiService={service}>
         <GlobalErrorProvider>
-          <Routes>
-            <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-            <Route path="/" element={<p>Lista de projetos</p>} />
-          </Routes>
-          <GlobalErrorProbe />
+          <FakeDialogsProvider dialogs={dialogs}>
+            <Routes>
+              <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+              <Route path="/" element={<p>Lista de projetos</p>} />
+            </Routes>
+            <GlobalErrorProbe />
+          </FakeDialogsProvider>
         </GlobalErrorProvider>
       </ServicesProvider>
     </MemoryRouter>,
   );
   await screen.findByTestId('project-details-container');
+  return dialogs;
 }
 
 export const mainTable = () => screen.getByTestId('main-articles-table');
