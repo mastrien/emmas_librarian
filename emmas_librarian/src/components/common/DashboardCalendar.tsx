@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ScientificVenue } from '../../types';
+import { MONTH_NAMES, WEEKDAYS, dayTitle, deadlineColorsByDate, isoDay } from './calendar/calendarDays';
+import './calendar/calendar.css';
 
 interface DashboardCalendarProps {
   diarySet: Set<string>;
@@ -10,184 +12,99 @@ interface DashboardCalendarProps {
   onSelectDate?: (dateStr: string) => void;
 }
 
-export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ diarySet, venues = [], onSelectDate }) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+interface DayProps {
+  date: Date;
+  iso: string;
+  diary: boolean;
+  colors: string[];
+  onSelect?: (iso: string) => void;
+}
 
-  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
-  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-
-  const daysInMonth = getDaysInMonth(year, month);
-  const firstDay = getFirstDayOfMonth(year, month);
-
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-
-  // Map of date string -> venue colors
-  const milestoneColorsMap = new Map<string, string[]>();
-  for (const v of venues) {
-    const venueColor = v.color || 'var(--color-primary)';
-    for (const m of v.milestones || []) {
-      if (m.target_date) {
-        const existing = milestoneColorsMap.get(m.target_date) || [];
-        if (!existing.includes(venueColor)) existing.push(venueColor);
-        milestoneColorsMap.set(m.target_date, existing);
-      }
-      if (m.field_type === 'range' && m.end_date) {
-        const existing = milestoneColorsMap.get(m.end_date) || [];
-        if (!existing.includes(venueColor)) existing.push(venueColor);
-        milestoneColorsMap.set(m.end_date, existing);
-      }
-    }
-  }
-
-  const days = [];
-  for (let i = 0; i < firstDay; i++) {
-    days.push(<div key={`empty-${i}`} style={{ aspectRatio: '1' }} />);
-  }
-
-  for (let i = 1; i <= daysInMonth; i++) {
-    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-    const activeDiary = diarySet.has(dStr);
-    const dayColors = milestoneColorsMap.get(dStr) || [];
-    const deadlineCount = dayColors.length;
-
-    const todayDate = new Date();
-    const isToday = todayDate.getFullYear() === year && todayDate.getMonth() === month && todayDate.getDate() === i;
-
-    const titleParts = [new Date(year, month, i).toLocaleDateString()];
-    if (activeDiary) titleParts.push('Atividade no Diário');
-    if (deadlineCount > 0) titleParts.push(`${deadlineCount} Prazo(s)`);
-    if (isToday) titleParts.push('(Hoje)');
-
-    days.push(
-      <div
-        key={`day-${i}`}
-        title={titleParts.join(' • ')}
-        onClick={() => onSelectDate && onSelectDate(dStr)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          aspectRatio: '1',
-          borderRadius: '4px',
-          backgroundColor: isToday ? 'var(--color-primary)' : activeDiary ? 'var(--bg-surface-hover)' : 'transparent',
-          color: isToday ? '#ffffff' : activeDiary ? 'var(--text-heading)' : 'var(--text-main)',
-          fontSize: '0.8rem',
-          fontWeight: isToday ? 'bold' : 'normal',
-          border: '1px solid transparent',
-          cursor: onSelectDate ? 'pointer' : 'default',
-          position: 'relative',
-        }}
-      >
-        {i}
-        {dayColors.length > 0 && !isToday && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '3px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              gap: '2px',
-              alignItems: 'center',
-            }}
-          >
-            {dayColors.slice(0, 3).map((c, idx) => (
-              <span
-                key={idx}
-                style={{
-                  width: '4px',
-                  height: '4px',
-                  borderRadius: '50%',
-                  backgroundColor: c,
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </div>,
-    );
-  }
-
-  const monthNames = [
-    'Janeiro',
-    'Fevereiro',
-    'Março',
-    'Abril',
-    'Maio',
-    'Junho',
-    'Julho',
-    'Agosto',
-    'Setembro',
-    'Outubro',
-    'Novembro',
-    'Dezembro',
-  ];
-
+// A day: the number, its state (today, diary, clickable) as classes, and up to three deadline dots in venue colours.
+const CalendarDay: React.FC<DayProps> = ({ date, iso, diary, colors, onSelect }) => {
+  const today = isSameDay(date, new Date());
+  const className = ['month-calendar-day', onSelect && 'is-clickable', diary && 'has-diary', today && 'is-today']
+    .filter(Boolean)
+    .join(' ');
   return (
-    <div data-testid="date-calendar" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <CalendarIcon size={16} color="var(--color-primary)" />
-          <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-heading)' }}>
-            {monthNames[month]} {year}
-          </span>
+    <div
+      className={className}
+      title={dayTitle(date, { diary, deadlines: colors.length, today })}
+      onClick={() => onSelect && onSelect(iso)}
+    >
+      {date.getDate()}
+      {colors.length > 0 && !today && (
+        <div className="month-calendar-dots">
+          {colors.slice(0, 3).map((color, idx) => (
+            <span key={idx} className="month-calendar-dot" style={{ '--dot-color': color } as React.CSSProperties} />
+          ))}
         </div>
-        <div style={{ display: 'flex', gap: '0.2rem' }}>
-          <button
-            type="button"
-            onClick={prevMonth}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '0.2rem',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button
-            type="button"
-            onClick={nextMonth}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '0.2rem',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
+      )}
+    </div>
+  );
+};
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          gap: '2px',
-          textAlign: 'center',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          color: 'var(--text-muted)',
-          marginBottom: '0.2rem',
-        }}
-      >
-        <div>Dom</div>
-        <div>Seg</div>
-        <div>Ter</div>
-        <div>Qua</div>
-        <div>Qui</div>
-        <div>Sex</div>
-        <div>Sáb</div>
-      </div>
+const MonthHeader: React.FC<{ year: number; month: number; onMove: (delta: number) => void }> = (props) => (
+  <div className="month-calendar-head">
+    <div className="month-calendar-title">
+      <CalendarIcon size={16} />
+      <span>
+        {MONTH_NAMES[props.month]} {props.year}
+      </span>
+    </div>
+    <div className="month-calendar-nav">
+      <button type="button" onClick={() => props.onMove(-1)}>
+        <ChevronLeft size={16} />
+      </button>
+      <button type="button" onClick={() => props.onMove(1)}>
+        <ChevronRight size={16} />
+      </button>
+    </div>
+  </div>
+);
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>{days}</div>
+/**
+ * The month calendar of the dashboard and the agenda: diary days shaded, deadline dots in the venues' colours, today
+ * highlighted. Clicking a day passes its date (yyyy-mm-dd) to `onSelectDate`.
+ *
+ * @example <DashboardCalendar diarySet={diary} venues={venues} onSelectDate={(d) => addVenue(d)} />
+ */
+export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ diarySet, venues = [], onSelectDate }) => {
+  const [shown, setShown] = useState(new Date());
+  const year = shown.getFullYear();
+  const month = shown.getMonth();
+  const colorsByDate = deadlineColorsByDate(venues);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const blanks = new Date(year, month, 1).getDay();
+  return (
+    <div data-testid="date-calendar" className="month-calendar">
+      <MonthHeader year={year} month={month} onMove={(delta) => setShown(new Date(year, month + delta, 1))} />
+      <div className="month-calendar-weekdays">
+        {WEEKDAYS.map((day) => (
+          <div key={day}>{day}</div>
+        ))}
+      </div>
+      <div className="month-calendar-days">
+        {Array.from({ length: blanks }, (_, i) => (
+          <div key={`empty-${i}`} className="month-calendar-blank" />
+        ))}
+        {Array.from({ length: daysInMonth }, (_, i) => {
+          const iso = isoDay(year, month, i + 1);
+          return (
+            <CalendarDay
+              key={iso}
+              date={new Date(year, month, i + 1)}
+              iso={iso}
+              diary={diarySet.has(iso)}
+              colors={colorsByDate.get(iso) || []}
+              onSelect={onSelectDate}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 };

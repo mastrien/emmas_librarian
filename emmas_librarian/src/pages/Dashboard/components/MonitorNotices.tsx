@@ -6,53 +6,30 @@ import type { MonitorNotice, SearchPreview } from '../../../types';
 import { describeError } from '../../../utils/describeError';
 import { ExperimentalTag } from '../../../components/common/ExperimentalTag';
 import { MONITOR_EXPERIMENTAL_REASON } from '../../../components/modals/searchHistory/SearchMonitorControl';
-
-const cardStyle: React.CSSProperties = {
-  padding: '0.9rem 1rem',
-  marginBottom: '1.25rem',
-  borderLeft: '3px solid var(--color-primary)',
-};
+import '../dashboard.css';
 
 const NoticeRow: React.FC<{ notice: MonitorNotice; onReview: () => void; busy: boolean }> = ({
   notice,
   onReview,
   busy,
 }) => (
-  <div
-    style={{
-      display: 'flex',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: '0.75rem',
-      paddingTop: '0.6rem',
-      borderTop: '1px solid var(--border-color)',
-    }}
-  >
-    <div style={{ minWidth: 0 }}>
+  <div className="monitor-row">
+    <div className="monitor-row-text">
       <strong>
         {notice.newCount === 0
           ? 'Sem novidades confirmadas'
           : `${notice.newCount} ${notice.newCount === 1 ? 'artigo novo' : 'artigos novos'}`}
       </strong>{' '}
       em {notice.projectName}
-      <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', overflowWrap: 'anywhere' }}>
+      <div className="monitor-row-query">
         Busca #{notice.searchId}: {notice.query}
       </div>
       {notice.failedBases.length > 0 && (
-        <div style={{ fontSize: '0.82rem', color: 'var(--color-warning)' }}>
-          Não verificou: {notice.failedBases.join(', ')}.
-        </div>
+        <div className="monitor-row-failed">Não verificou: {notice.failedBases.join(', ')}.</div>
       )}
     </div>
     {notice.newCount > 0 && (
-      <button
-        type="button"
-        className="btn-primary"
-        disabled={busy}
-        onClick={onReview}
-        style={{ padding: '0.35rem 0.8rem', fontSize: '0.85rem' }}
-      >
+      <button type="button" className="btn-primary monitor-review" disabled={busy} onClick={onReview}>
         Revisar
       </button>
     )}
@@ -132,27 +109,15 @@ export const MonitorNotices: React.FC = () => {
   return (
     <>
       {checking && (
-        <div
-          role="status"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            marginBottom: '1rem',
-            fontSize: '0.85rem',
-            color: 'var(--text-muted)',
-          }}
-        >
+        <div role="status" className="monitor-checking">
           <Loader2 size={14} className="animate-spin" aria-hidden="true" /> Verificando as buscas monitoradas…
         </div>
       )}
       {notices.length > 0 && (
-        <section className="card" aria-label="Novidades nas buscas monitoradas" style={cardStyle}>
-          <div
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}
-          >
-            <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-              <strong style={{ color: 'var(--text-heading)' }}>Novidades nas buscas monitoradas</strong>
+        <section className="card monitor-card" aria-label="Novidades nas buscas monitoradas">
+          <div className="monitor-card-head">
+            <span className="monitor-card-title">
+              <strong>Novidades nas buscas monitoradas</strong>
               <ExperimentalTag reason={MONITOR_EXPERIMENTAL_REASON} />
             </span>
             <button
@@ -160,13 +125,7 @@ export const MonitorNotices: React.FC = () => {
               aria-label="Dispensar o aviso"
               title="Dispensar até a próxima verificação"
               onClick={dismissAll}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                display: 'flex',
-              }}
+              className="monitor-dismiss"
             >
               <X size={18} aria-hidden="true" />
             </button>
@@ -175,7 +134,7 @@ export const MonitorNotices: React.FC = () => {
             <NoticeRow key={notice.searchId} notice={notice} busy={saving} onReview={() => void openReview(notice)} />
           ))}
           {error && (
-            <div role="alert" style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--color-danger)' }}>
+            <div role="alert" className="monitor-error">
               {error}
             </div>
           )}
