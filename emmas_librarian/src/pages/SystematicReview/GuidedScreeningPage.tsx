@@ -12,6 +12,7 @@ import { useScreeningSuggestions } from './useScreeningSuggestions';
 import { hasCriteria } from '../../utils/screeningCriteria';
 import { readerStateBackTo } from '../../utils/readerReturn';
 import './review.css';
+import './guided.css';
 import { BackLink } from '../../components/common/BackLink';
 
 const STAGES: { id: ScreeningStage; label: string }[] = [
@@ -20,18 +21,7 @@ const STAGES: { id: ScreeningStage; label: string }[] = [
 ];
 
 const StageTabs: React.FC<{ guided: GuidedScreening }> = ({ guided }) => (
-  <div
-    role="tablist"
-    aria-label="Etapa"
-    style={{
-      display: 'flex',
-      gap: '2px',
-      padding: '3px',
-      borderRadius: 'var(--radius-md)',
-      background: 'var(--bg-main)',
-      border: '1px solid var(--border-color)',
-    }}
-  >
+  <div role="tablist" aria-label="Etapa" className="guided-stage-tabs">
     {STAGES.map((s) => (
       <button
         key={s.id}
@@ -40,7 +30,6 @@ const StageTabs: React.FC<{ guided: GuidedScreening }> = ({ guided }) => (
         aria-selected={guided.stage === s.id}
         className="review-quiet"
         onClick={() => guided.setStage(s.id)}
-        style={guided.stage === s.id ? { background: 'var(--bg-surface)', fontWeight: 600 } : undefined}
       >
         {s.label}
       </button>
@@ -50,29 +39,20 @@ const StageTabs: React.FC<{ guided: GuidedScreening }> = ({ guided }) => (
 
 const ProgressLine: React.FC<{ guided: GuidedScreening }> = ({ guided }) => {
   const total = guided.poolSize || 1;
-  const width = (n: number) => `${(n / total) * 100}%`;
+  // Each kind's share of the bar, as a CSS variable guided.css reads.
+  const share = (n: number) => ({ '--share': `${(n / total) * 100}%` }) as React.CSSProperties;
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.9rem', alignItems: 'center' }}>
+    <div className="guided-progress">
       <strong>
         {guided.queue.length ? `Artigo ${guided.position + 1} de ${guided.queue.length}` : 'Nenhum artigo nesta etapa'}
       </strong>
-      <div
-        aria-hidden="true"
-        style={{
-          flex: '1 1 240px',
-          height: '8px',
-          borderRadius: '999px',
-          background: 'var(--bg-main)',
-          display: 'flex',
-          overflow: 'hidden',
-        }}
-      >
+      <div aria-hidden="true" className="guided-progress-bar">
         {(['include', 'maybe', 'exclude', 'removed'] as const).map((kind) => (
-          <span key={kind} className={`review-dot--${kind}`} style={{ width: width(guided.tally[kind]) }} />
+          <span key={kind} className={`review-dot--${kind}`} style={share(guided.tally[kind])} />
         ))}
       </div>
       <span className="review-muted">{guided.pending === 1 ? '1 pendente' : `${guided.pending} pendentes`}</span>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+      <label className="guided-check">
         <input type="checkbox" checked={guided.onlyPending} onChange={guided.toggleOnlyPending} /> Só pendentes
       </label>
     </div>
@@ -97,25 +77,15 @@ const ArticleCard: React.FC<{ article: Article; guided: GuidedScreening; quote: 
   guided,
   quote,
 }) => (
-  <article
-    className="review-section"
-    style={{
-      flex: '999 1 560px',
-      minWidth: 0,
-      padding: '1.4rem 1.6rem',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.7rem',
-    }}
-  >
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+  <article className="review-section guided-article">
+    <div className="guided-chips">
       {databasesOf(article).map((db) => (
         <span key={db} className="review-chip review-chip--none">
           {db}
         </span>
       ))}
     </div>
-    <h2 style={{ margin: 0, fontSize: '1.4rem', lineHeight: 1.3, overflowWrap: 'anywhere' }}>{article.title}</h2>
+    <h2>{article.title}</h2>
     <span className="review-muted">{articleMeta(article)}</span>
     {guided.stage === 'full' && (
       <div className="review-counts">
@@ -132,13 +102,11 @@ const ArticleCard: React.FC<{ article: Article; guided: GuidedScreening; quote: 
         </Link>
       </div>
     )}
-    <h3 className="review-menu-title" style={{ padding: 0, marginTop: '0.4rem' }}>
-      Resumo
-    </h3>
-    <p style={{ margin: 0, lineHeight: 1.65, maxWidth: '72ch' }}>
+    <h3 className="review-menu-title guided-abstract-title">Resumo</h3>
+    <p className="guided-abstract">
       {article.abstract ? <Abstract text={article.abstract} quote={quote} /> : 'Sem resumo cadastrado.'}
     </p>
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.4rem' }}>
+    <div className="guided-nav">
       <button type="button" className="review-small" onClick={() => guided.go(-1)} disabled={guided.position === 0}>
         ← Anterior
       </button>
@@ -158,18 +126,15 @@ const ArticleCard: React.FC<{ article: Article; guided: GuidedScreening; quote: 
 );
 
 const Finished: React.FC<{ guided: GuidedScreening; projectId: number }> = ({ guided, projectId }) => (
-  <div
-    className="review-section"
-    style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '0.9rem', alignItems: 'flex-start' }}
-  >
-    <h2 style={{ margin: 0 }}>
+  <div className="review-section guided-finished">
+    <h2>
       {guided.poolSize === 0
         ? 'Nenhum artigo chegou a esta etapa ainda'
         : guided.stage === 'title'
           ? 'Triagem por título e resumo concluída'
           : 'Avaliação do texto completo concluída'}
     </h2>
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+    <div className="guided-row">
       <span className="review-chip review-chip--include">{guided.tally.include} incluídos</span>
       <span className="review-chip review-chip--maybe">{guided.tally.maybe} em dúvida</span>
       <span className="review-chip review-chip--exclude">{guided.tally.exclude} excluídos</span>
@@ -179,12 +144,12 @@ const Finished: React.FC<{ guided: GuidedScreening; projectId: number }> = ({ gu
         </span>
       )}
     </div>
-    <p className="review-muted" style={{ margin: 0, maxWidth: '640px', lineHeight: 1.5 }}>
+    <p className="review-muted guided-finished-text">
       {guided.stage === 'title'
         ? 'Os incluídos e os em dúvida passam para a etapa de texto completo. Os excluídos já estão arquivados no projeto, com o motivo.'
         : 'Os incluídos aparecem na seção do rótulo na página da revisão; os excluídos ficam arquivados no projeto com o motivo desta etapa.'}
     </p>
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+    <div className="guided-row">
       {guided.stage === 'title' && (
         <button type="button" className="btn-primary" onClick={() => guided.setStage('full')}>
           Ir para texto completo
@@ -225,12 +190,10 @@ export const GuidedScreeningPage: React.FC = () => {
   const asking = canAsk && suggestions.running === null && (!suggestion || suggestions.isStale(suggestion));
   return (
     <div className="review fade-in">
-      <div className="review-header" style={{ alignItems: 'center' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.9rem', alignItems: 'center' }}>
+      <div className="review-header guided-header">
+        <div className="guided-title-row">
           <BackLink to={`/projects/${projectId}/review`}>Voltar à revisão</BackLink>
-          <h1 className="review-title" style={{ fontSize: '1.4rem' }}>
-            Triagem guiada · PRISMA 2020
-          </h1>
+          <h1 className="review-title guided-title">Triagem guiada · PRISMA 2020</h1>
         </div>
         <StageTabs guided={guided} />
       </div>
@@ -241,7 +204,7 @@ export const GuidedScreeningPage: React.FC = () => {
       {guided.finished || !article ? (
         <Finished guided={guided} projectId={projectId} />
       ) : (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.1rem', alignItems: 'flex-start' }}>
+        <div className="guided-body">
           <ArticleCard article={article} guided={guided} quote={suggestion?.quote_found ? suggestion.quote : null} />
           <GuidedDecisionPanel
             key={`${guided.stage}-${article.id}`}
