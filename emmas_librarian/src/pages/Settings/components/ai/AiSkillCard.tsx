@@ -119,9 +119,9 @@ const ModelSuggestions: React.FC<{ current: string; suggestions: string[]; onPic
               fontSize: '0.72rem',
               padding: '0.15rem 0.45rem',
               borderRadius: '12px',
-              border: isCurrent ? '1px solid var(--primary-color)' : '1px solid var(--border-color)',
-              background: isCurrent ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-card)',
-              color: isCurrent ? 'var(--primary-color)' : 'var(--text-muted)',
+              border: isCurrent ? '1px solid var(--color-primary)' : '1px solid var(--border-color)',
+              background: isCurrent ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-surface)',
+              color: isCurrent ? 'var(--color-primary)' : 'var(--text-muted)',
               cursor: 'pointer',
               fontWeight: isCurrent ? 600 : 400,
             }}
