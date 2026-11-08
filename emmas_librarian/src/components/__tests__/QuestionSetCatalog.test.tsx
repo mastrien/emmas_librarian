@@ -87,7 +87,8 @@ describe('QuestionSetCatalog', () => {
     renderCatalog();
 
     fireEvent.click(await screen.findByTitle('Editar'));
-    fireEvent.change(screen.getByDisplayValue('Metodologia'), { target: { value: 'Método' } });
+    // Spaces at the ends are dropped, as on creation.
+    fireEvent.change(screen.getByDisplayValue('Metodologia'), { target: { value: '  Método ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }));
 
     await waitFor(() =>

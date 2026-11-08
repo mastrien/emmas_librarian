@@ -27,13 +27,14 @@ interface PrismaPanelProps {
   actions: PrismaPanelActions;
 }
 
-// prisma.css: "may" (amber) for what may be wrong, "rem" (blue) for missing data.
-const WARNING_TONE: Record<PrismaWarning['kind'], 'may' | 'rem'> = {
-  mismatch: 'may',
-  pending: 'may',
-  partial: 'may',
-  nodata: 'rem',
-};
+/**
+ * The tone of a panel warning in prisma.css: "may" (amber) for what may be wrong, "rem" (blue) for missing data.
+ *
+ * @example warningTone('nodata') // 'rem'
+ */
+export function warningTone(kind: PrismaWarning['kind']): 'may' | 'rem' {
+  return kind === 'nodata' ? 'rem' : 'may';
+}
 
 const COLUMN_NAMES: Record<PrismaColumn, string> = {
   databases: 'Bases de dados e repositórios',
@@ -132,7 +133,7 @@ export const PrismaPanel: React.FC<PrismaPanelProps> = (props) => {
       <strong className="prisma-title-lg">n = {box.n}</strong>
       <p className="prisma-text">{box.how}</p>
       {box.warnings.map((w) => (
-        <div key={w.text} role="note" className={`prisma-warning prisma-warning--${WARNING_TONE[w.kind]}`}>
+        <div key={w.text} role="note" className={`prisma-warning prisma-warning--${warningTone(w.kind)}`}>
           {w.text}
         </div>
       ))}

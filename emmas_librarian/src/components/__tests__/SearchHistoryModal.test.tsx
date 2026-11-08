@@ -104,6 +104,11 @@ describe('SearchHistoryModal', () => {
     expect(byBase.getByText('Scopus: Chave de API inválida ou expirada')).toBeInTheDocument();
     expect(byBase.getByText('Únicos entre as bases: 1.180')).toBeInTheDocument();
     expect(byBase.getByText('Requisições: OpenAlex 10 · Web of Science 4')).toBeInTheDocument();
+    // The chip's border tells how each base went: fine, stopped early, failed.
+    const chip = (name: string) => byBase.getByText(`${name}:`, { exact: false, selector: '.history-breakdown-chip' });
+    expect(chip('OpenAlex')).toHaveClass('history-breakdown-chip--ok');
+    expect(chip('Web of Science')).toHaveClass('history-breakdown-chip--warning');
+    expect(chip('Scopus')).toHaveClass('history-breakdown-chip--error');
   });
 
   it('keeps the list readable when an entry has a malformed breakdown', () => {

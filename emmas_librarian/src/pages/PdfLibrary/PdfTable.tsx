@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, ExternalLink, Link2, Trash2 } from 'lucide-react';
-import { formatAddedDate, formatBytes, type PdfFileRecord } from './pdfLibraryData';
+import { formatAddedDate, type PdfFileRecord } from './pdfLibraryData';
+import { formatBytes } from '../../utils/formatters';
 
 interface PdfRowActions {
   onLink: (pdf: PdfFileRecord) => void;
