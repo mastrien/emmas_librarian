@@ -110,8 +110,9 @@ describe('ProjectDetailsPage tabs', () => {
 
     fireEvent.click(screen.getByTestId('tab-overview'));
 
-    expect(screen.getByTestId('tab-overview')).toHaveStyle({ fontWeight: '600' });
-    expect(screen.getByTestId('tab-articles')).toHaveStyle({ fontWeight: '400' });
+    // The highlight is the is-active class of projectPage.css now (Arca 134).
+    expect(screen.getByTestId('tab-overview')).toHaveClass('is-active');
+    expect(screen.getByTestId('tab-articles')).not.toHaveClass('is-active');
   });
 });
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookOpen, FileText, History, PieChart, Tags } from 'lucide-react';
+import '../projectPage.css';
 
 export type ProjectTabId = 'articles' | 'overview' | 'diary' | 'categories' | 'history';
 
@@ -25,9 +26,7 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({ activeTab, onSelect, a
     { id: 'history', label: `Histórico (${historyCount})`, icon: <History size={16} /> },
   ];
   return (
-    <div
-      style={{ display: 'flex', gap: '0.25rem', marginBottom: '1.5rem', borderBottom: '2px solid var(--border-color)' }}
-    >
+    <div className="project-tabs">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
@@ -35,21 +34,7 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({ activeTab, onSelect, a
             key={tab.id}
             data-testid={`tab-${tab.id}`}
             onClick={() => onSelect(tab.id)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.75rem 1.5rem',
-              border: 'none',
-              background: 'transparent',
-              color: isActive ? 'var(--color-primary)' : 'var(--text-muted)',
-              fontWeight: isActive ? 600 : 400,
-              fontSize: '0.95rem',
-              cursor: 'pointer',
-              borderBottom: isActive ? '2px solid var(--color-primary)' : '2px solid transparent',
-              marginBottom: '-2px',
-              transition: 'all var(--transition-fast)',
-            }}
+            className={isActive ? 'project-tab is-active' : 'project-tab'}
           >
             {tab.icon} {tab.label}
           </button>

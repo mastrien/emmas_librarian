@@ -1,23 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Search,
-  Brain,
-  Plus,
-  ChevronDown,
-  Upload,
-  Share2,
-  Download,
-  Tag,
-  Link as LinkIcon,
-  Settings,
-  FileIcon,
-  ExternalLink,
-  ListChecks,
-} from 'lucide-react';
+import { Search, Brain, Plus, Upload, Share2, Download, Tag, ListChecks } from 'lucide-react';
 import { Project, ProjectDocument } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import { exportWithFeedback } from '../../../utils/exportWithFeedback';
+import { ToolbarMenu, type ToolbarMenuItem } from './toolbar/ToolbarMenu';
+import { QuickAccessPanel } from './toolbar/QuickAccessPanel';
+import './toolbar/projectToolbar.css';
 
 interface ProjectToolbarProps {
   project: Project;
@@ -39,305 +28,87 @@ interface ProjectToolbarProps {
   handleExportMenuMouseLeave: () => void;
 }
 
-export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({
-  project,
-  projectDocuments,
-  isAddArticlesMenuOpen,
-  setIsAddArticlesMenuOpen,
-  isExportMenuOpen,
-  setIsExportMenuOpen,
-  handleBatchPdfImport,
-  setIsImportArticlesModalOpen,
-  setIsManualModalOpen,
-  setIsCategoriesModalOpen,
-  setIsQuickAccessModalOpen,
-  addArticlesMenuRef,
-  exportMenuRef,
-  handleAddMenuMouseEnter,
-  handleAddMenuMouseLeave,
-  handleExportMenuMouseEnter,
-  handleExportMenuMouseLeave,
-}) => {
+const addItems = (props: ProjectToolbarProps): ToolbarMenuItem[] => [
+  { icon: <Upload size={16} />, label: 'Importar PDFs em Lote', onSelect: props.handleBatchPdfImport },
+  {
+    icon: <Share2 size={16} />,
+    label: 'Importar de outro projeto',
+    onSelect: () => props.setIsImportArticlesModalOpen(true),
+  },
+  { icon: <Plus size={16} />, label: 'Artigo Manual', onSelect: () => props.setIsManualModalOpen(true) },
+];
+
+const exportItems = (projectId: number, service: ReturnType<typeof useProjectService>): ToolbarMenuItem[] => [
+  {
+    icon: <Download size={16} />,
+    label: 'Biblioshiny',
+    onSelect: () => void exportWithFeedback(() => service.exportBiblioshiny(projectId), 'CSV do Biblioshiny'),
+  },
+  {
+    icon: <Download size={16} />,
+    label: 'Pacote .emmapcarc (com PDFs)',
+    onSelect: () => void exportWithFeedback(() => service.exportProject(projectId), 'Pacote .emmapcarc'),
+  },
+];
+
+/**
+ * The project page's actions (search, investigation, review, add articles, export, categories) and its quick
+ * access links.
+ *
+ * @example <ProjectToolbar project={project} projectDocuments={docs} isAddArticlesMenuOpen={open} … />
+ */
+export const ProjectToolbar: React.FC<ProjectToolbarProps> = (props) => {
   const projectService = useProjectService();
+  const id = props.project.id;
   return (
     <>
-      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <Link
-          to={`/projects/${project.id}/search`}
-          className="btn-primary"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
+      <div className="project-toolbar">
+        <Link to={`/projects/${id}/search`} className="btn-primary toolbar-button">
           <Search size={18} /> Nova busca
         </Link>
-
         {/* The investigation is a page of its own (#73), like the review below. */}
-        <Link
-          to={`/projects/${project.id}/investigation`}
-          className="btn-secondary"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
+        <Link to={`/projects/${id}/investigation`} className="btn-secondary toolbar-button">
           <Brain size={18} /> Investigação com IA
         </Link>
-
         {/* The systematic review is a page of its own (#49); this page only links to it. */}
-        <Link
-          to={`/projects/${project.id}/review`}
-          className="btn-secondary"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
+        <Link to={`/projects/${id}/review`} className="btn-secondary toolbar-button">
           <ListChecks size={18} /> Revisão sistemática
         </Link>
-
-        {/* Group 1: Dropdown "Adicionar Artigos" */}
-        <div
-          ref={addArticlesMenuRef}
-          onMouseEnter={handleAddMenuMouseEnter}
-          onMouseLeave={handleAddMenuMouseLeave}
-          style={{ position: 'relative' }}
-        >
-          <button
-            onClick={() => setIsAddArticlesMenuOpen(!isAddArticlesMenuOpen)}
-            className="btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            <Plus size={18} /> Adicionar Artigos <ChevronDown size={14} />
-          </button>
-
-          {isAddArticlesMenuOpen && (
-            <div
-              className="glass-panel"
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: '100%',
-                minWidth: '220px',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-                zIndex: 100,
-                display: 'flex',
-                flexDirection: 'column',
-                padding: '0.5rem',
-                gap: '0.25rem',
-                backgroundColor: 'var(--bg-surface)',
-                border: '1px solid var(--border-color)',
-              }}
-            >
-              <button
-                className="menu-dropdown-item"
-                onClick={() => {
-                  setIsAddArticlesMenuOpen(false);
-                  handleBatchPdfImport();
-                }}
-              >
-                <Upload size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Importar PDFs em Lote
-              </button>
-
-              <button
-                className="menu-dropdown-item"
-                onClick={() => {
-                  setIsAddArticlesMenuOpen(false);
-                  setIsImportArticlesModalOpen(true);
-                }}
-              >
-                <Share2 size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Importar de outro projeto
-              </button>
-
-              <button
-                className="menu-dropdown-item"
-                onClick={() => {
-                  setIsAddArticlesMenuOpen(false);
-                  setIsManualModalOpen(true);
-                }}
-              >
-                <Plus size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Artigo Manual
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Group 2: Dropdown "Exportar" */}
-        <div
-          ref={exportMenuRef}
-          onMouseEnter={handleExportMenuMouseEnter}
-          onMouseLeave={handleExportMenuMouseLeave}
-          style={{ position: 'relative' }}
-        >
-          <button
-            onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-            className="btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            <Download size={18} /> Exportar <ChevronDown size={14} />
-          </button>
-
-          {isExportMenuOpen && (
-            <div
-              className="glass-panel"
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: '100%',
-                minWidth: '220px',
-                borderRadius: 'var(--radius-md)',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
-                zIndex: 100,
-                display: 'flex',
-                flexDirection: 'column',
-                padding: '0.5rem',
-                gap: '0.25rem',
-                backgroundColor: 'var(--bg-surface)',
-                border: '1px solid var(--border-color)',
-              }}
-            >
-              <button
-                className="menu-dropdown-item"
-                onClick={() => {
-                  setIsExportMenuOpen(false);
-                  return exportWithFeedback(() => projectService.exportBiblioshiny(project.id), 'CSV do Biblioshiny');
-                }}
-              >
-                <Download size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Biblioshiny
-              </button>
-
-              <button
-                className="menu-dropdown-item"
-                onClick={() => {
-                  setIsExportMenuOpen(false);
-                  return exportWithFeedback(() => projectService.exportProject(project.id), 'Pacote .emmapcarc');
-                }}
-              >
-                <Download size={16} style={{ color: 'var(--color-primary)', flexShrink: 0 }} /> Pacote .emmapcarc (com
-                PDFs)
-              </button>
-            </div>
-          )}
-        </div>
-
+        <ToolbarMenu
+          variant="primary"
+          icon={<Plus size={18} />}
+          label="Adicionar Artigos"
+          open={props.isAddArticlesMenuOpen}
+          onOpenChange={props.setIsAddArticlesMenuOpen}
+          items={addItems(props)}
+          menuRef={props.addArticlesMenuRef}
+          onMouseEnter={props.handleAddMenuMouseEnter}
+          onMouseLeave={props.handleAddMenuMouseLeave}
+        />
+        <ToolbarMenu
+          variant="secondary"
+          icon={<Download size={18} />}
+          label="Exportar"
+          open={props.isExportMenuOpen}
+          onOpenChange={props.setIsExportMenuOpen}
+          items={exportItems(id, projectService)}
+          menuRef={props.exportMenuRef}
+          onMouseEnter={props.handleExportMenuMouseEnter}
+          onMouseLeave={props.handleExportMenuMouseLeave}
+        />
         <button
-          onClick={() => setIsCategoriesModalOpen(true)}
-          className="btn-secondary"
+          onClick={() => props.setIsCategoriesModalOpen(true)}
+          className="btn-secondary toolbar-button"
           title="Gerenciar categorias de artigos"
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
           <Tag size={18} /> Criar categorias
         </button>
       </div>
-
-      {/* Acesso rápido */}
-      <div
-        style={{
-          marginTop: '0.5rem',
-          background: 'var(--bg-surface)',
-          padding: '1rem',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border-color)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-          <h3
-            style={{
-              margin: 0,
-              fontSize: '1.1rem',
-              color: 'var(--text-heading)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-          >
-            <LinkIcon size={16} /> Acesso rápido
-          </h3>
-          <button
-            onClick={() => setIsQuickAccessModalOpen(true)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              padding: '0.2rem',
-              display: 'flex',
-              transition: 'color var(--transition-fast)',
-            }}
-            title="Gerenciar acessos rápidos"
-          >
-            <Settings size={16} />
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {projectDocuments.length === 0 ? (
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
-              Nenhum link ou documento cadastrado. Clique na engrenagem para adicionar.
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {Object.entries(
-                projectDocuments.reduce<Record<string, ProjectDocument[]>>((acc, doc) => {
-                  const key = doc.category?.trim() || '';
-                  if (!acc[key]) acc[key] = [];
-                  acc[key].push(doc);
-                  return acc;
-                }, {}),
-              )
-                .sort(([catA], [catB]) => {
-                  if (catA === '') return -1;
-                  if (catB === '') return 1;
-                  return 0;
-                })
-                .map(([catName, docs]) => (
-                  <div
-                    key={catName || 'uncategorized'}
-                    style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}
-                  >
-                    {catName && (
-                      <div
-                        style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          color: 'var(--text-muted)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.3rem',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                          marginBottom: '0.25rem',
-                        }}
-                      >
-                        <Tag size={12} /> {catName}
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {docs.map((doc) => (
-                        <button
-                          key={doc.id}
-                          onClick={() => {
-                            projectService.openProjectDocumentExternal(doc.url, doc.local_file_path);
-                          }}
-                          className="btn-secondary"
-                          style={{
-                            padding: '0.4rem 0.8rem',
-                            fontSize: '0.85rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.4rem',
-                            background: 'var(--bg-main)',
-                          }}
-                          title={doc.url || doc.local_file_path}
-                        >
-                          {doc.url ? (
-                            <ExternalLink size={14} style={{ color: 'var(--color-primary)' }} />
-                          ) : (
-                            <FileIcon size={14} style={{ color: 'var(--color-primary)' }} />
-                          )}
-                          {doc.title}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <QuickAccessPanel
+        documents={props.projectDocuments}
+        onManage={() => props.setIsQuickAccessModalOpen(true)}
+        onOpen={(doc) => projectService.openProjectDocumentExternal(doc.url, doc.local_file_path)}
+      />
     </>
   );
 };

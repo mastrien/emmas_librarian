@@ -22,6 +22,7 @@ import { SearchHistoryModal } from '../components/modals/SearchHistoryModal';
 import { outsideSearchIds } from '../utils/outsideSearchEntries';
 import { useOpenAccessPdfs } from './ProjectDetails/hooks/useOpenAccessPdfs';
 import { BackLink } from '../components/common/BackLink';
+import './ProjectDetails/projectPage.css';
 
 const ARTICLES_PER_PAGE = 50;
 
@@ -57,15 +58,14 @@ export const ProjectDetailsPage: React.FC = () => {
   });
 
   if (data.loading) return <ProjectDetailsSkeleton />;
-  if (!data.project) return <div style={{ padding: '2rem', textAlign: 'center' }}>Projeto não encontrado.</div>;
+  if (!data.project) return <div className="project-not-found">Projeto não encontrado.</div>;
   const project = data.project;
 
   return (
     <div
       id="project-details-container"
       data-testid="project-details-container"
-      className="fade-in"
-      style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', minHeight: '80vh' }}
+      className="fade-in project-page"
       {...pdfImport.dropZone}
     >
       {pdfImport.isDragging && <PdfDropOverlay />}
@@ -73,7 +73,7 @@ export const ProjectDetailsPage: React.FC = () => {
         Voltar aos projetos
       </BackLink>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div className="project-page-top">
         <ProjectHeader
           project={project}
           articlesCount={data.articles.length}
