@@ -8,6 +8,7 @@ import { providerName } from '../../utils/screeningCriteria';
 import { recentRelevant } from '../../utils/screeningView';
 import { useArticleVectors } from './useArticleVectors';
 import { ExperimentalTag } from '../../components/common/ExperimentalTag';
+import './guided.css';
 
 const ORDER_REASON =
   'Ainda não foi medido, numa triagem real, quanto a ordem prevista ajuda. Ela muda só a ordem: nenhum artigo sai da fila e nada é decidido.';
@@ -90,7 +91,7 @@ export function useScreeningOrder(projectId: number, decisions: ScreeningDecisio
 export type ScreeningOrder = ReturnType<typeof useScreeningOrder>;
 
 const Toggle: React.FC<{ order: ScreeningOrder }> = ({ order }) => (
-  <label style={{ display: 'inline-flex', gap: '0.45rem', alignItems: 'center' }}>
+  <label className="guided-inline guided-inline--toggle">
     <input type="checkbox" checked={order.enabled} onChange={(e) => order.toggle(e.target.checked)} /> Ordenar por
     relevância prevista
   </label>
@@ -156,8 +157,8 @@ export const ScreeningOrderStrip: React.FC<{
       role="group"
       aria-label="Ordem da triagem"
     >
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', justifyContent: 'space-between' }}>
-        <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+      <div className="guided-strip-head guided-strip-head--wide">
+        <span className="guided-inline">
           <strong>
             {order.queue ? `Ordem prevista, aprendida com ${rank?.learnedFrom} decisões.` : 'Ordem original.'}
           </strong>

@@ -2,6 +2,7 @@ import React from 'react';
 import type { ScreeningLabel, ScreeningSuggestion } from '../../types';
 import { providerName } from '../../utils/screeningCriteria';
 import { ExperimentalTag } from '../../components/common/ExperimentalTag';
+import './guided.css';
 
 // Decided with the author for 1.3.0: how often it errs was not measured on a real screening yet.
 const SUGGESTION_REASON =
@@ -34,14 +35,14 @@ const Asked: React.FC<SuggestionBlockProps & { suggestion: ScreeningSuggestion }
   const unchecked = suggestion.quote_found === 0;
   return (
     <div className={stale || unchecked ? 'review-suggestion review-suggestion--warn' : 'review-suggestion'}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '0.5rem' }}>
-        <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+      <div className="guided-strip-head">
+        <span className="guided-inline">
           <strong>A IA sugere: {label?.name}</strong>
           <ExperimentalTag reason={SUGGESTION_REASON} />
         </span>
         <span className="review-muted">{confidenceText(suggestion.confidence)}</span>
       </div>
-      {suggestion.reason && <p style={{ margin: 0 }}>{suggestion.reason}</p>}
+      {suggestion.reason && <p className="guided-plain">{suggestion.reason}</p>}
       {unchecked ? (
         <strong role="note">{quoteWarning(suggestion)}</strong>
       ) : (
@@ -99,7 +100,7 @@ export const SuggestionBlock: React.FC<SuggestionBlockProps> = (props) => {
           <strong>Não foi possível sugerir.</strong> {failure}
         </span>
       )}
-      <button type="button" className="review-small" style={{ justifyContent: 'center' }} onClick={onSuggest}>
+      <button type="button" className="review-small guided-centered" onClick={onSuggest}>
         {failure ? 'Tentar de novo' : 'Sugerir (S)'}
       </button>
       {provider && (
