@@ -17,6 +17,7 @@ import { prismaLayout } from './prismaLayout';
 import { exportPrismaDiagram } from './prismaExport';
 import { ExportMenu } from './ExportMenu';
 import { DataTable, ExcludedTable } from './PrismaTables';
+import './prisma.css';
 
 const NO_RECORDS: PrismaRecords = { sources: [], origins: [], studyLinks: [] };
 
@@ -52,7 +53,7 @@ const WarningChips: React.FC<{ flow: PrismaFlow; order: PrismaBoxKey[] }> = ({ f
   const all = order.flatMap((k) => flow[k].warnings);
   const count = (kind: string) => all.filter((w) => w.kind === kind).length;
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+    <div className="prisma-row">
       <span className="review-chip review-chip--maybe">{count('pending')} aguardando decisões</span>
       <span className="review-chip review-chip--maybe">{count('mismatch')} com números que não batem</span>
       <span className="review-chip review-chip--maybe">{count('partial')} podem ser parciais</span>
@@ -128,7 +129,7 @@ export const PrismaTab: React.FC<{ projectId: number; screening: ScreeningState 
           {exporting.message.text}
         </p>
       )}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.1rem', alignItems: 'flex-start' }}>
+      <div className="prisma-columns">
         <div className="review-section prisma-canvas">
           <PrismaDiagram layout={layout} palette={SCREEN_PALETTE} selected={box.key} onSelect={setSelected} />
         </div>

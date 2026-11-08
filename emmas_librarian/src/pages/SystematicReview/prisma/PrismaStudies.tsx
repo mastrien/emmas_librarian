@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Article, PrismaRecords } from '../../../types';
-import { PANEL_FIELD, PANEL_LABEL } from './panelFieldStyles';
+import './prisma.css';
 
 /** What the study grouping can change; each call answers the records as they now are. */
 export interface StudyActions {
@@ -25,14 +25,9 @@ const PublicationPicker: React.FC<{
   value: string;
   onChange: (value: string) => void;
 }> = ({ label, publications, value, onChange }) => (
-  <label style={PANEL_LABEL}>
+  <label className="prisma-field-label">
     {label}
-    <select
-      className="input-field input-compact"
-      style={PANEL_FIELD}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    >
+    <select className="input-field input-compact prisma-field" value={value} onChange={(e) => onChange(e.target.value)}>
       <option value="">Escolha a publicação</option>
       {publications.map((p) => (
         <option key={p.id} value={p.id}>
@@ -67,7 +62,7 @@ export const StudyGrouping: React.FC<{ publications: Article[]; records: PrismaR
   return (
     <section className="prisma-editor" aria-label="Publicações do mesmo estudo">
       <strong>Publicações do mesmo estudo</strong>
-      <p className="review-muted" style={{ margin: 0 }}>
+      <p className="review-muted prisma-m0">
         Um estudo pode ter mais de uma publicação: um preprint e o artigo publicado, ou um resumo de congresso e o
         artigo completo. Marque quais são do mesmo estudo e o app conta os estudos sozinho.
       </p>
@@ -75,7 +70,7 @@ export const StudyGrouping: React.FC<{ publications: Article[]; records: PrismaR
         <div key={study} className="prisma-study">
           <span className="review-muted">1 estudo, {members.length} publicações</span>
           {members.map((m) => (
-            <span key={m.id} style={{ overflowWrap: 'anywhere' }}>
+            <span className="prisma-wrap" key={m.id}>
               · {m.title}
             </span>
           ))}

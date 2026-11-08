@@ -1,6 +1,7 @@
 import React from 'react';
 import type { PrismaBoxKey } from '../../../utils/prismaFlow';
 import { BAND_W, FOOTER_LINE_H, HEAD_H, LINE_H, PAD, type BoxPlace, type PrismaLayout } from './prismaLayout';
+import './prisma.css';
 
 /** Colours of the diagram: CSS variables on screen (follows the theme), plain hex in exported files. */
 export interface PrismaPalette {
@@ -94,7 +95,7 @@ const BoxShape: React.FC<{ box: BoxPlace; p: PrismaPalette; selected: boolean; o
       aria-pressed={interactive ? selected : undefined}
       onClick={onSelect}
       onKeyDown={interactive ? onKey : undefined}
-      style={interactive ? { cursor: 'pointer' } : undefined}
+      className={interactive ? 'prisma-box-interactive' : undefined}
     >
       <rect
         x={box.x}
@@ -184,7 +185,8 @@ export const PrismaDiagram: React.FC<PrismaDiagramProps> = ({
     viewBox={`0 0 ${layout.width} ${layout.height}`}
     width={fixedSize ? layout.width : '100%'}
     height={fixedSize ? layout.height : undefined}
-    style={fixedSize ? undefined : { maxWidth: layout.width, display: 'block' }}
+    className={fixedSize ? undefined : 'prisma-diagram-screen'}
+    style={fixedSize ? undefined : ({ '--diagram-width': `${layout.width}px` } as React.CSSProperties)}
     role="img"
     aria-label="Diagrama PRISMA 2020 da revisão"
   >

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { PrismaBoxKey, PrismaColumn, PrismaFlow } from '../../../utils/prismaFlow';
 import type { ExcludedReport } from '../../../utils/prisma/prismaTables';
+import './prisma.css';
 
 const COLUMN_NAMES: Record<PrismaColumn, string> = {
   databases: 'Bases de dados e repositórios',
@@ -9,7 +10,7 @@ const COLUMN_NAMES: Record<PrismaColumn, string> = {
 };
 
 const Heading: React.FC<{ title: string }> = ({ title }) => (
-  <h2 style={{ margin: '0 0.75rem 0.6rem', fontSize: '1.05rem' }}>
+  <h2 className="prisma-inset-head prisma-title-xs">
     {title} <span className="review-muted">vai junto na exportação</span>
   </h2>
 );
@@ -20,9 +21,9 @@ const Heading: React.FC<{ title: string }> = ({ title }) => (
  * @example <DataTable flow={flow} order={prismaOrder(flow)} />
  */
 export const DataTable: React.FC<{ flow: PrismaFlow; order: PrismaBoxKey[] }> = ({ flow, order }) => (
-  <section aria-label="Tabela de dados" className="review-section" style={{ padding: '1rem 0.5rem 0.5rem' }}>
+  <section aria-label="Tabela de dados" className="review-section prisma-pad-top">
     <Heading title="Tabela de dados" />
-    <div style={{ overflowX: 'auto' }}>
+    <div className="prisma-scroll-x">
       <table className="prisma-table">
         <thead>
           <tr>
@@ -56,17 +57,13 @@ export const DataTable: React.FC<{ flow: PrismaFlow; order: PrismaBoxKey[] }> = 
  * @example <ExcludedTable reports={excludedReports(input, flow)} />
  */
 export const ExcludedTable: React.FC<{ reports: ExcludedReport[] }> = ({ reports }) => (
-  <section
-    aria-label="Publicações excluídas e não recuperadas"
-    className="review-section"
-    style={{ padding: '1rem 0.5rem 0.5rem' }}
-  >
+  <section aria-label="Publicações excluídas e não recuperadas" className="review-section prisma-pad-top">
     <Heading title="Publicações excluídas e não recuperadas" />
-    <p className="review-muted" style={{ margin: '0 0.75rem 0.6rem' }}>
+    <p className="review-muted prisma-inset-head">
       A lista que o item 16b da PRISMA pede: cada publicação excluída no texto completo, ou cujo texto não foi
       recuperado, com o motivo.
     </p>
-    <div style={{ overflowX: 'auto' }}>
+    <div className="prisma-scroll-x">
       <table className="prisma-table">
         <thead>
           <tr>
@@ -88,9 +85,7 @@ export const ExcludedTable: React.FC<{ reports: ExcludedReport[] }> = ({ reports
         </tbody>
       </table>
       {reports.length === 0 && (
-        <p className="review-muted" style={{ margin: '0.5rem 0.75rem' }}>
-          Nenhuma publicação excluída no texto completo ainda.
-        </p>
+        <p className="review-muted prisma-inset">Nenhuma publicação excluída no texto completo ainda.</p>
       )}
     </div>
   </section>

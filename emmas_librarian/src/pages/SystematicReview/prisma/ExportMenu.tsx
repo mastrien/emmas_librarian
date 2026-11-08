@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { PrismaImageFormat } from '../../../types';
 import { useCloseOnOutside } from '../LabelMenu';
+import './prisma.css';
 
 const OPTIONS: { format: PrismaImageFormat; title: string; hint: string }[] = [
   { format: 'svg', title: 'SVG + tabelas (CSV)', hint: 'Vetor, para o artigo' },
@@ -31,7 +32,7 @@ export const ExportMenu: React.FC<{ onPick: (format: PrismaImageFormat) => void 
         Exportar ▾
       </button>
       {open && (
-        <div className="review-menu" role="menu" aria-label="Exportar o diagrama" style={{ width: '320px' }}>
+        <div className="review-menu prisma-w320" role="menu" aria-label="Exportar o diagrama">
           {OPTIONS.map((o) => (
             <button
               key={o.format}
@@ -40,13 +41,13 @@ export const ExportMenu: React.FC<{ onPick: (format: PrismaImageFormat) => void 
               className="review-menu-item"
               onClick={() => pick(o.format)}
             >
-              <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <span className="prisma-col prisma-gap-2">
                 <strong>{o.title}</strong>
                 <span className="review-muted">{o.hint}</span>
               </span>
             </button>
           ))}
-          <p className="review-muted" style={{ margin: '0.4rem 0.5rem 0.2rem', lineHeight: 1.5 }}>
+          <p className="review-muted prisma-note">
             Vão junto duas tabelas: a de dados do diagrama e a lista de publicações excluídas e não recuperadas, com o
             motivo (item 16b da PRISMA). A imagem leva no rodapé a referência do modelo PRISMA, com link. Caixas com
             aviso saem com o aviso; o app não corrige nenhum número sozinho.
