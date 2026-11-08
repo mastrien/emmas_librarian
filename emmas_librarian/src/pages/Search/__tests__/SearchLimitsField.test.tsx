@@ -19,7 +19,6 @@ function Harness({
     <SearchLimitsField
       limits={limits}
       selected={selected}
-      inputStyle={{}}
       onChange={(next) => {
         setLimits(next);
         onChange?.(next);
