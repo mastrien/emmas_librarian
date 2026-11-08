@@ -2,26 +2,12 @@ import React, { useState } from 'react';
 import { Check, Pencil, Undo2, X } from 'lucide-react';
 import type { InvestigationResult, ResultReview, ReviewStatus } from '../../../types';
 import { aiAnswerText, REVIEW_LABELS, canSaveCorrection } from '../../../utils/investigationAnswers';
+import './resultReview.css';
 
 export interface ResultReviewControlsProps {
   result: InvestigationResult;
   onReview: (review: ResultReview) => Promise<void>;
 }
-
-const BADGE_COLORS: Record<ReviewStatus, string> = {
-  pending: 'var(--color-warning, #f59e0b)',
-  accepted: 'var(--color-success, #10b981)',
-  edited: 'var(--color-primary)',
-  rejected: 'var(--color-danger, #ef4444)',
-};
-
-const smallButton: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.3rem',
-  fontSize: '0.8rem',
-  padding: '0.25rem 0.55rem',
-};
 
 // Shortcuts work while the answer block has focus (click it or Tab to it), never while typing in the edit box.
 const SHORTCUTS: Record<string, 'accept' | 'edit' | 'reject'> = { a: 'accept', e: 'edit', r: 'reject' };
@@ -70,22 +56,17 @@ export const ResultReviewControls: React.FC<ResultReviewControlsProps> = ({ resu
       tabIndex={0}
       onKeyDown={onKeyDown}
       aria-label={`Revisão da resposta: ${REVIEW_LABELS[result.review_status]}`}
-      style={{ padding: '0.5rem 0.75rem', borderTop: '1px solid var(--border-color)', outlineOffset: '2px' }}
+      className="result-review"
     >
-      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: BADGE_COLORS[result.review_status] }}>
+      <div className={`result-review-status result-review-status--${result.review_status satisfies ReviewStatus}`}>
         Revisão: {REVIEW_LABELS[result.review_status]}
       </div>
       {/* All under the status: sharing its line, two fit and the third fell alone onto the next (#84). */}
-      <div
-        role="group"
-        aria-label="Ações da revisão"
-        style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.4rem' }}
-      >
+      <div role="group" aria-label="Ações da revisão" className="result-review-actions">
         {marked ? (
           <button
             type="button"
-            className="btn-secondary"
-            style={smallButton}
+            className="btn-secondary result-review-button"
             disabled={busy}
             onClick={() => send({ status: 'pending' })}
           >
@@ -95,20 +76,18 @@ export const ResultReviewControls: React.FC<ResultReviewControlsProps> = ({ resu
           <>
             <button
               type="button"
-              className="btn-secondary"
-              style={smallButton}
+              className="btn-secondary result-review-button"
               disabled={busy}
               onClick={actions.accept}
             >
               <Check size={14} /> Aceitar
             </button>
-            <button type="button" className="btn-secondary" style={smallButton} disabled={busy} onClick={actions.edit}>
+            <button type="button" className="btn-secondary result-review-button" disabled={busy} onClick={actions.edit}>
               <Pencil size={14} /> Editar
             </button>
             <button
               type="button"
-              className="btn-secondary"
-              style={smallButton}
+              className="btn-secondary result-review-button"
               disabled={busy}
               onClick={actions.reject}
             >
@@ -118,7 +97,7 @@ export const ResultReviewControls: React.FC<ResultReviewControlsProps> = ({ resu
         )}
       </div>
       {result.review_status === 'edited' && draft === null && (
-        <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem' }}>
+        <p className="result-review-answer">
           <strong>Sua resposta:</strong> {result.reviewed_answer}
         </p>
       )}
@@ -147,7 +126,7 @@ interface ReviewEditorProps {
 }
 
 const ReviewEditor: React.FC<ReviewEditorProps> = ({ draft, initial, busy, onChange, onCancel, onSave }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.5rem' }}>
+  <div className="result-review-editor">
     <textarea
       className="input-field"
       aria-label="Sua resposta"
@@ -160,14 +139,13 @@ const ReviewEditor: React.FC<ReviewEditorProps> = ({ draft, initial, busy, onCha
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && canSaveCorrection(draft, initial)) onSave();
       }}
     />
-    <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
-      <button type="button" className="btn-secondary" style={smallButton} onClick={onCancel}>
+    <div className="result-review-editor-buttons">
+      <button type="button" className="btn-secondary result-review-button" onClick={onCancel}>
         Cancelar
       </button>
       <button
         type="button"
-        className="btn-primary"
-        style={smallButton}
+        className="btn-primary result-review-button"
         disabled={busy || !canSaveCorrection(draft, initial)}
         onClick={onSave}
       >

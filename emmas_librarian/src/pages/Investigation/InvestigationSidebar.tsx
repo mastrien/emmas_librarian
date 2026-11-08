@@ -24,7 +24,7 @@ const RunningCard: React.FC<{ projectId: number; run: InvestigationRunState; onP
         </span>
       </span>
       <span className="inv-bar" aria-hidden="true">
-        <i style={{ width: `${percent}%` }} />
+        <i style={{ '--progress': `${percent}%` } as React.CSSProperties} />
       </span>
       <span className="inv-muted">
         {run.targets.length} artigos · {run.questions.length} perguntas

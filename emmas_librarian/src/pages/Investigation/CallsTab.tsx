@@ -23,14 +23,14 @@ const isDone = (cell: CallCell) => cell.status !== 'running' && cell.status !== 
 const Stat: React.FC<{ label: string; value: string; danger?: boolean }> = ({ label, value, danger }) => (
   <div className="inv-stat">
     <span className="inv-muted">{label}</span>
-    <strong style={danger ? { color: 'var(--color-danger)' } : undefined}>{value}</strong>
+    <strong className={danger ? 'inv-danger' : undefined}>{value}</strong>
   </div>
 );
 
 const CallGrid: React.FC<{ cells: CallCell[]; questions: string[] }> = ({ cells, questions }) => (
   <section className="inv-card" aria-label="Cada chamada">
     <h3 className="inv-section-title">Cada chamada (artigo × pergunta)</h3>
-    <div className="inv-call-grid" style={{ gridTemplateColumns: `repeat(${Math.max(questions.length, 1)}, 1fr)` }}>
+    <div className="inv-call-grid" style={{ '--inv-columns': Math.max(questions.length, 1) } as React.CSSProperties}>
       {cells.map((cell, i) => (
         <span
           key={i}
@@ -72,14 +72,12 @@ export const CallsTab: React.FC<CallsTabProps> = ({ cells, questions, onRedo }) 
       </div>
       {groups.map((group) => (
         <div key={`${group.status}:${group.message}`} role="alert" className="inv-error-group">
-          <div style={{ minWidth: 0 }}>
+          <div className="inv-shrink">
             <strong>
               {group.count} {group.count === 1 ? 'chamada' : 'chamadas'}{' '}
               {group.status === 'error' ? 'com erro' : 'pulada(s)'}
             </strong>
-            <div className="inv-muted" style={{ overflowWrap: 'anywhere' }}>
-              {group.message}
-            </div>
+            <div className="inv-muted inv-wrap-anywhere">{group.message}</div>
           </div>
           {onRedo && (
             <button type="button" className="btn-secondary inv-small" onClick={() => onRedo(group.articleIds)}>

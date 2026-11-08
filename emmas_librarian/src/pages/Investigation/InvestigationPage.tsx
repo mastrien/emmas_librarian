@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { AlertCircle, ChevronsRight, Plus } from 'lucide-react';
+import { ChevronsRight, Plus } from 'lucide-react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { SideDrawer } from '../../components/common/SideDrawer';
 import { IndexRecalculationModal } from '../../components/modals/IndexRecalculationModal';
+import { QuotaModal } from '../../components/modals/QuotaModal';
 import { useInvestigationRunContext } from '../../contexts/InvestigationRunContext';
 import { useFillWindowHeight } from '../../hooks/useFillWindowHeight';
 import { useNarrowWindow } from '../../hooks/useNarrowWindow';
@@ -16,29 +16,8 @@ import { useInvestigationPageData } from './useInvestigationPageData';
 import type { InvestigationRunState } from './useInvestigationRun';
 import { useRecalculationBeforeRun } from './useRecalculationBeforeRun';
 import './investigation.css';
+import { fillHeightStyle } from '../../hooks/useFillWindowHeight';
 import { BackLink } from '../../components/common/BackLink';
-
-const QuotaNotice: React.FC<{ onClose: () => void }> = ({ onClose }) =>
-  createPortal(
-    <div className="inv-modal-overlay">
-      <div className="card fade-in inv-modal" role="alertdialog" aria-label="Limite de Cota Atingido">
-        <AlertCircle
-          size={48}
-          aria-hidden="true"
-          style={{ color: 'var(--color-danger)', margin: '0 auto 1rem auto' }}
-        />
-        <h3 style={{ margin: '0 0 1rem 0' }}>Limite de Cota Atingido</h3>
-        <p style={{ margin: '0 0 1.5rem 0', color: 'var(--text-muted)' }}>
-          A sua chave de API (OpenAI/Anthropic/Gemini) parece ter esgotado o limite de cota ou os créditos disponíveis.
-          Verifique o seu provedor de IA e atualize as configurações no sistema.
-        </p>
-        <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={onClose}>
-          Entendi
-        </button>
-      </div>
-    </div>,
-    document.body,
-  );
 
 const RunningView: React.FC<{ run: InvestigationRunState; onCancel: () => void }> = ({ run, onCancel }) => (
   <>
@@ -130,9 +109,9 @@ export const InvestigationPage: React.FC = () => {
   );
 
   return (
-    <div ref={setPage} className="inv-page" style={{ height }} data-testid="investigation-page">
+    <div ref={setPage} className="inv-page" style={fillHeightStyle(height)} data-testid="investigation-page">
       <header className="inv-page-head">
-        <div style={{ minWidth: 0 }}>
+        <div className="inv-shrink">
           <BackLink to={`/projects/${projectId}`}>Voltar ao projeto</BackLink>
           <h1>Investigação com IA</h1>
           <span className="inv-muted">{data.project.name}</span>
@@ -191,7 +170,7 @@ export const InvestigationPage: React.FC = () => {
           )}
         </div>
       </div>
-      {ownRun?.quotaHit && <QuotaNotice onClose={dismissQuota} />}
+      <QuotaModal isOpen={!!ownRun?.quotaHit} onClose={dismissQuota} />
       {recalculation.plan && (
         <IndexRecalculationModal
           plan={recalculation.plan}

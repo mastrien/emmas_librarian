@@ -118,7 +118,7 @@ export const InvestigationDetail: React.FC<InvestigationDetailProps> = (props) =
   return (
     <>
       <div className="inv-detail-head">
-        <div style={{ minWidth: 0 }}>
+        <div className="inv-shrink">
           <h2>
             Investigação #{investigation.id}{' '}
             <span className={`inv-chip ${STATUS_CHIP[statusTone(investigation.status)]}`}>
