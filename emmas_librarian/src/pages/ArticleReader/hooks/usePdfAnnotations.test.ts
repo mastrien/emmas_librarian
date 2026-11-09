@@ -146,6 +146,21 @@ describe('usePdfAnnotations', () => {
     expect(result.current.standaloneAnnotations).toHaveLength(0);
   });
 
+  it('keeps the standalone annotation when its deletion is declined', async () => {
+    dialogs.confirmMessage.mockReturnValue(false);
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
+    act(() => {
+      result.current.setStandaloneAnnotations([{ id: 200, content_markdown: '' } as Annotation]);
+    });
+
+    await act(async () => {
+      await result.current.handleDeleteStandaloneAnnotation('200');
+    });
+
+    expect(projectService.deleteAnnotation).not.toHaveBeenCalled();
+    expect(result.current.standaloneAnnotations).toHaveLength(1);
+  });
+
   it('edits highlight annotation', async () => {
     const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
     const highlight = viewerHighlight({ annotation_id: 100, comment: { text: 'Old text', emoji: '' } });
