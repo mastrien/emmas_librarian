@@ -99,6 +99,31 @@ describe('GuidedScreeningPage (#49)', () => {
     expect(screen.getByText('Artigo 2 de 2')).toBeInTheDocument();
   });
 
+  // guided.css draws both from these: the chosen label's outline (aria-pressed) and each kind's part of the bar.
+  it('marks the decision taken on the article and fills the bar by kind', async () => {
+    const service = screeningService(articles);
+    renderGuided(service);
+    expect(await heading('ConvLSTM')).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: '1' });
+    expect(await heading('MetNet')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '← Anterior' }));
+    expect(await heading('ConvLSTM')).toBeInTheDocument();
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Incluso/ })).toHaveAttribute('aria-pressed', 'true'),
+    );
+    expect(screen.getByRole('button', { name: /Excluído/ })).toHaveAttribute('aria-pressed', 'false');
+    const share = (kind: string) =>
+      parseFloat(
+        (document.querySelector(`.guided-progress-bar .review-dot--${kind}`) as HTMLElement).style.getPropertyValue(
+          '--share',
+        ),
+      );
+    expect(share('include')).toBeCloseTo(100 / 3);
+    expect(share('exclude')).toBe(0);
+  });
+
   it('moves with the buttons, switches stage with the tabs and can review a finished stage', async () => {
     const service = screeningService(articles, [
       storedDecision(1, INCLUDED),

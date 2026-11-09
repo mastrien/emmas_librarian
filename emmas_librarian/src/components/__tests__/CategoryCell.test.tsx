@@ -104,4 +104,19 @@ describe('CategoryCell', () => {
       expect(fakeService.setArticleCategory).toHaveBeenCalledWith(3, 12, 'Done');
     });
   });
+
+  it('tells in the app window when the new option cannot be saved', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    fakeService.updateProjectCategory.mockRejectedValue(new Error('locked'));
+    const category = { id: 12, project_id: 1, name: 'Status', type: 'enum', parsedOptions: [{ id: 1, name: 'To Do' }] };
+    renderCell(<CategoryCell articleId={3} category={category} initialValue="To Do" />);
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: '__ADD_NEW__' } });
+    const input = screen.getByPlaceholderText('Nova opção...');
+    fireEvent.change(input, { target: { value: 'Done' } });
+    fireEvent.blur(input);
+
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao adicionar opção.'));
+    expect(fakeService.setArticleCategory).not.toHaveBeenCalled();
+  });
 });

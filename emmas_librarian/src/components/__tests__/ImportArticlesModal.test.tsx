@@ -95,6 +95,19 @@ describe('ImportArticlesModal copying articles', () => {
     expect(onImportComplete).toHaveBeenCalled();
   });
 
+  // The window is a Modal (Arca 134): while the copy runs, its X and Esc wait for it.
+  it('locks the window while the copy runs', async () => {
+    fakeService.importArticlesFromProject.mockReturnValue(new Promise(() => {}));
+    const { onClose } = await openWithSource();
+
+    fireEvent.click(screen.getByText('Redes neurais'));
+    fireEvent.click(confirm());
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Fechar' })).toBeDisabled());
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('keeps "Confirmar Importação" disabled until an article is selected', async () => {
     await openWithSource();
     expect(confirm()).toBeDisabled();
