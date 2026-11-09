@@ -122,9 +122,17 @@ const RAIL_LINKS = {
   'Perguntar aos projetos': 'Perguntar aos projetos',
 };
 
+// The release tests (release-tests/) also drive PUBLISHED versions, which have the old header with "Mais opções"
+// and no rail: wait until either frame is on screen, then take the rail only when there is one.
+async function hasModuleRail(window) {
+  const rail = window.getByRole('navigation', { name: 'Módulos' });
+  await window.locator('nav[aria-label="Módulos"], button[title^="Mais op"]').first().waitFor({ timeout: 15000 });
+  return (await rail.count()) > 0;
+}
+
 async function navigateTo(window, label) {
   await dismissChangelog(window);
-  if (RAIL_LINKS[label]) {
+  if (RAIL_LINKS[label] && (await hasModuleRail(window))) {
     const rail = window.getByRole('navigation', { name: 'Módulos' });
     await rail.getByRole('link', { name: RAIL_LINKS[label], exact: true }).click();
     return;
@@ -152,9 +160,16 @@ async function navigateTo(window, label) {
     }
   }
 
-  throw new Error(
-    `navigateTo: no link or button with the text ${JSON.stringify(label)} and no rail module of that name`,
-  );
+  // Published versions before the redesign: the modules sit in the "Mais opções" menu of the header.
+  const moreBtn = window.locator('button[title^="Mais op"]').first();
+  if ((await moreBtn.count()) === 0) {
+    throw new Error(
+      `navigateTo: no link or button with the text ${JSON.stringify(label)} and no rail module of that name`,
+    );
+  }
+  await moreBtn.hover();
+  await window.waitForTimeout(300);
+  await window.locator('.menu-dropdown-item, a, button').filter({ hasText: target }).first().click();
 }
 
 async function clickAddArticlesOption(window, optionText) {
