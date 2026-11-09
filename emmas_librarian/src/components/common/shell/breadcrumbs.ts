@@ -18,6 +18,11 @@ const MODULES: Record<string, string> = {
 // Screens inside a project, by the part of the path after /projects/:id.
 const PROJECT_SCREENS: Record<string, string[]> = {
   '': [],
+  overview: ['Visão geral'],
+  articles: ['Artigos'],
+  categories: ['Categorias'],
+  diary: ['Diário'],
+  history: ['Histórico de buscas'],
   search: ['Nova busca'],
   investigation: ['Investigação com IA'],
   review: ['Revisão sistemática', 'Triagem'],

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useProjectService } from '../contexts/ServicesContext';
 import type { Article } from '../types';
 import { useProjectData } from './ProjectDetails/hooks/useProjectData';
@@ -11,7 +11,7 @@ import { useHoverMenu } from './ProjectDetails/hooks/useHoverMenu';
 import { ProjectDetailsSkeleton } from './ProjectDetails/components/ProjectDetailsSkeleton';
 import { ProjectHeader } from './ProjectDetails/components/ProjectHeader';
 import { ProjectToolbar } from './ProjectDetails/components/ProjectToolbar';
-import { ProjectTabs, type ProjectTabId } from './ProjectDetails/components/ProjectTabs';
+import { DEFAULT_PROJECT_SECTION, isProjectSection, type ProjectSection } from '../components/common/shell/projectNav';
 import { ProjectArticlesTab } from './ProjectDetails/components/ProjectArticlesTab';
 import { ProjectOverviewTab } from './ProjectDetails/components/ProjectOverviewTab';
 import { ProjectCategoriesTab } from './ProjectDetails/components/ProjectCategoriesTab';
@@ -34,11 +34,23 @@ const ARTICLES_PER_PAGE = 50;
  *   <Route path="/projects/:id" element={<ProjectDetailsPage />} />
  */
 export const ProjectDetailsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, section } = useParams<{ id: string; section?: string }>();
   const projectId = id ? parseInt(id) : null;
+  const navigate = useNavigate();
   const projectService = useProjectService();
   const modals = useProjectModals();
-  const [activeTab, setActiveTab] = useProjectViewState<ProjectTabId>(projectId, 'activeTab', 'articles');
+  // The section is in the URL (the project sidebar links to it); the session remembers the last one so
+  // /projects/:id reopens where the user was.
+  const activeTab = isProjectSection(section) ? section : null;
+  const [lastSection, setLastSection] = useProjectViewState<ProjectSection>(
+    projectId,
+    'activeTab',
+    DEFAULT_PROJECT_SECTION,
+  );
+  // The guard matters: the session setter is a new function each render, so an unguarded effect would loop.
+  useEffect(() => {
+    if (activeTab && activeTab !== lastSection) setLastSection(activeTab);
+  }, [activeTab, lastSection, setLastSection]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showKeyAlert, setShowKeyAlert] = useState(false);
   const addMenu = useHoverMenu();
@@ -57,6 +69,10 @@ export const ProjectDetailsPage: React.FC = () => {
     isDropBlocked: () => modals.isQuickAccessModalOpen,
   });
 
+  if (!activeTab) {
+    const target = isProjectSection(lastSection) ? lastSection : DEFAULT_PROJECT_SECTION;
+    return <Navigate replace to={`/projects/${id}/${target}`} />;
+  }
   if (data.loading) return <ProjectDetailsSkeleton />;
   if (!data.project) return <div className="project-not-found">Projeto não encontrado.</div>;
   const project = data.project;
@@ -104,13 +120,6 @@ export const ProjectDetailsPage: React.FC = () => {
           handleExportMenuMouseLeave={exportMenu.onMouseLeave}
         />
       </div>
-
-      <ProjectTabs
-        activeTab={activeTab}
-        onSelect={setActiveTab}
-        articleCount={data.articles.length}
-        historyCount={data.history.length}
-      />
 
       {activeTab === 'articles' && (
         <ProjectArticlesTab
@@ -173,7 +182,7 @@ export const ProjectDetailsPage: React.FC = () => {
         handleRevertSearch={actions.revertSearch}
         showKeyAlert={showKeyAlert}
         setShowKeyAlert={setShowKeyAlert}
-        setActiveTab={setActiveTab}
+        onShowHistory={() => navigate(`/projects/${id}/history`)}
       />
     </div>
   );

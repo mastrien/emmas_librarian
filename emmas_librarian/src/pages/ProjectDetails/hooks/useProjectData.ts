@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useProjectService } from '../../../contexts/ServicesContext';
+import { useRefreshProjectNav } from '../../../components/common/shell/projectNavRefresh';
 import type {
   Article,
   ArticleCategory,
@@ -18,6 +19,7 @@ import type {
  */
 export function useProjectData(projectId: number | null, onArticlesReloaded?: (articles: Article[]) => void) {
   const projectService = useProjectService();
+  const refreshProjectNav = useRefreshProjectNav();
   const [loading, setLoading] = useState(true);
   const [project, setProject] = useState<Project | null>(null);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -49,12 +51,13 @@ export function useProjectData(projectId: number | null, onArticlesReloaded?: (a
       setProjectDocuments(docs);
       setProjectCategories(categories);
       setArticleCategories(assignments);
+      refreshProjectNav();
     } catch (err) {
       console.error('Erro ao carregar dados do projeto', err);
     } finally {
       setLoading(false);
     }
-  }, [projectId, projectService]);
+  }, [projectId, projectService, refreshProjectNav]);
 
   useEffect(() => {
     reload();

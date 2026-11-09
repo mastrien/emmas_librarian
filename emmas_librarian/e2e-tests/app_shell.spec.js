@@ -37,7 +37,8 @@ test('the title bar path names the project and leads back home', async () => {
   try {
     await createProject(window, name);
     const path = window.getByRole('navigation', { name: 'Caminho' });
-    await expect(path.getByText(name)).toHaveAttribute('aria-current', 'page');
+    await expect(path.getByText('Artigos')).toHaveAttribute('aria-current', 'page');
+    await expect(path.getByRole('link', { name })).toBeVisible();
 
     await window.getByRole('link', { name: /Revisão sistemática/ }).click();
     await expect(path.getByRole('link', { name })).toBeVisible();
@@ -45,6 +46,28 @@ test('the title bar path names the project and leads back home', async () => {
 
     await path.getByRole('link', { name: 'Início' }).click();
     await expect(window).toHaveURL(/#\/$/);
+  } finally {
+    await electronApp.close();
+  }
+});
+
+// The project tabs became sidebar sections with their own URL: a reload keeps the section and its lit item.
+test('the project sidebar opens a section that survives a reload', async () => {
+  const electronApp = await launchApp();
+  const window = await getFirstWindow(electronApp);
+
+  try {
+    await createProject(window, 'Seções ' + Date.now());
+    const sidebar = window.getByRole('complementary', { name: 'Projeto' });
+    await expect(window).toHaveURL(/#\/projects\/\d+\/articles$/);
+
+    await sidebar.getByRole('link', { name: 'Diário' }).click();
+    await expect(window).toHaveURL(/#\/projects\/\d+\/diary$/);
+    await window.reload();
+
+    await expect(sidebar.getByRole('link', { name: 'Diário' })).toHaveAttribute('aria-current', 'page');
+    await expect(window.getByRole('navigation', { name: 'Caminho' }).getByText('Diário')).toBeVisible();
+    await expect(sidebar.getByRole('link', { name: 'Artigos 0' })).toBeVisible();
   } finally {
     await electronApp.close();
   }
@@ -65,6 +88,11 @@ test('a long project name never makes the window scroll sideways', async () => {
     expect(await noHorizontalScroll(window)).toBe(true);
     const bar = await window.locator('.app-titlebar').boundingBox();
     expect(bar.height).toBe(32);
+
+    // Below 1200px the project sidebar folds to icons; its links keep their names.
+    const sidebar = window.getByRole('complementary', { name: 'Projeto' });
+    expect((await sidebar.boundingBox()).width).toBe(52);
+    await expect(sidebar.getByRole('link', { name: 'Diário' })).toBeVisible();
   } finally {
     await electronApp.close();
   }

@@ -115,6 +115,7 @@ if (rootEl)
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/new-project" element={<NewProjectPage />} />
                 <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+                <Route path="/projects/:id/:section" element={<ProjectDetailsPage />} />
                 <Route path="/projects/:id/search" element={<SearchPage />} />
                 <Route path="/projects/:id/investigation" element={<InvestigationPage />} />
                 <Route path="/projects/:id/investigation/:view" element={<InvestigationPage />} />

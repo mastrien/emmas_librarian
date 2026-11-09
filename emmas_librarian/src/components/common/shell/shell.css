@@ -184,3 +184,158 @@
   border-radius: 0 3px 3px 0;
   background: var(--color-primary);
 }
+
+/* Project sidebar: sticks next to the rail while the screen scrolls; only its own list scrolls if it is long. */
+.project-nav {
+  position: sticky;
+  top: 32px;
+  height: calc(100vh - 32px);
+  width: 232px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-2);
+  overflow-y: auto;
+  background: var(--bg-sunken);
+  border-right: 1px solid var(--border-subtle);
+  z-index: 40;
+}
+
+.project-nav__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+}
+
+.project-nav__eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0 var(--space-2);
+}
+
+.project-nav__head .project-nav__eyebrow {
+  padding: 0;
+}
+
+/* A long name wraps to two lines, then ends in an ellipsis. */
+.project-nav__name {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-heading);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.project-nav__meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.project-nav__group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-nav__group .project-nav__eyebrow {
+  margin-bottom: var(--space-1);
+}
+
+.project-nav__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  padding: 0 var(--space-2);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: background var(--duration-hover) var(--ease-out);
+}
+
+.project-nav__item svg {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.project-nav__item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.project-nav__item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.project-nav__item.is-active {
+  background: var(--bg-raised);
+  color: var(--text-heading);
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px var(--border-subtle);
+}
+
+.project-nav__item.is-active svg {
+  color: var(--color-primary);
+}
+
+.project-nav__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-nav__count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Narrow windows: the sidebar folds to an icon strip so the screen keeps its width (the article table with its
+   filters open overflowed by 149px at 900px). Labels are hidden only visually: links keep their names for screen
+   readers, and the title attribute gives a tooltip. */
+@media (max-width: 1199px) {
+  .project-nav {
+    width: 52px;
+    padding: var(--space-3) 6px;
+    gap: var(--space-2);
+  }
+
+  .project-nav__head {
+    display: none;
+  }
+
+  .project-nav__eyebrow,
+  .project-nav__label,
+  .project-nav__count {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .project-nav__group + .project-nav__group {
+    border-top: 1px solid var(--border-subtle);
+    padding-top: var(--space-2);
+  }
+
+  .project-nav__item {
+    justify-content: center;
+    padding: 0;
+  }
+}

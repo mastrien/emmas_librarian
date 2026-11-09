@@ -162,7 +162,7 @@ describe('ProjectModalsContainer', () => {
     handleRevertSearch: vi.fn(),
     showKeyAlert: false,
     setShowKeyAlert: vi.fn(),
-    setActiveTab: vi.fn(),
+    onShowHistory: vi.fn(),
   };
 
   beforeEach(() => {
@@ -263,7 +263,7 @@ describe('ProjectModalsContainer', () => {
 
     fireEvent.click(screen.getByText('Navigate Search'));
     expect(defaultModalsState.setSelectedArticleForDetails).toHaveBeenCalledWith(null);
-    expect(defaultProps.setActiveTab).toHaveBeenCalledWith('history');
+    expect(defaultProps.onShowHistory).toHaveBeenCalled();
 
     fireEvent.click(screen.getByText('Updated Article'));
     expect(defaultProps.fetchData).toHaveBeenCalled();

@@ -153,6 +153,7 @@ export enum IpcChannel {
   PROJECTS_GET_SEARCH_HISTORY = 'projects:getSearchHistory',
   PROJECTS_GET_WRITING_PAD = 'projects:getWritingPad',
   PROJECTS_UPDATE_WRITING_PAD = 'projects:updateWritingPad',
+  PROJECTS_GET_NAV_COUNTS = 'projects:getNavCounts',
   SEARCH_PREVIEW = 'search:preview',
   SEARCH_SAVE_PREVIEW = 'search:savePreview',
   SEARCH_MONITORS_LIST = 'searchMonitor:list',
@@ -666,6 +667,14 @@ export interface SearchHistoryRecord {
 export interface AIExtractionResult {
   article: Article;
   result: Record<string, unknown>;
+}
+
+/** What the project sidebar counts next to its items (redesign, board 150). */
+export interface ProjectNavCounts {
+  articles: number;
+  categories: number;
+  searches: number;
+  investigations: number;
 }
 
 export interface ProjectStats {

@@ -1,6 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Brain, Plus, Upload, Share2, Download, Tag, ListChecks } from 'lucide-react';
+import { Plus, Upload, Share2, Download, Tag } from 'lucide-react';
 import { Project, ProjectDocument } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import { exportWithFeedback } from '../../../utils/exportWithFeedback';
@@ -57,8 +56,7 @@ const exportItems = (
 ];
 
 /**
- * The project page's actions (search, investigation, review, add articles, export, categories) and its quick
- * access links.
+ * The project page's actions (add articles, export, categories) and its quick access links.
  *
  * @example <ProjectToolbar project={project} projectDocuments={docs} isAddArticlesMenuOpen={open} … />
  */
@@ -69,17 +67,8 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = (props) => {
   return (
     <>
       <div className="project-toolbar">
-        <Link to={`/projects/${id}/search`} className="btn-primary toolbar-button">
-          <Search size={18} /> Nova busca
-        </Link>
-        {/* The investigation is a page of its own (#73), like the review below. */}
-        <Link to={`/projects/${id}/investigation`} className="btn-secondary toolbar-button">
-          <Brain size={18} /> Investigação com IA
-        </Link>
-        {/* The systematic review is a page of its own (#49); this page only links to it. */}
-        <Link to={`/projects/${id}/review`} className="btn-secondary toolbar-button">
-          <ListChecks size={18} /> Revisão sistemática
-        </Link>
+        {/* Nova busca, Investigação com IA (#73) and Revisão sistemática (#49) are pages of their own, linked from
+            the project sidebar since the redesign (board 150/153); this toolbar keeps the page's own actions. */}
         <ToolbarMenu
           variant="primary"
           icon={<Plus size={18} />}

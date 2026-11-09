@@ -40,6 +40,14 @@ describe('breadcrumbTrail', () => {
     ]);
   });
 
+  it('names the project page section after the project', () => {
+    expect(breadcrumbTrail('/projects/3/history', 'Chuva')).toEqual([
+      { label: 'Início', to: '/' },
+      { label: 'Chuva', to: '/projects/3' },
+      { label: 'Histórico de buscas' },
+    ]);
+  });
+
   it('says "Projeto" while the name has not loaded', () => {
     expect(breadcrumbTrail('/projects/3')[1]).toEqual({ label: 'Projeto' });
   });

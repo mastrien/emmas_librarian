@@ -75,7 +75,7 @@ test('F-15 Cross-project Article Sharing and Search History Traceability', async
     await expect(articleRow).toBeVisible({ timeout: 15000 });
 
     // 8. Go to Search History tab and verify history record with correct Search ID
-    await window.click('button:has-text("Histórico")');
+    await window.getByTestId('tab-history').click();
     const historyItem = window.locator('div').filter({ hasText: 'Importação de artigos' }).first();
     await expect(historyItem).toBeVisible();
     await expect(window.locator('span:has-text("ID:")').first()).toBeVisible();

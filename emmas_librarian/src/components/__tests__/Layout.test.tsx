@@ -2,6 +2,7 @@ import { render, screen, waitFor, fireEvent, act, within } from '@testing-librar
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Layout } from '../common/Layout';
+import { useRefreshProjectNav } from '../common/shell/projectNavRefresh';
 import type { UpdateStatusResponse } from '../../types';
 
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
@@ -59,6 +60,85 @@ describe('Layout Component', () => {
     expect(await within(path).findByRole('link', { name: 'Previsão de chuva' })).toHaveAttribute('href', '/projects/3');
     expect(within(path).getByText('Nova busca')).toHaveAttribute('aria-current', 'page');
     expect(fakeService.getProject).toHaveBeenCalledWith(3);
+  });
+
+  describe('project sidebar', () => {
+    beforeEach(() => {
+      fakeService.getProject.mockResolvedValue({
+        id: 3,
+        name: 'Previsão de chuva',
+        created_at: '2026-08-06T12:00:00Z',
+      });
+      fakeService.getProjectNavCounts.mockResolvedValue({
+        articles: 96,
+        categories: 4,
+        searches: 2,
+        investigations: 1,
+      });
+    });
+
+    it('lists the project sections with their counts and lights the current one', async () => {
+      renderAt('/projects/3/articles');
+
+      const sidebar = screen.getByRole('complementary', { name: 'Projeto' });
+      expect(await within(sidebar).findByText('96 artigos · desde 06/08/2026')).toBeInTheDocument();
+      expect(within(sidebar).getByRole('link', { name: 'Artigos 96' })).toHaveAttribute('aria-current', 'page');
+      expect(within(sidebar).getByRole('link', { name: 'Histórico 2' })).toHaveAttribute('href', '/projects/3/history');
+      expect(within(sidebar).getByRole('link', { name: 'Visão geral' })).not.toHaveAttribute('aria-current');
+      // #49 and #73: search, review and investigation are screens of their own, reached from here.
+      expect(within(sidebar).getByRole('link', { name: 'Nova busca' })).toHaveAttribute('href', '/projects/3/search');
+      expect(within(sidebar).getByRole('link', { name: 'Revisão sistemática' })).toHaveAttribute(
+        'href',
+        '/projects/3/review',
+      );
+      expect(within(sidebar).getByRole('link', { name: 'Investigação com IA 1' })).toHaveAttribute(
+        'href',
+        '/projects/3/investigation',
+      );
+    });
+
+    it('lights the systematic review on every review screen', async () => {
+      renderAt('/projects/3/review/prisma');
+
+      const sidebar = screen.getByRole('complementary', { name: 'Projeto' });
+      await within(sidebar).findByText('Previsão de chuva');
+      expect(within(sidebar).getByRole('link', { name: 'Revisão sistemática' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+    });
+
+    it('is not shown outside a project', async () => {
+      renderAt('/agenda');
+
+      await waitFor(() => expect(fakeService.getAppVersion).toHaveBeenCalled());
+      expect(screen.queryByRole('complementary', { name: 'Projeto' })).not.toBeInTheDocument();
+      expect(fakeService.getProjectNavCounts).not.toHaveBeenCalled();
+    });
+
+    // An import on the project page changes the counts without a navigation; the page asks the shell to recount.
+    it('counts again when a screen asks for it', async () => {
+      const RecountButton = () => <button onClick={useRefreshProjectNav()}>Recontar</button>;
+      render(
+        <MemoryRouter initialEntries={['/projects/3/articles']}>
+          <Layout>
+            <RecountButton />
+          </Layout>
+        </MemoryRouter>,
+      );
+      const sidebar = screen.getByRole('complementary', { name: 'Projeto' });
+      await within(sidebar).findByRole('link', { name: 'Artigos 96' });
+      fakeService.getProjectNavCounts.mockResolvedValue({
+        articles: 97,
+        categories: 4,
+        searches: 3,
+        investigations: 1,
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Recontar' }));
+
+      expect(await within(sidebar).findByRole('link', { name: 'Artigos 97' })).toBeInTheDocument();
+    });
   });
 
   it('opens the release notes from the rail', async () => {

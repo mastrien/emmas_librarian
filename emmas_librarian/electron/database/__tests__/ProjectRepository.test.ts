@@ -249,4 +249,41 @@ describe('ProjectRepository', () => {
       expect(opts.find((o) => o.name === 'OptNew')).toBeDefined();
     });
   });
+  describe('getNavCounts', () => {
+    const addArticle = (projectId: number, deleted = false) =>
+      db
+        .prepare('INSERT INTO articles (project_id, title, status, deleted_at) VALUES (?, ?, ?, ?)')
+        .run(projectId, 'A', 'archived', deleted ? '2026-01-01' : null);
+    const addSearch = (projectId: number) =>
+      db
+        .prepare(
+          "INSERT INTO search_history (project_id, unified_query, translated_queries, results_breakdown) VALUES (?, 'q', '{}', '{}')",
+        )
+        .run(projectId);
+    const addInvestigation = (projectId: number) =>
+      db
+        .prepare("INSERT INTO massive_investigations (project_id, questions, articles_ids) VALUES (?, '[]', '[]')")
+        .run(projectId);
+
+    it('counts only this project, archived articles in and trashed ones out', () => {
+      const project = repo.createProject('Tese');
+      const other = repo.createProject('Outro');
+      addArticle(project.id);
+      addArticle(project.id);
+      addArticle(project.id, true);
+      addArticle(other.id);
+      repo.createProjectCategory(project.id, 'Método', 'text');
+      addSearch(project.id);
+      addInvestigation(project.id);
+      addInvestigation(project.id);
+
+      expect(repo.getNavCounts(project.id)).toEqual({ articles: 2, categories: 1, searches: 1, investigations: 2 });
+    });
+
+    it('gives zeros for an empty project', () => {
+      const project = repo.createProject('Vazio');
+
+      expect(repo.getNavCounts(project.id)).toEqual({ articles: 0, categories: 0, searches: 0, investigations: 0 });
+    });
+  });
 });

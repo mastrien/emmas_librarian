@@ -51,26 +51,16 @@ describe('ProjectToolbar', () => {
 
   it('renders all buttons', () => {
     renderComponent();
-    expect(screen.getByText('Nova busca')).toBeInTheDocument();
-    expect(screen.getByText('Investigação com IA')).toBeInTheDocument();
     expect(screen.getByText('Adicionar Artigos')).toBeInTheDocument();
     expect(screen.getByText('Exportar')).toBeInTheDocument();
     expect(screen.getByText('Criar categorias')).toBeInTheDocument();
     expect(screen.getByText('Acesso rápido')).toBeInTheDocument();
   });
 
-  // #49: the systematic review is a page of its own; the project page only links to it.
-  it('links to the systematic review page of the project', () => {
+  // Redesign board 153: search, investigation and review moved to the project sidebar (tested with the Layout).
+  it('leaves the links to other project screens to the sidebar', () => {
     renderComponent();
-    expect(screen.getByRole('link', { name: /Revisão sistemática/ })).toHaveAttribute('href', '/projects/1/review');
-  });
-
-  it('links to the investigation page', () => {
-    renderComponent();
-    expect(screen.getByRole('link', { name: 'Investigação com IA' })).toHaveAttribute(
-      'href',
-      `/projects/${defaultProps.project.id}/investigation`,
-    );
+    expect(screen.queryByRole('link', { name: /Nova busca|Investigação com IA|Revisão sistemática/ })).toBeNull();
   });
 
   it('handles Adicionar Artigos click to open menu', () => {
