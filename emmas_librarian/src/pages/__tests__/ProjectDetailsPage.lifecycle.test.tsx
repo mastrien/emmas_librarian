@@ -16,9 +16,11 @@ vi.mock('react-chartjs-2', () => ({
 
 afterEach(() => vi.restoreAllMocks());
 
-const heading = () => screen.getByRole('heading', { level: 1 });
-const renameButton = () => heading().nextElementSibling as HTMLElement;
-const deleteButton = () => renameButton().nextElementSibling as HTMLElement;
+// Rename and delete live on the overview header since the redesign (board 154).
+const OVERVIEW = '/projects/1/overview';
+const renameButton = () => screen.getByRole('button', { name: 'Renomear projeto' });
+const deleteButton = () => screen.getByRole('button', { name: 'Excluir projeto' });
+const saveNameButton = () => screen.getByRole('button', { name: 'Salvar nome' });
 
 describe('ProjectDetailsPage loading', () => {
   it('shows a skeleton until the project loads', async () => {
@@ -40,10 +42,10 @@ describe('ProjectDetailsPage loading', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('link', { name: 'Voltar aos projetos' })).toBeInTheDocument();
+    expect(document.querySelector('.skeleton-block')).not.toBeNull();
     expect(screen.queryByTestId('project-details-container')).not.toBeInTheDocument();
     release();
-    expect(await screen.findByRole('heading', { name: 'Tese' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Artigos' })).toBeInTheDocument();
   });
 
   it('loads every data source for the project id in the URL', async () => {
@@ -161,12 +163,12 @@ describe('ProjectDetailsPage search history', () => {
 describe('ProjectDetailsPage rename', () => {
   it('saves a trimmed new name', async () => {
     const service = givenProject();
-    await renderProjectPage(service);
+    await renderProjectPage(service, OVERVIEW);
 
     fireEvent.click(renameButton());
     const input = screen.getByDisplayValue('Tese');
     fireEvent.change(input, { target: { value: '  Dissertação ' } });
-    fireEvent.click(input.nextElementSibling as HTMLElement);
+    fireEvent.click(saveNameButton());
 
     expect(await screen.findByRole('heading', { name: 'Dissertação' })).toBeInTheDocument();
     expect(service.updateProject).toHaveBeenCalledWith(1, 'Dissertação');
@@ -174,12 +176,12 @@ describe('ProjectDetailsPage rename', () => {
 
   it('ignores a blank name', async () => {
     const service = givenProject();
-    await renderProjectPage(service);
+    await renderProjectPage(service, OVERVIEW);
 
     fireEvent.click(renameButton());
     const input = screen.getByDisplayValue('Tese');
     fireEvent.change(input, { target: { value: '   ' } });
-    fireEvent.click(input.nextElementSibling as HTMLElement);
+    fireEvent.click(saveNameButton());
 
     expect(service.updateProject).not.toHaveBeenCalled();
     expect(input).toBeInTheDocument();
@@ -187,12 +189,12 @@ describe('ProjectDetailsPage rename', () => {
   });
 
   it('cancels editing and restores the original name', async () => {
-    await renderProjectPage(givenProject());
+    await renderProjectPage(givenProject(), OVERVIEW);
 
     fireEvent.click(renameButton());
     const input = screen.getByDisplayValue('Tese');
     fireEvent.change(input, { target: { value: 'Outro' } });
-    fireEvent.click((input.nextElementSibling as HTMLElement).nextElementSibling as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
     fireEvent.click(renameButton());
 
     expect(screen.getByDisplayValue('Tese')).toBeInTheDocument();
@@ -201,11 +203,11 @@ describe('ProjectDetailsPage rename', () => {
   it('alerts when the rename fails and keeps editing', async () => {
     const service = givenProject();
     service.updateProject.mockRejectedValue(new Error('dup'));
-    const dialogs = await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service, OVERVIEW);
 
     fireEvent.click(renameButton());
     fireEvent.change(screen.getByDisplayValue('Tese'), { target: { value: 'X' } });
-    fireEvent.click(screen.getByDisplayValue('X').nextElementSibling as HTMLElement);
+    fireEvent.click(saveNameButton());
 
     await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao atualizar nome do projeto'));
     expect(screen.getByDisplayValue('X')).toBeInTheDocument();
@@ -215,7 +217,7 @@ describe('ProjectDetailsPage rename', () => {
 describe('ProjectDetailsPage delete', () => {
   it('deletes after confirmation and returns to the project list', async () => {
     const service = givenProject();
-    const dialogs = await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service, OVERVIEW);
 
     fireEvent.click(deleteButton());
 
@@ -226,7 +228,7 @@ describe('ProjectDetailsPage delete', () => {
 
   it('keeps the project when the user declines', async () => {
     const service = givenProject();
-    const dialogs = await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service, OVERVIEW);
     dialogs.confirmMessage.mockReturnValue(false);
 
     fireEvent.click(deleteButton());
@@ -240,7 +242,7 @@ describe('ProjectDetailsPage delete', () => {
   it('alerts when deletion fails', async () => {
     const service = givenProject();
     service.deleteProject.mockRejectedValue(new Error('locked'));
-    const dialogs = await renderProjectPage(service);
+    const dialogs = await renderProjectPage(service, OVERVIEW);
 
     fireEvent.click(deleteButton());
 

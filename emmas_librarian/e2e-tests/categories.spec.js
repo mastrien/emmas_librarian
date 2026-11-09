@@ -57,6 +57,8 @@ test('F-11 Create categories, classify an article in the reader and export the v
     await createProject(window, 'Categorias ' + Date.now());
     await importFixturePdf(window);
 
+    // "Criar categorias" sits in the Categorias section header since the redesign.
+    await window.getByTestId('tab-categories').click();
     await window.getByRole('button', { name: 'Criar categorias' }).click();
     await addCategory(window, 'Metodologia', 'Texto');
     await addCategory(window, 'Tipo de estudo', 'Lista de Opções', 'Qualitativa, Quantitativa');
@@ -66,6 +68,7 @@ test('F-11 Create categories, classify an article in the reader and export the v
     await window.getByRole('button', { name: 'Fechar', exact: true }).click();
 
     // Classify the article where users do it: the reader's floating "Categorizar" panel.
+    await window.getByTestId('tab-articles').click();
     await openReader(window);
     await window.getByTitle('Categorias do Artigo').click();
     await categoryEditor(window, 'Metodologia').getByText('Adicionar').click();
