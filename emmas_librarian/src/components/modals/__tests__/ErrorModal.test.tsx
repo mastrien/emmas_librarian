@@ -138,4 +138,20 @@ describe('ErrorModal', () => {
     fireEvent.click(xButton);
     expect(hideError).toHaveBeenCalledTimes(2);
   });
+
+  // The window's top edge tells who can act: the person (warning) or nobody, the system failed (danger).
+  it.each([
+    ['USER_ERROR', 'error-modal--user'],
+    ['VALIDATION_ERROR', 'error-modal--user'],
+    ['SYSTEM_ERROR', 'error-modal--system'],
+  ] as const)('gives a %s the %s tone', (type, tone) => {
+    vi.mocked(useGlobalError).mockReturnValue({
+      currentError: new FrontendAppError('ERR_NOT_FOUND', type, 'x'),
+      hideError: vi.fn(),
+    } as unknown as ReturnType<typeof useGlobalError>);
+
+    render(<ErrorModal />);
+
+    expect(screen.getByRole('dialog')).toHaveClass(tone);
+  });
 });
