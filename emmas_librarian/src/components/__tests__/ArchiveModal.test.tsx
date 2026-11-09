@@ -50,4 +50,18 @@ describe('ArchiveModal', () => {
 
     expect(onSubmit).toHaveBeenCalledWith('fora do escopo');
   });
+
+  // It kept the last reason typed: the next archiving opened with the previous article's text.
+  it('starts each archiving with an empty reason', () => {
+    const modal = (isOpen: boolean) => <ArchiveModal isOpen={isOpen} onClose={vi.fn()} onSubmit={vi.fn()} />;
+    const { rerender } = render(modal(true));
+    fireEvent.change(screen.getByPlaceholderText('Por que este artigo não é relevante?'), {
+      target: { value: 'duplicado' },
+    });
+
+    rerender(modal(false));
+    rerender(modal(true));
+
+    expect(screen.getByPlaceholderText('Por que este artigo não é relevante?')).toHaveValue('');
+  });
 });
