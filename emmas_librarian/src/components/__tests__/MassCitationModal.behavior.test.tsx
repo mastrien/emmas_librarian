@@ -101,15 +101,16 @@ describe('MassCitationModal list', () => {
     expect(titles).toEqual(['T2', 'T1']);
   });
 
-  it('closes from the footer, the X button and the backdrop but not from the card', () => {
+  // The shared Modal (Arca 134): the X and Esc close it; a click inside, or on the backdrop, does not.
+  it('closes from the X and Esc, not from a click on the window', () => {
     const { onClose } = renderModal([article(1)]);
 
     fireEvent.click(screen.getByText('Citação em Massa (Artigos Lidos)'));
+    expect(onClose).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
-    fireEvent.click(screen.getByText('Citação em Massa (Artigos Lidos)').nextElementSibling as HTMLElement);
-    fireEvent.click(document.body.lastElementChild as HTMLElement);
+    fireEvent.keyDown(window, { key: 'Escape' });
 
-    expect(onClose).toHaveBeenCalledTimes(3);
+    expect(onClose).toHaveBeenCalledTimes(2);
   });
 });
 

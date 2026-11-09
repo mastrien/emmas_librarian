@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import { X, Copy, Check } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 import { generateCitation } from '../../services/citationService';
 import { Article } from '../../types';
 import {
@@ -15,6 +14,7 @@ import { MassCitationList, type RenderedCitation } from './massCitation/MassCita
 import { MassCitationEditPanel } from './massCitation/MassCitationEditPanel';
 import { sortCitableArticles } from './massCitation/sortCitableArticles';
 import { useMassCitationEditor } from './massCitation/useMassCitationEditor';
+import { Modal } from '../common/Modal';
 
 interface MassCitationModalProps {
   isOpen: boolean;
@@ -24,30 +24,6 @@ interface MassCitationModalProps {
 }
 
 const DEFAULT_SETTINGS: MassCitationSettings = { style: 'abnt', format: 'html', sortBy: 'author', useEtAl: true };
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: 'rgba(0,0,0,0.5)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 99999,
-};
-
-const cardStyle: React.CSSProperties = {
-  maxWidth: '850px',
-  width: '90%',
-  maxHeight: '90vh',
-  overflow: 'hidden',
-  background: 'var(--bg-main)',
-  display: 'flex',
-  flexDirection: 'column',
-  borderRadius: 'var(--radius-lg)',
-};
 
 /**
  * Bibliography for a set of articles (the project's read ones), with per-reference metadata editing.
@@ -102,59 +78,38 @@ export function MassCitationModal({ isOpen, onClose, articles, onArticlesUpdated
     );
   };
 
-  return createPortal(
-    <div style={overlayStyle} onClick={onClose}>
-      <div className="card fade-in" onClick={(e) => e.stopPropagation()} style={cardStyle}>
-        <div style={{ padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <div
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}
-          >
-            <h2 style={{ margin: 0, color: 'var(--text-heading)' }}>Citação em Massa (Artigos Lidos)</h2>
-            <button
-              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-              onClick={onClose}
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          {editor.editing ? (
-            <MassCitationEditPanel
-              fields={editor.editing.fields}
-              saving={editor.saving}
-              onFieldChange={editor.setField}
-              onCancel={editor.close}
-              onReset={editor.reset}
-              onSave={editor.save}
-            />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <MassCitationControls settings={settings} onChange={setSettings} />
-              <MassCitationList citations={citations} format={settings.format} onEdit={startEdit} />
-              <MassCitationFooter copied={copied} canCopy={citations.length > 0} onClose={onClose} onCopy={copyAll} />
-            </div>
-          )}
+  return (
+    <Modal label="Citação em Massa" title="Citação em Massa (Artigos Lidos)" onClose={onClose} width={850}>
+      {editor.editing ? (
+        <MassCitationEditPanel
+          fields={editor.editing.fields}
+          saving={editor.saving}
+          onFieldChange={editor.setField}
+          onCancel={editor.close}
+          onReset={editor.reset}
+          onSave={editor.save}
+        />
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <MassCitationControls settings={settings} onChange={setSettings} />
+          <MassCitationList citations={citations} format={settings.format} onEdit={startEdit} />
+          <MassCitationFooter copied={copied} canCopy={citations.length > 0} onCopy={copyAll} />
         </div>
-      </div>
-    </div>,
-    document.body,
+      )}
+    </Modal>
   );
 }
 
 interface MassCitationFooterProps {
   copied: boolean;
   canCopy: boolean;
-  onClose: () => void;
   onCopy: () => void;
 }
 
-const MassCitationFooter: React.FC<MassCitationFooterProps> = ({ copied, canCopy, onClose, onCopy }) => (
+const MassCitationFooter: React.FC<MassCitationFooterProps> = ({ copied, canCopy, onCopy }) => (
   <div
     style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', alignSelf: 'flex-end', marginTop: '0.5rem' }}
   >
-    <button onClick={onClose} className="btn-secondary" style={{ padding: '0.5rem 1.5rem' }}>
-      Fechar
-    </button>
     <button
       onClick={onCopy}
       disabled={!canCopy}

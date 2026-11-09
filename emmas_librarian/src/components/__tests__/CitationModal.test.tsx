@@ -95,13 +95,14 @@ describe('CitationModal visibility', () => {
     expect(screen.queryByText('Gerar Citação')).not.toBeInTheDocument();
   });
 
-  it('closes from the X button and the backdrop, but not from inside the card', () => {
+  // The shared Modal (Arca 134): the X and Esc close it; a click inside, or on the backdrop, does not.
+  it('closes from the X and Esc, not from a click inside', () => {
     const { onClose } = renderModal();
 
     fireEvent.click(screen.getByText('Gerar Citação'));
     expect(onClose).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByText('Gerar Citação').nextElementSibling as HTMLElement);
-    fireEvent.click(document.body.lastElementChild as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
+    fireEvent.keyDown(window, { key: 'Escape' });
 
     expect(onClose).toHaveBeenCalledTimes(2);
   });
