@@ -41,6 +41,22 @@ export class ProjectRepository {
       .get({ id: projectId }) as ProjectNavCounts;
   }
 
+  /**
+   * The project's "Sobre o projeto" page in markdown; empty until the user writes it.
+   *
+   * @example repo.getProjectAbout(1) // '## Objetivo\n…'
+   */
+  getProjectAbout(id: number): string {
+    const row = this.db.prepare('SELECT about_markdown FROM projects WHERE id = ?').get(id) as
+      | { about_markdown: string | null }
+      | undefined;
+    return row?.about_markdown ?? '';
+  }
+
+  updateProjectAbout(id: number, markdown: string): void {
+    this.db.prepare('UPDATE projects SET about_markdown = ? WHERE id = ?').run(markdown, id);
+  }
+
   updateProjectWritingPad(id: number, content: string) {
     const stmt = this.db.prepare('UPDATE projects SET writing_pad = ? WHERE id = ?');
     stmt.run(content, id);

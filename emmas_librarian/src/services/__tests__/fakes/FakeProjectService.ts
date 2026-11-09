@@ -108,6 +108,14 @@ export class FakeProjectService implements IProjectService {
 
   updateProject = vi.fn(async (_id: number, _name: string): Promise<void> => undefined);
 
+  aboutByProject = new Map<number, string>();
+
+  getProjectAbout = vi.fn(async (projectId: number): Promise<string> => this.aboutByProject.get(projectId) ?? '');
+
+  updateProjectAbout = vi.fn(async (projectId: number, markdown: string): Promise<void> => {
+    this.aboutByProject.set(projectId, markdown);
+  });
+
   getProjectNavCounts = vi.fn(
     async (_projectId: number): Promise<ProjectNavCounts> => ({
       articles: 0,

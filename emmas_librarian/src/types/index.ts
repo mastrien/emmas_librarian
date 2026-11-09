@@ -156,6 +156,8 @@ export enum IpcChannel {
   PROJECTS_GET_WRITING_PAD = 'projects:getWritingPad',
   PROJECTS_UPDATE_WRITING_PAD = 'projects:updateWritingPad',
   PROJECTS_GET_NAV_COUNTS = 'projects:getNavCounts',
+  PROJECTS_GET_ABOUT = 'projects:getAbout',
+  PROJECTS_UPDATE_ABOUT = 'projects:updateAbout',
   SEARCH_PREVIEW = 'search:preview',
   SEARCH_SAVE_PREVIEW = 'search:savePreview',
   SEARCH_MONITORS_LIST = 'searchMonitor:list',

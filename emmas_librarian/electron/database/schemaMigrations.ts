@@ -25,6 +25,8 @@ const COLUMN_MIGRATIONS = [
   'ALTER TABLE articles ADD COLUMN search_id INTEGER REFERENCES search_history(id) ON DELETE SET NULL',
   'ALTER TABLE articles ADD COLUMN ai_summary TEXT',
   'ALTER TABLE projects ADD COLUMN writing_pad TEXT',
+  // "Sobre o projeto" (markdown), the first thing the project overview shows (redesign, board 154).
+  'ALTER TABLE projects ADD COLUMN about_markdown TEXT',
   'ALTER TABLE projects ADD COLUMN screening_inclusion TEXT',
   'ALTER TABLE projects ADD COLUMN screening_exclusion TEXT',
   'ALTER TABLE projects ADD COLUMN screening_predicted_order INTEGER',

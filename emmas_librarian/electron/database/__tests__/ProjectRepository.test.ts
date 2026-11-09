@@ -13,6 +13,7 @@ describe('ProjectRepository', () => {
     const schema = fs.readFileSync(path.join(__dirname, '../schema.sql'), 'utf-8');
     db.exec(schema);
     db.exec('ALTER TABLE projects ADD COLUMN writing_pad TEXT;');
+    db.exec('ALTER TABLE projects ADD COLUMN about_markdown TEXT;');
 
     repo = new ProjectRepository(db);
     vi.clearAllMocks();
@@ -249,6 +250,17 @@ describe('ProjectRepository', () => {
       expect(opts.find((o) => o.name === 'OptNew')).toBeDefined();
     });
   });
+  describe('project about page', () => {
+    it('is empty until written, then keeps the markdown', () => {
+      const project = repo.createProject('Tese');
+      expect(repo.getProjectAbout(project.id)).toBe('');
+
+      repo.updateProjectAbout(project.id, '## Objetivo\n\nPrever a chuva.');
+
+      expect(repo.getProjectAbout(project.id)).toBe('## Objetivo\n\nPrever a chuva.');
+    });
+  });
+
   describe('getNavCounts', () => {
     const addArticle = (projectId: number, deleted = false) =>
       db

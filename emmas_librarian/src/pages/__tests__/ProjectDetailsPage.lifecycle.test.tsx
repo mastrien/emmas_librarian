@@ -8,11 +8,12 @@ import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectSe
 import { FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 import { givenProject, renderProjectPage, article, PROJECT } from './support/projectPageHarness';
 
-// jsdom has no canvas, so chart.js cannot draw the overview charts; the charts have tests of their own.
-vi.mock('react-chartjs-2', () => ({
-  Pie: () => <div data-testid="pie-chart" />,
-  Bar: () => <div data-testid="bar-chart" />,
-}));
+// The overview's markdown editor runs on contentEditable, which jsdom cannot drive (see FakeMdxEditor).
+vi.mock(
+  '@mdxeditor/editor',
+  async () => (await import('../../components/__tests__/fakes/FakeMdxEditor')).fakeMdxEditorModule,
+);
+vi.mock('@mdxeditor/editor/style.css', () => ({}));
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -101,7 +102,7 @@ describe('ProjectDetailsPage sections', () => {
   it('shows the section named in the URL', async () => {
     await renderProjectPage(givenProject([article({ id: 1 })]), '/projects/1/overview');
 
-    expect(await screen.findByText('Status dos Artigos')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sobre o projeto' })).toBeInTheDocument();
     expect(screen.queryByTestId('main-articles-table')).not.toBeInTheDocument();
   });
 
@@ -117,7 +118,7 @@ describe('ProjectDetailsPage sections', () => {
 
     await renderProjectPage(givenProject([article({ id: 1 })]));
 
-    expect(await screen.findByText('Status dos Artigos')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sobre o projeto' })).toBeInTheDocument();
   });
 
   it('remembers the section shown in the URL for the next visit', async () => {

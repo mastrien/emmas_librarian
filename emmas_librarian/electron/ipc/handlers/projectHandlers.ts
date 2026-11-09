@@ -17,6 +17,10 @@ export function registerProjectHandlers(ipc: IpcRegistrar, db: DatabaseAdapter):
   handle(ipc, IpcChannel.PROJECTS_GET_ALL, () => db.getAllProjects());
   handle(ipc, IpcChannel.PROJECTS_CREATE, (_e, name: string) => createUniquelyNamedProject(db, name));
   handle(ipc, IpcChannel.PROJECTS_GET_ONE, (_e, projectId: number) => db.getProject(projectId));
+  handle(ipc, IpcChannel.PROJECTS_GET_ABOUT, (_e, projectId: number) => db.getProjectAbout(projectId));
+  handle(ipc, IpcChannel.PROJECTS_UPDATE_ABOUT, (_e, projectId: number, markdown: string) =>
+    db.updateProjectAbout(projectId, markdown),
+  );
   handle(ipc, IpcChannel.PROJECTS_GET_NAV_COUNTS, (_e, projectId: number) => db.getProjectNavCounts(projectId));
   handle(ipc, IpcChannel.PROJECTS_GET_WRITING_PAD, (_e, projectId: number) => db.getProjectWritingPad(projectId));
   handle(ipc, IpcChannel.PROJECTS_UPDATE_WRITING_PAD, (_e, projectId: number, content: string) =>

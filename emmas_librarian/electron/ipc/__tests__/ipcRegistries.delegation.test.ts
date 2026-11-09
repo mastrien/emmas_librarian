@@ -44,6 +44,8 @@ const cases: DelegationCase[] = [
   viaDb(IpcChannel.PROJECTS_GET_ONE, 'getProject', [1]),
   viaDb(IpcChannel.PROJECTS_GET_WRITING_PAD, 'getProjectWritingPad', [1]),
   viaDb(IpcChannel.PROJECTS_GET_NAV_COUNTS, 'getProjectNavCounts', [1]),
+  viaDb(IpcChannel.PROJECTS_GET_ABOUT, 'getProjectAbout', [1]),
+  viaDb(IpcChannel.PROJECTS_UPDATE_ABOUT, 'updateProjectAbout', [1, '## Objetivo']),
   viaDb(IpcChannel.PROJECTS_UPDATE_WRITING_PAD, 'updateProjectWritingPad', [1, 'pad']),
   viaDb(IpcChannel.PROJECTS_GET_SEARCH_HISTORY, 'getSearchHistory', [1]),
   viaDb(IpcChannel.PROJECTS_UPDATE, 'updateProject', [1, 'Novo']),

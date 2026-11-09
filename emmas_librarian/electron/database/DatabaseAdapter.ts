@@ -156,6 +156,12 @@ export class DatabaseAdapter {
   getProject(id: number): Project | undefined {
     return this.projectRepo.getProject(id);
   }
+  getProjectAbout(id: number): string {
+    return this.projectRepo.getProjectAbout(id);
+  }
+  updateProjectAbout(id: number, markdown: string): void {
+    return this.projectRepo.updateProjectAbout(id, markdown);
+  }
   getProjectNavCounts(id: number): ProjectNavCounts {
     return this.projectRepo.getNavCounts(id);
   }

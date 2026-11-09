@@ -1,24 +1,8 @@
 import React, { forwardRef } from 'react';
 import { BookOpen } from 'lucide-react';
-import {
-  MDXEditor,
-  headingsPlugin,
-  listsPlugin,
-  quotePlugin,
-  markdownShortcutPlugin,
-  thematicBreakPlugin,
-  linkPlugin,
-  linkDialogPlugin,
-  toolbarPlugin,
-  BoldItalicUnderlineToggles,
-  BlockTypeSelect,
-  CreateLink,
-  InsertThematicBreak,
-  ListsToggle,
-  UndoRedo,
-  Separator,
-  type MDXEditorMethods,
-} from '@mdxeditor/editor';
+import { MDXEditor, thematicBreakPlugin, type MDXEditorMethods } from '@mdxeditor/editor';
+import { notesEditorPlugins } from '../markdown/notesEditorSetup';
+import { notesEditorTranslation } from '../markdown/notesEditorTranslation';
 import '@mdxeditor/editor/style.css';
 
 interface DiaryEditorProps {
@@ -27,21 +11,6 @@ interface DiaryEditorProps {
   readOnly: boolean;
   onChange: (markdown: string) => void;
 }
-
-const DiaryToolbarContents: React.FC = () => (
-  <>
-    <UndoRedo />
-    <Separator />
-    <BoldItalicUnderlineToggles />
-    <Separator />
-    <BlockTypeSelect />
-    <Separator />
-    <ListsToggle />
-    <Separator />
-    <CreateLink />
-    <InsertThematicBreak />
-  </>
-);
 
 /**
  * Live-preview markdown editor for one diary page. Keyed by date so switching pages
@@ -74,16 +43,9 @@ export const DiaryEditor = forwardRef<MDXEditorMethods, DiaryEditorProps>(functi
           readOnly={readOnly}
           onChange={onChange}
           placeholder="Escreva suas anotações do dia..."
-          plugins={[
-            headingsPlugin(),
-            listsPlugin(),
-            quotePlugin(),
-            thematicBreakPlugin(),
-            linkPlugin(),
-            linkDialogPlugin(),
-            markdownShortcutPlugin(),
-            toolbarPlugin({ toolbarContents: () => <DiaryToolbarContents /> }),
-          ]}
+          // The shared formatting bar; thematic breaks stay so older pages with "---" still render them.
+          plugins={[...notesEditorPlugins(), thematicBreakPlugin()]}
+          translation={notesEditorTranslation}
         />
       </div>
       <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
