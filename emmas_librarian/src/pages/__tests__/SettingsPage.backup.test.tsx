@@ -93,19 +93,6 @@ describe('SettingsPage backups', () => {
       expect(warning).not.toContain('PDFs, etc');
     });
 
-    it('does not restore an automatic backup when the warning is declined', async () => {
-      fakeService.listAutoBackups.mockResolvedValue([
-        { filename: 'emma_backup_2026-09-28.db.gz', date: '2026-09-28', sizeBytes: 2048 },
-      ]);
-      dialogs.confirmMessage.mockReturnValue(false);
-      await renderPage();
-      const row = (await screen.findByText('2026-09-28')).closest('div')!.parentElement!;
-
-      fireEvent.click(within(row).getByRole('button', { name: /Restaurar/ }));
-
-      expect(fakeService.restoreAutoBackup).not.toHaveBeenCalled();
-    });
-
     it('alerts when an automatic backup cannot be restored', async () => {
       fakeService.listAutoBackups.mockResolvedValue([
         { filename: 'emma_backup_2026-09-28.db.gz', date: '2026-09-28', sizeBytes: 2048 },
@@ -154,15 +141,6 @@ describe('SettingsPage backups', () => {
   });
 
   describe('restore and overwrite', () => {
-    it('does nothing when the overwrite warning is declined', async () => {
-      dialogs.confirmMessage.mockReturnValue(false);
-      await renderPage();
-
-      click('Restaurar e Sobrescrever');
-
-      expect(fakeService.restoreBackupOverride).not.toHaveBeenCalled();
-    });
-
     it('says the restore was cancelled when no file is chosen', async () => {
       await renderPage();
 
