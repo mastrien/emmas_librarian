@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { launchApp, getFirstWindow, createProject } = require('./helpers');
+const { launchApp, getFirstWindow, createProject, answerAppDialog } = require('./helpers');
 const { METADATA, SENTINELS, copyFixturePdf, importFixturePdf, openReader } = require('./articleFixture');
 
 /** Launches the app, imports the fixture article into a new project and opens it in the reader. */
@@ -135,9 +135,8 @@ test.describe('PDF reader', () => {
       await expect(preview).toContainText(METADATA.shortTitle);
       await expect(preview).toContainText('2025');
 
-      const saved = window.waitForEvent('dialog');
       await window.getByRole('button', { name: 'Salvar Metadados' }).click();
-      expect((await saved).message()).toBe('Metadados salvos com sucesso!');
+      expect(await answerAppDialog(window, 'Metadados salvos', 'Entendi')).toBe('Metadados salvos com sucesso!');
 
       // The toolbar title comes from the saved record.
       await expect(window.getByRole('banner').getByRole('heading', { level: 2 })).toHaveText(METADATA.title);

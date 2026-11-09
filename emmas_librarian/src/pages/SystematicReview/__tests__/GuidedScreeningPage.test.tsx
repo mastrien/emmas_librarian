@@ -6,6 +6,7 @@ import { GuidedScreeningPage } from '../GuidedScreeningPage';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import type { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
 import { DUPLICATE, EXCLUDED, INCLUDED, reviewArticle, screeningService, storedDecision } from './screeningTestData';
+import { FakeDialogsProvider } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 
 // Where a link took the page, with the router state it carried.
 const ReaderProbe: React.FC = () => {
@@ -17,10 +18,12 @@ function renderGuided(service: FakeProjectService) {
   render(
     <MemoryRouter initialEntries={['/projects/1/review/guided']}>
       <ServicesProvider apiService={service}>
-        <Routes>
-          <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
-          <Route path="/articles/:id" element={<ReaderProbe />} />
-        </Routes>
+        <FakeDialogsProvider>
+          <Routes>
+            <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
+            <Route path="/articles/:id" element={<ReaderProbe />} />
+          </Routes>
+        </FakeDialogsProvider>
       </ServicesProvider>
     </MemoryRouter>,
   );

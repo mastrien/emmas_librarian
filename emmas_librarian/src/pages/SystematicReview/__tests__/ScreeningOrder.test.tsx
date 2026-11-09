@@ -8,6 +8,7 @@ import type { FakeProjectService } from '../../../services/__tests__/fakes/FakeP
 import { EXCLUDED, INCLUDED, MAYBE, reviewArticle, screeningService, storedDecision } from './screeningTestData';
 import { predictedOrder, recentRelevant } from '../../../utils/screeningView';
 import type { ScreeningLabel } from '../../../types';
+import { FakeDialogsProvider } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 
 // A canvas is not drawn in jsdom; what the chart receives is what matters here.
 vi.mock('react-chartjs-2', () => ({
@@ -30,10 +31,12 @@ async function renderAt(service: FakeProjectService, path: string) {
   render(
     <MemoryRouter initialEntries={[path]}>
       <ServicesProvider apiService={service}>
-        <Routes>
-          <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
-          <Route path="/projects/:id/review/evaluation" element={<SystematicReviewPage tab="evaluation" />} />
-        </Routes>
+        <FakeDialogsProvider>
+          <Routes>
+            <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
+            <Route path="/projects/:id/review/evaluation" element={<SystematicReviewPage tab="evaluation" />} />
+          </Routes>
+        </FakeDialogsProvider>
       </ServicesProvider>
     </MemoryRouter>,
   );

@@ -7,6 +7,7 @@ import {
   type CitableArticle,
   type CitationFields,
 } from '../../../utils/cslMetadata';
+import { useDialogs } from '../../common/dialogs/DialogProvider';
 
 export interface EditingCitation {
   articleId: number;
@@ -29,6 +30,7 @@ interface MassCitationEditorOptions {
  */
 export function useMassCitationEditor({ originalFields, onSaved }: MassCitationEditorOptions) {
   const projectService = useProjectService();
+  const { inform } = useDialogs();
   const [editing, setEditing] = useState<EditingCitation | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -53,7 +55,7 @@ export function useMassCitationEditor({ originalFields, onSaved }: MassCitationE
       setEditing(null);
     } catch (err) {
       console.error('Erro ao salvar metadados em lote:', err);
-      alert('Erro ao salvar metadados.');
+      await inform({ title: 'Erro ao salvar', message: 'Erro ao salvar metadados.' });
     } finally {
       setSaving(false);
     }

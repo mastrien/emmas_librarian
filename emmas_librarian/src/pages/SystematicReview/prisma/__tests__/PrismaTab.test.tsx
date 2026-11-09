@@ -5,15 +5,18 @@ import { SystematicReviewPage } from '../../SystematicReviewPage';
 import { ServicesProvider } from '../../../../contexts/ServicesContext';
 import type { FakeProjectService } from '../../../../services/__tests__/fakes/FakeProjectService';
 import { prismaService } from './prismaTestData';
+import { FakeDialogsProvider } from '../../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 
 function renderPrisma(service: FakeProjectService, path = '/projects/1/review/prisma') {
   render(
     <MemoryRouter initialEntries={[path]}>
       <ServicesProvider apiService={service}>
-        <Routes>
-          <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
-          <Route path="/projects/:id/review/prisma" element={<SystematicReviewPage tab="prisma" />} />
-        </Routes>
+        <FakeDialogsProvider>
+          <Routes>
+            <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
+            <Route path="/projects/:id/review/prisma" element={<SystematicReviewPage tab="prisma" />} />
+          </Routes>
+        </FakeDialogsProvider>
       </ServicesProvider>
     </MemoryRouter>,
   );

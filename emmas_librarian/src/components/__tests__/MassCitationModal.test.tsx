@@ -7,6 +7,13 @@ import { generateCitation } from '../../services/citationService';
 // Mock api service
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
+import { FakeDialogs, withFakeDialogs } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const renderWithDialogs = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
+beforeEach(() => {
+  dialogs = new FakeDialogs();
+});
 
 const fakeService = FakeProjectService.create();
 vi.mock('../../services/api', () => ({
@@ -64,12 +71,12 @@ describe('MassCitationModal', () => {
   });
 
   it('does not render when isOpen is false', () => {
-    render(<MassCitationModal isOpen={false} onClose={vi.fn()} articles={mockArticles} />);
+    renderWithDialogs(<MassCitationModal isOpen={false} onClose={vi.fn()} articles={mockArticles} />);
     expect(screen.queryByText('Citação em Massa (Artigos Lidos)')).toBeNull();
   });
 
   it('renders correctly and lists citations', () => {
-    render(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
+    renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
     expect(screen.getByText('Citação em Massa (Artigos Lidos)')).toBeDefined();
 
     const items = screen.getAllByText(/Article/);
@@ -77,7 +84,7 @@ describe('MassCitationModal', () => {
   });
 
   it('changes style and format filters and updates output', () => {
-    render(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
+    renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
 
     // Change style to APA
     const styleSelect = document.body.querySelector('select') as HTMLSelectElement;
@@ -94,7 +101,7 @@ describe('MassCitationModal', () => {
   });
 
   it('toggles the et al checkbox and updates output', () => {
-    render(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
+    renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
 
     const etAlCheckbox = screen.getByLabelText(/Usar "et al\."/) as HTMLInputElement;
     expect(etAlCheckbox.checked).toBe(true);
@@ -107,7 +114,7 @@ describe('MassCitationModal', () => {
   });
 
   it('sorts alphabetically and chronologically', () => {
-    render(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
+    renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
 
     // The second select in controls is the sort filter
     const selects = document.body.querySelectorAll('select');
@@ -123,7 +130,7 @@ describe('MassCitationModal', () => {
   it('sorts by last name (family) of first author, not first name', () => {
     // mockArticles: id=1 has family='Zeta', id=2 has family='Alpha'
     // Alphabetical by surname: Alpha (id=2) should come before Zeta (id=1)
-    render(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
+    renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
 
     const citations = screen.getAllByText(/Article/);
     // First rendered item should mention 'Beta Article' (Alpha surname) and second 'Alpha Article' (Zeta surname)
@@ -137,7 +144,7 @@ describe('MassCitationModal', () => {
       { id: 11, project_id: 1, title: 'Segundo', authors: 'Ana Alves', year: 2021, status: 'read' as const },
       { id: 12, project_id: 1, title: 'Terceiro', authors: 'Bruno Melo', year: 2019, status: 'read' as const },
     ];
-    render(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={articles} />);
+    renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={articles} />);
 
     // Expected order by surname: Alves < Melo < Zimmer → Segundo, Terceiro, Primeiro
     // Use getAllByText with substring match since the mock wraps text in a span
@@ -155,7 +162,7 @@ describe('MassCitationModal', () => {
       { id: 21, project_id: 1, title: 'Art Y', authors: 'Abreu, Carla', year: 2023, status: 'read' as const },
       { id: 22, project_id: 1, title: 'Art Z', authors: 'Lima, Roberto', year: 2021, status: 'read' as const },
     ];
-    render(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={articles} />);
+    renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={articles} />);
 
     // Expected order by surname: Abreu < Lima < Souza → Art Y, Art Z, Art X
     const allCitations = screen.getAllByText(/Art [XYZ]/);
@@ -171,7 +178,7 @@ describe('MassCitationModal', () => {
       { id: 30, project_id: 1, title: 'Wrong if first', authors: 'Ana Zimmer', year: 2020, status: 'read' as const },
       { id: 31, project_id: 1, title: 'Wrong if last', authors: 'Carlos Alves', year: 2021, status: 'read' as const },
     ];
-    render(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={articles} />);
+    renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={articles} />);
 
     const citations = screen.getAllByText(/Wrong if/);
     // Surname order: Alves (Carlos) < Zimmer (Ana) → 'Wrong if last' first
@@ -181,7 +188,7 @@ describe('MassCitationModal', () => {
 
   it('allows inline editing of metadata and updates state', async () => {
     const onArticlesUpdatedMock = vi.fn();
-    render(
+    renderWithDialogs(
       <MassCitationModal
         isOpen={true}
         onClose={vi.fn()}
@@ -217,7 +224,7 @@ describe('MassCitationModal', () => {
   });
 
   it('resets metadata based on CSL JSON if reset button is clicked', async () => {
-    render(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
+    renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
 
     // Click edit on the second item (Alpha Article is second under author sort)
     const editBtns = screen.getAllByText('Editar');

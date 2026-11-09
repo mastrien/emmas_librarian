@@ -4,6 +4,8 @@ import type { Article, Highlight, Annotation, ProjectCategory, ArticleCategory }
 import { anchorPendingHighlights } from '../../../utils/pdfTextSearch';
 import { unanchoredNoteMarkdown } from '../../../utils/unanchoredNote';
 import { toViewerHighlight, type ViewerHighlight } from '../viewerHighlight';
+import { useDialogs } from '../../../components/common/dialogs/DialogProvider';
+import { UNLINK_PDF_QUESTION } from '../../../components/common/dialogs/unlinkPdfQuestion';
 
 export function useArticleData(
   id: string | undefined,
@@ -12,6 +14,7 @@ export function useArticleData(
   setAnchoringStatus: (s: string) => void,
 ) {
   const projectService = useProjectService();
+  const { confirm, inform } = useDialogs();
 
   // Highlights and the notes not attached to one, as stored; after a note became a highlight (or the other way).
   const reloadHighlightsAndNotes = useCallback(async () => {
@@ -176,7 +179,7 @@ export function useArticleData(
         await fetchData();
       }
     } catch {
-      alert('Erro ao vincular PDF');
+      await inform({ title: 'Erro ao vincular', message: 'Erro ao vincular PDF' });
     } finally {
       setUploading(false);
     }
@@ -184,18 +187,14 @@ export function useArticleData(
 
   const handleUnlinkClick = async () => {
     if (!id || !article) return;
-    if (
-      window.confirm(
-        'Deseja realmente desvincular o PDF deste artigo? O arquivo físico será removido do armazenamento local.',
-      )
-    ) {
+    if (await confirm(UNLINK_PDF_QUESTION)) {
       try {
         await projectService.unlinkPdf(parseInt(id));
         setPdfUrl('');
         setAiSummary(null);
         await fetchData();
       } catch {
-        alert('Erro ao desvincular o PDF');
+        await inform({ title: 'Erro ao desvincular', message: 'Erro ao desvincular o PDF' });
       }
     }
   };

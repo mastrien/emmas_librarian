@@ -4,6 +4,13 @@ import { MassCitationModal } from '../modals/MassCitationModal';
 import { ServicesProvider } from '../../contexts/ServicesContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import type { Article } from '../../types';
+import { FakeDialogs, withFakeDialogs } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const renderWithDialogs = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
+beforeEach(() => {
+  dialogs = new FakeDialogs();
+});
 
 vi.mock('../../services/citationService', async (importActual) => {
   const actual = await importActual<typeof import('../../services/citationService')>();
@@ -41,7 +48,7 @@ let service: FakeProjectService;
 
 function renderModal(articles: Article[], extra: { onClose?: () => void; onArticlesUpdated?: () => void } = {}) {
   const onClose = extra.onClose ?? vi.fn();
-  render(
+  renderWithDialogs(
     <ServicesProvider apiService={service}>
       <MassCitationModal
         isOpen={true}
@@ -62,7 +69,6 @@ beforeEach(() => {
   clipboard.writeText.mockReset().mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'clipboard', { value: clipboard, configurable: true });
   vi.stubGlobal('ClipboardItem', FakeClipboardItem);
-  vi.spyOn(window, 'alert').mockImplementation(() => undefined);
 });
 
 afterEach(() => {
@@ -166,7 +172,7 @@ describe('MassCitationModal editing', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
 
-    await waitFor(() => expect(window.alert).toHaveBeenCalledWith('Erro ao salvar metadados.'));
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao salvar metadados.'));
     expect(onArticlesUpdated).not.toHaveBeenCalled();
     expect(screen.getByText('Editar Metadados da Citação')).toBeInTheDocument();
   });

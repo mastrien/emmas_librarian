@@ -5,14 +5,17 @@ import { SystematicReviewPage } from '../SystematicReviewPage';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import type { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
 import { EXCLUDED, reviewArticle, screeningService, storedDecision } from './screeningTestData';
+import { FakeDialogsProvider } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 
 async function openLabels(service: FakeProjectService) {
   render(
     <MemoryRouter initialEntries={['/projects/1/review']}>
       <ServicesProvider apiService={service}>
-        <Routes>
-          <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
-        </Routes>
+        <FakeDialogsProvider>
+          <Routes>
+            <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
+          </Routes>
+        </FakeDialogsProvider>
       </ServicesProvider>
     </MemoryRouter>,
   );

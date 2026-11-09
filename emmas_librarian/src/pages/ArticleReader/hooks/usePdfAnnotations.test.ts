@@ -4,6 +4,10 @@ import { usePdfAnnotations } from './usePdfAnnotations';
 import { projectService } from '../../../services/api';
 import { Annotation } from '../../../types';
 import type { ViewerHighlight } from '../viewerHighlight';
+import { FakeDialogs, withFakeDialogs } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const renderWithDialogs = <T>(hook: () => T) => renderHook(hook, { wrapper: withFakeDialogs(dialogs) });
 
 /** A highlight in the shape the viewer reads (see viewerHighlight.ts). */
 const viewerHighlight = (overrides: Partial<ViewerHighlight> = {}): ViewerHighlight => ({
@@ -24,8 +28,7 @@ vi.mock('../../../services/api', async () => {
 describe('usePdfAnnotations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal('confirm', () => true);
-    vi.stubGlobal('alert', vi.fn());
+    dialogs = new FakeDialogs();
   });
 
   it('adds a highlight and keeps it in the shape the PDF viewer reads', async () => {
@@ -42,7 +45,7 @@ describe('usePdfAnnotations', () => {
       },
     ]);
 
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
 
     await act(async () => {
       await result.current.addHighlight({
@@ -70,7 +73,7 @@ describe('usePdfAnnotations', () => {
 
   it('creates standalone annotation', async () => {
     (projectService.createAnnotation as Mock).mockResolvedValue({ id: 200 });
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
 
     act(() => {
       result.current.setNewAnnotationText('Avulsa');
@@ -87,7 +90,7 @@ describe('usePdfAnnotations', () => {
   });
 
   it('ignores empty standalone annotation text', async () => {
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
 
     act(() => {
       result.current.setNewAnnotationText('   ');
@@ -101,7 +104,7 @@ describe('usePdfAnnotations', () => {
   });
 
   it('deletes highlight if confirmed', async () => {
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
     act(() => {
       result.current.setHighlights([viewerHighlight()]);
     });
@@ -115,8 +118,8 @@ describe('usePdfAnnotations', () => {
   });
 
   it('does not delete highlight if not confirmed', async () => {
-    vi.stubGlobal('confirm', () => false);
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    dialogs.confirmMessage.mockReturnValue(false);
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
     act(() => {
       result.current.setHighlights([viewerHighlight()]);
     });
@@ -130,7 +133,7 @@ describe('usePdfAnnotations', () => {
   });
 
   it('deletes standalone annotation', async () => {
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
     act(() => {
       result.current.setStandaloneAnnotations([{ id: 200, content_markdown: '' } as Annotation]);
     });
@@ -143,8 +146,23 @@ describe('usePdfAnnotations', () => {
     expect(result.current.standaloneAnnotations).toHaveLength(0);
   });
 
+  it('keeps the standalone annotation when its deletion is declined', async () => {
+    dialogs.confirmMessage.mockReturnValue(false);
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
+    act(() => {
+      result.current.setStandaloneAnnotations([{ id: 200, content_markdown: '' } as Annotation]);
+    });
+
+    await act(async () => {
+      await result.current.handleDeleteStandaloneAnnotation('200');
+    });
+
+    expect(projectService.deleteAnnotation).not.toHaveBeenCalled();
+    expect(result.current.standaloneAnnotations).toHaveLength(1);
+  });
+
   it('edits highlight annotation', async () => {
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
     const highlight = viewerHighlight({ annotation_id: 100, comment: { text: 'Old text', emoji: '' } });
 
     await act(async () => {
@@ -158,7 +176,7 @@ describe('usePdfAnnotations', () => {
   });
 
   it('alerts if highlight has no annotation_id on edit', async () => {
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
     const highlight = viewerHighlight({ comment: { text: 'Old text', emoji: '' } }); // no annotation_id
 
     await act(async () => {
@@ -167,14 +185,14 @@ describe('usePdfAnnotations', () => {
       } as unknown as React.MouseEvent);
     });
 
-    expect(window.alert).toHaveBeenCalledWith(
+    expect(dialogs.informMessage).toHaveBeenCalledWith(
       'Este destaque não possui uma anotação vinculada inicial. Crie um novo destaque com texto.',
     );
     expect(result.current.editingId).toBeNull();
   });
 
   it('edits highlight annotation with empty comment', async () => {
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
     const highlight = viewerHighlight({ annotation_id: 100 }); // empty comment
 
     await act(async () => {
@@ -188,7 +206,7 @@ describe('usePdfAnnotations', () => {
   });
 
   it('edits standalone annotation', async () => {
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
     const annotation = { id: 200, content_markdown: 'Markdown' } as Annotation;
 
     await act(async () => {
@@ -200,7 +218,7 @@ describe('usePdfAnnotations', () => {
   });
 
   it('saves edit for standalone', async () => {
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
     act(() => {
       result.current.setStandaloneAnnotations([{ id: 200, content_markdown: 'Old', article_id: 1, created_at: '' }]);
       result.current.setEditingId('200');
@@ -218,7 +236,7 @@ describe('usePdfAnnotations', () => {
   });
 
   it('saves edit for standalone, leaving others intact', async () => {
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
     act(() => {
       result.current.setStandaloneAnnotations([
         { id: 200, content_markdown: 'Old', article_id: 1, created_at: '' },
@@ -240,7 +258,7 @@ describe('usePdfAnnotations', () => {
   });
 
   it('saves edit for highlight, leaving others intact', async () => {
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
     act(() => {
       result.current.setHighlights([
         viewerHighlight({ comment: { text: 'Old', emoji: '' } }),
@@ -263,19 +281,19 @@ describe('usePdfAnnotations', () => {
 
   it('handles error in saveEdit', async () => {
     (projectService.updateAnnotation as Mock).mockRejectedValue(new Error('fail'));
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
 
     await act(async () => {
       await result.current.saveEdit('99', 100, false);
     });
 
-    expect(window.alert).toHaveBeenCalledWith('Erro ao salvar edição.');
+    expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao salvar edição.');
   });
 
   it('handles error in addHighlight', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     (projectService.createHighlight as Mock).mockRejectedValue(new Error('fail'));
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
 
     await act(async () => {
       await result.current.addHighlight({ position: {}, comment: { text: '' } });
@@ -288,7 +306,7 @@ describe('usePdfAnnotations', () => {
   it('handles error in handleCreateStandaloneAnnotation', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     (projectService.createAnnotation as Mock).mockRejectedValue(new Error('fail'));
-    const { result } = renderHook(() => usePdfAnnotations('1'));
+    const { result } = renderWithDialogs(() => usePdfAnnotations('1'));
 
     act(() => {
       result.current.setNewAnnotationText('Test error');

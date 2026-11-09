@@ -4,6 +4,7 @@ import { useProjectService } from '../../../contexts/ServicesContext';
 import { useDialogs, type Dialogs } from '../../../components/common/dialogs/DialogProvider';
 import type { Article, Project } from '../../../types';
 import type { ProjectModals } from './useProjectModals';
+import { UNLINK_PDF_QUESTION } from '../../../components/common/dialogs/unlinkPdfQuestion';
 
 type ArticleStatus = Article['status'];
 
@@ -63,13 +64,7 @@ export function useProjectActions(options: ProjectActionsOptions) {
 
   const unlinkPdf = useCallback(
     async (articleId: number) => {
-      const confirmed = await confirm({
-        title: 'Desvincular PDF',
-        message:
-          'Deseja realmente desvincular o PDF deste artigo? O arquivo físico será removido do armazenamento local.',
-        confirmLabel: 'Desvincular',
-        danger: true,
-      });
+      const confirmed = await confirm(UNLINK_PDF_QUESTION);
       if (!confirmed) return;
       await informOnFailure(inform, 'Erro ao desvincular o PDF', async () => {
         await projectService.unlinkPdf(articleId);

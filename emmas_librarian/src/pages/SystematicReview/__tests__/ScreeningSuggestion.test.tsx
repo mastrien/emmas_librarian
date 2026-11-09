@@ -8,6 +8,7 @@ import type { FakeProjectService } from '../../../services/__tests__/fakes/FakeP
 import type { ScreeningSuggestion } from '../../../types';
 import { criteriaSnapshot } from '../../../utils/screeningCriteria';
 import { EXCLUDED, INCLUDED, MAYBE, reviewArticle, screeningService, storedDecision } from './screeningTestData';
+import { FakeDialogsProvider } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 
 const CRITERIA = { inclusion: 'adultos', exclusion: 'internados' };
 const ABSTRACT = 'Um ensaio clínico com 412 adultos em atenção primária.';
@@ -46,11 +47,13 @@ async function renderAt(service: FakeProjectService, path: string) {
   render(
     <MemoryRouter initialEntries={[path]}>
       <ServicesProvider apiService={service}>
-        <Routes>
-          <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
-          <Route path="/projects/:id/review/evaluation" element={<SystematicReviewPage tab="evaluation" />} />
-          <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
-        </Routes>
+        <FakeDialogsProvider>
+          <Routes>
+            <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
+            <Route path="/projects/:id/review/evaluation" element={<SystematicReviewPage tab="evaluation" />} />
+            <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
+          </Routes>
+        </FakeDialogsProvider>
       </ServicesProvider>
     </MemoryRouter>,
   );

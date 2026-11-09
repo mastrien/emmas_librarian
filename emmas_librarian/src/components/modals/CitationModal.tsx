@@ -12,6 +12,7 @@ import {
 import { CitationMetadataFields } from '../common/citation/CitationMetadataFields';
 import { CITATION_STYLE_OPTIONS } from '../common/citation/citationStyles';
 import { useCitationCopy } from '../common/citation/useCitationCopy';
+import { useDialogs } from '../common/dialogs/DialogProvider';
 
 interface CitationModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ interface CitationModalProps {
  */
 export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: CitationModalProps) {
   const projectService = useProjectService();
+  const { inform } = useDialogs();
   const [style, setStyle] = useState<CitationStyle>('abnt');
   const [format, setFormat] = useState<CitationOutputFormat>('html');
   const [citationText, setCitationText] = useState('');
@@ -56,10 +58,10 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
     try {
       await projectService.updateArticleMetadata(article.id, citationFieldsToMetadata(fields));
       onArticleUpdated?.();
-      alert('Metadados salvos com sucesso!');
+      await inform({ title: 'Metadados salvos', message: 'Metadados salvos com sucesso!' });
     } catch (err) {
       console.error('Erro ao salvar metadados:', err);
-      alert('Erro ao salvar metadados.');
+      await inform({ title: 'Erro ao salvar', message: 'Erro ao salvar metadados.' });
     } finally {
       setSaving(false);
     }
