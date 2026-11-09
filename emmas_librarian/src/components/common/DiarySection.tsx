@@ -5,8 +5,10 @@ import { DiaryEntry } from '../../types';
 import { DiaryTimeline } from './diary/DiaryTimeline';
 import { DiaryPageToolbar } from './diary/DiaryPageToolbar';
 import { DiaryEditor, DiaryEmptyState } from './diary/DiaryEditor';
-import { DeleteDiaryPageDialog, DiaryHistoryDialog, type DiaryVersion } from './diary/DiaryDialogs';
+import { DiaryHistoryDialog, type DiaryVersion } from './diary/DiaryDialogs';
+import { formatDiaryDate } from './diary/diaryDates';
 import { localIsoDate } from '../../utils/localDate';
+import { useDialogs } from './dialogs/DialogProvider';
 
 interface DiarySectionProps {
   projectId: number;
@@ -22,11 +24,11 @@ const AUTOSAVE_DELAY_MS = 2000;
  */
 export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
   const projectService = useProjectService();
+  const { confirm } = useDialogs();
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [content, setContent] = useState('');
   const [saving, setSaving] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [isEditMode, setIsEditMode] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
@@ -100,10 +102,11 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
 
   const handleDelete = async () => {
     if (!selectedDate) return;
+    const message = `A página de ${formatDiaryDate(selectedDate)} será excluída permanentemente.`;
+    if (!(await confirm({ title: 'Excluir página?', message, confirmLabel: 'Excluir', danger: true }))) return;
     await projectService.deleteDiaryEntry(projectId, selectedDate);
     setSelectedDate(null);
     setContent('');
-    setConfirmDelete(false);
     await loadEntries();
   };
 
@@ -155,7 +158,7 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
               onSave={handleSave}
               onOpenHistory={handleOpenHistory}
               onToggleEditMode={() => setIsEditMode(!isEditMode)}
-              onDelete={() => setConfirmDelete(true)}
+              onDelete={() => void handleDelete()}
             />
             <DiaryEditor
               ref={editorRef}
@@ -169,9 +172,6 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
           <DiaryEmptyState />
         )}
       </div>
-      {confirmDelete && selectedDate && (
-        <DeleteDiaryPageDialog date={selectedDate} onCancel={() => setConfirmDelete(false)} onConfirm={handleDelete} />
-      )}
       {showHistory && selectedDate && (
         <DiaryHistoryDialog
           date={selectedDate}

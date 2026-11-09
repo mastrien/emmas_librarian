@@ -60,8 +60,10 @@ describe('HelpButton on the systematic review page (#50)', () => {
   it('keeps the help inside the window: a dialog with a maximum height whose text scrolls', () => {
     openHelp('/projects/1/review');
 
+    // The shared Modal caps the window (app-modal: max-height 90vh); the body is the part that scrolls. The real
+    // layout is checked in e2e-tests/modal_layout.spec.js, since jsdom does not apply the stylesheet.
     const dialog = screen.getByRole('dialog', { name: 'Guia da Revisão Sistemática' });
-    expect(dialog.style.maxHeight).toBe('calc(100vh - 2rem)');
+    expect(dialog).toHaveClass('app-modal');
     expect(screen.getByTestId('help-modal-body').style.overflowY).toBe('auto');
     expect(screen.getByRole('button', { name: 'Fechar ajuda' })).toBeInTheDocument();
   });
