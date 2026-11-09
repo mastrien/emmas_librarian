@@ -5,6 +5,7 @@ import type { Article } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import { describeError } from '../../../utils/describeError';
 import { sectionCaptionStyle, sectionStyle } from './sectionStyles';
+import { useDialogs } from '../../common/dialogs/DialogProvider';
 
 interface ArticlePdfSectionProps {
   article: Article;
@@ -39,14 +40,16 @@ export const ArticlePdfSection: React.FC<ArticlePdfSectionProps> = ({
   onAttachPdf,
 }) => {
   const projectService = useProjectService();
+  const { confirm, inform } = useDialogs();
 
   const unlinkPdf = async () => {
-    if (!window.confirm(UNLINK_CONFIRMATION)) return;
+    const asked = { title: 'Desvincular PDF', message: UNLINK_CONFIRMATION, confirmLabel: 'Desvincular', danger: true };
+    if (!(await confirm(asked))) return;
     try {
       await projectService.unlinkPdf(article.id);
       onArticleUpdated?.();
     } catch (err) {
-      alert(`Erro ao desvincular o PDF: ${describeError(err)}`);
+      await inform({ title: 'Erro ao desvincular', message: `Erro ao desvincular o PDF: ${describeError(err)}` });
     }
   };
 

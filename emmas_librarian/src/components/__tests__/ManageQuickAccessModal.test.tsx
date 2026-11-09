@@ -4,6 +4,13 @@ import { ManageQuickAccessModal } from '../modals/ManageQuickAccessModal';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { ServicesProvider } from '../../contexts/ServicesContext';
 import { ProjectDocument } from '../../types';
+import { FakeDialogs, withFakeDialogs } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+
+let dialogs = new FakeDialogs();
+const renderWithDialogs = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
+beforeEach(() => {
+  dialogs = new FakeDialogs();
+});
 
 describe('ManageQuickAccessModal', () => {
   let fakeService: FakeProjectService;
@@ -39,7 +46,7 @@ describe('ManageQuickAccessModal', () => {
     onClose?: () => void;
     onDocumentsChanged?: () => void;
   }) => {
-    return render(
+    return renderWithDialogs(
       <ServicesProvider apiService={fakeService}>
         <ManageQuickAccessModal
           isOpen={props.isOpen}

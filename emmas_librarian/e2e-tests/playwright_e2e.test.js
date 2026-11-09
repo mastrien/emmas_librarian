@@ -15,8 +15,9 @@ async function flow2UploadAndRead(window, articleTitle) {
   const autoresHeader = window.locator('div', { hasText: 'AUTORES' }).first();
   await expect(autoresHeader).toBeVisible();
 
-  await window.click('button:has-text("Fechar")');
-  await window.waitForSelector('button:has-text("Fechar")', { state: 'detached' });
+  const details = window.getByRole('dialog', { name: 'Detalhes do artigo' });
+  await details.getByRole('button', { name: 'Fechar' }).click();
+  await expect(details).toBeHidden();
 }
 
 async function flow3QueryBuilderSearch(window, searchTerm) {
