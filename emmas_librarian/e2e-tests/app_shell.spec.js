@@ -114,6 +114,26 @@ test('quick access links added from the sidebar move up when opened', async () =
   }
 });
 
+// "Teclado primeiro" (redesign canvas): Ctrl+K goes anywhere, here to a section of the open project.
+test('Ctrl+K opens the palette and Enter goes to what was typed', async () => {
+  const electronApp = await launchApp();
+  const window = await getFirstWindow(electronApp);
+
+  try {
+    await createProject(window, 'Paleta ' + Date.now());
+    await window.keyboard.press('Control+K');
+    const palette = window.getByRole('dialog', { name: 'Ir para' });
+    await palette.getByRole('combobox').fill('diario');
+    await expect(palette.getByRole('option', { name: 'Diário' })).toHaveAttribute('aria-selected', 'true');
+    await window.keyboard.press('Enter');
+
+    await expect(window).toHaveURL(/#\/projects\/\d+\/diary$/);
+    await expect(palette).toBeHidden();
+  } finally {
+    await electronApp.close();
+  }
+});
+
 // A long project name must shrink with an ellipsis instead of pushing the page sideways, also on a narrow window.
 test('a long project name never makes the window scroll sideways', async () => {
   const electronApp = await launchApp();

@@ -11,12 +11,15 @@ import { projectSegmentOf } from './shell/projectNav';
 import { ProjectNavRefreshProvider } from './shell/projectNavRefresh';
 import { useShellProject } from './shell/useShellProject';
 import { useAvailableUpdate, useChangelog } from './shell/useAppUpdates';
+import { CommandPalette } from './shell/palette/CommandPalette';
+import { PaletteButton } from './shell/palette/PaletteButton';
+import { useCommandPalette } from './shell/palette/useCommandPalette';
 import './shell/shell.css';
 
 /**
  * The frame around every screen (redesign, board 150): title bar with the path, update banner, module rail,
  * the project sidebar on project screens, and the screen. The reader keeps the title bar but drops the rail
- * and sidebar so the PDF gets the whole width.
+ * and sidebar so the PDF gets the whole width. Ctrl+K or the title bar's lupa opens the command palette.
  *
  * @example <Layout><DashboardPage /></Layout>
  */
@@ -29,10 +32,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const { project, counts, documents } = useShellProject(projectId, `${pathname}#${navVersion}`);
   const updateInfo = useAvailableUpdate();
   const changelog = useChangelog();
+  const palette = useCommandPalette();
 
   return (
     <div className={`app-frame${isReader ? ' app-frame--reader' : ''}`}>
-      <AppTitleBar trail={breadcrumbTrail(pathname, project?.name)} />
+      <AppTitleBar trail={breadcrumbTrail(pathname, project?.name)}>
+        <PaletteButton onOpen={palette.open} />
+      </AppTitleBar>
       <UpdateNotificationBanner
         updateInfo={updateInfo}
         onDownload={async () => {
@@ -59,6 +65,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </ProjectNavRefreshProvider>
         </div>
       )}
+      {palette.isOpen && <CommandPalette currentProjectId={projectId} onClose={palette.close} />}
       <ChangelogModal isOpen={changelog.isOpen} version={changelog.version} onClose={changelog.close} />
     </div>
   );

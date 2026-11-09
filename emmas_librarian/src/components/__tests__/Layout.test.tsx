@@ -208,6 +208,19 @@ describe('Layout Component', () => {
     });
   });
 
+  it('opens the command palette from the title bar and closes it with Esc', async () => {
+    localStorage.setItem('last_seen_version', '1.1.10');
+    renderAt('/agenda');
+    await waitFor(() => expect(fakeService.getAppVersion).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ir para, buscar artigo, executar (Ctrl+K)' }));
+    const palette = await screen.findByRole('dialog', { name: 'Ir para' });
+    await within(palette).findByRole('option', { name: 'Início' });
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Ir para' })).not.toBeInTheDocument());
+  });
+
   it('opens the release notes from the rail', async () => {
     localStorage.setItem('last_seen_version', '1.1.10');
     renderAt('/');
