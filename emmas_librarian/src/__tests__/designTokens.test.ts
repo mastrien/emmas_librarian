@@ -33,3 +33,53 @@ describe('design tokens (Arca 134)', () => {
     expect(undefinedUses()).toEqual([]);
   });
 });
+
+const ROOT = path.resolve(SRC, '..');
+const styleCss = fs.readFileSync(path.join(SRC, 'style.css'), 'utf8');
+
+function tokenFamily(token: string): string {
+  const match = styleCss.match(new RegExp(`${token}:\\s*'([^']+)'`));
+  if (!match) throw new Error(`style.css has no quoted family for ${token}; expected "${token}: 'Family', fallback"`);
+  return match[1];
+}
+
+function bundledFamily(pkg: string): string {
+  const css = fs.readFileSync(path.join(ROOT, 'node_modules', '@fontsource-variable', pkg, 'index.css'), 'utf8');
+  const match = css.match(/font-family:\s*'([^']+)'/);
+  if (!match) throw new Error(`@fontsource-variable/${pkg}/index.css declares no font-family`);
+  return match[1];
+}
+
+describe('fonts (redesign, Lexend + Source Serif 4 + JetBrains Mono)', () => {
+  // Google Fonts made the interface fall back to system fonts whenever the researcher was offline.
+  it('loads no font from the network', () => {
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+
+    expect(html).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);
+  });
+
+  it('points each font token at a family the app bundles', () => {
+    expect(tokenFamily('--font-sans')).toBe(bundledFamily('lexend'));
+    expect(tokenFamily('--font-heading')).toBe(bundledFamily('lexend'));
+    expect(tokenFamily('--font-read')).toBe(bundledFamily('source-serif-4'));
+    expect(tokenFamily('--font-mono')).toBe(bundledFamily('jetbrains-mono'));
+  });
+
+  it('imports the three bundled families at startup', () => {
+    const fonts = fs.readFileSync(path.join(SRC, 'theme', 'fonts.ts'), 'utf8');
+    const main = fs.readFileSync(path.join(SRC, 'main.tsx'), 'utf8');
+
+    for (const pkg of ['lexend', 'source-serif-4', 'jetbrains-mono']) {
+      expect(fonts).toContain(`'@fontsource-variable/${pkg}'`);
+    }
+    expect(main).toContain("import './theme/fonts';");
+  });
+
+  it('uses the mono token instead of a bare monospace stack', () => {
+    const bare = files
+      .filter(({ file }) => file !== 'style.css')
+      .flatMap(({ file, text }) => [...text.matchAll(/font-?[fF]amily:\s*['"]?(?:ui-)?monospace/g)].map(() => file));
+
+    expect(bare).toEqual([]);
+  });
+});

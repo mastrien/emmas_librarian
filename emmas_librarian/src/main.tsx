@@ -11,6 +11,7 @@ import { AskPage } from './pages/Ask/AskPage';
 import { AppShell } from './AppShell';
 import { GlobalErrorProvider } from './contexts/GlobalErrorContext';
 import { ErrorModal } from './components/modals/ErrorModal';
+import './theme/fonts';
 import './style.css';
 
 // Suppress React 19 warnings originating from third-party libraries (e.g. react-pdf-highlighter)
