@@ -49,6 +49,7 @@ export function registerDocumentHandlers(ipc: IpcRegistrar, db: DatabaseAdapter)
     db.reorderProjectDocuments(projectId, orderedIds || []),
   );
   handle(ipc, IpcChannel.PROJECT_DOCUMENTS_DELETE, (_e, id: number) => db.deleteProjectDocument(id));
+  handle(ipc, IpcChannel.PROJECT_DOCUMENTS_MARK_OPENED, (_e, id: number) => db.markProjectDocumentOpened(id));
   handle(ipc, IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, (_e, url?: string, filePath?: string) =>
     openDocument(url, filePath),
   );
@@ -74,9 +75,11 @@ function copyIntoDocuments(sourceFilePath: string, storedName: string, purpose: 
 }
 
 async function openDocument(url?: string, filePath?: string): Promise<void> {
-  if (filePath && fs.existsSync(filePath)) {
-    await shell.openPath(filePath);
-  } else if (url) {
-    await shell.openExternal(url);
-  }
+  const localFile = filePath && fs.existsSync(filePath) ? filePath : undefined;
+  const target = localFile ?? url;
+  if (!target) return;
+  // E2E: note the target instead of launching a browser or another app on the test machine.
+  const openLog = process.env.E2E_MOCK_OPEN_EXTERNAL_LOG;
+  if (openLog) return fs.appendFileSync(openLog, `${target}\n`);
+  await (localFile ? shell.openPath(localFile) : shell.openExternal(target));
 }

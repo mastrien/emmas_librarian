@@ -7,6 +7,8 @@ import { ToolbarMenu, type ToolbarMenuItem } from './toolbar/ToolbarMenu';
 import { QuickAccessPanel } from './toolbar/QuickAccessPanel';
 import './toolbar/projectToolbar.css';
 import { useDialogs, type Dialogs } from '../../../components/common/dialogs/DialogProvider';
+import { useRefreshProjectNav } from '../../../components/common/shell/projectNavRefresh';
+import { openQuickAccessDocument } from '../../../utils/openQuickAccessDocument';
 
 interface ProjectToolbarProps {
   project: Project;
@@ -63,6 +65,7 @@ const exportItems = (
 export const ProjectToolbar: React.FC<ProjectToolbarProps> = (props) => {
   const projectService = useProjectService();
   const { inform } = useDialogs();
+  const refreshProjectNav = useRefreshProjectNav();
   const id = props.project.id;
   return (
     <>
@@ -102,7 +105,9 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = (props) => {
       <QuickAccessPanel
         documents={props.projectDocuments}
         onManage={() => props.setIsQuickAccessModalOpen(true)}
-        onOpen={(doc) => projectService.openProjectDocumentExternal(doc.url, doc.local_file_path)}
+        onOpen={(doc) =>
+          void openQuickAccessDocument(projectService, doc).catch(console.error).finally(refreshProjectNav)
+        }
       />
     </>
   );

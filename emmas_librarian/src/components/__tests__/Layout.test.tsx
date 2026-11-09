@@ -1,8 +1,10 @@
 import { render, screen, waitFor, fireEvent, act, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Layout } from '../common/Layout';
 import { useRefreshProjectNav } from '../common/shell/projectNavRefresh';
+import { FakeDialogsProvider } from '../common/dialogs/__tests__/fakes/FakeDialogs';
+import type { ProjectDocument } from '../../types';
 import type { UpdateStatusResponse } from '../../types';
 
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
@@ -114,6 +116,71 @@ describe('Layout Component', () => {
       await waitFor(() => expect(fakeService.getAppVersion).toHaveBeenCalled());
       expect(screen.queryByRole('complementary', { name: 'Projeto' })).not.toBeInTheDocument();
       expect(fakeService.getProjectNavCounts).not.toHaveBeenCalled();
+    });
+
+    describe('quick access', () => {
+      const link = (id: number, extra: Partial<ProjectDocument> = {}): ProjectDocument => ({
+        id,
+        project_id: 3,
+        title: `Link ${id}`,
+        url: `https://exemplo.org/${id}`,
+        created_at: '2026-01-01',
+        position: id,
+        ...extra,
+      });
+      const initialHeight = window.innerHeight;
+      afterEach(() => {
+        window.innerHeight = initialHeight;
+      });
+      const quickAccess = () => screen.getByRole('region', { name: 'Acesso rápido' });
+      const renderWithDialogs = () =>
+        render(
+          <MemoryRouter initialEntries={['/projects/3/articles']}>
+            <FakeDialogsProvider>
+              <Layout>
+                <div>Tela</div>
+              </Layout>
+            </FakeDialogsProvider>
+          </MemoryRouter>,
+        );
+
+      it('lists the most recently opened links first, as many as fit, with the way to all of them', async () => {
+        window.innerHeight = 600; // 5 slots
+        fakeService.getProjectDocuments.mockResolvedValue([
+          ...[1, 2, 3, 4, 5, 6].map((id) => link(id)),
+          link(7, { last_opened_at: '2026-11-09 10:00:00' }),
+        ]);
+
+        renderAt('/projects/3/articles');
+
+        const titles = await within(quickAccess()).findAllByRole('button', { name: /^Link/ });
+        expect(titles.map((b) => b.textContent)).toEqual(['Link 7', 'Link 1', 'Link 2', 'Link 3', 'Link 4']);
+        expect(within(quickAccess()).getByRole('link', { name: 'Ver todos na Visão geral' })).toHaveAttribute(
+          'href',
+          '/projects/3/overview',
+        );
+      });
+
+      it('records the visit when a link is opened and lists the links again', async () => {
+        fakeService.getProjectDocuments.mockResolvedValue([link(1)]);
+        renderAt('/projects/3/articles');
+
+        fireEvent.click(await within(quickAccess()).findByRole('button', { name: 'Link 1' }));
+
+        await waitFor(() => expect(fakeService.markProjectDocumentOpened).toHaveBeenCalledWith(1));
+        expect(fakeService.openProjectDocumentExternal).toHaveBeenCalledWith('https://exemplo.org/1', undefined);
+        await waitFor(() => expect(fakeService.getProjectDocuments).toHaveBeenCalledTimes(2));
+      });
+
+      it('opens the quick access editor from its pencil', async () => {
+        fakeService.getProjectDocuments.mockResolvedValue([]);
+        renderWithDialogs();
+
+        expect(await within(quickAccess()).findByText('Nenhum link ainda.')).toBeInTheDocument();
+        fireEvent.click(within(quickAccess()).getByRole('button', { name: 'Gerenciar acesso rápido' }));
+
+        expect(await screen.findByRole('dialog', { name: 'Gerenciar Acesso Rápido' })).toBeInTheDocument();
+      });
     });
 
     // An import on the project page changes the counts without a navigation; the page asks the shell to recount.

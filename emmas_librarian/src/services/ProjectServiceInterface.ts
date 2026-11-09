@@ -236,6 +236,7 @@ export interface IProjectService {
   ): Promise<void>;
   reorderProjectDocuments(projectId: number, orderedIds: number[]): Promise<void>;
   deleteProjectDocument(id: number): Promise<void>;
+  markProjectDocumentOpened(id: number): Promise<void>;
   openProjectDocumentExternal(url?: string, filePath?: string): Promise<void>;
 
   // ── Diary ─────────────────────────────────────────────────────────

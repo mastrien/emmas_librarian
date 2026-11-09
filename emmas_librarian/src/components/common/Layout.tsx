@@ -26,7 +26,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const isReader = pathname.startsWith('/articles/');
   const projectId = projectIdOf(pathname);
   const [navVersion, refreshProjectNav] = useReducer((version: number) => version + 1, 0);
-  const { project, counts } = useShellProject(projectId, `${pathname}#${navVersion}`);
+  const { project, counts, documents } = useShellProject(projectId, `${pathname}#${navVersion}`);
   const updateInfo = useAvailableUpdate();
   const changelog = useChangelog();
 
@@ -50,6 +50,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               activeSegment={projectSegmentOf(pathname)}
               project={project}
               counts={counts}
+              documents={documents}
+              onQuickAccessChanged={refreshProjectNav}
             />
           )}
           <ProjectNavRefreshProvider value={refreshProjectNav}>

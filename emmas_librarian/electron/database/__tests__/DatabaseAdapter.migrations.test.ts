@@ -200,6 +200,7 @@ describe('legacy schemas', () => {
         CREATE TABLE massive_investigations (id INTEGER PRIMARY KEY, project_id INTEGER, questions TEXT, articles_ids TEXT);
         CREATE TABLE highlights (id INTEGER PRIMARY KEY, article_id INTEGER, color TEXT, position_data TEXT, annotation_id INTEGER);
         CREATE TABLE project_categories (id INTEGER PRIMARY KEY, project_id INTEGER, name TEXT, type TEXT);
+        CREATE TABLE project_documents (id INTEGER PRIMARY KEY, project_id INTEGER, title TEXT, url TEXT, local_file_path TEXT, created_at DATETIME);
       `),
     );
 
@@ -207,11 +208,13 @@ describe('legacy schemas', () => {
       investigations: (db.pragma('table_info(massive_investigations)') as { name: string }[]).map((c) => c.name),
       highlights: (db.pragma('table_info(highlights)') as { name: string }[]).map((c) => c.name),
       categories: (db.pragma('table_info(project_categories)') as { name: string }[]).map((c) => c.name),
+      documents: (db.pragma('table_info(project_documents)') as { name: string }[]).map((c) => c.name),
     }));
 
     expect(columns.investigations).toEqual(expect.arrayContaining(['model_used', 'status']));
     expect(columns.highlights).toContain('content_text');
     expect(columns.categories).toContain('options');
+    expect(columns.documents).toEqual(expect.arrayContaining(['position', 'category', 'last_opened_at']));
   });
 
   it('keeps only the latest diary entry per project and day in databases created before the unique constraint', () => {

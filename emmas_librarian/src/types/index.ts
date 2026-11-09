@@ -88,6 +88,8 @@ export interface ProjectDocument {
   created_at: string;
   position?: number;
   category?: string;
+  /** Set each time the link is opened; null until then. */
+  last_opened_at?: string | null;
 }
 
 export interface DiaryEntry {
@@ -232,6 +234,7 @@ export enum IpcChannel {
   PROJECT_DOCUMENTS_UPDATE = 'projectDocuments:update',
   PROJECT_DOCUMENTS_REORDER = 'projectDocuments:reorder',
   PROJECT_DOCUMENTS_DELETE = 'projectDocuments:delete',
+  PROJECT_DOCUMENTS_MARK_OPENED = 'projectDocuments:markOpened',
   PROJECT_DOCUMENT_OPEN_EXTERNAL = 'projectDocument:openExternal',
   MASSIVE_INVESTIGATIONS_GET = 'massiveInvestigations:get',
   MASSIVE_INVESTIGATIONS_SAVE = 'massiveInvestigations:save',

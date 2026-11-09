@@ -316,6 +316,10 @@ export class FakeProjectService implements IProjectService {
     this.documents = this.documents.filter((d) => d.id !== id);
   });
 
+  markProjectDocumentOpened = vi.fn(async (id: number): Promise<void> => {
+    this.documents = this.documents.map((d) => (d.id === id ? { ...d, last_opened_at: new Date().toISOString() } : d));
+  });
+
   openProjectDocumentExternal = vi.fn(async (_url?: string, _filePath?: string): Promise<void> => undefined);
 
   // ── Diary ───────────────────────────────────────────────────────────

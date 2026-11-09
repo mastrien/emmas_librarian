@@ -51,6 +51,8 @@ const COLUMN_MIGRATIONS = [
   'ALTER TABLE search_history ADD COLUMN unique_results INTEGER',
   'ALTER TABLE project_documents ADD COLUMN position INTEGER DEFAULT 0',
   'ALTER TABLE project_documents ADD COLUMN category TEXT DEFAULT NULL',
+  // When a quick access link was last opened: the project sidebar lists the recent ones (redesign, board 150).
+  'ALTER TABLE project_documents ADD COLUMN last_opened_at DATETIME DEFAULT NULL',
   // Human review of AI answers (#47); the default makes every existing answer pending.
   "ALTER TABLE investigation_results ADD COLUMN review_status TEXT NOT NULL DEFAULT 'pending'",
   'ALTER TABLE investigation_results ADD COLUMN reviewed_answer TEXT',

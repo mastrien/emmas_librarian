@@ -178,7 +178,7 @@ describe('ProjectToolbar', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders and handles quick access documents', () => {
+  it('renders and handles quick access documents', async () => {
     const projectDocuments = [
       { id: 1, project_id: 1, created_at: '', title: 'Google', url: 'https://google.com', category: 'General' },
       { id: 2, project_id: 1, created_at: '', title: 'Local File', local_file_path: '/local/file.pdf', category: '' },
@@ -192,12 +192,18 @@ describe('ProjectToolbar', () => {
     act(() => {
       fireEvent.click(googleBtn);
     });
-    expect(projectService.openProjectDocumentExternal).toHaveBeenCalledWith('https://google.com', undefined);
+    await waitFor(() =>
+      expect(projectService.openProjectDocumentExternal).toHaveBeenCalledWith('https://google.com', undefined),
+    );
 
     const localBtn = screen.getByText('Local File');
     act(() => {
       fireEvent.click(localBtn);
     });
-    expect(projectService.openProjectDocumentExternal).toHaveBeenCalledWith(undefined, '/local/file.pdf');
+    await waitFor(() =>
+      expect(projectService.openProjectDocumentExternal).toHaveBeenCalledWith(undefined, '/local/file.pdf'),
+    );
+    // The visit orders the recent links in the project sidebar.
+    expect(projectService.markProjectDocumentOpened).toHaveBeenCalledTimes(2);
   });
 });

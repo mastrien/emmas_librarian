@@ -453,6 +453,10 @@ export const projectService: IProjectService = {
     await safeInvoke(IpcChannel.PROJECT_DOCUMENTS_DELETE, id);
   },
 
+  async markProjectDocumentOpened(id: number): Promise<void> {
+    await safeInvoke(IpcChannel.PROJECT_DOCUMENTS_MARK_OPENED, id);
+  },
+
   async openProjectDocumentExternal(url?: string, filePath?: string): Promise<void> {
     await safeInvoke(IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, url, filePath);
   },

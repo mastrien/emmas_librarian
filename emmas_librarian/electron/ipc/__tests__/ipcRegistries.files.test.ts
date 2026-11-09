@@ -350,6 +350,17 @@ describe('PROJECT_DOCUMENT_OPEN_EXTERNAL', () => {
     expect(harness.shell.openPath).not.toHaveBeenCalled();
   });
 
+  it('notes the target instead of opening it when E2E_MOCK_OPEN_EXTERNAL_LOG is set', async () => {
+    vi.stubEnv('E2E_MOCK_OPEN_EXTERNAL_LOG', '/tmp/opened.log');
+
+    await invoke(IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, 'http://u', file);
+    await invoke(IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, 'http://v');
+
+    expect(disk.readFileSync('/tmp/opened.log').toString()).toBe('http://u\nhttp://v\n');
+    expect(harness.shell.openExternal).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+  });
+
   it('does nothing without a usable target', async () => {
     await invoke(IpcChannel.PROJECT_DOCUMENT_OPEN_EXTERNAL, undefined, file);
 

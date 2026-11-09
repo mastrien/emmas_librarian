@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, FileText, History, LayoutDashboard, ListChecks, Search, Sparkles, Tags } from 'lucide-react';
-import type { Project, ProjectNavCounts } from '../../../types';
+import type { Project, ProjectDocument, ProjectNavCounts } from '../../../types';
+import { useProjectService } from '../../../contexts/ServicesContext';
+import { openQuickAccessDocument } from '../../../utils/openQuickAccessDocument';
+import { ManageQuickAccessModal } from '../../modals/ManageQuickAccessModal';
 import { PROJECT_NAV, type ProjectNavItem } from './projectNav';
+import { QuickAccessRecents } from './QuickAccessRecents';
 
 const ICONS: Record<string, React.ReactNode> = {
   overview: <LayoutDashboard size={16} />,
@@ -62,16 +66,26 @@ interface ProjectSidebarProps {
   activeSegment?: string;
   project?: Project;
   counts?: ProjectNavCounts;
+  documents?: ProjectDocument[];
+  /** Called after a link is opened or the links are edited, so the shell reloads them. */
+  onQuickAccessChanged: () => void;
 }
 
 /**
  * The project's own navigation (redesign, board 150), next to the module rail on every project screen:
- * sections of the project page, search and analysis screens, with counts.
+ * sections of the project page, search and analysis screens, with counts, and the recent quick access links.
  *
- * @example <ProjectSidebar projectId={3} activeSegment="articles" project={project} counts={counts} />
+ * @example <ProjectSidebar projectId={3} activeSegment="articles" project={project} counts={counts} documents={docs} onQuickAccessChanged={reload} />
  */
-export const ProjectSidebar: React.FC<ProjectSidebarProps> = ({ projectId, activeSegment, project, counts }) => (
+export const ProjectSidebar: React.FC<ProjectSidebarProps> = (props) => (
   <aside className="project-nav" aria-label="Projeto">
+    <SidebarSections {...props} />
+    <SidebarQuickAccess {...props} />
+  </aside>
+);
+
+const SidebarSections: React.FC<ProjectSidebarProps> = ({ projectId, activeSegment, project, counts }) => (
+  <>
     <SidebarHead project={project} counts={counts} />
     {PROJECT_NAV.map((group, index) => (
       <nav key={group.title ?? index} className="project-nav__group" aria-label={group.title ?? 'Seções do projeto'}>
@@ -87,5 +101,32 @@ export const ProjectSidebar: React.FC<ProjectSidebarProps> = ({ projectId, activ
         ))}
       </nav>
     ))}
-  </aside>
+  </>
 );
+
+const SidebarQuickAccess: React.FC<ProjectSidebarProps> = ({ projectId, documents = [], onQuickAccessChanged }) => {
+  const projectService = useProjectService();
+  const [isManaging, setIsManaging] = useState(false);
+  const open = (doc: ProjectDocument) =>
+    void openQuickAccessDocument(projectService, doc).catch(console.error).finally(onQuickAccessChanged);
+  return (
+    <>
+      <QuickAccessRecents
+        projectId={projectId}
+        documents={documents}
+        onOpen={open}
+        onManage={() => setIsManaging(true)}
+      />
+      {/* Mounted only while open: the modal keeps its own copy of the links for drag-and-drop. */}
+      {isManaging && (
+        <ManageQuickAccessModal
+          isOpen
+          onClose={() => setIsManaging(false)}
+          projectId={projectId}
+          documents={documents}
+          onDocumentsChanged={onQuickAccessChanged}
+        />
+      )}
+    </>
+  );
+};

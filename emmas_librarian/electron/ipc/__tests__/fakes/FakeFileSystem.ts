@@ -39,6 +39,10 @@ export class FakeFileSystem {
     this.files.set(filePath, Buffer.from(content));
   };
 
+  appendFileSync = (filePath: string, content: string): void => {
+    this.files.set(filePath, Buffer.concat([this.files.get(filePath) ?? Buffer.alloc(0), Buffer.from(content)]));
+  };
+
   copyFileSync = (source: string, destination: string): void => {
     this.throwIfPending('copyFileSync');
     this.files.set(destination, this.readFileSync(source));

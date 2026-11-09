@@ -26,6 +26,19 @@ describe('DocumentRepository', () => {
     vi.clearAllMocks();
   });
 
+  describe('markProjectDocumentOpened', () => {
+    it('stamps only the opened link with the time it was opened', () => {
+      const opened = repo.saveProjectDocument(1, 'Edital', 'https://exemplo.org/edital');
+      const other = repo.saveProjectDocument(1, 'Planilha', 'https://exemplo.org/planilha');
+
+      repo.markProjectDocumentOpened(opened);
+
+      const docs = repo.getProjectDocuments(1);
+      expect(docs.find((d) => d.id === opened)?.last_opened_at).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+      expect(docs.find((d) => d.id === other)?.last_opened_at).toBeNull();
+    });
+  });
+
   describe('saveProjectDocument', () => {
     it('should save a document with minimal fields', () => {
       const id = repo.saveProjectDocument(1, 'Test Doc');

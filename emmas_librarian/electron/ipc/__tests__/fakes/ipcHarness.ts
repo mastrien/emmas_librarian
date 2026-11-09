@@ -51,6 +51,7 @@ const fsFacade = {
   mkdirSync: disk.mkdirSync,
   readFileSync: disk.readFileSync,
   writeFileSync: disk.writeFileSync,
+  appendFileSync: disk.appendFileSync,
   copyFileSync: disk.copyFileSync,
   unlinkSync: disk.unlinkSync,
   statSync: disk.statSync,

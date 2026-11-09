@@ -1,4 +1,7 @@
 const { test, expect } = require('@playwright/test');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const { launchApp, getFirstWindow, createProject } = require('./helpers');
 
 // Redesign, board 150: the header with "Mais opções" became a title bar with the path to the screen and a rail of
@@ -70,6 +73,44 @@ test('the project sidebar opens a section that survives a reload', async () => {
     await expect(sidebar.getByRole('link', { name: 'Artigos 0' })).toBeVisible();
   } finally {
     await electronApp.close();
+  }
+});
+
+// The sidebar keeps the recently opened quick access links on top; opening one is noted instead of launched.
+test('quick access links added from the sidebar move up when opened', async () => {
+  const openLog = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'emma-open-')), 'opened.log');
+  const electronApp = await launchApp({ E2E_MOCK_OPEN_EXTERNAL_LOG: openLog });
+  const window = await getFirstWindow(electronApp);
+
+  try {
+    await createProject(window, 'Acesso rápido ' + Date.now());
+    const quickAccess = window.getByRole('region', { name: 'Acesso rápido' });
+    await quickAccess.getByRole('button', { name: 'Gerenciar acesso rápido' }).click();
+    const dialog = window.getByRole('dialog', { name: 'Gerenciar Acesso Rápido' });
+    for (const [title, url] of [
+      ['Edital CAPES', 'https://exemplo.org/edital'],
+      ['Planilha de reuniões', 'https://exemplo.org/planilha'],
+    ]) {
+      await dialog.getByPlaceholder('Ex: Trello do Projeto, Edital CAPES').fill(title);
+      await dialog.getByPlaceholder('https://').fill(url);
+      await dialog.getByRole('button', { name: 'Adicionar' }).click();
+      await expect(dialog.getByText(title)).toBeVisible();
+    }
+    await dialog.getByRole('button', { name: 'Fechar' }).click();
+
+    const links = quickAccess.getByRole('button', { name: /Edital|Planilha/ });
+    await expect(links).toHaveText(['Edital CAPES', 'Planilha de reuniões']);
+    await quickAccess.getByRole('button', { name: 'Planilha de reuniões' }).click();
+
+    await expect
+      .poll(() => (fs.existsSync(openLog) ? fs.readFileSync(openLog, 'utf8') : ''))
+      .toBe('https://exemplo.org/planilha\n');
+    await expect(links).toHaveText(['Planilha de reuniões', 'Edital CAPES']);
+    await window.reload();
+    await expect(links).toHaveText(['Planilha de reuniões', 'Edital CAPES']);
+  } finally {
+    await electronApp.close();
+    fs.rmSync(path.dirname(openLog), { recursive: true, force: true });
   }
 });
 

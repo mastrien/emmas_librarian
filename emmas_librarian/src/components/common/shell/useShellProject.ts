@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useProjectService } from '../../../contexts/ServicesContext';
-import type { Project, ProjectNavCounts } from '../../../types';
+import type { Project, ProjectDocument, ProjectNavCounts } from '../../../types';
 
 export interface ShellProject {
   project?: Project;
   counts?: ProjectNavCounts;
+  documents?: ProjectDocument[];
 }
 
 /**
- * The project the shell is showing (title bar path and project sidebar): its record and the sidebar counts.
+ * The project the shell is showing (title bar path and project sidebar): its record, the sidebar counts and its
+ * quick access links.
  * Reloaded when the id, the route or `refreshKey` changes; empty outside a project, while loading or on error.
  *
  * @example const { project, counts } = useShellProject(projectIdOf(pathname), `${pathname}:${navVersion}`);
@@ -20,8 +22,12 @@ export function useShellProject(projectId: number | undefined, refreshKey: strin
   useEffect(() => {
     if (projectId === undefined) return;
     let current = true;
-    Promise.all([projectService.getProject(projectId), projectService.getProjectNavCounts(projectId)])
-      .then(([project, counts]) => current && setLoaded({ id: projectId, project, counts }))
+    Promise.all([
+      projectService.getProject(projectId),
+      projectService.getProjectNavCounts(projectId),
+      projectService.getProjectDocuments(projectId),
+    ])
+      .then(([project, counts, documents]) => current && setLoaded({ id: projectId, project, counts, documents }))
       .catch(() => current && setLoaded({}));
     return () => {
       current = false;
@@ -29,5 +35,6 @@ export function useShellProject(projectId: number | undefined, refreshKey: strin
   }, [projectService, projectId, refreshKey]);
 
   // A stale answer for the previous project never shows under the new one.
-  return projectId !== undefined && loaded.id === projectId ? { project: loaded.project, counts: loaded.counts } : {};
+  if (projectId === undefined || loaded.id !== projectId) return {};
+  return { project: loaded.project, counts: loaded.counts, documents: loaded.documents };
 }

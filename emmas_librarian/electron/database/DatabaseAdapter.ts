@@ -355,6 +355,9 @@ export class DatabaseAdapter {
   public reorderProjectDocuments(projectId: number, orderedIds: number[]): void {
     return this.documentRepo.reorderProjectDocuments(projectId, orderedIds);
   }
+  public markProjectDocumentOpened(id: number): void {
+    return this.documentRepo.markProjectDocumentOpened(id);
+  }
   public deleteProjectDocument(id: number): void {
     return this.documentRepo.deleteProjectDocument(id);
   }
