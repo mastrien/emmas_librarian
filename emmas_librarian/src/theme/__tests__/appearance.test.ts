@@ -51,8 +51,8 @@ describe('appearance (Arca 134)', () => {
     expect([root.dataset.theme, root.dataset.tone]).toEqual(['light', 'white']);
   });
 
-  it('takes the title bar colours from the page background and text tokens', () => {
-    root.style.setProperty('--bg-main', ' #161413');
+  it('takes the window button colours from the title bar background and text tokens', () => {
+    root.style.setProperty('--bg-sunken', ' #161413');
     root.style.setProperty('--text-main', '#e7e5e4 ');
 
     expect(titleBarColors(root)).toEqual({ color: '#161413', symbolColor: '#e7e5e4' });
@@ -61,7 +61,7 @@ describe('appearance (Arca 134)', () => {
   it('saves, applies and recolours the title bar in one step', () => {
     const storage = new MemoryAppearanceStorage();
     const bar = new RecordingTitleBar();
-    root.style.setProperty('--bg-main', '#141416');
+    root.style.setProperty('--bg-sunken', '#141416');
     root.style.setProperty('--text-main', '#e4e4e7');
 
     commitAppearance({ storage, root, updateTitleBar: bar.update }, DARK_WARM);

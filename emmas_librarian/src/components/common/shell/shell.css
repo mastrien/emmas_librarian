@@ -1,0 +1,186 @@
+/* App frame (redesign, board 150): title bar on top, module rail on the left, the screen in the rest. */
+
+/* The document still scrolls (not an inner box): the screens measure their height and stick their
+   toolbars against the window, and changing that is per-screen work. Title bar and rail stay put. */
+.app-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-main);
+}
+
+.app-frame__body {
+  display: flex;
+  flex: 1 1 auto;
+}
+
+.app-frame__main {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 2rem;
+}
+
+/* Reader: the PDF fills the window under the title bar, no rail, no page scroll. */
+.app-frame--reader {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-frame__main--bare {
+  flex: 1 1 0;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Title bar: the drag area of the frameless window. The OS buttons (titleBarOverlay) cover its right end,
+   so the env() inset keeps our content clear of them; outside Electron it falls back to 0. */
+.app-titlebar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  height: 32px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw)) 0 var(--space-3);
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border-color);
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.app-titlebar a,
+.app-titlebar button {
+  -webkit-app-region: no-drag;
+}
+
+.app-titlebar__logo {
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+}
+
+.app-titlebar__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.app-breadcrumbs {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.app-breadcrumbs ol {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 0;
+}
+
+.app-breadcrumbs li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* The project name is the long one: it shrinks first, with an ellipsis. */
+.app-breadcrumbs li:nth-child(2) {
+  flex: 0 1 auto;
+  overflow: hidden;
+}
+
+.app-breadcrumbs a,
+.app-breadcrumbs span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-breadcrumbs a:hover {
+  color: var(--text-heading);
+}
+
+.app-breadcrumbs [aria-current='page'] {
+  color: var(--text-heading);
+  font-weight: 500;
+}
+
+/* Module rail */
+.app-rail {
+  position: sticky;
+  top: 32px;
+  height: calc(100vh - 32px);
+  z-index: 50;
+  width: 56px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+  background: var(--bg-sunken);
+  border-right: 1px solid var(--border-color);
+}
+
+.app-rail__bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.app-rail__item {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background var(--duration-hover) var(--ease-out),
+    color var(--duration-hover) var(--ease-out);
+}
+
+.app-rail__item:hover {
+  color: var(--text-heading);
+  background: var(--bg-surface-hover);
+}
+
+.app-rail__item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.app-rail__item.is-active {
+  color: var(--text-heading);
+  background: var(--bg-raised);
+}
+
+/* The lit module: a short accent bar against the rail's left edge. */
+.app-rail__item.is-active::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--color-primary);
+}

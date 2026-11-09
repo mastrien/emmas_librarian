@@ -112,8 +112,23 @@ async function createProject(window, projectName) {
   await window.waitForURL(/.*\/projects\/\d+/);
 }
 
+// Modules live in the rail as icon links named by aria-label (redesign, board 150); projects are under "Início".
+const RAIL_LINKS = {
+  Projetos: 'Início',
+  Início: 'Início',
+  Agenda: 'Agenda',
+  'Biblioteca de PDFs': 'Biblioteca de PDFs',
+  Configurações: 'Configurações',
+  'Perguntar aos projetos': 'Perguntar aos projetos',
+};
+
 async function navigateTo(window, label) {
   await dismissChangelog(window);
+  if (RAIL_LINKS[label]) {
+    const rail = window.getByRole('navigation', { name: 'Módulos' });
+    await rail.getByRole('link', { name: RAIL_LINKS[label], exact: true }).click();
+    return;
+  }
   // Case-sensitive, unlike a plain hasText: "Projetos" must not take the dashboard's "Perguntar aos projetos" (#53).
   const target = new RegExp(label);
 
@@ -137,12 +152,9 @@ async function navigateTo(window, label) {
     }
   }
 
-  // Fallback: open "Mais opções" dropdown and click the menu item
-  const moreBtn = window.locator('button[title^="Mais op"]').first();
-  await moreBtn.hover();
-  await window.waitForTimeout(300);
-  const menuLink = window.locator('.menu-dropdown-item, a, button').filter({ hasText: target }).first();
-  await menuLink.click();
+  throw new Error(
+    `navigateTo: no link or button with the text ${JSON.stringify(label)} and no rail module of that name`,
+  );
 }
 
 async function clickAddArticlesOption(window, optionText) {

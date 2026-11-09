@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Layout } from '../common/Layout';
@@ -20,28 +20,66 @@ describe('Layout Component', () => {
     fakeService.getAppVersion.mockResolvedValue('1.1.10');
   });
 
-  it('renders standard layout header, content, and sidebar buttons', async () => {
+  const renderAt = (path: string) =>
     render(
-      <MemoryRouter initialEntries={['/']}>
+      <MemoryRouter initialEntries={[path]}>
         <Layout>
           <div>Test Children</div>
         </Layout>
       </MemoryRouter>,
     );
 
-    // Wait for version check
-    await waitFor(() => {
-      expect(fakeService.getAppVersion).toHaveBeenCalled();
-    });
+  it('shows the module rail with the screen inside the frame', async () => {
+    renderAt('/');
 
-    expect(screen.getAllByText("Emma's Librarian")[0]).toBeInTheDocument();
+    await waitFor(() => expect(fakeService.getAppVersion).toHaveBeenCalled());
 
-    // Open 3-dots dropdown menu
-    fireEvent.mouseEnter(screen.getByTitle('Mais opções'));
-
-    expect(screen.getByText('Projetos')).toBeInTheDocument();
-    expect(screen.getByText('Configurações')).toBeInTheDocument();
+    const rail = screen.getByRole('navigation', { name: 'Módulos' });
+    for (const name of ['Início', 'Perguntar aos projetos', 'Biblioteca de PDFs', 'Agenda', 'Configurações']) {
+      expect(within(rail).getByRole('link', { name })).toBeInTheDocument();
+    }
     expect(screen.getByText('Test Children')).toBeInTheDocument();
+  });
+
+  it('marks the module of the current route as the current page', async () => {
+    renderAt('/agenda');
+
+    await waitFor(() => expect(fakeService.getAppVersion).toHaveBeenCalled());
+
+    expect(screen.getByRole('link', { name: 'Agenda' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Início' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('shows the project name in the title bar path on a project screen', async () => {
+    fakeService.getProject.mockResolvedValue({ id: 3, name: 'Previsão de chuva', created_at: '' });
+
+    renderAt('/projects/3/search');
+
+    const path = screen.getByRole('navigation', { name: 'Caminho' });
+    expect(await within(path).findByRole('link', { name: 'Previsão de chuva' })).toHaveAttribute('href', '/projects/3');
+    expect(within(path).getByText('Nova busca')).toHaveAttribute('aria-current', 'page');
+    expect(fakeService.getProject).toHaveBeenCalledWith(3);
+  });
+
+  it('opens the release notes from the rail', async () => {
+    localStorage.setItem('last_seen_version', '1.1.10');
+    renderAt('/');
+    await waitFor(() => expect(fakeService.getAppVersion).toHaveBeenCalled());
+    expect(screen.queryByText('Novidades da Versão 1.1.10')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Novidades' }));
+
+    expect(await screen.findByText('Novidades da Versão 1.1.10')).toBeInTheDocument();
+  });
+
+  it('opens the help of the current screen from the rail', async () => {
+    localStorage.setItem('last_seen_version', '1.1.10');
+    renderAt('/');
+    await waitFor(() => expect(fakeService.getAppVersion).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ajuda sobre esta página' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Guia do Dashboard' })).toBeInTheDocument();
   });
 
   it('renders reader layout without header when pathname is /articles/', async () => {
@@ -57,9 +95,8 @@ describe('Layout Component', () => {
       expect(fakeService.getAppVersion).toHaveBeenCalled();
     });
 
-    // Reader layout shouldn't have header nav items like "Projetos"
-    expect(screen.queryByText('Projetos')).toBeNull();
-    expect(screen.queryByText('Configurações')).toBeNull();
+    // The reader gives the PDF the whole width: no module rail.
+    expect(screen.queryByRole('navigation', { name: 'Módulos' })).toBeNull();
     expect(screen.getByText('Reader Mode Children')).toBeInTheDocument();
   });
 

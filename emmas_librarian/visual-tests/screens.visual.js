@@ -80,12 +80,12 @@ const ALWAYS_MASKED = [
   '[data-testid="deadline-badge"]',
   ...(process.env.VISUAL_KEEP_CALENDAR === '1' ? [] : ['[data-testid="date-calendar"]']),
 ];
-// The title bar and the header are sticky, and the header its own GPU layer (.glass-panel has translateZ(0)); now
-// and then both were drawn a pixel lower than the page under them. At scroll 0 static puts them in the same place,
-// so the capture draws them static and without the layer, the same in every run.
+// The title bar and the rail are sticky, and .glass-panel its own GPU layer (translateZ(0)); now and then they were
+// drawn a pixel lower than the page under them. At scroll 0 static puts them in the same place, so the capture draws
+// them static and without the layer, the same in every run.
 const CAPTURE_STYLE = [
   '.glass-panel { transform: none !important; }',
-  '.native-titlebar, header.glass-panel { position: static !important; }',
+  '.app-titlebar, .app-rail { position: static !important; }',
 ].join(' ');
 const MASKS = {
   pdfs: (window) => [window.locator('table tbody tr td:nth-child(3)')],
