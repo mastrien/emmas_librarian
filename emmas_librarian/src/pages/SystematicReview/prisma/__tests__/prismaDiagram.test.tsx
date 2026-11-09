@@ -8,6 +8,7 @@ import { diagramSvgText, exportPrismaDiagram } from '../prismaExport';
 import { FakeProjectService } from '../../../../services/__tests__/fakes/FakeProjectService';
 import { smallFlow, twoColumnFlow } from './prismaTestData';
 import { PRISMA_PT_URL } from '../../../../utils/prisma/prismaSourceLinks';
+import { warningTone } from '../PrismaPanel';
 
 const TODAY = new Date(2026, 10, 1);
 const TABLES = { data: 'dados', excluded: 'excluídas' };
@@ -176,5 +177,38 @@ describe('exportPrismaDiagram (#50)', () => {
 
     expect(rasterize).toHaveBeenCalledWith(expect.stringMatching(/^<svg/), 1000, prismaLayout(flow, TODAY).height);
     expect(service.exportPrismaDiagram.mock.calls[0].slice(1, 3)).toEqual(['png', 'UE5H']);
+  });
+});
+
+// Arca 134: on screen the diagram reads its width from --diagram-width and its clickable boxes get a class; the
+// exported file must carry neither, since it leaves the app's stylesheet behind.
+describe('PrismaDiagram on screen and exported', () => {
+  const layout = prismaLayout(smallFlow(), TODAY);
+
+  it('marks the clickable boxes and sizes the screen diagram from a CSS variable', () => {
+    const { container } = render(<PrismaDiagram layout={layout} palette={SCREEN_PALETTE} onSelect={vi.fn()} />);
+    const svg = container.querySelector('svg')!;
+
+    expect(svg).toHaveClass('prisma-diagram-screen');
+    expect(svg.style.getPropertyValue('--diagram-width')).toBe(`${layout.width}px`);
+    expect(container.querySelectorAll('g[role="button"]')[0]).toHaveClass('prisma-box-interactive');
+  });
+
+  it('exports with no class and no CSS variable', () => {
+    const text = diagramSvgText(smallFlow(), TODAY);
+
+    expect(text).not.toContain('class=');
+    expect(text).not.toContain('--diagram-width');
+  });
+});
+
+describe('warningTone', () => {
+  it('blues missing data and ambers what may be wrong', () => {
+    expect(['nodata', 'mismatch', 'pending', 'partial'].map((k) => warningTone(k as never))).toEqual([
+      'rem',
+      'may',
+      'may',
+      'may',
+    ]);
   });
 });

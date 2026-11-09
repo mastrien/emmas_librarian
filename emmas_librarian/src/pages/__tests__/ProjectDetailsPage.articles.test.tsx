@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { act, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { givenProject, renderProjectPage, article, mainTable } from './support/projectPageHarness';
 
 afterEach(() => vi.restoreAllMocks());
@@ -276,6 +276,9 @@ describe('ProjectDetailsPage PDF links', () => {
     dialogs.confirmMessage.mockReturnValue(false);
 
     chooseFromRowMenu('Artigo com PDF', 'Desvincular PDF');
+    // The answer is a promise: check only once the question was answered, or a missing check passes.
+    await waitFor(() => expect(dialogs.asked).toHaveLength(1));
+    await act(async () => {});
 
     expect(service.unlinkPdf).not.toHaveBeenCalled();
   });

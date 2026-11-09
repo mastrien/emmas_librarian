@@ -15,19 +15,6 @@ export interface PdfFileRecord {
 }
 
 /**
- * A size in the largest unit that keeps it at least 1, with up to two decimals.
- *
- * @example formatBytes(1536) // '1.5 KB'
- */
-export function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-/**
  * When a PDF was added, as dd/mm/aaaa, hh:mm; "-" when unknown.
  *
  * @example formatAddedDate('2026-08-07T15:01:49') // '07/08/2026, 15:01'

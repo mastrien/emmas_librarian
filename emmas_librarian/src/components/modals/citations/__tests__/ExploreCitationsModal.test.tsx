@@ -163,4 +163,17 @@ describe('ExploreCitationsModal (#51)', () => {
 
     expect(onClose).toHaveBeenCalled();
   });
+
+  // On the shared Modal (Arca 134): while OpenAlex is being searched, the X and Esc wait for it.
+  it('stays open while the search runs', async () => {
+    const { service, onClose } = open([article(1)]);
+    service.previewCitations.mockReturnValue(new Promise(() => {}));
+    await screen.findByText(/Cita 30/);
+
+    fireEvent.click(search());
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Fechar' })).toBeDisabled());
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });
