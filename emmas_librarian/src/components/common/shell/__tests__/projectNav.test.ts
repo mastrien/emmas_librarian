@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PROJECT_NAV, isProjectSection, projectSegmentOf } from '../projectNav';
+import { PROJECT_NAV, isProjectSection, projectSegmentOf, isFocusRoute } from '../projectNav';
 
 describe('isProjectSection', () => {
   it('accepts the sections the project page shows', () => {
@@ -33,5 +33,13 @@ describe('PROJECT_NAV', () => {
     expect(segments[0]).toBe('overview');
     expect(new Set(segments).size).toBe(segments.length);
     expect(segments).toEqual(expect.arrayContaining(['search', 'history', 'review', 'investigation']));
+  });
+});
+
+describe('isFocusRoute', () => {
+  it('is true for the guided screening only (board 165)', () => {
+    expect(isFocusRoute('/projects/3/review/guided')).toBe(true);
+    expect(isFocusRoute('/projects/3/review')).toBe(false);
+    expect(isFocusRoute('/projects/3/review/prisma')).toBe(false);
   });
 });

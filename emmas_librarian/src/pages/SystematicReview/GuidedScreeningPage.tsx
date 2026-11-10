@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { Article, ScreeningStage } from '../../types';
 import { useScreening } from './useScreening';
 import { useGuidedScreening, type GuidedScreening } from './useGuidedScreening';
@@ -37,27 +37,66 @@ const StageTabs: React.FC<{ guided: GuidedScreening }> = ({ guided }) => (
   </div>
 );
 
-const ProgressLine: React.FC<{ guided: GuidedScreening }> = ({ guided }) => {
+const decidedCount = (guided: GuidedScreening) =>
+  guided.tally.include + guided.tally.maybe + guided.tally.exclude + guided.tally.removed;
+
+// The kinds' shares of the bar, as a CSS variable guided.css reads.
+const ProgressBar: React.FC<{ guided: GuidedScreening }> = ({ guided }) => {
   const total = guided.poolSize || 1;
-  // Each kind's share of the bar, as a CSS variable guided.css reads.
   const share = (n: number) => ({ '--share': `${(n / total) * 100}%` }) as React.CSSProperties;
   return (
-    <div className="guided-progress">
-      <strong>
-        {guided.queue.length ? `Artigo ${guided.position + 1} de ${guided.queue.length}` : 'Nenhum artigo nesta etapa'}
-      </strong>
-      <div aria-hidden="true" className="guided-progress-bar">
-        {(['include', 'maybe', 'exclude', 'removed'] as const).map((kind) => (
-          <span key={kind} className={`review-dot--${kind}`} style={share(guided.tally[kind])} />
-        ))}
-      </div>
-      <span className="review-muted">{guided.pending === 1 ? '1 pendente' : `${guided.pending} pendentes`}</span>
-      <label className="guided-check">
-        <input type="checkbox" checked={guided.onlyPending} onChange={guided.toggleOnlyPending} /> Só pendentes
-      </label>
+    <div aria-hidden="true" className="guided-progress-bar">
+      {(['include', 'maybe', 'exclude', 'removed'] as const).map((kind) => (
+        <span key={kind} className={`review-dot--${kind}`} style={share(guided.tally[kind])} />
+      ))}
     </div>
   );
 };
+
+// Escape leaves the screening, unless a note is being typed or a window is open (those use Escape themselves).
+function useExitOnEscape(onExit: () => void) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      const target = e.target as HTMLElement | null;
+      if (target && /INPUT|TEXTAREA|SELECT/.test(target.tagName)) return;
+      if (document.querySelector('[role="dialog"]')) return;
+      onExit();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onExit]);
+}
+
+/**
+ * The bar of the focus mode (board 165): the way out with its key, where the screening stands, the stage and the
+ * filter of pending articles. The prediction toggle stays in the band below, with the order's own messages.
+ */
+const FocusBar: React.FC<{ projectId: number; guided: GuidedScreening }> = ({ projectId, guided }) => (
+  <header className="guided-bar">
+    <BackLink to={`/projects/${projectId}/review`}>
+      Sair da triagem <kbd className="guided-key">Esc</kbd>
+    </BackLink>
+    <span className="guided-bar__sep" aria-hidden="true" />
+    <div className="guided-bar__progress">
+      <div className="guided-bar__line">
+        <strong>
+          {guided.queue.length
+            ? `Artigo ${guided.position + 1} de ${guided.queue.length}`
+            : 'Nenhum artigo nesta etapa'}
+        </strong>
+        <span className="review-muted">
+          {decidedCount(guided)} decididos · {guided.pending === 1 ? '1 pendente' : `${guided.pending} pendentes`}
+        </span>
+      </div>
+      <ProgressBar guided={guided} />
+    </div>
+    <StageTabs guided={guided} />
+    <label className="guided-check">
+      <input type="checkbox" checked={guided.onlyPending} onChange={guided.toggleOnlyPending} /> Só pendentes
+    </label>
+  </header>
+);
 
 // The words the suggestion leans on, marked in place so the person reads them in context.
 const Abstract: React.FC<{ text: string; quote: string | null }> = ({ text, quote }) => {
@@ -181,6 +220,8 @@ export const GuidedScreeningPage: React.FC = () => {
   const guided = useGuidedScreening(screening, projectId, order.queue);
   const suggestions = useScreeningSuggestions(projectId);
   const [writingCriteria, setWritingCriteria] = useState(false);
+  const navigate = useNavigate();
+  useExitOnEscape(() => navigate(`/projects/${projectId}/review`));
   if (screening.loading) return <div className="review review-muted">Carregando a triagem…</div>;
   const article = guided.current;
   // Suggestions read title and abstract, so they belong to that stage only.
@@ -189,15 +230,8 @@ export const GuidedScreeningPage: React.FC = () => {
   const canAsk = suggesting && !!article.abstract?.trim() && hasCriteria(suggestions.criteria);
   const asking = canAsk && suggestions.running === null && (!suggestion || suggestions.isStale(suggestion));
   return (
-    <div className="review fade-in">
-      <div className="review-header guided-header">
-        <div className="guided-title-row">
-          <BackLink to={`/projects/${projectId}/review`}>Voltar à revisão</BackLink>
-          <h1 className="review-title guided-title">Triagem guiada · PRISMA 2020</h1>
-        </div>
-        <StageTabs guided={guided} />
-      </div>
-      <ProgressLine guided={guided} />
+    <div className="guided-page fade-in">
+      <FocusBar projectId={projectId} guided={guided} />
       {guided.stage === 'title' && (
         <ScreeningOrderStrip order={order} decisions={screening.decisions} labels={screening.labels} />
       )}

@@ -36,7 +36,7 @@ test('#54 asks for a suggestion in the guided screening, decides, and measures i
     await expect(window.getByRole('heading', { name: 'Triagem por título e resumo concluída' })).toBeVisible();
 
     // The evaluation reuses what was already answered, so it has nothing to pay for.
-    await window.getByRole('link', { name: 'Voltar à revisão' }).last().click();
+    await window.getByRole('link', { name: 'Voltar à revisão' }).click();
     await window.getByRole('link', { name: 'Avaliar sugestões' }).click();
     const row = window.getByRole('row', { name: /e2e\/mock/ });
     await expect(row).toContainText('100% (1 de 1)');

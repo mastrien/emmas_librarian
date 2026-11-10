@@ -49,8 +49,8 @@ test('screens articles on the review page and the guided screening, archiving ex
     await expect(window.getByRole('heading', { name: 'Triagem por título e resumo concluída' })).toBeVisible();
 
     // Decisions are in the database: they survive a reload of the review page.
-    // The finished screen has its own "Voltar à revisão" besides the one in the header.
-    await window.getByRole('link', { name: 'Voltar à revisão' }).last().click();
+    // The finished screen has its own "Voltar à revisão" (the bar's way out is "Sair da triagem").
+    await window.getByRole('link', { name: 'Voltar à revisão' }).click();
     await window.reload();
     const counts = window.getByRole('status', { name: 'Contagem da triagem' });
     await expect(counts).toContainText('1 incluídos', { timeout: 10000 });

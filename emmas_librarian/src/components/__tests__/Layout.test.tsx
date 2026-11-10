@@ -45,6 +45,17 @@ describe('Layout Component', () => {
     expect(screen.getByText('Test Children')).toBeInTheDocument();
   });
 
+  // Board 165: the guided screening takes the window; leaving is on the screen itself.
+  it('drops the rail and the project sidebar on the guided screening', async () => {
+    renderAt('/projects/3/review/guided');
+
+    await waitFor(() => expect(fakeService.getAppVersion).toHaveBeenCalled());
+
+    expect(screen.queryByRole('navigation', { name: 'Módulos' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('complementary', { name: 'Projeto' })).not.toBeInTheDocument();
+    expect(screen.getByText('Test Children')).toBeInTheDocument();
+  });
+
   it('marks the module of the current route as the current page', async () => {
     renderAt('/agenda');
 

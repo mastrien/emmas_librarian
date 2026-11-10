@@ -48,7 +48,8 @@ test('#55 turns the predicted order on, asking before generating, and simulates 
       timeout: 15000,
     });
 
-    await window.getByRole('link', { name: /Voltar à revisão/ }).click();
+    // The guided screening is a focus mode since board 165: its way out is "Sair da triagem".
+    await window.getByRole('link', { name: /Sair da triagem/ }).click();
     await window.getByRole('link', { name: 'Avaliar sugestões' }).click();
     await window.getByRole('button', { name: 'Simular' }).click();
     await expect(window.getByRole('row', { name: '6 3 3' })).toBeVisible({ timeout: 15000 });
