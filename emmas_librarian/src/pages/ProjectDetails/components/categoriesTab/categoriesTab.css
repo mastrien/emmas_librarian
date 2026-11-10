@@ -1,93 +1,207 @@
-/* ProjectCategoriesTab. Values carried over from the inline styles they replace (Arca 134). */
-.categories-tab {
-  padding: 2rem;
-}
-
-.categories-tab-head {
+/* Categories matrix (redesign, board 156). The article column stays in place while the categories scroll sideways
+   inside the table area: the page itself never scrolls sideways. */
+.matrix-bar {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 1.5rem;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
 }
 
-.categories-tab-head h2 {
-  display: flex;
+.matrix-search {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  font-size: 1.5rem;
+  width: 240px;
 }
 
-.categories-tab-head h2 svg {
-  color: var(--color-primary);
+.matrix-search svg {
+  position: absolute;
+  left: 10px;
+  color: var(--text-muted);
+  pointer-events: none;
 }
 
-.categories-tab-exports {
-  display: flex;
-  gap: 1rem;
+.matrix-search input {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px 0 32px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 13px;
 }
 
-.categories-table-wrap {
+.matrix-summary {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.matrix-scroll {
   overflow-x: auto;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
+  background: var(--bg-surface);
 }
 
-.categories-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-  text-align: left;
+.matrix-table {
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
 }
 
-.categories-table thead tr {
-  border-bottom: 2px solid var(--border-color);
-  background: var(--bg-main);
-}
-
-.categories-table th {
-  padding: 1rem 1.5rem;
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.categories-table th.categories-th-category {
-  white-space: nowrap;
-}
-
-.categories-table tbody tr {
+.matrix-table th {
+  min-width: 180px;
+  max-width: 260px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border-color);
-  transition: background var(--transition-fast);
-}
-
-.categories-table tbody tr:hover {
-  background: var(--bg-main);
-}
-
-.categories-empty {
-  padding: 2rem;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.categories-cell-title {
-  max-width: 300px;
-  padding: 1rem 1.5rem;
-}
-
-.categories-cell-title div {
-  margin-bottom: 0.25rem;
-  overflow: hidden;
+  background: var(--bg-sunken);
   color: var(--text-heading);
+  font-size: 12px;
   font-weight: 600;
+  text-align: left;
+  vertical-align: bottom;
+}
+
+.matrix-th__kind {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The article column stays visible while the categories scroll. */
+.matrix-table th.matrix-th-article,
+.matrix-cell--article {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 300px;
+  min-width: 240px;
+  max-width: 300px;
+  box-shadow: inset -1px 0 0 var(--border-color);
+}
+
+.matrix-cell--article {
+  overflow: hidden;
+  background: var(--bg-surface);
+  color: var(--text-heading);
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.categories-cell-value {
-  min-width: 150px;
-  padding: 1rem 1.5rem;
+.matrix-cell {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: top;
+}
+
+.matrix-cell__button {
+  display: block;
+  width: 100%;
+  min-height: 24px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.matrix-cell__button:hover {
+  border-color: var(--border-color);
+  background: var(--bg-surface-hover);
+}
+
+.matrix-cell__button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.matrix-empty {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.matrix-text {
   color: var(--text-main);
-  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.matrix-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.matrix-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-raised);
+  color: var(--text-main);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.matrix-chip--more {
+  color: var(--text-muted);
+}
+
+/* Yes/no with color, icon and label: readable without the color. */
+.matrix-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.matrix-badge--yes {
+  background: var(--color-success-subtle);
+  color: var(--color-success-text);
+}
+
+.matrix-badge--no {
+  background: var(--bg-sunken);
+  color: var(--text-muted);
+}
+
+.matrix-no-rows,
+.matrix-empty-state p {
+  margin: 0;
+  padding: var(--space-6);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.matrix-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+}
+
+.matrix-empty-state p {
+  max-width: 56ch;
+  padding: 0;
 }

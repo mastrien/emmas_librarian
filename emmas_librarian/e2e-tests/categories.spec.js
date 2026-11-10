@@ -35,10 +35,11 @@ async function expectRoomyCategoriesModal(electronApp, window) {
 /** In the reader's "Categorizar" panel: the editor for one category, found by its label. */
 const categoryEditor = (window, category) => window.locator('label', { hasText: category }).locator('..');
 
-/** The read-only cell of `articleTitle` under the column `category` in the project's Categories tab. */
+/** The cell of `articleTitle` under the column `category` in the project's categories matrix (board 156). */
 async function categoryCell(window, articleTitle, category) {
+  // A header reads its kind and fill count on one line ("TEXTO · 1/1"), then the category name.
   const headers = await window.locator('table thead th').allInnerTexts();
-  const column = headers.findIndex((h) => h.trim() === category);
+  const column = headers.findIndex((h) => h.trim().split('\n').pop().trim() === category);
   expect(column, `column "${category}" in ${JSON.stringify(headers)}`).toBeGreaterThan(-1);
   return window.locator('table tbody tr', { hasText: articleTitle }).locator('td').nth(column);
 }
@@ -57,9 +58,9 @@ test('F-11 Create categories, classify an article in the reader and export the v
     await createProject(window, 'Categorias ' + Date.now());
     await importFixturePdf(window);
 
-    // "Criar categorias" sits in the Categorias section header since the redesign.
+    // "Gerenciar categorias" is the primary action of the Categorias section since the redesign (board 156).
     await window.getByTestId('tab-categories').click();
-    await window.getByRole('button', { name: 'Criar categorias' }).click();
+    await window.getByRole('button', { name: 'Gerenciar categorias' }).click();
     await addCategory(window, 'Metodologia', 'Texto');
     await addCategory(window, 'Tipo de estudo', 'Lista de Opções', 'Qualitativa, Quantitativa');
     await addCategory(window, 'Revisado', 'Sim/Não');
@@ -98,14 +99,22 @@ test('F-11 Create categories, classify an article in the reader and export the v
       await expect(await categoryCell(window, IMPORTED_TITLE, 'Revisado')).toHaveText('Sim');
     }
 
+    // A click on a cell edits it in place; the new value is saved.
+    await (await categoryCell(window, IMPORTED_TITLE, 'Metodologia')).getByRole('button').click();
+    const editor = window.locator('.matrix-cell--editing input');
+    await editor.fill('Survey presencial');
+    await editor.press('Tab');
+    await expect(await categoryCell(window, IMPORTED_TITLE, 'Metodologia')).toHaveText('Survey presencial');
+
     // The CSV export carries one column per category.
+    await window.getByRole('button', { name: /^Exportar/ }).hover();
     await window.getByRole('button', { name: 'Exportar CSV' }).click();
     await expect
       .poll(() => (fs.existsSync(csvPath) ? fs.readFileSync(csvPath, 'utf8') : ''), { timeout: 10000 })
-      .toContain('Survey online');
+      .toContain('Survey presencial');
     const [header, row] = fs.readFileSync(csvPath, 'utf8').trim().split('\n');
     expect(header).toBe('id,doi,title,authors,year,source,status,archive_note,Metodologia,Tipo de estudo,Revisado');
-    expect(row).toContain('"Survey online","Quantitativa","true"');
+    expect(row).toContain('"Survey presencial","Quantitativa","true"');
   } finally {
     await electronApp.close();
     fixture.cleanup();

@@ -55,10 +55,11 @@ describe('ProjectSectionHeader', () => {
   it('opens the categories manager from the categories header', () => {
     const props = renderHeader('categories');
 
-    fireEvent.click(screen.getByRole('button', { name: /Criar categorias/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Gerenciar categorias/ }));
 
-    expect(title()).toHaveTextContent('Categorias');
-    expect(screen.getByText('4 categorias')).toBeInTheDocument();
+    expect(title()).toHaveTextContent('Categorias e extrações');
+    expect(screen.getByText(/^4 categorias · uma coluna por categoria/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Exportar/ })).toBeInTheDocument();
     expect(props.onManageCategories).toHaveBeenCalled();
   });
 

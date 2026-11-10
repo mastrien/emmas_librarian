@@ -34,7 +34,11 @@ test('F-06 exports the project articles to CSV, XLSX and Biblioshiny', async () 
 
     await exportAndConfirm(
       window,
-      () => window.getByRole('button', { name: 'Exportar CSV' }).click(),
+      // CSV and XLSX sit in the categories header's "Exportar" menu (board 156), which opens on hover.
+      async () => {
+        await window.getByRole('button', { name: /^Exportar/ }).hover();
+        await window.getByRole('button', { name: 'Exportar CSV' }).click();
+      },
       `CSV exportado com sucesso para: ${target}`,
     );
     // The BOM makes Excel read the accents; the header is the documented column order.
@@ -47,7 +51,10 @@ test('F-06 exports the project articles to CSV, XLSX and Biblioshiny', async () 
 
     await exportAndConfirm(
       window,
-      () => window.getByRole('button', { name: 'Exportar XLSX' }).click(),
+      async () => {
+        await window.getByRole('button', { name: /^Exportar/ }).hover();
+        await window.getByRole('button', { name: 'Exportar XLSX' }).click();
+      },
       `XLSX exportado com sucesso para: ${target}`,
     );
     const sheet = xlsx.readFile(target).Sheets.Artigos;

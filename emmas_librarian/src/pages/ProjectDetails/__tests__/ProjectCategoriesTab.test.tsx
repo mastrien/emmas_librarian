@@ -1,129 +1,110 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, within } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import { ProjectCategoriesTab } from '../components/ProjectCategoriesTab';
-import { projectService } from '../../../services/api';
-import { FakeDialogs, withFakeDialogs } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
+import type { Article, ArticleCategory, ProjectCategory } from '../../../types';
 
-let dialogs = new FakeDialogs();
-beforeEach(() => {
-  dialogs = new FakeDialogs();
-});
-
-vi.mock('../../../services/api', async () => {
-  const { FakeProjectService } = await import('../../../services/__tests__/fakes/FakeProjectService');
-  return { projectService: FakeProjectService.create() };
-});
-
-// Mock CategoryCell to avoid dealing with its complex internals
+// The cell editor (CategoryCell) has tests of its own; here it only shows that it opened, and can report a save.
 vi.mock('../../../components/common/CategoryCell', () => ({
-  CategoryCell: ({ initialValue }: any) => <div data-testid="category-cell">{initialValue}</div>,
+  CategoryCell: ({ initialValue, onCategorySaved }: { initialValue: string; onCategorySaved: () => void }) => (
+    <button data-testid="category-editor" onClick={onCategorySaved}>
+      editor:{initialValue}
+    </button>
+  ),
 }));
 
+const categories: ProjectCategory[] = [
+  { id: 1, project_id: 1, name: 'Técnica mencionada', type: 'multiselect' },
+  { id: 2, project_id: 1, name: 'A técnica foi eficaz?', type: 'boolean' },
+  { id: 3, project_id: 1, name: 'Onde foi feito o estudo?', type: 'text' },
+];
+const articles = [
+  { id: 101, project_id: 1, title: 'Sem categorias' },
+  { id: 102, project_id: 1, title: 'Deep Learning for Water' },
+] as Article[];
+const values = [
+  { article_id: 102, category_id: 1, value: 'Transformer, LSTM, Random Forest, BJP', name: '', type: '' },
+  { article_id: 102, category_id: 2, value: 'true', name: '', type: '' },
+] as ArticleCategory[];
+
+function renderMatrix(extra: Partial<React.ComponentProps<typeof ProjectCategoriesTab>> = {}) {
+  const props = {
+    projectCategories: categories,
+    articleCategories: values,
+    nonArchivedArticles: articles,
+    onCategorySaved: vi.fn(),
+    onManageCategories: vi.fn(),
+    ...extra,
+  };
+  render(<ProjectCategoriesTab {...props} />);
+  return props;
+}
+
+const bodyRows = () => screen.getAllByRole('row').slice(1);
+
 describe('ProjectCategoriesTab', () => {
-  const mockProject = {
-    id: 1,
-    name: 'Test Project',
-    created_at: '2023-01-01T00:00:00.000Z',
-    description: '',
-    updated_at: '2023-01-01T00:00:00.000Z',
-  };
+  it('heads each column with its kind, how many articles have it and its name', () => {
+    renderMatrix();
 
-  const mockProjectCategories = [
-    { id: 1, project_id: 1, name: 'Methodology', type: 'text' },
-    { id: 2, project_id: 1, name: 'Results', type: 'text' },
-  ];
-
-  const mockNonArchivedArticles: any[] = [
-    { id: 101, title: 'Article 1' },
-    { id: 102, title: 'Article 2' },
-  ];
-
-  const mockArticleCategories = [
-    { article_id: 101, category_id: 1, name: 'Methodology', type: 'text', value: 'Qualitative' },
-    { article_id: 101, category_id: 2, name: 'Results', type: 'text', value: 'Positive' },
-  ];
-
-  const defaultProps = {
-    project: mockProject,
-    projectCategories: mockProjectCategories,
-    articleCategories: mockArticleCategories,
-    nonArchivedArticles: mockNonArchivedArticles,
-  };
-
-  beforeEach(() => {
-    vi.clearAllMocks();
+    const headers = screen.getAllByRole('columnheader').map((h) => h.textContent);
+    expect(headers).toEqual([
+      'Artigo',
+      'Várias opções · 1/2Técnica mencionada',
+      'Sim ou não · 1/2A técnica foi eficaz?',
+      'Texto · 0/2Onde foi feito o estudo?',
+    ]);
+    expect(screen.getByText('1 de 2 artigos com alguma categoria')).toBeInTheDocument();
   });
 
-  it('renders categories and articles', () => {
-    render(<ProjectCategoriesTab {...defaultProps} />, { wrapper: withFakeDialogs(dialogs) });
-    expect(screen.getByText('Categorias e Extrações')).toBeInTheDocument();
+  it('shows lists as chips with "+N", yes/no as a labelled badge and missing values as a dash', () => {
+    renderMatrix();
 
-    // Headers
-    expect(screen.getByText('ARTIGO')).toBeInTheDocument();
-    expect(screen.getByText('Methodology')).toBeInTheDocument();
-    expect(screen.getByText('Results')).toBeInTheDocument();
-
-    // Articles
-    expect(screen.getByText('Article 1')).toBeInTheDocument();
-    expect(screen.getByText('Article 2')).toBeInTheDocument();
-
-    // Values
-    expect(screen.getByText('Qualitative')).toBeInTheDocument();
-    expect(screen.getByText('Positive')).toBeInTheDocument();
+    const filled = within(bodyRows()[0]);
+    expect(filled.getByText('Transformer')).toBeInTheDocument();
+    expect(filled.getByText('+1')).toBeInTheDocument();
+    expect(filled.getByText('Sim')).toBeInTheDocument();
+    expect(within(bodyRows()[1]).getAllByText('—')).toHaveLength(3);
   });
 
-  it('renders empty state when there are no articles', () => {
-    render(<ProjectCategoriesTab {...defaultProps} nonArchivedArticles={[]} />, { wrapper: withFakeDialogs(dialogs) });
-    expect(screen.getByText('Nenhum artigo encontrado.')).toBeInTheDocument();
+  it('lists the filled articles first, or the project order on request, and filters by title', () => {
+    renderMatrix();
+    expect(bodyRows()[0]).toHaveTextContent('Deep Learning for Water');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ordem do projeto' }));
+    expect(bodyRows()[0]).toHaveTextContent('Sem categorias');
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Filtrar artigos' }), { target: { value: 'water' } });
+    expect(bodyRows()).toHaveLength(1);
   });
 
-  it('handles CSV export successfully', async () => {
-    (projectService.exportCsv as any).mockResolvedValue('/path/to/file.csv');
-    render(<ProjectCategoriesTab {...defaultProps} />, { wrapper: withFakeDialogs(dialogs) });
+  it('opens the editor on a click on a cell and goes back to the value after saving', () => {
+    const props = renderMatrix();
 
-    const exportCsvBtn = screen.getByText('Exportar CSV');
-    await act(async () => {
-      fireEvent.click(exportCsvBtn);
-    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Onde foi feito o estudo? de "Deep Learning for Water": editar' }),
+    );
+    fireEvent.click(screen.getByTestId('category-editor'));
 
-    expect(projectService.exportCsv).toHaveBeenCalledWith(1);
-    expect(dialogs.informMessage).toHaveBeenCalledWith('CSV exportado com sucesso para: /path/to/file.csv');
+    expect(props.onCategorySaved).toHaveBeenCalled();
+    expect(screen.queryByTestId('category-editor')).not.toBeInTheDocument();
   });
 
-  it('handles CSV export error', async () => {
-    (projectService.exportCsv as any).mockRejectedValue(new Error('Export failed'));
-    render(<ProjectCategoriesTab {...defaultProps} />, { wrapper: withFakeDialogs(dialogs) });
+  it('leaves the editor with Escape, keeping the value', () => {
+    const props = renderMatrix();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Onde foi feito o estudo? de "Deep Learning for Water": editar' }),
+    );
 
-    const exportCsvBtn = screen.getByText('Exportar CSV');
-    await act(async () => {
-      fireEvent.click(exportCsvBtn);
-    });
+    fireEvent.keyDown(screen.getByTestId('category-editor'), { key: 'Escape' });
 
-    expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao exportar CSV: Export failed');
+    expect(screen.queryByTestId('category-editor')).not.toBeInTheDocument();
+    expect(props.onCategorySaved).not.toHaveBeenCalled();
   });
 
-  it('handles XLSX export successfully', async () => {
-    (projectService.exportXlsx as any).mockResolvedValue('/path/to/file.xlsx');
-    render(<ProjectCategoriesTab {...defaultProps} />, { wrapper: withFakeDialogs(dialogs) });
+  it('explains categories and offers to create the first one when there are none', () => {
+    const props = renderMatrix({ projectCategories: [] });
 
-    const exportXlsxBtn = screen.getByText('Exportar XLSX');
-    await act(async () => {
-      fireEvent.click(exportXlsxBtn);
-    });
+    fireEvent.click(screen.getByRole('button', { name: 'Criar a primeira categoria' }));
 
-    expect(projectService.exportXlsx).toHaveBeenCalledWith(1);
-    expect(dialogs.informMessage).toHaveBeenCalledWith('XLSX exportado com sucesso para: /path/to/file.xlsx');
-  });
-
-  it('handles XLSX export error', async () => {
-    (projectService.exportXlsx as any).mockRejectedValue(new Error('Export failed'));
-    render(<ProjectCategoriesTab {...defaultProps} />, { wrapper: withFakeDialogs(dialogs) });
-
-    const exportXlsxBtn = screen.getByText('Exportar XLSX');
-    await act(async () => {
-      fireEvent.click(exportXlsxBtn);
-    });
-
-    expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao exportar XLSX: Export failed');
+    expect(props.onManageCategories).toHaveBeenCalled();
   });
 });

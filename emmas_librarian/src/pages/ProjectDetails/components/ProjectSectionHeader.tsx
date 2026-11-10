@@ -7,6 +7,7 @@ import type { ProjectActions } from '../hooks/useProjectActions';
 import { ArticleActions, type ArticleActionsProps } from './ArticleActions';
 import { ProjectNameActions, ProjectNameTitle } from './ProjectNameTitle';
 import { articlesSubtitle, countSubtitle, overviewSubtitle } from './sectionSubtitles';
+import { CategoriesExportMenu } from './categoriesTab/CategoriesExportMenu';
 
 export interface ProjectSectionHeaderProps {
   section: ProjectSection;
@@ -32,18 +33,22 @@ const OverviewHeader: React.FC<ProjectSectionHeaderProps> = ({ project, articles
   />
 );
 
-const CategoriesHeader: React.FC<ProjectSectionHeaderProps> = ({ categoryCount, onManageCategories }) => (
+// Board 156: the matrix explains itself in the subtitle; export and the one primary action on the right.
+const CategoriesHeader: React.FC<ProjectSectionHeaderProps> = ({ project, categoryCount, onManageCategories }) => (
   <PageHeader
-    title="Categorias"
-    subtitle={countSubtitle(categoryCount, 'categoria', 'categorias')}
+    title="Categorias e extrações"
+    subtitle={
+      categoryCount > 0
+        ? `${countSubtitle(categoryCount, 'categoria', 'categorias')} · uma coluna por categoria; clique numa célula para editar`
+        : 'Uma coluna por categoria para anotar o mesmo dado em todos os artigos'
+    }
     actions={
-      <button
-        onClick={onManageCategories}
-        className="btn-secondary toolbar-button"
-        title="Gerenciar categorias de artigos"
-      >
-        <Tag size={18} /> Criar categorias
-      </button>
+      <>
+        <CategoriesExportMenu projectId={project.id} />
+        <button onClick={onManageCategories} className="btn-primary toolbar-button" title="Criar e editar categorias">
+          <Tag size={18} /> Gerenciar categorias
+        </button>
+      </>
     }
   />
 );

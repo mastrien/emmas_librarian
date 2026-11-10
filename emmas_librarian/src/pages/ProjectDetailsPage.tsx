@@ -132,11 +132,11 @@ export const ProjectDetailsPage: React.FC = () => {
       )}
       {activeTab === 'categories' && (
         <ProjectCategoriesTab
-          project={project}
           projectCategories={data.projectCategories}
           articleCategories={data.articleCategories}
           nonArchivedArticles={data.articles.filter((a) => a.status !== 'archived')}
           onCategorySaved={data.reload}
+          onManageCategories={() => modals.setIsCategoriesModalOpen(true)}
         />
       )}
       {activeTab === 'diary' && projectId !== null && <DiarySection projectId={projectId} />}
