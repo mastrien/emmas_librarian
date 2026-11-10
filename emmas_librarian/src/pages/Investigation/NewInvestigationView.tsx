@@ -25,7 +25,7 @@ interface NewInvestigationViewProps {
 }
 
 /**
- * The setup of a new investigation: questions and articles side by side, and a bar that says, before it runs, how
+ * The setup of a new investigation (under the page's "Nova investigação" header): questions and articles side by side, and a bar that says, before it runs, how
  * many answers will be asked of which model (a wrong provider once went unnoticed until every call failed).
  *
  * @example <NewInvestigationView projectId={3} articlesWithPdf={a} searchHistory={h} draft={d} onDraftChange={setD} modelLabel="Ollama" busy={false} onStart={go} onCancel={back} />
@@ -39,15 +39,6 @@ export const NewInvestigationView: React.FC<NewInvestigationViewProps> = (props)
   const setQuestions = (next: string[]) => onDraftChange({ ...draft, questions: next });
   return (
     <div className="inv-scroll">
-      <div className="inv-detail-head">
-        <div>
-          <h2>Nova investigação</h2>
-          <div className="inv-muted">As mesmas perguntas vão para cada artigo escolhido.</div>
-        </div>
-        <button type="button" className="btn-secondary inv-small" onClick={onCancel}>
-          Cancelar
-        </button>
-      </div>
       {articlesWithPdf.length === 0 ? (
         <div className="inv-empty">Nenhum artigo com PDF vinculado encontrado neste projeto.</div>
       ) : (
@@ -92,14 +83,19 @@ export const NewInvestigationView: React.FC<NewInvestigationViewProps> = (props)
                 {!busy && <Link to="/settings">trocar em Configurações</Link>}
               </span>
             </span>
-            <button
-              type="button"
-              className="btn-primary"
-              disabled={busy || articles === 0 || questions === 0}
-              onClick={onStart}
-            >
-              Iniciar investigação
-            </button>
+            <span className="inv-run-actions">
+              <button type="button" className="btn-ghost" onClick={onCancel}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={busy || articles === 0 || questions === 0}
+                onClick={onStart}
+              >
+                Iniciar investigação
+              </button>
+            </span>
           </div>
         </>
       )}

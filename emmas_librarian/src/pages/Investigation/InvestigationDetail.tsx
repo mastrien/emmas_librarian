@@ -10,6 +10,10 @@ import { auditForExport } from '../../utils/auditExport';
 import { formatResultsAsCsv, formatResultsAsJson } from '../../utils/investigationExporter';
 import { statusTone } from '../../utils/investigationStatus';
 import { parseJsonList } from '../../utils/parseJsonList';
+import { Download, RotateCw } from 'lucide-react';
+import { PageHeader } from '../../components/common/PageHeader';
+import { ToolbarMenu } from '../ProjectDetails/components/toolbar/ToolbarMenu';
+import { useHoverMenu } from '../ProjectDetails/hooks/useHoverMenu';
 import { AnswersTab } from './AnswersTab';
 import { CallsTab } from './CallsTab';
 import { isPendingReview, questionsOf, savedCalls } from './investigationView';
@@ -89,6 +93,42 @@ function useResultsExport(
 
 const STATUS_CHIP = { success: 'inv-chip--ok', warning: 'inv-chip--warn', danger: 'inv-chip--bad' };
 
+/** "Exportar" of the header (board 162): the answers, with the audit when there is one, as CSV or JSON. */
+const InvestigationExportMenu: React.FC<{ onExport: (format: 'csv' | 'json') => void }> = ({ onExport }) => {
+  const menu = useHoverMenu();
+  return (
+    <ToolbarMenu
+      variant="secondary"
+      icon={<Download size={16} />}
+      label="Exportar"
+      open={menu.isOpen}
+      onOpenChange={menu.setIsOpen}
+      menuRef={menu.ref}
+      onMouseEnter={menu.onMouseEnter}
+      onMouseLeave={menu.onMouseLeave}
+      items={[
+        { icon: <Download size={16} />, label: 'Exportar CSV', onSelect: () => onExport('csv') },
+        { icon: <Download size={16} />, label: 'Exportar JSON', onSelect: () => onExport('json') },
+      ]}
+    />
+  );
+};
+
+/**
+ * The line under the title: when it ran (no seconds), with which model, on how much.
+ *
+ * @example investigationSummary(inv, 9, 4) // "08/08/2026, 02:55 · Ollama (gpt-oss) · 9 artigos · 4 perguntas"
+ */
+export function investigationSummary(
+  investigation: InvestigationHistoryRecord,
+  articleCount: number,
+  questionCount: number,
+): string {
+  const when = new Date(investigation.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  const model = investigation.model_used || 'Modelo desconhecido';
+  return `${when} · ${model} · ${articleCount} artigos · ${questionCount} perguntas`;
+}
+
 /**
  * One stored investigation on its page (#73): what it ran, and the tabs "Chamadas", "Respostas" and "Auditoria".
  * Keyed by the investigation, so opening another one starts clean. The tab survives a trip to the PDF reader.
@@ -110,48 +150,33 @@ export const InvestigationDetail: React.FC<InvestigationDetailProps> = (props) =
   const articleIds = [...new Set(results.map((r) => r.article_id))];
   const errors = results.filter((r) => r.status !== 'success').length;
   const pending = results.filter(isPendingReview).length;
+  // Order of the canvas (board 162): what to review first, then how it ran, then the audit.
   const tabs: { id: DetailTab; label: string; count?: string }[] = [
-    { id: 'calls', label: 'Chamadas', count: errors ? `${errors} com erro` : undefined },
     { id: 'answers', label: 'Respostas', count: pending ? `${pending} pendentes` : undefined },
+    { id: 'calls', label: 'Chamadas', count: errors ? `${errors} com erro` : undefined },
     { id: 'audit', label: 'Auditoria' },
   ];
   return (
     <>
-      <div className="inv-detail-head">
-        <div className="inv-shrink">
-          <h2>
+      <PageHeader
+        title={
+          <>
             Investigação #{investigation.id}{' '}
             <span className={`inv-chip ${STATUS_CHIP[statusTone(investigation.status)]}`}>
               {investigation.status || 'Desconhecido'}
             </span>
-          </h2>
-          <div className="inv-muted">
-            {new Date(investigation.created_at).toLocaleString()} · {investigation.model_used || 'Modelo desconhecido'}{' '}
-            · {articleIds.length} artigos · {questions.length} perguntas
-          </div>
-        </div>
-        <div className="inv-actions">
-          <button
-            type="button"
-            className="btn-secondary inv-small"
-            disabled={results.length === 0}
-            onClick={() => void exportAs('csv')}
-          >
-            Exportar CSV
-          </button>
-          <button
-            type="button"
-            className="btn-secondary inv-small"
-            disabled={results.length === 0}
-            onClick={() => void exportAs('json')}
-          >
-            Exportar JSON
-          </button>
-          <button type="button" className="btn-secondary inv-small" onClick={() => onReExecute(questions, articleIds)}>
-            Executar de novo
-          </button>
-        </div>
-      </div>
+          </>
+        }
+        subtitle={investigationSummary(investigation, articleIds.length, questions.length)}
+        actions={
+          <>
+            {results.length > 0 && <InvestigationExportMenu onExport={(format) => void exportAs(format)} />}
+            <button type="button" className="btn-secondary" onClick={() => onReExecute(questions, articleIds)}>
+              <RotateCw size={16} aria-hidden="true" /> Rodar de novo
+            </button>
+          </>
+        }
+      />
       <div className="inv-tabs" role="tablist" aria-label="Partes da investigação">
         {tabs.map((t) => (
           <button

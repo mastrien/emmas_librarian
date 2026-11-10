@@ -24,15 +24,16 @@ function reviewProject() {
 }
 
 describe('InvestigationPage (#73): where it opens', () => {
-  it('opens the newest investigation, listed with its status, model and what is left to review', async () => {
+  // Board 159: the sidebar line is short (number, date, what is left to review); the rest is in its tooltip.
+  it('opens the newest investigation, listed with what is left to review and the details in its tooltip', async () => {
     const { service } = reviewProject();
     renderInvestigation(service, '/projects/3/investigation');
 
     expect(await screen.findByRole('heading', { name: /Investigação #14/ })).toBeInTheDocument();
-    const card = within(list()).getByRole('link', { name: /#14/ });
-    expect(card).toHaveTextContent('Sucesso');
-    expect(card).toHaveTextContent('Ollama (gpt-oss:120b) · 2 artigos · 2 perguntas');
-    await waitFor(() => expect(card).toHaveTextContent('3 para revisar'));
+    const item = within(list()).getByRole('link', { name: /#14/ });
+    await waitFor(() => expect(item).toHaveTextContent(/3$/));
+    expect(item).toHaveAttribute('title', 'Sucesso · Ollama (gpt-oss:120b) · 2 artigos · 2 perguntas · 3 para revisar');
+    expect(item).toHaveAttribute('aria-current', 'page');
   });
 
   // #84: measured at mount the page was still loading, so it had no height until the window was resized.
@@ -53,15 +54,14 @@ describe('InvestigationPage (#73): where it opens', () => {
     expect(within(list()).getByText('Nenhuma investigação ainda.')).toBeInTheDocument();
   });
 
-  it('shows the model of the next run and a way back to the project', async () => {
+  it('shows the model of the next run', async () => {
     const service = investigationService([article(1)], []);
     service.getAiModelConfigs.mockResolvedValue([
       { skill: 'extraction', provider: 'openai', model_name: 'gpt-4o-mini' },
     ] as never);
     renderInvestigation(service, '/projects/3/investigation');
 
-    expect(await screen.findByText('OpenAI (gpt-4o-mini)')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Voltar ao projeto' })).toHaveAttribute('href', '/projects/3');
+    expect(await screen.findByText(/OpenAI \(gpt-4o-mini\)/)).toBeInTheDocument();
   });
 
   it('falls back to the list when the address names an investigation that does not exist', async () => {
@@ -75,11 +75,11 @@ describe('InvestigationPage (#73): where it opens', () => {
     const service = investigationService([], [record(14, { questions: '{oops', articles_ids: 'x' })]);
     renderInvestigation(service, '/projects/3/investigation/14');
 
-    expect(
-      await within(await screen.findByRole('navigation', { name: 'Investigações do projeto' })).findByText(
-        /0 artigos · 0 perguntas/,
-      ),
-    ).toBeInTheDocument();
+    const item = await within(await screen.findByRole('navigation', { name: 'Investigações do projeto' })).findByRole(
+      'link',
+      { name: /#14/ },
+    );
+    expect(item.getAttribute('title')).toContain('0 artigos · 0 perguntas');
   });
 });
 
@@ -222,7 +222,7 @@ describe('InvestigationPage (#73): calls', () => {
     renderInvestigation(service, '/projects/3/investigation/14');
 
     await waitFor(() => expect(screen.getByRole('tab', { name: /Chamadas/ })).toHaveAttribute('aria-selected', 'true'));
-    expect(within(list()).getByText('Falhou')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Investigação #14/ })).toHaveTextContent('Falhou');
   });
 });
 
@@ -425,24 +425,26 @@ describe('InvestigationPage: the embedding model changed', () => {
 });
 
 describe('InvestigationPage (#73): side panels', () => {
-  it('collapses the list beside the content on a wide window', async () => {
+  it('lists the investigations in the project sidebar on a wide window, a new one first', async () => {
     const { service } = reviewProject();
     renderInvestigation(service, '/projects/3/investigation/14');
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Recolher a lista de investigações' }));
-    expect(screen.queryByRole('navigation', { name: 'Investigações do projeto' })).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Mostrar a lista de investigações' }));
-    expect(list()).toBeInTheDocument();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    const links = within(await screen.findByRole('navigation', { name: 'Investigações do projeto' })).getAllByRole(
+      'link',
+    );
+    expect(links.map((l) => l.textContent)).toEqual(['+ Nova investigação', expect.stringMatching(/^#14 · /)]);
+    expect(screen.queryByRole('button', { name: /Investigações \(/ })).not.toBeInTheDocument();
   });
 
+  // The sidebar folds to icons below 1200px (shell.css), with no room for the list.
   it('on a narrow window the list is a drawer on the left, closed by choosing an investigation', async () => {
-    setWindowWidth(1000);
+    setWindowWidth(1150);
     const { service } = reviewProject();
     renderInvestigation(service, '/projects/3/investigation/14');
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Mostrar a lista de investigações' }));
+    expect(await screen.findByRole('heading', { name: /Investigação #14/ })).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Investigações do projeto' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Investigações (1)' }));
     const drawer = screen.getByRole('dialog', { name: 'Investigações do projeto' });
     expect(drawer).toHaveClass('side-drawer--left');
     fireEvent.click(within(drawer).getByRole('link', { name: /#14/ }));

@@ -1,5 +1,5 @@
 import { act } from 'react';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { ArticleReaderToolbar } from '../../../../pages/ArticleReader/components/ArticleReaderToolbar';
@@ -57,10 +57,10 @@ describe('the audit on the investigation page', () => {
     service.saveExportedFile.mockResolvedValue(true);
     renderInvestigation(service, '/projects/3/investigation/19');
 
-    const exportButton = await screen.findByRole('button', { name: 'Exportar CSV' });
-    await waitFor(() => expect(exportButton).toBeEnabled());
+    // Since board 162 the formats are in the header's "Exportar" menu, shown once there are answers.
+    fireEvent.click(await screen.findByRole('button', { name: /^Exportar/ }));
     await act(async () => {
-      fireEvent.click(exportButton);
+      fireEvent.click(screen.getByRole('button', { name: 'Exportar CSV' }));
     });
 
     const [csv] = service.saveExportedFile.mock.calls[0];

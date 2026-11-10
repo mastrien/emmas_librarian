@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronsRight, Plus } from 'lucide-react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { ChevronsRight } from 'lucide-react';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { SideDrawer } from '../../components/common/SideDrawer';
 import { IndexRecalculationModal } from '../../components/modals/IndexRecalculationModal';
 import { QuotaModal } from '../../components/modals/QuotaModal';
@@ -9,7 +9,7 @@ import { useFillWindowHeight } from '../../hooks/useFillWindowHeight';
 import { useNarrowWindow } from '../../hooks/useNarrowWindow';
 import { CallsTab } from './CallsTab';
 import { InvestigationDetail } from './InvestigationDetail';
-import { InvestigationSidebar } from './InvestigationSidebar';
+import { InvestigationNavList } from './InvestigationNavList';
 import { NewInvestigationView, type InvestigationDraft } from './NewInvestigationView';
 import { investigationPath, liveCalls } from './investigationView';
 import { useInvestigationPageData } from './useInvestigationPageData';
@@ -17,32 +17,44 @@ import type { InvestigationRunState } from './useInvestigationRun';
 import { useRecalculationBeforeRun } from './useRecalculationBeforeRun';
 import './investigation.css';
 import { fillHeightStyle } from '../../hooks/useFillWindowHeight';
-import { BackLink } from '../../components/common/BackLink';
+import { PageHeader } from '../../components/common/PageHeader';
+import { ProjectNavPortal } from '../../components/common/shell/projectNavSlot';
 
-const RunningView: React.FC<{ run: InvestigationRunState; onCancel: () => void }> = ({ run, onCancel }) => (
+// The project sidebar folds to icons at this width (shell.css); the investigations then go to a drawer.
+const SIDEBAR_FOLDS_PX = 1199;
+
+const RunningView: React.FC<{ run: InvestigationRunState; modelLabel: string; onCancel: () => void }> = ({
+  run,
+  modelLabel,
+  onCancel,
+}) => (
   <>
-    <div className="inv-detail-head">
-      <div>
-        <h2>
+    <PageHeader
+      title={
+        <>
           Investigação em andamento{' '}
           <span className="inv-chip inv-chip--run">
             Artigo {run.current} de {run.targets.length}
           </span>
-        </h2>
-        <div className="inv-muted">As respostas chegam para revisão quando a investigação terminar.</div>
-      </div>
-      <button type="button" className="btn-secondary inv-small inv-danger" onClick={onCancel}>
-        Cancelar
-      </button>
-    </div>
+        </>
+      }
+      subtitle={`${run.targets.length} artigos · ${run.questions.length} perguntas · ${modelLabel}. As respostas chegam para revisão quando ela terminar.`}
+      actions={
+        <button type="button" className="btn-secondary inv-danger" onClick={onCancel}>
+          Cancelar
+        </button>
+      }
+    />
     <CallsTab cells={liveCalls(run)} questions={run.questions} />
   </>
 );
 
+const NEW_SUBTITLE = 'Perguntas feitas a cada PDF. Cada resposta vem com a página de onde saiu.';
+
 /**
- * The mass investigation as a page of the project (#73), out of the modal it had outgrown: the investigations on
- * one side and, on the other, a new one, the one running or a stored one with its calls, answers and audit. It
- * drops the app's side margins, since the answers grid uses every pixel. Prototype:
+ * The mass investigation as a page of the project (#73), out of the modal it had outgrown: a new one, the one
+ * running or a stored one with its answers, calls and audit. It narrows the side margins, since the answers grid uses every pixel. The list of investigations lives in the project
+ * sidebar (board 159). Prototype:
  * https://claude.ai/artifact/QHAWxKuRzQPB53reaG1qtX
  *
  * @example <Route path="/projects/:id/investigation/:view" element={<InvestigationPage />} />
@@ -52,14 +64,13 @@ export const InvestigationPage: React.FC = () => {
   const projectId = Number(params.id);
   const view = params.view;
   const navigate = useNavigate();
-  const narrow = useNarrowWindow();
+  const folded = useNarrowWindow(SIDEBAR_FOLDS_PX);
   const { setPage, height } = useFillWindowHeight();
   const { run, start, cancel, dismiss, dismissQuota } = useInvestigationRunContext();
   const ownRun = run?.projectId === projectId ? run : null;
   const data = useInvestigationPageData(projectId, ownRun?.savedId ?? null);
   const recalculation = useRecalculationBeforeRun();
   const [draftEdits, setDraft] = useState<InvestigationDraft | null>(null);
-  const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const articlesWithPdf = data.articles.filter((a) => !!a.local_file_path);
   const draft = draftEdits ?? { questions: [''], selectedIds: articlesWithPdf.map((a) => a.id) };
@@ -96,54 +107,35 @@ export const InvestigationPage: React.FC = () => {
   };
   const begin = () => void recalculation.check(draft.selectedIds, runDraft);
   const leaveNew = () => navigate(investigationPath(projectId));
-  const sidebar = (inDrawer: boolean) => (
-    <InvestigationSidebar
+  const navList = (
+    <InvestigationNavList
       projectId={projectId}
       history={data.history}
       run={run}
       pendingById={data.pendingById}
       auditedIds={data.auditedIds}
-      onCollapse={inDrawer ? undefined : () => setCollapsed(true)}
       onPick={() => setDrawerOpen(false)}
     />
   );
 
   return (
     <div ref={setPage} className="inv-page" style={fillHeightStyle(height)} data-testid="investigation-page">
-      <header className="inv-page-head">
-        <div className="inv-shrink">
-          <BackLink to={`/projects/${projectId}`}>Voltar ao projeto</BackLink>
-          <h1>Investigação com IA</h1>
-          <span className="inv-muted">{data.project.name}</span>
-        </div>
-        <div className="inv-actions">
-          <span className="inv-model">
-            Modelo: <strong>{data.modelLabel}</strong> <Link to="/settings">Configurações</Link>
-          </span>
-          <Link to={investigationPath(projectId, 'new')} className="btn-primary">
-            <Plus size={16} aria-hidden="true" /> Nova investigação
-          </Link>
-        </div>
-      </header>
-      <div className="inv-body">
-        {!narrow && !collapsed && sidebar(false)}
-        {(narrow || collapsed) && (
-          <button
-            type="button"
-            className="btn-secondary inv-rail"
-            aria-label="Mostrar a lista de investigações"
-            onClick={() => (narrow ? setDrawerOpen(true) : setCollapsed(false))}
-          >
-            <ChevronsRight size={16} aria-hidden="true" /> Investigações ({data.history.length})
-          </button>
-        )}
-        {narrow && drawerOpen && (
-          <SideDrawer side="left" label="Investigações do projeto" onClose={() => setDrawerOpen(false)}>
-            {sidebar(true)}
-          </SideDrawer>
-        )}
-        <div className="inv-main">
-          {view === 'new' && (
+      {/* The list lives under "Investigação com IA" in the project sidebar (board 159); a drawer on a folded one. */}
+      {!folded && <ProjectNavPortal>{navList}</ProjectNavPortal>}
+      {folded && (
+        <button type="button" className="btn-ghost inv-drawer-button" onClick={() => setDrawerOpen(true)}>
+          <ChevronsRight size={16} aria-hidden="true" /> Investigações ({data.history.length})
+        </button>
+      )}
+      {folded && drawerOpen && (
+        <SideDrawer side="left" label="Investigações do projeto" onClose={() => setDrawerOpen(false)}>
+          {navList}
+        </SideDrawer>
+      )}
+      <div className="inv-main">
+        {view === 'new' && (
+          <>
+            <PageHeader title="Nova investigação" subtitle={NEW_SUBTITLE} />
             <NewInvestigationView
               projectId={projectId}
               articlesWithPdf={articlesWithPdf}
@@ -155,20 +147,20 @@ export const InvestigationPage: React.FC = () => {
               onStart={begin}
               onCancel={leaveNew}
             />
-          )}
-          {view === 'running' && ownRun && <RunningView run={ownRun} onCancel={cancel} />}
-          {opened && (
-            <InvestigationDetail
-              key={opened.id}
-              projectId={projectId}
-              investigation={opened}
-              articles={data.articles}
-              history={data.history}
-              onReExecute={reExecute}
-              onPendingChanged={data.setPending}
-            />
-          )}
-        </div>
+          </>
+        )}
+        {view === 'running' && ownRun && <RunningView run={ownRun} modelLabel={data.modelLabel} onCancel={cancel} />}
+        {opened && (
+          <InvestigationDetail
+            key={opened.id}
+            projectId={projectId}
+            investigation={opened}
+            articles={data.articles}
+            history={data.history}
+            onReExecute={reExecute}
+            onPendingChanged={data.setPending}
+          />
+        )}
       </div>
       <QuotaModal isOpen={!!ownRun?.quotaHit} onClose={dismissQuota} />
       {recalculation.plan && (

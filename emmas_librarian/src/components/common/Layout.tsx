@@ -9,6 +9,7 @@ import { ProjectSidebar } from './shell/ProjectSidebar';
 import { breadcrumbTrail, projectIdOf } from './shell/breadcrumbs';
 import { projectSegmentOf } from './shell/projectNav';
 import { ProjectNavRefreshProvider } from './shell/projectNavRefresh';
+import { ProjectNavSlotProvider } from './shell/projectNavSlot';
 import { useShellProject } from './shell/useShellProject';
 import { useAvailableUpdate, useChangelog } from './shell/useAppUpdates';
 import { CommandPalette } from './shell/palette/CommandPalette';
@@ -48,22 +49,24 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {isReader ? (
         <div className="app-frame__main--bare">{children}</div>
       ) : (
-        <div className="app-frame__body">
-          <ModuleRail onShowChangelog={changelog.show} />
-          {projectId !== undefined && (
-            <ProjectSidebar
-              projectId={projectId}
-              activeSegment={projectSegmentOf(pathname)}
-              project={project}
-              counts={counts}
-              documents={documents}
-              onQuickAccessChanged={refreshProjectNav}
-            />
-          )}
-          <ProjectNavRefreshProvider value={refreshProjectNav}>
-            <main className="app-frame__main fade-in">{children}</main>
-          </ProjectNavRefreshProvider>
-        </div>
+        <ProjectNavSlotProvider>
+          <div className="app-frame__body">
+            <ModuleRail onShowChangelog={changelog.show} />
+            {projectId !== undefined && (
+              <ProjectSidebar
+                projectId={projectId}
+                activeSegment={projectSegmentOf(pathname)}
+                project={project}
+                counts={counts}
+                documents={documents}
+                onQuickAccessChanged={refreshProjectNav}
+              />
+            )}
+            <ProjectNavRefreshProvider value={refreshProjectNav}>
+              <main className="app-frame__main fade-in">{children}</main>
+            </ProjectNavRefreshProvider>
+          </div>
+        </ProjectNavSlotProvider>
       )}
       {palette.isOpen && <CommandPalette currentProjectId={projectId} onClose={palette.close} />}
       <ChangelogModal isOpen={changelog.isOpen} version={changelog.version} onClose={changelog.close} />

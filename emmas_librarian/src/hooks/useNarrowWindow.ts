@@ -4,16 +4,16 @@ import { useEffect, useState } from 'react';
 export const NARROW_WINDOW_PX = 1100;
 
 /**
- * Whether the window is too narrow for side panels beside the content.
+ * Whether the window is at most `maxWidth` wide: by default, too narrow for side panels beside the content.
  *
- * @example const narrow = useNarrowWindow();
+ * @example const narrow = useNarrowWindow(); const folded = useNarrowWindow(1199);
  */
-export function useNarrowWindow(): boolean {
-  const [narrow, setNarrow] = useState(() => window.innerWidth <= NARROW_WINDOW_PX);
+export function useNarrowWindow(maxWidth: number = NARROW_WINDOW_PX): boolean {
+  const [narrow, setNarrow] = useState(() => window.innerWidth <= maxWidth);
   useEffect(() => {
-    const onResize = () => setNarrow(window.innerWidth <= NARROW_WINDOW_PX);
+    const onResize = () => setNarrow(window.innerWidth <= maxWidth);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, []);
+  }, [maxWidth]);
   return narrow;
 }
