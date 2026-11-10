@@ -118,6 +118,8 @@ export const ProjectDetailsPage: React.FC = () => {
           onAttachPdf={actions.attachPdf}
           openAccess={openAccess}
           outsideSearchIds={outsideSearchIds(data.history)}
+          history={data.history}
+          onShowHistory={() => navigate(`/projects/${id}/history`)}
         />
       )}
       {activeTab === 'overview' && (
@@ -155,7 +157,6 @@ export const ProjectDetailsPage: React.FC = () => {
       <ProjectModalsContainer
         projectId={projectId ?? 0}
         project={project}
-        articles={data.articles}
         projectDocuments={data.projectDocuments}
         history={data.history}
         readArticles={filtering.readArticles}
@@ -167,7 +168,6 @@ export const ProjectDetailsPage: React.FC = () => {
         handleRevertSearch={actions.revertSearch}
         showKeyAlert={showKeyAlert}
         setShowKeyAlert={setShowKeyAlert}
-        onShowHistory={() => navigate(`/projects/${id}/history`)}
       />
     </div>
   );

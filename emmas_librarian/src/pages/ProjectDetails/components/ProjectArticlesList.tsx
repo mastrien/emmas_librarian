@@ -86,6 +86,37 @@ const ArticleRow: React.FC<ArticleRowProps> = ({ article, handlers, props, isCur
   );
 };
 
+interface RowHandlerSource {
+  onAttachPdf: (id: number) => void;
+  onUnlinkPdf: (id: number) => void;
+  onStatusChange: (id: number, status: 'new' | 'read' | 'archived') => void;
+  openAccess: { fetchOne: (id: number) => void };
+  modals: {
+    setEditingArticle: (article: Article) => void;
+    setArchivingId: (id: number) => void;
+    setCitationArticle: (article: Article) => void;
+    setCitationSeedArticles: (articles: Article[]) => void;
+  };
+}
+
+/**
+ * The actions of one article, shared by its row and the details panel.
+ *
+ * @example const handlers = rowHandlersFor(tabProps);
+ */
+export function rowHandlersFor(source: RowHandlerSource): ArticleRowHandlers {
+  return {
+    onUpload: source.onAttachPdf,
+    onFindOpenAccess: source.openAccess.fetchOne,
+    onUnlink: source.onUnlinkPdf,
+    onStatusChange: source.onStatusChange,
+    onEdit: source.modals.setEditingArticle,
+    onArchive: source.modals.setArchivingId,
+    onCite: source.modals.setCitationArticle,
+    onExploreCitations: (article) => source.modals.setCitationSeedArticles([article]),
+  };
+}
+
 /**
  * The project's article table (board 153): a checkbox only while selecting, the article (title, byline), year,
  * bases, PDF and a "⋯" with every other action. The row J/K moved to is marked.

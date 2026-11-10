@@ -32,7 +32,13 @@ test('J moves through the rows, X selects one and Enter opens the details', asyn
     // Enter on a focused button stays that button's; away from controls it opens the current row.
     await window.locator('body').click({ position: { x: 5, y: 300 } });
     await window.keyboard.press('Enter');
-    await expect(window.getByRole('dialog', { name: 'Detalhes do artigo' })).toContainText('Artigo um');
+    await expect(window.getByRole('complementary', { name: 'Detalhes do artigo' })).toContainText('Artigo um');
+
+    // Escape closes the details; Space opens them again for the current row.
+    await window.keyboard.press('Escape');
+    await expect(window.getByRole('complementary', { name: 'Detalhes do artigo' })).toBeHidden();
+    await window.keyboard.press(' ');
+    await expect(window.getByRole('complementary', { name: 'Detalhes do artigo' })).toContainText('Artigo um');
   } finally {
     await electronApp.close();
   }

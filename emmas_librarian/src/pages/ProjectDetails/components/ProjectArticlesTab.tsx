@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Article } from '../../../types';
+import type { Article, SearchHistoryItem } from '../../../types';
 import type { ProjectFiltering } from '../hooks/useProjectFiltering';
 import type { ProjectModals } from '../hooks/useProjectModals';
 import { clearedFilters } from '../hooks/articleFilters';
@@ -12,6 +12,8 @@ import { OpenAccessReport } from './articles/OpenAccessReport';
 import { useArticleSelection, type ArticleSelectionState } from './articles/useArticleSelection';
 import { useArticleKeyboard } from './articles/useArticleKeyboard';
 import type { OpenAccessPdfs } from '../hooks/useOpenAccessPdfs';
+import { ArticleInspector } from './inspector/ArticleInspector';
+import { rowHandlersFor } from './ProjectArticlesList';
 
 type ArticleStatus = Article['status'];
 
@@ -25,6 +27,9 @@ interface ProjectArticlesTabProps {
   openAccess: OpenAccessPdfs;
   /** History entries that only brought articles from outside the searches. */
   outsideSearchIds?: Set<number>;
+  /** For the details panel: where each article came from, and the way to that history. */
+  history: SearchHistoryItem[];
+  onShowHistory: () => void;
 }
 
 type WithSelection = ProjectArticlesTabProps & { selection: ArticleSelectionState };
@@ -78,17 +83,49 @@ const ArticlesTable: React.FC<WithSelection & { currentIndex: number }> = ({
   />
 );
 
-// J/K/Enter/X: Enter reads the PDF when there is one, otherwise opens the details; X starts selecting if needed.
+// J/K/Enter/X/Space: Enter reads the PDF when there is one, otherwise opens the details; X starts selecting if
+// needed; Space shows or hides the details; while they show, J/K take them along to the new row.
 function useListKeyboard(props: ProjectArticlesTabProps, selection: ArticleSelectionState): number {
   const navigate = useNavigate();
-  return useArticleKeyboard(props.filtering.paginatedArticles, {
-    onOpen: (a) => (a.local_file_path ? navigate(`/articles/${a.id}`) : props.modals.setSelectedArticleForDetails(a)),
+  const { modals } = props;
+  const shown = modals.selectedArticleForDetails;
+  const current = useArticleKeyboard(props.filtering.paginatedArticles, {
+    onOpen: (a) => (a.local_file_path ? navigate(`/articles/${a.id}`) : modals.setSelectedArticleForDetails(a)),
     onToggleSelection: (a) => {
       selection.start();
       selection.toggle(a.id);
     },
+    onToggleDetails: (a) => modals.setSelectedArticleForDetails(shown?.id === a.id ? null : a),
+    onEscape: () => modals.setSelectedArticleForDetails(null),
   });
+  const currentArticle = props.filtering.paginatedArticles[current];
+  useEffect(() => {
+    if (shown && currentArticle && shown.id !== currentArticle.id) modals.setSelectedArticleForDetails(currentArticle);
+    // Only a move of the current row drags the panel along; opening another article by its title does not.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentArticle?.id]);
+  return current;
 }
+
+const Inspector: React.FC<ProjectArticlesTabProps> = (props) => {
+  const article = props.modals.selectedArticleForDetails;
+  if (!article) return null;
+  // The freshest copy from the list, so a change made from the panel shows at once.
+  const listed = props.filtering.activeArticles.find((a) => a.id === article.id) ?? article;
+  return (
+    <ArticleInspector
+      article={listed}
+      handlers={rowHandlersFor(props)}
+      history={props.history}
+      onClose={() => props.modals.setSelectedArticleForDetails(null)}
+      onShowHistory={() => {
+        props.modals.setSelectedArticleForDetails(null);
+        props.onShowHistory();
+      }}
+      outsideSearch={listed.search_id !== undefined && !!props.outsideSearchIds?.has(listed.search_id)}
+    />
+  );
+};
 
 /**
  * The Artigos section (board 153): search, order, status and filters above the table; the batch bar while
@@ -110,20 +147,23 @@ export const ProjectArticlesTab: React.FC<ProjectArticlesTabProps> = (props) => 
         selecting={selection.selecting}
         onToggleSelecting={selection.selecting ? selection.exit : selection.start}
       />
-      <div className="project-articles-main">
-        {selection.selecting && <SelectionBar {...props} selection={selection} />}
-        <ArticlesTable {...props} selection={selection} currentIndex={currentIndex} />
-        <ArticlesFooter
-          shown={filtering.activeArticles.length}
-          total={total}
-          currentPage={filtering.currentPage}
-          totalPages={filtering.totalPages}
-          pageSize={filtering.itemsPerPage}
-          onPageChange={filtering.setCurrentPage}
-        />
-        {props.openAccess.report && (
-          <OpenAccessReport report={props.openAccess.report} onClose={props.openAccess.closeReport} />
-        )}
+      <div className="articles-workspace">
+        <div className="project-articles-main articles-workspace__list">
+          {selection.selecting && <SelectionBar {...props} selection={selection} />}
+          <ArticlesTable {...props} selection={selection} currentIndex={currentIndex} />
+          <ArticlesFooter
+            shown={filtering.activeArticles.length}
+            total={total}
+            currentPage={filtering.currentPage}
+            totalPages={filtering.totalPages}
+            pageSize={filtering.itemsPerPage}
+            onPageChange={filtering.setCurrentPage}
+          />
+          {props.openAccess.report && (
+            <OpenAccessReport report={props.openAccess.report} onClose={props.openAccess.closeReport} />
+          )}
+        </div>
+        <Inspector {...props} />
       </div>
     </div>
   );

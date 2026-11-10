@@ -29,10 +29,13 @@ async function importFixturePdf(window) {
   await expect(window.locator('table').getByText(IMPORTED_TITLE)).toBeVisible({ timeout: 15000 });
 }
 
-/** From the project page: article details → "Visualizar PDF", then waits for pdf.js to render text. */
+/** From the project page: the title opens the details panel → "Ler PDF", then waits for pdf.js to render text. */
 async function openReader(window, title = IMPORTED_TITLE) {
   await window.locator('table').getByText(title).first().click();
-  await window.getByRole('link', { name: /Visualizar PDF/ }).click();
+  await window
+    .getByRole('complementary', { name: 'Detalhes do artigo' })
+    .getByRole('link', { name: /Ler PDF/ })
+    .click();
   await window.waitForURL(/\/articles\/\d+/);
   await expect(window.locator('.textLayer').getByText(METADATA.journal).first()).toBeVisible({ timeout: 20000 });
 }

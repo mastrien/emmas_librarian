@@ -11,12 +11,12 @@ async function flow2UploadAndRead(window, articleTitle) {
   await window.fill('input[placeholder="Ex: John Doe, Jane Smith"]', 'Emma Watson');
   await window.click('button[type="submit"]');
 
-  await window.click(`text="${articleTitle}"`);
-  const autoresHeader = window.locator('div', { hasText: 'AUTORES' }).first();
-  await expect(autoresHeader).toBeVisible();
+  // The title opens the details panel beside the table (board 153).
+  await window.getByTestId('main-articles-table').getByRole('button', { name: articleTitle }).click();
+  const details = window.getByRole('complementary', { name: 'Detalhes do artigo' });
+  await expect(details.getByText('Emma Watson')).toBeVisible();
 
-  const details = window.getByRole('dialog', { name: 'Detalhes do artigo' });
-  await details.getByRole('button', { name: 'Fechar' }).click();
+  await details.getByRole('button', { name: 'Fechar detalhes' }).click();
   await expect(details).toBeHidden();
 }
 

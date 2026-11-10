@@ -9,7 +9,6 @@ import { EditArticleModal } from '../../../components/modals/EditArticleModal';
 import { ManageQuickAccessModal } from '../../../components/modals/ManageQuickAccessModal';
 import { ProjectCategoriesModal } from '../../../components/modals/ProjectCategoriesModal';
 import { CitationModal } from '../../../components/modals/CitationModal';
-import { ArticleDetailsModal } from '../../../components/modals/ArticleDetailsModal';
 import { MassCitationModal } from '../../../components/modals/MassCitationModal';
 import { AttachPdfModal } from '../../../components/modals/AttachPdfModal';
 import { ImportArticlesModal } from '../../../components/modals/ImportArticlesModal';
@@ -21,7 +20,6 @@ interface ProjectModalsContainerProps {
   projectId: number;
   /** Set when coming back from the reader to an audit (#48). */
   project: Project;
-  articles: Article[];
   projectDocuments: ProjectDocument[];
   history: any[];
   readArticles: Article[];
@@ -33,14 +31,11 @@ interface ProjectModalsContainerProps {
   handleRevertSearch: (searchId: number) => void;
   showKeyAlert: boolean;
   setShowKeyAlert: (val: boolean) => void;
-  /** Shows the search history section (the article details link to the search that brought the article). */
-  onShowHistory: () => void;
 }
 
 export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
   projectId,
   project,
-  articles,
   projectDocuments,
   history,
   readArticles,
@@ -52,7 +47,6 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
   handleRevertSearch,
   showKeyAlert,
   setShowKeyAlert,
-  onShowHistory,
 }) => {
   const projectService = useProjectService();
   const navigate = useNavigate();
@@ -149,25 +143,7 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
           onArticlesUpdated={fetchData}
         />
       )}
-      <ArticleDetailsModal
-        isOpen={!!modals.selectedArticleForDetails}
-        onClose={() => modals.setSelectedArticleForDetails(null)}
-        article={
-          modals.selectedArticleForDetails
-            ? articles.find((a) => a.id === modals.selectedArticleForDetails?.id) || modals.selectedArticleForDetails
-            : null
-        }
-        history={history}
-        onNavigateToSearch={() => {
-          modals.setSelectedArticleForDetails(null);
-          onShowHistory();
-        }}
-        onArticleUpdated={fetchData}
-        onAttachPdf={(art) => {
-          modals.setAttachPdfArticle(art);
-        }}
-      />
-
+      {/* The article details are a panel beside the table now (board 153), not a window: ArticleInspector. */}
       {modals.isImportArticlesModalOpen && projectId && (
         <ImportArticlesModal
           isOpen={modals.isImportArticlesModalOpen}
