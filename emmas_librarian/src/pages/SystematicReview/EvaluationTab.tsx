@@ -9,6 +9,8 @@ import { decisionAt } from '../../utils/screeningView';
 import { CriteriaModal } from './CriteriaModal';
 import { useScreeningEvaluation } from './useScreeningEvaluation';
 import { useScreeningSuggestions } from './useScreeningSuggestions';
+import { EvaluationChecklist } from './EvaluationChecklist';
+import './evaluationChecklist.css';
 import { ExperimentalTag } from '../../components/common/ExperimentalTag';
 import type { ScreeningState } from './useScreening';
 
@@ -196,16 +198,13 @@ export const EvaluationTab: React.FC<{ projectId: number; screening: ScreeningSt
         critérios. Para comparar outro motor, troque o modelo em <Link to="/settings">Configurações</Link> e avalie de
         novo: os resultados ficam lado a lado.
       </p>
-      {eligible.length === 0 && (
-        <p className="review-muted" style={{ margin: 0 }}>
-          Decida alguns artigos com resumo na triagem para poder avaliar.
-        </p>
-      )}
-      {!hasCriteria(criteria) && (
-        <button type="button" className="review-link" onClick={() => setWriting(true)}>
-          Escrever os critérios do projeto
-        </button>
-      )}
+      <EvaluationChecklist
+        projectId={projectId}
+        hasCriteria={hasCriteria(criteria)}
+        decided={eligible.length}
+        engine={engine?.id ?? null}
+        onWriteCriteria={() => setWriting(true)}
+      />
       {eligible.length > 0 && hasCriteria(criteria) && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
           <span>
