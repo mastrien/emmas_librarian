@@ -42,7 +42,7 @@ test('F-15 Cross-project Article Sharing and Search History Traceability', async
 
     // Go back to Projects list
     await navigateTo(window, 'Projetos');
-    await window.waitForSelector('text="Novo Projeto"');
+    await window.waitForSelector('text="Novo projeto"');
 
     // 3. Create Destination Project (Project B)
     const destProjectName = 'Destination Project ' + Date.now();
@@ -139,7 +139,7 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
 
     // 3. Create Project B and reuse the same PDF
     await navigateTo(window, 'Projetos');
-    await window.waitForSelector('text="Novo Projeto"');
+    await window.waitForSelector('text="Novo projeto"');
     const projBName = 'PDF Library Proj B ' + Date.now();
     await createProject(window, projBName);
 

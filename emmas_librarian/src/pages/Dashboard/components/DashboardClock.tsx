@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import '../dashboard.css';
+
+/**
+ * The date and the time as the eyebrow of the home header (board 151), ticking each second:
+ * "Domingo, 8 de novembro · 22:14".
+ *
+ * @example <DashboardClock />
+ */
+export function dateLine(now: Date): string {
+  const weekday = now.toLocaleDateString('pt-BR', { weekday: 'long' });
+  const dayAndMonth = now.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' });
+  const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return `${weekday[0].toUpperCase()}${weekday.slice(1)}, ${dayAndMonth} · ${time}`;
+}
 
 export const DashboardClock: React.FC = () => {
   const [now, setNow] = useState(new Date());
@@ -9,17 +21,5 @@ export const DashboardClock: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const currentTimeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const day = now.getDate();
-  const monthShort = now.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
-  const year = now.getFullYear();
-  const weekday = now.toLocaleDateString('pt-BR', { weekday: 'long' });
-  const currentDateStr = `${weekday}, ${day} ${monthShort} ${year}`;
-
-  return (
-    <div data-testid="dashboard-clock" className="dashboard-clock">
-      <div className="dashboard-clock-time">{currentTimeStr}</div>
-      <div className="dashboard-clock-date">{currentDateStr}</div>
-    </div>
-  );
+  return <span data-testid="dashboard-clock">{dateLine(now)}</span>;
 };

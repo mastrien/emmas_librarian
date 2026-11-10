@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import { DashboardClock } from '../DashboardClock';
+import { DashboardClock, dateLine } from '../DashboardClock';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -16,8 +16,7 @@ describe('DashboardClock', () => {
   it('shows the current time and date in pt-BR', () => {
     render(<DashboardClock />);
 
-    expect(screen.getByText('10:00')).toBeInTheDocument();
-    expect(screen.getByText(/24 set 2026/)).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-clock')).toHaveTextContent('Quinta-feira, 24 de setembro · 10:00');
   });
 
   it('ticks forward as time passes', () => {
@@ -27,7 +26,7 @@ describe('DashboardClock', () => {
       vi.advanceTimersByTime(60_000);
     });
 
-    expect(screen.getByText('10:01')).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-clock')).toHaveTextContent('· 10:01');
   });
 
   it('stops ticking after unmount', () => {
@@ -36,5 +35,11 @@ describe('DashboardClock', () => {
     unmount();
 
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('dateLine', () => {
+  it('capitalises the weekday and writes the month in full (board 151)', () => {
+    expect(dateLine(new Date(2026, 10, 8, 22, 14))).toBe('Domingo, 8 de novembro · 22:14');
   });
 });

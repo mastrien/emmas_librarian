@@ -100,7 +100,7 @@ async function getFirstWindow(electronApp) {
 
 async function createProject(window, projectName) {
   await dismissChangelog(window);
-  const newProjBtn = window.locator('a, button').filter({ hasText: 'Novo Projeto' }).first();
+  const newProjBtn = window.locator('a, button').filter({ hasText: 'Novo projeto' }).first();
   await newProjBtn.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
   const isNewProjBtnVisible = await newProjBtn.isVisible().catch(() => false);
   if (!isNewProjBtnVisible) {

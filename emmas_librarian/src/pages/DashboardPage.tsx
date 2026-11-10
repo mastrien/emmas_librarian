@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProjectService } from '../contexts/ServicesContext';
 import { MonitorNotices } from './Dashboard/components/MonitorNotices';
-import { Project, ScientificVenue, MilestoneStatus } from '../types';
+import { Project, ScientificVenue, MilestoneStatus, type Article, type DiaryEntry } from '../types';
 import { MessageSquare, Plus, Download } from 'lucide-react';
 import { DashboardCalendar } from '../components/common/DashboardCalendar';
 import { DeadlineBanner } from '../components/common/deadlines/DeadlineBanner';
 import { VenueFormModal } from '../components/modals/VenueFormModal';
 
+import { PageHeader } from '../components/common/PageHeader';
 import { DashboardClock } from './Dashboard/components/DashboardClock';
+import { homeTotals } from './Dashboard/homeNumbers';
 import { DashboardDragDropOverlay } from './Dashboard/components/DashboardDragDropOverlay';
 import { DashboardProjectsList } from './Dashboard/components/DashboardProjectsList';
 import { DashboardGlobalStats } from './Dashboard/components/DashboardGlobalStats';
@@ -18,6 +20,26 @@ import { useDialogs } from '../components/common/dialogs/DialogProvider';
 
 // What went wrong, as the import error message always showed it: the error's text, or the value itself.
 const errorText = (err: unknown): string => (err instanceof Error && err.message ? err.message : String(err));
+
+/**
+ * One project's article counts for its card, and the days of its diary.
+ *
+ * @example projectStats(articles, diaryEntries).read // 7
+ */
+export function projectStats(
+  articles: Article[],
+  diary: Pick<DiaryEntry, 'entry_date'>[],
+): NonNullable<Project['stats']> {
+  const count = (status: Article['status']) => articles.filter((a) => a.status === status).length;
+  return {
+    total: articles.length,
+    read: count('read'),
+    active: count('new'),
+    archived: count('archived'),
+    withPdf: articles.filter((a) => !!a.local_file_path).length,
+    diaryDates: diary.map((d) => d.entry_date),
+  };
+}
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -37,24 +59,16 @@ export const DashboardPage: React.FC = () => {
       const data = await projectService.getProjects();
 
       const projectsWithStats = await Promise.all(
-        data.map(async (project) => {
-          const articles = await projectService.getArticles(project.id);
-          const diaryEntries = await projectService.getDiaryEntries(project.id);
-          return {
-            ...project,
-            stats: {
-              total: articles.length,
-              read: articles.filter((a) => a.status === 'read').length,
-              active: articles.filter((a) => a.status === 'new').length,
-              archived: articles.filter((a) => a.status === 'archived').length,
-              withPdf: articles.filter((a) => !!a.local_file_path).length,
-              diaryDates: (diaryEntries as any[]).map((d: any) => d.entry_date),
-            },
-          };
-        }),
+        data.map(async (project) => ({
+          ...project,
+          stats: projectStats(
+            await projectService.getArticles(project.id),
+            (await projectService.getDiaryEntries(project.id)) as DiaryEntry[],
+          ),
+        })),
       );
 
-      setProjects(projectsWithStats as any);
+      setProjects(projectsWithStats);
 
       // Load Agenda Venues
       const venuesData = await projectService.getScientificVenues();
@@ -96,46 +110,7 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  const globalStats = projects.reduce(
-    (acc, p: any) => {
-      if (p.stats) {
-        acc.active += p.stats.active;
-        acc.read += p.stats.read;
-        acc.archived += p.stats.archived;
-        acc.total += p.stats.total;
-        acc.withPdf += p.stats.withPdf;
-        if (p.stats.diaryDates) {
-          p.stats.diaryDates.forEach((d: string) => acc.diarySet.add(d));
-        }
-      }
-      return acc;
-    },
-    { active: 0, read: 0, archived: 0, total: 0, withPdf: 0, diarySet: new Set<string>() },
-  );
-
-  const chartData = {
-    labels: ['Com PDF Vinculado', 'Sem PDF'],
-    datasets: [
-      {
-        data: [globalStats.withPdf, globalStats.total - globalStats.withPdf],
-        backgroundColor: ['#10b981', '#6b7280'],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  const statusChartData = {
-    labels: ['Ativos', 'Lidos', 'Arquivados'],
-    datasets: [
-      {
-        data: [globalStats.active, globalStats.read, globalStats.archived],
-        backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  const hasData = globalStats.total > 0;
+  const totals = homeTotals(projects);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -177,83 +152,75 @@ export const DashboardPage: React.FC = () => {
     <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className="dashboard">
       {isDragging && <DashboardDragDropOverlay />}
 
-      {/* Seção da Agenda no Topo */}
-      <div className="fade-in dashboard-agenda">
-        <div className="dashboard-agenda-top">
-          <DashboardClock />
-          <div>
+      <PageHeader
+        eyebrow={<DashboardClock />}
+        title="Início"
+        actions={
+          <>
+            <Link to="/ask" className="btn-secondary">
+              <MessageSquare size={18} aria-hidden="true" /> Perguntar aos projetos
+            </Link>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const newId = await projectService.importProject();
+                  if (newId) window.location.href = `#/projects/${newId}`;
+                } catch (err) {
+                  await inform({ title: 'Erro ao importar', message: `Erro ao importar projeto: ${errorText(err)}` });
+                }
+              }}
+              className="btn-secondary"
+              title="Importar projeto (.emmapcarc)"
+            >
+              <Download size={18} aria-hidden="true" /> Importar
+            </button>
+            <Link to="/new-project" className="btn-primary">
+              <Plus size={18} aria-hidden="true" /> Novo projeto
+            </Link>
+          </>
+        }
+      />
+
+      <div className="home-columns">
+        <div className="home-main">
+          <MonitorNotices />
+          {loading ? (
+            <div data-testid="dashboard-loading-skeleton" className="fade-in dashboard-skeleton">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="dashboard-skeleton-card" />
+              ))}
+            </div>
+          ) : (
+            <>
+              <DashboardProjectsList projects={projects} />
+              {projects.length > 0 && totals.total > 0 && <DashboardGlobalStats totals={totals} />}
+            </>
+          )}
+        </div>
+
+        <aside className="home-side" aria-label="Agenda">
+          <section className="card home-side__card" aria-label="Próximos prazos">
+            <DeadlineBanner
+              venues={venues}
+              onToggleMilestoneStatus={handleToggleMilestoneStatus}
+              onOpenAgenda={() => navigate('/agenda')}
+            />
+          </section>
+          <section className="card home-side__card" aria-label="Calendário">
             <DashboardCalendar
-              diarySet={globalStats.diarySet}
+              diarySet={totals.diaryDays}
               venues={venues}
               onAddVenue={handleOpenAddVenueModal}
               onOpenAgenda={() => navigate('/agenda')}
               onSelectDate={(dStr) => handleOpenAddVenueModal(dStr)}
             />
-          </div>
-        </div>
-
-        <div>
-          <DeadlineBanner
-            venues={venues}
-            onToggleMilestoneStatus={handleToggleMilestoneStatus}
-            onOpenAgenda={() => navigate('/agenda')}
-          />
-        </div>
-      </div>
-
-      <MonitorNotices />
-
-      {/* Cabeçalho dos Projetos */}
-      <div className="dashboard-projects-head">
-        <div>
-          <h1>Seus Projetos</h1>
-          <p>Gerencie e acompanhe suas revisões sistemáticas da literatura.</p>
-        </div>
-
-        <div className="dashboard-actions">
-          <Link to="/ask" className="btn-secondary">
-            <MessageSquare size={20} /> Perguntar aos projetos
-          </Link>
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                const newId = await projectService.importProject();
-                if (newId) window.location.href = `#/projects/${newId}`;
-              } catch (err) {
-                await inform({ title: 'Erro ao importar', message: `Erro ao importar projeto: ${errorText(err)}` });
-              }
-            }}
-            className="btn-secondary"
-            title="Importar projeto (.emmapcarc)"
-          >
-            <Download size={20} /> Importar
-          </button>
-          <Link to="/new-project" className="btn-primary">
-            <Plus size={20} /> Novo Projeto
-          </Link>
-        </div>
-      </div>
-
-      {loading ? (
-        <div data-testid="dashboard-loading-skeleton" className="fade-in dashboard-skeleton">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="dashboard-skeleton-card" />
-          ))}
-        </div>
-      ) : (
-        <>
-          <DashboardProjectsList projects={projects} />
-
-          <div className="dashboard-terms">
+          </section>
+          <p className="home-terms">
             <Link to="/terms">Ao usar o sistema, você concorda com os Termos de Uso</Link>
-          </div>
-
-          {!loading && projects.length > 0 && hasData && (
-            <DashboardGlobalStats statusChartData={statusChartData} chartData={chartData} />
-          )}
-        </>
-      )}
+          </p>
+        </aside>
+      </div>
 
       {/* Modal Form */}
       <VenueFormModal

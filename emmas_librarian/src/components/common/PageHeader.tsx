@@ -3,7 +3,7 @@ import './pageHeader.css';
 
 interface PageHeaderProps {
   /** Small upper-case label above the title ("Projeto" on the project overview). */
-  eyebrow?: string;
+  eyebrow?: ReactNode;
   title: ReactNode;
   /** One muted line under the title: counts and dates, in tabular numbers. */
   subtitle?: ReactNode;
