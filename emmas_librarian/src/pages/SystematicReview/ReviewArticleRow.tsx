@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import type { ReviewRow } from '../../utils/screeningView';
 import { readerStateBackTo } from '../../utils/readerReturn';
-import { articleMeta, wasRead } from './reviewText';
+import { reviewByline, wasRead } from './reviewText';
 
 interface ReviewArticleRowProps {
   row: ReviewRow;
@@ -35,7 +35,9 @@ export const ReviewArticleRow: React.FC<ReviewArticleRowProps> = ({ row, actions
       )}
       <div className="review-row-text">
         <span className="review-row-title">{row.article.title}</span>
-        <span className="review-row-meta">{articleMeta(row.article)}</span>
+        <span className="review-row-meta" title={row.article.authors ?? undefined}>
+          {reviewByline(row.article)}
+        </span>
         {reason && <span className="review-row-reason">{reason}</span>}
         {wasRead(row) && (
           <span className="review-chip review-chip--read" style={{ alignSelf: 'flex-start' }}>

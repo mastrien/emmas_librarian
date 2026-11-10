@@ -8,6 +8,14 @@ async function addManualArticle(window, title) {
   await window.click('button[type="submit"]');
 }
 
+// The list shows one status at a time since board 164.
+async function showStatus(window, name) {
+  await window
+    .getByRole('group', { name: 'Status da triagem' })
+    .getByRole('button', { name: new RegExp(`^${name}`) })
+    .click();
+}
+
 async function pickLabel(window, title, label) {
   const row = window.getByTestId('review-row').filter({ hasText: title });
   await row.getByRole('button', { name: /Rótulo/ }).click();
@@ -31,6 +39,7 @@ test('screens articles on the review page and the guided screening, archiving ex
     await pickLabel(window, 'Artigo alfa', 'Excluído');
     await expect(window.getByRole('status').filter({ hasText: 'arquivado no projeto' })).toBeVisible();
     await pickLabel(window, 'Artigo beta', 'Incluso');
+    await showStatus(window, 'Incluídos');
     await expect(window.getByRole('region', { name: 'Incluso (1)' })).toContainText('Artigo beta');
 
     // The guided screening opens on the one article still undecided; "2" puts it in doubt and ends the stage.
@@ -64,6 +73,7 @@ test('screens articles on the review page and the guided screening, archiving ex
     await archivedRow.getByRole('button', { name: 'Mais ações' }).click();
     await window.getByRole('menuitem', { name: 'Restaurar Artigo' }).click();
     await window.getByRole('link', { name: /Revisão sistemática/ }).click();
+    await showStatus(window, 'Sem decisão');
     await expect(window.getByTestId('review-row').filter({ hasText: 'Artigo alfa' })).toContainText('Rótulo');
     await expect(window.getByRole('status', { name: 'Contagem da triagem' })).toContainText('0 excluídos');
   } finally {

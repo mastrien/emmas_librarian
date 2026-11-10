@@ -7,13 +7,17 @@ import { MassCitationModal } from '../../components/modals/MassCitationModal';
 import { useScreening, type ScreeningState } from './useScreening';
 import { ExcludedSection, LabelSection, type RowActions } from './ReviewSections';
 import { PendingList } from './PendingList';
-import { ReviewCountsBar, UndoToast } from './ReviewBits';
+import { UndoToast } from './ReviewBits';
+import { ScreeningStatusFilter } from './ScreeningStatusFilter';
+import { defaultFilter, filterCount, type ScreeningFilter } from './screeningFilter';
+import { useSessionState } from '../../hooks/useSessionState';
 import { ManageLabelsModal } from './ManageLabelsModal';
 import { PrismaTab } from './prisma/PrismaTab';
 import { CriteriaModal } from './CriteriaModal';
 import { EvaluationTab } from './EvaluationTab';
 import { SimulationSection } from './SimulationSection';
 import './review.css';
+import './screeningList.css';
 import { PageHeader } from '../../components/common/PageHeader';
 import { ProjectNavPortal } from '../../components/common/shell/projectNavSlot';
 import { ReviewNavList, type ReviewTab } from './ReviewNavList';
@@ -97,33 +101,19 @@ const ReviewHeader: React.FC<ReviewHeaderProps> = ({ projectId, tab, counts, onM
   );
 };
 
-const ReviewBody: React.FC<{ screening: ScreeningState; onCite: (articles: Article[]) => void }> = ({
-  screening,
-  onCite,
-}) => {
+interface FilteredListProps {
+  screening: ScreeningState;
+  filter: ScreeningFilter;
+  onCite: (articles: Article[]) => void;
+}
+
+/** The list of the chosen status: the undecided articles, or the label sections of that kind. */
+const FilteredList: React.FC<FilteredListProps> = ({ screening, filter, onCite }) => {
   const sections = useOpenSections();
   const actions = rowActions(screening);
   const { view } = screening;
-  return (
-    <>
-      <ReviewCountsBar counts={view.counts} />
-      {view.sections.map((group) => (
-        <LabelSection
-          key={group.label.id}
-          group={group}
-          open={sections.isOpen(`label-${group.label.id}`)}
-          onToggle={() => sections.toggle(`label-${group.label.id}`)}
-          actions={actions}
-          onCite={group.label.kind === 'include' ? () => onCite(group.rows.map((r) => r.article)) : undefined}
-        />
-      ))}
-      <ExcludedSection
-        groups={view.excluded}
-        unlabeled={view.unlabeled}
-        open={sections.isOpen('excluded')}
-        onToggle={() => sections.toggle('excluded')}
-        actions={actions}
-      />
+  if (filter === 'pending') {
+    return (
       <PendingList
         rows={view.pending}
         labels={screening.labels}
@@ -135,7 +125,61 @@ const ReviewBody: React.FC<{ screening: ScreeningState; onCite: (articles: Artic
           )
         }
       />
+    );
+  }
+  if (filter === 'exclude' || filter === 'removed') {
+    const removed = filter === 'removed';
+    return (
+      <ExcludedSection
+        groups={view.excluded.filter((g) => g.label.kind === filter)}
+        unlabeled={removed ? [] : view.unlabeled}
+        open={sections.isOpen(filter)}
+        onToggle={() => sections.toggle(filter)}
+        actions={actions}
+        title={removed ? 'Removidos antes da triagem' : 'Excluídos'}
+        word={removed ? 'o PRISMA conta à parte' : 'arquivados no projeto'}
+      />
+    );
+  }
+  return (
+    <>
+      {view.sections
+        .filter((group) => group.label.kind === filter)
+        .map((group) => (
+          <LabelSection
+            key={group.label.id}
+            group={group}
+            open={sections.isOpen(`label-${group.label.id}`)}
+            onToggle={() => sections.toggle(`label-${group.label.id}`)}
+            actions={actions}
+            onCite={group.label.kind === 'include' ? () => onCite(group.rows.map((r) => r.article)) : undefined}
+          />
+        ))}
     </>
+  );
+};
+
+/**
+ * The screening (board 164): the statuses with their counts as one control, the chosen one's list under it, and
+ * the note that an exclusion archives the article in the project.
+ */
+const ReviewBody: React.FC<{ projectId: number; screening: ScreeningState; onCite: (articles: Article[]) => void }> = ({
+  projectId,
+  screening,
+  onCite,
+}) => {
+  const { counts } = screening.view;
+  const [stored, setFilter] = useSessionState<ScreeningFilter | null>(`review.${projectId}.filter`, null);
+  const filter = stored ?? defaultFilter(counts);
+  return (
+    <div className="review-screening">
+      <ScreeningStatusFilter counts={counts} value={filter} onChange={setFilter} />
+      <FilteredList screening={screening} filter={filter} onCite={onCite} />
+      {filterCount(counts, filter) === 0 && filter !== 'pending' && (
+        <div className="review-empty">Nenhum artigo com este status.</div>
+      )}
+      <p className="review-footnote">Excluir aqui também arquiva o artigo no projeto, com o rótulo como motivo.</p>
+    </div>
   );
 };
 
@@ -178,7 +222,7 @@ export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'scr
           <SimulationSection projectId={projectId} />
         </>
       )}
-      {tab === 'screening' && <ReviewBody screening={screening} onCite={setCiting} />}
+      {tab === 'screening' && <ReviewBody projectId={projectId} screening={screening} onCite={setCiting} />}
       {screening.lastChange && <UndoToast change={screening.lastChange} />}
       <ManageLabelsModal
         isOpen={managing}

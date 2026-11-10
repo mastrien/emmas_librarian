@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Check, CircleHelp, X } from 'lucide-react';
+import { QUICK_KINDS, quickLabel, type QuickKind } from './screeningFilter';
 import type { ScreeningLabel } from '../../types';
 import type { ReviewRow } from '../../utils/screeningView';
 import { KINDS_BY_STAGE } from '../../utils/screeningPresets';
@@ -75,6 +77,41 @@ const BatchBar: React.FC<{ selection: Selection; labels: ScreeningLabel[]; onPic
   );
 };
 
+const QUICK_ICONS: Record<QuickKind, React.ReactNode> = {
+  include: <Check size={14} className="review-icon--include" aria-hidden="true" />,
+  maybe: <CircleHelp size={14} className="review-icon--maybe" aria-hidden="true" />,
+  exclude: <X size={14} className="review-icon--exclude" aria-hidden="true" />,
+};
+
+/**
+ * Board 164: Incluir, Dúvida and Excluir on a pending row, each with the first label of its kind; they show on hover
+ * or keyboard focus, and the label menu beside them keeps every other label.
+ */
+const QuickDecision: React.FC<{ row: ReviewRow; labels: ScreeningLabel[]; onPick: PendingListProps['onPick'] }> = ({
+  row,
+  labels,
+  onPick,
+}) => (
+  <span className="review-quick">
+    {QUICK_KINDS.map(({ kind, label }) => {
+      const target = quickLabel(labels, kind);
+      if (!target) return null;
+      return (
+        <button
+          key={kind}
+          type="button"
+          className="review-small"
+          title={`${label}: rótulo "${target.name}"`}
+          aria-label={`${label} ${row.article.title}`}
+          onClick={() => onPick([row], target)}
+        >
+          {QUICK_ICONS[kind]} {label}
+        </button>
+      );
+    })}
+  </span>
+);
+
 /**
  * "Sem decisão": the articles still to screen, one "Rótulo ▾" each, and a selection mode that applies one label to
  * many at once.
@@ -88,7 +125,6 @@ export const PendingList: React.FC<PendingListProps> = ({ rows, labels, onPick }
   const read = rows.filter((r) => r.article.status === 'read').length;
   return (
     <>
-      <h2 style={{ margin: '0.5rem 0 0', fontSize: '1.15rem' }}>Sem decisão</h2>
       {selection.selecting ? (
         <BatchBar selection={selection} labels={labels} onPick={onPick} />
       ) : (
@@ -97,7 +133,7 @@ export const PendingList: React.FC<PendingListProps> = ({ rows, labels, onPick }
             {rows.length} {rows.length === 1 ? 'artigo' : 'artigos'} sem decisão ({read} já lidos no projeto)
           </span>
           <button type="button" className="review-small" onClick={selection.start} disabled={rows.length === 0}>
-            Selecionar
+            Selecionar vários
           </button>
         </div>
       )}
@@ -112,13 +148,16 @@ export const PendingList: React.FC<PendingListProps> = ({ rows, labels, onPick }
                 : undefined
             }
             actions={
-              <LabelMenu
-                labels={labels}
-                kinds={KINDS_BY_STAGE.title}
-                currentLabelId={null}
-                buttonText="Rótulo ▾"
-                onPick={(label) => onPick([row], label)}
-              />
+              <>
+                {!selection.selecting && <QuickDecision row={row} labels={labels} onPick={onPick} />}
+                <LabelMenu
+                  labels={labels}
+                  kinds={KINDS_BY_STAGE.title}
+                  currentLabelId={null}
+                  buttonText="Rótulo ▾"
+                  onPick={(label) => onPick([row], label)}
+                />
+              </>
             }
           />
         ))}

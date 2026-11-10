@@ -1,9 +1,7 @@
 import React from 'react';
 import type { Article } from '../../../../types';
-import { splitAuthorNames } from '../../../../utils/authors';
+import { shortAuthorList } from '../../../../utils/authors';
 import { openAccessMessage, type OpenAccessRowState } from './openAccessText';
-
-const VISIBLE_AUTHORS = 3;
 
 /**
  * "Hersbach H.; Bell B.; Berrisford P.; +38 · Quarterly Journal…": the first authors and the venue on one line
@@ -12,11 +10,7 @@ const VISIBLE_AUTHORS = 3;
  * @example articleByline({ authors: 'Silva, A.; Costa, B.', journal: 'Nature' } as Article) // 'Silva, A.; Costa, B. · Nature'
  */
 export function articleByline(article: Pick<Article, 'authors' | 'journal'>): string {
-  const names = splitAuthorNames(article.authors);
-  const hidden = names.length - VISIBLE_AUTHORS;
-  const authors = names.length
-    ? [...names.slice(0, VISIBLE_AUTHORS), ...(hidden > 0 ? [`+${hidden}`] : [])].join('; ')
-    : 'Autores desconhecidos';
+  const authors = shortAuthorList(article.authors);
   return article.journal ? `${authors} · ${article.journal}` : authors;
 }
 

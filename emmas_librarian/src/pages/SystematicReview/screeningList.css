@@ -1,0 +1,85 @@
+/* The screening list (board 164): the statuses as one control, a footnote under the list. */
+.review-screening {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.review-status-filter {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-sunken);
+}
+.review-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.review-status:hover {
+  color: var(--text-heading);
+}
+.review-status.is-on {
+  background: var(--bg-surface);
+  color: var(--text-heading);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.review-status:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+.review-status__count {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.review-icon--include {
+  color: var(--color-success-text);
+}
+.review-icon--maybe {
+  color: var(--color-warning-text);
+}
+.review-icon--exclude {
+  color: var(--color-danger-text);
+}
+.review-icon--removed {
+  color: var(--text-muted);
+}
+.review-footnote {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+/* The quick decisions show on hover or keyboard focus, so the list reads calm (board 164). */
+.review-quick {
+  display: inline-flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--duration-hover, 120ms) var(--ease-out, ease-out);
+}
+.review-row:hover .review-quick,
+.review-row:focus-within .review-quick {
+  opacity: 1;
+}
+@media (hover: none) {
+  .review-quick {
+    opacity: 1;
+  }
+}
+.review-quick .review-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

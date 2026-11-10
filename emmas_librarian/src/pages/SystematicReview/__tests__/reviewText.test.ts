@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { articleMeta, articlesCount, databasesOf, wasRead } from '../reviewText';
+import { articleMeta, articlesCount, databasesOf, wasRead, reviewByline } from '../reviewText';
 import type { Article, ScreeningDecision } from '../../../types';
 
 const article = (extra: Partial<Article>): Article =>
@@ -29,5 +29,19 @@ describe('reviewText (#49)', () => {
 
   it('counts articles in Portuguese', () => {
     expect([articlesCount(1), articlesCount(3)]).toEqual(['1 artigo', '3 artigos']);
+  });
+});
+
+describe('reviewByline', () => {
+  it('shows the first authors, the year and the journal on one line (board 164)', () => {
+    const article = { authors: 'Shi, X.; Li, Y.; Wu, Z.; Ma, Q.', year: 2015, journal: 'NeurIPS' } as Article;
+
+    expect(reviewByline(article)).toBe('Shi, X.; Li, Y.; Wu, Z.; +1 · 2015 · NeurIPS');
+  });
+
+  it('marks a missing year', () => {
+    expect(reviewByline({ authors: 'Shi, X.', year: null, journal: null } as unknown as Article)).toBe(
+      'Shi, X. · s/ ano',
+    );
   });
 });

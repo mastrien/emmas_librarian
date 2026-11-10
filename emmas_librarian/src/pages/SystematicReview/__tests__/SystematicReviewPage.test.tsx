@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect } from 'vitest';
 import { SystematicReviewPage } from '../SystematicReviewPage';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import type { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
@@ -28,6 +28,12 @@ function renderReview(service: FakeProjectService) {
 }
 
 const section = (name: RegExp) => screen.getByRole('region', { name });
+
+// Board 164: the list shows one status at a time, chosen in the "Status da triagem" control.
+async function showStatus(name: string) {
+  const statuses = await screen.findByRole('group', { name: 'Status da triagem' });
+  fireEvent.click(within(statuses).getByRole('button', { name: new RegExp(`^${name}`) }));
+}
 const pendingRow = (title: string) => screen.getByText(title).closest('[data-testid="review-row"]') as HTMLElement;
 
 async function pickLabel(row: HTMLElement, button: RegExp, label: string) {
@@ -36,6 +42,9 @@ async function pickLabel(row: HTMLElement, button: RegExp, label: string) {
 }
 
 describe('SystematicReviewPage (#49)', () => {
+  // The chosen status is kept for the session; each test starts on the default one.
+  beforeEach(() => sessionStorage.clear());
+
   it('groups articles by label, counts them, and lists the undecided ones', async () => {
     const service = screeningService(
       [reviewArticle(1, 'GPM'), reviewArticle(2, 'MetNet'), reviewArticle(3, 'ConvLSTM', { status: 'read' })],
@@ -44,10 +53,13 @@ describe('SystematicReviewPage (#49)', () => {
     renderReview(service);
 
     expect(await screen.findByRole('heading', { name: 'Triagem' })).toBeInTheDocument();
-    expect(within(section(/^Incluso \(1\)/)).getByText('GPM')).toBeInTheDocument();
-    expect(within(section(/^Em dúvida \(1\)/)).getByText('MetNet')).toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Contagem da triagem' })).toHaveTextContent('1 incluídos');
     expect(within(pendingRow('ConvLSTM')).getByText('lido')).toBeInTheDocument();
+    expect(screen.queryByText('GPM')).not.toBeInTheDocument();
+    await showStatus('Incluídos');
+    expect(within(section(/^Incluso \(1\)/)).getByText('GPM')).toBeInTheDocument();
+    await showStatus('Em dúvida');
+    expect(within(section(/^Em dúvida \(1\)/)).getByText('MetNet')).toBeInTheDocument();
   });
 
   it('decides an undecided article from its menu, and undoes it from the toast', async () => {
@@ -72,7 +84,7 @@ describe('SystematicReviewPage (#49)', () => {
     ]);
     renderReview(service);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Selecionar' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Selecionar vários' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Selecionar ConvLSTM' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Selecionar GPM' }));
     const bar = screen.getByRole('region', { name: 'Ações para os artigos selecionados' });
@@ -86,6 +98,7 @@ describe('SystematicReviewPage (#49)', () => {
     const archived = reviewArticle(6, 'Attention', { status: 'archived', archive_note: 'Excluído · só texto' });
     const service = screeningService([archived], [storedDecision(6, EXCLUDED, 'full', 'só texto')]);
     renderReview(service);
+    await showStatus('Excluídos');
 
     const excluded = await screen.findByRole('region', { name: /^Excluídos \(1\)/ });
     expect(within(excluded).getByText('Motivo: Excluído · só texto')).toBeInTheDocument();
@@ -97,6 +110,7 @@ describe('SystematicReviewPage (#49)', () => {
   it('keeps articles archived by hand apart until they get a label', async () => {
     const service = screeningService([reviewArticle(7, 'Review', { status: 'archived', archive_note: 'revisão' })]);
     renderReview(service);
+    await showStatus('Excluídos');
 
     const excluded = await screen.findByRole('region', { name: /^Excluídos \(1\)/ });
     expect(within(excluded).getByText('Arquivado no projeto (sem rótulo)')).toBeInTheDocument();
@@ -112,6 +126,7 @@ describe('SystematicReviewPage (#49)', () => {
       [storedDecision(1, INCLUDED, 'title'), storedDecision(1, MAYBE, 'full', 'ver métodos')],
     );
     renderReview(service);
+    await showStatus('Em dúvida');
 
     await pickLabel(await screen.findByRole('region', { name: /^Em dúvida \(1\)/ }), /Rótulo/, 'Incluso');
 
@@ -144,13 +159,33 @@ describe('SystematicReviewPage (#49)', () => {
       screeningService([reviewArticle(1, 'GPM'), reviewArticle(2, 'MetNet')], [storedDecision(1, INCLUDED)]),
     );
 
+    await showStatus('Incluídos');
     const included = await screen.findByRole('region', { name: /^Incluso \(1\)/ });
     fireEvent.click(within(included).getByRole('button', { name: /^Incluso \(1\)/ }));
     expect(within(included).queryByText('GPM')).toBeNull();
+    await showStatus('Sem decisão');
     fireEvent.click(within(pendingRow('MetNet')).getByRole('button', { name: /Rótulo/ }));
     expect(screen.getByRole('menu', { name: 'Rótulos' })).toBeInTheDocument();
     fireEvent.keyDown(document, { key: 'Escape' });
 
     expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('decides a pending article in one click with the first label of the kind', async () => {
+    const service = screeningService([reviewArticle(3, 'ConvLSTM')]);
+    renderReview(service);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Dúvida ConvLSTM' }));
+
+    await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([3], MAYBE, 'title', null));
+  });
+
+  it('opens on the included ones once nothing waits for a decision, and says when a status is empty', async () => {
+    renderReview(screeningService([reviewArticle(1, 'GPM')], [storedDecision(1, INCLUDED)]));
+
+    expect(await screen.findByRole('button', { name: /^Incluídos/ })).toHaveAttribute('aria-pressed', 'true');
+    await showStatus('Removidos antes');
+
+    expect(screen.getByText('Nenhum artigo com este status.')).toBeInTheDocument();
   });
 });
