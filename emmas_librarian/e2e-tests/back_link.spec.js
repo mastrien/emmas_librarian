@@ -21,13 +21,12 @@ test('every back link looks the same, with no border and no fill', async () => {
 
   try {
     await createProject(window, 'Voltar ' + Date.now());
-    // The project page lost its "Voltar aos projetos" to the title bar path, and the search page its back link to the
-    // sidebar (redesign, board 158); the inner screens keep theirs.
-    await window.getByRole('link', { name: 'Revisão sistemática' }).click();
-    const reference = await look(window.getByRole('link', { name: 'Voltar ao projeto' }));
+    // The project screens lost their back links to the title bar path and the sidebar (redesign, boards 153-164);
+    // the module screens keep theirs: "Perguntar aos projetos" and the PDF library.
+    await window.getByRole('link', { name: 'Perguntar aos projetos' }).click();
+    const reference = await look(window.getByRole('link', { name: 'Voltar aos projetos' }));
     expect(reference).toMatchObject({ border: '0px', background: 'rgba(0, 0, 0, 0)', arrow: 18 });
 
-    // The investigation lost its back link to the sidebar too (board 159); the PDF library keeps one.
     await window.getByRole('link', { name: 'Biblioteca de PDFs' }).click();
     expect(await look(window.getByRole('link', { name: 'Voltar aos projetos' }))).toEqual(reference);
   } finally {

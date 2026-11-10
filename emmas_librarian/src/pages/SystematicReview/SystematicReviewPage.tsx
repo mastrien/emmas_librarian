@@ -14,7 +14,9 @@ import { CriteriaModal } from './CriteriaModal';
 import { EvaluationTab } from './EvaluationTab';
 import { SimulationSection } from './SimulationSection';
 import './review.css';
-import { BackLink } from '../../components/common/BackLink';
+import { PageHeader } from '../../components/common/PageHeader';
+import { ProjectNavPortal } from '../../components/common/shell/projectNavSlot';
+import { ReviewNavList, type ReviewTab } from './ReviewNavList';
 
 // Sections start open, except those the person closed during this visit.
 function useOpenSections() {
@@ -43,31 +45,57 @@ function rowActions(screening: ScreeningState): RowActions {
   };
 }
 
-const ReviewHeader: React.FC<{
+interface ReviewHeaderProps {
   projectId: number;
-  projectName: string;
+  tab: ReviewTab;
+  counts: ScreeningState['view']['counts'];
   onManageLabels: () => void;
   onWriteCriteria: () => void;
-}> = ({ projectId, projectName, onManageLabels, onWriteCriteria }) => (
-  <div className="review-header">
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-start' }}>
-      <BackLink to={`/projects/${projectId}`}>Voltar ao projeto</BackLink>
-      <span className="review-muted">{projectName}</span>
-      <h1 className="review-title">Revisão sistemática</h1>
-    </div>
-    <div className="review-actions">
-      <button type="button" className="review-quiet" onClick={onWriteCriteria}>
-        <ListChecks size={16} aria-hidden="true" /> Critérios
-      </button>
-      <button type="button" className="review-quiet" onClick={onManageLabels}>
-        <Tag size={16} aria-hidden="true" /> Gerenciar rótulos
-      </button>
-      <Link to={`/projects/${projectId}/review/guided`} className="btn-primary">
-        <Play size={16} aria-hidden="true" /> Iniciar triagem guiada
-      </Link>
-    </div>
-  </div>
-);
+}
+
+// What each part of the review says under its title (boards 164, 166, 167).
+const decidedLine = (counts: ReviewHeaderProps['counts']) => {
+  const decided = counts.include + counts.maybe + counts.exclude;
+  return `${decided} de ${decided + counts.pending} decididos`;
+};
+
+const EVALUATION_NOTE =
+  'Compara as sugestões da IA com as suas decisões. A IA nunca vê as suas decisões: só título, resumo e critérios.';
+
+/** The page's header for each part (boards 164-167); the actions of the screening stay on every part. */
+const ReviewHeader: React.FC<ReviewHeaderProps> = ({ projectId, tab, counts, onManageLabels, onWriteCriteria }) => {
+  const titles: Record<ReviewTab, { eyebrow: string; title: string; subtitle?: string }> = {
+    screening: { eyebrow: 'Revisão sistemática · PRISMA 2020', title: 'Triagem', subtitle: decidedLine(counts) },
+    prisma: { eyebrow: 'Revisão sistemática', title: 'Diagrama PRISMA 2020' },
+    evaluation: {
+      eyebrow: 'Revisão sistemática',
+      title: 'Avaliar sugestões',
+      subtitle: EVALUATION_NOTE,
+    },
+  };
+  const { eyebrow, title, subtitle } = titles[tab];
+  return (
+    <PageHeader
+      eyebrow={eyebrow}
+      title={title}
+      subtitle={subtitle}
+      actions={
+        <>
+          <button type="button" className="btn-ghost" onClick={onWriteCriteria}>
+            <ListChecks size={16} aria-hidden="true" /> Critérios
+          </button>
+          {/* The name keeps "Gerenciar" for screen readers; the canvas shows the short label. */}
+          <button type="button" className="btn-ghost" onClick={onManageLabels} aria-label="Gerenciar rótulos">
+            <Tag size={16} aria-hidden="true" /> Rótulos
+          </button>
+          <Link to={`/projects/${projectId}/review/guided`} className="btn-primary">
+            <Play size={16} aria-hidden="true" /> Iniciar triagem guiada
+          </Link>
+        </>
+      }
+    />
+  );
+};
 
 const ReviewBody: React.FC<{ screening: ScreeningState; onCite: (articles: Article[]) => void }> = ({
   screening,
@@ -111,43 +139,16 @@ const ReviewBody: React.FC<{ screening: ScreeningState; onCite: (articles: Artic
   );
 };
 
+export type { ReviewTab };
+
 /**
- * The systematic review of a project (#49), a page of its own like the PDF reader: label sections, exclusions,
- * the undecided articles, the labels window and the way into the guided screening. The project page does not
- * change; an exclusion here archives the article there.
+ * The systematic review of a project (#49), a page of its own: label sections, exclusions, the undecided
+ * articles, the labels window and the way into the guided screening; the PRISMA diagram and the evaluation are
+ * its other parts, listed in the project sidebar (board 164). An exclusion here archives the article in the project.
  *
  * Usage:
  *   <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
  */
-/** The tabs of the review page (#50, #54), each with its own address. */
-export type ReviewTab = 'screening' | 'prisma' | 'evaluation';
-
-const ReviewTabs: React.FC<{ projectId: number; tab: ReviewTab }> = ({ projectId, tab }) => (
-  <nav aria-label="Abas da revisão" className="review-tabs">
-    <Link
-      to={`/projects/${projectId}/review`}
-      className={tab === 'screening' ? 'review-tab review-tab--on' : 'review-tab'}
-      aria-current={tab === 'screening' ? 'page' : undefined}
-    >
-      Triagem
-    </Link>
-    <Link
-      to={`/projects/${projectId}/review/prisma`}
-      className={tab === 'prisma' ? 'review-tab review-tab--on' : 'review-tab'}
-      aria-current={tab === 'prisma' ? 'page' : undefined}
-    >
-      Diagrama PRISMA
-    </Link>
-    <Link
-      to={`/projects/${projectId}/review/evaluation`}
-      className={tab === 'evaluation' ? 'review-tab review-tab--on' : 'review-tab'}
-      aria-current={tab === 'evaluation' ? 'page' : undefined}
-    >
-      Avaliar sugestões
-    </Link>
-  </nav>
-);
-
 export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'screening' }) => {
   const projectId = Number(useParams<{ id: string }>().id);
   const screening = useScreening(projectId);
@@ -159,13 +160,17 @@ export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'scr
   if (screening.loading) return <div className="review review-muted">Carregando a revisão…</div>;
   return (
     <div className="review fade-in">
+      {/* The parts of the review live under its item in the project sidebar (board 164). */}
+      <ProjectNavPortal>
+        <ReviewNavList projectId={projectId} pending={screening.view.counts.pending} />
+      </ProjectNavPortal>
       <ReviewHeader
         projectId={projectId}
-        projectName={screening.project?.name ?? ''}
+        tab={tab}
+        counts={screening.view.counts}
         onManageLabels={() => setManaging(true)}
         onWriteCriteria={() => setWritingCriteria(true)}
       />
-      <ReviewTabs projectId={projectId} tab={tab} />
       {tab === 'prisma' && <PrismaTab projectId={projectId} screening={screening} />}
       {tab === 'evaluation' && (
         <>
