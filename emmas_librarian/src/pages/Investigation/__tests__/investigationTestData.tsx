@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { GlobalErrorProvider } from '../../../contexts/GlobalErrorContext';
 import { InvestigationRunProvider } from '../../../contexts/InvestigationRunContext';
@@ -120,4 +120,11 @@ export function setWindowWidth(width: number) {
   act(() => {
     window.dispatchEvent(new Event('resize'));
   });
+}
+
+/** Opens a step of a new investigation from its stepper (board 159). */
+export function goToStep(label: 'Perguntas' | 'Artigos' | 'Modelo e custo' | 'Executar') {
+  fireEvent.click(
+    within(screen.getByRole('list', { name: 'Passos da investigação' })).getByRole('button', { name: label }),
+  );
 }

@@ -4,6 +4,7 @@ import {
   article,
   answer,
   failure,
+  goToStep,
   investigationService,
   record,
   renderInvestigation,
@@ -54,14 +55,17 @@ describe('InvestigationPage (#73): where it opens', () => {
     expect(within(list()).getByText('Nenhuma investigação ainda.')).toBeInTheDocument();
   });
 
-  it('shows the model of the next run', async () => {
+  it('shows the model of the next run on its step', async () => {
     const service = investigationService([article(1)], []);
     service.getAiModelConfigs.mockResolvedValue([
       { skill: 'extraction', provider: 'openai', model_name: 'gpt-4o-mini' },
     ] as never);
     renderInvestigation(service, '/projects/3/investigation');
+    fireEvent.change(await screen.findByPlaceholderText('Pergunta 1'), { target: { value: 'Q' } });
 
-    expect(await screen.findByText(/OpenAI \(gpt-4o-mini\)/)).toBeInTheDocument();
+    goToStep('Modelo e custo');
+
+    expect(await screen.findByText('OpenAI (gpt-4o-mini)')).toBeInTheDocument();
   });
 
   it('falls back to the list when the address names an investigation that does not exist', async () => {
@@ -212,6 +216,7 @@ describe('InvestigationPage (#73): calls', () => {
 
     expect(await screen.findByRole('heading', { name: 'Nova investigação' })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Q1')).toBeInTheDocument();
+    goToStep('Modelo e custo');
     expect(screen.getByText('2 artigos × 2 perguntas = 4 respostas')).toBeInTheDocument();
   });
 
@@ -230,6 +235,7 @@ describe('InvestigationPage (#73): a new investigation', () => {
   const start = async (service: ReturnType<typeof investigationService>) => {
     renderInvestigation(service, '/projects/3/investigation/new');
     fireEvent.change(await screen.findByPlaceholderText('Pergunta 1'), { target: { value: 'Qual o desenho?' } });
+    goToStep('Executar');
     // The start first asks what indexing would do, so the run only begins after that answer.
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Iniciar investigação' }));
@@ -245,13 +251,43 @@ describe('InvestigationPage (#73): a new investigation', () => {
     expect(await screen.findByText('Nenhum artigo com PDF vinculado encontrado neste projeto.')).toBeInTheDocument();
   });
 
-  it('says how many answers it will ask for, and cannot start without a question', async () => {
+  // Board 159: Perguntas, Artigos, Modelo e custo, Executar; a step opens once the ones before it are complete.
+  it('cannot go past the questions without one, then says how many answers it will ask for', async () => {
     renderInvestigation(investigationService([article(1), article(2)], []), '/projects/3/investigation/new');
 
-    expect(await screen.findByRole('button', { name: 'Iniciar investigação' })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: /Próximo: artigos/ })).toBeDisabled();
+    expect(screen.getByText('Escreva pelo menos uma pergunta.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Executar' })).toBeDisabled();
     fireEvent.change(screen.getByPlaceholderText('Pergunta 1'), { target: { value: 'Q' } });
+    fireEvent.click(screen.getByRole('button', { name: /Próximo: artigos/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Próximo: modelo e custo/ }));
+
     expect(screen.getByText('2 artigos × 1 perguntas = 2 respostas')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Próximo: executar/ }));
     expect(screen.getByRole('button', { name: 'Iniciar investigação' })).toBeEnabled();
+  });
+
+  it('starts the questions from the newest investigation', async () => {
+    renderInvestigation(
+      investigationService([article(1)], [record(14, { questions: JSON.stringify(['Onde?', 'Quando?']) })]),
+      '/projects/3/investigation/new',
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /Da investigação #14/ }));
+
+    expect(screen.getByDisplayValue('Onde?')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Quando?')).toBeInTheDocument();
+  });
+
+  it('keeps what was chosen when going back a step', async () => {
+    renderInvestigation(investigationService([article(1)], []), '/projects/3/investigation/new');
+    fireEvent.change(await screen.findByPlaceholderText('Pergunta 1'), { target: { value: 'Qual o desenho?' } });
+    goToStep('Artigos');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Voltar' }));
+
+    expect(screen.getByDisplayValue('Qual o desenho?')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Perguntas' })).toHaveAttribute('aria-current', 'step');
   });
 
   it('keeps one empty question when the last one is removed', async () => {
@@ -336,6 +372,7 @@ describe('InvestigationPage: the embedding model changed', () => {
   const start = async (service: ReturnType<typeof investigationService>) => {
     renderInvestigation(service, '/projects/3/investigation/new');
     fireEvent.change(await screen.findByPlaceholderText('Pergunta 1'), { target: { value: 'Qual o desenho?' } });
+    goToStep('Executar');
     // The start first asks what indexing would do, so the run only begins after that answer.
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Iniciar investigação' }));
