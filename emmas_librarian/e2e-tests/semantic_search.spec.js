@@ -5,13 +5,13 @@ async function runSearch(window, term, setLimits = async () => {}) {
   await window.click('text="Nova busca"');
   await window.fill('input[placeholder="Termo de busca..."]', term);
   await setLimits();
-  await window.click('button:has-text("Fazer Busca")');
+  await window.getByRole('button', { name: /Fazer busca/ }).click();
 }
 
 // A limit above a base's ceiling blocks the search; then a common value with one per-base adjustment.
 async function chooseLimits(window) {
   const common = window.getByLabel('Máximo de resultados por base');
-  const searchButton = window.getByRole('button', { name: /Fazer Busca/ });
+  const searchButton = window.getByRole('button', { name: /Fazer busca/ });
   await common.fill('20000');
   await expect(window.getByRole('alert')).toContainText('OpenAlex aceita até 10.000 resultados');
   await expect(searchButton).toBeDisabled();
@@ -53,7 +53,11 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
 
     await review.getByRole('button', { name: /Descartar/ }).click();
     await expect(review).toBeHidden();
-    await window.getByRole('link', { name: 'Voltar ao projeto' }).click();
+    // The search page has no back link since the redesign (board 158): the sidebar leads back to the articles.
+    await window
+      .getByRole('navigation', { name: 'Seções do projeto' })
+      .getByRole('link', { name: /Artigos/ })
+      .click();
     await expect(window.getByTestId('project-details-container')).toBeVisible();
     await expect(resultRow).toHaveCount(0);
 

@@ -128,3 +128,14 @@ export function validateSearchLimits(limits: unknown, bases: string[]): Partial<
   }
   return Object.fromEntries(bases.filter(isSearchBase).map((base) => [base, effectiveLimit(shape, base)]));
 }
+
+/**
+ * The most results a search can bring: each chosen base's limit, added up (the "Até" of the search summary,
+ * board 158). Names that are not search bases are left out.
+ *
+ * Usage:
+ *   maxResults({ common: 1000, perBase: { wos: 500 } }, ['openalex', 'wos']); // 1500
+ */
+export function maxResults(limits: SearchLimits, bases: string[]): number {
+  return bases.filter(isSearchBase).reduce((sum, base) => sum + effectiveLimit(limits, base), 0);
+}
