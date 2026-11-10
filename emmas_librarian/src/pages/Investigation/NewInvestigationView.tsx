@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { ArticleSelector } from '../../components/ai/ArticleSelector';
 import type { Article, InvestigationHistoryRecord, SearchHistoryItem } from '../../types';
 import { InvestigationStepper } from './InvestigationStepper';
+import './newInvestigation.css';
 import { QuestionsStep } from './QuestionsStep';
 import { ModelStep, RunStep } from './RunPlanSteps';
 import {

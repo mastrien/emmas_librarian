@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { Article, InvestigationResult } from '../../../types';
 import {
   callErrorGroups,
+  callMatrix,
+  evidencesOf,
   gridOrder,
   investigationPath,
   liveCalls,
@@ -48,6 +50,7 @@ describe('liveCalls', () => {
     current: 2,
     isRunning: true,
     quotaHit: false,
+    startedAt: 0,
     savedId: null,
     ...extra,
   });
@@ -74,6 +77,8 @@ describe('callErrorGroups', () => {
     question: 'Q',
     status,
     error,
+    answer: null,
+    evidences: [],
   });
 
   it('gives one group per message, counting calls and each article once', () => {
@@ -138,5 +143,46 @@ describe('investigationPath', () => {
     expect(investigationPath(3)).toBe('/projects/3/investigation');
     expect(investigationPath(3, 14)).toBe('/projects/3/investigation/14');
     expect(investigationPath(3, 'new')).toBe('/projects/3/investigation/new');
+  });
+});
+
+describe('callMatrix', () => {
+  const call = (articleId: number, question: string, status: CallCell['status']): CallCell => ({
+    articleId,
+    articleTitle: `A${articleId}`,
+    question,
+    status,
+    error: null,
+    answer: null,
+    evidences: [],
+  });
+
+  it('lays the calls out as articles × questions, a missing call left empty', () => {
+    const rows = callMatrix(
+      [call(1, 'Q2', 'running'), call(1, 'Q1', 'success'), call(2, 'Q1', 'queued')],
+      ['Q1', 'Q2'],
+    );
+
+    expect(rows.map((r) => r.articleTitle)).toEqual(['A1', 'A2']);
+    expect(rows[0].calls.map((c) => c?.status)).toEqual(['success', 'running']);
+    expect(rows[1].calls[1]).toBeUndefined();
+  });
+});
+
+describe('evidencesOf', () => {
+  it('reads the cited passages of a RAG answer, with their pages', () => {
+    const answer = JSON.stringify({
+      question: 'Q',
+      synthesizedAnswer: 'Sim',
+      confidenceScore: 0.9,
+      evidences: [{ text: 'trecho', page: 26, bbox: null, reasoning: '' }],
+    });
+
+    expect(evidencesOf({ answer, quote: null })).toEqual([{ page: 26, text: 'trecho' }]);
+  });
+
+  it('falls back to the single quote of an older answer, and to nothing', () => {
+    expect(evidencesOf({ answer: 'texto', quote: 'citação' })).toEqual([{ page: null, text: 'citação' }]);
+    expect(evidencesOf({ answer: null, quote: null })).toEqual([]);
   });
 });

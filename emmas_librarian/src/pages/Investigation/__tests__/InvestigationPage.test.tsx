@@ -211,7 +211,7 @@ describe('InvestigationPage (#73): calls', () => {
     const group = screen.getByRole('alert');
     expect(group).toHaveTextContent('4 chamadas com erro');
     expect(group).toHaveTextContent('401 chave recusada');
-    expect(screen.getByText('6 de 6')).toBeInTheDocument();
+    expect(screen.getByText('6 chamadas · 2 com resposta, 4 sem')).toBeInTheDocument();
     fireEvent.click(within(group).getByRole('button', { name: 'Refazer estes 2 artigos' }));
 
     expect(await screen.findByRole('heading', { name: 'Nova investigação' })).toBeInTheDocument();
@@ -228,6 +228,37 @@ describe('InvestigationPage (#73): calls', () => {
 
     await waitFor(() => expect(screen.getByRole('tab', { name: /Chamadas/ })).toHaveAttribute('aria-selected', 'true'));
     expect(screen.getByRole('heading', { name: /Investigação #14/ })).toHaveTextContent('Falhou');
+  });
+});
+
+describe('InvestigationPage: the calls as a list (board 161)', () => {
+  it('lists every call, filters the failed ones and shows the chosen one beside the list', async () => {
+    const { service } = reviewProject();
+    renderInvestigation(service, '/projects/3/investigation/14');
+    fireEvent.click(await screen.findByRole('tab', { name: /Chamadas/ }));
+
+    expect(within(screen.getByRole('table', { name: 'Chamadas' })).getAllByRole('row')).toHaveLength(5);
+    fireEvent.click(screen.getByRole('button', { name: 'Com erro (1)' }));
+    const rows = within(screen.getByRole('table', { name: 'Chamadas' })).getAllByRole('row');
+    expect(rows).toHaveLength(2);
+    fireEvent.click(within(rows[1]).getByRole('button'));
+
+    const detail = screen.getByRole('complementary', { name: 'Chamada selecionada' });
+    expect(detail).toHaveTextContent('Chamada 4');
+    expect(detail).toHaveTextContent('401 chave recusada');
+  });
+
+  it('narrows the list to one question', async () => {
+    const { service } = reviewProject();
+    renderInvestigation(service, '/projects/3/investigation/14');
+    fireEvent.click(await screen.findByRole('tab', { name: /Chamadas/ }));
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Pergunta' }), { target: { value: 'Q2' } });
+
+    const rows = within(screen.getByRole('table', { name: 'Chamadas' }))
+      .getAllByRole('row')
+      .slice(1);
+    expect(rows.map((r) => (r as HTMLTableRowElement).cells[0].textContent)).toEqual(['2', '4']);
   });
 });
 
@@ -331,6 +362,22 @@ describe('InvestigationPage (#73): a new investigation', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('401 chave recusada');
     expect(screen.queryByRole('button', { name: /Refazer/ })).not.toBeInTheDocument();
+    await act(async () => finish([]));
+  });
+
+  // Board 160: how many calls are done, which article is being asked, and a way to leave while it runs.
+  it('counts the calls done and lets the person leave while the run goes on', async () => {
+    let finish: (rows: never[]) => void = () => undefined;
+    const service = investigationService([article(1)], []);
+    service.massiveExtraction.mockImplementation(() => new Promise((resolve) => (finish = resolve as never)));
+    await start(service);
+
+    const progress = await screen.findByRole('region', { name: 'Progresso' });
+    expect(progress).toHaveTextContent('0 de 1 chamadas');
+    expect(progress).toHaveTextContent('Agora: Estudo 1');
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar em segundo plano' }));
+
+    expect(screen.getByTestId('where')).toHaveTextContent('/projects/3/articles');
     await act(async () => finish([]));
   });
 
