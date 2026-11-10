@@ -43,3 +43,13 @@ describe('SourceDatabaseBadges', () => {
     expect(screen.getByText('Scopus')).toBeInTheDocument();
   });
 });
+
+describe('SourceDatabaseBadges, compact (board 153)', () => {
+  it('abbreviates each base but keeps the full name for the tooltip and screen readers', () => {
+    render(<SourceDatabaseBadges sourceDatabases='["Web of Science"]' compact />);
+
+    const badge = screen.getByLabelText('Web of Science');
+    expect(badge).toHaveTextContent('WoS');
+    expect(badge).toHaveAttribute('title', 'Web of Science');
+  });
+});

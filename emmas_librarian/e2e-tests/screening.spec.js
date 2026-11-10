@@ -58,10 +58,10 @@ test('screens articles on the review page and the guided screening, archiving ex
     await expect(archived).toHaveText(/Arquivados\s*1/, { timeout: 10000 });
     await archived.click();
     await expect(window.getByText('Motivo: Excluído')).toBeVisible();
-    // The row shortcuts show on hover (style.css .row-actions__shortcuts), so hover the row like a person would.
+    // Status actions live in the row's "⋯" (board 153).
     const archivedRow = window.getByTestId('main-articles-table').getByRole('row', { name: /Artigo alfa/ });
-    await archivedRow.hover();
-    await archivedRow.getByTitle('Restaurar Artigo').click();
+    await archivedRow.getByRole('button', { name: 'Mais ações' }).click();
+    await window.getByRole('menuitem', { name: 'Restaurar Artigo' }).click();
     await window.getByRole('link', { name: /Revisão sistemática/ }).click();
     await expect(window.getByTestId('review-row').filter({ hasText: 'Artigo alfa' })).toContainText('Rótulo');
     await expect(window.getByRole('status', { name: 'Contagem da triagem' })).toContainText('0 excluídos');

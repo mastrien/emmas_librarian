@@ -190,8 +190,8 @@ describe('ProjectDetailsPage article forms', () => {
   it('treats a legacy bare source value as a single source instead of crashing the page', async () => {
     await renderProjectPage(givenProject([article({ id: 8, title: 'Legado', source_databases: 'Manual' })]));
 
-    // One badge in the BASES column and one in the article cell for narrow tables (CSS picks which shows).
-    expect(within(mainTable()).getAllByText('⚠️ Manual')).toHaveLength(2);
+    // The compact base badge says "Manual" and carries the warning for screen readers and the tooltip.
+    expect(within(mainTable()).getAllByLabelText(/adicionados manualmente/)).toHaveLength(1);
     fireEvent.click(within(mainTable()).getByRole('button', { name: 'Mais ações' }));
     expect(screen.getByRole('menuitem', { name: 'Editar Metadados' })).toBeInTheDocument();
   });

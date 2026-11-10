@@ -1,11 +1,15 @@
-import { render, screen, fireEvent, act, within } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProjectArticlesList } from '../components/ProjectArticlesList';
 import { MemoryRouter } from 'react-router-dom';
+import type { Article } from '../../../types';
+
+const article = (extra: Partial<Article> & { id: number }): Article =>
+  ({ project_id: 1, title: `Article ${extra.id}`, status: 'new', ...extra }) as Article;
 
 describe('ProjectArticlesList', () => {
   const defaultProps = {
-    paginatedArticles: [],
+    paginatedArticles: [] as Article[],
     setSelectedArticleForDetails: vi.fn(),
     handleUnlinkClick: vi.fn(),
     handleUploadClick: vi.fn(),
@@ -21,156 +25,110 @@ describe('ProjectArticlesList', () => {
     vi.clearAllMocks();
   });
 
-  const renderComponent = (props = {}) => {
-    return render(
+  const renderComponent = (props: Partial<typeof defaultProps> & { currentIndex?: number } = {}) =>
+    render(
       <MemoryRouter>
         <ProjectArticlesList {...defaultProps} {...props} />
       </MemoryRouter>,
     );
-  };
 
-  // Unlink, edit and cite live in the row's "⋯" menu.
+  // Status, reading and reference actions live in the row's "⋯" menu (board 153).
   const chooseFromRowMenu = (item: string) => {
     fireEvent.click(screen.getByRole('button', { name: 'Mais ações' }));
     fireEvent.click(screen.getByRole('menuitem', { name: item }));
   };
 
-  it('renders empty state when no articles', () => {
+  it('says so when the list is empty', () => {
     renderComponent();
-    expect(screen.getByText('Nenhum artigo ativo na biblioteca.')).toBeInTheDocument();
+    expect(screen.getByText('Nenhum artigo nesta lista.')).toBeInTheDocument();
   });
 
-  it('renders articles list', () => {
-    const paginatedArticles = [
-      {
-        id: 1,
-        title: 'Article 1',
-        authors: 'John Doe',
-        doi: '10.123/1',
-        year: 2021,
-        citation_count: 5,
-        source_databases: '["Scopus"]',
-        is_oa: 1,
-        local_file_path: null,
-        status: 'new',
-      },
-    ];
-    renderComponent({ paginatedArticles });
-
-    const [articleCell, authorsCell, basesCell] = within(screen.getAllByRole('row')[1]).getAllByRole('cell');
-    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
-      'ARTIGO',
-      'AUTORES',
-      'BASES',
-      'AÇÕES',
-    ]);
-    expect(within(articleCell).getByText('Article 1')).toBeInTheDocument();
-    // Year, DOI, citations and open access describe the article, so they sit under its title.
-    expect(within(articleCell).getByText('DOI 10.123/1')).toBeInTheDocument();
-    expect(within(articleCell).getByText('2021')).toBeInTheDocument();
-    expect(within(articleCell).getByText('5 citações')).toBeInTheDocument();
-    expect(within(articleCell).getByText('Acesso aberto')).toBeInTheDocument();
-    expect(authorsCell).toHaveTextContent(/^John Doe$/);
-    expect(within(basesCell).getByText('Scopus')).toBeInTheDocument();
-    expect(within(basesCell).queryByText(/Acesso/)).not.toBeInTheDocument();
-  });
-
-  it('handles click on article title', () => {
-    const paginatedArticles = [{ id: 1, title: 'Article 1' }];
-    renderComponent({ paginatedArticles });
-
-    const titleDiv = screen.getByText('Article 1');
-    act(() => {
-      fireEvent.click(titleDiv);
+  it('shows article, year, bases, PDF and the actions menu', () => {
+    renderComponent({
+      paginatedArticles: [
+        article({ id: 1, authors: 'Silva, A.', journal: 'Nature', year: 2021, source_databases: '["Web of Science"]' }),
+      ],
     });
 
-    expect(defaultProps.setSelectedArticleForDetails).toHaveBeenCalledWith(paginatedArticles[0]);
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
+      'Artigo',
+      'Ano',
+      'Bases',
+      'PDF',
+      '',
+    ]);
+    const cells = within(screen.getAllByRole('row')[1]).getAllByRole('cell');
+    expect(cells[0]).toHaveTextContent('Article 1');
+    expect(cells[0]).toHaveTextContent('Silva, A. · Nature');
+    expect(cells[1]).toHaveTextContent('2021');
+    expect(within(cells[2]).getByLabelText('Web of Science')).toHaveTextContent('WoS');
+    expect(within(cells[3]).getByRole('button', { name: 'Vincular PDF' })).toBeInTheDocument();
+    expect(within(cells[4]).getByRole('button', { name: 'Mais ações' })).toBeInTheDocument();
   });
 
-  it('renders manual tag', () => {
-    const paginatedArticles = [{ id: 1, title: 'Article 1', source_databases: '["Manual"]' }];
-    renderComponent({ paginatedArticles });
-    // The bases also render inside the article cell for narrow tables (hidden by a container query jsdom
-    // does not apply), so look in the BASES column.
-    const basesCell = within(screen.getAllByRole('row')[1]).getAllByRole('cell')[2];
-    expect(within(basesCell).getByText('⚠️ Manual')).toBeInTheDocument();
+  it('opens the details from the title', () => {
+    const a = article({ id: 1 });
+    renderComponent({ paginatedArticles: [a] });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Article 1' }));
+
+    expect(defaultProps.setSelectedArticleForDetails).toHaveBeenCalledWith(a);
   });
 
-  it('handles unlink pdf click when file exists', () => {
-    const paginatedArticles = [{ id: 1, title: 'Article 1', local_file_path: '/path.pdf' }];
-    renderComponent({ paginatedArticles });
+  it('marks the row the keyboard moved to', () => {
+    renderComponent({ paginatedArticles: [article({ id: 1 }), article({ id: 2 })], currentIndex: 1 });
+
+    const rows = screen.getAllByRole('row');
+    expect(rows[2]).toHaveClass('is-current');
+    expect(rows[2]).toHaveAttribute('aria-current', 'true');
+    expect(rows[1]).not.toHaveClass('is-current');
+  });
+
+  it('unlinks the PDF of an article that has one', () => {
+    renderComponent({ paginatedArticles: [article({ id: 1, local_file_path: '/a.pdf' })] });
 
     chooseFromRowMenu('Desvincular PDF');
 
     expect(defaultProps.handleUnlinkClick).toHaveBeenCalledWith(1);
   });
 
-  it('handles upload pdf click when file missing', () => {
-    const paginatedArticles = [{ id: 1, title: 'Article 1', local_file_path: null }];
-    renderComponent({ paginatedArticles });
+  it('attaches a PDF from the computer to an article without one', () => {
+    renderComponent({ paginatedArticles: [article({ id: 1 })] });
 
-    act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Vincular PDF' }));
-    });
+    fireEvent.click(screen.getByRole('button', { name: 'Vincular PDF' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Do computador…' }));
 
     expect(defaultProps.handleUploadClick).toHaveBeenCalledWith(1);
   });
 
-  it('handles status change to read/new', () => {
-    const paginatedArticles = [
-      { id: 1, title: 'New Article', status: 'new' },
-      { id: 2, title: 'Read Article', status: 'read' },
-      { id: 3, title: 'Archived Article', status: 'archived' },
-    ];
-    renderComponent({ paginatedArticles });
+  it.each([
+    [{ status: 'new' as const }, 'Marcar como Lido', 'read'],
+    [{ status: 'read' as const }, 'Desmarcar como Lido', 'new'],
+    [{ status: 'archived' as const }, 'Restaurar Artigo', 'new'],
+  ])('changes the status from the menu (%o → %s)', (extra, item, status) => {
+    renderComponent({ paginatedArticles: [article({ id: 1, ...extra })] });
 
-    const readBtn = screen.getByTitle('Marcar como Lido');
-    act(() => {
-      fireEvent.click(readBtn);
-    });
-    expect(defaultProps.handleStatusChange).toHaveBeenCalledWith(1, 'read');
+    chooseFromRowMenu(item);
 
-    const unmarkBtn = screen.getByTitle('Desmarcar como Lido');
-    act(() => {
-      fireEvent.click(unmarkBtn);
-    });
-    expect(defaultProps.handleStatusChange).toHaveBeenCalledWith(2, 'new');
-
-    const restoreBtn = screen.getByTitle('Restaurar Artigo');
-    act(() => {
-      fireEvent.click(restoreBtn);
-    });
-    expect(defaultProps.handleStatusChange).toHaveBeenCalledWith(3, 'new');
+    expect(defaultProps.handleStatusChange).toHaveBeenCalledWith(1, status);
   });
 
-  it('handles archiving', () => {
-    const paginatedArticles = [{ id: 1, title: 'Article 1', status: 'new' }];
-    renderComponent({ paginatedArticles });
+  it('asks for the archive reason from the menu', () => {
+    renderComponent({ paginatedArticles: [article({ id: 1 })] });
 
-    const archiveBtn = screen.getByTitle('Arquivar');
-    act(() => {
-      fireEvent.click(archiveBtn);
-    });
+    chooseFromRowMenu('Arquivar');
 
     expect(defaultProps.setArchivingId).toHaveBeenCalledWith(1);
   });
 
-  it('offers metadata editing for every article, not only manual ones', () => {
-    const paginatedArticles = [{ id: 1, title: 'Search Result', status: 'new', source_databases: '["Scopus"]' }];
-    renderComponent({ paginatedArticles });
+  it('offers metadata editing and citation for every article', () => {
+    const a = article({ id: 1, source_databases: '["Scopus"]' });
+    renderComponent({ paginatedArticles: [a] });
 
     chooseFromRowMenu('Editar Metadados');
-
-    expect(defaultProps.setEditingArticle).toHaveBeenCalledWith(paginatedArticles[0]);
-  });
-
-  it('handles citation', () => {
-    const paginatedArticles = [{ id: 1, title: 'Article 1', status: 'new' }];
-    renderComponent({ paginatedArticles });
-
     chooseFromRowMenu('Gerar Citação');
 
-    expect(defaultProps.setCitationArticle).toHaveBeenCalledWith(paginatedArticles[0]);
+    expect(defaultProps.setEditingArticle).toHaveBeenCalledWith(a);
+    expect(defaultProps.setCitationArticle).toHaveBeenCalledWith(a);
   });
 });

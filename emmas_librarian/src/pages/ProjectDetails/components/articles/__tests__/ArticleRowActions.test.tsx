@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { ArticleRowActions, type ArticleRowHandlers } from '../ArticleRowActions';
 import type { Article } from '../../../../../types';
+
+const LocationProbe = () => <output data-testid="location">{useLocation().pathname}</output>;
 
 const article = (overrides: Partial<Article> = {}): Article => ({
   id: 7,
@@ -25,7 +27,10 @@ function renderActions(overrides: Partial<Article> = {}, outsideSearch = false) 
   };
   const a = article(overrides);
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={['/projects/1/articles']}>
+      <Routes>
+        <Route path="*" element={<LocationProbe />} />
+      </Routes>
       <table>
         <tbody>
           <tr>
@@ -41,93 +46,63 @@ function renderActions(overrides: Partial<Article> = {}, outsideSearch = false) 
 }
 
 const openMenu = () => fireEvent.click(screen.getByRole('button', { name: 'Mais ações' }));
-const shortcuts = () => within(screen.getByRole('toolbar', { name: 'Atalhos' }));
-
-describe('ArticleRowActions main line', () => {
-  it('opens the reader when the article has a PDF', () => {
-    renderActions({ local_file_path: '/lib/a.pdf' });
-
-    expect(screen.getByRole('link', { name: 'Ler' })).toHaveAttribute('href', '/articles/7');
-  });
-
-  // "Vincular PDF" offers both ways to get the PDF (option B of the open access mock-up).
-  it('offers to attach a PDF from the computer or to look for an open access copy', () => {
-    const { handlers } = renderActions();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Vincular PDF' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Do computador…' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Vincular PDF' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Buscar PDF aberto' }));
-
-    expect(handlers.onUpload).toHaveBeenCalledWith(7);
-    expect(handlers.onFindOpenAccess).toHaveBeenCalledWith(7);
-  });
-
-  it('keeps the DOI button always visible, pointing to doi.org', () => {
-    renderActions({ doi: '10.1016/j.x' });
-
-    expect(screen.getByRole('link', { name: 'DOI' })).toHaveAttribute('href', 'https://doi.org/10.1016/j.x');
-  });
-
-  it('shows no DOI button for an article without DOI', () => {
-    renderActions();
-
-    expect(screen.queryByRole('link', { name: 'DOI' })).not.toBeInTheDocument();
-  });
-});
-
-describe('ArticleRowActions shortcuts', () => {
-  it('labels the shortcuts "Lido" and "Arquivar" for an active article', () => {
-    const { handlers } = renderActions();
-
-    fireEvent.click(shortcuts().getByRole('button', { name: 'Lido' }));
-    fireEvent.click(shortcuts().getByRole('button', { name: 'Arquivar' }));
-
-    expect(handlers.onStatusChange).toHaveBeenCalledWith(7, 'read');
-    expect(handlers.onArchive).toHaveBeenCalledWith(7);
-  });
-
-  it('offers "Desmarcar" for a read article', () => {
-    const { handlers } = renderActions({ status: 'read' });
-
-    fireEvent.click(shortcuts().getByRole('button', { name: 'Desmarcar' }));
-
-    expect(handlers.onStatusChange).toHaveBeenCalledWith(7, 'new');
-  });
-
-  it('only offers "Restaurar" for an archived article', () => {
-    const { handlers } = renderActions({ status: 'archived' });
-
-    fireEvent.click(shortcuts().getByRole('button', { name: 'Restaurar' }));
-
-    expect(shortcuts().getAllByRole('button')).toHaveLength(1);
-    expect(handlers.onStatusChange).toHaveBeenCalledWith(7, 'new');
-  });
-});
+const menuLabels = () => screen.getAllByRole('menuitem').map((item) => item.textContent?.trim());
 
 describe('ArticleRowActions menu', () => {
-  it('groups the actions and leaves the DOI out, since it has its own button', () => {
+  // Board 153: the row has only "⋯", so the status comes first in it.
+  it('puts the status first, then reading, then the reference tools', () => {
     renderActions({ local_file_path: '/lib/a.pdf', doi: '10.1/x' });
 
     openMenu();
 
-    const labels = screen.getAllByRole('menuitem').map((item) => item.textContent?.trim());
-    expect(labels).toEqual([
-      'Desvincular PDF',
+    expect(menuLabels()).toEqual([
       'Marcar como Lido',
       'Arquivar',
+      'Ler o PDF',
+      'Abrir pelo DOI',
+      'Desvincular PDF',
       'Editar Metadados',
       'Gerar Citação',
       'Explorar citações',
     ]);
     expect(screen.getAllByRole('group').map((g) => g.getAttribute('aria-label'))).toEqual([
-      'Leitura',
       'Organização',
+      'Leitura',
       'Referência',
     ]);
   });
 
-  it('has no "Leitura" section when there is no PDF to unlink', () => {
+  it('offers to unmark a read article and only to restore an archived one', () => {
+    renderActions({ status: 'read' });
+    openMenu();
+    expect(menuLabels().slice(0, 2)).toEqual(['Desmarcar como Lido', 'Arquivar']);
+  });
+
+  it('restores an archived article', () => {
+    const { handlers } = renderActions({ status: 'archived' });
+    openMenu();
+
+    expect(screen.getByRole('group', { name: 'Organização' })).toHaveTextContent('Restaurar Artigo');
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Restaurar Artigo' }));
+
+    expect(handlers.onStatusChange).toHaveBeenCalledWith(7, 'new');
+  });
+
+  it('opens the reader and the DOI page from the reading group', () => {
+    const opened = vi.spyOn(window, 'open').mockReturnValue(null);
+    renderActions({ local_file_path: '/lib/a.pdf', doi: '10.1/x' });
+
+    openMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Abrir pelo DOI' }));
+    openMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Ler o PDF' }));
+
+    expect(opened).toHaveBeenCalledWith('https://doi.org/10.1/x', '_blank');
+    expect(screen.getByTestId('location')).toHaveTextContent('/articles/7');
+    opened.mockRestore();
+  });
+
+  it('has no "Leitura" section without a PDF or a DOI', () => {
     renderActions();
 
     openMenu();

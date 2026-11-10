@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { ArrowUpDown, Search } from 'lucide-react';
+import { ArrowUpDown, Search, SquareCheck } from 'lucide-react';
 import type { ProjectFiltering } from '../../hooks/useProjectFiltering';
 import { activeFilters, clearedFilters, withoutFilter } from '../../hooks/articleFilters';
 import { FiltersPopover } from './FiltersPopover';
 import { StatusSegmented } from './StatusSegmented';
-import { FilterChips } from './ResultLine';
+import { FilterChips } from './FilterChips';
+import { keyBelongsElsewhere } from './keyboardTargets';
 import './articlesToolbar.css';
 
 const SORT_OPTIONS = [
@@ -18,9 +19,6 @@ const SORT_OPTIONS = [
   ['citations-asc', 'Menos citados'],
 ] as const;
 
-const isTyping = (target: EventTarget | null) =>
-  target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
-
 /**
  * "/" focuses the search from anywhere on the screen, unless the user is already typing somewhere (board 153).
  *
@@ -29,7 +27,7 @@ const isTyping = (target: EventTarget | null) =>
 export function useSlashFocus(ref: React.RefObject<HTMLInputElement | null>): void {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+      if (e.key !== '/' || keyBelongsElsewhere(e)) return;
       e.preventDefault();
       ref.current?.focus();
     };
@@ -80,19 +78,31 @@ const SortSelect: React.FC<{ filtering: ProjectFiltering }> = ({ filtering }) =>
   </label>
 );
 
+interface ArticlesToolbarProps {
+  filtering: ProjectFiltering;
+  /** Multi-select is on: the button then leaves it. */
+  selecting: boolean;
+  onToggleSelecting: () => void;
+}
+
 /**
- * The two lines above the article table (board 153): search ("/") and order; then the status, "Filtros" and the
- * active filters as chips. Every change goes back to the first page.
+ * The two lines above the article table (board 153): search ("/"), "Selecionar" and the order; then the status,
+ * "Filtros" and the active filters as chips. Every change goes back to the first page.
  *
- * @example <ArticlesToolbar filtering={filtering} />
+ * @example <ArticlesToolbar filtering={filtering} selecting={false} onToggleSelecting={start} />
  */
-export const ArticlesToolbar: React.FC<{ filtering: ProjectFiltering }> = ({ filtering }) => {
+export const ArticlesToolbar: React.FC<ArticlesToolbarProps> = ({ filtering, selecting, onToggleSelecting }) => {
   const { criteria, applyCriteria, countFor } = filtering;
   return (
     <div className="articles-toolbar">
       <div className="articles-toolbar__row">
         <SearchField filtering={filtering} />
-        <SortSelect filtering={filtering} />
+        <span className="articles-toolbar__group">
+          <button type="button" className="btn-ghost" aria-pressed={selecting} onClick={onToggleSelecting}>
+            <SquareCheck size={16} /> {selecting ? 'Sair da seleção' : 'Selecionar'}
+          </button>
+          <SortSelect filtering={filtering} />
+        </span>
       </div>
       <div className="articles-toolbar__row">
         <StatusSegmented

@@ -30,39 +30,29 @@ const chooseFilter = (name: RegExp) => {
 };
 
 describe('ProjectDetailsPage pagination', () => {
-  it('shows the first 50 active articles with the bottom controls', async () => {
+  const previous = () => screen.getByRole('button', { name: 'Página anterior' });
+  const next = () => screen.getByRole('button', { name: 'Próxima página' });
+
+  it('shows the first 50 active articles with the pager in the footer', async () => {
     await renderProjectPage(givenProject(many));
 
     expect(screen.getByText('60 artigos')).toBeInTheDocument();
     expect(visibleTitles()).toHaveLength(50);
-    expect(screen.getByRole('button', { name: /^Anterior$/ })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /^Próxima$/ })).toBeEnabled();
-    expect(screen.getAllByText('1 / 2')).toHaveLength(2);
+    expect(screen.getByText('1–50 de 60')).toBeInTheDocument();
+    expect(previous()).toBeDisabled();
+    expect(next()).toBeEnabled();
   });
 
-  it('moves between pages with the bottom controls', async () => {
+  it('moves between pages with the footer pager', async () => {
     await renderProjectPage(givenProject(many));
 
-    fireEvent.click(screen.getByRole('button', { name: /^Próxima$/ }));
-    expect(screen.getAllByText('2 / 2')).toHaveLength(2);
+    fireEvent.click(next());
+    expect(screen.getByText('51–60 de 60')).toBeInTheDocument();
     expect(visibleTitles()).toHaveLength(10);
-    expect(screen.getByRole('button', { name: /^Próxima$/ })).toBeDisabled();
+    expect(next()).toBeDisabled();
 
-    fireEvent.click(screen.getByRole('button', { name: /^Anterior$/ }));
-    expect(screen.getAllByText('1 / 2')).toHaveLength(2);
-  });
-
-  it('moves between pages with the compact top controls', async () => {
-    await renderProjectPage(givenProject(many));
-    const previousTop = () => screen.getByRole('button', { name: 'Página anterior' });
-    const nextTop = () => screen.getByRole('button', { name: 'Próxima página' });
-
-    expect(previousTop()).toBeDisabled();
-    fireEvent.click(nextTop());
-    expect(screen.getAllByText('2 / 2')).toHaveLength(2);
-    expect(nextTop()).toBeDisabled();
-    fireEvent.click(previousTop());
-    expect(screen.getAllByText('1 / 2')).toHaveLength(2);
+    fireEvent.click(previous());
+    expect(screen.getByText('1–50 de 60')).toBeInTheDocument();
   });
 
   it.each([
@@ -81,11 +71,11 @@ describe('ProjectDetailsPage pagination', () => {
     ],
   ])('returns to page 1 after %s', async (_label, change) => {
     await renderProjectPage(givenProject(many));
-    fireEvent.click(screen.getByRole('button', { name: /^Próxima$/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Próxima página' }));
 
     change();
 
-    expect(screen.queryByText('2 / 2')).not.toBeInTheDocument();
+    expect(screen.queryByText('51–60 de 60')).not.toBeInTheDocument();
   });
 
   it('counts only active articles, not read or archived ones', async () => {
