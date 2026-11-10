@@ -65,6 +65,12 @@ describe('ArticleMetaLine', () => {
     expect(screen.getByText('Acesso aberto')).toBeInTheDocument();
   });
 
+  it('says why an archived article was archived', () => {
+    render(<ArticleMetaLine article={article({ status: 'archived', archive_note: 'fora do escopo' })} />);
+
+    expect(screen.getByText('Motivo: fora do escopo')).toBeInTheDocument();
+  });
+
   it('uses the singular for one citation and names a missing year', () => {
     render(<ArticleMetaLine article={article({ citation_count: 1 })} />);
 

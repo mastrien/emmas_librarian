@@ -18,12 +18,6 @@ async function addManualArticle(window, title, authors) {
   await window.click('button[type="submit"]');
 }
 
-async function setSidebar(window, open) {
-  const sidebar = window.getByRole('complementary', { name: 'Filtros' });
-  if ((await sidebar.isVisible()) !== open) await window.getByRole('button', { name: /^Filtros/ }).click();
-  await expect(sidebar).toBeVisible({ visible: open });
-}
-
 // How far the table sticks out of its scroll container (0 or less = no horizontal scroll).
 const tableOverflow = (window) =>
   window.evaluate(() => {
@@ -31,7 +25,8 @@ const tableOverflow = (window) =>
     return table.scrollWidth - table.parentElement.clientWidth;
   });
 
-test('the article table never needs a horizontal scroll, with the filters sidebar open or closed', async () => {
+// The filters became a popover over the page (board 153), so only the window width changes the table's room.
+test('the article table never needs a horizontal scroll, at any window width', async () => {
   test.setTimeout(120000);
   const electronApp = await launchApp();
   const window = await getFirstWindow(electronApp);
@@ -45,12 +40,7 @@ test('the article table never needs a horizontal scroll, with the filters sideba
 
     for (const width of [900, 1000, 1200, 1366]) {
       await electronApp.evaluate(({ BrowserWindow }, w) => BrowserWindow.getAllWindows()[0].setSize(w, 850), width);
-      for (const open of [true, false]) {
-        await setSidebar(window, open);
-        await expect
-          .poll(() => tableOverflow(window), { message: `${width}px, filtros ${open ? 'abertos' : 'fechados'}` })
-          .toBeLessThanOrEqual(0);
-      }
+      await expect.poll(() => tableOverflow(window), { message: `${width}px` }).toBeLessThanOrEqual(0);
     }
   } finally {
     await electronApp.close();

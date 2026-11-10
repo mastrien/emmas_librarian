@@ -2,13 +2,11 @@ import React, { useState } from 'react';
 import type { Article } from '../../../types';
 import type { ProjectFiltering } from '../hooks/useProjectFiltering';
 import type { ProjectModals } from '../hooks/useProjectModals';
-import { activeFilters, clearedFilters, withoutFilter } from '../hooks/articleFilters';
+import { clearedFilters } from '../hooks/articleFilters';
 import { ProjectArticlesList } from './ProjectArticlesList';
-import { ArticlesFilterBar } from './articles/ArticlesFilterBar';
-import { FiltersPanel } from './articles/FiltersPanel';
+import { ArticlesToolbar } from './articles/ArticlesToolbar';
 import { ResultLine } from './articles/ResultLine';
 import { BatchBar } from './articles/BatchBar';
-import { ReadArticlesSection, ArchivedArticlesSection } from './articles/ArticleStatusSections';
 import { PaginationControls } from './articles/ArticlesPagination';
 import { OpenAccessReport } from './articles/OpenAccessReport';
 import type { OpenAccessPdfs } from '../hooks/useOpenAccessPdfs';
@@ -18,8 +16,6 @@ type ArticleStatus = Article['status'];
 interface ProjectArticlesTabProps {
   filtering: ProjectFiltering;
   modals: ProjectModals;
-  isSidebarOpen: boolean;
-  onToggleSidebar: () => void;
   onStatusChange: (articleId: number, status: ArticleStatus) => void;
   onStatusChangeMany: (articleIds: number[], status: ArticleStatus) => void;
   onUnlinkPdf: (articleId: number) => void;
@@ -59,49 +55,24 @@ function useArticleSelection(listed: Article[]) {
 }
 
 /**
- * The "Artigos" tab: filter bar, filter panel, read/archived sections, the result line (or the batch
- * actions bar while multi-select is on) and the paginated list of articles.
+ * The Artigos section (board 153): search, order, status and filters above the paginated list; the batch actions
+ * bar replaces the result line while multi-select is on.
  *
  * Usage:
- *   <ProjectArticlesTab filtering={filtering} modals={modals} isSidebarOpen={open} ... />
+ *   <ProjectArticlesTab filtering={filtering} modals={modals} onStatusChange={change} ... />
  */
-export const ProjectArticlesTab: React.FC<ProjectArticlesTabProps> = (props) => {
-  const { filtering, modals, isSidebarOpen, onToggleSidebar } = props;
-  return (
-    <div className="custom-controls project-articles">
-      <ArticlesFilterBar filtering={filtering} isSidebarOpen={isSidebarOpen} onToggleSidebar={onToggleSidebar} />
-      <div className="project-articles-layout">
-        {isSidebarOpen && <FiltersPanel filtering={filtering} />}
-        <div className="project-articles-main">
-          <ReadArticlesSection
-            articles={filtering.readArticles}
-            isOpen={filtering.isReadArticlesOpen}
-            onToggle={filtering.setIsReadArticlesOpen}
-            onOpenMassCitation={() => {
-              modals.setMassCitationArticles(null);
-              modals.setIsMassCitationModalOpen(true);
-            }}
-            onShowDetails={modals.setSelectedArticleForDetails}
-            onCite={modals.setCitationArticle}
-            onMarkUnread={(id) => props.onStatusChange(id, 'new')}
-          />
-          <ArchivedArticlesSection
-            articles={filtering.archivedArticles}
-            isOpen={filtering.isArchivedArticlesOpen}
-            onToggle={filtering.setIsArchivedArticlesOpen}
-            onRestore={(id) => props.onStatusChange(id, 'new')}
-          />
-          <PaginatedArticles {...props} />
-        </div>
-      </div>
+export const ProjectArticlesTab: React.FC<ProjectArticlesTabProps> = (props) => (
+  <div className="custom-controls project-articles">
+    <ArticlesToolbar filtering={props.filtering} />
+    <div className="project-articles-main">
+      <PaginatedArticles {...props} />
     </div>
-  );
-};
+  </div>
+);
 
 const PaginatedArticles: React.FC<ProjectArticlesTabProps> = (props) => {
-  const { filtering, modals, isSidebarOpen, onToggleSidebar } = props;
-  const { activeArticles, paginatedArticles, criteria, applyCriteria, currentPage, totalPages, setCurrentPage } =
-    filtering;
+  const { filtering, modals } = props;
+  const { activeArticles, paginatedArticles, criteria, currentPage, totalPages, setCurrentPage } = filtering;
   const selection = useArticleSelection(activeArticles);
   // Every article the filters keep, on every page: selecting a page at a time was the slow part of a batch (validation
   // of epic #44).
@@ -137,10 +108,6 @@ const PaginatedArticles: React.FC<ProjectArticlesTabProps> = (props) => {
         <ResultLine
           shown={activeArticles.length}
           total={total}
-          filters={activeFilters(criteria)}
-          onRemove={(key) => applyCriteria(withoutFilter(criteria, key))}
-          onClear={() => applyCriteria(clearedFilters(criteria))}
-          onShowAll={() => !isSidebarOpen && onToggleSidebar()}
           onStartSelection={selection.start}
           currentPage={currentPage}
           totalPages={totalPages}

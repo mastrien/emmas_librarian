@@ -49,7 +49,6 @@ export const ProjectDetailsPage: React.FC = () => {
   useEffect(() => {
     if (activeTab && activeTab !== lastSection) setLastSection(activeTab);
   }, [activeTab, lastSection, setLastSection]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showKeyAlert, setShowKeyAlert] = useState(false);
   const addMenu = useHoverMenu();
   const exportMenu = useHoverMenu();
@@ -113,8 +112,6 @@ export const ProjectDetailsPage: React.FC = () => {
         <ProjectArticlesTab
           filtering={filtering}
           modals={modals}
-          isSidebarOpen={isSidebarOpen}
-          onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
           onStatusChange={actions.changeStatus}
           onStatusChangeMany={actions.changeStatusMany}
           onUnlinkPdf={actions.unlinkPdf}

@@ -8,7 +8,8 @@ const CHIP_GAP = 6.4; // 0.4rem, the gap in .filter-chips
 interface FilterChipsProps {
   filters: ActiveFilter[];
   onRemove: (key: FilterKey) => void;
-  onShowAll: () => void;
+  /** Where "+N filtros" leads; without it the hidden count is only shown. */
+  onShowAll?: () => void;
   onClear: () => void;
 }
 
@@ -77,11 +78,14 @@ export const FilterChips: React.FC<FilterChipsProps> = ({ filters, onRemove, onS
       {filters.slice(0, visible).map((f) => (
         <Chip key={f.key} filter={f} onRemove={onRemove} />
       ))}
-      {hidden > 0 && (
-        <button type="button" className="link-button" onClick={onShowAll}>
-          {moreLabel(hidden)}
-        </button>
-      )}
+      {hidden > 0 &&
+        (onShowAll ? (
+          <button type="button" className="link-button" onClick={onShowAll}>
+            {moreLabel(hidden)}
+          </button>
+        ) : (
+          <span className="filter-chips__more">{moreLabel(hidden)}</span>
+        ))}
       {filters.length > 0 && (
         <button type="button" className="link-button" onClick={onClear}>
           Limpar
@@ -131,22 +135,21 @@ export function resultCountLabel(shown: number, total: number): string {
   return shown === total ? `${total} ${noun}` : `${shown} de ${total} ${noun}`;
 }
 
-interface ResultLineProps extends FilterChipsProps, PagerProps {
+interface ResultLineProps extends PagerProps {
   shown: number;
   total: number;
   onStartSelection: () => void;
 }
 
 /**
- * The line above the table: how many articles the filters leave, the active filters that explain it,
- * "Selecionar" (multi-select) and the page switcher when there is more than one page.
+ * The line above the table: how many articles the filters leave, "Selecionar" (multi-select) and the page
+ * switcher when there is more than one page. The active filters sit above it, beside "Filtros" (board 153).
  *
- * @example <ResultLine shown={8} total={52} filters={active} ... />
+ * @example <ResultLine shown={8} total={52} onStartSelection={start} currentPage={1} totalPages={2} … />
  */
 export const ResultLine: React.FC<ResultLineProps> = ({ shown, total, onStartSelection, ...rest }) => (
   <div className="result-line">
     <span className="result-line__total">{resultCountLabel(shown, total)}</span>
-    <FilterChips filters={rest.filters} onRemove={rest.onRemove} onShowAll={rest.onShowAll} onClear={rest.onClear} />
     <button type="button" className="btn-ghost" onClick={onStartSelection}>
       <SquareCheck size={16} /> Selecionar
     </button>

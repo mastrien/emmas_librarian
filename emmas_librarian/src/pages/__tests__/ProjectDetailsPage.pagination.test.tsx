@@ -23,6 +23,12 @@ const visibleTitles = () =>
     .getAllByRole('listitem')
     .map((li) => li.textContent);
 
+// The PDF and open access options sit in the "Filtros" popover since the redesign (board 153).
+const chooseFilter = (name: RegExp) => {
+  fireEvent.click(screen.getByRole('button', { name: /^Filtros/ }));
+  fireEvent.click(within(screen.getByRole('dialog', { name: 'Filtros' })).getByRole('checkbox', { name }));
+};
+
 describe('ProjectDetailsPage pagination', () => {
   it('shows the first 50 active articles with the bottom controls', async () => {
     await renderProjectPage(givenProject(many));
@@ -67,11 +73,8 @@ describe('ProjectDetailsPage pagination', () => {
           target: { value: 'Artigo' },
         }),
     ],
-    ['toggling the PDF filter', () => fireEvent.click(screen.getByRole('checkbox', { name: /^Com PDF,/ }))],
-    [
-      'toggling the open access filter',
-      () => fireEvent.click(screen.getByRole('checkbox', { name: /^Acesso aberto,/ })),
-    ],
+    ['toggling the PDF filter', () => chooseFilter(/^Com PDF,/)],
+    ['toggling the open access filter', () => chooseFilter(/^Acesso aberto,/)],
     [
       'changing the sort order',
       () => fireEvent.change(screen.getByRole('combobox', { name: /Ordenar/ }), { target: { value: 'title-desc' } }),

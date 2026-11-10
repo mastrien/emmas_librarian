@@ -16,6 +16,14 @@ const chooseFromRowMenu = (title: string, item: string) => {
   fireEvent.click(inRow(title).getByRole('button', { name: 'Mais ações' }));
   fireEvent.click(screen.getByRole('menuitem', { name: item }));
 };
+// Board 153: the status is a segmented control above the list; the other filters sit in the "Filtros" popover.
+const chooseStatus = (name: RegExp) =>
+  fireEvent.click(within(screen.getByRole('group', { name: 'Status dos artigos' })).getByRole('button', { name }));
+const filters = () => {
+  if (!screen.queryByRole('dialog', { name: 'Filtros' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Filtros/ }));
+  return within(screen.getByRole('dialog', { name: 'Filtros' }));
+};
 
 describe('ProjectDetailsPage filters', () => {
   const articles = [
@@ -37,7 +45,7 @@ describe('ProjectDetailsPage filters', () => {
     async (label) => {
       await renderProjectPage(givenProject(articles));
 
-      fireEvent.click(screen.getByRole('checkbox', { name: new RegExp(`^${label},`) }));
+      fireEvent.click(filters().getByRole('checkbox', { name: new RegExp(`^${label},`) }));
 
       expect(within(mainTable()).getByText('Paper about genes')).toBeInTheDocument();
       expect(within(mainTable()).queryByText('Paper about proteins')).not.toBeInTheDocument();
@@ -58,7 +66,7 @@ describe('ProjectDetailsPage filters', () => {
     expect(rowTitles()[0]).toContain('Paper about proteins');
   });
 
-  it('applies the sidebar status, database and keyword filters', async () => {
+  it('applies the status, database and keyword filters', async () => {
     await renderProjectPage(
       givenProject([
         article({ id: 1, title: 'Paper One', source_databases: '["OpenAlex"]', author_keywords: 'React; Testing' }),
@@ -75,87 +83,60 @@ describe('ProjectDetailsPage filters', () => {
     expect(listed('Paper One')).toBeInTheDocument();
     expect(listed('Paper Two')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('radio', { name: /^Lidos,/ }));
+    chooseStatus(/^Lidos/);
     expect(listed('Paper One')).not.toBeInTheDocument();
     expect(listed('Paper Two')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('radio', { name: /^Todos,/ }));
-    fireEvent.click(screen.getByRole('checkbox', { name: /^OpenAlex,/ }));
+    chooseStatus(/^Todos/);
+    fireEvent.click(filters().getByRole('checkbox', { name: /^OpenAlex,/ }));
     expect(listed('Paper One')).toBeInTheDocument();
     expect(listed('Paper Two')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('checkbox', { name: /^OpenAlex,/ }));
-    fireEvent.click(screen.getByRole('button', { name: /^SQL,/ }));
+    fireEvent.click(filters().getByRole('checkbox', { name: /^OpenAlex,/ }));
+    fireEvent.click(filters().getByRole('button', { name: /^SQL,/ }));
     expect(listed('Paper One')).not.toBeInTheDocument();
     expect(listed('Paper Two')).toBeInTheDocument();
   });
-
-  it('hides and shows the filter sidebar', async () => {
-    await renderProjectPage(givenProject(articles));
-    expect(screen.getByRole('complementary', { name: 'Filtros' })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: /^Filtros/ }));
-    expect(screen.queryByRole('complementary', { name: 'Filtros' })).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: /^Filtros/ }));
-    expect(screen.getByRole('complementary', { name: 'Filtros' })).toBeInTheDocument();
-  });
 });
 
-describe('ProjectDetailsPage read and archived sections', () => {
+describe('ProjectDetailsPage read and archived articles', () => {
   const articles = [
     article({ id: 1, title: 'Artigo novo' }),
     article({ id: 2, title: 'Artigo lido', status: 'read' }),
     article({ id: 3, title: 'Artigo arquivado', status: 'archived', archive_note: 'fora do escopo' }),
   ];
+  const statusButton = (name: RegExp) =>
+    within(screen.getByRole('group', { name: 'Status dos artigos' })).getByRole('button', { name });
 
-  it('groups read and archived articles with counts and the archive reason', async () => {
+  it('counts them in the status control and shows the archive reason in the archived list', async () => {
     await renderProjectPage(givenProject(articles));
 
-    expect(screen.getByText('Artigos Lidos (1)')).toBeInTheDocument();
-    expect(screen.getByText('Artigos Arquivados (1)')).toBeInTheDocument();
-    expect(screen.getByText('Motivo: fora do escopo')).toBeInTheDocument();
+    expect(statusButton(/^Lidos/)).toHaveTextContent('Lidos 1');
+    expect(statusButton(/^Arquivados/)).toHaveTextContent('Arquivados 1');
+    chooseStatus(/^Arquivados/);
+    expect(within(mainTable()).getByText('Motivo: fora do escopo')).toBeInTheDocument();
   });
 
   it('moves a read article back to new', async () => {
     const service = givenProject(articles);
     await renderProjectPage(service);
-    const readSection = screen.getByText('Artigos Lidos (1)').closest('details') as HTMLElement;
+    chooseStatus(/^Lidos/);
 
-    fireEvent.click(within(readSection).getByRole('button', { name: 'Desmarcar' }));
+    fireEvent.click(inRow('Artigo lido').getByTitle('Desmarcar como Lido'));
 
-    await waitFor(() => expect(screen.queryByText('Artigos Lidos (1)')).not.toBeInTheDocument());
+    await waitFor(() => expect(statusButton(/^Lidos/)).toHaveTextContent('Lidos 0'));
     expect(service.updateArticleStatus).toHaveBeenCalledWith(2, 'new', undefined);
   });
 
   it('restores an archived article', async () => {
     const service = givenProject(articles);
     await renderProjectPage(service);
-    const archived = screen.getByText('Artigos Arquivados (1)').closest('details') as HTMLElement;
+    chooseStatus(/^Arquivados/);
 
-    fireEvent.click(within(archived).getByRole('button', { name: 'Restaurar' }));
+    fireEvent.click(inRow('Artigo arquivado').getByTitle('Restaurar Artigo'));
 
-    await waitFor(() => expect(screen.queryByText('Artigos Arquivados (1)')).not.toBeInTheDocument());
+    await waitFor(() => expect(statusButton(/^Arquivados/)).toHaveTextContent('Arquivados 0'));
     expect(service.updateArticleStatus).toHaveBeenCalledWith(3, 'new', undefined);
-  });
-
-  it('opens citation, details and mass citation from the read section', async () => {
-    await renderProjectPage(givenProject(articles));
-    const readSection = () => screen.getByText('Artigos Lidos (1)').closest('details') as HTMLElement;
-
-    fireEvent.click(within(readSection()).getByRole('button', { name: 'Citar' }));
-    const citation = await screen.findByRole('dialog', { name: 'Gerar Citação' });
-    fireEvent.click(within(citation).getByRole('button', { name: 'Fechar' }));
-
-    fireEvent.click(within(readSection()).getByRole('button', { name: /Citação em Massa/ }));
-    expect(await screen.findByText(/Citação em Massa/, { selector: 'h2, h3' })).toBeInTheDocument();
-  });
-
-  it('links read articles to the reader', async () => {
-    await renderProjectPage(givenProject(articles));
-    const readSection = screen.getByText('Artigos Lidos (1)').closest('details') as HTMLElement;
-
-    expect(within(readSection).getByRole('link', { name: 'Ver' })).toHaveAttribute('href', '/articles/2');
   });
 });
 
@@ -166,7 +147,7 @@ describe('ProjectDetailsPage status changes from the main list', () => {
 
     fireEvent.click(inRow('Artigo novo').getByTitle('Marcar como Lido'));
 
-    expect(await screen.findByText('Artigos Lidos (1)')).toBeInTheDocument();
+    await waitFor(() => expect(within(mainTable()).queryByText('Artigo novo')).not.toBeInTheDocument());
     expect(service.updateArticleStatus).toHaveBeenCalledWith(1, 'read', undefined);
   });
 
@@ -180,8 +161,9 @@ describe('ProjectDetailsPage status changes from the main list', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar Arquivamento' }));
 
-    expect(await screen.findByText('Motivo: duplicado')).toBeInTheDocument();
-    expect(service.updateArticleStatus).toHaveBeenCalledWith(1, 'archived', 'duplicado');
+    await waitFor(() => expect(service.updateArticleStatus).toHaveBeenCalledWith(1, 'archived', 'duplicado'));
+    chooseStatus(/^Arquivados/);
+    expect(await within(mainTable()).findByText('Motivo: duplicado')).toBeInTheDocument();
   });
 
   it('alerts and keeps the article when the status update fails', async () => {
@@ -194,7 +176,7 @@ describe('ProjectDetailsPage status changes from the main list', () => {
     await waitFor(() =>
       expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao atualizar status do artigo: locked'),
     );
-    expect(screen.queryByText('Artigos Lidos (1)')).not.toBeInTheDocument();
+    expect(within(mainTable()).getByText('Artigo novo')).toBeInTheDocument();
   });
 });
 

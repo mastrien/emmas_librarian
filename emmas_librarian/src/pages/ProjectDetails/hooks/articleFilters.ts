@@ -1,5 +1,6 @@
 import type { Article } from '../../../types';
 import { parseSourceDatabases } from '../../../utils/sourceDatabases';
+import { publicationYear } from '../../../utils/publicationYears';
 
 export type StatusFilter = 'new' | 'read' | 'archived' | 'all';
 
@@ -14,21 +15,27 @@ export interface ArticleFilterCriteria {
   databases: string[];
   docType: string;
   keyword: string;
+  /** Publication year range (board 153); null on a side means no limit there. */
+  yearFrom: number | null;
+  yearTo: number | null;
+  /** With a year range on, whether articles without a year stay in the list. */
+  includeNoYear: boolean;
 }
 
 /** The key of one removable filter chip: a field, or "database:<name>" for one selected base. */
-export type FilterKey = 'status' | 'pdf' | 'noPdf' | 'oa' | 'docType' | 'keyword' | `database:${string}`;
+export type FilterKey = 'pdf' | 'noPdf' | 'oa' | 'docType' | 'keyword' | 'year' | `database:${string}`;
 
 export interface ActiveFilter {
   key: FilterKey;
   label: string;
 }
 
+// The order and names of the status control above the list (board 153): "Ativos" are the articles still to read.
 export const STATUS_LABELS: Record<StatusFilter, string> = {
-  new: 'Não lidos',
+  all: 'Todos',
+  new: 'Ativos',
   read: 'Lidos',
   archived: 'Arquivados',
-  all: 'Todos',
 };
 
 // Author and index keywords are stored as semicolon-separated strings.
@@ -46,6 +53,13 @@ function matchesStatus(article: Article, status: StatusFilter): boolean {
   if (status === 'all') return true;
   if (status === 'new') return article.status === 'new' || !article.status;
   return article.status === status;
+}
+
+function matchesYear(article: Article, c: ArticleFilterCriteria): boolean {
+  if (c.yearFrom === null && c.yearTo === null) return true;
+  const year = publicationYear(article);
+  if (year === null) return c.includeNoYear;
+  return (c.yearFrom === null || year >= c.yearFrom) && (c.yearTo === null || year <= c.yearTo);
 }
 
 function matchesText(article: Article, term: string): boolean {
@@ -70,7 +84,8 @@ export function matchesFilters(article: Article, c: ArticleFilterCriteria): bool
     (c.databases.length === 0 ||
       c.databases.some((db) => parseSourceDatabases(article.source_databases).includes(db))) &&
     (!c.docType || article.document_type === c.docType) &&
-    (!keyword || articleKeywords(article).some((k) => k.toLowerCase() === keyword))
+    (!keyword || articleKeywords(article).some((k) => k.toLowerCase() === keyword)) &&
+    matchesYear(article, c)
   );
 }
 
@@ -88,9 +103,15 @@ export function countWith(
   return articles.filter((a) => matchesFilters(a, next)).length;
 }
 
+/** "2005–2026", "até 2010" or "desde 2005" for the year chip. */
+function yearRangeLabel(c: ArticleFilterCriteria): string {
+  if (c.yearFrom !== null && c.yearTo !== null) return `${c.yearFrom}–${c.yearTo}`;
+  return c.yearFrom !== null ? `desde ${c.yearFrom}` : `até ${c.yearTo}`;
+}
+
 /**
- * The filters currently narrowing the list, as chips. The search box and the default status
- * ("Não lidos") are not chips: the search has its own field and the default is not a choice.
+ * The filters currently narrowing the list, as chips. The search box and the status are not chips: both have
+ * their own control above the list (board 153).
  *
  * @example activeFilters({ ...criteria, onlyWithPdf: true }) // [{ key: 'pdf', label: 'Com PDF' }]
  */
@@ -99,13 +120,13 @@ export function activeFilters(
   docTypeLabel: (type: string) => string = (t) => t,
 ): ActiveFilter[] {
   const filters: ActiveFilter[] = [];
-  if (c.statusFilter !== 'new') filters.push({ key: 'status', label: STATUS_LABELS[c.statusFilter] });
   if (c.onlyWithPdf) filters.push({ key: 'pdf', label: 'Com PDF' });
   if (c.onlyWithoutPdf) filters.push({ key: 'noPdf', label: 'Sem PDF' });
   if (c.onlyOpenAccess) filters.push({ key: 'oa', label: 'Acesso aberto' });
   c.databases.forEach((db) => filters.push({ key: `database:${db}`, label: db }));
   if (c.docType) filters.push({ key: 'docType', label: docTypeLabel(c.docType) });
   if (c.keyword) filters.push({ key: 'keyword', label: `"${c.keyword}"` });
+  if (c.yearFrom !== null || c.yearTo !== null) filters.push({ key: 'year', label: yearRangeLabel(c) });
   return filters;
 }
 
@@ -115,7 +136,7 @@ export function activeFilters(
  * @example withoutFilter(criteria, 'database:Scopus')
  */
 export function withoutFilter(c: ArticleFilterCriteria, key: FilterKey): ArticleFilterCriteria {
-  if (key === 'status') return { ...c, statusFilter: 'new' };
+  if (key === 'year') return { ...c, yearFrom: null, yearTo: null, includeNoYear: false };
   if (key === 'pdf') return { ...c, onlyWithPdf: false };
   if (key === 'noPdf') return { ...c, onlyWithoutPdf: false };
   if (key === 'oa') return { ...c, onlyOpenAccess: false };
@@ -125,16 +146,18 @@ export function withoutFilter(c: ArticleFilterCriteria, key: FilterKey): Article
   return { ...c, databases: c.databases.filter((d) => d !== db) };
 }
 
-/** All filters off (the search box keeps its text; it is not part of "Limpar filtros"). */
+/** All filters off. The search text and the status keep their values: they are not in the filters popover. */
 export function clearedFilters(c: ArticleFilterCriteria): ArticleFilterCriteria {
   return {
     ...c,
     onlyWithPdf: false,
     onlyWithoutPdf: false,
     onlyOpenAccess: false,
-    statusFilter: 'new',
     databases: [],
     docType: '',
     keyword: '',
+    yearFrom: null,
+    yearTo: null,
+    includeNoYear: false,
   };
 }

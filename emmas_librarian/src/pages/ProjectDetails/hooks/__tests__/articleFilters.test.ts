@@ -27,6 +27,9 @@ const NONE: ArticleFilterCriteria = {
   databases: [],
   docType: '',
   keyword: '',
+  yearFrom: null,
+  yearTo: null,
+  includeNoYear: false,
 };
 
 describe('matchesFilters', () => {
@@ -86,21 +89,20 @@ describe('activeFilters and withoutFilter', () => {
     keyword: 'nowcasting',
   };
 
-  it('lists one chip per filter, without the search text or the default status', () => {
+  it('lists one chip per filter, without the search text or the status (they have their own controls)', () => {
     const labels = activeFilters(criteria, (t) => (t === 'review' ? 'Revisão' : t)).map((f) => f.label);
 
-    expect(labels).toEqual(['Todos', 'Com PDF', 'Scopus', 'Crossref', 'Revisão', '"nowcasting"']);
+    expect(labels).toEqual(['Com PDF', 'Scopus', 'Crossref', 'Revisão', '"nowcasting"']);
     expect(activeFilters(NONE)).toEqual([]);
   });
 
   it('removes exactly the chip that was clicked', () => {
     expect(withoutFilter(criteria, 'database:Scopus').databases).toEqual(['Crossref']);
-    expect(withoutFilter(criteria, 'status').statusFilter).toBe('new');
     expect(withoutFilter(criteria, 'keyword').keyword).toBe('');
   });
 
-  it('clears every filter but keeps the search text', () => {
-    expect(clearedFilters(criteria)).toEqual({ ...NONE, searchTerm: 'radar' });
+  it('clears every filter but keeps the search text and the status', () => {
+    expect(clearedFilters(criteria)).toEqual({ ...NONE, searchTerm: 'radar', statusFilter: 'all' });
   });
 });
 
@@ -118,5 +120,34 @@ describe('"Sem PDF" (validation of epic #44)', () => {
     expect(activeFilters(on)).toContainEqual({ key: 'noPdf', label: 'Sem PDF' });
     expect(withoutFilter(on, 'noPdf').onlyWithoutPdf).toBe(false);
     expect(clearedFilters(on).onlyWithoutPdf).toBe(false);
+  });
+});
+
+describe('year range (board 153)', () => {
+  const y2004 = article({ id: 1, year: 2004 });
+  const y2010 = article({ id: 2, year: 2010 });
+  const noYear = article({ id: 3 });
+  const kept = (c: ArticleFilterCriteria) =>
+    [y2004, y2010, noYear].filter((a) => matchesFilters(a, c)).map((a) => a.id);
+
+  it('keeps every article while no range is set', () => {
+    expect(kept(NONE)).toEqual([1, 2, 3]);
+  });
+
+  it('keeps the years inside the range, both ends included, and drops those without a year', () => {
+    expect(kept({ ...NONE, yearFrom: 2005, yearTo: 2010 })).toEqual([2]);
+    expect(kept({ ...NONE, yearTo: 2004 })).toEqual([1]);
+  });
+
+  it('brings the articles without a year back on request', () => {
+    expect(kept({ ...NONE, yearFrom: 2005, includeNoYear: true })).toEqual([2, 3]);
+  });
+
+  it('shows as one chip that removes the whole range', () => {
+    const on = { ...NONE, yearFrom: 2005, yearTo: 2026, includeNoYear: true };
+
+    expect(activeFilters(on)).toEqual([{ key: 'year', label: '2005–2026' }]);
+    expect(activeFilters({ ...NONE, yearFrom: 2005 })[0].label).toBe('desde 2005');
+    expect(withoutFilter(on, 'year')).toEqual(NONE);
   });
 });

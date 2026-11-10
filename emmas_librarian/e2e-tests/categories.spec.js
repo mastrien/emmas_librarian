@@ -69,6 +69,9 @@ test('F-11 Create categories, classify an article in the reader and export the v
 
     // Classify the article where users do it: the reader's floating "Categorizar" panel.
     await window.getByTestId('tab-articles').click();
+    // The categories section has a table too: wait for the articles one before clicking a title in it.
+    await window.waitForURL(/\/articles$/);
+    await expect(window.getByTestId('main-articles-table')).toBeVisible();
     await openReader(window);
     await window.getByTitle('Categorias do Artigo').click();
     await categoryEditor(window, 'Metodologia').getByText('Adicionar').click();
