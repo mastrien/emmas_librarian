@@ -5,7 +5,8 @@ const editor = (window) => window.locator('[contenteditable="true"]').first();
 
 async function openTodayPage(window) {
   await window.getByTestId('tab-diary').click();
-  await window.getByRole('button', { name: 'Página de Hoje' }).click();
+  // Board 155: "+" beside "Páginas" opens (or creates) today's page.
+  await window.getByRole('button', { name: 'Página de hoje', exact: true }).click();
   await expect(editor(window)).toBeVisible({ timeout: 10000 });
 }
 
@@ -16,8 +17,9 @@ async function writePage(window, text) {
   await window.keyboard.type(text);
 }
 
+// The diary saves by itself 2s after the last keystroke (no save button since the redesign).
 async function saveNow(window) {
-  await window.getByRole('button', { name: 'Salvar' }).click();
+  await expect(window.locator('.diary-save--done')).toContainText('Salvo às', { timeout: 10000 });
   await expect(window.getByText('Não salvo')).toBeHidden();
 }
 
@@ -45,7 +47,10 @@ test.describe('Project diary', () => {
       await window.reload();
       await dismissChangelog(window);
       await window.getByTestId('tab-diary').click();
-      await window.getByRole('button', { name: /Hoje/ }).filter({ hasNotText: 'Página de Hoje' }).click();
+      await window
+        .getByRole('navigation', { name: 'Páginas do diário' })
+        .getByRole('button', { name: /^Hoje/ })
+        .click();
       await expect(editor(window)).toContainText('Primeira leitura do artigo de teste.');
     });
   });
@@ -84,7 +89,7 @@ test.describe('Project diary', () => {
       await expect(window.getByText('Excluir página?')).toBeVisible();
       await window.getByRole('button', { name: 'Excluir', exact: true }).click();
 
-      await expect(window.getByText(/Nenhuma entrada ainda/)).toBeVisible();
+      await expect(window.getByText('Nenhuma página ainda.')).toBeVisible();
       await expect(editor(window)).toBeHidden();
     });
   });

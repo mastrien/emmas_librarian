@@ -109,7 +109,7 @@ describe('ProjectDetailsPage sections', () => {
   it('shows the diary section', async () => {
     await renderProjectPage(givenProject(), '/projects/1/diary');
 
-    expect(await screen.findByRole('button', { name: /Página de Hoje/ })).toBeInTheDocument();
+    expect(await screen.findByRole('navigation', { name: 'Páginas do diário' })).toBeInTheDocument();
   });
 
   // The sidebar links to sections; coming back to /projects/:id must reopen the one the user left.
