@@ -76,9 +76,10 @@ test('F-15 Cross-project Article Sharing and Search History Traceability', async
 
     // 8. Go to Search History tab and verify history record with correct Search ID
     await window.getByTestId('tab-history').click();
-    const historyItem = window.locator('div').filter({ hasText: 'Importação de artigos' }).first();
-    await expect(historyItem).toBeVisible();
-    await expect(window.locator('span:has-text("ID:")').first()).toBeVisible();
+    // Board 157: the inclusion is listed by what it recorded, and opens beside the list.
+    const historyList = window.getByRole('navigation', { name: 'Buscas do projeto' });
+    await expect(historyList.getByRole('button', { name: /Importação de artigos/ })).toBeVisible();
+    await expect(window.getByRole('heading', { level: 2, name: /Importação de artigos/ })).toBeVisible();
   } finally {
     await electronApp.close();
   }

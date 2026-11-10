@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tag } from 'lucide-react';
-import type { Article, Project } from '../../../types';
+import type { Article, Project, SearchReportFormat } from '../../../types';
+import { StrategyExportMenu } from '../../../components/modals/searchHistory/StrategyExportMenu';
 import type { ProjectSection } from '../../../components/common/shell/projectNav';
 import { PageHeader } from '../../../components/common/PageHeader';
 import type { ProjectActions } from '../hooks/useProjectActions';
@@ -18,6 +19,8 @@ export interface ProjectSectionHeaderProps {
   actions: ProjectActions;
   articleActions: ArticleActionsProps;
   onManageCategories: () => void;
+  /** Saves the search strategy report (#45); answers the path, or null when cancelled. */
+  onExportStrategy: (format: SearchReportFormat) => Promise<string | null>;
 }
 
 const OverviewHeader: React.FC<ProjectSectionHeaderProps> = ({ project, articles, actions }) => (
@@ -77,7 +80,11 @@ export const ProjectSectionHeader: React.FC<ProjectSectionHeaderProps> = (props)
       return <PageHeader title="Diário" />;
     case 'history':
       return (
-        <PageHeader title="Histórico de buscas" subtitle={countSubtitle(props.historyCount, 'entrada', 'entradas')} />
+        <PageHeader
+          title="Histórico de buscas"
+          subtitle={`Registro de todas as buscas feitas neste projeto · ${countSubtitle(props.historyCount, 'entrada', 'entradas')}`}
+          actions={<StrategyExportMenu onExport={props.onExportStrategy} />}
+        />
       );
   }
 };

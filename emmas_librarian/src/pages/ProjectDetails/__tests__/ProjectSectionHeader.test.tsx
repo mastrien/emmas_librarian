@@ -21,6 +21,7 @@ function renderHeader(section: ProjectSection, extra: Partial<ProjectSectionHead
     } as unknown as ProjectSectionHeaderProps['actions'],
     articleActions: { projectId: 3 } as ProjectSectionHeaderProps['articleActions'],
     onManageCategories: vi.fn(),
+    onExportStrategy: vi.fn(async () => null),
     ...extra,
   };
   render(
@@ -66,7 +67,8 @@ describe('ProjectSectionHeader', () => {
   it('titles the diary and the search history', () => {
     renderHeader('history');
     expect(title()).toHaveTextContent('Histórico de buscas');
-    expect(screen.getByText('2 entradas')).toBeInTheDocument();
+    expect(screen.getByText(/· 2 entradas$/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Exportar estratégia/ })).toBeInTheDocument();
   });
 
   it('keeps the project actions out of the other sections', () => {

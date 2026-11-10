@@ -17,7 +17,7 @@ import { ProjectCategoriesTab } from './ProjectDetails/components/ProjectCategor
 import { ProjectModalsContainer } from './ProjectDetails/components/ProjectModalsContainer';
 import { PdfDropOverlay } from './ProjectDetails/components/PdfDropOverlay';
 import { DiarySection } from '../components/common/DiarySection';
-import { SearchHistoryModal } from '../components/modals/SearchHistoryModal';
+import { SearchHistoryView } from '../components/modals/searchHistory/SearchHistoryView';
 import { outsideSearchIds } from '../utils/outsideSearchEntries';
 import { useOpenAccessPdfs } from './ProjectDetails/hooks/useOpenAccessPdfs';
 import './ProjectDetails/projectPage.css';
@@ -90,6 +90,7 @@ export const ProjectDetailsPage: React.FC = () => {
         categoryCount={data.projectCategories.length}
         actions={actions}
         onManageCategories={() => modals.setIsCategoriesModalOpen(true)}
+        onExportStrategy={(format) => projectService.exportSearchReport(project.id, format)}
         articleActions={{
           projectId: project.id,
           isAddArticlesMenuOpen: addMenu.isOpen,
@@ -140,18 +141,8 @@ export const ProjectDetailsPage: React.FC = () => {
         />
       )}
       {activeTab === 'diary' && projectId !== null && <DiarySection projectId={projectId} />}
-      {activeTab === 'history' && (
-        <SearchHistoryModal
-          isOpen={true}
-          onClose={() => {}}
-          history={data.history}
-          embedded={true}
-          onRevertSearch={actions.revertSearch}
-          onExportStrategy={
-            projectId === null ? undefined : (format) => projectService.exportSearchReport(projectId, format)
-          }
-          projectId={projectId ?? undefined}
-        />
+      {activeTab === 'history' && projectId !== null && (
+        <SearchHistoryView history={data.history} projectId={projectId} onRevertSearch={actions.revertSearch} />
       )}
 
       <ProjectModalsContainer

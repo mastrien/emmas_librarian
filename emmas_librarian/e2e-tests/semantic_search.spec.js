@@ -70,7 +70,8 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
 
     // The history records what was asked of each base and what came back (traceability).
     await window.getByTestId('tab-history').click();
-    await expect(window.getByText('1.500 por base (Crossref 300)')).toBeVisible();
+    // The limits sit in the chosen search's line of facts (board 157).
+    await expect(window.getByText(/até 1\.500 por base \(Crossref 300\)/)).toBeVisible();
     await expect(window.getByText('Únicos entre as bases: 1')).toBeVisible();
 
     // The saved search can be reopened in the query builder from the history, limits included.
