@@ -12,6 +12,13 @@ export interface ResultReviewControlsProps {
 // Shortcuts work while the answer block has focus (click it or Tab to it), never while typing in the edit box.
 const SHORTCUTS: Record<string, 'accept' | 'edit' | 'reject'> = { a: 'accept', e: 'edit', r: 'reject' };
 
+// The key is shown, not read: the button keeps its plain name ("Aceitar") for screen readers and tests.
+const Key: React.FC<{ children: string }> = ({ children }) => (
+  <kbd className="result-review-key" aria-hidden="true">
+    {children}
+  </kbd>
+);
+
 /**
  * Accept, edit or reject one AI answer (#47), with its review status always visible. Once an answer is marked,
  * the three give way to "Desfazer", which brings them back (validation of epic #44). Keys, while the answer is
@@ -74,24 +81,25 @@ export const ResultReviewControls: React.FC<ResultReviewControlsProps> = ({ resu
           </button>
         ) : (
           <>
+            {/* Board 162: accepting is the common case, so it is the primary; each shows its key. */}
             <button
               type="button"
-              className="btn-secondary result-review-button"
+              className="btn-primary result-review-button result-review-button--grow"
               disabled={busy}
               onClick={actions.accept}
             >
-              <Check size={14} /> Aceitar
+              <Check size={14} /> Aceitar <Key>A</Key>
             </button>
             <button type="button" className="btn-secondary result-review-button" disabled={busy} onClick={actions.edit}>
-              <Pencil size={14} /> Editar
+              <Pencil size={14} /> Editar <Key>E</Key>
             </button>
             <button
               type="button"
-              className="btn-secondary result-review-button"
+              className="btn-secondary result-review-button result-review-button--danger"
               disabled={busy}
               onClick={actions.reject}
             >
-              <X size={14} /> Rejeitar
+              <X size={14} /> Rejeitar <Key>R</Key>
             </button>
           </>
         )}
