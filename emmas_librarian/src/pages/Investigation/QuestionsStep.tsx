@@ -12,8 +12,18 @@ interface QuestionsStepProps {
   lastInvestigation?: InvestigationHistoryRecord;
 }
 
-const StartCard: React.FC<{ title: string; note: string; onPick: () => void }> = ({ title, note, onPick }) => (
-  <button type="button" className="inv-start-card" onClick={onPick}>
+const StartCard: React.FC<{ title: string; note: string; picked: boolean; onPick: () => void }> = ({
+  title,
+  note,
+  picked,
+  onPick,
+}) => (
+  <button
+    type="button"
+    className={picked ? 'inv-start-card is-on' : 'inv-start-card'}
+    aria-pressed={picked}
+    onClick={onPick}
+  >
     <span className="inv-start-card__title">{title}</span>
     <span className="inv-muted">{note}</span>
   </button>
@@ -27,24 +37,37 @@ const StartCard: React.FC<{ title: string; note: string; onPick: () => void }> =
  */
 export const QuestionsStep: React.FC<QuestionsStepProps> = ({ projectId, questions, onChange, lastInvestigation }) => {
   const [creatingSet, setCreatingSet] = useState(false);
+  // Which card the questions came from (the board marks it); typing afterwards leaves the mark where it is.
+  const [picked, setPicked] = useState<'last' | 'blank'>(lastInvestigation ? 'last' : 'blank');
   const lastQuestions = lastInvestigation ? parseJsonList<string>(lastInvestigation.questions) : [];
   return (
     <div className="inv-step-body">
       <section className="inv-start" aria-label="Começar de">
-        <span className="inv-section-title">Começar de</span>
+        <span className="inv-section-title">Começar de um conjunto</span>
         <div className="inv-start-grid">
           {lastInvestigation && lastQuestions.length > 0 && (
             <StartCard
               title={`Da investigação #${lastInvestigation.id}`}
               note={`${lastQuestions.length} perguntas`}
-              onPick={() => onChange(lastQuestions)}
+              picked={picked === 'last'}
+              onPick={() => {
+                setPicked('last');
+                onChange(lastQuestions);
+              }}
             />
           )}
-          <StartCard title="Do zero" note="Escreva as suas perguntas" onPick={() => onChange([''])} />
+          <StartCard
+            title="Do zero"
+            note="Escreva as suas perguntas"
+            picked={picked === 'blank'}
+            onPick={() => {
+              setPicked('blank');
+              onChange(['']);
+            }}
+          />
         </div>
       </section>
-      <section className="inv-card" aria-label="Perguntas">
-        <h3 className="inv-section-title">Perguntas</h3>
+      <section className="inv-questions" aria-label="Perguntas">
         <QuestionListEditor questions={questions} onChange={onChange} onSaveAsSet={() => setCreatingSet(true)} />
         <div className="inv-divider">
           <QuestionSetCatalog

@@ -57,6 +57,27 @@ const ProgressCard: React.FC<{ run: InvestigationRunState; cells: CallCell[] }> 
 
 const STAGE_MARK = { done: <Check size={12} />, run: null, wait: null };
 
+/**
+ * How far the indexing of the PDFs is. The run indexes each PDF the first time it asks about it, so an article that
+ * already has its results has certainly been indexed; the stage is done only when every article has.
+ *
+ * @example indexStage({ targets: [a, b], results: [r] }) // { state: 'run', note: '1 de 2' }
+ */
+export function indexStage(run: Pick<InvestigationRunState, 'targets' | 'results'>): {
+  state: 'done' | 'run';
+  note: string;
+} {
+  const total = run.targets.length;
+  const indexed = Math.min(run.results.length, total);
+  return { state: indexed === total ? 'done' : 'run', note: `${indexed} de ${total}` };
+}
+
+/** "Iniciada às 22:05": when the run began, in the user's clock. */
+export function startedAtText(startedAt: number): string {
+  const time = new Date(startedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return `Iniciada às ${time}`;
+}
+
 const Stage: React.FC<{ state: 'done' | 'run' | 'wait'; label: string; note: string }> = ({ state, label, note }) => (
   <li className={`inv-stage inv-stage--${state}`}>
     <span className="inv-stage__mark" aria-hidden="true">
@@ -67,15 +88,16 @@ const Stage: React.FC<{ state: 'done' | 'run' | 'wait'; label: string; note: str
   </li>
 );
 
-const RunSide: React.FC<{ cells: CallCell[] }> = ({ cells }) => {
+const RunSide: React.FC<{ cells: CallCell[]; run: InvestigationRunState }> = ({ cells, run }) => {
   const done = cells.filter(isDone).length;
+  const indexing = indexStage(run);
   const groups = callErrorGroups(cells).filter((g) => g.status === 'error');
   return (
     <div className="inv-run-side">
       <section className="inv-card" aria-label="Etapas">
         <h3 className="inv-section-title">Etapas</h3>
         <ol className="inv-stages">
-          <Stage state="done" label="Indexar os PDFs" note="feito" />
+          <Stage state={indexing.state} label="Indexar os PDFs" note={indexing.note} />
           <Stage state="run" label="Perguntar a cada PDF" note={`${done} de ${cells.length}`} />
           <Stage state="wait" label="Revisar as respostas" note="você" />
         </ol>
@@ -121,13 +143,10 @@ export const RunningView: React.FC<RunningViewProps> = ({ run, modelLabel, onCan
       <PageHeader
         title={
           <>
-            Investigação em andamento{' '}
-            <span className="inv-chip inv-chip--run">
-              Artigo {run.current} de {run.targets.length}
-            </span>
+            Investigação <span className="inv-badge-run">Rodando</span>
           </>
         }
-        subtitle={`${run.targets.length} artigos · ${run.questions.length} perguntas · ${modelLabel}`}
+        subtitle={`${startedAtText(run.startedAt)} · ${modelLabel} · ${run.targets.length} artigos · ${run.questions.length} perguntas`}
         actions={
           <>
             <button type="button" className="btn-ghost inv-danger" onClick={onCancel}>
@@ -144,7 +163,7 @@ export const RunningView: React.FC<RunningViewProps> = ({ run, modelLabel, onCan
           <ProgressCard run={run} cells={cells} />
           <CallMatrix cells={cells} questions={run.questions} />
         </div>
-        <RunSide cells={cells} />
+        <RunSide cells={cells} run={run} />
       </div>
     </>
   );

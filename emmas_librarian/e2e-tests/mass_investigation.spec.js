@@ -72,7 +72,7 @@ test('Investigation page - Checkbox state persists across re-renders', async () 
 
     // Back to the questions to add one, which updates the draft in the page and re-renders the steps
     await modal.getByRole('button', { name: 'Voltar' }).click();
-    await modal.locator('button:has-text("+ Adicionar Pergunta")').click();
+    await modal.locator('button:has-text("Pergunta")').click();
     await modal.getByRole('list', { name: 'Passos da investigação' }).getByRole('button', { name: 'Artigos' }).click();
 
     // Verify checkbox is still unchecked after re-render (the original bug)

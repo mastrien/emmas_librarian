@@ -353,9 +353,8 @@ describe('InvestigationPage (#73): a new investigation', () => {
     });
     await start(service);
 
-    expect(await screen.findByRole('heading', { name: /Investigação em andamento/ })).toHaveTextContent(
-      'Artigo 1 de 1',
-    );
+    expect(await screen.findByRole('heading', { name: /Investigação\s+Rodando/ })).toBeInTheDocument();
+    expect(screen.getByText('Indexar os PDFs').closest('li')).toHaveTextContent('0 de 1');
     expect(screen.getByRole('img', { name: 'Estudo 1, Qual o desenho?: rodando' })).toBeInTheDocument();
     await act(async () => finish([]));
 
