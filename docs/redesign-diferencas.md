@@ -159,6 +159,16 @@ Feito: **PDFs em acesso aberto** (título e "N artigos sem PDF procurados", trê
 - [ ] **Acesso rápido**: o board agrupa por nome do grupo ("WorCAP", "Reuniões"), com alças e "⋯" por item, e botões "Link ou arquivo" e "Novo grupo". O app mantém a lista com arrastar para reordenar e o formulário embaixo; só o título mudou.
 - [ ] **PDFs em acesso aberto**: "Falharam" soma as falhas e as cópias abertas que o download automático não conseguiu baixar (o exemplo do board, "o link aberto devolveu uma página, não um PDF", é desse caso). O botão "Abrir link" do board é o "Abrir a página" que já existia.
 
+## 179 · Janelas da revisão e da investigação (#184)
+
+Feito: **Critérios do projeto** (título e subtítulo do board, "Incluir quando" com visto verde e "Excluir quando" com X vermelho, "Concluir" na barra de baixo com a dica "Salvos ao sair de cada campo"); **Rótulos de triagem** ("Concluir" na barra de baixo); **Refazer o índice antes de rodar?** (pergunta do board, número de PDFs na barra, "Cancelar" e o botão de confirmar); **A cota acabou** (ícone vermelho ao lado do título e "Entendi" sem fundo na barra).
+
+- [ ] **Critérios**: falta o campo "Pergunta da revisão" (o app não guarda a pergunta da revisão). Os critérios continuam salvando sozinhos, então não há "Cancelar"/"Salvar critérios"; o botão é "Concluir".
+- [ ] **Rótulos**: o board mostra um seletor Título e resumo / Texto completo, uma lista simples com a tecla de cada rótulo (1 a 4) e o botão "Motivo de exclusão". O app mantém a janela de antes (rótulos por tipo, renomear, mover, apagar, modelo PRISMA 2020); só ganhou a barra de baixo.
+- [ ] **Cota**: o board diz o nome do provedor ("A cota do Gemini acabou"), quantas chamadas já foram feitas, "Detalhes técnicos" e os botões "Trocar modelo" e "Tentar de novo". O app mantém "Limite de Cota Atingido" e o texto geral; retomar as chamadas que faltam é recurso novo.
+- [ ] **Como ler a auditoria** ficou como estava (o board mostra só o texto curto e um exemplo; o app tem o gráfico e as explicações mais longas).
+- [ ] O nome acessível das janelas não mudou ("Recalcular os PDFs", "Critérios de inclusão e exclusão"), só o título que aparece na tela.
+
 ## Próximas telas (este documento ganha uma seção por PR)
 
 175–181 Janelas (restante)

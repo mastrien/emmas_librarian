@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Check, X } from 'lucide-react';
 import { Modal } from '../../components/common/Modal';
+import { ModalFooter } from '../../components/common/ModalFooter';
+import { Button } from '../../components/common/Button';
 import { useProjectService } from '../../contexts/ServicesContext';
 import type { ScreeningCriteria } from '../../types';
 
@@ -40,15 +43,18 @@ export const CriteriaModal: React.FC<{
   return (
     <Modal
       label="Critérios de inclusão e exclusão"
-      title="Critérios de inclusão e exclusão"
-      description="Vão junto com título e resumo em cada sugestão. Salvos ao sair de cada campo."
+      title="Critérios do projeto"
+      description="Guiam a sua triagem e as sugestões da IA"
       closeLabel="Fechar os critérios"
       onClose={close}
     >
       {criteria && (
         <>
           <label className="review-field">
-            <span>Incluir quando</span>
+            <span className="review-field-name">
+              <Check size={14} aria-hidden="true" style={{ color: 'var(--color-success)' }} />
+              Incluir quando
+            </span>
             <textarea
               className="input-field"
               rows={4}
@@ -58,7 +64,10 @@ export const CriteriaModal: React.FC<{
             />
           </label>
           <label className="review-field">
-            <span>Excluir quando</span>
+            <span className="review-field-name">
+              <X size={14} aria-hidden="true" style={{ color: 'var(--color-danger)' }} />
+              Excluir quando
+            </span>
             <textarea
               className="input-field"
               rows={4}
@@ -69,6 +78,11 @@ export const CriteriaModal: React.FC<{
           </label>
         </>
       )}
+      <ModalFooter hint="Salvos ao sair de cada campo">
+        <Button variant="primary" onClick={close}>
+          Concluir
+        </Button>
+      </ModalFooter>
     </Modal>
   );
 };

@@ -20,4 +20,10 @@ describe('QuotaModal', () => {
 
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('puts a red icon beside the title instead of a large one above the text (board 179)', () => {
+    render(<QuotaModal isOpen={true} onClose={vi.fn()} />);
+
+    expect(document.querySelector('.app-modal-icon.is-danger')).not.toBeNull();
+  });
 });
