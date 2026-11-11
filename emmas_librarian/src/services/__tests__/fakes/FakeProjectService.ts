@@ -54,6 +54,7 @@ import type {
 import type {
   Project,
   ProjectNavCounts,
+  ScreeningSummary,
   Article,
   Highlight,
   Annotation,
@@ -115,6 +116,10 @@ export class FakeProjectService implements IProjectService {
   updateProjectAbout = vi.fn(async (projectId: number, markdown: string): Promise<void> => {
     this.aboutByProject.set(projectId, markdown);
   });
+
+  markProjectOpened = vi.fn(async (_projectId: number): Promise<void> => undefined);
+
+  getScreeningSummaries = vi.fn(async (): Promise<Record<number, ScreeningSummary>> => ({}));
 
   getProjectNavCounts = vi.fn(
     async (_projectId: number): Promise<ProjectNavCounts> => ({

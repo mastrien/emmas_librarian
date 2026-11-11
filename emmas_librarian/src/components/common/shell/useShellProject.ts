@@ -19,6 +19,13 @@ export function useShellProject(projectId: number | undefined, refreshKey: strin
   const projectService = useProjectService();
   const [loaded, setLoaded] = useState<ShellProject & { id?: number }>({});
 
+  // Entering a project, on any of its screens, makes it the most recent one on the home (board 151). Failing to
+  // record it must never get in the way of the screen.
+  useEffect(() => {
+    if (projectId === undefined) return;
+    void projectService.markProjectOpened(projectId).catch(() => undefined);
+  }, [projectService, projectId]);
+
   useEffect(() => {
     if (projectId === undefined) return;
     let current = true;

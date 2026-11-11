@@ -65,13 +65,39 @@ export function sharePercent(part: number, whole: number): number {
 
 export type ProjectOrder = 'recent' | 'az';
 
+type Ordered = Pick<Project, 'name' | 'created_at' | 'last_opened_at'>;
+
+/** The last sign of life of a project: when it was opened, or else when it was created. */
+const lastActivity = (project: Pick<Project, 'created_at' | 'last_opened_at'>): string =>
+  project.last_opened_at ?? project.created_at;
+
 /**
- * The projects in the chosen order: the newest first, or by name (accents and case ignored).
+ * The projects in the chosen order: the most recently opened first (a project never opened counts from its
+ * creation), or by name (accents and case ignored).
  *
  * @example sortProjects(projects, 'az').map((p) => p.name)
  */
-export function sortProjects<T extends Pick<Project, 'name' | 'created_at'>>(projects: T[], order: ProjectOrder): T[] {
+export function sortProjects<T extends Ordered>(projects: T[], order: ProjectOrder): T[] {
   const sorted = [...projects];
   if (order === 'az') return sorted.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
-  return sorted.sort((a, b) => b.created_at.localeCompare(a.created_at));
+  return sorted.sort((a, b) => new Date(lastActivity(b)).getTime() - new Date(lastActivity(a)).getTime());
+}
+
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
+/**
+ * "aberto há 2 h" for a card (board 151); nothing for a project that was never opened.
+ *
+ * @example openedAgo('2026-11-10T20:00:00Z', new Date('2026-11-10T22:30:00Z')) // 'aberto há 2 h'
+ */
+export function openedAgo(openedAt: string | null | undefined, now: Date): string | null {
+  if (!openedAt) return null;
+  const elapsed = Math.max(0, now.getTime() - new Date(openedAt).getTime());
+  if (elapsed < MINUTE) return 'aberto agora';
+  if (elapsed < HOUR) return `aberto há ${Math.floor(elapsed / MINUTE)} min`;
+  if (elapsed < DAY) return `aberto há ${Math.floor(elapsed / HOUR)} h`;
+  if (elapsed < 30 * DAY) return `aberto há ${Math.floor(elapsed / DAY)} d`;
+  return `aberto em ${new Date(openedAt).toLocaleDateString('pt-BR')}`;
 }

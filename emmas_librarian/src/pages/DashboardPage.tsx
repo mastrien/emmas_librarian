@@ -56,11 +56,15 @@ export const DashboardPage: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const data = await projectService.getProjects();
+      const [data, screenings] = await Promise.all([
+        projectService.getProjects(),
+        projectService.getScreeningSummaries(),
+      ]);
 
       const projectsWithStats = await Promise.all(
         data.map(async (project) => ({
           ...project,
+          screening: screenings[project.id],
           stats: projectStats(
             await projectService.getArticles(project.id),
             (await projectService.getDiaryEntries(project.id)) as DiaryEntry[],

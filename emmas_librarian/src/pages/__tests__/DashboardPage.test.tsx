@@ -6,6 +6,7 @@ import { FakeDialogs, FakeDialogsProvider } from '../../components/common/dialog
 
 let dialogs = new FakeDialogs();
 import { ServicesContext } from '../../contexts/ServicesContext';
+import type { Article, Project } from '../../types';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 
 const fakeService = FakeProjectService.create();
@@ -91,6 +92,36 @@ describe('DashboardPage', () => {
     const overview = screen.getByRole('region', { name: 'Visão geral' });
     expect(within(overview).getByText('Com PDF')).toBeInTheDocument();
     expect(within(overview).getByText('Sem PDF')).toBeInTheDocument();
+  });
+
+  // Board 151: a project that had interaction with the review shows the screening progress, with its badge and
+  // when it was opened; the others show the reading progress.
+  it('shows the screening progress and the badge for a project that opened the review, reading for the others', async () => {
+    fakeService.getProjects.mockResolvedValue([
+      {
+        id: 1,
+        name: 'Revisão',
+        created_at: '2023-01-01',
+        last_opened_at: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+      },
+      { id: 2, name: 'Leitura', created_at: '2023-01-02', last_opened_at: null },
+    ] as unknown as Project[]);
+    fakeService.getScreeningSummaries.mockResolvedValue({ 1: { decided: 1 } });
+    fakeService.getArticles.mockResolvedValue([
+      { id: 1, status: 'read', project_id: 1, title: 'T1' } as Article,
+      { id: 2, status: 'new', project_id: 1, title: 'T2' } as Article,
+    ]);
+
+    renderDashboard();
+
+    const review = (await screen.findByText('Revisão')).closest('a')!;
+    expect(within(review).getByText('Revisão sistemática')).toBeInTheDocument();
+    expect(within(review).getByText('Triagem por título e resumo')).toBeInTheDocument();
+    expect(within(review).getByText('1 de 2')).toBeInTheDocument();
+    expect(within(review).getByText('aberto há 2 h')).toBeInTheDocument();
+    const reading = screen.getByText('Leitura', { selector: 'h3' }).closest('a')!;
+    expect(within(reading).queryByText('Revisão sistemática')).not.toBeInTheDocument();
+    expect(within(reading).getByText('1 de 2 lidos')).toBeInTheDocument();
   });
 
   it('handles error when loading data', async () => {

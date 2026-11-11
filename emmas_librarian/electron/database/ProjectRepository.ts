@@ -1,5 +1,5 @@
 import type { Database } from 'better-sqlite3';
-import { Project, ProjectCategory, CategoryOption, ProjectNavCounts } from '../../src/types';
+import { Project, ProjectCategory, CategoryOption, ProjectNavCounts, ScreeningSummary } from '../../src/types';
 import fs from 'fs';
 import { deletePdfIfUnused } from './sharedPdfFiles';
 import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
@@ -39,6 +39,39 @@ export class ProjectRepository {
            (SELECT COUNT(*) FROM massive_investigations WHERE project_id = @id) AS investigations`,
       )
       .get({ id: projectId }) as ProjectNavCounts;
+  }
+
+  /**
+   * Records that the project was opened now (ISO, like created_at), so the home can list recent ones first.
+   *
+   * @example repo.markProjectOpened(1)
+   */
+  markProjectOpened(projectId: number): void {
+    this.db.prepare('UPDATE projects SET last_opened_at = ? WHERE id = ?').run(new Date().toISOString(), projectId);
+  }
+
+  /**
+   * How far the screening went in each project that ever opened the review: opening it creates the project's labels,
+   * so a project with labels or with decisions "had interaction with the review" (board 151). Projects that never
+   * did are absent from the result.
+   *
+   * @example repo.getScreeningSummaries() // { 3: { decided: 12 } }
+   */
+  getScreeningSummaries(): Record<number, ScreeningSummary> {
+    const rows = this.db
+      .prepare(
+        `SELECT p.id AS project_id,
+           (SELECT COUNT(DISTINCT d.article_id) FROM screening_decisions d
+              JOIN articles a ON a.id = d.article_id AND a.deleted_at IS NULL
+             WHERE a.project_id = p.id AND d.stage = 'title') AS decided
+         FROM projects p
+         WHERE p.deleted_at IS NULL
+           AND (EXISTS (SELECT 1 FROM screening_labels l WHERE l.project_id = p.id)
+             OR EXISTS (SELECT 1 FROM screening_decisions d JOIN articles a ON a.id = d.article_id
+                         WHERE a.project_id = p.id))`,
+      )
+      .all() as { project_id: number; decided: number }[];
+    return Object.fromEntries(rows.map((row) => [row.project_id, { decided: row.decided }]));
   }
 
   /**
