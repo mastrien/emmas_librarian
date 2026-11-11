@@ -67,7 +67,7 @@ const decidedLine = (counts: ReviewHeaderProps['counts']) => {
 const EVALUATION_NOTE =
   'Compara as sugestões da IA com as suas decisões. A IA nunca vê as suas decisões: só título, resumo e critérios.';
 
-/** The page's header for each part (boards 164-167); the actions of the screening stay on every part. */
+/** The page's header for each part (boards 164-167); the actions of the screening stay on the screening and the diagram. */
 const ReviewHeader: React.FC<ReviewHeaderProps> = ({ projectId, tab, counts, onManageLabels, onWriteCriteria }) => {
   const titles: Record<ReviewTab, { eyebrow: string; title: string; subtitle?: string }> = {
     screening: { eyebrow: 'Revisão sistemática · PRISMA 2020', title: 'Triagem', subtitle: decidedLine(counts) },
@@ -85,18 +85,20 @@ const ReviewHeader: React.FC<ReviewHeaderProps> = ({ projectId, tab, counts, onM
       title={title}
       subtitle={subtitle}
       actions={
-        <>
-          <button type="button" className="btn-ghost" onClick={onWriteCriteria}>
-            <ListChecks size={16} aria-hidden="true" /> Critérios
-          </button>
-          {/* The name keeps "Gerenciar" for screen readers; the canvas shows the short label. */}
-          <button type="button" className="btn-ghost" onClick={onManageLabels} aria-label="Gerenciar rótulos">
-            <Tag size={16} aria-hidden="true" /> Rótulos
-          </button>
-          <Link to={`/projects/${projectId}/review/guided`} className="btn-primary">
-            <Play size={16} aria-hidden="true" /> Iniciar triagem guiada
-          </Link>
-        </>
+        tab === 'evaluation' ? undefined : (
+          <>
+            <button type="button" className="btn-ghost" onClick={onWriteCriteria}>
+              <ListChecks size={16} aria-hidden="true" /> Critérios
+            </button>
+            {/* The name keeps "Gerenciar" for screen readers; the canvas shows the short label. */}
+            <button type="button" className="btn-ghost" onClick={onManageLabels} aria-label="Gerenciar rótulos">
+              <Tag size={16} aria-hidden="true" /> Rótulos
+            </button>
+            <Link to={`/projects/${projectId}/review/guided`} className="btn-primary">
+              <Play size={16} aria-hidden="true" /> Iniciar triagem guiada
+            </Link>
+          </>
+        )
       }
     />
   );
@@ -222,10 +224,10 @@ export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'scr
       />
       {tab === 'prisma' && <PrismaTab projectId={projectId} screening={screening} />}
       {tab === 'evaluation' && (
-        <>
+        <div className="review-evaluation-columns">
           <EvaluationTab key={criteriaEdits} projectId={projectId} screening={screening} />
           <SimulationSection projectId={projectId} />
-        </>
+        </div>
       )}
       {tab === 'screening' && <ReviewBody projectId={projectId} screening={screening} onCite={setCiting} />}
       {screening.lastChange && <UndoToast change={screening.lastChange} />}
