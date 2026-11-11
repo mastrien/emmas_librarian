@@ -15,23 +15,13 @@ export interface PdfFileRecord {
 }
 
 /**
- * When a PDF was added, as dd/mm/aaaa, hh:mm; "-" when unknown.
+ * The day a PDF was added, as dd/mm/aaaa (board 171); "-" when unknown.
  *
- * @example formatAddedDate('2026-08-07T15:01:49') // '07/08/2026, 15:01'
+ * @example formatAddedDay('2026-08-07T15:01:49') // '07/08/2026'
  */
-export function formatAddedDate(dateStr: string): string {
+export function formatAddedDay(dateStr: string): string {
   if (!dateStr) return '-';
-  try {
-    return new Date(dateStr).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return dateStr;
-  }
+  return new Date(dateStr).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 /**
@@ -59,4 +49,37 @@ export function libraryMetrics(pdfs: PdfFileRecord[]) {
     shared: pdfs.filter((p) => p.articles.length > 1).length,
     orphans: pdfs.filter((p) => p.articles.length === 0).length,
   };
+}
+
+export type PdfFilter = 'all' | 'shared' | 'orphans';
+
+/**
+ * The PDFs of a filter: all of them, those reused by several articles or those with no article.
+ *
+ * @example filterByUse(pdfs, 'orphans')
+ */
+export function filterByUse(pdfs: PdfFileRecord[], filter: PdfFilter): PdfFileRecord[] {
+  if (filter === 'shared') return pdfs.filter((pdf) => pdf.articles.length > 1);
+  if (filter === 'orphans') return pdfs.filter((pdf) => pdf.articles.length === 0);
+  return pdfs;
+}
+
+export type PdfSort = 'size' | 'recent' | 'name';
+
+export const PDF_SORTS: readonly { id: PdfSort; label: string }[] = [
+  { id: 'size', label: 'Tamanho ↓' },
+  { id: 'recent', label: 'Mais recentes' },
+  { id: 'name', label: 'Nome' },
+];
+
+/**
+ * The PDFs in the chosen order: the biggest first, the latest added first, or by file name.
+ *
+ * @example sortPdfs(pdfs, 'size')[0].file_size // the largest
+ */
+export function sortPdfs(pdfs: PdfFileRecord[], sort: PdfSort): PdfFileRecord[] {
+  const sorted = [...pdfs];
+  if (sort === 'name') return sorted.sort((a, b) => a.filename.localeCompare(b.filename, 'pt-BR', { numeric: true }));
+  if (sort === 'recent') return sorted.sort((a, b) => b.created_at.localeCompare(a.created_at));
+  return sorted.sort((a, b) => b.file_size - a.file_size);
 }

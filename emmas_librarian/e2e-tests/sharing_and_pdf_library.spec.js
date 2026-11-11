@@ -118,7 +118,7 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
 
     // 2. Go to PDF Library Page
     await navigateTo(window, 'Biblioteca de PDFs');
-    await expect(window.locator('h1:has-text("Biblioteca Global de PDFs")')).toBeVisible({ timeout: 5000 });
+    await expect(window.getByRole('heading', { name: 'Biblioteca de PDFs', level: 1 })).toBeVisible({ timeout: 5000 });
 
     // Verify PDF is registered in Library — target the unique filename row
     const pdfRow = window.locator(`tr:has-text("${pdfFilename}")`).first();
@@ -128,6 +128,7 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
     // The link dialog's overlay must cover the whole window. A transform left on <main> by the
     // fade-in animation used to make <main> its containing block, pushing the dialog off-screen.
     // Since Arca 134 the dialog is the shared Modal: the overlay is its backdrop, the dialog the box inside.
+    await pdfRow.getByRole('button', { name: 'Mais ações' }).click();
     await pdfRow.getByTitle('Vincular a outro Artigo').click();
     const linkDialog = window.getByRole('dialog', { name: 'Vincular PDF a um Artigo' });
     await expect(linkDialog).toBeVisible();

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, ExternalLink, Link2, Trash2 } from 'lucide-react';
-import { formatAddedDate, type PdfFileRecord } from './pdfLibraryData';
+import { AlertTriangle, ExternalLink, Link2, MoreHorizontal, Trash2 } from 'lucide-react';
+import { useCloseOnOutside } from '../SystematicReview/LabelMenu';
+import { formatAddedDay, type PdfFileRecord } from './pdfLibraryData';
 import { formatBytes } from '../../utils/formatters';
 
 interface PdfRowActions {
@@ -45,29 +46,55 @@ const PdfUses: React.FC<{ pdf: PdfFileRecord }> = ({ pdf }) => {
   );
 };
 
-const PdfActions: React.FC<{ pdf: PdfFileRecord } & PdfRowActions> = ({ pdf, onLink, onDelete }) => {
+/** "Mais ações" (board 171): linking the PDF to another article and deleting it, out of the way of "Abrir". */
+const RowMenu: React.FC<{ pdf: PdfFileRecord } & PdfRowActions> = ({ pdf, onLink, onDelete }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useCloseOnOutside(open, () => setOpen(false));
+  const pick = (action: (pdf: PdfFileRecord) => void) => () => {
+    setOpen(false);
+    action(pdf);
+  };
+  return (
+    <div className="pdf-menu" ref={ref}>
+      <button
+        type="button"
+        className="pdf-menu__button"
+        aria-label="Mais ações"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
+        <MoreHorizontal size={16} aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="pdf-menu__list" role="menu" aria-label="Ações do PDF">
+          <button type="button" role="menuitem" title="Vincular a outro Artigo" onClick={pick(onLink)}>
+            <Link2 size={14} aria-hidden="true" /> Vincular a outro artigo
+          </button>
+          <button type="button" role="menuitem" className="is-danger" title="Excluir PDF" onClick={pick(onDelete)}>
+            <Trash2 size={14} aria-hidden="true" /> Excluir PDF
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const PdfActions: React.FC<{ pdf: PdfFileRecord } & PdfRowActions> = ({ pdf, ...actions }) => {
   const navigate = useNavigate();
   return (
     <div className="pdf-actions">
       {pdf.articles.length > 0 && (
         <button
-          className="btn-secondary pdf-action"
+          type="button"
+          className="pdf-open"
           onClick={() => navigate(`/articles/${pdf.articles[0].article_id}`)}
           title="Visualizar no Leitor"
         >
-          Leitor
+          Abrir
         </button>
       )}
-      <button
-        className="btn-secondary pdf-action pdf-action--link"
-        onClick={() => onLink(pdf)}
-        title="Vincular a outro Artigo"
-      >
-        <Link2 size={13} /> Vincular
-      </button>
-      <button className="btn-secondary pdf-action pdf-action--delete" onClick={() => onDelete(pdf)} title="Excluir PDF">
-        <Trash2 size={13} />
-      </button>
+      <RowMenu pdf={pdf} {...actions} />
     </div>
   );
 };
@@ -79,7 +106,7 @@ const PdfRow: React.FC<{ pdf: PdfFileRecord } & PdfRowActions> = ({ pdf, ...acti
       <span title={pdf.filename}>{pdf.filename}</span>
     </td>
     <td className="pdf-cell-size">{formatBytes(pdf.file_size)}</td>
-    <td className="pdf-cell-date">{formatAddedDate(pdf.created_at)}</td>
+    <td className="pdf-cell-date">{formatAddedDay(pdf.created_at)}</td>
     <td className="pdf-cell-links">
       <PdfUses pdf={pdf} />
     </td>
@@ -104,9 +131,9 @@ export const PdfTable: React.FC<{ pdfs: PdfFileRecord[] } & PdfRowActions> = ({ 
           <tr>
             <th>Arquivo</th>
             <th>Tamanho</th>
-            <th>Data de Adição</th>
-            <th>Artigos e Projetos Vinculados</th>
-            <th>Ações</th>
+            <th>Adicionado</th>
+            <th>Artigo vinculado</th>
+            <th aria-label="Ações" />
           </tr>
         </thead>
         <tbody>

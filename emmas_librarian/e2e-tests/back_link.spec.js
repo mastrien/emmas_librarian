@@ -21,15 +21,13 @@ test('every back link looks the same, with no border and no fill', async () => {
 
   try {
     await createProject(window, 'Voltar ' + Date.now());
-    // The project screens lost their back links to the title bar path and the sidebar (redesign, boards 153-164), and
-    // "Perguntar aos projetos" to the module rail (board 168): the PDF library and the terms keep theirs.
-    await window.getByRole('link', { name: 'Biblioteca de PDFs' }).click();
-    const reference = await look(window.getByRole('link', { name: 'Voltar aos projetos' }));
-    expect(reference).toMatchObject({ border: '0px', background: 'rgba(0, 0, 0, 0)', arrow: 18 });
-
+    // The project screens, the PDF library and "Perguntar aos projetos" lost their back links to the title bar path,
+    // the sidebar and the module rail (redesign, boards 153-171): only the terms keep theirs (until board 174),
+    // so this checks that one against the look the design rule asks for.
     await window.getByRole('link', { name: 'Início', exact: true }).click();
     await window.getByRole('link', { name: /Termos de Uso/ }).click();
-    expect(await look(window.getByRole('link', { name: 'Voltar aos projetos' }))).toEqual(reference);
+    const reference = await look(window.getByRole('link', { name: 'Voltar aos projetos' }));
+    expect(reference).toMatchObject({ border: '0px', background: 'rgba(0, 0, 0, 0)', arrow: 18 });
   } finally {
     await electronApp.close();
   }

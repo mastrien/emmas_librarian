@@ -1,4 +1,4 @@
-import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { PdfLibraryPage } from '../PdfLibraryPage';
@@ -31,6 +31,12 @@ const renderPage = () => {
   );
 };
 
+/** Opens the first row's "Mais ações" menu and picks an item (board 171: the actions are out of the row). */
+const pickFromMenu = async (title: string): Promise<HTMLElement> => {
+  fireEvent.click((await screen.findAllByRole('button', { name: 'Mais ações' }))[0]);
+  return (await screen.findAllByTitle(title))[0];
+};
+
 describe('PdfLibraryPage', () => {
   beforeEach(() => {
     dialogs = new FakeDialogs();
@@ -52,7 +58,7 @@ describe('PdfLibraryPage', () => {
       expect(screen.queryByText('Carregando Biblioteca de PDFs...')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByText('Biblioteca Global de PDFs')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Biblioteca de PDFs' })).toBeInTheDocument();
     expect(screen.getByText('Nenhum arquivo PDF encontrado.')).toBeInTheDocument();
   });
 
@@ -127,7 +133,7 @@ describe('PdfLibraryPage', () => {
       expect(screen.queryByText('Carregando Biblioteca de PDFs...')).not.toBeInTheDocument();
     });
 
-    const searchInput = screen.getByPlaceholderText(/Pesquisar por nome do PDF/i);
+    const searchInput = screen.getByPlaceholderText(/Nome do arquivo ou título/i);
 
     // Search for filename
     fireEvent.change(searchInput, { target: { value: 'apple' } });
@@ -198,7 +204,7 @@ describe('PdfLibraryPage', () => {
       expect(screen.queryByText('Carregando Biblioteca de PDFs...')).not.toBeInTheDocument();
     });
 
-    const btnDelete = screen.getAllByTitle('Excluir PDF')[0];
+    const btnDelete = await pickFromMenu('Excluir PDF');
     fireEvent.click(btnDelete);
 
     await waitFor(() => {
@@ -230,7 +236,7 @@ describe('PdfLibraryPage', () => {
       expect(screen.queryByText('Carregando Biblioteca de PDFs...')).not.toBeInTheDocument();
     });
 
-    const btnDelete = screen.getAllByTitle('Excluir PDF')[0];
+    const btnDelete = await pickFromMenu('Excluir PDF');
     fireEvent.click(btnDelete);
 
     await waitFor(() => {
@@ -262,7 +268,7 @@ describe('PdfLibraryPage', () => {
       expect(screen.queryByText('Carregando Biblioteca de PDFs...')).not.toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getAllByTitle('Excluir PDF')[0]);
+    fireEvent.click(await pickFromMenu('Excluir PDF'));
 
     await waitFor(() => {
       expect(alertSpy).toHaveBeenCalledWith('Erro ao excluir PDF: Error: Delete fail');
@@ -295,7 +301,7 @@ describe('PdfLibraryPage', () => {
     });
 
     // Open link modal
-    fireEvent.click(screen.getAllByTitle('Vincular a outro Artigo')[0]);
+    fireEvent.click(await pickFromMenu('Vincular a outro Artigo'));
 
     await waitFor(() => {
       expect(screen.getByText('Vincular PDF a um Artigo')).toBeInTheDocument();
@@ -304,7 +310,7 @@ describe('PdfLibraryPage', () => {
     expect(fakeService.getProjects).toHaveBeenCalled();
 
     // Select project
-    const projectSelect = screen.getAllByRole('combobox')[0];
+    const projectSelect = within(screen.getByRole('dialog')).getAllByRole('combobox')[0];
     fireEvent.change(projectSelect, { target: { value: '100' } });
 
     await waitFor(() => {
@@ -312,7 +318,7 @@ describe('PdfLibraryPage', () => {
     });
 
     // Select article
-    const articleSelect = screen.getAllByRole('combobox')[1];
+    const articleSelect = within(screen.getByRole('dialog')).getAllByRole('combobox')[1];
     fireEvent.change(articleSelect, { target: { value: '200' } });
 
     // Confirm Link
@@ -346,13 +352,13 @@ describe('PdfLibraryPage', () => {
       expect(screen.queryByText('Carregando Biblioteca de PDFs...')).not.toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getAllByTitle('Vincular a outro Artigo')[0]);
+    fireEvent.click(await pickFromMenu('Vincular a outro Artigo'));
 
     await waitFor(() => {
       expect(screen.getByText('Vincular PDF a um Artigo')).toBeInTheDocument();
     });
 
-    const projectSelect = screen.getAllByRole('combobox')[0];
+    const projectSelect = within(screen.getByRole('dialog')).getAllByRole('combobox')[0];
     fireEvent.change(projectSelect, { target: { value: '100' } });
 
     await waitFor(() => {
@@ -379,11 +385,11 @@ describe('PdfLibraryPage', () => {
       expect(screen.queryByText('Carregando Biblioteca de PDFs...')).not.toBeInTheDocument();
     });
 
-    // back is a link to the projects now (BackLink, Arca 134), not a navigate() call
-    expect(screen.getByRole('link', { name: 'Voltar aos projetos' })).toHaveAttribute('href', '/');
+    // the title bar path replaces the back link (board 171)
+    expect(screen.queryByRole('link', { name: 'Voltar aos projetos' })).not.toBeInTheDocument();
 
     // navigate to article reader (button)
-    fireEvent.click(screen.getAllByTitle('Visualizar no Leitor')[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Abrir' })[0]);
     expect(navigateMock).toHaveBeenCalledWith('/articles/99');
 
     // navigate to article (text)
@@ -410,7 +416,7 @@ describe('PdfLibraryPage', () => {
     fakeService.getStoredPdfs.mockResolvedValue([ORPHAN]);
     dialogs.confirmMessage.mockReturnValue(false);
     renderPage();
-    fireEvent.click((await screen.findAllByTitle('Excluir PDF'))[0]);
+    fireEvent.click(await pickFromMenu('Excluir PDF'));
 
     await waitFor(() => expect(dialogs.asked).toHaveLength(1));
     await act(async () => {});
@@ -426,13 +432,40 @@ describe('PdfLibraryPage', () => {
     ]);
     fakeService.linkPdfToArticle.mockRejectedValue('disco cheio');
     renderPage();
-    fireEvent.click((await screen.findAllByTitle('Vincular a outro Artigo'))[0]);
-    fireEvent.change((await screen.findAllByRole('combobox'))[0], { target: { value: '100' } });
-    await waitFor(() => expect(screen.getAllByRole('combobox')).toHaveLength(2));
-    fireEvent.change(screen.getAllByRole('combobox')[1], { target: { value: '200' } });
+    fireEvent.click(await pickFromMenu('Vincular a outro Artigo'));
+    fireEvent.change((await within(await screen.findByRole('dialog')).findAllByRole('combobox'))[0], {
+      target: { value: '100' },
+    });
+    await waitFor(() => expect(within(screen.getByRole('dialog')).getAllByRole('combobox')).toHaveLength(2));
+    fireEvent.change(within(screen.getByRole('dialog')).getAllByRole('combobox')[1], { target: { value: '200' } });
 
     fireEvent.click(screen.getByText('Vincular PDF'));
 
     await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao vincular PDF: disco cheio'));
+  });
+
+  it('narrows the table to the orphans and orders it by name', async () => {
+    const pdf = (id: number, filename: string, size: number, linked: boolean) => ({
+      id,
+      file_path: filename,
+      file_hash: String(id),
+      filename,
+      file_size: size,
+      created_at: '2026-08-07T12:00:00',
+      articles: linked ? [{ article_id: id, article_title: `T${id}`, project_id: 1, project_name: 'P' }] : [],
+    });
+    fakeService.getStoredPdfs.mockResolvedValue([
+      pdf(1, 'b.pdf', 10, true),
+      pdf(2, 'z.pdf', 99, false),
+      pdf(3, 'a.pdf', 5, false),
+    ]);
+    renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: /Órfãos 2/ }));
+    expect(screen.queryByText('b.pdf')).not.toBeInTheDocument();
+    expect(screen.getAllByText(/\.pdf$/).map((el) => el.textContent)).toEqual(['z.pdf', 'a.pdf']);
+
+    fireEvent.change(screen.getByLabelText(/Ordenar/), { target: { value: 'name' } });
+    expect(screen.getAllByText(/\.pdf$/).map((el) => el.textContent)).toEqual(['a.pdf', 'z.pdf']);
   });
 });
