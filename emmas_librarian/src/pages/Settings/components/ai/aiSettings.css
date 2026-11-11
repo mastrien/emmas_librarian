@@ -1,11 +1,5 @@
-/* The AI settings card (AiSettings, AiSkillCard, AiSettingsFields). Values carried over from the inline styles they
-   replace (Arca 134). The key fields use .settings-label and the .api-key-* classes of settings.css. */
-.settings-label-aside {
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: normal;
-}
-
+/* The AI settings (AiSettings, ProviderRows, AiTaskTable, AiSettingsFields): board 170. The key fields use the
+   .api-key-* classes of settings.css. */
 .settings-small-label {
   display: block;
   margin-bottom: 0.5rem;
@@ -22,12 +16,11 @@
 .ai-sharing-notice {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-  padding: 1rem;
-  border: 1px solid rgba(234, 179, 8, 0.3);
-  border-radius: var(--radius-md);
-  background: rgba(234, 179, 8, 0.1);
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-warning-subtle);
 }
 
 .ai-sharing-icon {
@@ -39,48 +32,160 @@
 .ai-sharing-text {
   margin: 0;
   color: var(--text-main);
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 12px;
 }
 
 .ai-sharing-text a {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.ai-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ai-section__title {
+  margin: 0 0 4px;
+  color: var(--text-heading);
+  font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.ai-advanced {
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--border-color);
+/* A provider is a line: name, field, state. */
+.ai-provider {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr) 110px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.ai-advanced h3 {
-  margin-bottom: 0.5rem;
-  font-size: 1.2rem;
+.ai-provider:last-of-type {
+  border-bottom: 0;
+}
+
+.ai-provider__name {
   color: var(--text-heading);
+  font-weight: 500;
 }
 
-.ai-advanced-text {
-  margin-bottom: 1.5rem;
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  height: 20px;
+  padding: 0 7px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-raised);
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.ai-rag {
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+.ai-badge--ok {
+  border-color: transparent;
+  background: var(--color-success-subtle);
+  color: var(--color-success-text);
 }
 
-.ai-rag h4 {
-  margin: 0 0 1rem 0;
+.ai-badge--acc {
+  border-color: transparent;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-text);
+}
+
+.ai-tasks {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.ai-tasks th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.ai-tasks th:first-child {
+  width: 220px;
+}
+
+.ai-tasks th:nth-child(2) {
+  width: 200px;
+}
+
+.ai-tasks th:last-child {
+  width: 56px;
+}
+
+.ai-tasks td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.ai-task__name {
   color: var(--text-heading);
+  font-weight: 500;
+}
+
+.input-field.ai-task__field {
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
+}
+
+.ai-task__model {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.ai-hint {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* The RAG numbers fold under one line that already says them. */
+.ai-rag {
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.ai-rag summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.ai-rag__title {
+  color: var(--text-heading);
+  font-weight: 500;
+}
+
+.ai-rag__summary {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .ai-rag-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+  margin-top: 12px;
 }
 
 .ai-footer {
@@ -92,81 +197,26 @@
 
 .settings-card .ai-restore-button,
 .settings-card .ai-restore-button:hover {
-  padding: 0.5rem 1rem;
+  padding: 0 12px;
   color: var(--color-danger);
-  font-size: 0.9rem;
 }
 
 .ai-restore-button svg {
   margin-right: 0.4rem;
 }
 
-/* AiSkillCard */
-.ai-skill {
-  padding: 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-main);
-}
-
-.ai-skill h4 {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 1rem 0;
-  color: var(--text-heading);
-}
-
-.ai-skill-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.model-suggestions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-top: 0.4rem;
-}
-
-.model-suggestions-label {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-
-.model-chip {
-  padding: 0.15rem 0.45rem;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  background: var(--bg-surface);
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 400;
-  cursor: pointer;
-}
-
-.model-chip[aria-pressed='true'] {
-  border-color: var(--color-primary);
-  background: rgba(99, 102, 241, 0.12);
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
 .ai-recommendation {
   margin-top: 0.6rem;
-  padding: 0.66rem 0.9rem;
-  border: 1px solid rgba(234, 179, 8, 0.35);
-  border-radius: var(--radius-md);
-  background: rgba(234, 179, 8, 0.1);
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-warning-subtle);
   color: var(--text-main);
-  font-size: 0.82rem;
+  font-size: 12px;
   line-height: 1.4;
 }
 
 .ai-note {
   margin: 0.6rem 0 0;
-  font-size: 0.82rem;
+  font-size: 12px;
   line-height: 1.4;
 }

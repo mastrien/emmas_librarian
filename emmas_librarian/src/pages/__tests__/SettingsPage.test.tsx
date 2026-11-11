@@ -94,11 +94,11 @@ describe('SettingsPage', () => {
         </FakeDialogsProvider>
       </BrowserRouter>,
     );
-    const provider = await screen.findByRole('combobox', { name: 'Provedor: 📝 Geração de Resumos' });
+    const provider = await screen.findByRole('combobox', { name: 'Provedor: Geração de resumos' });
 
     fireEvent.change(provider, { target: { value: 'anthropic' } });
 
-    expect(screen.getByRole('textbox', { name: 'Modelo: 📝 Geração de Resumos' })).toHaveValue('claude-sonnet-5');
+    expect(screen.getByRole('combobox', { name: 'Modelo: Geração de resumos' })).toHaveValue('claude-sonnet-5');
   });
 
   // Validation of epic #44: a provider picked but not saved left a whole investigation failing.
