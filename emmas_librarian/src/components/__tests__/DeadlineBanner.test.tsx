@@ -40,7 +40,7 @@ describe('DeadlineBanner (TDD)', () => {
     );
 
     expect(screen.getByText('Chamada de Trabalhos')).toBeInTheDocument();
-    expect(screen.getByText('SBBD 2026 · 2026-01-01 a 2026-12-31')).toBeInTheDocument();
+    expect(screen.getByText('SBBD 2026 · 01/01/2026 a 31/12/2026')).toBeInTheDocument();
   });
 
   it('triggers onToggleMilestoneStatus when checkbox is clicked', () => {
@@ -68,7 +68,7 @@ describe('deadlineSubline', () => {
   });
 
   it('names the event by its acronym and adds the dates of a range', () => {
-    expect(deadlineSubline(item({}, '2026-12-31'))).toBe('SBBD 2026 · 2026-01-01 a 2026-12-31');
+    expect(deadlineSubline(item({}, '2026-12-31'))).toBe('SBBD 2026 · 01/01/2026 a 31/12/2026');
   });
 
   it('falls back to the title of an event with no acronym, with no dates for a single day', () => {

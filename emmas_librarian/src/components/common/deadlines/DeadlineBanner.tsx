@@ -3,6 +3,7 @@ import { Calendar, ChevronRight } from 'lucide-react';
 import { ScientificVenue, MilestoneStatus } from '../../../types';
 import { localIsoDate } from '../../../utils/localDate';
 import { withMilestoneStatus } from '../agenda/agendaQueries';
+import { formatMilestoneDate } from '../agenda/deadlineDates';
 import { deadlineBadge, upcomingDeadlines, type DeadlineItem } from './deadlineQueries';
 import './deadlineBanner.css';
 
@@ -29,8 +30,8 @@ const NoDeadlines: React.FC<{ onOpenAgenda: () => void }> = ({ onOpenAgenda }) =
 /** The line under a deadline's name: the event (its acronym, else its title) and, for a range, the dates. */
 export function deadlineSubline(item: DeadlineItem): string {
   const venue = item.venue.acronym || item.venue.title;
-  const { target_date: from, end_date: to } = item.milestone;
-  return to ? `${venue} · ${from} a ${to}` : venue;
+  const { milestone } = item;
+  return milestone.end_date ? `${venue} · ${formatMilestoneDate(milestone)}` : venue;
 }
 
 const DeadlineRow: React.FC<{ item: DeadlineItem; onToggle: () => void }> = ({ item, onToggle }) => {
