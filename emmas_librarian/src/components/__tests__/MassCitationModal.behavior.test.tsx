@@ -82,7 +82,7 @@ describe('MassCitationModal list', () => {
     renderModal([]);
 
     expect(screen.getByText('Nenhum artigo marcado como lido neste projeto.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Copiar Todas/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Copiar tudo/ })).toBeDisabled();
   });
 
   it('numbers the citations', () => {
@@ -105,7 +105,7 @@ describe('MassCitationModal list', () => {
   it('closes from the X and Esc, not from a click on the window', () => {
     const { onClose } = renderModal([article(1)]);
 
-    fireEvent.click(screen.getByText('Citação em Massa (Artigos Lidos)'));
+    fireEvent.click(screen.getByRole('heading', { name: /^Citar \d+ artigos?$/ }));
     expect(onClose).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
     fireEvent.keyDown(window, { key: 'Escape' });
@@ -118,7 +118,7 @@ describe('MassCitationModal copy', () => {
   it('copies all citations as rich HTML with a plain-text alternative', async () => {
     renderModal([article(1), article(2)]);
 
-    fireEvent.click(screen.getByRole('button', { name: /Copiar Todas/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Copiar tudo/ }));
 
     await screen.findByRole('button', { name: /Copiado!/ });
     const [item] = clipboard.write.mock.calls[0][0] as FakeClipboardItem[];
@@ -131,7 +131,7 @@ describe('MassCitationModal copy', () => {
     clipboard.write.mockRejectedValue(new Error('denied'));
     renderModal([article(1)]);
 
-    fireEvent.click(screen.getByRole('button', { name: /Copiar Todas/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Copiar tudo/ }));
 
     await screen.findByRole('button', { name: /Copiado!/ });
     expect(clipboard.writeText).toHaveBeenCalledWith('T1 abnt');
@@ -142,12 +142,12 @@ describe('MassCitationModal copy', () => {
     renderModal([article(1), article(2)]);
     fireEvent.click(screen.getByRole('button', { name: /Texto/ }));
 
-    fireEvent.click(screen.getByRole('button', { name: /Copiar Todas/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Copiar tudo/ }));
 
     await screen.findByRole('button', { name: /Copiado!/ });
     expect(clipboard.writeText).toHaveBeenCalledWith('T1 abnt text\n\nT2 abnt text');
     await act(() => vi.advanceTimersByTimeAsync(2000));
-    expect(screen.getByRole('button', { name: /Copiar Todas/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Copiar tudo/ })).toBeInTheDocument();
   });
 });
 

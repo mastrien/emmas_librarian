@@ -129,8 +129,7 @@ test.describe('PDF reader', () => {
       };
       for (const [name, value] of Object.entries(fields)) await window.locator(`input[name="${name}"]`).fill(value);
 
-      // The preview is the box right above the "Copiar" button.
-      const preview = window.getByRole('button', { name: 'Copiar' }).locator('xpath=preceding-sibling::div[1]');
+      const preview = window.getByTestId('citation-preview');
       await expect(preview).toContainText('LIMA, Ana Beatriz');
       await expect(preview).toContainText(METADATA.shortTitle);
       await expect(preview).toContainText('2025');

@@ -69,7 +69,7 @@ const readBlob = (blob: Blob) =>
   });
 
 const field = (name: string) => document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
-const preview = () => screen.getByRole('button', { name: /Copiar|Copiado!/ }).previousElementSibling as HTMLElement;
+const preview = () => screen.getByTestId('citation-preview');
 
 beforeEach(() => {
   service = FakeProjectService.create();
@@ -92,14 +92,14 @@ describe('CitationModal visibility', () => {
   ])('renders nothing when %s', (_label, props) => {
     renderModal(props);
 
-    expect(screen.queryByText('Gerar Citação')).not.toBeInTheDocument();
+    expect(screen.queryByText('Citar artigo')).not.toBeInTheDocument();
   });
 
   // The shared Modal (Arca 134): the X and Esc close it; a click inside, or on the backdrop, does not.
   it('closes from the X and Esc, not from a click inside', () => {
     const { onClose } = renderModal();
 
-    fireEvent.click(screen.getByText('Gerar Citação'));
+    fireEvent.click(screen.getByText('Citar artigo'));
     expect(onClose).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
     fireEvent.keyDown(window, { key: 'Escape' });
@@ -328,6 +328,16 @@ describe('CitationModal reset', () => {
 });
 
 describe('CitationModal copy', () => {
+  it('names the article under the title and turns the copy button green while it says "Copiado!" (board 177)', async () => {
+    renderModal();
+    expect(screen.getByRole('button', { name: 'Copiar' })).not.toHaveClass('app-modal-copied');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copiar' }));
+
+    expect(await screen.findByRole('button', { name: /Copiado!/ })).toHaveClass('app-modal-copied');
+    expect(document.querySelector('.app-modal-description')).not.toBeNull();
+  });
+
   it('copies rich HTML plus a tag-free plain text fallback', async () => {
     renderModal();
 

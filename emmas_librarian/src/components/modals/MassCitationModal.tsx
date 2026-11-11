@@ -15,6 +15,8 @@ import { MassCitationEditPanel } from './massCitation/MassCitationEditPanel';
 import { sortCitableArticles } from './massCitation/sortCitableArticles';
 import { useMassCitationEditor } from './massCitation/useMassCitationEditor';
 import { Modal } from '../common/Modal';
+import { ModalFooter } from '../common/ModalFooter';
+import { Button } from '../common/Button';
 
 interface MassCitationModalProps {
   isOpen: boolean;
@@ -79,7 +81,13 @@ export function MassCitationModal({ isOpen, onClose, articles, onArticlesUpdated
   };
 
   return (
-    <Modal label="Citação em Massa" title="Citação em Massa (Artigos Lidos)" onClose={onClose} width={850}>
+    <Modal
+      label="Citação em massa"
+      title={`Citar ${articles.length} ${articles.length === 1 ? 'artigo' : 'artigos'}`}
+      description="Os artigos lidos do projeto"
+      onClose={onClose}
+      width={850}
+    >
       {editor.editing ? (
         <MassCitationEditPanel
           fields={editor.editing.fields}
@@ -107,17 +115,10 @@ interface MassCitationFooterProps {
 }
 
 const MassCitationFooter: React.FC<MassCitationFooterProps> = ({ copied, canCopy, onCopy }) => (
-  <div
-    style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', alignSelf: 'flex-end', marginTop: '0.5rem' }}
-  >
-    <button
-      onClick={onCopy}
-      disabled={!canCopy}
-      className="btn-primary"
-      style={{ padding: '0.5rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-    >
-      {copied ? <Check size={16} /> : <Copy size={16} />}
-      {copied ? 'Copiado!' : 'Copiar Todas'}
-    </button>
-  </div>
+  <ModalFooter>
+    <Button variant="primary" className={copied ? 'app-modal-copied' : undefined} onClick={onCopy} disabled={!canCopy}>
+      {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+      {copied ? 'Copiado!' : 'Copiar tudo'}
+    </Button>
+  </ModalFooter>
 );
