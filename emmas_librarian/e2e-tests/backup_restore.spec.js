@@ -2,7 +2,14 @@ const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { launchApp, getFirstWindow, createProject, navigateTo, answerAppDialog } = require('./helpers');
+const {
+  launchApp,
+  getFirstWindow,
+  createProject,
+  navigateTo,
+  openSettingsSection,
+  answerAppDialog,
+} = require('./helpers');
 const { IMPORTED_TITLE, copyFixturePdf, importFixturePdf, openReader } = require('./articleFixture');
 
 /** A temp folder the spec owns: app data folders (kept across relaunches) and the backup file. */
@@ -30,6 +37,7 @@ async function createLibraryAndBackup(env, userDataDir, projectName) {
   await createProject(window, projectName);
   await importFixturePdf(window);
   await navigateTo(window, 'Configurações');
+  await openSettingsSection(window, 'Backup e segurança');
   expect(await clickAndReadMessage(window, 'Criar Backup Completo', 'Backup criado')).toContain(
     'Backup completo criado com sucesso',
   );
@@ -63,6 +71,7 @@ test.describe('Full backup restore', () => {
       await createProject(window, 'Projeto Posterior');
       fs.rmSync(path.join(dataDir, 'storage', 'pdfs'), { recursive: true, force: true });
       await navigateTo(window, 'Configurações');
+      await openSettingsSection(window, 'Backup e segurança');
       const exited = app.waitForEvent('close');
       // Confirming the "SOBRESCREVER" warning (the app's own window) restores and exits; relaunch is left to the
       // test under E2E.
@@ -106,6 +115,7 @@ test.describe('Full backup restore', () => {
       const app = await launchApp(env, { userDataDir: newComputer });
       const window = await getFirstWindow(app);
       await navigateTo(window, 'Configurações');
+      await openSettingsSection(window, 'Backup e segurança');
       const exited = app.waitForEvent('close');
       await window.getByRole('button', { name: 'Restaurar e Sobrescrever' }).click();
       await answerAppDialog(window, 'Restaurar e sobrescrever', 'Restaurar e sobrescrever');
@@ -140,6 +150,7 @@ test.describe('Full backup restore', () => {
         const window = await getFirstWindow(app);
         await createProject(window, 'Projeto Local');
         await navigateTo(window, 'Configurações');
+        await openSettingsSection(window, 'Backup e segurança');
 
         expect(await clickAndReadMessage(window, 'Importar e Mesclar', 'Backup mesclado')).toBe(
           '1 projeto novo foi importado e mesclado com sucesso!',
@@ -152,6 +163,7 @@ test.describe('Full backup restore', () => {
         await window.goBack();
         await window.waitForURL(/\/projects\/\d+/);
         await navigateTo(window, 'Configurações');
+        await openSettingsSection(window, 'Backup e segurança');
         expect(await clickAndReadMessage(window, 'Importar e Mesclar', 'Nada para mesclar')).toMatch(
           /^Nenhum projeto novo encontrado/,
         );

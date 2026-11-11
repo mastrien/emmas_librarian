@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import { useProjectService } from '../contexts/ServicesContext';
 import type { AIModelConfig, AISkill, AIProvider, UpdateStatusResponse } from '../types';
 
@@ -14,8 +14,19 @@ import { modelSuggestions, suggestedModelFor } from './Settings/aiModelSuggestio
 import { TYPING_DELAY_MS, useSettingsAutosave } from './Settings/useSettingsAutosave';
 import { AutosaveNotice } from './Settings/components/AutosaveNotice';
 import { useDialogs } from '../components/common/dialogs/DialogProvider';
+import { PageHeader } from '../components/common/PageHeader';
+import { SettingsNav } from './Settings/components/SettingsNav';
+import { SETTINGS_SECTIONS, keysCount, sectionOf, type SettingsSection } from './Settings/settingsSections';
 
-export const SettingsPage: React.FC = () => {
+/**
+ * The settings (board 170): a list of sections at the left and, at the right, the one chosen (the first when the path
+ * names none), each with its own title. `section` overrides the route, for tests and for places that embed one.
+ *
+ * @example <Route path="/settings/:section" element={<SettingsPage />} />
+ */
+export const SettingsPage: React.FC<{ section?: SettingsSection }> = ({ section: forced }) => {
+  const routed = useParams<{ section?: string }>().section;
+  const section = forced ?? sectionOf(routed);
   const projectService = useProjectService();
   // The app's own windows, not window.confirm/alert (Arca 103/134).
   const { confirm, inform } = useDialogs();
@@ -324,83 +335,90 @@ export const SettingsPage: React.FC = () => {
     await projectService.restoreUpdateSnapshot();
   };
 
+  const info = SETTINGS_SECTIONS.find((candidate) => candidate.id === section)!;
+  const counts: Partial<Record<SettingsSection, string>> = {
+    keys: keysCount([scopusKey, wosKey, openAlexKey, ieeeKey]),
+    ...(trashItems.length > 0 && { trash: String(trashItems.length) }),
+  };
+
   return (
-    <div className="fade-in settings-page">
-      <div className="settings-head">
-        <div className="settings-head-icon">
-          <Settings size={28} />
-        </div>
-        <h1>Configurações</h1>
-        <AutosaveNotice status={autosave.status} />
-      </div>
+    <div className="fade-in settings-layout">
+      <SettingsNav autosaveStatus={autosave.status} appVersion={appVersion} counts={counts} />
+      <div className="settings-page">
+        <PageHeader title={info.label} subtitle={info.subtitle} />
+        <div className="settings-sections">
+          {section === 'appearance' && <AppearanceSettings />}
 
-      <div className="settings-sections">
-        <AppearanceSettings />
+          {section === 'keys' && (
+            <ApiKeysSettings
+              scopusKey={scopusKey}
+              setScopusKey={bind('scopus_api_key', setScopusKey)}
+              wosKey={wosKey}
+              setWosKey={bind('wos_api_key', setWosKey)}
+              openAlexKey={openAlexKey}
+              setOpenAlexKey={bind('openalex_api_key', setOpenAlexKey)}
+              ieeeKey={ieeeKey}
+              setIeeeKey={bind('ieee_api_key', setIeeeKey)}
+            />
+          )}
 
-        <ApiKeysSettings
-          scopusKey={scopusKey}
-          setScopusKey={bind('scopus_api_key', setScopusKey)}
-          wosKey={wosKey}
-          setWosKey={bind('wos_api_key', setWosKey)}
-          openAlexKey={openAlexKey}
-          setOpenAlexKey={bind('openalex_api_key', setOpenAlexKey)}
-          ieeeKey={ieeeKey}
-          setIeeeKey={bind('ieee_api_key', setIeeeKey)}
-        />
+          {section === 'ai' && (
+            <AiSettings
+              openaiKey={openaiKey}
+              setOpenaiKey={bind('api_key_openai', setOpenaiKey)}
+              geminiKey={geminiKey}
+              setGeminiKey={bind('api_key_gemini', setGeminiKey)}
+              anthropicKey={anthropicKey}
+              setAnthropicKey={bind('api_key_anthropic', setAnthropicKey)}
+              ollamaUrl={ollamaUrl}
+              setOllamaUrl={bind('api_key_ollama', setOllamaUrl)}
+              ollamaCloudKey={ollamaCloudKey}
+              setOllamaCloudKey={bind('api_key_ollama_cloud', setOllamaCloudKey)}
+              aiConfigs={aiConfigs}
+              handleUpdateAiConfig={handleUpdateAiConfig}
+              getModelSuggestions={modelSuggestions}
+              ragChunkSize={ragChunkSize}
+              setRagChunkSize={bind('rag_chunk_size', setRagChunkSize)}
+              ragChunkOverlap={ragChunkOverlap}
+              setRagChunkOverlap={bind('rag_chunk_overlap', setRagChunkOverlap)}
+              ragTopK={ragTopK}
+              setRagTopK={bind('rag_top_k', setRagTopK)}
+              handleRestoreAiDefaults={handleRestoreAiDefaults}
+              autosaveStatus={autosave.status}
+            />
+          )}
 
-        <AiSettings
-          openaiKey={openaiKey}
-          setOpenaiKey={bind('api_key_openai', setOpenaiKey)}
-          geminiKey={geminiKey}
-          setGeminiKey={bind('api_key_gemini', setGeminiKey)}
-          anthropicKey={anthropicKey}
-          setAnthropicKey={bind('api_key_anthropic', setAnthropicKey)}
-          ollamaUrl={ollamaUrl}
-          setOllamaUrl={bind('api_key_ollama', setOllamaUrl)}
-          ollamaCloudKey={ollamaCloudKey}
-          setOllamaCloudKey={bind('api_key_ollama_cloud', setOllamaCloudKey)}
-          aiConfigs={aiConfigs}
-          handleUpdateAiConfig={handleUpdateAiConfig}
-          getModelSuggestions={modelSuggestions}
-          ragChunkSize={ragChunkSize}
-          setRagChunkSize={bind('rag_chunk_size', setRagChunkSize)}
-          ragChunkOverlap={ragChunkOverlap}
-          setRagChunkOverlap={bind('rag_chunk_overlap', setRagChunkOverlap)}
-          ragTopK={ragTopK}
-          setRagTopK={bind('rag_top_k', setRagTopK)}
-          handleRestoreAiDefaults={handleRestoreAiDefaults}
-          autosaveStatus={autosave.status}
-        />
+          {section === 'backup' && (
+            <BackupSettings
+              autoBackups={autoBackups}
+              handleToggleAutoBackups={handleToggleAutoBackups}
+              autoBackupsList={autoBackupsList}
+              handleExportBackup={handleExportBackup}
+              handleRestoreBackupOverride={handleRestoreBackupOverride}
+              handleRestoreBackupMerge={handleRestoreBackupMerge}
+              handleRestoreAutoBackup={handleRestoreAutoBackup}
+            />
+          )}
 
-        <BackupSettings
-          autoBackups={autoBackups}
-          handleToggleAutoBackups={handleToggleAutoBackups}
-          autoBackupsList={autoBackupsList}
-          handleExportBackup={handleExportBackup}
-          handleRestoreBackupOverride={handleRestoreBackupOverride}
-          handleRestoreBackupMerge={handleRestoreBackupMerge}
-          handleRestoreAutoBackup={handleRestoreAutoBackup}
-        />
+          {section === 'updates' && (
+            <UpdateSettings
+              currentVersion={appVersion}
+              updateStatus={updateStatus}
+              onCheckForUpdates={handleCheckUpdates}
+              onDownloadUpdate={handleDownloadUpdate}
+              onInstallUpdate={handleInstallUpdate}
+              onRestoreSnapshot={handleRestoreSnapshot}
+            />
+          )}
 
-        <UpdateSettings
-          currentVersion={appVersion}
-          updateStatus={updateStatus}
-          onCheckForUpdates={handleCheckUpdates}
-          onDownloadUpdate={handleDownloadUpdate}
-          onInstallUpdate={handleInstallUpdate}
-          onRestoreSnapshot={handleRestoreSnapshot}
-        />
-
-        <TrashSettings
-          trashItems={trashItems}
-          handleEmptyTrash={handleEmptyTrash}
-          handleRestore={handleRestore}
-          handlePermanentDelete={handlePermanentDelete}
-        />
-
-        {/* App Info Section */}
-        <div className="settings-version">
-          <p>Emma's Librarian {appVersion ? `v${appVersion}` : ''}</p>
+          {section === 'trash' && (
+            <TrashSettings
+              trashItems={trashItems}
+              handleEmptyTrash={handleEmptyTrash}
+              handleRestore={handleRestore}
+              handlePermanentDelete={handlePermanentDelete}
+            />
+          )}
         </div>
       </div>
     </div>

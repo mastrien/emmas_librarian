@@ -28,7 +28,7 @@ const renderPage = async () => {
   const view = render(
     <BrowserRouter>
       <FakeDialogsProvider dialogs={dialogs}>
-        <SettingsPage />
+        <SettingsPage section="updates" />
       </FakeDialogsProvider>
     </BrowserRouter>,
   );

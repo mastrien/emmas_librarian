@@ -64,6 +64,16 @@ Seguiu a versão "copy" e depois o esclarecimento do autor: projeto com interaç
 - [ ] As abas do painel lateral (Anotações, Pesquisar, Insights IA) mantêm o estilo de antes; o board as mostra como controle segmentado.
 - [ ] O botão de ajuda mantém o texto "Ajuda" (o board não o mostra na barra).
 
+## 170 · Configurações (#175)
+
+Feito: lista de seções à esquerda (Aparência, Chaves das bases com "2/4", Inteligência artificial, Backup e segurança, Atualizações, Lixeira com contagem) e uma tela por seção, com título e subtítulo; a rota passou a `/settings/:seção`.
+
+- [ ] **Dentro de "Inteligência artificial"**: os provedores continuam como campos empilhados (sem a linha "nome · campo · selo"), sem os selos "sem chave / configurada / respondendo"; "Por tarefa" continua como cartões, não como a tabela Tarefa · Provedor · Modelo; o bloco RAG não é um "Avançado" recolhível com o resumo "trecho 1000 · sobreposição 200 · 10 trechos".
+- [ ] **Chaves das bases**: sem selos de estado por chave.
+- [ ] **Aviso de nuvem** da IA: mantém o texto e o desenho antigos (o board o põe como aviso âmbar de uma linha).
+- [ ] A lista de seções é desenhada dentro da página, não na coluna lateral do shell; visualmente é igual.
+- [ ] As outras seções (Aparência, Backup, Atualizações, Lixeira) mantêm o conteúdo de antes, só sem a moldura de cartão e com o título da seção no cabeçalho.
+
 ## Próximas telas (este documento ganha uma seção por PR)
 
-170 Configurações · 171 Biblioteca de PDFs · 172–173 Agenda · 174 Termos · 175–181 Janelas
+171 Biblioteca de PDFs · 172–173 Agenda · 174 Termos · 175–181 Janelas

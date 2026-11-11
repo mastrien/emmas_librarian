@@ -127,6 +127,7 @@ if (rootEl)
                 <Route path="/ask/:conversationId" element={<AskPage />} />
                 <Route path="/articles/:id" element={<ArticleReaderPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/settings/:section" element={<SettingsPage />} />
                 <Route path="/terms" element={<TermsOfUsePage />} />
                 <Route path="/pdfs" element={<PdfLibraryPage />} />
                 <Route path="/agenda" element={<AgendaPage />} />

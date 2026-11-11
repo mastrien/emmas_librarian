@@ -172,6 +172,16 @@ async function navigateTo(window, label) {
   await window.locator('.menu-dropdown-item, a, button').filter({ hasText: target }).first().click();
 }
 
+/**
+ * Opens a section of the settings from its list at the left (board 170); the older versions the release tests drive
+ * have one long page with no list, where there is nothing to do.
+ */
+async function openSettingsSection(window, name) {
+  if (!(await hasModuleRail(window))) return;
+  const nav = window.getByRole('navigation', { name: 'Seções das configurações' });
+  await nav.getByRole('link', { name }).click();
+}
+
 async function clickAddArticlesOption(window, optionText) {
   await dismissChangelog(window);
   const directBtn = window.locator('button').filter({ hasText: optionText }).first();
@@ -208,6 +218,7 @@ module.exports = {
   getFirstWindow,
   createProject,
   navigateTo,
+  openSettingsSection,
   clickAddArticlesOption,
   dismissChangelog,
   answerAppDialog,

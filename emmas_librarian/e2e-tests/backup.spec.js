@@ -3,7 +3,14 @@ const AdmZip = require('adm-zip');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { launchApp, getFirstWindow, createProject, navigateTo, answerAppDialog } = require('./helpers');
+const {
+  launchApp,
+  getFirstWindow,
+  createProject,
+  navigateTo,
+  openSettingsSection,
+  answerAppDialog,
+} = require('./helpers');
 
 test('F-09 Trigger data backup creation', async () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'playwright-backup-'));
@@ -15,6 +22,7 @@ test('F-09 Trigger data backup creation', async () => {
   try {
     await createProject(window, 'Backup Project ' + Date.now());
     await navigateTo(window, 'Configurações');
+    await openSettingsSection(window, 'Backup e segurança');
 
     // The confirmation is the app's own window (DialogProvider): waiting for it fails the test when none appears.
     await window.click('button:has-text("Criar Backup Completo")');

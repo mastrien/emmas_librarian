@@ -1,8 +1,9 @@
 const { test, expect } = require('@playwright/test');
-const { launchApp, getFirstWindow, navigateTo } = require('./helpers');
+const { launchApp, getFirstWindow, navigateTo, openSettingsSection } = require('./helpers');
 
 async function fillOpenaiKey(window, key) {
   await navigateTo(window, 'Configurações');
+  await openSettingsSection(window, 'Inteligência artificial');
   await window.waitForTimeout(1000);
   const locator = window.locator('input[placeholder="sk-..."]');
   await window.fill('input[placeholder="sk-..."]', key);
@@ -15,6 +16,7 @@ async function fillOpenaiKey(window, key) {
 async function verifyKeyPersisted(window, expectedKey) {
   await navigateTo(window, 'Projetos');
   await navigateTo(window, 'Configurações');
+  await openSettingsSection(window, 'Inteligência artificial');
   const locator = window.locator('input[placeholder="sk-..."]');
   await expect(locator).toHaveValue(expectedKey);
 }
