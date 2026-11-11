@@ -21,7 +21,7 @@ test.describe('Agenda & Prazos E2E Tests', () => {
     await navigateTo(window, 'Agenda');
 
     // 2. Open Novo Evento modal
-    const addVenueBtn = window.locator('button', { hasText: 'Novo Evento' }).first();
+    const addVenueBtn = window.locator('button', { hasText: 'Novo evento' }).first();
     await expect(addVenueBtn).toBeVisible({ timeout: 10000 });
     await addVenueBtn.click();
 
@@ -55,12 +55,12 @@ test.describe('Agenda & Prazos E2E Tests', () => {
     const saveBtn = window.locator('button', { hasText: 'Salvar Evento' });
     await saveBtn.click();
 
-    // 4. Verify venue card in "Por Evento/Revista" mode using specific unique locators
+    // 4. Verify venue card in the calendar view's events panel using specific unique locators
     await expect(window.locator(`text=${uniqueTitle}`)).toBeVisible({ timeout: 10000 });
     await expect(window.locator(`text=${uniqueAcronym}`).first()).toBeVisible();
 
-    // 5. Switch to "Lista de Prazos" view using the unified pill control
-    const listModeBtn = window.locator('button', { hasText: 'Lista de Prazos' });
+    // 5. Switch to "Lista de prazos" view using the unified pill control
+    const listModeBtn = window.locator('button', { hasText: 'Lista de prazos' });
     await expect(listModeBtn).toBeVisible();
     await listModeBtn.click();
 
@@ -84,7 +84,7 @@ test.describe('Agenda & Prazos E2E Tests', () => {
     const nativeDialogs = [];
     window.on('dialog', (d) => nativeDialogs.push(d.message()));
     await navigateTo(window, 'Agenda');
-    await window.locator('button', { hasText: 'Novo Evento' }).first().click();
+    await window.locator('button', { hasText: 'Novo evento' }).first().click();
     const title = 'Evento para excluir ' + Date.now();
     await window.fill('input[placeholder*="Simpósio Brasileiro"]', title);
     await window.fill('input[placeholder*="SBBD 2026"]', 'EX' + Date.now().toString().slice(-5));

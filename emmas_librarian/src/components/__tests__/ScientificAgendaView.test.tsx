@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent, within, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ScientificAgendaView } from '../common/ScientificAgendaView';
 import { ScientificVenue } from '../../types';
 
@@ -44,69 +44,137 @@ const MOCK_VENUES: ScientificVenue[] = [
   },
 ];
 
-describe('ScientificAgendaView (TDD)', () => {
+const OLD_VENUE: ScientificVenue = {
+  id: 3,
+  title: 'Revista Brasileira de Meteorologia',
+  acronym: 'RBMet',
+  category: 'journal',
+  milestones: [
+    {
+      id: 103,
+      venue_id: 3,
+      label: 'Chamada especial',
+      field_type: 'single',
+      target_date: '2026-02-01',
+      has_time: false,
+      status: 'pending',
+    },
+  ],
+};
+
+describe('ScientificAgendaView (boards 172 and 173)', () => {
   const mockOnAddVenue = vi.fn();
-  const mockOnEditVenue = vi.fn();
-  const mockOnDeleteVenue = vi.fn();
   const mockOnToggleMilestoneStatus = vi.fn().mockResolvedValue(true);
 
-  it('renders venue cards by default and handles text search filter', () => {
-    render(
-      <ScientificAgendaView
-        venues={MOCK_VENUES}
-        diarySet={new Set()}
-        onAddVenue={mockOnAddVenue}
-        onEditVenue={mockOnEditVenue}
-        onDeleteVenue={mockOnDeleteVenue}
-        onToggleMilestoneStatus={mockOnToggleMilestoneStatus}
-      />,
-    );
-
-    expect(screen.getByText(/SBBD 2026/i)).toBeInTheDocument();
-    expect(screen.getByText(/RES — Revista/i)).toBeInTheDocument();
-
-    // Filter text
-    const searchInput = screen.getByPlaceholderText(/Buscar por evento ou sigla.../i);
-    fireEvent.change(searchInput, { target: { value: 'Engenharia' } });
-
-    expect(screen.queryByText(/SBBD 2026/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/RES — Revista/i)).toBeInTheDocument();
+  // Today is 20 July 2026: the August deadline is ahead, the February one is long overdue.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 6, 20, 10, 0));
+    vi.clearAllMocks();
   });
 
-  it('switches to milestone_list mode using the unified pill control', () => {
+  afterEach(() => vi.useRealTimers());
+
+  const renderView = (venues = MOCK_VENUES) =>
     render(
       <ScientificAgendaView
-        venues={MOCK_VENUES}
-        diarySet={new Set()}
+        venues={venues}
         onAddVenue={mockOnAddVenue}
-        onEditVenue={mockOnEditVenue}
-        onDeleteVenue={mockOnDeleteVenue}
+        onEditVenue={vi.fn()}
+        onDeleteVenue={vi.fn()}
         onToggleMilestoneStatus={mockOnToggleMilestoneStatus}
       />,
     );
 
-    const listBtn = screen.getByText('Lista de Prazos');
-    fireEvent.click(listBtn);
+  const openList = () => fireEvent.click(screen.getByRole('button', { name: 'Lista de prazos' }));
 
+  it('opens on the current month with the events panel, and searches by event or acronym', () => {
+    renderView();
+
+    expect(screen.getByText('Julho de 2026')).toBeInTheDocument();
+    const panel = screen.getByRole('complementary', { name: 'Eventos e revistas' });
+    expect(within(panel).getByText('SBBD 2026 · Simpósio de Banco de Dados')).toBeInTheDocument();
+    expect(within(panel).getByText('RES · Revista de Engenharia de Software')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText('Evento ou sigla'), { target: { value: 'Engenharia' } });
+
+    expect(within(panel).queryByText(/SBBD 2026/)).not.toBeInTheDocument();
+    expect(within(panel).getByText(/RES ·/)).toBeInTheDocument();
+  });
+
+  it('moves between months, draws a chip on each day of a range and returns with "Hoje"', () => {
+    renderView();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Próximo mês' }));
+    const grid = screen.getByTestId('month-grid');
+    expect(screen.getByText('Agosto de 2026')).toBeInTheDocument();
+    expect(within(grid).getByText('SBBD 2026 · Submissão de Artigo')).toBeInTheDocument();
+    expect(within(grid).getAllByText('SBBD 2026')).toHaveLength(14); // the other days of the range
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mês anterior' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hoje' }));
+    expect(screen.getByText('Julho de 2026')).toBeInTheDocument();
+  });
+
+  it('starts a new event on the clicked day', () => {
+    renderView();
+
+    fireEvent.click(within(screen.getByTestId('month-grid')).getByTitle('20/07/2026'));
+
+    expect(mockOnAddVenue).toHaveBeenCalledWith('2026-07-20');
+  });
+
+  it('lists the pending deadlines first, with counts, and the done ones on request', () => {
+    renderView();
+    openList();
+
+    expect(screen.getByRole('button', { name: 'Pendentes 1' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('Submissão de Artigo')).toBeInTheDocument();
+    expect(screen.getByText('em 26 d')).toBeInTheDocument();
+    expect(screen.queryByText('Submissão Inicial')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Feitos 1' }));
+
     expect(screen.getByText('Submissão Inicial')).toBeInTheDocument();
+    expect(screen.getByText('feito')).toBeInTheDocument();
+    expect(screen.queryByText('Submissão de Artigo')).not.toBeInTheDocument();
   });
 
-  it('performs optimistic local status update when milestone status is toggled', async () => {
-    render(
-      <ScientificAgendaView
-        venues={MOCK_VENUES}
-        diarySet={new Set()}
-        onAddVenue={mockOnAddVenue}
-        onEditVenue={mockOnEditVenue}
-        onDeleteVenue={mockOnDeleteVenue}
-        onToggleMilestoneStatus={mockOnToggleMilestoneStatus}
-      />,
-    );
+  it('groups the list by month', () => {
+    renderView();
+    openList();
+    fireEvent.click(screen.getByRole('button', { name: 'Todos 2' }));
 
-    const toggleBtns = screen.getAllByRole('checkbox');
-    fireEvent.click(toggleBtns[0]);
+    expect(screen.getByRole('columnheader', { name: 'Agosto de 2026' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Setembro de 2026' })).toBeInTheDocument();
+  });
+
+  it('warns about a deadline overdue for long, can hide it from the list and marks it done', () => {
+    renderView([...MOCK_VENUES, OLD_VENUE]);
+    openList();
+
+    expect(screen.getByText('venceu há 169 d')).toBeInTheDocument();
+    expect(screen.getByText('Um prazo venceu há mais de 60 dias')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('switch', { name: /Mostrar vencidos há mais de 60 dias/ }));
+    expect(screen.queryByText('venceu há 169 d')).not.toBeInTheDocument();
+    expect(screen.getByText('Um prazo venceu há mais de 60 dias')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Marcar como feito' }));
+
+    expect(mockOnToggleMilestoneStatus).toHaveBeenCalledWith(103, 'completed');
+    expect(screen.queryByText(/venceu há mais de 60 dias/)).not.toBeInTheDocument();
+  });
+
+  it('marks a deadline done at once from the panel, before the save returns', async () => {
+    renderView();
+
+    const checkbox = screen.getAllByRole('checkbox')[0];
+    await act(async () => {
+      fireEvent.click(checkbox);
+    });
 
     expect(mockOnToggleMilestoneStatus).toHaveBeenCalledWith(101, 'completed');
+    expect(checkbox).toBeChecked();
   });
 });

@@ -63,13 +63,56 @@ export function withMilestoneStatus(
   }));
 }
 
+export interface MonthGroup {
+  /** "Abril de 2025". */
+  label: string;
+  items: MilestoneWithVenue[];
+}
+
+const MONTHS = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro',
+];
+
 /**
- * A deadline's date as the agenda shows it: a range, or the date with its time. The card and the list join the time
- * differently ("2026-11-06 14:00" vs "2026-11-06 às 14:00"), as they always did.
+ * The deadlines grouped by the month of their first date, keeping the order they came in.
  *
- * @example milestoneDateText(m, ' às ') // '2026-11-06 às 14:00'
+ * @example groupByMonth(milestonesByDate(venues, 'pending'))[0].label // 'Abril de 2025'
  */
-export function milestoneDateText(m: ScientificMilestone, timeJoin: ' ' | ' às '): string {
-  if (m.field_type === 'range' && m.end_date) return `${m.target_date} a ${m.end_date}`;
-  return `${m.target_date}${m.has_time && m.target_time ? `${timeJoin}${m.target_time}` : ''}`;
+export function groupByMonth(items: MilestoneWithVenue[]): MonthGroup[] {
+  const groups: MonthGroup[] = [];
+  for (const item of items) {
+    const [year, month] = item.milestone.target_date.split('-').map(Number);
+    const label = `${MONTHS[month - 1]} de ${year}`;
+    const last = groups[groups.length - 1];
+    if (last?.label === label) last.items.push(item);
+    else groups.push({ label, items: [item] });
+  }
+  return groups;
+}
+
+export interface StatusCounts {
+  pending: number;
+  completed: number;
+  all: number;
+}
+
+/**
+ * How many deadlines are pending, done and in all, for the counts on the status filter.
+ *
+ * @example statusCounts(milestonesByDate(venues, 'all')) // { pending: 2, completed: 1, all: 3 }
+ */
+export function statusCounts(items: MilestoneWithVenue[]): StatusCounts {
+  const completed = items.filter((item) => item.milestone.status === 'completed').length;
+  return { pending: items.length - completed, completed, all: items.length };
 }
