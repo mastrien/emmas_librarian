@@ -275,11 +275,11 @@ describe('Layout Component', () => {
     localStorage.setItem('last_seen_version', '1.1.10');
     renderAt('/');
     await waitFor(() => expect(fakeService.getAppVersion).toHaveBeenCalled());
-    expect(screen.queryByText('Novidades da Versão 1.1.10')).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Novidades da Versão 1.1.10' })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Novidades' }));
 
-    expect(await screen.findByText('Novidades da Versão 1.1.10')).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Novidades da Versão 1.1.10' })).toBeInTheDocument();
   });
 
   it('opens the help of the current screen from the rail', async () => {
@@ -320,14 +320,14 @@ describe('Layout Component', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Novidades da Versão 1.1.10')).toBeInTheDocument();
+      expect(screen.getByRole('dialog', { name: 'Novidades da Versão 1.1.10' })).toBeInTheDocument();
     });
 
-    const closeBtn = screen.getByText('Entendido, vamos lá!');
+    const closeBtn = screen.getByRole('button', { name: 'Continuar' });
     fireEvent.click(closeBtn);
 
     expect(localStorage.getItem('last_seen_version')).toBe('1.1.10');
-    expect(screen.queryByText('Novidades da Versão 1.1.10')).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Novidades da Versão 1.1.10' })).toBeNull();
   });
 
   describe('update banner', () => {

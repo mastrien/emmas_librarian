@@ -62,6 +62,18 @@ describe('ErrorModal', () => {
     expect(screen.getByText(/Ocorreu um problema inesperado no Emma's Librarian/i)).toBeInTheDocument();
   });
 
+  it('shows the tone of the error as the icon of the title: red for the system, amber for the user (board 181)', () => {
+    vi.mocked(useGlobalError).mockReturnValue({
+      currentError: new Error('boom'),
+      hideError: vi.fn(),
+    } as unknown as ReturnType<typeof useGlobalError>);
+
+    render(<ErrorModal />);
+
+    expect(document.querySelector('.app-modal-icon.is-danger')).not.toBeNull();
+    expect(document.querySelector('.app-modal-icon.is-warn')).toBeNull();
+  });
+
   it('renders a generic Error (not FrontendAppError)', () => {
     const genericError = new Error('Generic JS Error');
 

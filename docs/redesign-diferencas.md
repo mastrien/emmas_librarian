@@ -178,6 +178,15 @@ Feito: **Novo evento / Editar evento** (título do board, grupos "Evento ou revi
 - [ ] **Site (opcional)** do board se chama "Link / URL da Chamada" no app.
 - [ ] **Histórico de versões do diário** ficou como estava. O board mostra uma lista de versões à esquerda e, à direita, a comparação com o texto atual (verde o que entrou, vermelho o que saiu) e "Restaurar esta versão"; hoje o app lista as versões com "Restaurar" em cada uma, sem comparar. A comparação é recurso novo.
 
-## Próximas telas (este documento ganha uma seção por PR)
+## 181 · Janelas de aviso e ajuda (#186)
 
-175–181 Janelas (restante)
+Feito: **Erro** (ícone vermelho ou âmbar no título conforme o erro, "Ver detalhes técnicos" à esquerda da barra de baixo, "Copiar Logs" quando os detalhes estão abertos, "Entendi"); **Novidades** (título "Versão 1.3.1", linha "Novidades: o que mudou…", "Continuar" na barra de baixo, no lugar de "Entendido, vamos lá!"). A pergunta destrutiva e o aviso do board já vieram com a base das janelas (#179).
+
+- [ ] **Erro**: o board termina com uma ação do contexto ("Anexar outro PDF") e "Copiar detalhes" sempre visível; o app só tem "Entendi" e mostra "Copiar Logs" depois de abrir os detalhes. As ações por contexto seriam recurso novo, uma por tipo de erro.
+- [ ] **Novidades**: o board tem a etiqueta "NOVIDADES" em cima do título e o link "Ver todas as versões"; o app mostra a etiqueta como subtítulo e já lista todas as versões na própria janela, então não há link.
+- [ ] **Chave de IA necessária**: o board pede a chave ali mesmo ("Salvar e continuar", "Usar outro provedor"); o app só leva às Configurações, como na janela de chave das bases (board 175).
+- [ ] **Ajuda**: o board tem busca ("Como faço para…") e uma lista de tópicos que abre cada um; o app mantém a janela de ajuda que mostra o guia da tela atual. Busca e lista de tópicos são recurso novo.
+
+## Fim do redesign
+
+Todas as telas do canvas (150 a 181) têm PR. Os itens `[ ]` acima são o que escolhi diferente ou deixei de fora e dependem do seu julgamento.

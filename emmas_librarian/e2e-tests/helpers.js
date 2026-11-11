@@ -75,7 +75,7 @@ async function dismissChangelog(window) {
 
     const changelogBtn = window
       .locator('button')
-      .filter({ hasText: /^Entendido/ })
+      .filter({ hasText: /^(Entendido|Continuar)$/ })
       .first();
     if (await changelogBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await changelogBtn.click().catch(() => {});
