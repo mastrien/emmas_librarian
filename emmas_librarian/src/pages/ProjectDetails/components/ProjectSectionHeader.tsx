@@ -9,6 +9,7 @@ import { ArticleActions, type ArticleActionsProps } from './ArticleActions';
 import { ProjectNameActions, ProjectNameTitle } from './ProjectNameTitle';
 import { articlesSubtitle, countSubtitle, overviewSubtitle } from './sectionSubtitles';
 import { CategoriesExportMenu } from './categoriesTab/CategoriesExportMenu';
+import { ExportChartsButton } from './overview/ExportChartsButton';
 
 export interface ProjectSectionHeaderProps {
   section: ProjectSection;
@@ -29,9 +30,12 @@ const OverviewHeader: React.FC<ProjectSectionHeaderProps> = ({ project, articles
     title={<ProjectNameTitle project={project} {...actions} />}
     subtitle={overviewSubtitle(project, articles.length)}
     actions={
-      actions.isEditingName ? undefined : (
-        <ProjectNameActions onRename={() => actions.setIsEditingName(true)} onDelete={actions.deleteProject} />
-      )
+      <>
+        <ExportChartsButton articles={articles} />
+        {!actions.isEditingName && (
+          <ProjectNameActions onRename={() => actions.setIsEditingName(true)} onDelete={actions.deleteProject} />
+        )}
+      </>
     }
   />
 );

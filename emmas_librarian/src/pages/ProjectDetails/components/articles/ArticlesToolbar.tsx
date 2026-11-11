@@ -8,7 +8,7 @@ import { FilterChips } from './FilterChips';
 import { keyBelongsElsewhere } from './keyboardTargets';
 import './articlesToolbar.css';
 
-const SORT_OPTIONS = [
+export const SORT_OPTIONS = [
   ['added-desc', 'Últimos adicionados'],
   ['added-asc', 'Primeiros adicionados'],
   ['year-desc', 'Mais recentes'],

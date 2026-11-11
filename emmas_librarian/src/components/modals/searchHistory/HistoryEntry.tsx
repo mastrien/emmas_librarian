@@ -141,6 +141,7 @@ export const HistoryEntry: React.FC<HistoryEntryProps> = (props) => {
       <div className="history-entry-columns">
         <HistoryBreakdown
           breakdown={parseStoredObject<SearchBreakdown>(item.results_breakdown)}
+          saved={item.total_results}
           uniqueResults={item.unique_results}
         />
         <TranslatedQueries item={item} />
