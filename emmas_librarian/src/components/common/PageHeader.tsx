@@ -11,6 +11,8 @@ interface PageHeaderProps {
   subtitle?: ReactNode;
   /** Buttons on the right; at most one primary (canvas rule "um botão primário por tela"). */
   actions?: ReactNode;
+  /** The larger title of the home screen (canvas `.t-xl`, 30px); every other screen uses the 22px one. */
+  large?: boolean;
 }
 
 /**
@@ -20,8 +22,8 @@ interface PageHeaderProps {
  *
  * @example <PageHeader title="Artigos" subtitle="96 no projeto · 7 lidos" actions={<button>Exportar</button>} />
  */
-export const PageHeader: React.FC<PageHeaderProps> = ({ eyebrow, title, titleExtra, subtitle, actions }) => (
-  <header className="page-header">
+export const PageHeader: React.FC<PageHeaderProps> = ({ eyebrow, title, titleExtra, subtitle, actions, large }) => (
+  <header className={large ? 'page-header page-header--xl' : 'page-header'}>
     <div className="page-header__titles">
       {eyebrow && <span className="page-header__eyebrow">{eyebrow}</span>}
       {titleExtra ? (
