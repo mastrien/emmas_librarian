@@ -9,6 +9,8 @@ interface ProviderRowProps {
   /** Secrets are masked; the Ollama URL is not. */
   secret?: boolean;
   title?: string;
+  /** A line under the field, for what the provider asks of the person (where to get the key, a limit). */
+  hint?: React.ReactNode;
 }
 
 /**
@@ -33,6 +35,7 @@ export const ProviderRow: React.FC<ProviderRowProps> = ({
   placeholder,
   secret = true,
   title,
+  hint,
 }) => {
   const id = useId();
   const badge = providerBadge(value);
@@ -61,6 +64,7 @@ export const ProviderRow: React.FC<ProviderRowProps> = ({
         {badge.tone === 'ok' && <Check size={12} aria-hidden="true" />}
         {badge.text}
       </span>
+      {hint && <p className="ai-provider__hint">{hint}</p>}
     </div>
   );
 };
