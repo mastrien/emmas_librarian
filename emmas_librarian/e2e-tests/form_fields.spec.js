@@ -34,7 +34,7 @@ test('the manual article form uses one field look, label above, full width', asy
     );
 
     expect(looks[0]).toEqual(looks[1]);
-    expect(looks[0]).toMatchObject({ border: '1px', fontSize: '16px', labelAbove: true, fillsColumn: true });
+    expect(looks[0]).toMatchObject({ border: '1px', fontSize: '13px', labelAbove: true, fillsColumn: true });
     expect(await dialog.getByLabel('Resumo').evaluate((el) => getComputedStyle(el).resize)).toBe('none');
   } finally {
     await electronApp.close();

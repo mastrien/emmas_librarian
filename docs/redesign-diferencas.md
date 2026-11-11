@@ -187,6 +187,23 @@ Feito: **Erro** (ícone vermelho ou âmbar no título conforme o erro, "Ver deta
 - [ ] **Chave de IA necessária**: o board pede a chave ali mesmo ("Salvar e continuar", "Usar outro provedor"); o app só leva às Configurações, como na janela de chave das bases (board 175).
 - [ ] **Ajuda**: o board tem busca ("Como faço para…") e uma lista de tópicos que abre cada um; o app mantém a janela de ajuda que mostra o guia da tela atual. Busca e lista de tópicos são recurso novo.
 
+## Rodada de correções (PR de correções, depois da primeira validação)
+
+Regra que o autor fixou: a interface fica igual ao board; só se diverge quando o board pressupõe uma funcionalidade que o sistema não tem. Reaproveitar o desenho antigo não conta. Os itens abaixo foram refeitos nessa regra; marque `[x]` se ficou certo.
+
+- [ ] **Base (150)**: cor e medidas da sidebar do projeto, botões de 32px/13px, fonte base de 13px, margem lateral de 28px e telas ocupando a largura toda (antes havia colunas centradas de 1200/1280px).
+- [ ] **Início (151)**: "Próximos prazos" em linhas, calendário compacto com letras e linha sob os dias com prazo, cartões no tamanho do board, título de 30px, "Termos de uso" na cor de destaque. A triagem conta arquivados como progresso; o projeto só vira "Revisão sistemática" depois que um artigo recebe uma decisão.
+- [ ] **Novo projeto (152)**: centralizado na vertical; "Importar um projeto" é link de texto.
+- [ ] **Artigos (153)**: o botão "Filtros" mostra a quantidade em selo de destaque. **Painel do artigo**: resumo na fonte de leitura, palavras-chave em chips, origem numa linha discreta (sem os chips "+ categoria" e "Resumir com IA", por decisão do autor).
+- [ ] **Visão geral (154)**: "Exportar gráficos" salva ano, bases e editoras num SVG. Um gráfico por tipo de categoria fica no Arca (#201).
+- [ ] **Histórico (157)**: "Resultados por base" como tabela Base × Retornados, com "Salvos no projeto" e a nota de quantos já estavam no projeto.
+- [ ] **Nova investigação (159)**: cartões de "Começar de um conjunto" com o escolhido marcado, perguntas em linhas P1…Pn, "+ Pergunta", barra de baixo com margem. Tipo de resposta, "Vira categoria" e "das categorias do projeto" ficam no Arca (#200).
+- [ ] **Em andamento (160)**: "Investigação" com o selo "Rodando" e "Iniciada às HH:MM · modelo · N artigos · M perguntas"; "Indexar os PDFs" só aparece feita quando todos os artigos já passaram por ela.
+- [ ] **Configurações › IA (170)**: provedores em linhas com selo "sem chave"/"configurada" ("respondendo" precisaria de uma chamada ao provedor e não existe), "Por tarefa" em tabela com o modelo sugerido por provedor e o selo "rec.", RAG recolhível com o resumo dos números.
+- [ ] **Ctrl+K**: ações das telas (nova entrada do diário e histórico, novo evento e navegação da agenda, ordenar e filtrar artigos, categorias, acesso rápido, critérios e rótulos, importar) e mais destinos (seções das Configurações, nova investigação, avaliação, novidades, ajuda).
+
+Ainda abertos desta rodada: auditoria das demais telas contra o board (Perguntar, Leitor, PDFs, Agenda, janelas); acesso rápido e investigações da sidebar com muitos itens (proposta: mostrar os mais recentes e "Ver todos").
+
 ## Fim do redesign
 
 Todas as telas do canvas (150 a 181) têm PR. Os itens `[ ]` acima são o que escolhi diferente ou deixei de fora e dependem do seu julgamento.
