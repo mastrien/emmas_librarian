@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { ArticleReaderToolbar } from '../components/ArticleReaderToolbar';
 import { toolbarProps } from './toolbarProps';
 import type { Article } from '../../../types';
