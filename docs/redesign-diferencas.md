@@ -202,7 +202,12 @@ Regra que o autor fixou: a interface fica igual ao board; só se diverge quando 
 - [ ] **Configurações › IA (170)**: provedores em linhas com selo "sem chave"/"configurada" ("respondendo" precisaria de uma chamada ao provedor e não existe), "Por tarefa" em tabela com o modelo sugerido por provedor e o selo "rec.", RAG recolhível com o resumo dos números.
 - [ ] **Ctrl+K**: ações das telas (nova entrada do diário e histórico, novo evento e navegação da agenda, ordenar e filtrar artigos, categorias, acesso rápido, critérios e rótulos, importar) e mais destinos (seções das Configurações, nova investigação, avaliação, novidades, ajuda).
 
-Ainda abertos desta rodada: auditoria das demais telas contra o board (Perguntar, Leitor, PDFs, Agenda, janelas); acesso rápido e investigações da sidebar com muitos itens (proposta: mostrar os mais recentes e "Ver todos").
+- [ ] **Biblioteca de PDFs (171)**: cartões com etiqueta em maiúsculas, tabela com colunas e cabeçalho do board, sem moldura de cartão.
+- [ ] **Configurações › Chaves das bases**: mesmo desenho de linhas dos provedores (nome, campo, selo), com as dicas embaixo. O board não mostra essa seção; segui o padrão da IA.
+- [ ] **Leitor (169)**: abas do painel lateral (Anotações, Insights IA, Pesquisar) como controle segmentado, na ordem do board. O cartão de categorias do artigo continua com os editores da matriz.
+- [ ] **Termos (174)**: aviso de responsabilidade sem borda, só o fundo âmbar. **Artigos (153)**: tabela direto na página, cabeçalho e linhas nas medidas do board.
+
+Ainda abertos desta rodada: auditoria com dados das telas que só aparecem depois de uma investigação ou conversa (respostas, auditoria, chamadas, triagem guiada, Perguntar), da Agenda com eventos e das janelas; acesso rápido e investigações da sidebar com muitos itens (proposta: mostrar os mais recentes e "Ver todos").
 
 ## Fim do redesign
 
