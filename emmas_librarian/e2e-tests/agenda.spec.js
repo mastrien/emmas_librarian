@@ -52,7 +52,7 @@ test.describe('Agenda & Prazos E2E Tests', () => {
     await expect(window.locator(`input[value="Revisão Final E2E"]`)).toBeVisible();
 
     // Save venue
-    const saveBtn = window.locator('button', { hasText: 'Salvar Evento' });
+    const saveBtn = window.locator('button', { hasText: 'Criar evento' });
     await saveBtn.click();
 
     // 4. Verify venue card in the calendar view's events panel using specific unique locators
@@ -88,7 +88,7 @@ test.describe('Agenda & Prazos E2E Tests', () => {
     const title = 'Evento para excluir ' + Date.now();
     await window.fill('input[placeholder*="Simpósio Brasileiro"]', title);
     await window.fill('input[placeholder*="SBBD 2026"]', 'EX' + Date.now().toString().slice(-5));
-    await window.locator('button', { hasText: 'Salvar Evento' }).click();
+    await window.locator('button', { hasText: 'Criar evento' }).click();
     await expect(window.getByText(title)).toBeVisible({ timeout: 10000 });
 
     await window.getByTitle('Excluir Evento').first().click();

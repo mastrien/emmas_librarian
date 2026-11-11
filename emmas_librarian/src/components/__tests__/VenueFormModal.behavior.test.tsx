@@ -54,7 +54,7 @@ describe('VenueFormModal initial state', () => {
   it('renders nothing when closed', () => {
     render(<VenueFormModal isOpen={false} onClose={onClose} onSave={onSave} />);
 
-    expect(screen.queryByText('Novo Evento / Periódico')).not.toBeInTheDocument();
+    expect(screen.queryByText('Novo evento')).not.toBeInTheDocument();
   });
 
   it('defaults the three standard milestones to today without an initial date', () => {
@@ -69,12 +69,24 @@ describe('VenueFormModal initial state', () => {
   it('prefills an existing venue, defaulting missing optional fields', () => {
     renderModal({ initialData: venue });
 
-    expect(screen.getByText('Editar Evento / Periódico')).toBeInTheDocument();
+    expect(screen.getByText('Editar evento')).toBeInTheDocument();
     expect(titleInput()).toHaveValue('SBBD');
     expect(screen.getByPlaceholderText('Ex: SBBD 2026')).toHaveValue('');
     expect(screen.getByRole('combobox')).toHaveValue('journal');
     expect(screen.getByDisplayValue('Prazo')).toBeInTheDocument();
     expect(screen.getByDisplayValue('14:30')).toBeInTheDocument();
+  });
+
+  it('names the save button by what it does: "Criar evento" for a new one, "Salvar" when editing (board 180)', () => {
+    const { unmount } = renderModal();
+    expect(screen.getByRole('button', { name: 'Criar evento' })).toBeInTheDocument();
+    expect(screen.getByText('Evento ou revista')).toBeInTheDocument();
+    unmount();
+
+    renderModal({ initialData: venue });
+
+    expect(screen.getByRole('button', { name: 'Salvar' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Criar evento' })).not.toBeInTheDocument();
   });
 
   it('falls back to the default category and color when the venue has none', () => {
@@ -98,7 +110,7 @@ describe('VenueFormModal closing', () => {
   it('closes from the X, Esc and the footer, not from a click on the window', () => {
     renderModal();
 
-    fireEvent.click(screen.getByText('Novo Evento / Periódico'));
+    fireEvent.click(screen.getByText('Novo evento'));
     expect(onClose).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
     fireEvent.keyDown(window, { key: 'Escape' });
