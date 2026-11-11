@@ -108,4 +108,20 @@ describe('DialogProvider (Arca 103/134)', () => {
 
     expect(() => render(<Orphan />)).toThrow('useDialogs() precisa de um <DialogProvider>');
   });
+
+  it('marks a destructive question with a red icon and a notice with a neutral one (board 181)', async () => {
+    const dialogs = renderProvider();
+
+    act(() => {
+      void dialogs.current.confirm(DELETE);
+    });
+    expect(await screen.findByRole('dialog')).toContainElement(document.querySelector('.app-modal-icon.is-danger'));
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
+
+    act(() => {
+      void dialogs.current.inform({ title: 'PDFs importados', message: 'Pronto.' });
+    });
+    await screen.findByRole('dialog', { name: 'PDFs importados' });
+    expect(document.querySelector('.app-modal-icon.is-info')).not.toBeNull();
+  });
 });

@@ -112,6 +112,15 @@ Feito: coluna de leitura com "Nesta página" ao lado (sumário que rola até a s
 - [ ] **"Atualizado na versão"** é uma constante (`TERMS_VERSION`) que precisa ser mudada à mão quando os termos mudarem; não acompanha a versão do app.
 - [ ] **E2E de links de voltar**: sem links de voltar restantes além do leitor, o teste passou a conferir o do leitor (importa um PDF de teste).
 
+## 175–181 · Janelas: a base e as perguntas do app (#179)
+
+Feito: a janela padrão (`Modal`) ganhou o desenho do board (cantos 14px, sombra, título 15px, descrição pequena, X em quadrado de 28px), um ícone em quadrado colorido antes do título (`icon` e `tone`) e a barra de baixo `ModalFooter` (fundo cinza, linha em cima, dica à esquerda e botões à direita, colada ao fim quando a janela rola). As perguntas e avisos do app (`confirm`/`inform`) usam o ícone e a barra sem fundo do board 181: lixeira vermelha para perguntas destrutivas.
+
+As janelas de cada board entram nos PRs seguintes, uma seção por PR.
+
+- [ ] **Avisos (`inform`)** mostram sempre o ícone neutro (i). O board usa um visto verde para "PDFs importados"; o app usa o mesmo aviso para sucessos e erros, e não sei qual é qual sem mexer em cada chamada.
+- [ ] A barra de baixo só está nas perguntas do app por enquanto; as demais janelas ganham quando cada board for refeito.
+
 ## Próximas telas (este documento ganha uma seção por PR)
 
-175–181 Janelas
+175–181 Janelas (restante)

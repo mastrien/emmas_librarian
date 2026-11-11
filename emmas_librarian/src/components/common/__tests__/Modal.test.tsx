@@ -81,4 +81,17 @@ describe('Modal', () => {
 
     expect(screen.getByRole('dialog').style).toMatchObject({ width: '900px', maxWidth: '100%' });
   });
+
+  it('puts an icon in a tinted square before the title, in the tone it is given', () => {
+    open({ icon: <svg data-testid="bin" />, tone: 'danger' });
+
+    const square = screen.getByTestId('bin').parentElement;
+    expect(square).toHaveClass('app-modal-icon', 'is-danger');
+  });
+
+  it('shows no icon square when none is given', () => {
+    open();
+
+    expect(document.querySelector('.app-modal-icon')).toBeNull();
+  });
 });
