@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tags, X as XIcon } from 'lucide-react';
+import { X as XIcon } from 'lucide-react';
 import { CategoryCell } from '../common/CategoryCell';
 
 import { ProjectCategory, ArticleCategory } from '../../types';
@@ -28,9 +28,8 @@ export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = (
           className="card fade-in"
           style={{
             position: 'absolute',
-            bottom: '100%',
+            bottom: 0,
             left: 0,
-            marginBottom: '1rem',
             width: '300px',
             background: 'var(--bg-main)',
             padding: '1rem',
@@ -40,6 +39,7 @@ export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-heading)' }}>Categorias</h3>
             <button
+              aria-label="Fechar painel de categorias"
               onClick={() => setIsCategoriesOpen(false)}
               style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
             >
@@ -74,23 +74,6 @@ export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = (
           )}
         </div>
       )}
-      <button
-        onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
-        className="btn-primary"
-        style={{
-          borderRadius: '2rem',
-          padding: '0.8rem 1.5rem',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          background: 'var(--color-primary)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-        }}
-        title="Categorias do Artigo"
-      >
-        <Tags size={20} />
-        Categorizar
-      </button>
     </div>
   );
 };

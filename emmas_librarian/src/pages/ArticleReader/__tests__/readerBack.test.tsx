@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 import { ArticleReaderToolbar } from '../components/ArticleReaderToolbar';
+import { toolbarProps } from './toolbarProps';
 import type { Article } from '../../../types';
 
 const article = { id: 1, project_id: 3, title: 'Estudo 1', status: 'read' } as Article;
@@ -13,22 +14,7 @@ function renderToolbar(state: unknown) {
   render(
     <MemoryRouter initialEntries={[{ pathname: '/articles/1', state }]}>
       <Routes>
-        <Route
-          path="/articles/1"
-          element={
-            <ArticleReaderToolbar
-              article={article}
-              hasLocalFile
-              uploading={false}
-              scale={1}
-              handleZoom={vi.fn()}
-              handleFileUpload={vi.fn()}
-              handleUnlinkClick={vi.fn()}
-              setIsEditingMetadata={vi.fn()}
-              setIsCitationModalOpen={vi.fn()}
-            />
-          }
-        />
+        <Route path="/articles/1" element={<ArticleReaderToolbar {...toolbarProps(article)} />} />
         <Route path="/projects/*" element={<Probe />} />
       </Routes>
     </MemoryRouter>,

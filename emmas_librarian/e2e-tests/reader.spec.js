@@ -42,7 +42,7 @@ test.describe('PDF reader', () => {
     const { window, close } = await openFixtureInReader();
     try {
       await expect(window.locator('.textLayer').getByText(METADATA.shortTitle).first()).toBeVisible();
-      await expect(window.getByText('de 4', { exact: true })).toBeVisible();
+      await expect(window.getByText('/ 4', { exact: true })).toBeVisible();
       await expect(pageInput(window)).toHaveValue('1');
 
       await window.getByRole('button', { name: 'Próxima página' }).click();
