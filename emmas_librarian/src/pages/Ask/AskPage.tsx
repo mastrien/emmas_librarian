@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertCircle, ChevronsRight } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { SideDrawer } from '../../components/common/SideDrawer';
 import { IndexRecalculationModal } from '../../components/modals/IndexRecalculationModal';
 import { useFillWindowHeight } from '../../hooks/useFillWindowHeight';
@@ -9,6 +9,7 @@ import { AskScopeBar } from './AskScopeBar';
 import { AskSidebar } from './AskSidebar';
 import { AskComposer, AskIndexNotice, AskSourcePanel } from './AskSidePieces';
 import { AskThread, type PickedCitation } from './AskThread';
+import { sourcesOfCitation } from './askDisplay';
 import { useAskPage } from './useAskPage';
 import './ask.css';
 
@@ -18,7 +19,22 @@ import './ask.css';
  *
  * @example <Route path="/ask/:conversationId" element={<AskPage />} />
  */
+// Ctrl N starts a new conversation from anywhere on the page, as the button says (board 168).
+function useNewConversationKey() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || e.key.toLowerCase() !== 'n') return;
+      e.preventDefault();
+      navigate('/ask');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [navigate]);
+}
+
 export const AskPage: React.FC = () => {
+  useNewConversationKey();
   const params = useParams();
   const conversationId = params.conversationId ? Number(params.conversationId) : null;
   const ask = useAskPage(conversationId);
@@ -34,7 +50,13 @@ export const AskPage: React.FC = () => {
     <AskSidebar conversations={ask.conversations} onRemove={ask.remove} onPick={() => setListOpen(false)} />
   );
   const source = picked && ask.conversation && (
-    <AskSourcePanel citation={picked} conversationId={ask.conversation.id} onClose={() => setPicked(null)} />
+    <AskSourcePanel
+      citation={picked}
+      sources={sourcesOfCitation(ask.conversation, picked)}
+      conversationId={ask.conversation.id}
+      onClose={() => setPicked(null)}
+      onPick={setPicked}
+    />
   );
   const shownError = ask.error ?? ask.indexError;
 
@@ -55,7 +77,12 @@ export const AskPage: React.FC = () => {
             <ChevronsRight size={16} aria-hidden="true" /> Conversas
           </button>
         )}
-        <AskScopeBar projects={ask.projects} scope={ask.scope} onChange={ask.setScope} />
+        <AskScopeBar
+          projects={ask.projects}
+          scope={ask.scope}
+          onChange={ask.setScope}
+          indexed={ask.coverage?.indexed.length}
+        />
         <AskThread conversation={ask.conversation} pending={ask.pending} picked={picked} onPick={setPicked} />
         {shownError && (
           <div className="ask-error" role="alert">

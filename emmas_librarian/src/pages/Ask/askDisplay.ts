@@ -1,4 +1,12 @@
-import type { AskCitation, AskCitationAccess, AskReadCitation, AskStep, AskUnverified } from '../../types';
+import type {
+  AskAnswer,
+  AskCitation,
+  AskCitationAccess,
+  AskConversation,
+  AskReadCitation,
+  AskStep,
+  AskUnverified,
+} from '../../types';
 
 const LABEL_LENGTH = 28;
 
@@ -87,4 +95,75 @@ export function citationReaderState(citation: AskReadCitation, conversationId: n
     page: citation.page,
     backTo: { path: `/ask/${conversationId}`, label: 'Voltar à conversa' },
   };
+}
+
+const sameSource = (a: AskReadCitation, b: AskReadCitation) =>
+  a.articleId === b.articleId && a.page === b.page && a.text === b.text;
+
+/**
+ * The distinct passages an answer cites, in the order they first appear: the numbers of the chips (board 168) and
+ * the list of "Fontes".
+ *
+ * @example answerSources(answer).length // 3
+ */
+export function answerSources(answer: AskAnswer<AskReadCitation>): AskReadCitation[] {
+  const sources: AskReadCitation[] = [];
+  for (const claim of answer.claims) {
+    for (const citation of claim.citations) {
+      if (!sources.some((known) => sameSource(known, citation))) sources.push(citation);
+    }
+  }
+  return sources;
+}
+
+/**
+ * The sources of the answer a citation belongs to; just the citation when no answer holds it.
+ *
+ * @example sourcesOfCitation(conversation, citation) // [citation, …]
+ */
+export function sourcesOfCitation(conversation: AskConversation | null, citation: AskReadCitation): AskReadCitation[] {
+  for (const message of conversation?.messages ?? []) {
+    const sources = message.answer ? answerSources(message.answer) : [];
+    if (sources.some((known) => sameSource(known, citation))) return sources;
+  }
+  return [citation];
+}
+
+/**
+ * The position of a citation among the sources (counted from 1), 0 when it is not one of them.
+ *
+ * @example sourceNumber(sources, citation) // 2
+ */
+export function sourceNumber(sources: AskReadCitation[], citation: AskReadCitation): number {
+  return sources.findIndex((known) => sameSource(known, citation)) + 1;
+}
+
+/**
+ * The text "Copiar" puts on the clipboard: the statements, one per paragraph, each followed by its sources as
+ * "[Almeida 2021, p. 4]".
+ *
+ * @example answerAsText(answer) // 'A série tem 60 anos. [Almeida 2021, p. 4]'
+ */
+export function answerAsText(answer: AskAnswer<AskReadCitation>): string {
+  return answer.claims
+    .map((claim) => {
+      const sources = claim.citations.map((citation) => `[${citationLabel(citation)}]`).join(' ');
+      return sources ? `${claim.text} ${sources}` : claim.text;
+    })
+    .join('\n\n');
+}
+
+/**
+ * The heading a conversation sits under in the list (board 168): "Hoje", or the month it was last used in (with the
+ * year when it is not this one).
+ *
+ * @example conversationGroup('2026-08-10T10:00:00Z', new Date(2026, 10, 10)) // 'Agosto'
+ */
+export function conversationGroup(updatedAt: string, now: Date): string {
+  const date = new Date(updatedAt);
+  if (Number.isNaN(date.getTime())) return 'Antes';
+  if (date.toDateString() === now.toDateString()) return 'Hoje';
+  const month = date.toLocaleDateString('pt-BR', { month: 'long' });
+  const name = month[0].toUpperCase() + month.slice(1);
+  return date.getFullYear() === now.getFullYear() ? name : `${name} de ${date.getFullYear()}`;
 }

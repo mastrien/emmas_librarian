@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import type { AskReadCitation } from '../../../types';
+import type { AskAnswer, AskConversation, AskReadCitation } from '../../../types';
 import { readerBackFrom } from '../../../utils/readerReturn';
 import {
+  answerAsText,
+  answerSources,
   auditNotice,
   citationAccessNote,
   citationLabel,
   citationReaderState,
+  conversationGroup,
+  sourceNumber,
+  sourcesOfCitation,
   stepText,
   unverifiedReason,
 } from '../askDisplay';
@@ -106,5 +111,59 @@ describe('citationReaderState', () => {
 
     expect(state).toMatchObject({ searchQuery: 'trecho', page: 4 });
     expect(readerBackFrom(state)).toEqual({ path: '/ask/3', label: 'Voltar à conversa' });
+  });
+});
+
+// Board 168: numbered chips, a list of "Fontes", "Copiar" and the headings of the conversation list.
+describe('the sources of an answer', () => {
+  const first = citation();
+  const second = citation({ articleId: 2, page: 9, text: 'outro trecho', authors: 'Souza, B.', year: 2019 });
+  const answer: AskAnswer<AskReadCitation> = {
+    steps: [],
+    claims: [
+      { text: 'A série tem 60 anos.', citations: [first, second], unverified: null },
+      { text: 'Repete a primeira.', citations: [{ ...first }], unverified: null },
+      { text: 'Sem fonte.', citations: [], unverified: { kind: 'no_source' } },
+    ],
+  };
+
+  it('lists each passage once, in the order it first appears', () => {
+    expect(answerSources(answer)).toEqual([first, second]);
+  });
+
+  it('numbers a citation among them, 0 when it is not one', () => {
+    const sources = answerSources(answer);
+
+    expect(sourceNumber(sources, second)).toBe(2);
+    expect(sourceNumber(sources, citation({ page: 99 }))).toBe(0);
+  });
+
+  it('finds the sources of the answer a citation belongs to', () => {
+    const conversation = {
+      id: 1,
+      title: 't',
+      projects: [],
+      messages: [{ id: 1, role: 'assistant', content: '', created_at: '', answer }],
+    } as AskConversation;
+
+    expect(sourcesOfCitation(conversation, second)).toEqual([first, second]);
+    expect(sourcesOfCitation(null, second)).toEqual([second]);
+  });
+
+  it('writes the statements with their sources for the clipboard', () => {
+    expect(answerAsText(answer)).toBe(
+      'A série tem 60 anos. [Almeida 2021, p. 4] [Souza 2019, p. 9]\n\nRepete a primeira. [Almeida 2021, p. 4]\n\nSem fonte.',
+    );
+  });
+});
+
+describe('conversationGroup', () => {
+  const now = new Date(2026, 10, 10, 12);
+
+  it('is "Hoje" for today, else the month, with the year when it is not this one', () => {
+    expect(conversationGroup(new Date(2026, 10, 10, 8).toISOString(), now)).toBe('Hoje');
+    expect(conversationGroup(new Date(2026, 7, 10).toISOString(), now)).toBe('Agosto');
+    expect(conversationGroup(new Date(2025, 11, 1).toISOString(), now)).toBe('Dezembro de 2025');
+    expect(conversationGroup('', now)).toBe('Antes');
   });
 });

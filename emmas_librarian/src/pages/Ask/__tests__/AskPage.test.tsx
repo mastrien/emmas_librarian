@@ -275,6 +275,56 @@ describe('AskPage (#53)', () => {
     expect(await screen.findByText(/não respondem a esta pergunta/)).toBeInTheDocument();
   });
 
+  // Board 168: numbered chips and the list of sources beside the picked one.
+  describe('numbered sources', () => {
+    const second = citation({
+      articleId: 2,
+      page: 9,
+      title: 'Outro estudo',
+      text: 'segundo trecho',
+      access: { kind: 'open', articleId: 2 },
+    });
+    const withTwo = {
+      text: 'Duas fontes.',
+      citations: [citation(), second],
+      unverified: null,
+    } as AskClaim<AskReadCitation>;
+
+    it('numbers the chips, lists every source in the panel and switches the picked one', async () => {
+      const service = serviceWith();
+      service.getAskConversation.mockResolvedValue(conversation([withTwo]));
+      await open(service, '/ask/5');
+
+      await press(await screen.findByRole('button', { name: 'Almeida 2021, p. 4' }));
+      const list = screen.getByRole('list', { name: 'Fontes' });
+      expect(within(list).getAllByRole('button')).toHaveLength(2);
+      await press(within(list).getByRole('button', { name: 'Ver a fonte 2: Outro estudo' }));
+
+      expect(screen.getByText('segundo trecho')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Ver a fonte 2: Outro estudo' })).toHaveClass('is-on');
+    });
+
+    it('says how many sources the answer has and offers to copy it', async () => {
+      const service = serviceWith();
+      service.getAskConversation.mockResolvedValue(conversation([withTwo]));
+      await open(service, '/ask/5');
+
+      expect(await screen.findByText(/2 fontes\./)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Copiar' })).toBeInTheDocument();
+    });
+  });
+
+  it('starts a new conversation with Ctrl N, from anywhere on the page', async () => {
+    const service = serviceWith();
+    service.getAskConversation.mockResolvedValue(conversation([checked]));
+    await open(service, '/ask/5');
+    await screen.findByRole('log', { name: 'Conversa' });
+
+    fireEvent.keyDown(window, { key: 'n', ctrlKey: true });
+
+    await waitFor(() => expect(screen.getAllByTestId('where')[0].textContent).toMatch(/^\/ask(null)?$/));
+  });
+
   describe('citations', () => {
     async function openCitation(access: AskReadCitation['access']) {
       const service = serviceWith();

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { Project } from '../../types';
+import { pdfCount } from '../../utils/pdfCount';
 
 // Closes on a click anywhere else, as a dropdown does.
 function useClickOutside(onOutside: () => void) {
@@ -44,7 +45,9 @@ export const AskScopeBar: React.FC<{
   projects: Project[];
   scope: number[];
   onChange: (scope: number[]) => void;
-}> = ({ projects, scope, onChange }) => {
+  /** How many PDFs of these projects answer (indexed with the current model); hidden while unknown. */
+  indexed?: number;
+}> = ({ projects, scope, onChange, indexed }) => {
   const [open, setOpen] = useState(false);
   const box = useClickOutside(() => setOpen(false));
   const toggle = (id: number, chosen: boolean) =>
@@ -52,7 +55,7 @@ export const AskScopeBar: React.FC<{
   const chosen = projects.filter((project) => scope.includes(project.id));
   return (
     <div className="ask-scope" ref={box}>
-      <span className="ask-muted">Respondendo com:</span>
+      <span className="ask-muted">Respondendo com</span>
       {chosen.map((project) => (
         <span key={project.id} className="ask-chip">
           <span className="ask-chip-name">{project.name}</span>
@@ -65,6 +68,9 @@ export const AskScopeBar: React.FC<{
         + projeto
       </button>
       {open && <ProjectMenu projects={projects} scope={scope} onToggle={toggle} />}
+      {indexed !== undefined && scope.length > 0 && (
+        <span className="ask-muted ask-scope__count">{pdfCount(indexed)} indexados</span>
+      )}
     </div>
   );
 };

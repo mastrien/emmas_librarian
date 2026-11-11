@@ -1,16 +1,25 @@
 import React, { useEffect, useRef } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Copy } from 'lucide-react';
 import type { AskAnswer, AskClaim, AskConversation, AskReadCitation } from '../../types';
-import { auditNotice, citationLabel, stepText, unverifiedReason } from './askDisplay';
+import {
+  answerAsText,
+  answerSources,
+  auditNotice,
+  citationLabel,
+  sourceNumber,
+  stepText,
+  unverifiedReason,
+} from './askDisplay';
 
 /** The citation open in the side panel. */
 export type PickedCitation = AskReadCitation;
 
 const ClaimItem: React.FC<{
   claim: AskClaim<AskReadCitation>;
+  sources: AskReadCitation[];
   picked: PickedCitation | null;
   onPick: (citation: PickedCitation) => void;
-}> = ({ claim, picked, onPick }) => (
+}> = ({ claim, sources, picked, onPick }) => (
   <li className={claim.unverified ? 'ask-claim ask-claim--unverified' : 'ask-claim'}>
     {claim.text}
     {claim.unverified && (
@@ -26,9 +35,11 @@ const ClaimItem: React.FC<{
             type="button"
             className="ask-cite"
             aria-pressed={picked === citation}
+            aria-label={citationLabel(citation)}
+            title={citationLabel(citation)}
             onClick={() => onPick(citation)}
           >
-            {citationLabel(citation)}
+            {sourceNumber(sources, citation)}
           </button>
         ))}
       </span>
@@ -42,6 +53,7 @@ const AnswerBlock: React.FC<{
   onPick: (citation: PickedCitation) => void;
 }> = ({ answer, picked, onPick }) => {
   const marked = answer.claims.filter((claim) => claim.unverified).length;
+  const sources = answerSources(answer);
   return (
     <div className="ask-answer">
       {answer.steps.map((step, i) => (
@@ -63,10 +75,22 @@ const AnswerBlock: React.FC<{
         <>
           <ul className="ask-claims">
             {answer.claims.map((claim, i) => (
-              <ClaimItem key={i} claim={claim} picked={picked} onPick={onPick} />
+              <ClaimItem key={i} claim={claim} sources={sources} picked={picked} onPick={onPick} />
             ))}
           </ul>
-          <p className="ask-foot">Respostas de IA podem errar: abra as citações para conferir.</p>
+          <div className="ask-foot">
+            <button
+              type="button"
+              className="ask-copy"
+              onClick={() => void navigator.clipboard?.writeText(answerAsText(answer))}
+            >
+              <Copy size={14} aria-hidden="true" /> Copiar
+            </button>
+            <span>
+              Respostas de IA podem errar: abra as citações para conferir.
+              {sources.length > 0 && ` ${sources.length} ${sources.length === 1 ? 'fonte' : 'fontes'}.`}
+            </span>
+          </div>
         </>
       )}
     </div>
