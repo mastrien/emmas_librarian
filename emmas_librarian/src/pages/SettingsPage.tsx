@@ -12,7 +12,6 @@ import { UpdateSettings, describeSnapshotDate } from './Settings/components/Upda
 import { TrashSettings } from './Settings/components/TrashSettings';
 import { modelSuggestions, suggestedModelFor } from './Settings/aiModelSuggestions';
 import { TYPING_DELAY_MS, useSettingsAutosave } from './Settings/useSettingsAutosave';
-import { AutosaveNotice } from './Settings/components/AutosaveNotice';
 import { useDialogs } from '../components/common/dialogs/DialogProvider';
 import { PageHeader } from '../components/common/PageHeader';
 import { SettingsNav } from './Settings/components/SettingsNav';
