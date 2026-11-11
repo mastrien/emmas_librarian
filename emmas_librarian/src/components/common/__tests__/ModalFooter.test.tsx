@@ -33,4 +33,15 @@ describe('ModalFooter', () => {
 
     expect(container.firstChild).toHaveClass('is-plain');
   });
+
+  it('keeps a leading button at the left, before the hint and the main buttons', () => {
+    render(
+      <ModalFooter leading={<button type="button">Descartar</button>} hint="dica">
+        <button type="button">Salvar</button>
+      </ModalFooter>,
+    );
+
+    const order = Array.from(document.querySelector('.app-modal-foot')!.children).map((el) => el.textContent);
+    expect(order).toEqual(['Descartar', 'dica', 'Salvar']);
+  });
 });

@@ -121,6 +121,16 @@ As janelas de cada board entram nos PRs seguintes, uma seção por PR.
 - [ ] **Avisos (`inform`)** mostram sempre o ícone neutro (i). O board usa um visto verde para "PDFs importados"; o app usa o mesmo aviso para sucessos e erros, e não sei qual é qual sem mexer em cada chamada.
 - [ ] A barra de baixo só está nas perguntas do app por enquanto; as demais janelas ganham quando cada board for refeito.
 
+## 175 · Janelas de busca (#180)
+
+Feito: resumo da busca com os números em cartões (Novos em verde), uma linha por base com o resultado na cor do desfecho, "Descartar" à esquerda na barra de baixo e "Salvar N novos no projeto" à direita; janela "chave necessária" com o ícone de chave no título e a barra de baixo.
+
+- [ ] **Resumo da busca**: mantive os quatro números (Encontrados, Repetidos, Já no projeto, Novos), que fecham a conta validada no épico #44; o board tem três (Retornados, Novos, Repetidos).
+- [ ] **Lista de artigos** continua dentro da janela (com o filtro "só o que não está no projeto"); no board ela fica atrás de "Ver a lista".
+- [ ] **Tabela por base**: sem a coluna "Novos" por base (o app não sabe quantos novos vieram de cada base) e sem o selo "completa"/"parou no limite"; o desfecho aparece na cor e no texto da linha.
+- [ ] **Subtítulo** da janela: o app mantém "Nada foi salvo ainda…"; o board mostra a consulta ("título contém …"), que a janela não recebe.
+- [ ] **Chave necessária**: o board pede a chave ali mesmo (campo, "Salvar e buscar", "Buscar sem a Scopus"); o app só leva para as Configurações. Fazer o campo inline é trabalho novo (salvar chave e retomar a busca), não só visual.
+
 ## Próximas telas (este documento ganha uma seção por PR)
 
 175–181 Janelas (restante)

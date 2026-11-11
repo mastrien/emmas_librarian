@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Loader2, Save, Trash2 } from 'lucide-react';
 import type { SearchPreview, SearchPreviewItem } from '../../types';
 import { Modal } from '../common/Modal';
+import { ModalFooter } from '../common/ModalFooter';
+import { Button } from '../common/Button';
 import { ArticleDetailsModal } from './ArticleDetailsModal';
 import { previewItemToArticle } from './searchSummary/previewItemToArticle';
 import { saveButtonLabel, searchCounts, type SearchCounts } from './searchSummary/searchCounts';
@@ -47,14 +49,18 @@ const SummaryCounts: React.FC<{ counts: SearchCounts }> = ({ counts }) => (
 type SummaryActionsProps = Omit<SearchSummaryModalProps, 'preview' | 'saveError'> & { added: number };
 
 const SummaryActions: React.FC<SummaryActionsProps> = ({ isSaving, onSave, onDiscard, added }) => (
-  <div className="search-summary-actions">
-    <button onClick={onDiscard} disabled={isSaving} className="btn-secondary">
-      <Trash2 size={18} /> Descartar
-    </button>
-    <button onClick={onSave} disabled={isSaving} className="btn-primary">
-      {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />} {saveButtonLabel(added)}
-    </button>
-  </div>
+  <ModalFooter
+    leading={
+      <Button variant="ghost" className="search-summary-discard" onClick={onDiscard} disabled={isSaving}>
+        <Trash2 size={16} aria-hidden="true" /> Descartar
+      </Button>
+    }
+  >
+    <Button variant="primary" onClick={onSave} disabled={isSaving}>
+      {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} aria-hidden="true" />}{' '}
+      {saveButtonLabel(added)}
+    </Button>
+  </ModalFooter>
 );
 
 const OnlyNewToggle: React.FC<{ known: number; checked: boolean; onChange: (checked: boolean) => void }> = (props) => (
