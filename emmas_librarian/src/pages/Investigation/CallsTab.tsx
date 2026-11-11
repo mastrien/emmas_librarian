@@ -1,3 +1,4 @@
+import { SegmentedControl } from '../../components/common/SegmentedControl';
 import React, { useState } from 'react';
 import { Copy } from 'lucide-react';
 import { SideDrawer } from '../../components/common/SideDrawer';
@@ -126,17 +127,19 @@ const CallsToolbar: React.FC<CallsToolbarProps> = ({ cells, questions, filter, o
   ];
   return (
     <div className="inv-toolbar">
-      {filters.map((f) => (
-        <button
-          key={f.id}
-          type="button"
-          className="inv-filter"
-          aria-pressed={filter === f.id}
-          onClick={() => onFilter(f.id)}
-        >
-          {f.label} ({f.count})
-        </button>
-      ))}
+      <SegmentedControl
+        label="Chamadas a mostrar"
+        value={filter}
+        onChange={onFilter}
+        options={filters.map((f) => ({
+          value: f.id,
+          label: (
+            <>
+              {f.label} <span className="segmented-option__count">{f.count}</span>
+            </>
+          ),
+        }))}
+      />
       <select
         className="input-field input-compact inv-question-filter"
         aria-label="Pergunta"

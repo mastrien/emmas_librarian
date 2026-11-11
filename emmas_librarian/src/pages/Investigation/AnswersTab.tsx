@@ -1,3 +1,4 @@
+import { SegmentedControl } from '../../components/common/SegmentedControl';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InvestigationResultBlock } from '../../components/ai/investigation/InvestigationResultBlock';
@@ -170,17 +171,20 @@ const AnswersToolbar: React.FC<{
   view: ReturnType<typeof useAnswersView>;
 }> = ({ results, questions, view }) => (
   <div className="inv-toolbar">
-    {FILTERS.map((f) => (
-      <button
-        key={f.id}
-        type="button"
-        className="inv-filter"
-        aria-pressed={view.filter === f.id}
-        onClick={() => view.setFilter(f.id)}
-      >
-        {f.label} ({results.filter((r) => matchesFilter(r, f.id)).length})
-      </button>
-    ))}
+    <SegmentedControl
+      label="Respostas a mostrar"
+      value={view.filter}
+      onChange={view.setFilter}
+      options={FILTERS.map((f) => ({
+        value: f.id,
+        label: (
+          <>
+            {f.label}{' '}
+            <span className="segmented-option__count">{results.filter((r) => matchesFilter(r, f.id)).length}</span>
+          </>
+        ),
+      }))}
+    />
     <select
       className="input-field input-compact inv-question-filter"
       aria-label="Pergunta"

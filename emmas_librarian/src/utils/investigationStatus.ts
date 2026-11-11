@@ -25,6 +25,17 @@ export function investigationStatus(outcomes: ArticleOutcome[]): string {
 }
 
 /**
+ * What the badge says (board 161): a run that went through reads "Concluída"; the other statuses already say what
+ * happened ("Concluída com erros (1 de 2)", "Falhou").
+ *
+ * @example statusLabel('Sucesso') // 'Concluída'
+ */
+export function statusLabel(status: string | null | undefined): string {
+  if (status === STATUS_SUCCESS) return 'Concluída';
+  return status || 'Desconhecido';
+}
+
+/**
  * The colour of a status badge: success, a partial run, or anything else (failed, quota, old error texts).
  *
  * @example statusTone('Concluída com erros (1 de 2)') // 'warning'
