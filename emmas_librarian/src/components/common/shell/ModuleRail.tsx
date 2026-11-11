@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Calendar, FileText, HelpCircle, Home, MessageCircle, Settings, Sparkles, type LucideIcon } from 'lucide-react';
 import { HelpModal, helpPageKey } from '../HelpButton';
+import { usePageCommands } from './palette/PageCommandsContext';
 import { activeModule, RAIL_MODULES, SETTINGS_MODULE, type ModuleKey, type RailModule } from './modules';
 
 const ICONS: Record<ModuleKey, LucideIcon> = {
@@ -47,6 +48,10 @@ export const ModuleRail: React.FC<{ onShowChangelog: () => void }> = ({ onShowCh
   const { pathname } = useLocation();
   const [helpOpen, setHelpOpen] = useState(false);
   const active = activeModule(pathname);
+  usePageCommands('rail', [
+    { id: 'app:changelog', group: 'Ir para', label: 'Novidades da versão', run: onShowChangelog },
+    { id: 'app:help', group: 'Ir para', label: 'Ajuda sobre esta página', run: () => setHelpOpen(true) },
+  ]);
 
   return (
     <nav className="app-rail" aria-label="Módulos">

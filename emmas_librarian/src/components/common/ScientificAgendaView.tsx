@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { usePageCommands } from './shell/palette/PageCommandsContext';
 import type { MilestoneStatus, ScientificVenue } from '../../types';
 import { AgendaHeader, type AgendaView } from './agenda/AgendaHeader';
 import { DeadlineListView } from './agenda/DeadlineListView';
@@ -90,6 +91,17 @@ export const ScientificAgendaView: React.FC<ScientificAgendaViewProps> = (props)
   const [query, setQuery] = useState('');
   const { localVenues, toggle } = useOptimisticVenues(props.venues, props.onToggleMilestoneStatus);
   const { shown, move, reset } = useShownMonth(today);
+  usePageCommands('agenda', [
+    { id: 'agenda:new', label: 'Novo evento', run: () => props.onAddVenue() },
+    { id: 'agenda:today', label: 'Agenda: ir para hoje', run: reset },
+    { id: 'agenda:prev', label: 'Agenda: mês anterior', run: () => move(-1) },
+    { id: 'agenda:next', label: 'Agenda: mês seguinte', run: () => move(1) },
+    {
+      id: 'agenda:toggle-view',
+      label: view === 'calendar' ? 'Agenda: ver a lista de prazos' : 'Agenda: ver o calendário',
+      run: () => setView(view === 'calendar' ? 'deadlines' : 'calendar'),
+    },
+  ]);
   const nav = <MonthNav year={shown.year} month={shown.month} onMove={move} onToday={reset} />;
   return (
     <div className="agenda">

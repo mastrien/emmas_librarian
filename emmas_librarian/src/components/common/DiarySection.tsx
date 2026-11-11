@@ -9,6 +9,7 @@ import { DiaryHistoryDialog, type DiaryVersion } from './diary/DiaryDialogs';
 import { formatDiaryDate } from './diary/diaryDates';
 import { localIsoDate } from '../../utils/localDate';
 import { useDialogs } from './dialogs/DialogProvider';
+import { usePageCommands } from './shell/palette/PageCommandsContext';
 import './diary/diary.css';
 
 interface DiarySectionProps {
@@ -159,6 +160,23 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
     }
   };
 
+  usePageCommands('diary', [
+    { id: 'diary:today', label: 'Diário: página de hoje', run: () => void handleToday() },
+    ...(selectedDate
+      ? [
+          {
+            id: 'diary:history',
+            label: 'Diário: histórico de versões desta página',
+            run: () => void handleOpenHistory(),
+          },
+          {
+            id: 'diary:mode',
+            label: mode === 'read' ? 'Diário: editar esta página' : 'Diário: só ler esta página',
+            run: () => setMode(mode === 'read' ? 'edit' : 'read'),
+          },
+        ]
+      : []),
+  ]);
   return (
     <div className="diary">
       <DiaryTimeline

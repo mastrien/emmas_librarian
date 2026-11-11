@@ -1,11 +1,13 @@
 import type { Article, Project } from '../../../../types';
 import { RAIL_MODULES, SETTINGS_MODULE } from '../modules';
 import { PROJECT_NAV } from '../projectNav';
+import { SETTINGS_SECTIONS } from '../../../../pages/Settings/settingsSections';
 
 // Ctrl+K (redesign, board 150 and the "Teclado primeiro" rule of the canvas): one box to go anywhere, find an
-// article of the current project, or start a common action. Every command is a navigation.
+// article of the current project, or start a common action. A command either goes to a route or runs
+// something the open screen registered (new entry, sort by year, …).
 
-export type PaletteGroup = 'Ir para' | 'Projeto atual' | 'Projetos' | 'Artigos' | 'Executar';
+export type PaletteGroup = 'Nesta tela' | 'Ir para' | 'Projeto atual' | 'Projetos' | 'Artigos' | 'Executar';
 
 export interface PaletteCommand {
   id: string;
@@ -13,7 +15,10 @@ export interface PaletteCommand {
   label: string;
   /** Shown after the label, and searched with it (authors and year of an article). */
   hint?: string;
-  to: string;
+  /** Where the command goes; commands of the open screen carry `run` instead. */
+  to?: string;
+  /** What the command does, for the ones a screen registers (new entry, sort by year, …). */
+  run?: () => void;
 }
 
 export interface PaletteSources {
@@ -50,8 +55,24 @@ const articleCommands = (articles: PaletteSources['articles']): PaletteCommand[]
     to: `/articles/${a.id}`,
   }));
 
+const settingsCommands = (): PaletteCommand[] =>
+  SETTINGS_SECTIONS.map((s) => ({
+    id: `settings:${s.id}`,
+    group: 'Ir para',
+    label: `Configurações › ${s.label}`,
+    to: `/settings/${s.id}`,
+  }));
+
+const projectToolCommands = (id: number): PaletteCommand[] =>
+  [
+    ['search', 'Nova busca', `/projects/${id}/search`],
+    ['investigation-new', 'Nova investigação', `/projects/${id}/investigation/new`],
+    ['evaluation', 'Avaliar sugestões da IA', `/projects/${id}/review/evaluation`],
+  ].map(([key, label, to]) => ({ id: `tool:${key}`, group: 'Projeto atual', label, to }));
+
 const actionCommands = (projectId?: number): PaletteCommand[] => [
   { id: 'action:new-project', group: 'Executar', label: 'Criar projeto', to: '/new-project' },
+  { id: 'action:terms', group: 'Ir para', label: 'Termos de uso e IA', to: '/terms' },
   ...(projectId === undefined
     ? []
     : [
@@ -75,11 +96,13 @@ const actionCommands = (projectId?: number): PaletteCommand[] => [
  *
  * @example buildPaletteCommands({ projects, currentProjectId: 3, articles })
  */
-export function buildPaletteCommands(sources: PaletteSources): PaletteCommand[] {
+export function buildPaletteCommands(sources: PaletteSources, screenCommands: PaletteCommand[] = []): PaletteCommand[] {
   const { currentProjectId: id } = sources;
   return [
-    ...(id === undefined ? [] : sectionCommands(id)),
+    ...screenCommands,
+    ...(id === undefined ? [] : [...sectionCommands(id), ...projectToolCommands(id)]),
     ...moduleCommands(),
+    ...settingsCommands(),
     ...projectCommands(sources.projects.filter((p) => p.id !== id)),
     ...actionCommands(id),
     ...articleCommands(sources.articles),
@@ -98,7 +121,7 @@ export function normalizeForSearch(text: string): string {
     .toLowerCase();
 }
 
-const EMPTY_QUERY_GROUPS: readonly PaletteGroup[] = ['Projeto atual', 'Ir para', 'Executar'];
+const EMPTY_QUERY_GROUPS: readonly PaletteGroup[] = ['Nesta tela', 'Projeto atual', 'Ir para', 'Executar'];
 
 /**
  * The commands whose label or hint contain every word typed, labels starting with the query first. With an
@@ -106,7 +129,7 @@ const EMPTY_QUERY_GROUPS: readonly PaletteGroup[] = ['Projeto atual', 'Ir para',
  *
  * @example filterPaletteCommands(commands, 'agen') // [{ label: 'Agenda', … }]
  */
-export function filterPaletteCommands(commands: PaletteCommand[], query: string, limit = 40): PaletteCommand[] {
+export function filterPaletteCommands(commands: PaletteCommand[], query: string, limit = 60): PaletteCommand[] {
   const typed = normalizeForSearch(query.trim());
   if (!typed) return commands.filter((c) => EMPTY_QUERY_GROUPS.includes(c.group)).slice(0, limit);
   const words = typed.split(/\s+/);

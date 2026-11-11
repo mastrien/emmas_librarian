@@ -32,6 +32,28 @@ describe('buildPaletteCommands', () => {
   });
 });
 
+describe('buildPaletteCommands, screen and tool commands', () => {
+  it('puts what the open screen registered first, ahead of the places', () => {
+    const screen = [{ id: 'agenda:new', group: 'Nesta tela' as const, label: 'Novo evento', run: () => undefined }];
+
+    const commands = buildPaletteCommands({ projects, articles: [] }, screen);
+
+    expect(commands[0]).toMatchObject({ id: 'agenda:new', group: 'Nesta tela' });
+  });
+
+  it('offers the project tools and every settings section', () => {
+    const commands = buildPaletteCommands({ projects, currentProjectId: 3, articles: [] });
+
+    expect(commands.find((c) => c.id === 'tool:investigation-new')).toMatchObject({
+      to: '/projects/3/investigation/new',
+    });
+    expect(commands.find((c) => c.id === 'settings:backup')).toMatchObject({
+      label: 'Configurações › Backup e segurança',
+      to: '/settings/backup',
+    });
+  });
+});
+
 describe('normalizeForSearch', () => {
   it('drops accents and case', () => {
     expect(normalizeForSearch('Previsão Climática')).toBe('previsao climatica');

@@ -14,6 +14,7 @@ import { useSessionState } from '../../hooks/useSessionState';
 import { ManageLabelsModal } from './ManageLabelsModal';
 import { PrismaTab } from './prisma/PrismaTab';
 import { CriteriaModal } from './CriteriaModal';
+import { usePageCommands } from '../../components/common/shell/palette/PageCommandsContext';
 import { EvaluationTab } from './EvaluationTab';
 import { SimulationSection } from './SimulationSection';
 import './review.css';
@@ -201,6 +202,10 @@ export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'scr
   // Criteria written from the header change what the evaluation compares, so it reads them again.
   const [criteriaEdits, setCriteriaEdits] = useState(0);
   const [citing, setCiting] = useState<Article[] | null>(null);
+  usePageCommands('review', [
+    { id: 'review:criteria', label: 'Editar critérios do projeto', run: () => setWritingCriteria(true) },
+    { id: 'review:labels', label: 'Gerenciar rótulos de triagem', run: () => setManaging(true) },
+  ]);
   if (screening.loading) return <div className="review review-muted">Carregando a revisão…</div>;
   return (
     <div className="review fade-in">

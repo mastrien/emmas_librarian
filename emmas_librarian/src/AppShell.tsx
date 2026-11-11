@@ -2,6 +2,7 @@ import React, { type ReactNode } from 'react';
 import { Layout } from './components/common/Layout';
 import { InvestigationRunProvider } from './contexts/InvestigationRunContext';
 import { DialogProvider } from './components/common/dialogs/DialogProvider';
+import { PageCommandsProvider } from './components/common/shell/palette/PageCommandsContext';
 
 /**
  * What stays mounted around every page. The investigation run sits above the Layout on purpose: the Layout draws the
@@ -14,7 +15,9 @@ import { DialogProvider } from './components/common/dialogs/DialogProvider';
 export const AppShell: React.FC<{ children: ReactNode }> = ({ children }) => (
   <DialogProvider>
     <InvestigationRunProvider>
-      <Layout>{children}</Layout>
+      <PageCommandsProvider>
+        <Layout>{children}</Layout>
+      </PageCommandsProvider>
     </InvestigationRunProvider>
   </DialogProvider>
 );

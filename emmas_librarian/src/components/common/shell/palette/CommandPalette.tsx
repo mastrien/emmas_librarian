@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Modal } from '../../Modal';
 import { buildPaletteCommands, filterPaletteCommands, type PaletteCommand } from './paletteCommands';
 import { usePaletteSources } from './usePaletteSources';
+import { useRegisteredCommands } from './PageCommandsContext';
 import './palette.css';
 
 const LISTBOX_ID = 'command-palette-results';
@@ -57,7 +58,8 @@ const nextIndex = (key: string, index: number, count: number): number | null => 
 export const CommandPalette: React.FC<{ currentProjectId?: number; onClose: () => void }> = (props) => {
   const navigate = useNavigate();
   const sources = usePaletteSources(props.currentProjectId);
-  const commands = useMemo(() => buildPaletteCommands(sources), [sources]);
+  const screenCommands = useRegisteredCommands();
+  const commands = useMemo(() => buildPaletteCommands(sources, screenCommands), [sources, screenCommands]);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const results = useMemo(() => filterPaletteCommands(commands, query), [commands, query]);
@@ -65,7 +67,8 @@ export const CommandPalette: React.FC<{ currentProjectId?: number; onClose: () =
 
   const pick = (command: PaletteCommand) => {
     props.onClose();
-    navigate(command.to);
+    if (command.run) command.run();
+    else if (command.to) navigate(command.to);
   };
   const onKeyDown = (event: React.KeyboardEvent) => {
     const next = nextIndex(event.key, activeIndex, results.length);
