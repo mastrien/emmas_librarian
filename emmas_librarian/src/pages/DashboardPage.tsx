@@ -15,11 +15,9 @@ import { DashboardDragDropOverlay } from './Dashboard/components/DashboardDragDr
 import { DashboardProjectsList } from './Dashboard/components/DashboardProjectsList';
 import { DashboardGlobalStats } from './Dashboard/components/DashboardGlobalStats';
 import { droppedFilePath } from '../utils/droppedFilePath';
+import { importProjectWithFeedback } from '../utils/importProjectWithFeedback';
 import './Dashboard/dashboard.css';
 import { useDialogs } from '../components/common/dialogs/DialogProvider';
-
-// What went wrong, as the import error message always showed it: the error's text, or the value itself.
-const errorText = (err: unknown): string => (err instanceof Error && err.message ? err.message : String(err));
 
 /**
  * One project's article counts for its card, and the days of its diary.
@@ -140,14 +138,13 @@ export const DashboardPage: React.FC = () => {
     if (files.length === 0) return;
 
     for (const file of files) {
-      try {
-        const newId = await projectService.importProject(droppedFilePath(file));
-        if (newId) {
-          window.location.href = `#/projects/${newId}`;
-          break;
-        }
-      } catch (err) {
-        await inform({ title: 'Erro ao importar', message: `Erro ao importar ${file.name}: ${errorText(err)}` });
+      const newId = await importProjectWithFeedback(projectService, inform, {
+        path: droppedFilePath(file),
+        what: file.name,
+      });
+      if (newId) {
+        window.location.href = `#/projects/${newId}`;
+        break;
       }
     }
   };
@@ -167,12 +164,8 @@ export const DashboardPage: React.FC = () => {
             <button
               type="button"
               onClick={async () => {
-                try {
-                  const newId = await projectService.importProject();
-                  if (newId) window.location.href = `#/projects/${newId}`;
-                } catch (err) {
-                  await inform({ title: 'Erro ao importar', message: `Erro ao importar projeto: ${errorText(err)}` });
-                }
+                const newId = await importProjectWithFeedback(projectService, inform);
+                if (newId) window.location.href = `#/projects/${newId}`;
               }}
               className="btn-secondary"
               title="Importar projeto (.emmapcarc)"
