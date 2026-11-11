@@ -103,6 +103,15 @@ Feito: subtítulo "Eventos, prazos e chamadas de periódicos", barra com busca, 
 - [ ] **Situação** além de "venceu há N d": "hoje", "em N d" e "feito".
 - [ ] Os nomes dos botões mudaram de "Novo Evento" e "Lista de Prazos" para "Novo evento" e "Lista de prazos" (E2E ajustado); a janela "Novo Evento / Periódico" fica para os boards 175–181.
 
+## 174 · Termos de uso e IA (#178)
+
+Feito: coluna de leitura com "Nesta página" ao lado (sumário que rola até a seção e marca a que está sendo lida), "Atualizado na versão 1.3.1", texto de abertura em serifada, "O que cada base permite" com uma linha por base (nome, selo Livre/Metadados livres/Restritivo, texto e link da política) e a isenção de responsabilidade em aviso âmbar. Sem link de voltar; a página deixou de ser um cartão.
+
+- [ ] **Texto das bases encurtado** como no board (o texto antigo era mais longo; por exemplo, o do Scopus perdeu a menção a "OpenAI" e o do Web of Science o "Totalmente restritivo"). Confira se o resumo basta juridicamente.
+- [ ] **"IA e as suas chaves"** não tem título próprio no board: o item do sumário aponta para o segundo parágrafo de abertura.
+- [ ] **"Atualizado na versão"** é uma constante (`TERMS_VERSION`) que precisa ser mudada à mão quando os termos mudarem; não acompanha a versão do app.
+- [ ] **E2E de links de voltar**: sem links de voltar restantes além do leitor, o teste passou a conferir o do leitor (importa um PDF de teste).
+
 ## Próximas telas (este documento ganha uma seção por PR)
 
-174 Termos · 175–181 Janelas
+175–181 Janelas
