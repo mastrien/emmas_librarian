@@ -51,9 +51,10 @@ export class ProjectRepository {
   }
 
   /**
-   * How far the screening went in each project that ever opened the review: opening it creates the project's labels,
-   * so a project with labels or with decisions "had interaction with the review" (board 151). Projects that never
-   * did are absent from the result.
+   * How far the screening went in each project that used the review: a project counts as "systematic review" once
+   * an article got a decision (opening the section only seeds the labels, which is not using it). Progress is the
+   * articles decided at title and abstract plus the archived ones, since archiving is a result of the screening.
+   * Projects that never used it are absent from the result.
    *
    * @example repo.getScreeningSummaries() // { 3: { decided: 12 } }
    */
@@ -61,14 +62,14 @@ export class ProjectRepository {
     const rows = this.db
       .prepare(
         `SELECT p.id AS project_id,
-           (SELECT COUNT(DISTINCT d.article_id) FROM screening_decisions d
-              JOIN articles a ON a.id = d.article_id AND a.deleted_at IS NULL
-             WHERE a.project_id = p.id AND d.stage = 'title') AS decided
+           (SELECT COUNT(*) FROM articles a
+             WHERE a.project_id = p.id AND a.deleted_at IS NULL
+               AND (a.status = 'archived'
+                 OR EXISTS (SELECT 1 FROM screening_decisions d WHERE d.article_id = a.id AND d.stage = 'title'))) AS decided
          FROM projects p
          WHERE p.deleted_at IS NULL
-           AND (EXISTS (SELECT 1 FROM screening_labels l WHERE l.project_id = p.id)
-             OR EXISTS (SELECT 1 FROM screening_decisions d JOIN articles a ON a.id = d.article_id
-                         WHERE a.project_id = p.id))`,
+           AND EXISTS (SELECT 1 FROM screening_decisions d JOIN articles a ON a.id = d.article_id
+                        WHERE a.project_id = p.id)`,
       )
       .all() as { project_id: number; decided: number }[];
     return Object.fromEntries(rows.map((row) => [row.project_id, { decided: row.decided }]));

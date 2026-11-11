@@ -13,29 +13,32 @@
 }
 
 .month-calendar-title {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--color-primary);
-}
-
-.month-calendar-title span {
+  margin: 0;
   color: var(--text-heading);
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .month-calendar-nav {
   display: flex;
-  gap: 0.2rem;
+  gap: 4px;
 }
 
 .month-calendar-nav button {
-  padding: 0.2rem;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
   border: none;
+  border-radius: 7px;
   background: none;
   color: var(--text-muted);
   cursor: pointer;
+}
+
+.month-calendar-nav button:hover {
+  background: var(--bg-surface-hover);
 }
 
 .month-calendar-weekdays,
@@ -46,15 +49,15 @@
 }
 
 .month-calendar-weekdays {
-  margin-bottom: 0.2rem;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 11px;
   font-weight: 600;
+  line-height: 28px;
   text-align: center;
 }
 
 .month-calendar-blank {
-  aspect-ratio: 1;
+  height: 28px;
 }
 
 .month-calendar-day {
@@ -62,13 +65,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1;
-  border: 1px solid transparent;
-  border-radius: 4px;
+  height: 28px;
+  border-radius: 6px;
   background-color: transparent;
   color: var(--text-main);
-  font-size: 0.8rem;
-  font-weight: normal;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
   cursor: default;
 }
 
@@ -84,23 +86,10 @@
 .month-calendar-day.is-today {
   background-color: var(--color-primary);
   color: #ffffff;
-  font-weight: bold;
+  font-weight: 600;
 }
 
-.month-calendar-dots {
-  position: absolute;
-  bottom: 3px;
-  left: 50%;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  transform: translateX(-50%);
-}
-
-/* --dot-color is the venue's colour, set by the component. */
-.month-calendar-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: var(--dot-color);
+/* Board 151: a day with a deadline gets a line under the number. */
+.month-calendar-day.has-deadline {
+  box-shadow: inset 0 -2px 0 var(--color-warning);
 }

@@ -36,11 +36,11 @@ export function upcomingDeadlines(venues: ScientificVenue[], todayIso: string, l
 /**
  * How close a deadline is, as the badge says it: overdue, today, within a week, or later.
  *
- * @example deadlineBadge(-3) // { tone: 'overdue', text: 'Venceu há 3 d' }
+ * @example deadlineBadge(-3) // { tone: 'overdue', text: 'venceu há 3 d' }
  */
 export function deadlineBadge(daysDiff: number): { tone: DeadlineTone; text: string } {
-  if (daysDiff === 0) return { tone: 'today', text: 'Hoje!' };
-  if (daysDiff < 0) return { tone: 'overdue', text: `Venceu há ${Math.abs(daysDiff)} d` };
-  if (daysDiff <= 7) return { tone: 'urgent', text: `Em ${daysDiff} dias` };
-  return { tone: 'upcoming', text: `Em ${daysDiff} dias` };
+  if (daysDiff === 0) return { tone: 'today', text: 'hoje' };
+  if (daysDiff < 0) return { tone: 'overdue', text: `venceu há ${Math.abs(daysDiff)} d` };
+  if (daysDiff <= 7) return { tone: 'urgent', text: `em ${daysDiff} d` };
+  return { tone: 'upcoming', text: `em ${daysDiff} d` };
 }

@@ -332,17 +332,35 @@ describe('ProjectRepository', () => {
         .prepare('INSERT INTO screening_decisions (article_id, label_id, stage) VALUES (?, ?, ?)')
         .run(articleId, labelId, stage);
 
-    it('leaves out the projects that never opened the review', () => {
+    it('leaves out the projects that never used the review', () => {
       repo.createProject('Sem revisão');
 
       expect(repo.getScreeningSummaries()).toEqual({});
     });
 
-    it('lists a project that opened the review (it has labels) even with nothing decided', () => {
+    it('does not count a project that only opened the review (its labels are seeded) as using it', () => {
       const project = repo.createProject('Tese');
       addLabel(project.id);
 
+      expect(repo.getScreeningSummaries()).toEqual({});
+    });
+
+    it('lists a project once an article has a decision', () => {
+      const project = repo.createProject('Tese');
+      const label = addLabel(project.id);
+      decide(addArticle(project.id), label, 'full');
+
       expect(repo.getScreeningSummaries()).toEqual({ [project.id]: { decided: 0 } });
+    });
+
+    it('counts archived articles as screened (archiving is a result of the screening)', () => {
+      const project = repo.createProject('Tese');
+      const label = addLabel(project.id);
+      const archived = addArticle(project.id);
+      db.prepare("UPDATE articles SET status = 'archived' WHERE id = ?").run(archived);
+      decide(addArticle(project.id), label, 'title');
+
+      expect(repo.getScreeningSummaries()[project.id]).toEqual({ decided: 2 });
     });
 
     it('counts the articles decided at title and abstract, not the full-text ones nor the trashed', () => {

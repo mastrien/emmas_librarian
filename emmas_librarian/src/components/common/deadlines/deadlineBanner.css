@@ -27,14 +27,14 @@
   gap: 0.2rem;
   border: none;
   background: none;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
 }
 
 .deadline-link--small {
-  font-size: 0.8rem;
+  font-size: 12px;
 }
 
 .deadlines {
@@ -50,63 +50,67 @@
 }
 
 .deadlines-title {
+  margin: 0;
   color: var(--text-heading);
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.deadlines-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 0.75rem;
-}
-
-.deadline-card {
+.deadlines-list {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background-color: var(--bg-surface);
 }
 
-.deadline-card-top {
+/* Board 151: a check, the deadline and its event, and how far it is. */
+.deadline-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.4rem;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.deadline-venue {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+.deadline-row:last-child {
+  border-bottom: 0;
+}
+
+.deadline-row input {
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.deadline-row__text {
+  flex: 1 1 0;
   min-width: 0;
-}
-
-/* --venue-color and --venue-tint come from the venue (components/common/agenda/venueColors.ts). */
-.deadline-venue-chip {
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  background-color: var(--venue-tint, rgba(59, 130, 246, 0.15));
-  color: var(--venue-color, #3b82f6);
-  font-size: 0.7rem;
-  font-weight: 700;
-}
-
-.deadline-venue a {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.deadline-row__label {
+  color: var(--text-heading);
+  font-weight: 500;
+}
+
+.deadline-row__venue {
+  overflow: hidden;
   color: var(--text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .deadline-badge {
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .deadline-badge--upcoming {
@@ -116,39 +120,11 @@
 
 .deadline-badge--today,
 .deadline-badge--urgent {
-  background-color: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background-color: var(--color-warning-subtle);
+  color: var(--color-warning);
 }
 
 .deadline-badge--overdue {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-}
-
-.deadline-card-label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.deadline-card-label input {
-  cursor: pointer;
-}
-
-.deadline-card-label span {
-  flex: 1;
-  overflow: hidden;
-  color: var(--text-heading);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.deadline-card-date {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: var(--text-muted);
-  font-size: 0.75rem;
+  background-color: var(--color-danger-subtle);
+  color: var(--color-danger);
 }

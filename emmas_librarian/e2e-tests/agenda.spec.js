@@ -74,7 +74,7 @@ test.describe('Agenda & Prazos E2E Tests', () => {
     await expect(projectsHeading).toBeVisible({ timeout: 10000 });
 
     // Check upcoming deadline banner displays milestone or venue acronym
-    const deadlineBanner = window.locator('text=Próximos Prazos');
+    const deadlineBanner = window.locator('text=Próximos prazos');
     await expect(deadlineBanner).toBeVisible();
   });
 

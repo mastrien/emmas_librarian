@@ -156,6 +156,7 @@ export const DashboardPage: React.FC = () => {
       <PageHeader
         eyebrow={<DashboardClock />}
         title="Início"
+        large
         actions={
           <>
             <Link to="/ask" className="btn-secondary">
@@ -214,7 +215,7 @@ export const DashboardPage: React.FC = () => {
             />
           </section>
           <p className="home-terms">
-            <Link to="/terms">Ao usar o sistema, você concorda com os Termos de Uso</Link>
+            Ao usar o sistema, você concorda com os <Link to="/terms">Termos de uso</Link>.
           </p>
         </aside>
       </div>

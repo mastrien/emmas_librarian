@@ -37,12 +37,12 @@ describe('DeadlineBanner day count in the user time zone', () => {
     process.env.TZ = originalTz;
   });
 
-  it('shows "Hoje!" for a deadline on the local date late in the evening', () => {
+  it('shows "hoje" for a deadline on the local date late in the evening', () => {
     render(
       <DeadlineBanner venues={[venueDueOn('2026-09-26')]} onToggleMilestoneStatus={vi.fn()} onOpenAgenda={vi.fn()} />,
     );
 
-    expect(screen.getByText('Hoje!')).toBeInTheDocument();
+    expect(screen.getByText('hoje')).toBeInTheDocument();
   });
 
   it('counts tomorrow as one day away late in the evening', () => {
@@ -50,6 +50,6 @@ describe('DeadlineBanner day count in the user time zone', () => {
       <DeadlineBanner venues={[venueDueOn('2026-09-27')]} onToggleMilestoneStatus={vi.fn()} onOpenAgenda={vi.fn()} />,
     );
 
-    expect(screen.getByText('Em 1 dias')).toBeInTheDocument();
+    expect(screen.getByText('em 1 d')).toBeInTheDocument();
   });
 });

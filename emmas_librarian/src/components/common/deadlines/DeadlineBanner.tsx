@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, ChevronRight, ExternalLink } from 'lucide-react';
+import { Calendar, ChevronRight } from 'lucide-react';
 import { ScientificVenue, MilestoneStatus } from '../../../types';
 import { localIsoDate } from '../../../utils/localDate';
-import { venueColorVars } from '../agenda/venueColors';
 import { withMilestoneStatus } from '../agenda/agendaQueries';
 import { deadlineBadge, upcomingDeadlines, type DeadlineItem } from './deadlineQueries';
 import './deadlineBanner.css';
@@ -14,26 +13,6 @@ interface DeadlineBannerProps {
 }
 
 const SHOWN_DEADLINES = 4;
-
-// The call link lives on the event; showing it next to each deadline saves a trip to the Agenda.
-const VenueTag: React.FC<{ venue: ScientificVenue }> = ({ venue }) => (
-  <span className="deadline-venue">
-    <span className="deadline-venue-chip" style={venueColorVars(venue)}>
-      {venue.acronym || venue.title}
-    </span>
-    {venue.url && (
-      <a
-        href={venue.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        title="Abrir URL do Evento"
-        aria-label="Abrir URL do Evento"
-      >
-        <ExternalLink size={13} />
-      </a>
-    )}
-  </span>
-);
 
 const NoDeadlines: React.FC<{ onOpenAgenda: () => void }> = ({ onOpenAgenda }) => (
   <div className="deadline-none">
@@ -47,28 +26,31 @@ const NoDeadlines: React.FC<{ onOpenAgenda: () => void }> = ({ onOpenAgenda }) =
   </div>
 );
 
-const DeadlineCard: React.FC<{ item: DeadlineItem; onToggle: () => void }> = ({ item, onToggle }) => {
-  const { venue, milestone, daysDiff } = item;
+/** The line under a deadline's name: the event (its acronym, else its title) and, for a range, the dates. */
+export function deadlineSubline(item: DeadlineItem): string {
+  const venue = item.venue.acronym || item.venue.title;
+  const { target_date: from, end_date: to } = item.milestone;
+  return to ? `${venue} · ${from} a ${to}` : venue;
+}
+
+const DeadlineRow: React.FC<{ item: DeadlineItem; onToggle: () => void }> = ({ item, onToggle }) => {
+  const { milestone, daysDiff } = item;
   const badge = deadlineBadge(daysDiff);
   return (
-    <div className="deadline-card">
-      <div className="deadline-card-top">
-        <VenueTag venue={venue} />
-        <span data-testid="deadline-badge" className={`deadline-badge deadline-badge--${badge.tone}`}>
-          {badge.text}
-        </span>
+    <div className="deadline-row">
+      <input
+        type="checkbox"
+        checked={milestone.status === 'completed'}
+        onChange={onToggle}
+        aria-label={`Marcar "${milestone.label}" como feito`}
+      />
+      <div className="deadline-row__text">
+        <span className="deadline-row__label">{milestone.label}</span>
+        <span className="deadline-row__venue">{deadlineSubline(item)}</span>
       </div>
-      <div className="deadline-card-label">
-        <input type="checkbox" checked={milestone.status === 'completed'} onChange={onToggle} />
-        <span>{milestone.label}</span>
-      </div>
-      <div className="deadline-card-date">
-        <Calendar size={13} />
-        <span>
-          {milestone.target_date}
-          {milestone.end_date ? ` a ${milestone.end_date}` : ''}
-        </span>
-      </div>
+      <span data-testid="deadline-badge" className={`deadline-badge deadline-badge--${badge.tone}`}>
+        {badge.text}
+      </span>
     </div>
   );
 };
@@ -95,14 +77,14 @@ export const DeadlineBanner: React.FC<DeadlineBannerProps> = ({ venues, onToggle
   return (
     <div className="deadlines">
       <div className="deadlines-head">
-        <span className="deadlines-title">Próximos Prazos</span>
+        <h2 className="deadlines-title">Próximos prazos</h2>
         <button type="button" className="deadline-link deadline-link--small" onClick={onOpenAgenda}>
-          Ver Todos <ChevronRight size={14} />
+          Agenda
         </button>
       </div>
-      <div className="deadlines-grid">
+      <div className="deadlines-list">
         {items.map((item) => (
-          <DeadlineCard
+          <DeadlineRow
             key={item.milestone.id || `${item.venue.id}-${item.milestone.label}`}
             item={item}
             onToggle={() => item.milestone.id && toggle(item.milestone.id, item.milestone.status)}
