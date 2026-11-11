@@ -1,8 +1,11 @@
 import React from 'react';
 import { AlertTriangle, CheckCircle, Minus, XCircle } from 'lucide-react';
 import { Modal } from '../../../../components/common/Modal';
+import { ModalFooter } from '../../../../components/common/ModalFooter';
+import { Button } from '../../../../components/common/Button';
 import type { OpenAccessBatchReport } from '../../hooks/useOpenAccessPdfs';
 import { openAccessMessage, reportGroups, type OpenAccessMessage, type ReportEntry } from './openAccessText';
+import './openAccessReport.css';
 
 const TONE_ICON: Record<OpenAccessMessage['tone'], React.ReactNode> = {
   ok: <CheckCircle size={16} color="var(--color-success)" />,
@@ -39,6 +42,24 @@ function heading(report: OpenAccessBatchReport): string {
     : title;
 }
 
+/** Downloaded, with no open version, and failed (an open copy the app could not download counts as failed). */
+export function reportTotals(entries: ReportEntry[]): { downloaded: number; noOpenVersion: number; failed: number } {
+  const count = (...statuses: ReportEntry['outcome']['status'][]) =>
+    entries.filter((e) => statuses.includes(e.outcome.status)).length;
+  return {
+    downloaded: count('downloaded'),
+    noOpenVersion: count('not-open', 'no-doi'),
+    failed: count('failed', 'blocked'),
+  };
+}
+
+const Tile: React.FC<{ label: string; value: number; tone?: 'ok' | 'bad' }> = ({ label, value, tone }) => (
+  <div className="oa-report__tile">
+    <span className="oa-report__tile-label">{label}</span>
+    <span className={tone ? `oa-report__tile-value is-${tone}` : 'oa-report__tile-value'}>{value}</span>
+  </div>
+);
+
 /**
  * The end of a batch download: what came in, and first of all what needs the user — blocked copies with the
  * page to download in the browser — then failures, articles without an open copy and those that had a PDF.
@@ -49,19 +70,37 @@ function heading(report: OpenAccessBatchReport): string {
 export const OpenAccessReport: React.FC<{ report: OpenAccessBatchReport; onClose: () => void }> = ({
   report,
   onClose,
-}) => (
-  <Modal label={heading(report)} title={heading(report)} onClose={onClose} width={640} className="oa-report">
-    {reportGroups(report.entries).map((group) => (
-      <section key={group.label} aria-label={group.label}>
-        <h4>
-          {group.label} ({group.entries.length})
-        </h4>
-        <ul>
-          {group.entries.map((entry) => (
-            <EntryRow key={entry.articleId} entry={entry} />
-          ))}
-        </ul>
-      </section>
-    ))}
-  </Modal>
-);
+}) => {
+  const totals = reportTotals(report.entries);
+  return (
+    <Modal
+      label={heading(report)}
+      title="PDFs em acesso aberto"
+      description={`${report.total} artigos sem PDF procurados`}
+      onClose={onClose}
+      width={640}
+      className="oa-report"
+    >
+      <div className="oa-report__tiles" role="group" aria-label="Resumo">
+        <Tile label="Baixados" value={totals.downloaded} tone="ok" />
+        <Tile label="Sem versão aberta" value={totals.noOpenVersion} />
+        <Tile label="Falharam" value={totals.failed} tone="bad" />
+      </div>
+      {reportGroups(report.entries).map((group) => (
+        <section key={group.label} aria-label={group.label}>
+          <h4>
+            {group.label} ({group.entries.length})
+          </h4>
+          <ul>
+            {group.entries.map((entry) => (
+              <EntryRow key={entry.articleId} entry={entry} />
+            ))}
+          </ul>
+        </section>
+      ))}
+      <ModalFooter>
+        <Button onClick={onClose}>Concluir</Button>
+      </ModalFooter>
+    </Modal>
+  );
+};

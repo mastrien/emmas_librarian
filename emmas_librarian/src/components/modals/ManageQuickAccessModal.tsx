@@ -81,7 +81,7 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({
   };
 
   return (
-    <Modal label="Gerenciar Acesso Rápido" title="Gerenciar Acesso Rápido" onClose={onClose} width={640}>
+    <Modal label="Gerenciar Acesso Rápido" title="Acesso rápido" onClose={onClose} width={640}>
       <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1.5rem', paddingRight: '0.5rem' }}>
         <QuickAccessDocumentList
           documents={localDocs}
