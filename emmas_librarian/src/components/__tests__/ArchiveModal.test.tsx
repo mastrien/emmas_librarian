@@ -13,14 +13,14 @@ describe('ArchiveModal', () => {
     const onSubmit = vi.fn();
     render(<ArchiveModal isOpen={true} onClose={onClose} onSubmit={onSubmit} />);
 
-    expect(screen.getByText('Motivo do Arquivamento (Opcional)')).toBeInTheDocument();
+    expect(screen.getByText('Arquivar este artigo?')).toBeInTheDocument();
 
-    const textarea = screen.getByPlaceholderText('Por que este artigo não é relevante?');
+    const textarea = screen.getByPlaceholderText('ex.: fora do escopo');
     expect(textarea).toBeInTheDocument();
 
     fireEvent.change(textarea, { target: { value: 'Out of scope' } });
 
-    const submitBtn = screen.getByText('Confirmar Arquivamento');
+    const submitBtn = screen.getByText('Arquivar');
     fireEvent.click(submitBtn);
 
     expect(onSubmit).toHaveBeenCalledWith('Out of scope');
@@ -43,7 +43,7 @@ describe('ArchiveModal', () => {
 
     expect(screen.getByRole('heading', { name: 'Arquivar 3 artigos' })).toBeInTheDocument();
     expect(screen.getByText(/vale para todos os 3 artigos/)).toBeInTheDocument();
-    fireEvent.change(screen.getByPlaceholderText('Por que estes artigos não são relevantes?'), {
+    fireEvent.change(screen.getByPlaceholderText('ex.: fora do escopo'), {
       target: { value: 'fora do escopo' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Arquivar 3' }));
@@ -55,13 +55,13 @@ describe('ArchiveModal', () => {
   it('starts each archiving with an empty reason', () => {
     const modal = (isOpen: boolean) => <ArchiveModal isOpen={isOpen} onClose={vi.fn()} onSubmit={vi.fn()} />;
     const { rerender } = render(modal(true));
-    fireEvent.change(screen.getByPlaceholderText('Por que este artigo não é relevante?'), {
+    fireEvent.change(screen.getByPlaceholderText('ex.: fora do escopo'), {
       target: { value: 'duplicado' },
     });
 
     rerender(modal(false));
     rerender(modal(true));
 
-    expect(screen.getByPlaceholderText('Por que este artigo não é relevante?')).toHaveValue('');
+    expect(screen.getByPlaceholderText('ex.: fora do escopo')).toHaveValue('');
   });
 });

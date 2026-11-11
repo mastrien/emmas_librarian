@@ -62,7 +62,7 @@ function renderModal(overrides: Partial<React.ComponentProps<typeof EditArticleM
 const input = (label: string) =>
   screen.getByText(label).parentElement!.querySelector('input, textarea') as HTMLInputElement;
 const type = (label: string, value: string) => fireEvent.change(input(label), { target: { value } });
-const submit = () => fireEvent.submit(screen.getByRole('button', { name: /Salvar Alterações/ }).closest('form')!);
+const submit = () => fireEvent.submit(screen.getByRole('button', { name: 'Salvar' }).closest('form')!);
 const aiButton = () => screen.getByRole('button', { name: /Preencher com IA/ });
 
 beforeEach(() => {
@@ -76,7 +76,15 @@ describe('EditArticleModal visibility', () => {
   it('renders nothing when closed', () => {
     renderModal({ isOpen: false });
 
-    expect(screen.queryByText('Editar Metadados do Artigo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Editar metadados')).not.toBeInTheDocument();
+  });
+
+  it('saves with Ctrl+Enter, as its footer hint says (board 176)', async () => {
+    const { onSubmit } = renderModal();
+
+    fireEvent.keyDown(input('Título *'), { key: 'Enter', ctrlKey: true });
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
   });
 
   it('closes from the X and Cancelar buttons without submitting', () => {
@@ -159,7 +167,7 @@ describe('EditArticleModal submit', () => {
     submit();
 
     expect(screen.getByRole('button', { name: 'Cancelar' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /Salvar Alterações/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Salvar' })).toBeDisabled();
     await act(async () => finish());
     expect(onClose).toHaveBeenCalled();
   });

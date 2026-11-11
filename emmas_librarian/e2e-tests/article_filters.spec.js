@@ -56,7 +56,7 @@ test('filters show as chips beside "Filtros" and several articles are archived w
     const batchBar = window.getByRole('region', { name: 'Ações para os artigos selecionados' });
     await expect(batchBar).toContainText('2 selecionados');
     await batchBar.getByRole('button', { name: /Arquivar/ }).click();
-    await window.getByPlaceholder('Por que estes artigos não são relevantes?').fill('fora do escopo');
+    await window.getByPlaceholder('ex.: fora do escopo').fill('fora do escopo');
     await window.getByRole('button', { name: 'Arquivar 2' }).click();
 
     await expect(table.getByText('Artigo alfa')).toBeHidden();

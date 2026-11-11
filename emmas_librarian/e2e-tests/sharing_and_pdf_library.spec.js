@@ -50,7 +50,7 @@ test('F-15 Cross-project Article Sharing and Search History Traceability', async
 
     // 4. Click "Importar de outro projeto" to open sharing modal
     await clickAddArticlesOption(window, 'Importar de outro projeto');
-    await expect(window.getByRole('dialog', { name: 'Importar Artigos de Outro Projeto' })).toBeVisible();
+    await expect(window.getByRole('dialog', { name: 'Importar artigos de outro projeto' })).toBeVisible();
 
     // 5. Select Source Project in the dropdown
     await window.waitForSelector(`select[id="source-project-select"] option:has-text("${sourceProjectName}")`, {
@@ -66,9 +66,9 @@ test('F-15 Cross-project Article Sharing and Search History Traceability', async
     await window.click('input[type="checkbox"][id="select-all-articles"]');
 
     // Verify at least one article is selected before clicking import
-    await window.waitForSelector('text=/selecionado\\(s\\) para cópia/', { timeout: 5000 });
+    await window.waitForSelector('text=/1 escolhidos/', { timeout: 5000 });
 
-    await window.click('button:has-text("Confirmar Importação")');
+    await window.click('button:has-text("Importar 1")');
 
     // 7. Verify article is present in Destination Project B
     const articleRow = window.locator('table >> text=Article from Project A');

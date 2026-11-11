@@ -176,7 +176,7 @@ describe('ProjectDetailsPage article forms', () => {
 
     openEditMetadata();
     fireEvent.change(screen.getByDisplayValue('Avulso'), { target: { value: 'Avulso revisado' } });
-    fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 
     await waitFor(() =>
       expect(service.updateArticleMetadata).toHaveBeenCalledWith(
@@ -203,7 +203,7 @@ describe('ProjectDetailsPage article forms', () => {
 
     openEditMetadata();
     fireEvent.change(screen.getByDisplayValue('Importado'), { target: { value: 'Importado corrigido' } });
-    fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 
     await waitFor(() =>
       expect(service.updateArticleMetadata).toHaveBeenCalledWith(

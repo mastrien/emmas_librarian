@@ -157,10 +157,10 @@ describe('ProjectDetailsPage status changes from the main list', () => {
     await renderProjectPage(service);
 
     chooseFromRowMenu('Artigo novo', 'Arquivar');
-    fireEvent.change(screen.getByPlaceholderText('Por que este artigo não é relevante?'), {
+    fireEvent.change(screen.getByPlaceholderText('ex.: fora do escopo'), {
       target: { value: 'duplicado' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Confirmar Arquivamento' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Arquivar' }));
 
     await waitFor(() => expect(service.updateArticleStatus).toHaveBeenCalledWith(1, 'archived', 'duplicado'));
     chooseStatus(/^Arquivados/);
@@ -199,7 +199,7 @@ describe('ProjectDetailsPage multi-select', () => {
     selectArticles('Artigo um', 'Artigo três');
 
     fireEvent.click(bar().getByRole('button', { name: /Arquivar/ }));
-    fireEvent.change(screen.getByPlaceholderText('Por que estes artigos não são relevantes?'), {
+    fireEvent.change(screen.getByPlaceholderText('ex.: fora do escopo'), {
       target: { value: 'fora do escopo' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Arquivar 2' }));

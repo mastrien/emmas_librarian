@@ -8,6 +8,8 @@ import type { FrontendAppError } from '../../utils/AppError';
 import { LabeledField } from '../common/LabeledField';
 import { AUTHORS_SEPARATOR_HINT } from '../common/articleFieldHints';
 import { Modal } from '../common/Modal';
+import { ModalFooter } from '../common/ModalFooter';
+import { Button } from '../common/Button';
 import { useDialogs } from '../common/dialogs/DialogProvider';
 import {
   articleFromForm,
@@ -65,13 +67,7 @@ const EditArticleForm: React.FC<Omit<EditArticleModalProps, 'isOpen'>> = ({ onCl
   };
 
   return (
-    <Modal
-      label="Editar Metadados do Artigo"
-      title="Editar Metadados do Artigo"
-      onClose={onClose}
-      busy={submitting}
-      width={550}
-    >
+    <Modal label="Editar metadados" title="Editar metadados" onClose={onClose} busy={submitting} width={550}>
       {article.local_file_path && (
         <button
           type="button"
@@ -96,21 +92,20 @@ const EditArticleForm: React.FC<Omit<EditArticleModalProps, 'isOpen'>> = ({ onCl
         </button>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <form
+        onSubmit={handleSubmit}
+        onKeyDown={(e) => e.ctrlKey && e.key === 'Enter' && e.currentTarget.requestSubmit()}
+        style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+      >
+        <span className="app-modal-group">Identificação</span>
         <LabeledField label="Título *" value={fields.title} onChange={set('title')} required />
+        <LabeledField label="Autores" value={fields.authors} onChange={set('authors')} hint={AUTHORS_SEPARATOR_HINT} />
+        <span className="app-modal-group">Publicação</span>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <LabeledField
-            label="Autores"
-            value={fields.authors}
-            onChange={set('authors')}
-            hint={AUTHORS_SEPARATOR_HINT}
-          />
+          <LabeledField label="Revista / Periódico" value={fields.journal} onChange={set('journal')} />
           <LabeledField label="Ano" type="number" value={fields.year} onChange={set('year')} />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <LabeledField label="DOI" value={fields.doi} onChange={set('doi')} />
-          <LabeledField label="Revista / Periódico" value={fields.journal} onChange={set('journal')} />
-        </div>
+        <LabeledField label="DOI" value={fields.doi} onChange={set('doi')} />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
           <LabeledField label="Volume" value={fields.volume} onChange={set('volume')} />
           <LabeledField label="Edição (Issue)" value={fields.issue} onChange={set('issue')} />
@@ -118,20 +113,15 @@ const EditArticleForm: React.FC<Omit<EditArticleModalProps, 'isOpen'>> = ({ onCl
         </div>
         <LabeledField label="Resumo" value={fields.abstract} onChange={set('abstract')} multiline />
 
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
-          <button type="button" onClick={onClose} disabled={submitting} className="btn-secondary">
+        <ModalFooter hint={<span className="app-modal-kbd">Ctrl Enter</span>}>
+          <Button variant="ghost" onClick={onClose} disabled={submitting}>
             Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            Salvar Alterações
-          </button>
-        </div>
+          </Button>
+          <Button type="submit" variant="primary" disabled={submitting}>
+            {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} aria-hidden="true" />}
+            Salvar
+          </Button>
+        </ModalFooter>
       </form>
     </Modal>
   );
