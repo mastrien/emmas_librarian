@@ -207,7 +207,13 @@ Regra que o autor fixou: a interface fica igual ao board; só se diverge quando 
 - [ ] **Leitor (169)**: abas do painel lateral (Anotações, Insights IA, Pesquisar) como controle segmentado, na ordem do board. O cartão de categorias do artigo continua com os editores da matriz.
 - [ ] **Termos (174)**: aviso de responsabilidade sem borda, só o fundo âmbar. **Artigos (153)**: tabela direto na página, cabeçalho e linhas nas medidas do board.
 
-Ainda abertos desta rodada: auditoria com dados das telas que só aparecem depois de uma investigação ou conversa (respostas, auditoria, chamadas, triagem guiada, Perguntar), da Agenda com eventos e das janelas; acesso rápido e investigações da sidebar com muitos itens (proposta: mostrar os mais recentes e "Ver todos").
+- [ ] **Investigação (161, 162)**: filtros de Respostas e Chamadas como controle segmentado; o selo de uma investigação sem erros diz "Concluída". A coluna "Trechos" da lista de chamadas e "Prompt completo e resposta bruta" ficam de fora: o app não guarda esses dados por chamada.
+- [ ] **Avaliar sugestões (167)**: comparação e simulação lado a lado (3 para 2), sem os botões da triagem no topo. Os resultados da medição (tabelas de motores, calibração) continuam como estavam, porque o board só mostra o estado inicial.
+- [ ] **Perguntar (168)**: o botão de enviar fica dentro da caixa, num botão de ícone, e a caixa cresce com o texto. Troca a decisão antiga de manter o botão fora da caixa; o teste E2E agora confere que ele está dentro.
+- [ ] **Início (151)**: as datas do prazo na lista seguem a Agenda ("02 a 05/12/2026"); a tela não rola mais sem necessidade.
+- [ ] **Triagem guiada (165)**: margens do modo de foco ajustadas ao novo espaçamento (sumiu a barra de rolagem horizontal).
+
+Ainda abertos desta rodada: auditoria das janelas (modais) com dados; acesso rápido e investigações da sidebar com muitos itens (proposta: mostrar os mais recentes e "Ver todos").
 
 ## Fim do redesign
 

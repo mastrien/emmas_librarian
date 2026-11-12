@@ -430,20 +430,47 @@
   padding-left: 1.1rem;
   overflow-wrap: anywhere;
 }
-/* The button takes the height of the box, which has two lines and can grow (validation of epic #44). */
+/* Board 168: one box with the send button inside it, at the bottom right; the box grows with the text. */
 .ask-composer {
   flex: none;
   display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 0.5rem;
-  padding: 0 1rem 0.9rem;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px 28px 18px;
+}
+.ask-composer__box {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 6px 6px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-surface);
+}
+.ask-composer__box:focus-within {
+  border-color: var(--color-primary);
 }
 .ask-composer textarea {
   flex: 1;
   min-width: 0;
   max-height: 140px;
-  resize: vertical;
+  padding: 6px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-main);
+  font: inherit;
+  line-height: 1.5;
+  resize: none;
+}
+.ask-composer .ask-composer__send {
+  flex: none;
+  width: 32px;
+  padding: 0;
 }
 
 /* The cited chunk. */
@@ -491,7 +518,6 @@
 }
 
 .ask-composer__hint {
-  flex: 1 0 100%;
   color: var(--text-muted);
   font-size: 11px;
   text-align: center;

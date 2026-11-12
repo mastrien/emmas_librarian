@@ -33,10 +33,8 @@ test('#53 a project is asked from the dashboard, and the answer survives a reloa
     await expect(notice).toBeHidden({ timeout: 30000 });
 
     const box = window.getByRole('textbox', { name: 'Sua pergunta' });
-    // Validation of epic #44: the box stood taller than the send button.
-    const boxHeight = (await box.boundingBox()).height;
-    const sendHeight = (await window.getByRole('button', { name: 'Enviar' }).boundingBox()).height;
-    expect(Math.abs(boxHeight - sendHeight)).toBeLessThanOrEqual(1);
+    // Board 168: the send button sits inside the box of the question.
+    await expect(window.locator('.ask-composer__box').getByRole('button', { name: 'Enviar' })).toBeVisible();
     await box.fill('Qual a amostra?');
     await box.press('Enter');
 

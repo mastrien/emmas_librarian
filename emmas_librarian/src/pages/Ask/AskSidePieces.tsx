@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { ArrowUp, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { AskIndexProgress, AskIndexResult, AskReadCitation, ProjectIndexCoverage } from '../../types';
 import { embeddingModelName, pdfCount } from '../../utils/pdfCount';
@@ -177,22 +177,29 @@ export const AskComposer: React.FC<{
         void submit();
       }}
     >
-      <textarea
-        className="input-field"
-        aria-label="Sua pergunta"
-        rows={2}
-        value={text}
-        placeholder={placeholderFor(hasScope, canAsk)}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key !== 'Enter' || e.shiftKey) return;
-          e.preventDefault();
-          void submit();
-        }}
-      />
-      <button type="submit" className="btn-primary" disabled={blocked}>
-        {sending ? 'Perguntando…' : 'Enviar'}
-      </button>
+      <div className="ask-composer__box">
+        <textarea
+          aria-label="Sua pergunta"
+          rows={2}
+          value={text}
+          placeholder={placeholderFor(hasScope, canAsk)}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter' || e.shiftKey) return;
+            e.preventDefault();
+            void submit();
+          }}
+        />
+        <button
+          type="submit"
+          className="btn-primary ask-composer__send"
+          disabled={blocked}
+          aria-label={sending ? 'Perguntando…' : 'Enviar'}
+          title="Enviar (Enter)"
+        >
+          <ArrowUp size={16} aria-hidden="true" />
+        </button>
+      </div>
       <span className="ask-composer__hint">
         Enter envia · Shift+Enter quebra a linha · cada afirmação traz artigo e página
       </span>
