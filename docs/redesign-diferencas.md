@@ -213,7 +213,11 @@ Regra que o autor fixou: a interface fica igual ao board; só se diverge quando 
 - [ ] **Início (151)**: as datas do prazo na lista seguem a Agenda ("02 a 05/12/2026"); a tela não rola mais sem necessidade.
 - [ ] **Triagem guiada (165)**: margens do modo de foco ajustadas ao novo espaçamento (sumiu a barra de rolagem horizontal).
 
-Ainda abertos desta rodada: auditoria das janelas (modais) com dados; acesso rápido e investigações da sidebar com muitos itens (proposta: mostrar os mais recentes e "Ver todos").
+- [ ] **Novo evento (180)**: um prazo por linha (nome, data, X) e "+ Prazo"; o tipo do evento é controle segmentado com as cinco categorias do app (o board mostra quatro; Workshop existe no app); "Nome do evento", "Sigla" e "Site (opcional)" no desenho do board. Mantive a cor do emblema, que o board não mostra. Um prazo "Pontual" ou "Intervalo" ainda se escolhe ao adicionar.
+- [ ] **Ctrl+K (150)**: linha de busca com lupa e Esc, grupos e barra com as teclas, sem título nem X; "Nesta tela" vem antes dos destinos.
+- [ ] **Campos dos formulários e do acesso rápido**: rótulo de 12,5px em peso médio, como no board. O desenho do Acesso rápido (grupos com alça, "Link ou arquivo", "Novo grupo") continua como antes, só com os campos novos.
+
+Ainda abertos desta rodada: janelas que não consegui abrir na captura (citar, arquivar, anexar PDF, importar, confirmações e erros); acesso rápido e investigações da sidebar com muitos itens (proposta: mostrar os mais recentes e "Ver todos").
 
 ## Fim do redesign
 
