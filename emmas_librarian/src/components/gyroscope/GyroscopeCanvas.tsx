@@ -40,6 +40,13 @@ const RINGS: { radius: number; tilt: [number, number, number]; spin: [number, nu
   { radius: 1.66, tilt: [1.2, 0.3, 0.0], spin: [0.1, 0.22, -0.08] },
 ];
 
+/** Largura da borda fina nas duas laterais da face interna (mesma cor da face externa), na altura da faixa. */
+const INNER_BORDER = 0.035;
+
+/** Índices dos materiais de cada anel: 0 = cor do anel (face externa, bordas, orlas), 1 = face interna. */
+const RING_MATERIAL = 0;
+const INNER_MATERIAL = 1;
+
 const FLOAT_AMPLITUDE = 0.15; // quanto sobe/desce
 const FLOAT_SPEED = 0.8; // velocidade da flutuação
 
@@ -49,8 +56,10 @@ const FLOAT_SPEED = 0.8; // velocidade da flutuação
  * as bordas superior/inferior se recolhem `curve` unidades em direção ao centro.
  * O eixo do anel fica em Z (mesma orientação do antigo toro).
  *
- * A geometria é feita revolucionando 4 perfis (parede externa, interna e as
- * 2 bordas) separadamente, para manter as arestas vivas entre eles.
+ * A geometria é feita revolucionando perfis (parede externa, parede interna e as
+ * 2 bordas) separadamente, para manter as arestas vivas entre eles. A parede
+ * interna é dividida em três faixas: as duas orlas finas (cor do anel) e o
+ * meio (cor do fundo), cada uma num grupo com seu material.
  */
 function createBandGeometry(radius: number, wall: number, height: number, curve: number, segments: number) {
   const h = height;
@@ -62,15 +71,20 @@ function createBandGeometry(radius: number, wall: number, height: number, curve:
   // Cada perfil é uma lista de pontos [r, y]. A ordem define o lado "de fora":
   // a normal é a tangente (dr, dy) girada para (dy, -dr).
   const outerWall: [number, number][] = [];
-  const innerWall: [number, number][] = [];
   for (let i = 0; i <= steps; i++) {
     const y = -h / 2 + (h * i) / steps;
     outerWall.push([radius - inset(y), y]); // de baixo para cima → normal para fora
   }
-  for (let i = steps; i >= 0; i--) {
-    const y = -h / 2 + (h * i) / steps;
-    innerWall.push([radius - wall - inset(y), y]); // de cima para baixo → normal para dentro
-  }
+  // Uma faixa da parede interna entre duas alturas, de cima para baixo → normal para dentro.
+  const innerStrip = (yFrom: number, yTo: number, n: number): [number, number][] =>
+    Array.from({ length: n + 1 }, (_, i) => {
+      const y = yFrom + ((yTo - yFrom) * i) / n;
+      return [radius - wall - inset(y), y];
+    });
+  const border = Math.min(INNER_BORDER, h / 4);
+  const innerTopRim = innerStrip(h / 2, h / 2 - border, 2);
+  const innerMiddle = innerStrip(h / 2 - border, -h / 2 + border, steps);
+  const innerBottomRim = innerStrip(-h / 2 + border, -h / 2, 2);
   const e = inset(h / 2);
   const topEdge: [number, number][] = [
     [radius - e, h / 2],
@@ -81,13 +95,22 @@ function createBandGeometry(radius: number, wall: number, height: number, curve:
     [radius - e, -h / 2],
   ];
 
-  const profiles = [outerWall, innerWall, topEdge, bottomEdge];
+  const profiles: { points: [number, number][]; material: number }[] = [
+    { points: outerWall, material: RING_MATERIAL },
+    { points: innerTopRim, material: RING_MATERIAL },
+    { points: innerMiddle, material: INNER_MATERIAL },
+    { points: innerBottomRim, material: RING_MATERIAL },
+    { points: topEdge, material: RING_MATERIAL },
+    { points: bottomEdge, material: RING_MATERIAL },
+  ];
 
   const positions: number[] = [];
   const indices: number[] = [];
 
-  for (const profile of profiles) {
+  const groups: { start: number; count: number; material: number }[] = [];
+  for (const { points: profile, material } of profiles) {
     const base = positions.length / 3;
+    const firstIndex = indices.length;
     const m = profile.length;
     for (let s = 0; s <= segments; s++) {
       const theta = (s / segments) * Math.PI * 2;
@@ -107,13 +130,18 @@ function createBandGeometry(radius: number, wall: number, height: number, curve:
         indices.push(a, b, c, b, d, c);
       }
     }
+    groups.push({ start: firstIndex, count: indices.length - firstIndex, material });
   }
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setIndex(indices);
+  for (const group of groups) geometry.addGroup(group.start, group.count, group.material);
   return geometry.rotateX(Math.PI / 2);
 }
+
+/** As duas cores de um anel: a da face externa e das bordas, e a do interior da faixa (a do fundo onde ele está). */
+export type RingColors = { ring: string; inner: string };
 
 /** Estado da IA para controlar a semântica de cada anel. */
 export type GyroAiState = 'idle' | 'thinking' | 'speaking';
@@ -130,11 +158,11 @@ function Ring({
   tilt,
   spin,
   anim,
-  themeConfig,
+  colors,
 }: (typeof RINGS)[number] & {
   index: number;
   anim: AnimRef;
-  themeConfig: (typeof SILHOUETTE_PALETTES)['dark'];
+  colors: RingColors;
 }) {
   const ref = useRef<THREE.Mesh>(null!);
   const geometry = useMemo(
@@ -143,16 +171,16 @@ function Ring({
   );
   useEffect(() => () => geometry.dispose(), [geometry]);
 
-  // Material único: silhueta plana uniforme 100% sólida (zero transparência)
-  const material = useMemo(
-    () =>
-      new THREE.MeshBasicMaterial({
-        color: themeConfig.color,
-        side: THREE.DoubleSide,
-      }),
-    [themeConfig],
+  // Dois materiais planos e 100% sólidos (zero transparência): a cor do anel (face externa, bordas e orlas da face
+  // interna) e a cor do fundo, que preenche o interior da faixa. A ordem é a dos índices RING_MATERIAL / INNER_MATERIAL.
+  const materials = useMemo(
+    () => [
+      new THREE.MeshBasicMaterial({ color: colors.ring, side: THREE.DoubleSide }),
+      new THREE.MeshBasicMaterial({ color: colors.inner, side: THREE.DoubleSide }),
+    ],
+    [colors.ring, colors.inner],
   );
-  useEffect(() => () => material.dispose(), [material]);
+  useEffect(() => () => materials.forEach((material) => material.dispose()), [materials]);
 
   useFrame((_, dt) => {
     const s = dt * anim.current.ringSpeeds[index];
@@ -160,18 +188,10 @@ function Ring({
     ref.current.rotation.y += spin[1] * s;
     ref.current.rotation.z += spin[2] * s;
   });
-  return <mesh ref={ref} rotation={tilt} geometry={geometry} material={material} />;
+  return <mesh ref={ref} rotation={tilt} geometry={geometry} material={materials} />;
 }
 
-function Gyroscope({
-  themeConfig,
-  state = 'idle',
-  speed = 1,
-}: {
-  themeConfig: (typeof SILHOUETTE_PALETTES)['dark'];
-  state?: GyroAiState;
-  speed?: number;
-}) {
+function Gyroscope({ colors, state = 'idle', speed = 1 }: { colors: RingColors; state?: GyroAiState; speed?: number }) {
   const group = useRef<THREE.Group>(null!);
   const anim = useRef<AnimState>({
     ringSpeeds: [1, 1, 1],
@@ -202,7 +222,7 @@ function Gyroscope({
   return (
     <group ref={group}>
       {RINGS.map((r, i) => (
-        <Ring key={i} index={i} {...r} anim={anim} themeConfig={themeConfig} />
+        <Ring key={i} index={i} {...r} anim={anim} colors={colors} />
       ))}
     </group>
   );
@@ -213,8 +233,12 @@ export type GyroscopeCanvasProps = {
   coreColor?: string;
   /** Cor de fundo (opcional). Se omitido ou 'transparent', o fundo fica transparente. */
   background?: string;
-  /** Tema ativo ('dark' | 'light') para harmonizar a silhueta. */
+  /** Tema ativo ('dark' | 'light'): escolhe a cor do anel quando `ringColor` não é dada. */
   theme?: 'dark' | 'light';
+  /** Cor da face externa e das bordas (inclusive as orlas finas da face interna). */
+  ringColor?: string;
+  /** Cor do interior da faixa: a do fundo onde o anel está, para a face interna sumir nele. Sem ela, é a do anel. */
+  innerColor?: string;
   /** Estado da IA que orquestra a aceleração independente dos anéis. */
   state?: GyroAiState;
   /** Multiplicador base geral de rotação (1 = normal). */
@@ -229,6 +253,8 @@ export type GyroscopeCanvasProps = {
 export function GyroscopeCanvas({
   background,
   theme = 'dark',
+  ringColor,
+  innerColor,
   state = 'idle',
   speed = 1,
   opacity,
@@ -236,18 +262,21 @@ export function GyroscopeCanvas({
   style,
 }: GyroscopeCanvasProps) {
   const isTransparent = !background || background === 'transparent';
-  const themeConfig = SILHOUETTE_PALETTES[theme] || SILHOUETTE_PALETTES.dark;
+  const ring = ringColor ?? (SILHOUETTE_PALETTES[theme] || SILHOUETTE_PALETTES.dark).color;
+  const colors = { ring, inner: innerColor ?? ring };
 
   return (
     <Canvas
       className={className}
       style={{ pointerEvents: 'none', opacity, ...style }} // a cena ignora o mouse
+      // flat: sem tone mapping, para as cores saírem exatamente as dadas (o padrão escurecia o branco para cinza).
+      flat
       dpr={[1, 2]}
       camera={{ position: [0, 0, 5.5], fov: 45 }}
       gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}
     >
       {!isTransparent && <color attach="background" args={[background]} />}
-      <Gyroscope themeConfig={themeConfig} state={state} speed={speed} />
+      <Gyroscope colors={colors} state={state} speed={speed} />
     </Canvas>
   );
 }
