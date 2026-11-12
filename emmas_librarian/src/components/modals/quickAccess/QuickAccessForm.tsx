@@ -16,22 +16,23 @@ interface QuickAccessFormProps {
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
-  fontSize: '0.8rem',
-  fontWeight: 600,
-  marginBottom: '0.2rem',
-  color: 'var(--text-muted)',
+  fontSize: '12.5px',
+  fontWeight: 500,
+  marginBottom: '6px',
+  color: 'var(--text-heading)',
 };
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  padding: '0.5rem 0.7rem',
-  borderRadius: 'var(--radius-sm)',
+  height: '34px',
+  padding: '0 10px',
+  borderRadius: '8px',
   border: '1px solid var(--border-color)',
   outline: 'none',
-  background: 'var(--bg-surface)',
+  background: 'var(--bg-sunken)',
   color: 'var(--text-main)',
   fontFamily: 'inherit',
-  fontSize: '0.85rem',
+  fontSize: '13px',
 };
 
 // Greyed out while the other source (URL vs PDF) is filled in.
