@@ -61,9 +61,9 @@ describe('the predicted order in the guided screening (#55)', () => {
     expect(await heading('Primeiro')).toBeInTheDocument();
     expect(service.getArticleVectorPlan).not.toHaveBeenCalled();
     expect(service.rankScreening).not.toHaveBeenCalled();
-    expect(
-      within(screen.getByRole('group', { name: 'Ordem da triagem' })).getByText('Experimental'),
-    ).toBeInTheDocument();
+    // The switch carries its "Experimental" tag, in the bar; the band under it stays out while there is nothing to say.
+    expect(within(toggle().closest('span')!).getByText('Experimental')).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Ordem da triagem' })).not.toBeInTheDocument();
   });
 
   it('remembers the choice of the project, and opens on the likeliest', async () => {
@@ -208,7 +208,8 @@ describe('the predicted order in the guided screening (#55)', () => {
     await press(toggle());
 
     expect(service.setScreeningOrderOn).toHaveBeenCalledWith(1, false);
-    expect(screen.getByText('Ordem original.')).toBeInTheDocument();
+    expect(toggle()).not.toBeChecked();
+    expect(screen.queryByText(/Ordem prevista, aprendida/)).not.toBeInTheDocument();
   });
 
   it('is not at full text', async () => {

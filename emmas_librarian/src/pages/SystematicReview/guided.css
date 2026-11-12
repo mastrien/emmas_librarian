@@ -1,92 +1,10 @@
 /* The guided screening (GuidedScreeningPage, GuidedDecisionPanel, SuggestionBlock, ScreeningOrderStrip). Values
    carried over from the inline styles they replace (Arca 134). */
 
-.guided-stage-tabs {
-  display: flex;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-main);
-}
-
-.guided-stage-tabs .review-quiet[aria-selected='true'] {
-  background: var(--bg-surface);
-  font-weight: 600;
-}
-
-.guided-progress-bar {
-  display: flex;
-  flex: 1 1 240px;
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--bg-main);
-}
-
-.guided-progress-bar > span {
-  width: var(--share, 0%);
-}
-
 .guided-check {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-}
-
-.guided-body {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 1.1rem;
-}
-
-/* The article is read on the page itself, centred, no frame (board 165). */
-.review-section.guided-article {
-  display: flex;
-  flex: 999 1 560px;
-  flex-direction: column;
-  gap: 0.7rem;
-  min-width: 0;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 1rem 1.5rem;
-  border: none;
-  background: none;
-}
-
-.guided-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.guided-article h2 {
-  margin: 0;
-  font-family: var(--font-reading, var(--font-heading));
-  font-size: 26px;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-.review-menu-title.guided-abstract-title {
-  margin-top: 0.4rem;
-  padding: 0;
-}
-
-.guided-abstract {
-  max-width: 72ch;
-  margin: 0;
-  font-family: var(--font-reading, var(--font-sans));
-  font-size: 16px;
-  line-height: 1.65;
-}
-
-.guided-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.4rem;
 }
 
 .review-section.guided-finished {
@@ -111,75 +29,6 @@
   max-width: 640px;
   margin: 0;
   line-height: 1.5;
-}
-
-/* GuidedDecisionPanel: the right column, the buttons big with their key at the end (board 165). */
-.review-section.guided-decision {
-  display: flex;
-  flex: 1 1 340px;
-  max-width: 380px;
-  flex-direction: column;
-  gap: 0.7rem;
-  min-width: 280px;
-  padding: 1rem;
-}
-
-.guided-key {
-  min-width: 22px;
-  padding: 0.1rem 0.35rem;
-  border: 1px solid var(--border-color);
-  border-bottom-width: 2px;
-  border-radius: 4px;
-  background: var(--bg-main);
-  font-size: 0.75rem;
-  text-align: center;
-}
-
-.review-small.guided-option {
-  justify-content: flex-start;
-  gap: 12px;
-  min-height: 52px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  /* The key goes to the end of the button, after the label. */
-  flex-direction: row-reverse;
-}
-
-.review-small.guided-option > .guided-key {
-  margin-left: auto;
-}
-
-.review-small.guided-option[aria-pressed='true'] {
-  outline: 2px solid var(--color-primary);
-}
-
-.guided-duplicate {
-  align-self: flex-start;
-  padding: 0.35rem 0.1rem;
-  border: 0;
-  color: var(--color-primary);
-  background: none;
-  font: inherit;
-  font-size: 0.85rem;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
-.review-muted.guided-note {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.guided-note textarea {
-  font: inherit;
-  resize: vertical;
-}
-
-.review-muted.guided-hint {
-  margin: 0;
 }
 
 /* SuggestionBlock and ScreeningOrderStrip */
@@ -218,17 +67,13 @@
 .guided-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: 0;
   margin: -20px -28px -24px;
-  min-height: calc(100vh - 32px);
+  height: calc(100vh - 32px);
 }
 
-.guided-page > :not(.guided-bar) {
+.guided-page > :not(.guided-bar):not(.guided-body) {
   margin-inline: 28px;
-}
-
-.guided-page > :last-child {
-  margin-bottom: 24px;
 }
 
 .guided-bar {
@@ -247,31 +92,269 @@
   background: var(--border-color);
 }
 
-.guided-bar__progress {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 320px;
-}
-
-.guided-bar__line {
-  white-space: nowrap;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.guided-bar__progress .guided-progress-bar {
-  flex: none;
-  height: 6px;
-}
-
 .guided-bar .back-link {
   gap: 8px;
 }
 
 .guided-bar .guided-key {
   font-weight: 400;
+}
+
+/* The bar's stage control: the app's segmented look, on tabs (the stage is a tablist). */
+.guided-stage-tabs .segmented-option[aria-selected='true'] {
+  background: var(--bg-surface);
+  color: var(--text-heading);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.guided-bar__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 260px;
+}
+
+.guided-bar__line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.guided-bar__line strong {
+  font-weight: 600;
+}
+
+/* How much is decided, in the colours of the kinds (board 165). */
+.guided-progress-bar {
+  display: flex;
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: var(--bg-sunken);
+}
+
+.guided-progress-bar > span {
+  width: var(--share, 0%);
+}
+
+.guided-order-toggle {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+/* The body: the article read in the middle, the decision in a column of its own at the right (board 165). */
+.guided-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.guided-main {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.guided-article {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 760px;
+  padding: 28px 32px;
+}
+
+.guided-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.guided-article h2 {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.review-menu-title.guided-abstract-title {
+  margin: 0;
+  padding: 0;
+}
+
+.guided-abstract {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.guided-abstract mark {
+  border-radius: 2px;
+  background: rgba(250, 204, 21, 0.45);
+  color: inherit;
+}
+
+.guided-decision {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 380px;
+  border-left: 1px solid var(--border-color);
+  background: var(--bg-surface);
+}
+
+.guided-decision__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.guided-decision__title {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.guided-key {
+  min-width: 20px;
+  margin-left: auto;
+  padding: 2px 5px;
+  border: 1px solid var(--border-color);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1;
+  text-align: center;
+}
+
+/* One big button per label, tinted by its kind, with its key at the end. */
+.guided-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--bg-sunken);
+  color: var(--text-heading);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.guided-option--include {
+  background: var(--color-success-subtle);
+  color: var(--color-success-text);
+}
+
+.guided-option--maybe {
+  background: var(--color-warning-subtle);
+  color: var(--color-warning-text);
+}
+
+.guided-option--exclude {
+  background: var(--color-danger-subtle);
+  color: var(--color-danger-text);
+}
+
+.guided-option:hover {
+  border-color: currentColor;
+}
+
+.guided-option[aria-pressed='true'] {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.guided-note {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guided-note__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-heading);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.guided-note__hint {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.guided-note textarea {
+  font: inherit;
+  resize: vertical;
+}
+
+.guided-duplicate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary-text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.guided-duplicate:hover {
+  text-decoration: underline;
+}
+
+.guided-decision__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.guided-decision__nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guided-decision__skip {
+  margin-left: auto;
+}
+
+.guided-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* The suggestion of the AI reads as the board's callout, in the AI's colour. */
+.guided-decision .review-suggestion {
+  border: none;
+  border-radius: 10px;
+  background: var(--color-ai-subtle);
 }

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ListChecks, Play, Tag } from 'lucide-react';
+import { Info, ListChecks, Play, SquareCheckBig, Tag } from 'lucide-react';
 import type { Article, ScreeningLabel } from '../../types';
 import { listStage, type ReviewRow } from '../../utils/screeningView';
 import { MassCitationModal } from '../../components/modals/MassCitationModal';
 import { useScreening, type ScreeningState } from './useScreening';
 import { ExcludedSection, LabelSection, type RowActions } from './ReviewSections';
-import { PendingList } from './PendingList';
+import { PendingList, useSelection, type Selection } from './PendingList';
 import { UndoToast } from './ReviewBits';
 import { ScreeningStatusFilter } from './ScreeningStatusFilter';
 import { defaultFilter, filterCount, type ScreeningFilter } from './screeningFilter';
@@ -61,7 +61,7 @@ interface ReviewHeaderProps {
 // What each part of the review says under its title (boards 164, 166, 167).
 const decidedLine = (counts: ReviewHeaderProps['counts']) => {
   const decided = counts.include + counts.maybe + counts.exclude;
-  return `${decided} de ${decided + counts.pending} decididos`;
+  return `${decided} de ${decided + counts.pending} decididos por título e resumo`;
 };
 
 const EVALUATION_NOTE =
@@ -106,12 +106,13 @@ const ReviewHeader: React.FC<ReviewHeaderProps> = ({ projectId, tab, counts, onM
 
 interface FilteredListProps {
   screening: ScreeningState;
+  selection: Selection;
   filter: ScreeningFilter;
   onCite: (articles: Article[]) => void;
 }
 
 /** The list of the chosen status: the undecided articles, or the label sections of that kind. */
-const FilteredList: React.FC<FilteredListProps> = ({ screening, filter, onCite }) => {
+const FilteredList: React.FC<FilteredListProps> = ({ screening, selection, filter, onCite }) => {
   const sections = useOpenSections();
   const actions = rowActions(screening);
   const { view } = screening;
@@ -119,6 +120,7 @@ const FilteredList: React.FC<FilteredListProps> = ({ screening, filter, onCite }
     return (
       <PendingList
         rows={view.pending}
+        selection={selection}
         labels={screening.labels}
         onPick={(rows, label) =>
           void screening.decide(
@@ -174,14 +176,41 @@ const ReviewBody: React.FC<{ projectId: number; screening: ScreeningState; onCit
   const { counts } = screening.view;
   const [stored, setFilter] = useSessionState<ScreeningFilter | null>(`review.${projectId}.filter`, null);
   const filter = stored ?? defaultFilter(counts);
+  const selection = useSelection(screening.view.pending);
+  const decided = counts.include + counts.maybe + counts.exclude;
+  const total = decided + counts.pending;
   return (
     <div className="review-screening">
-      <ScreeningStatusFilter counts={counts} value={filter} onChange={setFilter} />
-      <FilteredList screening={screening} filter={filter} onCite={onCite} />
+      <div className="review-bar">
+        <ScreeningStatusFilter counts={counts} value={filter} onChange={setFilter} />
+        {filter === 'pending' && !selection.selecting && (
+          <button
+            type="button"
+            className="btn-secondary btn--sm review-bar__select"
+            onClick={selection.start}
+            disabled={counts.pending === 0}
+          >
+            <SquareCheckBig size={14} aria-hidden="true" /> Selecionar vários
+          </button>
+        )}
+      </div>
+      <div
+        className="review-progress"
+        role="progressbar"
+        aria-label="Triagem decidida"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={decided}
+      >
+        <i style={{ width: `${total === 0 ? 0 : (decided / total) * 100}%` }} />
+      </div>
+      <FilteredList screening={screening} selection={selection} filter={filter} onCite={onCite} />
       {filterCount(counts, filter) === 0 && filter !== 'pending' && (
         <div className="review-empty">Nenhum artigo com este status.</div>
       )}
-      <p className="review-footnote">Excluir aqui também arquiva o artigo no projeto, com o rótulo como motivo.</p>
+      <p className="review-footnote">
+        <Info size={14} aria-hidden="true" /> Excluir aqui também arquiva o artigo no projeto, com o rótulo como motivo.
+      </p>
     </div>
   );
 };

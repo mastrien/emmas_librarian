@@ -7,7 +7,7 @@ import { GuidedDecisionPanel } from './GuidedDecisionPanel';
 import { articleMeta, databasesOf } from './reviewText';
 import { CriteriaModal } from './CriteriaModal';
 import { SuggestionBlock } from './SuggestionBlock';
-import { ScreeningOrderStrip, useScreeningOrder } from './ScreeningOrderStrip';
+import { OrderToggle, ScreeningOrderStrip, useScreeningOrder, type ScreeningOrder } from './ScreeningOrderStrip';
 import { useScreeningSuggestions } from './useScreeningSuggestions';
 import { hasCriteria } from '../../utils/screeningCriteria';
 import { readerStateBackTo } from '../../utils/readerReturn';
@@ -21,14 +21,14 @@ const STAGES: { id: ScreeningStage; label: string }[] = [
 ];
 
 const StageTabs: React.FC<{ guided: GuidedScreening }> = ({ guided }) => (
-  <div role="tablist" aria-label="Etapa" className="guided-stage-tabs">
+  <div role="tablist" aria-label="Etapa" className="segmented guided-stage-tabs">
     {STAGES.map((s) => (
       <button
         key={s.id}
         type="button"
         role="tab"
         aria-selected={guided.stage === s.id}
-        className="review-quiet"
+        className="segmented-option"
         onClick={() => guided.setStage(s.id)}
       >
         {s.label}
@@ -69,10 +69,14 @@ function useExitOnEscape(onExit: () => void) {
 }
 
 /**
- * The bar of the focus mode (board 165): the way out with its key, where the screening stands, the stage and the
- * filter of pending articles. The prediction toggle stays in the band below, with the order's own messages.
+ * The bar of the focus mode (board 165): the way out with its key, where the screening stands, the stage, the filter
+ * of pending articles and, at the right, the prediction toggle. The order's own messages come in the band below.
  */
-const FocusBar: React.FC<{ projectId: number; guided: GuidedScreening }> = ({ projectId, guided }) => (
+const FocusBar: React.FC<{ projectId: number; guided: GuidedScreening; order: ScreeningOrder }> = ({
+  projectId,
+  guided,
+  order,
+}) => (
   <header className="guided-bar">
     <BackLink to={`/projects/${projectId}/review`}>
       Sair da triagem <kbd className="guided-key">Esc</kbd>
@@ -85,9 +89,7 @@ const FocusBar: React.FC<{ projectId: number; guided: GuidedScreening }> = ({ pr
             ? `Artigo ${guided.position + 1} de ${guided.queue.length}`
             : 'Nenhum artigo nesta etapa'}
         </strong>
-        <span className="review-muted">
-          {decidedCount(guided)} decididos · {guided.pending === 1 ? '1 pendente' : `${guided.pending} pendentes`}
-        </span>
+        <span className="review-muted">{decidedCount(guided)} decididos</span>
       </div>
       <ProgressBar guided={guided} />
     </div>
@@ -95,6 +97,7 @@ const FocusBar: React.FC<{ projectId: number; guided: GuidedScreening }> = ({ pr
     <label className="guided-check">
       <input type="checkbox" checked={guided.onlyPending} onChange={guided.toggleOnlyPending} /> Só pendentes
     </label>
+    {guided.stage === 'title' && <OrderToggle order={order} />}
   </header>
 );
 
@@ -116,7 +119,7 @@ const ArticleCard: React.FC<{ article: Article; guided: GuidedScreening; quote: 
   guided,
   quote,
 }) => (
-  <article className="review-section guided-article">
+  <article className="guided-article">
     <div className="guided-chips">
       {databasesOf(article).map((db) => (
         <span key={db} className="review-chip review-chip--none">
@@ -145,22 +148,6 @@ const ArticleCard: React.FC<{ article: Article; guided: GuidedScreening; quote: 
     <p className="guided-abstract">
       {article.abstract ? <Abstract text={article.abstract} quote={quote} /> : 'Sem resumo cadastrado.'}
     </p>
-    <div className="guided-nav">
-      <button type="button" className="review-small" onClick={() => guided.go(-1)} disabled={guided.position === 0}>
-        ← Anterior
-      </button>
-      <button
-        type="button"
-        className="review-small"
-        onClick={() => guided.go(1)}
-        disabled={guided.position >= guided.queue.length - 1}
-      >
-        Próximo →
-      </button>
-      <button type="button" className="review-small" onClick={() => void guided.undo()} disabled={!guided.canUndo}>
-        Desfazer (Z)
-      </button>
-    </div>
   </article>
 );
 
@@ -231,7 +218,7 @@ export const GuidedScreeningPage: React.FC = () => {
   const asking = canAsk && suggestions.running === null && (!suggestion || suggestions.isStale(suggestion));
   return (
     <div className="guided-page fade-in">
-      <FocusBar projectId={projectId} guided={guided} />
+      <FocusBar projectId={projectId} guided={guided} order={order} />
       {guided.stage === 'title' && (
         <ScreeningOrderStrip order={order} decisions={screening.decisions} labels={screening.labels} />
       )}
@@ -239,10 +226,14 @@ export const GuidedScreeningPage: React.FC = () => {
         <Finished guided={guided} projectId={projectId} />
       ) : (
         <div className="guided-body">
-          <ArticleCard article={article} guided={guided} quote={suggestion?.quote_found ? suggestion.quote : null} />
+          <main className="guided-main">
+            <ArticleCard article={article} guided={guided} quote={suggestion?.quote_found ? suggestion.quote : null} />
+          </main>
           <GuidedDecisionPanel
             key={`${guided.stage}-${article.id}`}
-            stage={guided.stage}
+            canGoBack={guided.position > 0}
+            canGoOn={guided.position < guided.queue.length - 1}
+            canUndo={guided.canUndo}
             options={guided.options}
             duplicate={guided.duplicate}
             decision={guided.decisionHere}

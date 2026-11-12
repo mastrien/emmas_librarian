@@ -40,7 +40,7 @@ describe('GuidedScreeningPage (#49)', () => {
     renderGuided(screeningService(articles, [storedDecision(1, INCLUDED, 'title')]));
 
     expect(await screen.findByText('Artigo 2 de 3')).toBeInTheDocument();
-    expect(screen.getByText(/^1 decididos · 2 pendentes$/)).toBeInTheDocument();
+    expect(screen.getByText(/^1 decididos$/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Sair da triagem/ })).toHaveAttribute('href', '/projects/1/review');
     fireEvent.keyDown(window, { key: 'Escape' });
 
@@ -157,7 +157,7 @@ describe('GuidedScreeningPage (#49)', () => {
     expect(await heading('Triagem por título e resumo concluída')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Rever todos desta etapa' }));
     expect(await heading('ConvLSTM')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Próximo →' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pular →' }));
     expect(await heading('MetNet')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '← Anterior' }));
     expect(await heading('ConvLSTM')).toBeInTheDocument();
@@ -177,7 +177,7 @@ describe('GuidedScreeningPage (#49)', () => {
     ]);
     renderGuided(service);
     fireEvent.click(await screen.findByRole('tab', { name: 'Texto completo' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Próximo →' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Pular →' }));
     expect(await heading('MetNet')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('link', { name: 'Abrir o artigo' }));

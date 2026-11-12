@@ -90,11 +90,19 @@ export function useScreeningOrder(projectId: number, decisions: ScreeningDecisio
 
 export type ScreeningOrder = ReturnType<typeof useScreeningOrder>;
 
-const Toggle: React.FC<{ order: ScreeningOrder }> = ({ order }) => (
-  <label className="guided-inline guided-inline--toggle">
-    <input type="checkbox" checked={order.enabled} onChange={(e) => order.toggle(e.target.checked)} /> Ordenar por
-    relevância prevista
-  </label>
+/**
+ * The switch of the predicted order with its "Experimental" tag, at the right of the focus bar (board 165).
+ *
+ * @example <OrderToggle order={order} />
+ */
+export const OrderToggle: React.FC<{ order: ScreeningOrder }> = ({ order }) => (
+  <span className="guided-inline guided-order-toggle">
+    <label className="guided-inline guided-inline--toggle">
+      <input type="checkbox" checked={order.enabled} onChange={(e) => order.toggle(e.target.checked)} /> Ordenar por
+      relevância prevista
+    </label>
+    <ExperimentalTag reason={ORDER_REASON} />
+  </span>
 );
 
 // Only what was observed: an estimate of how many are left looks safe without being, and someone could stop because
@@ -138,7 +146,8 @@ const GenerateOffer: React.FC<{ order: ScreeningOrder; firstTime: boolean }> = (
 };
 
 /**
- * The band above the guided screening: what order the queue is in, and why. It only ever changes the order.
+ * The band under the guided screening's bar, only while the order has something to say: the order it learned, what it
+ * cannot do yet, the vectors it needs. It only ever changes the order.
  *
  * @example <ScreeningOrderStrip order={order} decisions={decisions} labels={labels} />
  */
@@ -151,21 +160,17 @@ export const ScreeningOrderStrip: React.FC<{
   const failure = vectors.error ?? rankError;
   const { plan, progress } = vectors;
   const firstTime = !!plan && plan.pending === plan.total;
+  const waitingForDecisions = !!rank && !order.queue && (rank.needRelevant > 0 || rank.needExcluded > 0);
+  const hasSomethingToSay =
+    !!order.queue || (enabled && (!!failure || !!progress || !!plan?.pending || waitingForDecisions));
+  if (!hasSomethingToSay) return null;
   return (
     <div
       className={failure ? 'review-suggestion review-suggestion--warn' : 'review-suggestion'}
       role="group"
       aria-label="Ordem da triagem"
     >
-      <div className="guided-strip-head guided-strip-head--wide">
-        <span className="guided-inline">
-          <strong>
-            {order.queue ? `Ordem prevista, aprendida com ${rank?.learnedFrom} decisões.` : 'Ordem original.'}
-          </strong>
-          <ExperimentalTag reason={ORDER_REASON} />
-        </span>
-        <Toggle order={order} />
-      </div>
+      {order.queue && <strong>Ordem prevista, aprendida com {rank?.learnedFrom} decisões.</strong>}
       {enabled && failure && (
         <span role="alert">
           <strong>Não foi possível ordenar.</strong> {failure} Os artigos sem vetor ficam no fim da fila.

@@ -151,7 +151,7 @@ describe('SystematicReviewPage (#49)', () => {
       screeningService([reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')], [storedDecision(1, INCLUDED, 'title')]),
     );
 
-    expect(await screen.findByText('1 de 2 decididos')).toBeInTheDocument();
+    expect(await screen.findByText('1 de 2 decididos por título e resumo')).toBeInTheDocument();
   });
 
   it('closes a section and a label menu', async () => {
@@ -178,6 +178,60 @@ describe('SystematicReviewPage (#49)', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Dúvida ConvLSTM' }));
 
     await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([3], MAYBE, 'title', null));
+  });
+
+  it('shows how much is decided as a progress bar over the list', async () => {
+    renderReview(
+      screeningService([reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')], [storedDecision(1, INCLUDED, 'title')]),
+    );
+
+    const bar = await screen.findByRole('progressbar', { name: 'Triagem decidida' });
+
+    expect(bar).toHaveAttribute('aria-valuenow', '1');
+    expect(bar).toHaveAttribute('aria-valuemax', '2');
+  });
+
+  it('labels a pending line "sem decisão", with the keys of the quick decisions on their buttons', async () => {
+    renderReview(screeningService([reviewArticle(3, 'ConvLSTM')]));
+
+    await screen.findByText('ConvLSTM');
+
+    expect(within(pendingRow('ConvLSTM')).getByText('sem decisão')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Incluir ConvLSTM' })).toHaveTextContent('1');
+    expect(screen.getByRole('button', { name: 'Dúvida ConvLSTM' })).toHaveTextContent('2');
+    expect(screen.getByRole('button', { name: 'Excluir ConvLSTM' })).toHaveTextContent('3');
+  });
+
+  it('decides the line under the pointer with the keys 1, 2 and 3', async () => {
+    const service = screeningService([reviewArticle(3, 'ConvLSTM'), reviewArticle(4, 'GPM')]);
+    renderReview(service);
+    await screen.findByText('ConvLSTM');
+
+    fireEvent.mouseEnter(pendingRow('GPM'));
+    fireEvent.keyDown(window, { key: '2' });
+
+    await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([4], MAYBE, 'title', null));
+  });
+
+  it('ignores the keys when no line is under the pointer, or while typing', async () => {
+    const service = screeningService([reviewArticle(3, 'ConvLSTM')]);
+    renderReview(service);
+    await screen.findByText('ConvLSTM');
+
+    fireEvent.keyDown(window, { key: '1' });
+    fireEvent.mouseEnter(pendingRow('ConvLSTM'));
+    const field = document.createElement('input');
+    document.body.appendChild(field);
+    fireEvent.keyDown(field, { key: '1' });
+    field.remove();
+
+    expect(service.decideScreening).not.toHaveBeenCalled();
+  });
+
+  it('says which of the pending articles the page shows', async () => {
+    renderReview(screeningService([reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')]));
+
+    expect(await screen.findByText(/1–2 de\s+2/)).toBeInTheDocument();
   });
 
   it('opens on the included ones once nothing waits for a decision, and says when a status is empty', async () => {
