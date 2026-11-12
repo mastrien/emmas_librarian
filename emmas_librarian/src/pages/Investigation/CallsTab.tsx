@@ -1,8 +1,9 @@
 import { SegmentedControl } from '../../components/common/SegmentedControl';
 import React, { useState } from 'react';
-import { Copy } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import { SideDrawer } from '../../components/common/SideDrawer';
 import { useNarrowWindow } from '../../hooks/useNarrowWindow';
+import { useCopyText } from '../../hooks/useCopyText';
 import { callAsText, callsSummary, failedCount, visibleCalls, type CallFilter, type NumberedCall } from './callsList';
 import { callErrorGroups, type CallCell } from './investigationView';
 import './investigationRuns.css';
@@ -66,16 +67,14 @@ const CallRow: React.FC<{ item: NumberedCall; questionNumber: number; selected: 
 /** The selected call (board 161): its question, the passage the model cited and what it answered or why it failed. */
 const CallInspector: React.FC<{ item: NumberedCall }> = ({ item }) => {
   const { call } = item;
+  const { copied, copy } = useCopyText();
   return (
     <div className="inv-call-detail">
       <div className="inv-call-detail__head">
         <span className="inv-section-title">Chamada {item.number}</span>
-        <button
-          type="button"
-          className="btn-ghost inv-small"
-          onClick={() => void navigator.clipboard?.writeText(callAsText(item))}
-        >
-          <Copy size={14} aria-hidden="true" /> Copiar
+        <button type="button" className="btn-ghost inv-small" onClick={() => void copy(callAsText(item))}>
+          {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}{' '}
+          {copied ? 'Copiado!' : 'Copiar'}
         </button>
       </div>
       <span className="inv-muted">{call.articleTitle}</span>

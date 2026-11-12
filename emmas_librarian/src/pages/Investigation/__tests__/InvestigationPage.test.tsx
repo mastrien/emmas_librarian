@@ -259,6 +259,26 @@ describe('InvestigationPage: the calls as a list (board 161)', () => {
     expect(detail).toHaveTextContent('401 chave recusada');
   });
 
+  it('copies the chosen call and says so on the button', async () => {
+    const written: string[] = [];
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: async (text: string) => void written.push(text) },
+      configurable: true,
+    });
+    const { service } = reviewProject();
+    renderInvestigation(service, '/projects/3/investigation/14');
+    fireEvent.click(await screen.findByRole('tab', { name: /Chamadas/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Com erro 1' }));
+    fireEvent.click(
+      within(within(screen.getByRole('table', { name: 'Chamadas' })).getAllByRole('row')[1]).getByRole('button'),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copiar' }));
+
+    expect(await screen.findByRole('button', { name: 'Copiado!' })).toBeInTheDocument();
+    expect(written[0]).toContain('401 chave recusada');
+  });
+
   it('narrows the list to one question', async () => {
     const { service } = reviewProject();
     renderInvestigation(service, '/projects/3/investigation/14');
