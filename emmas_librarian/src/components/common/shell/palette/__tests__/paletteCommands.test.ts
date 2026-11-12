@@ -41,6 +41,18 @@ describe('buildPaletteCommands, screen and tool commands', () => {
     expect(commands[0]).toMatchObject({ id: 'agenda:new', group: 'Nesta tela' });
   });
 
+  it('keeps the app-wide commands a screen registered with the places, after the ones of the screen itself', () => {
+    const registered = [
+      { id: 'app:help', group: 'Ir para' as const, label: 'Ajuda', run: () => undefined },
+      { id: 'agenda:new', group: 'Nesta tela' as const, label: 'Novo evento', run: () => undefined },
+    ];
+
+    const ids = buildPaletteCommands({ projects, articles: [] }, registered).map((c) => c.id);
+
+    expect(ids[0]).toBe('agenda:new');
+    expect(ids.indexOf('app:help')).toBeGreaterThan(ids.indexOf('module:home'));
+  });
+
   it('offers the project tools and every settings section', () => {
     const commands = buildPaletteCommands({ projects, currentProjectId: 3, articles: [] });
 

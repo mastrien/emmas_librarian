@@ -98,10 +98,14 @@ const actionCommands = (projectId?: number): PaletteCommand[] => [
  */
 export function buildPaletteCommands(sources: PaletteSources, screenCommands: PaletteCommand[] = []): PaletteCommand[] {
   const { currentProjectId: id } = sources;
+  // What the open screen offers comes first; the app-wide ones it registered (news, help) sit with the places.
+  const here = screenCommands.filter((c) => c.group === 'Nesta tela');
+  const everywhere = screenCommands.filter((c) => c.group !== 'Nesta tela');
   return [
-    ...screenCommands,
+    ...here,
     ...(id === undefined ? [] : [...sectionCommands(id), ...projectToolCommands(id)]),
     ...moduleCommands(),
+    ...everywhere,
     ...settingsCommands(),
     ...projectCommands(sources.projects.filter((p) => p.id !== id)),
     ...actionCommands(id),

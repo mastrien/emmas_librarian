@@ -26,6 +26,8 @@ interface ModalProps {
   icon?: ReactNode;
   /** The tint of the icon's square. */
   tone?: ModalTone;
+  /** No header of its own: the content brings its own top row (the Ctrl+K palette, board 150). */
+  bare?: boolean;
   children: ReactNode;
 }
 
@@ -57,19 +59,23 @@ export const Modal: React.FC<ModalProps> = (props) => {
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className={['card', 'fade-in', 'app-modal', className].filter(Boolean).join(' ')}
+        className={['card', 'fade-in', 'app-modal', props.bare && 'app-modal--bare', className]
+          .filter(Boolean)
+          .join(' ')}
         style={{ width: `${width}px`, maxWidth: '100%' }}
       >
-        <div className="app-modal-head">
-          {props.icon && <span className={`app-modal-icon is-${props.tone ?? 'info'}`}>{props.icon}</span>}
-          <div className="app-modal-titles">
-            <h2 className="app-modal-title">{title}</h2>
-            {description && <p className="app-modal-description">{description}</p>}
+        {!props.bare && (
+          <div className="app-modal-head">
+            {props.icon && <span className={`app-modal-icon is-${props.tone ?? 'info'}`}>{props.icon}</span>}
+            <div className="app-modal-titles">
+              <h2 className="app-modal-title">{title}</h2>
+              {description && <p className="app-modal-description">{description}</p>}
+            </div>
+            <button type="button" className="app-modal-x" aria-label={closeLabel} disabled={busy} onClick={onClose}>
+              <X size={18} aria-hidden="true" />
+            </button>
           </div>
-          <button type="button" className="app-modal-x" aria-label={closeLabel} disabled={busy} onClick={onClose}>
-            <X size={18} aria-hidden="true" />
-          </button>
-        </div>
+        )}
         {props.children}
       </div>
     </div>,

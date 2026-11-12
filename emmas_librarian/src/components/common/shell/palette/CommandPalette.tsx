@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { Modal } from '../../Modal';
 import { buildPaletteCommands, filterPaletteCommands, type PaletteCommand } from './paletteCommands';
 import { usePaletteSources } from './usePaletteSources';
@@ -78,28 +79,43 @@ export const CommandPalette: React.FC<{ currentProjectId?: number; onClose: () =
   };
 
   return (
-    <Modal label="Ir para" title="Ir para" onClose={props.onClose} width={560} className="palette">
-      <input
-        autoFocus
-        className="palette-input"
-        role="combobox"
-        aria-expanded="true"
-        aria-controls={LISTBOX_ID}
-        aria-activedescendant={active ? optionId(active) : undefined}
-        aria-label="Ir para, buscar artigo, executar"
-        placeholder="Ir para, buscar artigo, executar…"
-        value={query}
-        onChange={(event) => {
-          setQuery(event.target.value);
-          setActiveIndex(0);
-        }}
-        onKeyDown={onKeyDown}
-      />
+    <Modal label="Ir para" title="Ir para" bare onClose={props.onClose} width={600} className="palette">
+      <div className="palette-head">
+        <Search size={16} aria-hidden="true" />
+        <input
+          autoFocus
+          className="palette-input"
+          role="combobox"
+          aria-expanded="true"
+          aria-controls={LISTBOX_ID}
+          aria-activedescendant={active ? optionId(active) : undefined}
+          aria-label="Ir para, buscar artigo, executar"
+          placeholder="Ir para, buscar artigo, executar…"
+          value={query}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setActiveIndex(0);
+          }}
+          onKeyDown={onKeyDown}
+        />
+        <kbd className="palette-kbd">Esc</kbd>
+      </div>
       {results.length === 0 ? (
         <p className="palette-empty">Nada encontrado para “{query}”.</p>
       ) : (
         <PaletteResults results={results} activeIndex={activeIndex} onPick={pick} onHover={setActiveIndex} />
       )}
+      <div className="palette-foot" aria-hidden="true">
+        <span>
+          <kbd className="palette-kbd">↑</kbd> <kbd className="palette-kbd">↓</kbd> navegar
+        </span>
+        <span>
+          <kbd className="palette-kbd">Enter</kbd> executar
+        </span>
+        <span>
+          <kbd className="palette-kbd">Esc</kbd> fechar
+        </span>
+      </div>
     </Modal>
   );
 };
