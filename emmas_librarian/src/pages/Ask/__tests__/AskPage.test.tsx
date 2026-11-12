@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
 import type {
@@ -150,6 +150,30 @@ describe('AskPage (#53)', () => {
       const drawer = await screen.findByRole('dialog', { name: 'Trecho citado' });
       expect(within(drawer).getByText('sessenta anos de dados')).toBeInTheDocument();
     });
+  });
+
+  it('says which model answers and which one searches the PDFs, with the way to change them', async () => {
+    const service = serviceWith();
+    service.getAiModelConfigs.mockResolvedValue([
+      { id: 1, skill: 'extraction', provider: 'gemini', model_name: 'gemini-2.5-flash', updated_at: '' },
+      { id: 2, skill: 'embeddings', provider: 'ollama', model_name: 'nomic-embed-text', updated_at: '' },
+    ]);
+    await open(service);
+
+    const note = screen.getByLabelText('Modelos usados');
+    expect(note).toHaveTextContent('Responde com gemini-2.5-flash (Google Gemini)');
+    expect(note).toHaveTextContent('Busca nos PDFs com nomic-embed-text (Ollama)');
+    expect(within(note).getByRole('link', { name: 'Mudar nas configurações' })).toHaveAttribute('href', '/settings/ai');
+  });
+
+  it('shows no model when the settings could not be read, instead of naming one it does not know', async () => {
+    const service = serviceWith();
+    service.getAiModelConfigs.mockRejectedValue(new Error('banco bloqueado'));
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await open(service);
+
+    expect(screen.queryByLabelText('Modelos usados')).not.toBeInTheDocument();
+    log.mockRestore();
   });
 
   it('starts asking for a project, and cannot send without one', async () => {

@@ -6,6 +6,7 @@ import { IndexRecalculationModal } from '../../components/modals/IndexRecalculat
 import { useFillWindowHeight } from '../../hooks/useFillWindowHeight';
 import { useNarrowWindow } from '../../hooks/useNarrowWindow';
 import { AskScopeBar } from './AskScopeBar';
+import { AskModelsNote } from './AskModelsNote';
 import { AskSidebar } from './AskSidebar';
 import { AskComposer, AskIndexNotice, AskSourcePanel } from './AskSidePieces';
 import { AskThread, type PickedCitation } from './AskThread';
@@ -102,6 +103,7 @@ export const AskPage: React.FC = () => {
           sending={ask.pending !== null}
           onSend={ask.send}
         />
+        <AskModelsNote />
       </div>
       {source &&
         (narrow ? (

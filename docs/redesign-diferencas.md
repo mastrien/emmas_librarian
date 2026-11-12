@@ -228,6 +228,8 @@ Regra que o autor fixou: a interface fica igual ao board; só se diverge quando 
 - [ ] **Triagem guiada (165)**: a decisão virou uma coluna de 380 px à direita, colada à borda, com os botões coloridos por tipo (ícone redondo, nome e tecla), a nota com a tecla N, "É duplicado…" e a sugestão da IA como cartão roxo; "Anterior", "Desfazer" e "Pular" foram para o rodapé da coluna, com "Decidir já leva ao próximo pendente.". A chave "Ordenar por relevância prevista" com a etiqueta Experimental foi para a direita da barra; a faixa de baixo só aparece quando a ordem tem algo a dizer (erro, vetores a gerar, o que falta). O título da coluna é "Sua decisão" nas duas etapas (a etapa está na barra).
 - [ ] **Chamadas da investigação (161)**: "Copiar" no inspetor vira "Copiado!" por dois segundos (novo; só avisa se a área de transferência aceitou).
 
+- [ ] **Perguntar aos projetos (168)**: uma nota sob a caixa diz qual modelo responde e qual busca nos PDFs (lidos das configurações, com o padrão quando nada foi escolhido) e leva às configurações de IA. O board não mostra isso; acrescentei porque não dava para saber. As chamadas de IA (perguntas, investigação, sugestões, resumos) deixaram de ter limite de 30 segundos: esperam a resposta.
+
 Corrigidos depois do teste no app: a primeira seção das Configurações (Aparência) não aparecia destacada na barra lateral ao entrar pela primeira vez.
 
 Ainda abertos desta rodada: confirmações e erros (não conferi ainda); acesso rápido e investigações da sidebar com muitos itens (proposta: mostrar os mais recentes e "Ver todos"); o PDF que sumiu do leitor depois de dois destaques (não reproduzi, ver o PR).

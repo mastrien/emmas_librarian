@@ -163,6 +163,14 @@ describe('AIService', () => {
     expect((metadata as any).title).toBe('Gemini Title');
   });
 
+  // A 30 s limit cut off slow models (a local one, a long answer): an AI call now waits for its answer.
+  it('asks the model without a time limit', async () => {
+    await aiService.generateSummary(1, 'fake/path.pdf');
+
+    const init = vi.mocked(global.fetch).mock.calls[0][1] as RequestInit;
+    expect(init.signal).toBeUndefined();
+  });
+
   it('should generate summary by calling completion API', async () => {
     const summary = await aiService.generateSummary(1, 'fake/path.pdf');
 
