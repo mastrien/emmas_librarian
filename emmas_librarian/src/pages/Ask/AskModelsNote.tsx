@@ -4,8 +4,8 @@ import { useProjectService } from '../../contexts/ServicesContext';
 import { askModelsText, type AskModelsText } from './askModels';
 
 /**
- * Under the box where the question is typed: which model writes the answer and which one searches the PDFs, with the way
- * to change them. Nothing is shown until the settings are read, and a failure to read them hides the note: it must not
+ * Under the empty page's text, one line each and faint: which model writes the answer, which one searches the PDFs, and
+ * the way to change them. Nothing is shown until the settings are read, and a failure to read them hides the note: it must not
  * name a model it does not know.
  *
  * @example <AskModelsNote />
@@ -25,14 +25,10 @@ export const AskModelsNote: React.FC = () => {
   }, [service]);
   if (!models) return null;
   return (
-    <p className="ask-models" aria-label="Modelos usados">
-      <span>
-        Responde com <strong>{models.answer}</strong>
-      </span>
-      <span>
-        Busca nos PDFs com <strong>{models.search}</strong>
-      </span>
+    <div className="ask-models" role="group" aria-label="Modelos usados">
+      <span>Responde com {models.answer}</span>
+      <span>Busca nos PDFs com {models.search}</span>
       <Link to="/settings/ai">Mudar nas configurações</Link>
-    </p>
+    </div>
   );
 };

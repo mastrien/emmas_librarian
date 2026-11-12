@@ -84,7 +84,13 @@ export const AskPage: React.FC = () => {
           onChange={ask.setScope}
           indexed={ask.coverage?.indexed.length}
         />
-        <AskThread conversation={ask.conversation} pending={ask.pending} picked={picked} onPick={setPicked} />
+        <AskThread
+          conversation={ask.conversation}
+          pending={ask.pending}
+          picked={picked}
+          onPick={setPicked}
+          note={<AskModelsNote />}
+        />
         {shownError && (
           <div className="ask-error" role="alert">
             <AlertCircle size={16} aria-hidden="true" /> {shownError}
@@ -103,7 +109,6 @@ export const AskPage: React.FC = () => {
           sending={ask.pending !== null}
           onSend={ask.send}
         />
-        <AskModelsNote />
       </div>
       {source &&
         (narrow ? (

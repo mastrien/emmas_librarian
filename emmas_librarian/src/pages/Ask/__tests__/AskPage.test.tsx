@@ -176,6 +176,31 @@ describe('AskPage (#53)', () => {
     log.mockRestore();
   });
 
+  it('puts the rings above the question of the empty page, and the models under its text, one to a line', async () => {
+    await open(serviceWith());
+
+    const heading = screen.getByRole('heading', { name: 'O que você quer saber?' });
+    const rings = screen.getByRole('img', { name: 'Anéis animados da Emma' });
+    expect(rings.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const note = screen.getByRole('group', { name: 'Modelos usados' });
+    expect(within(note).getAllByText(/Responde com|Busca nos PDFs com|Mudar nas configurações/)).toHaveLength(3);
+  });
+
+  it('takes the rings and the models away once the first question is sent, keeping one pair beside the answer', async () => {
+    const service = serviceWith();
+    service.sendAskQuestion.mockReturnValue(new Promise(() => undefined));
+    await open(service);
+    await chooseProject('Revisão');
+    await waitFor(() => expect(service.getAskCoverage).toHaveBeenCalledWith([3]));
+    fireEvent.change(box(), { target: { value: 'Qual a amostra?' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Enviar' })).toBeEnabled());
+    await press(screen.getByRole('button', { name: 'Enviar' }));
+
+    expect(screen.queryByRole('heading', { name: 'O que você quer saber?' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Modelos usados' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('img', { name: 'Anéis animados da Emma' })).toHaveLength(1);
+  });
+
   it('starts asking for a project, and cannot send without one', async () => {
     await open(serviceWith());
 
