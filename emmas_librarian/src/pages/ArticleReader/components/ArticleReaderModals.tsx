@@ -129,7 +129,6 @@ export const ArticleReaderModals: React.FC<ArticleReaderModalsProps> = ({
         <AttachPdfModal
           isOpen={isAttachModalOpen}
           articleId={parseInt(id)}
-          articleTitle={article.title}
           onClose={() => setIsAttachModalOpen(false)}
           onAttached={fetchData}
         />

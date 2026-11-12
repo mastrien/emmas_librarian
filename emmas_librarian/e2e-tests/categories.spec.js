@@ -7,9 +7,13 @@ const { IMPORTED_TITLE, copyFixturePdf, importFixturePdf, openReader } = require
 
 /** Creates a category in the "Categorias do Projeto" modal. `options` only for list types. */
 async function addCategory(window, name, typeLabel, options) {
+  // "Nova categoria" opens its form below the list (board 178); once open, the button stays open for the next one.
+  if (!(await window.getByPlaceholder('Nome (ex: Metodologia)').isVisible())) {
+    await window.getByRole('button', { name: 'Nova categoria' }).click();
+  }
   await window.getByPlaceholder('Nome (ex: Metodologia)').fill(name);
   await window
-    .locator('select', { has: window.locator('option', { hasText: 'Lista de Opções' }) })
+    .locator('select', { has: window.locator('option', { hasText: 'Múltipla escolha' }) })
     .first()
     .selectOption({ label: typeLabel });
   if (options) await window.getByPlaceholder(/Opções separadas por vírgula/).fill(options);
@@ -17,12 +21,11 @@ async function addCategory(window, name, typeLabel, options) {
   await expect(window.getByText(name, { exact: true }).first()).toBeVisible();
 }
 
-// Validation of epic #44: the modal was cramped at 500px; it is 720px, and on a 1000px window nothing in it
-// runs past its right edge.
+// Board 178: a narrow window (470px); on a 1000px window nothing in it runs past its right edge.
 async function expectRoomyCategoriesModal(electronApp, window) {
   await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1000, 850));
   const dialog = window.getByRole('dialog', { name: 'Categorias do Projeto' });
-  await expect.poll(async () => Math.round((await dialog.boundingBox()).width)).toBe(720);
+  await expect.poll(async () => Math.round((await dialog.boundingBox()).width)).toBe(470);
   const spill = await dialog.evaluate((node) => {
     const right = node.getBoundingClientRect().right;
     return Math.max(
@@ -62,9 +65,10 @@ test('F-11 Create categories, classify an article in the reader and export the v
     await window.getByTestId('tab-categories').click();
     await window.getByRole('button', { name: 'Gerenciar categorias' }).click();
     await addCategory(window, 'Metodologia', 'Texto');
-    await addCategory(window, 'Tipo de estudo', 'Lista de Opções', 'Qualitativa, Quantitativa');
-    await addCategory(window, 'Revisado', 'Sim/Não');
-    await expect(window.getByText('2 opções: Qualitativa, Quantitativa')).toBeVisible();
+    await addCategory(window, 'Tipo de estudo', 'Lista', 'Qualitativa, Quantitativa');
+    await addCategory(window, 'Revisado', 'Sim ou não');
+    // The line of a category says its type (board 178); the options are seen when it is edited.
+    await expect(window.locator('.categories-type-chip', { hasText: 'Lista' })).toBeVisible();
     await expectRoomyCategoriesModal(electronApp, window);
     await window.getByRole('button', { name: 'Fechar', exact: true }).click();
 

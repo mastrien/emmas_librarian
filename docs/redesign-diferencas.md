@@ -217,7 +217,16 @@ Regra que o autor fixou: a interface fica igual ao board; só se diverge quando 
 - [ ] **Ctrl+K (150)**: linha de busca com lupa e Esc, grupos e barra com as teclas, sem título nem X; "Nesta tela" vem antes dos destinos.
 - [ ] **Campos dos formulários e do acesso rápido**: rótulo de 12,5px em peso médio, como no board. O desenho do Acesso rápido (grupos com alça, "Link ou arquivo", "Novo grupo") continua como antes, só com os campos novos.
 
-Ainda abertos desta rodada: janelas que não consegui abrir na captura (citar, arquivar, anexar PDF, importar, confirmações e erros); acesso rápido e investigações da sidebar com muitos itens (proposta: mostrar os mais recentes e "Ver todos").
+- [ ] **Citar artigo (177)**: um seletor só com ABNT, APA, Vancouver, Harvard, IEEE e BibTeX; a citação numa caixa afundada; "Copiar" fica verde com "Copiado!"; o rodapé diz "Lembra o último formato" e o app passa a lembrar de verdade. Fora do board e mantidos: "Usar et al." (abaixo da caixa) e "Editar metadados" (segunda vista na mesma janela, com Restaurar, Voltar e Salvar; salvar volta à citação). Sem o RIS do board (o app não gera RIS) e sem o botão "Texto simples" (a cópia em HTML já leva o texto puro junto).
+- [ ] **Citação em massa (177)**: mesmo seletor, a lista numerada dentro de uma caixa, "Ordenar por" e "Usar et al."; com BibTeX aparece "Baixar .bib" (novo, salva todas as referências num arquivo). A edição de uma referência continua trocando a lista pelo formulário.
+- [ ] **Arquivar (176)**: pergunta de uma linha, motivo em campo de uma linha (era uma caixa de texto grande), rodapé padrão.
+- [ ] **PDF do artigo (176)**: área tracejada para soltar o PDF (novo: o arquivo solto é anexado), "ou escolha um arquivo", "Buscar em acesso aberto" (novo neste lugar: usa a busca de cópia aberta que já existia na tabela) e "Usar um PDF da biblioteca" (lista com filtro e "Vincular"). O título do artigo saiu do cabeçalho, como no board.
+- [ ] **Categorias (178)**: janela estreita (470 px) com uma linha por categoria: nome, selo do tipo ("Texto", "Sim ou não", "Lista", "Múltipla escolha") e "⋯" com Editar e Excluir (a confirmação continua dentro da linha). "Nova categoria" e "Conjuntos e JSON" (os modelos prontos e a importação, que o board não mostra) abrem embaixo da lista. Sem a alça de arrastar: o app não guarda a ordem das categorias (Arca).
+- [ ] **Acesso rápido (178)**: itens agrupados pelo grupo (a categoria que o app já tinha), cada um com alça, nome, "link externo" ou "arquivo local · nome", e "⋯" (Editar, Remover); lápis para renomear o grupo (renomeia em todos os itens); "+ Link ou arquivo" e "Novo grupo". O formulário de adicionar/editar virou uma segunda vista da janela, com os rótulos do restante do app. Um grupo só existe enquanto tem item: "Novo grupo" abre o formulário já pedindo o nome do grupo.
+
+Corrigidos depois do teste no app: a primeira seção das Configurações (Aparência) não aparecia destacada na barra lateral ao entrar pela primeira vez.
+
+Ainda abertos desta rodada: confirmações e erros (não conferi ainda); acesso rápido e investigações da sidebar com muitos itens (proposta: mostrar os mais recentes e "Ver todos"); o PDF que sumiu do leitor depois de dois destaques (não reproduzi, ver o PR).
 
 ## Fim do redesign
 

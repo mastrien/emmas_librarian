@@ -86,18 +86,14 @@ describe('MassCitationModal', () => {
   it('changes style and format filters and updates output', () => {
     renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
 
-    // Change style to APA
-    const styleSelect = document.body.querySelector('select') as HTMLSelectElement;
-    expect(styleSelect).toBeDefined();
-    fireEvent.change(styleSelect, { target: { value: 'apa' } });
-    expect(styleSelect.value).toBe('apa');
+    fireEvent.click(screen.getByRole('button', { name: 'APA' }));
+    expect(screen.getByRole('button', { name: 'APA' })).toHaveAttribute('aria-pressed', 'true');
+    expect(generateCitation).toHaveBeenCalledWith(expect.any(Object), 'apa', 'html', true);
 
-    // Change format to text
-    const textBtn = screen.getByText('Texto');
-    fireEvent.click(textBtn);
+    fireEvent.click(screen.getByRole('button', { name: 'BibTeX' }));
 
-    // Verify generateCitation is called with proper arguments including default useEtAl=true
-    expect(generateCitation).toHaveBeenCalledWith(expect.any(Object), 'apa', 'text', true);
+    // BibTeX is a format of its own, with the default useEtAl=true
+    expect(generateCitation).toHaveBeenCalledWith(expect.any(Object), 'abnt', 'bibtex', true);
   });
 
   it('toggles the et al checkbox and updates output', () => {
@@ -116,9 +112,7 @@ describe('MassCitationModal', () => {
   it('sorts alphabetically and chronologically', () => {
     renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
 
-    // The second select in controls is the sort filter
-    const selects = document.body.querySelectorAll('select');
-    const sortSelect = selects[1] as HTMLSelectElement;
+    const sortSelect = screen.getByLabelText('Ordenar por') as HTMLSelectElement;
     expect(sortSelect).toBeDefined();
     expect(sortSelect.value).toBe('author'); // default sort is author
 

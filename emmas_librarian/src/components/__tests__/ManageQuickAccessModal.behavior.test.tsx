@@ -54,7 +54,12 @@ const titleInput = () => screen.getByPlaceholderText('Ex: Trello do Projeto, Edi
 const urlInput = () => screen.getByPlaceholderText('https://');
 const form = () => titleInput().closest('form') as HTMLFormElement;
 const rows = () => Array.from(document.querySelectorAll('[draggable]')) as HTMLElement[];
-const rowTitles = () => rows().map((row) => row.querySelector('span[style*="font-weight: 600"]')?.textContent);
+const rowTitles = () => rows().map((row) => row.querySelector('.quick-access-row__title')?.textContent);
+const openAdd = () => fireEvent.click(screen.getByRole('button', { name: /Link ou arquivo/ }));
+const chooseFromMenu = (title: string, action: 'Editar' | 'Remover') => {
+  fireEvent.click(screen.getByRole('button', { name: `Ações de ${title}` }));
+  fireEvent.click(screen.getByRole('menuitem', { name: action }));
+};
 const gaps = () => screen.queryAllByTestId('quick-access-drop-gap');
 
 beforeEach(() => {
@@ -91,13 +96,14 @@ describe('ManageQuickAccessModal lifecycle', () => {
       doc(3, { url: undefined }),
     ]);
 
-    expect(screen.getByText('edital.pdf')).toBeInTheDocument();
-    expect(screen.getByText('modelo.pdf')).toBeInTheDocument();
-    expect(screen.getByText('Documento anexado')).toBeInTheDocument();
+    expect(screen.getByText('arquivo local · edital.pdf')).toBeInTheDocument();
+    expect(screen.getByText('arquivo local · modelo.pdf')).toBeInTheDocument();
+    expect(screen.getByText('arquivo local · anexado')).toBeInTheDocument();
   });
 
   it('suggests existing categories without duplicates', () => {
     renderModal([doc(1, { category: 'A ' }), doc(2, { category: 'A' }), doc(3, { category: ' ' })]);
+    openAdd();
 
     const options = Array.from(document.querySelectorAll('#quick-access-categories option')).map((o) =>
       o.getAttribute('value'),
@@ -110,6 +116,7 @@ describe('ManageQuickAccessModal PDF attachment', () => {
   it('attaches a PDF, disables the url and allows removing it', async () => {
     service.openPdfDialog.mockResolvedValue('C:\\files\\edital.pdf');
     renderModal([]);
+    openAdd();
 
     fireEvent.click(screen.getByRole('button', { name: /Anexar PDF/ }));
 
@@ -117,23 +124,26 @@ describe('ManageQuickAccessModal PDF attachment', () => {
     expect(urlInput()).toBeDisabled();
     expect(screen.getByRole('button', { name: /Trocar PDF/ })).toBeInTheDocument();
     fireEvent.click(screen.getByTitle('Remover PDF'));
-    expect(screen.queryByText(/Arquivo selecionado/)).not.toBeInTheDocument();
+    expect(screen.queryByText('edital.pdf', { exact: false })).not.toBeInTheDocument();
     expect(urlInput()).toBeEnabled();
   });
 
   it('keeps the form unchanged when the dialog is cancelled', async () => {
     service.openPdfDialog.mockResolvedValue(null);
     renderModal([]);
+    openAdd();
 
     fireEvent.click(screen.getByRole('button', { name: /Anexar PDF/ }));
 
     await waitFor(() => expect(service.openPdfDialog).toHaveBeenCalled());
-    expect(screen.queryByText(/Arquivo selecionado/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Anexar PDF/ })).toBeInTheDocument();
+    expect(screen.queryByTitle('Remover PDF')).not.toBeInTheDocument();
   });
 
   it('alerts when the dialog fails', async () => {
     service.openPdfDialog.mockRejectedValue(new Error('no dialog'));
     renderModal([]);
+    openAdd();
 
     fireEvent.click(screen.getByRole('button', { name: /Anexar PDF/ }));
 
@@ -142,6 +152,7 @@ describe('ManageQuickAccessModal PDF attachment', () => {
 
   it('disables attaching while a url is typed', () => {
     renderModal([]);
+    openAdd();
 
     fireEvent.change(urlInput(), { target: { value: 'https://x' } });
 
@@ -151,9 +162,10 @@ describe('ManageQuickAccessModal PDF attachment', () => {
   it('creates a document from a PDF with null url and category', async () => {
     service.openPdfDialog.mockResolvedValue('/f/a.pdf');
     renderModal([]);
+    openAdd();
     fireEvent.change(titleInput(), { target: { value: '  Edital  ' } });
     fireEvent.click(screen.getByRole('button', { name: /Anexar PDF/ }));
-    await screen.findByText(/Arquivo selecionado/);
+    await screen.findByText('a.pdf');
 
     fireEvent.submit(form());
 
@@ -161,6 +173,8 @@ describe('ManageQuickAccessModal PDF attachment', () => {
       expect(service.createProjectDocument).toHaveBeenCalledWith(10, 'Edital', null, '/f/a.pdf', null),
     );
     expect(onDocumentsChanged).toHaveBeenCalled();
+    // Saved: back to the list, and the next new item starts empty.
+    openAdd();
     expect(titleInput()).toHaveValue('');
   });
 });
@@ -168,6 +182,7 @@ describe('ManageQuickAccessModal PDF attachment', () => {
 describe('ManageQuickAccessModal submit validation', () => {
   it('disables submit without a url or file', () => {
     renderModal([]);
+    openAdd();
 
     fireEvent.change(titleInput(), { target: { value: 'T' } });
 
@@ -176,6 +191,7 @@ describe('ManageQuickAccessModal submit validation', () => {
 
   it('requires a non-blank title', () => {
     renderModal([]);
+    openAdd();
     fireEvent.change(titleInput(), { target: { value: '   ' } });
     fireEvent.change(urlInput(), { target: { value: 'https://x' } });
 
@@ -187,7 +203,7 @@ describe('ManageQuickAccessModal submit validation', () => {
 
   it('rejects a document that has both a url and a file', () => {
     renderModal([doc(1, { local_file_path: '/f/a.pdf' })]);
-    fireEvent.click(screen.getByTitle('Editar item'));
+    chooseFromMenu('Doc 1', 'Editar');
 
     fireEvent.submit(form());
 
@@ -198,6 +214,7 @@ describe('ManageQuickAccessModal submit validation', () => {
   it('alerts with the error message when saving fails and keeps the form', async () => {
     service.createProjectDocument.mockRejectedValue(new Error('disk full'));
     renderModal([]);
+    openAdd();
     fireEvent.change(titleInput(), { target: { value: 'T' } });
     fireEvent.change(urlInput(), { target: { value: 'https://x' } });
 
@@ -211,23 +228,33 @@ describe('ManageQuickAccessModal submit validation', () => {
 });
 
 describe('ManageQuickAccessModal editing and deleting', () => {
-  it('cancels editing back to an empty "add" form', () => {
+  it('cancels editing back to the list, and the next new item starts empty', () => {
     renderModal([doc(1, { category: 'C' })]);
-    fireEvent.click(screen.getByTitle('Editar item'));
+    chooseFromMenu('Doc 1', 'Editar');
     expect(titleInput()).toHaveValue('Doc 1');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar Edição' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 
-    expect(screen.getByText('Adicionar Novo')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Link ou arquivo/ })).toBeInTheDocument();
+    openAdd();
     expect(titleInput()).toHaveValue('');
     expect(urlInput()).toHaveValue('');
+  });
+
+  it('opens "Novo grupo" with the group to fill in first', () => {
+    renderModal([doc(1, { category: 'C' })]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Novo grupo' }));
+
+    expect(screen.getByRole('heading', { name: 'Novo grupo' })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Ex: Reuniões, Modelos')).toHaveFocus();
   });
 
   it('does nothing when deletion is not confirmed', async () => {
     dialogs.confirmMessage.mockReturnValue(false);
     renderModal([doc(1)]);
 
-    fireEvent.click(screen.getByTitle('Remover item'));
+    chooseFromMenu('Doc 1', 'Remover');
     // The answer is a promise: check only once the question was answered, or a missing check passes.
     await waitFor(() => expect(dialogs.asked).toHaveLength(1));
     await act(async () => {});
@@ -235,32 +262,20 @@ describe('ManageQuickAccessModal editing and deleting', () => {
     expect(service.deleteProjectDocument).not.toHaveBeenCalled();
   });
 
-  it('deletes the item being edited and resets the form', async () => {
+  it('removes the item after the question is confirmed', async () => {
     renderModal([doc(1), doc(2)]);
-    fireEvent.click(screen.getAllByTitle('Editar item')[1]);
 
-    fireEvent.click(screen.getAllByTitle('Remover item')[1]);
+    chooseFromMenu('Doc 2', 'Remover');
 
     await waitFor(() => expect(onDocumentsChanged).toHaveBeenCalled());
     expect(service.deleteProjectDocument).toHaveBeenCalledWith(2);
-    expect(screen.getByText('Adicionar Novo')).toBeInTheDocument();
-  });
-
-  it('keeps editing another item when deleting a different one', async () => {
-    renderModal([doc(1), doc(2)]);
-    fireEvent.click(screen.getAllByTitle('Editar item')[0]);
-
-    fireEvent.click(screen.getAllByTitle('Remover item')[1]);
-
-    await waitFor(() => expect(onDocumentsChanged).toHaveBeenCalled());
-    expect(titleInput()).toHaveValue('Doc 1');
   });
 
   it('alerts when deletion fails', async () => {
     service.deleteProjectDocument.mockRejectedValue(new Error('locked'));
     renderModal([doc(1)]);
 
-    fireEvent.click(screen.getByTitle('Remover item'));
+    chooseFromMenu('Doc 1', 'Remover');
 
     await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao remover documento: locked'));
     expect(onDocumentsChanged).not.toHaveBeenCalled();
@@ -285,7 +300,7 @@ describe('ManageQuickAccessModal reordering', () => {
 
     expect(dataTransfer.getData('text/plain')).toBe('0');
     expect(dataTransfer.effectAllowed).toBe('move');
-    expect(rows()[0].style.opacity).toBe('0.35');
+    expect(rows()[0]).toHaveClass('is-dragged');
   });
 
   it('shows a gap before the hovered upper half and drops there', async () => {
@@ -339,7 +354,7 @@ describe('ManageQuickAccessModal reordering', () => {
     fireEvent.dragEnd(rows()[0]);
 
     expect(gaps()).toHaveLength(0);
-    expect(rows()[0].style.opacity).toBe('1');
+    expect(rows()[0]).not.toHaveClass('is-dragged');
   });
 
   it('restores the original order when saving the new order fails', async () => {
@@ -354,5 +369,41 @@ describe('ManageQuickAccessModal reordering', () => {
     await waitFor(() => expect(console.error).toHaveBeenCalledWith('Erro ao reordenar documentos:', expect.any(Error)));
     expect(rowTitles()).toEqual(['Doc 1', 'Doc 2', 'Doc 3']);
     expect(onDocumentsChanged).not.toHaveBeenCalled();
+  });
+});
+
+describe('ManageQuickAccessModal groups', () => {
+  const renameFirstGroup = (to: string) => {
+    fireEvent.click(screen.getByRole('button', { name: 'Renomear grupo A' }));
+    const field = screen.getByLabelText('Novo nome do grupo A');
+    fireEvent.change(field, { target: { value: to } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+  };
+
+  it('renames a group by renaming the category of each of its documents', async () => {
+    renderModal([doc(1, { category: 'A' }), doc(2, { category: 'B' }), doc(3, { category: 'A' })]);
+
+    renameFirstGroup('Z');
+
+    await waitFor(() => expect(onDocumentsChanged).toHaveBeenCalled());
+    expect(service.updateProjectDocument).toHaveBeenCalledTimes(2);
+    expect(service.updateProjectDocument).toHaveBeenCalledWith(1, 'Doc 1', 'https://d1.com', null, 'Z');
+    expect(service.updateProjectDocument).toHaveBeenCalledWith(3, 'Doc 3', 'https://d3.com', null, 'Z');
+  });
+
+  it('says when a group could not be renamed', async () => {
+    service.updateProjectDocument.mockRejectedValue(new Error('locked'));
+    renderModal([doc(1, { category: 'A' })]);
+
+    renameFirstGroup('Z');
+
+    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao renomear o grupo: locked'));
+    expect(onDocumentsChanged).not.toHaveBeenCalled();
+  });
+
+  it('lists the documents of a group together, the ones with no group first', () => {
+    renderModal([doc(1, { category: 'A' }), doc(2), doc(3, { category: 'A' })]);
+
+    expect(rowTitles()).toEqual(['Doc 2', 'Doc 1', 'Doc 3']);
   });
 });

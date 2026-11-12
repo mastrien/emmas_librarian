@@ -111,8 +111,8 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
     const details = window.getByRole('complementary', { name: 'Detalhes do artigo' });
     await window.getByTestId('main-articles-table').getByRole('button', { name: 'Article with PDF A' }).click();
     await details.getByRole('button', { name: /Vincular PDF/ }).click();
-    await window.waitForSelector('button:has-text("Upload do Computador")', { timeout: 5000 });
-    await window.click('button:has-text("Upload do Computador")');
+    await window.waitForSelector('button:has-text("escolha um arquivo")', { timeout: 5000 });
+    await window.click('button:has-text("escolha um arquivo")');
     await expect(details.getByRole('link', { name: /Ler PDF/ })).toBeVisible({ timeout: 10000 });
     await details.getByRole('button', { name: 'Fechar detalhes' }).click();
 
@@ -155,8 +155,8 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
     // Link existing PDF from Library to Article B
     await window.getByTestId('main-articles-table').getByRole('button', { name: 'Article with PDF B' }).click();
     await details.getByRole('button', { name: /Vincular PDF/ }).click();
-    await window.waitForSelector('button:has-text("Selecionar da Biblioteca")', { timeout: 5000 });
-    await window.click('button:has-text("Selecionar da Biblioteca")');
+    await window.waitForSelector('button:has-text("Usar um PDF da biblioteca")', { timeout: 5000 });
+    await window.click('button:has-text("Usar um PDF da biblioteca")');
 
     // Choose PDF from list modal — select the specific unique PDF item's link button (AttachPdfModal renders divs, not trs)
     await window.waitForSelector(`div:has-text("${pdfFilename}") button[title="Vincular este PDF"]`, {

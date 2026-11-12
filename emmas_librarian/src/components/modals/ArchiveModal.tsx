@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { ModalFooter } from '../common/ModalFooter';
 import { Button } from '../common/Button';
+import { TextField } from '../common/fields';
+import './modalForms.css';
 
 interface ArchiveModalProps {
   isOpen: boolean;
@@ -11,6 +13,12 @@ interface ArchiveModalProps {
   count?: number;
 }
 
+const reasonLabel = (
+  <>
+    Motivo <span className="modal-optional">(opcional)</span>
+  </>
+);
+
 // Mounted only while open: each archiving starts with an empty reason (it used to keep the last one typed).
 const ArchiveForm: React.FC<Omit<ArchiveModalProps, 'isOpen'>> = ({ onClose, onSubmit, count = 1 }) => {
   const [note, setNote] = useState('');
@@ -19,39 +27,27 @@ const ArchiveForm: React.FC<Omit<ArchiveModalProps, 'isOpen'>> = ({ onClose, onS
     <Modal
       label={many ? `Arquivar ${count} artigos` : 'Arquivar artigo'}
       title={many ? `Arquivar ${count} artigos` : 'Arquivar este artigo?'}
-      description={
-        many
-          ? `O motivo (opcional) vale para todos os ${count} artigos e aparece na exportação.`
-          : 'Ele sai da lista de ativos e volta quando você quiser.'
-      }
       onClose={onClose}
       width={400}
     >
       <form
+        className="modal-form"
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit(note);
         }}
       >
-        <textarea
+        <p className="modal-form__lead">
+          {many
+            ? `O motivo (opcional) vale para todos os ${count} artigos e aparece na exportação.`
+            : 'Ele sai da lista de ativos e volta quando você quiser.'}
+        </p>
+        <TextField
           autoFocus
+          label={reasonLabel}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="ex.: fora do escopo"
-          aria-label="Motivo (opcional)"
-          style={{
-            width: '100%',
-            height: '100px',
-            padding: '0.75rem',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border-color)',
-            outline: 'none',
-            resize: 'none',
-            marginBottom: '1rem',
-            fontFamily: 'inherit',
-            background: 'var(--bg-surface)',
-            color: 'var(--text-main)',
-          }}
         />
         <ModalFooter>
           <Button variant="ghost" onClick={onClose}>
@@ -67,7 +63,7 @@ const ArchiveForm: React.FC<Omit<ArchiveModalProps, 'isOpen'>> = ({ onClose, onS
 };
 
 /**
- * Asks the optional reason for archiving one article, or several at once (the same reason for all).
+ * Asks the optional reason for archiving one article, or several at once (the same reason for all). Board 176.
  *
  * @example <ArchiveModal isOpen={archiving} count={2} onClose={close} onSubmit={(note) => archive(note)} />
  */

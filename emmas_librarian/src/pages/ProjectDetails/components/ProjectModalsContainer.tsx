@@ -157,7 +157,6 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
         <AttachPdfModal
           isOpen={!!modals.attachPdfArticle}
           articleId={modals.attachPdfArticle.id}
-          articleTitle={modals.attachPdfArticle.title}
           onClose={() => modals.setAttachPdfArticle(null)}
           onAttached={fetchData}
         />
