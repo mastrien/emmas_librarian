@@ -47,15 +47,15 @@ const INNER_BORDER = 0.035;
 const RING_MATERIAL = 0;
 const INNER_MATERIAL = 1;
 
-/** Experimento (Emma): os movimentos periódicos (giro em repouso, flutuação, ciclo do anel interno) rodam 2x mais rápido. */
-const PERIODIC_SPEEDUP = 2;
+/** Experimento (Emma): a aceleração periódica do anel interno roda 2x mais rápido. O giro em repouso não mudou. */
+const INNER_BURST_SPEEDUP = 2;
 /** Experimento (Emma): os movimentos do carregamento (pensando, respondendo) rodam 5x mais rápido que os de antes. */
 const LOADING_SPEEDUP = 5;
 /** Quanto um anel acelera, em relação ao giro em repouso, quando é a vez dele. */
 const BURST = 2.5;
 
 const FLOAT_AMPLITUDE = 0.15; // quanto sobe/desce
-const FLOAT_SPEED = 0.8 * PERIODIC_SPEEDUP; // velocidade da flutuação
+const FLOAT_SPEED = 0.8; // velocidade da flutuação
 
 /**
  * Cinta circular: um cilindro oco de parede fina (raio externo `radius`,
@@ -201,21 +201,21 @@ function Ring({
 function Gyroscope({ colors, state = 'idle', speed = 1 }: { colors: RingColors; state?: GyroAiState; speed?: number }) {
   const group = useRef<THREE.Group>(null!);
   const anim = useRef<AnimState>({
-    ringSpeeds: [PERIODIC_SPEEDUP, PERIODIC_SPEEDUP, PERIODIC_SPEEDUP],
+    ringSpeeds: [1, 1, 1],
   });
 
   useFrame(({ clock }, dt) => {
     const a = anim.current;
     const t = clock.elapsedTime;
 
-    // 1. Anel interno: ciclo periódico (10s / PERIODIC_SPEEDUP) -> acelera durante 2s / PERIODIC_SPEEDUP
-    const innerBurst = t % (10 / PERIODIC_SPEEDUP) < 2 / PERIODIC_SPEEDUP ? BURST * PERIODIC_SPEEDUP : PERIODIC_SPEEDUP;
+    // 1. Anel interno: ciclo de 10s -> acelera (BURST x INNER_BURST_SPEEDUP) durante 2s
+    const innerBurst = t % 10 < 2 ? BURST * INNER_BURST_SPEEDUP : 1.0;
 
     // 2. Anel do meio: acelera enquanto o sistema está pensando
-    const middleBurst = state === 'thinking' ? BURST * LOADING_SPEEDUP : PERIODIC_SPEEDUP;
+    const middleBurst = state === 'thinking' ? BURST * LOADING_SPEEDUP : 1.0;
 
     // 3. Anel exterior: acelera enquanto a IA está respondendo/escrevendo
-    const outerBurst = state === 'speaking' ? BURST * LOADING_SPEEDUP : PERIODIC_SPEEDUP;
+    const outerBurst = state === 'speaking' ? BURST * LOADING_SPEEDUP : 1.0;
 
     // Metas suavizadas
     const k = 1 - Math.exp(-dt * 4.5);

@@ -11,6 +11,7 @@ import {
   unverifiedReason,
 } from './askDisplay';
 import { AskRings, AskRingsStill } from './AskRings';
+import { useSpeakingAfterAnswer } from './useSpeakingAfterAnswer';
 
 /** The citation open in the side panel. */
 export type PickedCitation = AskReadCitation;
@@ -109,13 +110,13 @@ const Empty: React.FC<{ note?: React.ReactNode }> = ({ note }) => (
 );
 
 /** An answer with the rings beside it (board 168): alive on the last one, still on the ones before. */
-const Reply: React.FC<{ live: boolean; thinking?: boolean; children: React.ReactNode }> = ({
+const Reply: React.FC<{ live: boolean; state?: 'idle' | 'thinking' | 'speaking'; children: React.ReactNode }> = ({
   live,
-  thinking,
+  state = 'idle',
   children,
 }) => (
   <div className="ask-reply">
-    {live ? <AskRings size="avatar" state={thinking ? 'thinking' : 'idle'} /> : <AskRingsStill />}
+    {live ? <AskRings size="avatar" state={state} /> : <AskRingsStill />}
     <div className="ask-reply__body">{children}</div>
   </div>
 );
@@ -135,6 +136,7 @@ export const AskThread: React.FC<{
 }> = ({ conversation, pending, picked, onPick, note }) => {
   const end = useRef<HTMLDivElement>(null);
   const messages = conversation?.messages ?? [];
+  const speaking = useSpeakingAfterAnswer(pending);
   useEffect(() => {
     end.current?.scrollIntoView?.({ block: 'end' });
   }, [messages.length, pending]);
@@ -144,7 +146,7 @@ export const AskThread: React.FC<{
     <div className="ask-thread" role="log" aria-label="Conversa">
       {messages.map((message) =>
         message.role === 'assistant' && message.answer ? (
-          <Reply key={message.id} live={!pending && message === lastAnswer}>
+          <Reply key={message.id} live={!pending && message === lastAnswer} state={speaking ? 'speaking' : 'idle'}>
             <AnswerBlock answer={message.answer} picked={picked} onPick={onPick} />
           </Reply>
         ) : (
@@ -156,7 +158,7 @@ export const AskThread: React.FC<{
       {pending && (
         <>
           <div className="ask-question">{pending}</div>
-          <Reply live thinking>
+          <Reply live state="thinking">
             {/* The rings are the loading; the words stay for screen readers only. */}
             <div className="visually-hidden" role="status">
               Lendo os PDFs…
