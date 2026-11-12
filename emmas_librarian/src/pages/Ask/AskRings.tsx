@@ -1,5 +1,6 @@
 import React from 'react';
-import { GyroscopeCanvas, type GyroAiState } from '../../components/gyroscope/GyroscopeCanvas';
+import { useMemo } from 'react';
+import { GyroscopeCanvas, renderRingsStill, type GyroAiState } from '../../components/gyroscope/GyroscopeCanvas';
 import { ACCENT_TOKEN, RING_TOKEN, useCanvasColors } from '../../components/gyroscope/useCanvasColors';
 
 interface AskRingsProps {
@@ -25,8 +26,21 @@ export const AskRings: React.FC<AskRingsProps> = ({ size, state = 'idle' }) => {
   );
 };
 
-/** The still rings of the board, for the answers that are not the last: only one canvas at a time is alive. */
-export const AskRingsStill: React.FC = () => (
+/** The size, in pixels, the still frame is drawn at: three times the 28 the avatar shows, so it is sharp. */
+const STILL_PX = 84;
+
+/**
+ * The same rings, still, for the answers that are not the last: a frame of the 3D drawing as an image, so that only one
+ * canvas is alive at a time. Where it cannot be drawn (no WebGL), the board's flat drawing takes its place.
+ */
+export const AskRingsStill: React.FC = () => {
+  const { ring, inner } = useCanvasColors(ACCENT_TOKEN);
+  const src = useMemo(() => (ring && inner ? renderRingsStill({ ring, inner }, STILL_PX) : null), [ring, inner]);
+  if (!src) return <FlatRings />;
+  return <img className="ask-rings ask-rings--avatar" src={src} alt="Anéis da Emma" />;
+};
+
+const FlatRings: React.FC = () => (
   <svg
     className="ask-rings ask-rings--avatar ask-rings--still"
     viewBox="0 0 32 32"

@@ -47,8 +47,15 @@ const INNER_BORDER = 0.035;
 const RING_MATERIAL = 0;
 const INNER_MATERIAL = 1;
 
+/** Experimento (Emma): os movimentos periódicos (giro em repouso, flutuação, ciclo do anel interno) rodam 2x mais rápido. */
+const PERIODIC_SPEEDUP = 2;
+/** Experimento (Emma): os movimentos do carregamento (pensando, respondendo) rodam 5x mais rápido que os de antes. */
+const LOADING_SPEEDUP = 5;
+/** Quanto um anel acelera, em relação ao giro em repouso, quando é a vez dele. */
+const BURST = 2.5;
+
 const FLOAT_AMPLITUDE = 0.15; // quanto sobe/desce
-const FLOAT_SPEED = 0.8; // velocidade da flutuação
+const FLOAT_SPEED = 0.8 * PERIODIC_SPEEDUP; // velocidade da flutuação
 
 /**
  * Cinta circular: um cilindro oco de parede fina (raio externo `radius`,
@@ -61,7 +68,7 @@ const FLOAT_SPEED = 0.8; // velocidade da flutuação
  * interna é dividida em três faixas: as duas orlas finas (cor do anel) e o
  * meio (cor do fundo), cada uma num grupo com seu material.
  */
-function createBandGeometry(radius: number, wall: number, height: number, curve: number, segments: number) {
+export function createBandGeometry(radius: number, wall: number, height: number, curve: number, segments: number) {
   const h = height;
   const steps = 32; // subdivisões ao longo da altura (suavidade da curva)
 
@@ -194,21 +201,21 @@ function Ring({
 function Gyroscope({ colors, state = 'idle', speed = 1 }: { colors: RingColors; state?: GyroAiState; speed?: number }) {
   const group = useRef<THREE.Group>(null!);
   const anim = useRef<AnimState>({
-    ringSpeeds: [1, 1, 1],
+    ringSpeeds: [PERIODIC_SPEEDUP, PERIODIC_SPEEDUP, PERIODIC_SPEEDUP],
   });
 
   useFrame(({ clock }, dt) => {
     const a = anim.current;
     const t = clock.elapsedTime;
 
-    // 1. Anel interno: ciclo de 10s -> acelera para 2.5x durante 2s
-    const innerBurst = t % 10 < 2 ? 2.5 : 1.0;
+    // 1. Anel interno: ciclo periódico (10s / PERIODIC_SPEEDUP) -> acelera durante 2s / PERIODIC_SPEEDUP
+    const innerBurst = t % (10 / PERIODIC_SPEEDUP) < 2 / PERIODIC_SPEEDUP ? BURST * PERIODIC_SPEEDUP : PERIODIC_SPEEDUP;
 
-    // 2. Anel do meio: 2.5x enquanto o sistema está pensando
-    const middleBurst = state === 'thinking' ? 2.5 : 1.0;
+    // 2. Anel do meio: acelera enquanto o sistema está pensando
+    const middleBurst = state === 'thinking' ? BURST * LOADING_SPEEDUP : PERIODIC_SPEEDUP;
 
-    // 3. Anel exterior: 2.5x enquanto a IA está respondendo/escrevendo
-    const outerBurst = state === 'speaking' ? 2.5 : 1.0;
+    // 3. Anel exterior: acelera enquanto a IA está respondendo/escrevendo
+    const outerBurst = state === 'speaking' ? BURST * LOADING_SPEEDUP : PERIODIC_SPEEDUP;
 
     // Metas suavizadas
     const k = 1 - Math.exp(-dt * 4.5);
@@ -279,4 +286,65 @@ export function GyroscopeCanvas({
       <Gyroscope colors={colors} state={state} speed={speed} />
     </Canvas>
   );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Quadro parado                                                      */
+/* ------------------------------------------------------------------ */
+
+let stillRenderer: THREE.WebGLRenderer | null = null;
+const stills = new Map<string, string | null>();
+
+/** Quanto cada anel já girou no quadro parado: uma pose que não é a de partida, para os anéis não ficarem alinhados. */
+const STILL_POSE_SECONDS = 3;
+
+/**
+ * Um quadro dos anéis, parado, como imagem (data URL): o mesmo desenho do canvas animado, desenhado uma vez num
+ * renderizador compartilhado. Serve para os lugares onde há muitos anéis (um por resposta): cada canvas vivo ocupa um
+ * contexto WebGL, e o navegador só guarda uns 16. Sem WebGL (testes), devolve null.
+ *
+ * @example const src = renderRingsStill({ ring: '#4f46e5', inner: '#f8fafc' }, 84); // <img src={src} />
+ */
+export function renderRingsStill(colors: RingColors, px: number): string | null {
+  const key = `${colors.ring}|${colors.inner}|${px}`;
+  const cached = stills.get(key);
+  if (cached !== undefined) return cached;
+  let image: string | null = null;
+  try {
+    stillRenderer ??= new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+    stillRenderer.setPixelRatio(1);
+    stillRenderer.setSize(px, px, false);
+    stillRenderer.setClearColor(0x000000, 0);
+    image = drawStill(stillRenderer, colors);
+  } catch {
+    image = null;
+  }
+  stills.set(key, image);
+  return image;
+}
+
+function drawStill(renderer: THREE.WebGLRenderer, colors: RingColors): string {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+  camera.position.set(0, 0, 5.5);
+  const materials = [
+    new THREE.MeshBasicMaterial({ color: colors.ring, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: colors.inner, side: THREE.DoubleSide }),
+  ];
+  const geometries = RINGS.map((ring) => {
+    const geometry = createBandGeometry(ring.radius, RING_WALL, RING_HEIGHT, RING_CURVE, RING_SEGMENTS);
+    const mesh = new THREE.Mesh(geometry, materials);
+    mesh.rotation.set(
+      ring.tilt[0] + ring.spin[0] * STILL_POSE_SECONDS,
+      ring.tilt[1] + ring.spin[1] * STILL_POSE_SECONDS,
+      ring.tilt[2] + ring.spin[2] * STILL_POSE_SECONDS,
+    );
+    scene.add(mesh);
+    return geometry;
+  });
+  renderer.render(scene, camera);
+  const image = renderer.domElement.toDataURL('image/png');
+  geometries.forEach((geometry) => geometry.dispose());
+  materials.forEach((material) => material.dispose());
+  return image;
 }

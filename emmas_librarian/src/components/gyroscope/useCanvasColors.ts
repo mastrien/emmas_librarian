@@ -13,7 +13,7 @@ export interface CanvasColors {
 }
 
 /**
- * Reads a CSS colour token as the colour it is now. A canvas cannot read `var(--x)` itself, so a throwaway element takes
+ * Reads a CSS colour token as the colour it is now. A canvas cannot read a CSS variable itself, so a throwaway element takes
  * the token as its background and the browser resolves it, whatever the token is made of. An empty answer (no such
  * token, or no styles, as in tests) is `undefined`.
  *
