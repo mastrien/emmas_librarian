@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 
-/** The tokens of the app the rings take their colours from: the tone of the app's side bars for the ring, the page's for its inside. */
+/** The tokens of the app the rings take their colours from: a quiet tone for the ring, the page's for its inside. */
 export const RING_TOKEN = '--bg-sunken';
+/** The accent the person chose, for the rings that stand beside an answer. */
+export const ACCENT_TOKEN = '--color-primary';
 export const INNER_TOKEN = '--bg-main';
 
 export interface CanvasColors {
@@ -26,27 +28,32 @@ export function readToken(root: HTMLElement, token: string): string | undefined 
   return color && color !== 'rgba(0, 0, 0, 0)' ? color : undefined;
 }
 
-export const readCanvasColors = (root: HTMLElement = document.documentElement): CanvasColors => ({
-  ring: readToken(root, RING_TOKEN),
+export const readCanvasColors = (
+  root: HTMLElement = document.documentElement,
+  ringToken: string = RING_TOKEN,
+): CanvasColors => ({
+  ring: readToken(root, ringToken),
   inner: readToken(root, INNER_TOKEN),
   theme: root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light',
 });
 
 /**
  * The colours of the rings, which follow the app: the mode, the tone and the accent are attributes on <html>, and any of
- * them changing reads the tokens again.
+ * them changing reads the tokens again. `ringToken` names the token of the ring: the quiet one by default, or the accent.
  *
- * @example const { ring, inner, theme } = useCanvasColors(); <GyroscopeCanvas ringColor={ring} innerColor={inner} theme={theme} />
+ * @example const { ring, inner, theme } = useCanvasColors(ACCENT_TOKEN); <GyroscopeCanvas ringColor={ring} innerColor={inner} theme={theme} />
  */
 export function useCanvasColors(
+  ringToken: string = RING_TOKEN,
   root: HTMLElement = document.documentElement,
-  read: (root: HTMLElement) => CanvasColors = readCanvasColors,
+  read: (root: HTMLElement, ringToken: string) => CanvasColors = readCanvasColors,
 ): CanvasColors {
-  const [colors, setColors] = useState<CanvasColors>(() => read(root));
+  const [colors, setColors] = useState<CanvasColors>(() => read(root, ringToken));
   useEffect(() => {
-    const observer = new MutationObserver(() => setColors(read(root)));
+    setColors(read(root, ringToken));
+    const observer = new MutationObserver(() => setColors(read(root, ringToken)));
     observer.observe(root, { attributes: true });
     return () => observer.disconnect();
-  }, [root, read]);
+  }, [root, read, ringToken]);
   return colors;
 }

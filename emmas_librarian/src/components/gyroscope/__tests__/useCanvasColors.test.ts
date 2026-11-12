@@ -26,15 +26,20 @@ describe('readCanvasColors', () => {
 });
 
 describe('useCanvasColors', () => {
-  const fakeRead = (root: HTMLElement): CanvasColors => ({
-    ring: root.getAttribute('data-tone') === 'warm' ? 'rgb(1, 1, 1)' : 'rgb(2, 2, 2)',
+  const fakeRead = (root: HTMLElement, token: string): CanvasColors => ({
+    ring:
+      token === '--accent'
+        ? 'rgb(9, 9, 9)'
+        : root.getAttribute('data-tone') === 'warm'
+          ? 'rgb(1, 1, 1)'
+          : 'rgb(2, 2, 2)',
     inner: 'rgb(3, 3, 3)',
     theme: 'light',
   });
 
   it('reads the colours again when an attribute of the page changes', async () => {
     const root = document.createElement('html');
-    const { result } = renderHook(() => useCanvasColors(root, fakeRead));
+    const { result } = renderHook(() => useCanvasColors('--quiet', root, fakeRead));
     expect(result.current.ring).toBe('rgb(2, 2, 2)');
 
     await act(async () => {
@@ -43,5 +48,17 @@ describe('useCanvasColors', () => {
     });
 
     expect(result.current.ring).toBe('rgb(1, 1, 1)');
+  });
+
+  it('takes the ring from the token it is asked for, and changes with it', () => {
+    const root = document.createElement('html');
+    const { result, rerender } = renderHook(({ token }) => useCanvasColors(token, root, fakeRead), {
+      initialProps: { token: '--quiet' },
+    });
+    expect(result.current.ring).toBe('rgb(2, 2, 2)');
+
+    rerender({ token: '--accent' });
+
+    expect(result.current.ring).toBe('rgb(9, 9, 9)');
   });
 });

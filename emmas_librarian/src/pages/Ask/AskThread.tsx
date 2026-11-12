@@ -157,7 +157,8 @@ export const AskThread: React.FC<{
         <>
           <div className="ask-question">{pending}</div>
           <Reply live thinking>
-            <div className="ask-step ask-step--running" role="status">
+            {/* The rings are the loading; the words stay for screen readers only. */}
+            <div className="visually-hidden" role="status">
               Lendo os PDFs…
             </div>
           </Reply>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { GyroscopeCanvas, type GyroAiState } from '../../components/gyroscope/GyroscopeCanvas';
-import { useCanvasColors } from '../../components/gyroscope/useCanvasColors';
+import { ACCENT_TOKEN, RING_TOKEN, useCanvasColors } from '../../components/gyroscope/useCanvasColors';
 
 interface AskRingsProps {
   /** "hero" is the large one above the empty page; "avatar" is the 28 px one beside an answer (board 168). */
@@ -16,7 +16,8 @@ interface AskRingsProps {
  * @example <AskRings size="hero" />
  */
 export const AskRings: React.FC<AskRingsProps> = ({ size, state = 'idle' }) => {
-  const { ring, inner, theme } = useCanvasColors();
+  // The big ones wait quietly in the tone of the side bars; the one beside an answer is in the chosen accent.
+  const { ring, inner, theme } = useCanvasColors(size === 'avatar' ? ACCENT_TOKEN : RING_TOKEN);
   return (
     <div className={`ask-rings ask-rings--${size}`} role="img" aria-label="Anéis animados da Emma">
       <GyroscopeCanvas theme={theme} ringColor={ring} innerColor={inner} state={state} />
