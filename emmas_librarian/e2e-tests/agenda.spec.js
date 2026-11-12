@@ -37,7 +37,7 @@ test.describe('Agenda & Prazos E2E Tests', () => {
     await window.fill('input[placeholder*="SBBD 2026"]', uniqueAcronym);
 
     // Add custom milestone inline without prompt()
-    const addCustomFieldBtn = window.locator('button', { hasText: 'Criar Novo Campo' });
+    const addCustomFieldBtn = window.getByRole('button', { name: 'Prazo', exact: true });
     await expect(addCustomFieldBtn).toBeVisible();
     await addCustomFieldBtn.click();
 

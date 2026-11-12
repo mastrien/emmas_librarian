@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import type { MilestoneFieldType } from '../../../types';
+import { SegmentedControl } from '../../common/SegmentedControl';
+import './venueForm.css';
 
 interface CustomMilestoneFormProps {
   /** Receives the trimmed, non-empty label. */
@@ -8,26 +10,9 @@ interface CustomMilestoneFormProps {
   onCancel: () => void;
 }
 
-const panelStyle: React.CSSProperties = {
-  backgroundColor: 'var(--bg-main)',
-  border: '1px solid var(--border-color)',
-  borderRadius: 'var(--radius-md)',
-  padding: '0.75rem',
-  marginBottom: '1rem',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
-};
-
-const radioLabelStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.25rem',
-  cursor: 'pointer',
-};
-
 /**
- * Inline form (instead of prompt(), which Electron does not support) to name a new deadline and pick its type.
+ * Inline form (instead of prompt(), which Electron does not support) to name a new deadline and pick its type: one
+ * day, or a range.
  *
  * Usage:
  *   {adding && <CustomMilestoneForm onConfirm={add} onMissingLabel={showError} onCancel={() => setAdding(false)} />}
@@ -42,51 +27,32 @@ export const CustomMilestoneForm: React.FC<CustomMilestoneFormProps> = ({ onConf
   };
 
   return (
-    <div style={panelStyle}>
-      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-heading)' }}>
-        Novo Campo Personalizado
-      </span>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem' }}>
+    <div className="venue-custom">
+      <div className="venue-custom__line">
         <input
           type="text"
+          aria-label="Nome do novo prazo"
+          className="input-field"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="Ex: Avaliação de Pares / Câmera Ready"
-          style={{
-            padding: '0.4rem',
-            fontSize: '0.85rem',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-color)',
-            background: 'var(--bg-surface)',
-            color: 'var(--text-main)',
-          }}
+          autoFocus
         />
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.8rem' }}>
-          <label style={radioLabelStyle}>
-            <input type="radio" name="fieldType" checked={type === 'single'} onChange={() => setType('single')} />
-            Pontual
-          </label>
-          <label style={radioLabelStyle}>
-            <input type="radio" name="fieldType" checked={type === 'range'} onChange={() => setType('range')} />
-            Intervalo
-          </label>
-        </div>
+        <SegmentedControl<MilestoneFieldType>
+          label="Tipo do prazo"
+          value={type}
+          onChange={setType}
+          options={[
+            { value: 'single', label: 'Pontual' },
+            { value: 'range', label: 'Intervalo' },
+          ]}
+        />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.25rem' }}>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="btn-secondary"
-          style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-        >
+      <div className="venue-custom__actions">
+        <button type="button" onClick={onCancel} className="btn-ghost">
           Cancelar
         </button>
-        <button
-          type="button"
-          onClick={confirm}
-          className="btn-primary"
-          style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}
-        >
+        <button type="button" onClick={confirm} className="btn-secondary">
           Confirmar Campo
         </button>
       </div>

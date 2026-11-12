@@ -22,14 +22,13 @@ describe('VenueFormModal (TDD)', () => {
       target: { value: 'Conferência de IA' },
     });
 
-    const addCustomBtn = screen.getByText(/Criar Novo Campo/i);
+    const addCustomBtn = screen.getByRole('button', { name: /^Prazo$/ });
     fireEvent.click(addCustomBtn);
 
     const labelInput = screen.getByPlaceholderText(/Ex: Avaliação de Pares/i);
     fireEvent.change(labelInput, { target: { value: 'Período de Revisão' } });
 
-    const radios = screen.getAllByRole('radio');
-    fireEvent.click(radios[1]); // 2nd radio is "Intervalo"
+    fireEvent.click(screen.getByRole('button', { name: 'Intervalo' }));
 
     const confirmFieldBtn = screen.getByText('Confirmar Campo');
     fireEvent.click(confirmFieldBtn);
@@ -55,7 +54,7 @@ describe('VenueFormModal (TDD)', () => {
   it('allows adding a custom field inline without prompt()', () => {
     render(<VenueFormModal isOpen={true} onClose={mockOnClose} onSave={mockOnSave} />);
 
-    fireEvent.click(screen.getByText(/Criar Novo Campo/i));
+    fireEvent.click(screen.getByRole('button', { name: /^Prazo$/ }));
 
     const labelInput = screen.getByPlaceholderText(/Ex: Avaliação de Pares/i);
     fireEvent.change(labelInput, { target: { value: 'Revisão Final' } });

@@ -12,9 +12,7 @@ const renderModal = (props: { initialData?: ScientificVenue | null; initialDate?
 const titleInput = () => screen.getByPlaceholderText('Ex: Simpósio Brasileiro de BD');
 const form = () => titleInput().closest('form') as HTMLFormElement;
 const milestoneCards = () =>
-  screen
-    .getAllByTitle('Remover campo')
-    .map((button) => button.closest('div[style*="flex-direction: column"]') as HTMLElement);
+  screen.getAllByTitle('Remover prazo').map((button) => button.closest('.venue-milestone') as HTMLElement);
 const savedVenue = () => onSave.mock.calls[0][0] as Omit<ScientificVenue, 'id' | 'created_at'>;
 
 const venue: ScientificVenue = {
@@ -72,7 +70,7 @@ describe('VenueFormModal initial state', () => {
     expect(screen.getByText('Editar evento')).toBeInTheDocument();
     expect(titleInput()).toHaveValue('SBBD');
     expect(screen.getByPlaceholderText('Ex: SBBD 2026')).toHaveValue('');
-    expect(screen.getByRole('combobox')).toHaveValue('journal');
+    expect(screen.getByRole('button', { name: 'Periódico / Revista' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByDisplayValue('Prazo')).toBeInTheDocument();
     expect(screen.getByDisplayValue('14:30')).toBeInTheDocument();
   });
@@ -100,7 +98,7 @@ describe('VenueFormModal initial state', () => {
     });
     fireEvent.submit(form());
 
-    expect(screen.getByRole('combobox')).toHaveValue('conference');
+    expect(screen.getByRole('button', { name: 'Congresso / Conferência' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('Adicione e preencha pelo menos um prazo válido para o evento.')).toBeInTheDocument();
   });
 });
@@ -124,25 +122,25 @@ describe('VenueFormModal milestones', () => {
   it('removes a milestone', () => {
     renderModal({ initialDate: '2026-05-05' });
 
-    fireEvent.click(screen.getAllByTitle('Remover campo')[1]);
+    fireEvent.click(screen.getAllByTitle('Remover prazo')[1]);
 
     expect(screen.queryByDisplayValue('Submissão')).not.toBeInTheDocument();
-    expect(screen.getAllByTitle('Remover campo')).toHaveLength(2);
+    expect(screen.getAllByTitle('Remover prazo')).toHaveLength(2);
   });
 
   it('requires a name for a custom field', () => {
     renderModal();
-    fireEvent.click(screen.getByText(/Criar Novo Campo/));
+    fireEvent.click(screen.getByRole('button', { name: /^Prazo$/ }));
 
     fireEvent.click(screen.getByText('Confirmar Campo'));
 
-    expect(screen.getByText('Informe o nome do novo campo/prazo.')).toBeInTheDocument();
-    expect(screen.getAllByTitle('Remover campo')).toHaveLength(3);
+    expect(screen.getByText('Informe o nome do novo prazo.')).toBeInTheDocument();
+    expect(screen.getAllByTitle('Remover prazo')).toHaveLength(3);
   });
 
   it('hides the custom field form on cancel', () => {
     renderModal();
-    fireEvent.click(screen.getByText(/Criar Novo Campo/));
+    fireEvent.click(screen.getByRole('button', { name: /^Prazo$/ }));
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Cancelar' })[0]);
 
@@ -151,16 +149,16 @@ describe('VenueFormModal milestones', () => {
 
   it('starts a custom range with both dates on the initial date', () => {
     renderModal({ initialDate: '2026-05-05' });
-    fireEvent.click(screen.getByText(/Criar Novo Campo/));
+    fireEvent.click(screen.getByRole('button', { name: /^Prazo$/ }));
     fireEvent.change(screen.getByPlaceholderText(/Ex: Avaliação de Pares/), { target: { value: '  Revisão  ' } });
-    fireEvent.click(screen.getByLabelText('Intervalo'));
+    fireEvent.click(screen.getByRole('button', { name: 'Intervalo' }));
 
     fireEvent.click(screen.getByText('Confirmar Campo'));
 
     const card = milestoneCards().at(-1)!;
     expect(within(card).getByDisplayValue('Revisão')).toBeInTheDocument();
     expect(within(card).getAllByDisplayValue('2026-05-05')).toHaveLength(2);
-    expect(within(card).getByText('Intervalo')).toBeInTheDocument();
+    expect(within(card).getByLabelText('Até')).toBeInTheDocument();
   });
 
   it('shows a time input only while "Incluir horário" is checked', () => {
@@ -204,8 +202,8 @@ describe('VenueFormModal submit', () => {
     fireEvent.change(titleInput(), { target: { value: ' SBBD 2 ' } });
     fireEvent.change(screen.getByPlaceholderText('Ex: SBBD 2026'), { target: { value: ' S2 ' } });
     fireEvent.change(screen.getByPlaceholderText('https://...'), { target: { value: ' http://x ' } });
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'workshop' } });
-    fireEvent.click(document.querySelectorAll('button[style*="border-radius: 50%"]')[3]);
+    fireEvent.click(screen.getByRole('button', { name: 'Workshop' }));
+    fireEvent.click(screen.getAllByRole('button', { name: /^Cor / })[3]);
 
     fireEvent.submit(form());
 
