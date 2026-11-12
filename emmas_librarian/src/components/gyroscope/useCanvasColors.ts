@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 /** The tokens of the app the rings take their colours from: a quiet tone for the ring, the page's for its inside. */
 export const RING_TOKEN = '--bg-sunken';
@@ -48,12 +48,14 @@ export function useCanvasColors(
   root: HTMLElement = document.documentElement,
   read: (root: HTMLElement, ringToken: string) => CanvasColors = readCanvasColors,
 ): CanvasColors {
-  const [colors, setColors] = useState<CanvasColors>(() => read(root, ringToken));
+  // The page changing only says "read again"; the colours themselves are worked out from the page and the token.
+  const [changes, setChanges] = useState(0);
   useEffect(() => {
-    setColors(read(root, ringToken));
-    const observer = new MutationObserver(() => setColors(read(root, ringToken)));
+    const observer = new MutationObserver(() => setChanges((count) => count + 1));
     observer.observe(root, { attributes: true });
     return () => observer.disconnect();
-  }, [root, read, ringToken]);
+  }, [root]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- "changes" is the reason to read again, not a value used here
+  const colors = useMemo(() => read(root, ringToken), [root, read, ringToken, changes]);
   return colors;
 }
