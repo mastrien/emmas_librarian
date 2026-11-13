@@ -172,7 +172,7 @@ describe('MassCitationModal .bib download', () => {
     fireEvent.click(screen.getByRole('button', { name: /Baixar \.bib/ }));
 
     await waitFor(() =>
-      expect(dialogs.informMessage).toHaveBeenCalledWith(expect.stringContaining('Erro ao salvar o arquivo .bib')),
+      expect(dialogs.informed).toContainEqual(expect.objectContaining({ message: 'O arquivo não foi gravado.' })),
     );
   });
 });

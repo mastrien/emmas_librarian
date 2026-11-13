@@ -1,9 +1,9 @@
 import React from 'react';
+import { failureNotice } from '../../common/dialogs/failureNotice';
 import { Link } from 'react-router-dom';
 import { Upload, Eye, Trash2 } from 'lucide-react';
 import type { Article } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
-import { describeError } from '../../../utils/describeError';
 import { sectionCaptionStyle, sectionStyle } from './sectionStyles';
 import { useDialogs } from '../../common/dialogs/DialogProvider';
 import { UNLINK_PDF_QUESTION } from '../../common/dialogs/unlinkPdfQuestion';
@@ -46,7 +46,7 @@ export const ArticlePdfSection: React.FC<ArticlePdfSectionProps> = ({
       await projectService.unlinkPdf(article.id);
       onArticleUpdated?.();
     } catch (err) {
-      await inform({ title: 'Erro ao desvincular', message: `Erro ao desvincular o PDF: ${describeError(err)}` });
+      await inform(failureNotice('Não conseguimos desvincular o PDF', 'O PDF continua ligado ao artigo.', err));
     }
   };
 

@@ -188,7 +188,11 @@ describe('EditArticleModal submit', () => {
 
     submit();
 
-    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith(`Erro ao editar artigo: ${message}`));
+    await waitFor(() =>
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({ message: 'As alterações não foram salvas.', details: message }),
+      ),
+    );
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Cancelar' })).toBeEnabled();
   });
@@ -282,7 +286,11 @@ describe('EditArticleModal AI fill', () => {
 
     fireEvent.click(aiButton());
 
-    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith(`Erro ao extrair metadados: ${message}`));
+    await waitFor(() =>
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({ message: 'A IA não conseguiu ler o artigo.', details: message }),
+      ),
+    );
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

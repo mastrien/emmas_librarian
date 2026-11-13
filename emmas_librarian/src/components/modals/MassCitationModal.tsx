@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { failureNotice } from '../common/dialogs/failureNotice';
 import { generateCitation } from '../../services/citationService';
 import { Article } from '../../types';
 import {
@@ -10,7 +11,6 @@ import {
 import { useCitationCopy } from '../common/citation/useCitationCopy';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { useDialogs } from '../common/dialogs/DialogProvider';
-import { describeError } from '../../utils/describeError';
 import { BIB_FILE_NAME, bibFileContent } from './citation/bibFile';
 import { MassCitationFooter } from './massCitation/MassCitationFooter';
 import './modalForms.css';
@@ -89,7 +89,7 @@ export function MassCitationModal({ isOpen, onClose, articles, onArticlesUpdated
     try {
       await service.saveExportedFile(bibFileContent(citations.map((c) => c.text)), BIB_FILE_NAME);
     } catch (err) {
-      await inform({ title: 'Erro ao exportar', message: `Erro ao salvar o arquivo .bib: ${describeError(err)}` });
+      await inform(failureNotice('Não conseguimos salvar o arquivo .bib', 'O arquivo não foi gravado.', err));
     }
   };
 

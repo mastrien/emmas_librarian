@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { failureNotice } from '../common/dialogs/failureNotice';
 import { Download, Link2 } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
-import { describeError } from '../../utils/describeError';
 import { openAccessMessage } from '../../pages/ProjectDetails/components/articles/openAccessText';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
@@ -71,7 +70,7 @@ const AttachPdfModalContent: React.FC<AttachPdfModalProps> = ({ articleId, onClo
       if (outcome.status === 'downloaded') return attached();
       await inform({ title: 'Acesso aberto', message: openAccessMessage(outcome).text });
     } catch (err) {
-      await inform({ title: 'Acesso aberto', message: `Não foi possível procurar: ${describeError(err)}` });
+      await inform(failureNotice('Não conseguimos procurar o PDF', 'A busca em acesso aberto não terminou.', err));
     } finally {
       setSearching(false);
     }

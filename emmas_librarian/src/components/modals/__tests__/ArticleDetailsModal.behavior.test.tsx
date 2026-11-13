@@ -139,6 +139,10 @@ describe('ArticleDetailsModal sections', () => {
 
     fireEvent.click(screen.getByText('Desvincular PDF'));
 
-    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao desvincular o PDF: locked'));
+    await waitFor(() =>
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({ message: 'O PDF continua ligado ao artigo.', details: 'locked' }),
+      ),
+    );
   });
 });

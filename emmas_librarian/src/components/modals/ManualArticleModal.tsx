@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
+import { failureNotice } from '../common/dialogs/failureNotice';
 import { X as XIcon, Upload, Loader2, Plus } from 'lucide-react';
 import type { Article } from '../../types';
 import { useProjectService } from '../../contexts/ServicesContext';
-import { describeError } from '../../utils/describeError';
 import { fileNameFromPath } from '../../utils/formatters';
 import { LabeledField } from '../common/LabeledField';
 import { AUTHORS_SEPARATOR_HINT } from '../common/articleFieldHints';
@@ -99,7 +99,7 @@ const ManualArticleForm: React.FC<Omit<ManualArticleModalProps, 'isOpen'>> = ({ 
       await onSubmit(articleFromForm(fields), filePath);
       onClose();
     } catch (err: unknown) {
-      await inform({ title: 'Erro ao adicionar', message: `Erro ao adicionar artigo: ${describeError(err)}` });
+      await inform(failureNotice('Não conseguimos adicionar o artigo', 'O artigo não entrou no projeto.', err));
     } finally {
       setSubmitting(false);
     }

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { failureNotice } from '../common/dialogs/failureNotice';
 import { Plus } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { ProjectDocument } from '../../types';
-import { describeError } from '../../utils/describeError';
 import { reorderedItems } from './quickAccess/documentReorder';
 import { inGroupOrder } from './quickAccess/groupDocuments';
 import { useDocumentDrag } from './quickAccess/useDocumentDrag';
@@ -117,7 +117,7 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({
       await projectService.deleteProjectDocument(id);
       onDocumentsChanged();
     } catch (err: unknown) {
-      await inform({ title: 'Erro ao remover', message: `Erro ao remover documento: ${describeError(err)}` });
+      await inform(failureNotice('Não conseguimos remover o documento', 'O documento continua no acesso rápido.', err));
     }
   };
 
@@ -130,7 +130,7 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({
       }
       onDocumentsChanged();
     } catch (err: unknown) {
-      await inform({ title: 'Erro ao renomear', message: `Erro ao renomear o grupo: ${describeError(err)}` });
+      await inform(failureNotice('Não conseguimos renomear o grupo', 'O grupo manteve o nome.', err));
     }
   };
 

@@ -220,7 +220,11 @@ describe('ManageQuickAccessModal submit validation', () => {
 
     fireEvent.submit(form());
 
-    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao salvar documento: disk full'));
+    await waitFor(() =>
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({ message: 'O documento não foi salvo.', details: 'disk full' }),
+      ),
+    );
     expect(titleInput()).toHaveValue('T');
     expect(onDocumentsChanged).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Adicionar' })).toBeEnabled();
@@ -277,7 +281,11 @@ describe('ManageQuickAccessModal editing and deleting', () => {
 
     chooseFromMenu('Doc 1', 'Remover');
 
-    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao remover documento: locked'));
+    await waitFor(() =>
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({ message: 'O documento continua no acesso rápido.', details: 'locked' }),
+      ),
+    );
     expect(onDocumentsChanged).not.toHaveBeenCalled();
   });
 });
@@ -397,7 +405,11 @@ describe('ManageQuickAccessModal groups', () => {
 
     renameFirstGroup('Z');
 
-    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao renomear o grupo: locked'));
+    await waitFor(() =>
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({ message: 'O grupo manteve o nome.', details: 'locked' }),
+      ),
+    );
     expect(onDocumentsChanged).not.toHaveBeenCalled();
   });
 

@@ -1,8 +1,8 @@
 import React from 'react';
+import { failureNotice } from '../../../../components/common/dialogs/failureNotice';
 import { Download } from 'lucide-react';
 import { useDialogs } from '../../../../components/common/dialogs/DialogProvider';
 import { useProjectService } from '../../../../contexts/ServicesContext';
-import { describeError } from '../../../../utils/describeError';
 import { EXPORT_DONE_TITLE, EXPORT_FAILED_TITLE } from '../../../../utils/exportWithFeedback';
 import type { Article } from '../../../../types';
 import { chartsSvg } from './chartExport';
@@ -20,7 +20,7 @@ export const ExportChartsButton: React.FC<{ articles: Article[] }> = ({ articles
       const saved = await service.saveExportedFile(chartsSvg(articles), 'graficos.svg');
       if (saved) await inform({ title: EXPORT_DONE_TITLE, message: 'Gráficos exportados em SVG.' });
     } catch (err) {
-      await inform({ title: EXPORT_FAILED_TITLE, message: `Erro ao exportar os gráficos: ${describeError(err)}` });
+      await inform(failureNotice(EXPORT_FAILED_TITLE, 'Os gráficos não foram exportados.', err));
     }
   };
   return (
