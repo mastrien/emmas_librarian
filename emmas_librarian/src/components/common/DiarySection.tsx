@@ -1,3 +1,4 @@
+import { DIARY_CONFLICT } from './diary/useDiaryPageSave';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { DiaryEntry } from '../../types';
@@ -83,7 +84,11 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
 
   const handleToday = async () => {
     if (!entries.some((e) => e.entry_date === todayStr)) {
-      await projectService.saveDiaryEntry(projectId, todayStr, '', null);
+      // The list may be older than the database: today's page can already exist (made in another window). The
+      // database then refuses the empty write; the page is there, so it is read again and opened.
+      await projectService.saveDiaryEntry(projectId, todayStr, '', null).catch((err: unknown) => {
+        if ((err as { code?: string } | null)?.code !== DIARY_CONFLICT) throw err;
+      });
       await reload();
     }
     setSelectedDate(todayStr);

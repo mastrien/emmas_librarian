@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { DialogProvider, informToneFromTitle, useDialogs, type Dialogs } from '../DialogProvider';
 
 // Hands the test the dialogs of the provider it is rendered in.
@@ -87,6 +87,19 @@ describe('DialogProvider technical details (board 181)', () => {
 
     expect(writeText).toHaveBeenCalledWith("ENOENT: no such file or directory, open 'a.pdf'");
     expect(await within(dialog).findByRole('button', { name: 'Copiado' })).toBeInTheDocument();
+  });
+
+  it('does not say "Copiado" when the clipboard refuses', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    Object.assign(navigator, { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('negado')) } });
+    const dialog = await openWithDetails();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Copiar detalhes' }));
+
+    await waitFor(() => expect(consoleError).toHaveBeenCalled());
+    expect(within(dialog).getByRole('button', { name: 'Copiar detalhes' })).toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: 'Copiado' })).not.toBeInTheDocument();
+    consoleError.mockRestore();
   });
 
   it('shows no details block when the notice has none', async () => {

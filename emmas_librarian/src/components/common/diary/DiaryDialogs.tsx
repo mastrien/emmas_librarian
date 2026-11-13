@@ -71,6 +71,19 @@ const VersionButton: React.FC<{ on: boolean; head: string; note: string; onSelec
   </button>
 );
 
+/** How many versions of a page the database keeps (HistoryRepository trims the older ones). */
+export const DIARY_VERSIONS_KEPT = 10;
+
+/**
+ * What the oldest version in the list is called: "primeira versão" only while the list is not trimmed; once the
+ * database holds its limit, older ones may have been dropped and it is just the oldest that is still kept.
+ *
+ * @example oldestNote(3) // 'primeira versão'; oldestNote(10) // 'mais antiga guardada'
+ */
+export function oldestNote(count: number): string {
+  return count >= DIARY_VERSIONS_KEPT ? 'mais antiga guardada' : 'primeira versão';
+}
+
 /**
  * The versions of a diary page (board 180): the list at the left, the current page first, each version with what
  * differs from the current text; at the right the chosen version with that difference marked. The current text becomes
@@ -110,7 +123,7 @@ export const DiaryHistoryDialog: React.FC<DiaryHistoryDialogProps> = ({
               key={v.id}
               on={chosen === String(v.id)}
               head={versionStamp(v.updated_at)}
-              note={v === oldest ? 'primeira versão' : changeSummary(v.content, current)}
+              note={v === oldest ? oldestNote(versions.length) : changeSummary(v.content, current)}
               onSelect={() => setChosen(String(v.id))}
             />
           ))}

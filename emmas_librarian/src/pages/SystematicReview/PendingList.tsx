@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { isTextEntry } from '../../utils/isTextEntry';
+import { keyBelongsElsewhere } from '../ProjectDetails/components/articles/keyboardTargets';
 import { Check, CircleHelp, X } from 'lucide-react';
 import { QUICK_KINDS, quickLabel, type QuickKind } from './screeningFilter';
 import type { ScreeningLabel } from '../../types';
@@ -22,11 +22,20 @@ interface PendingListProps {
  * The selection mode of the pending list. Only rows still pending count as selected, so a decided article leaves the
  * selection by itself. The page owns it, because its button sits in the bar with the statuses (board 164).
  *
- * @example const selection = useSelection(view.pending); <PendingList rows={view.pending} selection={selection} … />
+ * It starts over when `resetKey` changes (the status or the stage on screen), so ids picked in one list do not carry
+ * to another where the same articles are pending too.
+ *
+ * @example const selection = useSelection(view.pending, 'pending:title'); <PendingList rows={view.pending} selection={selection} … />
  */
-export function useSelection(rows: ReviewRow[]) {
+export function useSelection(rows: ReviewRow[], resetKey: string) {
   const [selecting, setSelecting] = useState(false);
   const [ids, setIds] = useState<Set<number>>(new Set());
+  const [seenKey, setSeenKey] = useState(resetKey);
+  if (seenKey !== resetKey) {
+    setSeenKey(resetKey);
+    setSelecting(false);
+    setIds(new Set());
+  }
   const selected = rows.filter((r) => ids.has(r.article.id));
   const toggle = (id: number) =>
     setIds((prev) => {
@@ -87,14 +96,13 @@ const BatchBar: React.FC<{ selection: Selection; labels: ScreeningLabel[]; onPic
 /** The key that picks each quick decision while the pointer is over a row (board 164). */
 export const QUICK_KEYS: Record<QuickKind, string> = { include: '1', maybe: '2', exclude: '3' };
 
-const isTyping = isTextEntry;
-
-// 1, 2 and 3 decide the row under the pointer, as the keys on the buttons say; typing in a field is left alone.
+// 1, 2 and 3 decide the row under the pointer, as the keys on the buttons say; typing in a field, a window or menu
+// open over the page, and a key held down (which repeats) are left alone.
 function useQuickKeys(row: ReviewRow | null, labels: ScreeningLabel[], onPick: PendingListProps['onPick']) {
   useEffect(() => {
     if (!row) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+      if (e.repeat || keyBelongsElsewhere(e)) return;
       const kind = QUICK_KINDS.find((q) => QUICK_KEYS[q.kind] === e.key)?.kind;
       const target = kind && quickLabel(labels, kind);
       if (target) onPick([row], target);
@@ -149,7 +157,10 @@ const QuickDecision: React.FC<{ row: ReviewRow; labels: ScreeningLabel[]; onPick
 export const PendingList: React.FC<PendingListProps> = ({ rows, selection, labels, onPick }) => {
   // "Selecionar todos" takes every pending article, not only this page.
   const paged = usePagedRows(rows, REVIEW_PAGE_SIZE);
-  const [hovered, setHovered] = useState<ReviewRow | null>(null);
+  // The row under the pointer is kept by its article id and read from the current rows: a row that was decided leaves
+  // the list without a mouseleave, and a stale object would be decided again by the next key (review of PR #187).
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const hovered = rows.find((r) => r.article.id === hoveredId) ?? null;
   useQuickKeys(selection.selecting ? null : hovered, labels, onPick);
   return (
     <>
@@ -159,7 +170,9 @@ export const PendingList: React.FC<PendingListProps> = ({ rows, selection, label
           <ReviewArticleRow
             key={row.article.id}
             row={row}
-            onHover={(over) => setHovered((current) => (over ? row : current === row ? null : current))}
+            onHover={(over) =>
+              setHoveredId((current) => (over ? row.article.id : current === row.article.id ? null : current))
+            }
             selection={
               selection.selecting
                 ? { checked: selection.isSelected(row.article.id), onToggle: () => selection.toggle(row.article.id) }

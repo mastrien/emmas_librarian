@@ -3,8 +3,8 @@ import { failureNotice } from '../common/dialogs/failureNotice';
 import { Plus } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { ProjectDocument } from '../../types';
-import { reorderedItems } from './quickAccess/documentReorder';
-import { inGroupOrder } from './quickAccess/groupDocuments';
+
+import { inGroupOrder, reorderedInGroups } from './quickAccess/groupDocuments';
 import { useDocumentDrag } from './quickAccess/useDocumentDrag';
 import { useQuickAccessForm } from './quickAccess/useQuickAccessForm';
 import { QuickAccessDocumentList } from './quickAccess/QuickAccessDocumentList';
@@ -65,7 +65,7 @@ export const ManageQuickAccessModal: React.FC<ManageQuickAccessModalProps> = ({
   const ordered = useMemo(() => inGroupOrder(localDocs), [localDocs]);
 
   const move = async (sourceIndex: number, dropIndex: number | null) => {
-    const updated = reorderedItems(ordered, sourceIndex, dropIndex);
+    const updated = reorderedInGroups(ordered, sourceIndex, dropIndex);
     if (!updated) return;
     setLocalDocs(updated);
     try {

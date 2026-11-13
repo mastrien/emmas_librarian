@@ -192,7 +192,7 @@ const ReviewBody: React.FC<ReviewBodyProps> = ({ projectId, screening, stage, on
   const { counts } = screening.view;
   const [stored, setFilter] = useSessionState<ScreeningFilter | null>(`review.${projectId}.filter`, null);
   const filter = stored ?? defaultFilter(counts);
-  const selection = useSelection(screening.view.pending);
+  const selection = useSelection(screening.view.pending, `${filter}:${stage}`);
   const decided = counts.include + counts.maybe + counts.exclude;
   const total = decided + counts.pending;
   return (

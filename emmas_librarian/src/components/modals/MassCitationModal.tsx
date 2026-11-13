@@ -11,6 +11,7 @@ import {
 import { useCitationCopy } from '../common/citation/useCitationCopy';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { useDialogs } from '../common/dialogs/DialogProvider';
+import { EXPORT_DONE_TITLE } from '../../utils/exportWithFeedback';
 import { BIB_FILE_NAME, bibFileContent } from './citation/bibFile';
 import { MassCitationFooter } from './massCitation/MassCitationFooter';
 import './modalForms.css';
@@ -87,7 +88,10 @@ export function MassCitationModal({ isOpen, onClose, articles, onArticlesUpdated
 
   const downloadBib = async () => {
     try {
-      await service.saveExportedFile(bibFileContent(citations.map((c) => c.text)), BIB_FILE_NAME);
+      const saved = await service.saveExportedFile(bibFileContent(citations.map((c) => c.text)), BIB_FILE_NAME);
+      // A cancelled save dialog needs no message; a saved file gets the same confirmation as every other export.
+      if (saved)
+        await inform({ title: EXPORT_DONE_TITLE, message: 'Referências salvas em um arquivo .bib.', tone: 'ok' });
     } catch (err) {
       await inform(failureNotice('Não conseguimos salvar o arquivo .bib', 'O arquivo não foi gravado.', err));
     }

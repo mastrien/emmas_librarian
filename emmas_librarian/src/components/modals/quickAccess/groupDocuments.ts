@@ -1,4 +1,5 @@
 import type { ProjectDocument } from '../../../types';
+import { reorderedItems } from './documentReorder';
 
 export interface DocumentGroup {
   /** The group's name; null for the documents that have none. */
@@ -30,3 +31,21 @@ export function groupDocuments(documents: ProjectDocument[]): DocumentGroup[] {
  */
 export const inGroupOrder = (documents: ProjectDocument[]): ProjectDocument[] =>
   groupDocuments(documents).flatMap((group) => group.documents);
+
+/**
+ * The documents after a drag, or null when the drag changes nothing or cannot be shown: the list is drawn by group, so
+ * a document dropped in the middle of another group would be saved there and drawn back in its own (review of PR #187).
+ * Dragging inside a group, or to the edge between two groups, is kept.
+ *
+ * @example reorderedInGroups(inGroupOrder(docs), 0, 2) // the first document moved down inside its group
+ */
+export function reorderedInGroups(
+  ordered: ProjectDocument[],
+  sourceIndex: number,
+  dropIndex: number | null,
+): ProjectDocument[] | null {
+  const updated = reorderedItems(ordered, sourceIndex, dropIndex);
+  if (!updated) return null;
+  const drawn = inGroupOrder(updated);
+  return drawn.every((d, i) => d.id === updated[i].id) ? updated : null;
+}

@@ -23,8 +23,11 @@ const isPdf = (file: File): boolean => file.name.toLowerCase().endsWith('.pdf');
 export const PdfDropZone: React.FC<PdfDropZoneProps> = ({ onPick, onChoose, onRejected, disabled }) => {
   const [over, setOver] = useState(false);
 
+  // The window sits inside the project page, and a drop bubbles through the portal to the page's own handler, which
+  // would import the same PDF as a new article (found in the review of PR #187). The zone keeps its events to itself.
   const drop = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setOver(false);
     const file = e.dataTransfer.files[0];
     if (!file || disabled) return;
@@ -37,6 +40,7 @@ export const PdfDropZone: React.FC<PdfDropZoneProps> = ({ onPick, onChoose, onRe
       className={`pdf-drop${over ? ' is-over' : ''}`}
       onDragOver={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         setOver(true);
       }}
       onDragLeave={() => setOver(false)}

@@ -224,6 +224,43 @@ describe('SystematicReviewPage (#49)', () => {
     await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([4], MAYBE, 'title', null));
   });
 
+  // Review of PR #187: a decided row leaves the list without a mouseleave, and the next key press decided it again.
+  it('does not decide a row that already left the list when the key is pressed again with the pointer still', async () => {
+    const service = screeningService([reviewArticle(3, 'ConvLSTM'), reviewArticle(4, 'GPM')]);
+    renderReview(service);
+    await screen.findByText('GPM');
+    fireEvent.mouseEnter(pendingRow('GPM'));
+
+    fireEvent.keyDown(window, { key: '1' });
+    await waitFor(() => expect(screen.queryByText('GPM')).not.toBeInTheDocument());
+    fireEvent.keyDown(window, { key: '1' });
+
+    expect(service.decideScreening).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a key held down, which would repeat the decision', async () => {
+    const service = screeningService([reviewArticle(3, 'ConvLSTM')]);
+    renderReview(service);
+    await screen.findByText('ConvLSTM');
+    fireEvent.mouseEnter(pendingRow('ConvLSTM'));
+
+    fireEvent.keyDown(window, { key: '1', repeat: true });
+
+    expect(service.decideScreening).not.toHaveBeenCalled();
+  });
+
+  it('leaves the selection mode when the stage changes, instead of carrying the ids to the other stage', async () => {
+    renderReview(screeningService([reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')]));
+    fireEvent.click(await screen.findByRole('button', { name: 'Selecionar vários' }));
+    expect(screen.getByRole('region', { name: 'Ações para os artigos selecionados' })).toBeInTheDocument();
+
+    showStage('Texto completo');
+    showStage('Título e resumo');
+
+    expect(screen.queryByRole('region', { name: 'Ações para os artigos selecionados' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Selecionar vários' })).toBeInTheDocument();
+  });
+
   it('ignores the keys when no line is under the pointer, or while typing', async () => {
     const service = screeningService([reviewArticle(3, 'ConvLSTM')]);
     renderReview(service);

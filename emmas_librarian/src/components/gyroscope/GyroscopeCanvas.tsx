@@ -345,9 +345,12 @@ function drawStill(renderer: THREE.WebGLRenderer, colors: RingColors): string {
     scene.add(mesh);
     return geometry;
   });
-  renderer.render(scene, camera);
-  const image = renderer.domElement.toDataURL('image/png');
-  geometries.forEach((geometry) => geometry.dispose());
-  materials.forEach((material) => material.dispose());
-  return image;
+  // Disposed even when the render throws halfway (found in the review of PR #187): the shared renderer outlives this call.
+  try {
+    renderer.render(scene, camera);
+    return renderer.domElement.toDataURL('image/png');
+  } finally {
+    geometries.forEach((geometry) => geometry.dispose());
+    materials.forEach((material) => material.dispose());
+  }
 }

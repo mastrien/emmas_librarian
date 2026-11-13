@@ -56,6 +56,13 @@ export function useDiaryPageSave({
   const baseline = useRef(initialContent);
   const pending = useRef<{ text: string; timer: ReturnType<typeof setTimeout> } | null>(null);
   const blocked = useRef(false);
+  // Writes go one after the other: a write sent while another is in flight would still carry the old baseline and the
+  // database would report a conflict that is only this page's own earlier save (found in the review of PR #187).
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  const inOrder = useCallback((job: () => Promise<void>) => {
+    queue.current = queue.current.then(job);
+    return queue.current;
+  }, []);
   const [status, setStatus] = useState<DiarySaveStatus>(IDLE);
   useEffect(() => {
     serviceRef.current = service;
@@ -68,20 +75,23 @@ export function useDiaryPageSave({
   }, []);
 
   const write = useCallback(
-    async (text: string) => {
+    (text: string) => {
       setStatus((s) => ({ ...s, saving: true }));
-      try {
-        await serviceRef.current.saveDiaryEntry(projectId, date, text, baseline.current);
-        baseline.current = text;
-        onSavedRef.current(date, text);
-        setStatus({ saving: false, dirty: pending.current !== null, savedAt: clockTime(), problem: null });
-      } catch (err) {
-        blocked.current = isConflict(err);
-        if (!blocked.current) console.error('Failed to save diary page:', err);
-        setStatus((s) => ({ ...s, saving: false, problem: blocked.current ? 'conflict' : 'failed' }));
-      }
+      return inOrder(async () => {
+        if (blocked.current) return;
+        try {
+          await serviceRef.current.saveDiaryEntry(projectId, date, text, baseline.current);
+          baseline.current = text;
+          onSavedRef.current(date, text);
+          setStatus({ saving: false, dirty: pending.current !== null, savedAt: clockTime(), problem: null });
+        } catch (err) {
+          blocked.current = isConflict(err);
+          if (!blocked.current) console.error('Failed to save diary page:', err);
+          setStatus((s) => ({ ...s, saving: false, problem: blocked.current ? 'conflict' : 'failed' }));
+        }
+      });
     },
-    [projectId, date],
+    [projectId, date, inOrder],
   );
 
   const flush = useCallback(async () => {
@@ -120,11 +130,16 @@ export function useDiaryPageSave({
       const waiting = pending.current;
       if (!waiting || blocked.current) return;
       clearTimeout(waiting.timer);
-      serviceRef.current
-        .saveDiaryEntry(projectId, date, waiting.text, baseline.current)
-        .catch((err: unknown) => console.error('Failed to save diary page on leaving:', err));
+      void inOrder(async () => {
+        try {
+          await serviceRef.current.saveDiaryEntry(projectId, date, waiting.text, baseline.current);
+          baseline.current = waiting.text;
+        } catch (err) {
+          console.error('Failed to save diary page on leaving:', err);
+        }
+      });
     },
-    [projectId, date],
+    [projectId, date, inOrder],
   );
 
   return { status, change, flush, discard };

@@ -164,6 +164,21 @@ describe('MassCitationModal .bib download', () => {
     );
   });
 
+  it('confirms the file was saved, and stays quiet when the save dialog was cancelled', async () => {
+    service.saveExportedFile.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    renderModal([article(1)]);
+    fireEvent.click(screen.getByRole('button', { name: 'BibTeX' }));
+
+    fireEvent.click(screen.getByRole('button', { name: /Baixar \.bib/ }));
+    await waitFor(() =>
+      expect(dialogs.informed).toContainEqual(expect.objectContaining({ title: 'Exportação concluída', tone: 'ok' })),
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Baixar \.bib/ }));
+    await waitFor(() => expect(service.saveExportedFile).toHaveBeenCalledTimes(2));
+
+    expect(dialogs.informed).toHaveLength(1);
+  });
+
   it('tells when the file could not be saved', async () => {
     service.saveExportedFile.mockRejectedValue(new Error('disco cheio'));
     renderModal([article(1)]);

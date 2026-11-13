@@ -117,6 +117,20 @@ describe('DiarySection timeline', () => {
 });
 
 describe('DiarySection today page', () => {
+  it("opens today's page that already exists in the database though the list did not have it", async () => {
+    givenEntries(entry(PAST));
+    service.saveDiaryEntry.mockRejectedValueOnce(
+      Object.assign(new Error('ERR_DIARY_CONFLICT'), { code: 'ERR_DIARY_CONFLICT' }),
+    );
+    renderDiary();
+    await screen.findByText(shortDate(PAST));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Página de hoje' }));
+
+    await screen.findByRole('heading', { name: longDate(TODAY) });
+    expect(service.getDiaryEntries).toHaveBeenCalledTimes(2);
+  });
+
   it("creates today's page when missing, then opens it", async () => {
     givenEntries(entry(PAST));
     renderDiary();
@@ -256,6 +270,22 @@ describe('DiarySection deletion', () => {
 });
 
 describe('DiarySection history', () => {
+  // The database keeps 10 versions per page, so a full list may have lost the true first one (review of PR #187).
+  it('does not call the oldest version the first when the database keeps its limit of them', async () => {
+    givenEntries(entry(PAST, 'atual'));
+    service.getDiaryEntryHistory.mockResolvedValue(
+      Array.from({ length: 10 }, (_, i) => ({ id: 20 - i, content: `v${i}`, updated_at: '2026-03-05 10:00:00' })),
+    );
+    renderDiary();
+    await openEntry(PAST, 'atual');
+    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Histórico de Versões' });
+
+    expect(within(dialog).getByText('mais antiga guardada')).toBeInTheDocument();
+    expect(within(dialog).queryByText('primeira versão')).not.toBeInTheDocument();
+  });
+
   const version = (id: number, content: string, updated_at = '2026-03-05 10:00:00') => ({ id, content, updated_at });
   const openHistory = async () => {
     fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
