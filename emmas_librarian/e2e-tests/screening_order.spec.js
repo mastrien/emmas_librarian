@@ -26,9 +26,10 @@ test('#55 turns the predicted order on, asking before generating, and simulates 
     await expect(window.getByRole('heading', { name: 'Artigo Um', level: 2 })).toBeVisible();
 
     // Off by default, and turning it on asks before anything is sent.
-    const toggle = window.getByRole('checkbox', { name: /Ordenar por relevância prevista/ });
+    const toggle = window.getByRole('switch', { name: /Ordenar por relevância prevista/ });
     await expect(toggle).not.toBeChecked();
-    await toggle.click();
+    // The input is hidden behind the styled switch, so the click goes to its text.
+    await window.getByText('Ordenar por relevância prevista').click();
     await expect(window.getByText('Gerar os vetores de 7 artigos?')).toBeVisible();
     await window.getByRole('button', { name: 'Gerar e ordenar' }).click();
     await expect(window.getByText(/Faltam 3 relevantes e 3 excluídos/)).toBeVisible({ timeout: 15000 });
@@ -44,7 +45,7 @@ test('#55 turns the predicted order on, asking before generating, and simulates 
 
     // The choice belongs to the project.
     await window.reload();
-    await expect(window.getByRole('checkbox', { name: /Ordenar por relevância prevista/ })).toBeChecked({
+    await expect(window.getByRole('switch', { name: /Ordenar por relevância prevista/ })).toBeChecked({
       timeout: 15000,
     });
 
