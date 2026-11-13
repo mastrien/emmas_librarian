@@ -94,8 +94,8 @@ test.describe('Project diary', () => {
     });
   });
 
-  // The page that overwrote another: with the pages opened one after the other with no pause, the text of one could
-  // arrive in the editor of another and be saved under it.
+  // Smoke test of the page that overwrote another. The local IPC answers too fast to reproduce the race here, so what
+  // proves it is DiarySection.test ("never mixes the text of two pages"), where one page answers late.
   test('opening pages in quick succession never moves text from one page to another', async () => {
     await withProject(async (window) => {
       const projectId = Number((await window.evaluate(() => location.hash)).match(/projects\/(\d+)/)[1]);

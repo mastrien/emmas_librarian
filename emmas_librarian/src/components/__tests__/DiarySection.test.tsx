@@ -353,6 +353,9 @@ describe('DiarySection never mixes the text of two pages', () => {
     await waitFor(() => expect(editor.value).toBe('texto de B'));
 
     await act(async () => slowA.resolve(entry(PAST, 'texto de A')));
+    await act(() => vi.advanceTimersByTimeAsync(100));
+    // The late answer of A must not reach the page of B.
+    expect(screen.getByLabelText<HTMLTextAreaElement>('editor').value).toBe('texto de B');
     typeInto(screen.getByLabelText('editor'), 'texto de B, editado');
     await act(() => vi.advanceTimersByTimeAsync(2500));
 
