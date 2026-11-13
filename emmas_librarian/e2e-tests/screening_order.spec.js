@@ -28,8 +28,10 @@ test('#55 turns the predicted order on, asking before generating, and simulates 
     // Off by default, and turning it on asks before anything is sent.
     const toggle = window.getByRole('switch', { name: /Ordenar por relevância prevista/ });
     await expect(toggle).not.toBeChecked();
-    // The input is hidden behind the styled switch, so the click goes to its text.
-    await window.getByText('Ordenar por relevância prevista').click();
+    // The input is hidden behind the styled switch (board 165): its track must show, and the click goes to the label.
+    const label = window.locator('label.app-switch', { hasText: 'Ordenar por relevância prevista' });
+    await expect(label.locator('.app-switch__track')).toBeVisible();
+    await label.click();
     await expect(window.getByText('Gerar os vetores de 7 artigos?')).toBeVisible();
     await window.getByRole('button', { name: 'Gerar e ordenar' }).click();
     await expect(window.getByText(/Faltam 3 relevantes e 3 excluídos/)).toBeVisible({ timeout: 15000 });

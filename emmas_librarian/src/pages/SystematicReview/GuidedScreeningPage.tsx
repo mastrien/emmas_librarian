@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { isTextEntry } from '../../utils/isTextEntry';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { Article, ScreeningStage } from '../../types';
 import { useScreening } from './useScreening';
@@ -59,8 +60,7 @@ function useExitOnEscape(onExit: () => void) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented) return;
-      const target = e.target as HTMLElement | null;
-      if (target && /INPUT|TEXTAREA|SELECT/.test(target.tagName)) return;
+      if (isTextEntry(e.target)) return;
       if (document.querySelector('[role="dialog"]')) return;
       onExit();
     };

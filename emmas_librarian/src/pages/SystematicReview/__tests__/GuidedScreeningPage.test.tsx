@@ -68,6 +68,19 @@ describe('GuidedScreeningPage (#49)', () => {
     expect(await heading('MetNet')).toBeInTheDocument();
   });
 
+  // After a click the styled switch keeps focus on its hidden checkbox; the decision keys must still work from there.
+  it('still decides with a key right after a click on a switch, whose hidden checkbox keeps the focus', async () => {
+    const service = screeningService(articles);
+    renderGuided(service);
+    await heading('ConvLSTM');
+    const onlyPending = screen.getByRole('switch', { name: 'Só pendentes' });
+    fireEvent.click(onlyPending);
+
+    fireEvent.keyDown(onlyPending, { key: '1' });
+
+    await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([1], INCLUDED, 'title', null));
+  });
+
   it('sends the note with the decision, and does not decide while the note is being typed', async () => {
     const service = screeningService(articles);
     renderGuided(service);

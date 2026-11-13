@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { isTextEntry } from '../../utils/isTextEntry';
 import { Check, CircleHelp, X } from 'lucide-react';
 import { QUICK_KINDS, quickLabel, type QuickKind } from './screeningFilter';
 import type { ScreeningLabel } from '../../types';
@@ -86,8 +87,7 @@ const BatchBar: React.FC<{ selection: Selection; labels: ScreeningLabel[]; onPic
 /** The key that picks each quick decision while the pointer is over a row (board 164). */
 export const QUICK_KEYS: Record<QuickKind, string> = { include: '1', maybe: '2', exclude: '3' };
 
-const isTyping = (target: EventTarget | null) =>
-  target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName);
+const isTyping = isTextEntry;
 
 // 1, 2 and 3 decide the row under the pointer, as the keys on the buttons say; typing in a field is left alone.
 function useQuickKeys(row: ReviewRow | null, labels: ScreeningLabel[], onPick: PendingListProps['onPick']) {

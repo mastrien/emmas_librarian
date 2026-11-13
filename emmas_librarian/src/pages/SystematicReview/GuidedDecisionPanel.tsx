@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
+import { isTextEntry } from '../../utils/isTextEntry';
 import { CircleCheck, CircleHelp, CircleX } from 'lucide-react';
 import type { ScreeningDecision, ScreeningLabel } from '../../types';
 import './guided.css';
@@ -20,9 +21,7 @@ interface GuidedDecisionPanelProps {
   onSuggest?: () => void;
 }
 
-const typing = (target: EventTarget | null) =>
-  target instanceof HTMLElement &&
-  (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.tagName === 'SELECT');
+const typing = isTextEntry;
 
 // The keys of the guided screening: 1-9 decide, D duplicate, ← → move, Z undo, S asks for a suggestion, N writes a note. While typing a
 // note the keys type; Escape leaves the note.
