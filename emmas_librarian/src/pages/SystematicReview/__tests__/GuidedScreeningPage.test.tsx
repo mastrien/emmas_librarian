@@ -114,7 +114,7 @@ describe('GuidedScreeningPage (#49)', () => {
     renderGuided(service);
 
     await heading('ConvLSTM');
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Só pendentes' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Só pendentes' }));
     fireEvent.keyDown(window, { key: 'ArrowRight' });
 
     expect(await heading('Attention')).toBeInTheDocument();

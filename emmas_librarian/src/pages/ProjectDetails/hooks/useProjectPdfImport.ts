@@ -29,7 +29,7 @@ export function useProjectPdfImport({ projectId, onImported, isDropBlocked }: Pd
     try {
       const count = await projectService.createArticlesFromPdfs(projectId, filePaths);
       await onImported();
-      await inform({ title: 'PDFs importados', message: `${count} artigo(s) importado(s) com sucesso.` });
+      await inform({ title: 'PDFs importados', message: `${count} artigo(s) importado(s) com sucesso.`, tone: 'ok' });
     } catch (err) {
       await informFailure(err);
     }

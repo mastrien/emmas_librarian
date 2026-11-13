@@ -1,0 +1,57 @@
+.app-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-main);
+}
+
+.app-switch__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-switch__track {
+  position: relative;
+  flex-shrink: 0;
+  width: 28px;
+  height: 16px;
+  border-radius: 999px;
+  /* Off: the muted text colour, faded, so it reads in light, dark and warm tones. */
+  background: color-mix(in srgb, var(--text-muted) 45%, transparent);
+  transition: background 0.15s;
+}
+
+/* The knob. */
+.app-switch__track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  transition: transform 0.15s;
+}
+
+.app-switch__input:checked + .app-switch__track {
+  background: var(--color-primary);
+}
+
+.app-switch__input:checked + .app-switch__track::after {
+  transform: translateX(12px);
+}
+
+.app-switch__input:focus-visible + .app-switch__track {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.app-switch__input:disabled + .app-switch__track {
+  opacity: 0.5;
+}

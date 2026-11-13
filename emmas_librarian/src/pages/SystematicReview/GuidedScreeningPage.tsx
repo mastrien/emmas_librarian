@@ -14,6 +14,7 @@ import { readerStateBackTo } from '../../utils/readerReturn';
 import './review.css';
 import './guided.css';
 import { BackLink } from '../../components/common/BackLink';
+import { Switch } from '../../components/common/Switch';
 
 const STAGES: { id: ScreeningStage; label: string }[] = [
   { id: 'title', label: 'Título e resumo' },
@@ -94,9 +95,9 @@ const FocusBar: React.FC<{ projectId: number; guided: GuidedScreening; order: Sc
       <ProgressBar guided={guided} />
     </div>
     <StageTabs guided={guided} />
-    <label className="guided-check">
-      <input type="checkbox" checked={guided.onlyPending} onChange={guided.toggleOnlyPending} /> Só pendentes
-    </label>
+    <Switch checked={guided.onlyPending} onChange={guided.toggleOnlyPending}>
+      Só pendentes
+    </Switch>
     {guided.stage === 'title' && <OrderToggle order={order} />}
   </header>
 );

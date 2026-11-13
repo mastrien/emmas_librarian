@@ -15,55 +15,39 @@ describe('ChangelogModal', () => {
     // Check if version is rendered
     expect(screen.getByRole('dialog', { name: 'Novidades da Versão 2.0.0' })).toBeDefined();
 
-    // Check if new features text is present (may appear in multiple version sections)
-    expect(screen.getAllByText('Categorias de Seleção Múltipla:').length).toBeGreaterThan(0);
-
     // Click to close
     const btn = screen.getByRole('button', { name: 'Continuar' });
     fireEvent.click(btn);
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('shows the version as the title, under a line saying these are the news (board 181)', () => {
+  it('shows the version as the title, under a small "Novidades" label (board 181)', () => {
     render(<ChangelogModal isOpen={true} version="1.3.1" onClose={vi.fn()} />);
 
     expect(screen.getByRole('heading', { level: 2, name: 'Versão 1.3.1' })).toBeInTheDocument();
-    expect(screen.getByText(/^Novidades: o que mudou/)).toBeInTheDocument();
+    expect(screen.getByText('Novidades')).toBeInTheDocument();
   });
 
-  it('lists every release from newest to oldest', () => {
-    render(<ChangelogModal isOpen={true} version="1.2.0" onClose={vi.fn()} />);
+  it('shows only the current release until "Ver todas as versões" is clicked', () => {
+    render(<ChangelogModal isOpen={true} version="1.3.1" onClose={vi.fn()} />);
 
-    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
-      'Versão 1.3.1 — Correções pequenas',
-      'Versão 1.3.0 — Revisão sistemática e IA',
-      'Versão 1.2.2 — Correção da abertura do programa',
-      'Versão 1.2.1 — Atualizações mais seguras',
-      'Versão 1.2.0 — Open Access, Novas Bases & Filtros',
-      'Versão 1.1.23 — Leitura de PDF & Categorias',
-      'Versão 1.1.22 — Otimização Extrema de Performance',
-      'Versão 1.1.21 — Estabilidade de Testes & Navegação',
-      'Versão 1.1.20 — UI & UX',
-      'Versão 1.1.19 — Agenda & Prazos',
-      ...[18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6].map((n) => `Versão 1.1.${n}`),
-    ]);
+    expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0);
+    expect(screen.getAllByRole('listitem').length).toBeLessThan(10);
+    fireEvent.click(screen.getByRole('button', { name: 'Ver todas as versões' }));
+
+    expect(screen.queryByRole('button', { name: 'Ver todas as versões' })).toBeNull();
+    expect(screen.getAllByRole('heading', { level: 3 })[0]).toHaveTextContent('Versão 1.3.1 — Correções pequenas');
     expect(screen.getAllByRole('listitem')).toHaveLength(82);
   });
 
   it('keeps inline formatting inside release notes', () => {
     render(<ChangelogModal isOpen={true} version="1.1.23" onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ver todas as versões' }));
 
     const note = screen.getByText('Correção de Recurso Local em Produção:').closest('li') as HTMLElement;
     expect(note.querySelectorAll('code')).toHaveLength(3);
     expect(note).toHaveTextContent(
       'Correção de Recurso Local em Produção: Correção do erro Not allowed to load local resource ao abrir o aplicativo empacotado. O carregamento do index.html e do ícone agora utilizam a API app.getAppPath() para localizar corretamente os arquivos na raiz.',
     );
-  });
-
-  it('shows the API key reminder', () => {
-    render(<ChangelogModal isOpen={true} version="1.1.23" onClose={vi.fn()} />);
-
-    expect(screen.getByText('Aviso Importante')).toBeInTheDocument();
-    expect(screen.getByText(/configurar suas chaves de API/)).toBeInTheDocument();
   });
 });

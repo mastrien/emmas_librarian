@@ -46,7 +46,7 @@ async function renderAt(service: FakeProjectService, path: string) {
 const articles = [reviewArticle(1, 'Primeiro'), reviewArticle(2, 'Segundo'), reviewArticle(3, 'Terceiro')];
 const ready = { order: [3, 1, 2], learnedFrom: 67, needRelevant: 0, needExcluded: 0 };
 const plan = (extra = {}) => ({ total: 3, pending: 0, provider: 'ollama', previousModel: null, ...extra });
-const toggle = () => screen.getByRole('checkbox', { name: /Ordenar por relevância prevista/ });
+const toggle = () => screen.getByRole('switch', { name: /Ordenar por relevância prevista/ });
 const heading = (title: string) => screen.findByRole('heading', { name: title, level: 2 });
 
 describe('the predicted order in the guided screening (#55)', () => {

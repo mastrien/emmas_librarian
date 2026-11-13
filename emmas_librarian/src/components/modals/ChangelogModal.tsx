@@ -1,5 +1,4 @@
-import React from 'react';
-import { AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { ModalFooter } from '../common/ModalFooter';
 import { Button } from '../common/Button';
@@ -11,28 +10,62 @@ interface ChangelogModalProps {
   onClose: () => void;
 }
 
+const EYEBROW_STYLE: React.CSSProperties = {
+  display: 'block',
+  marginBottom: '2px',
+  color: 'var(--text-muted)',
+  fontSize: '11px',
+  fontWeight: 600,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+};
+
+const LINK_STYLE: React.CSSProperties = {
+  alignSelf: 'flex-start',
+  padding: 0,
+  border: 'none',
+  background: 'none',
+  color: 'var(--color-primary-text)',
+  fontSize: '0.875rem',
+  cursor: 'pointer',
+};
+
 /**
- * "What's new" dialog shown after the app is updated.
+ * "What's new" dialog shown after the app is updated (board 181): the current version's notes, and a link that lists
+ * every earlier version too. The old "Aviso Importante" about API keys is gone: the board does not have it and it
+ * repeated what the key window already says when a task needs one.
  *
  * Usage:
  *   <ChangelogModal isOpen={showChangelog} version={appVersion} onClose={dismiss} />
  */
 export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version, onClose }) => {
+  const [showAll, setShowAll] = useState(false);
   if (!isOpen) return null;
+  const releases = showAll ? CHANGELOG_RELEASES : CHANGELOG_RELEASES.slice(0, 1);
 
   return (
     <Modal
       label={`Novidades da Versão ${version}`}
-      title={`Versão ${version}`}
-      description="Novidades: o que mudou no Emma's Librarian."
+      title={
+        <>
+          <span aria-hidden="true" style={EYEBROW_STYLE}>
+            Novidades
+          </span>
+          {`Versão ${version}`}
+        </>
+      }
       onClose={onClose}
       width={550}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {CHANGELOG_RELEASES.map((release) => (
-          <ReleaseNotes key={release.title} release={release} />
+        {releases.map((release) => (
+          <ReleaseNotes key={release.title} release={release} showTitle={showAll} />
         ))}
-        <ApiKeyReminder />
+        {!showAll && (
+          <button type="button" style={LINK_STYLE} onClick={() => setShowAll(true)}>
+            Ver todas as versões
+          </button>
+        )}
       </div>
 
       <ModalFooter>
@@ -44,20 +77,22 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
   );
 };
 
-const ReleaseNotes: React.FC<{ release: ChangelogRelease }> = ({ release }) => (
+const ReleaseNotes: React.FC<{ release: ChangelogRelease; showTitle: boolean }> = ({ release, showTitle }) => (
   <div>
-    <h3
-      style={{
-        marginTop: 0,
-        marginBottom: '0.75rem',
-        fontSize: '1.1rem',
-        color: 'var(--color-primary)',
-        borderBottom: '1px solid var(--border-color)',
-        paddingBottom: '0.25rem',
-      }}
-    >
-      {release.title}
-    </h3>
+    {showTitle && (
+      <h3
+        style={{
+          marginTop: 0,
+          marginBottom: '0.75rem',
+          fontSize: '1.1rem',
+          color: 'var(--color-primary)',
+          borderBottom: '1px solid var(--border-color)',
+          paddingBottom: '0.25rem',
+        }}
+      >
+        {release.title}
+      </h3>
+    )}
     <ul
       style={{
         margin: 0,
@@ -73,28 +108,5 @@ const ReleaseNotes: React.FC<{ release: ChangelogRelease }> = ({ release }) => (
         <li key={index}>{item}</li>
       ))}
     </ul>
-  </div>
-);
-
-const ApiKeyReminder: React.FC = () => (
-  <div
-    style={{
-      padding: '1rem',
-      background: 'var(--bg-surface)',
-      borderRadius: 'var(--radius-md)',
-      border: '1px solid var(--border-color)',
-      display: 'flex',
-      gap: '1rem',
-      alignItems: 'flex-start',
-    }}
-  >
-    <AlertCircle size={20} color="var(--color-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
-    <div>
-      <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600 }}>Aviso Importante</p>
-      <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-        Certifique-se de configurar suas chaves de API nas configurações se deseja continuar usando os resumos de IA e
-        busca avançada.
-      </p>
-    </div>
   </div>
 );

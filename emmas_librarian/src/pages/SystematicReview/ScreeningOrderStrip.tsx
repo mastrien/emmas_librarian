@@ -8,6 +8,7 @@ import { providerName } from '../../utils/screeningCriteria';
 import { recentRelevant } from '../../utils/screeningView';
 import { useArticleVectors } from './useArticleVectors';
 import { ExperimentalTag } from '../../components/common/ExperimentalTag';
+import { Switch } from '../../components/common/Switch';
 import './guided.css';
 
 const ORDER_REASON =
@@ -97,10 +98,9 @@ export type ScreeningOrder = ReturnType<typeof useScreeningOrder>;
  */
 export const OrderToggle: React.FC<{ order: ScreeningOrder }> = ({ order }) => (
   <span className="guided-inline guided-order-toggle">
-    <label className="guided-inline guided-inline--toggle">
-      <input type="checkbox" checked={order.enabled} onChange={(e) => order.toggle(e.target.checked)} /> Ordenar por
-      relevância prevista
-    </label>
+    <Switch checked={order.enabled} onChange={order.toggle}>
+      Ordenar por relevância prevista
+    </Switch>
     <ExperimentalTag reason={ORDER_REASON} />
   </span>
 );
