@@ -34,6 +34,10 @@ async function showStatus(name: string) {
   const statuses = await screen.findByRole('group', { name: 'Status da triagem' });
   fireEvent.click(within(statuses).getByRole('button', { name: new RegExp(`^${name}`) }));
 }
+// Board 164: "Título e resumo | Texto completo" chooses the stage the list shows.
+function showStage(name: string) {
+  fireEvent.click(within(screen.getByRole('group', { name: 'Etapa' })).getByRole('button', { name }));
+}
 const pendingRow = (title: string) => screen.getByText(title).closest('[data-testid="review-row"]') as HTMLElement;
 
 async function pickLabel(row: HTMLElement, button: RegExp, label: string) {
@@ -96,8 +100,13 @@ describe('SystematicReviewPage (#49)', () => {
 
   it('shows an exclusion with its reason, and takes it back at the stage it was made', async () => {
     const archived = reviewArticle(6, 'Attention', { status: 'archived', archive_note: 'Excluído · só texto' });
-    const service = screeningService([archived], [storedDecision(6, EXCLUDED, 'full', 'só texto')]);
+    const service = screeningService(
+      [archived],
+      [storedDecision(6, INCLUDED, 'title'), storedDecision(6, EXCLUDED, 'full', 'só texto')],
+    );
     renderReview(service);
+    await screen.findByRole('heading', { name: 'Triagem' });
+    showStage('Texto completo');
     await showStatus('Excluídos');
 
     const excluded = await screen.findByRole('region', { name: /^Excluídos \(1\)/ });
@@ -126,6 +135,8 @@ describe('SystematicReviewPage (#49)', () => {
       [storedDecision(1, INCLUDED, 'title'), storedDecision(1, MAYBE, 'full', 'ver métodos')],
     );
     renderReview(service);
+    await screen.findByRole('heading', { name: 'Triagem' });
+    showStage('Texto completo');
     await showStatus('Em dúvida');
 
     await pickLabel(await screen.findByRole('region', { name: /^Em dúvida \(1\)/ }), /Rótulo/, 'Incluso');
@@ -241,5 +252,34 @@ describe('SystematicReviewPage (#49)', () => {
     await showStatus('Removidos antes');
 
     expect(screen.getByText('Nenhum artigo com este status.')).toBeInTheDocument();
+  });
+});
+
+describe('SystematicReviewPage stage toggle (board 164)', () => {
+  beforeEach(() => sessionStorage.clear());
+
+  it('shows the title stage first, and what is decided at full text only after choosing it', async () => {
+    renderReview(
+      screeningService(
+        [reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')],
+        [storedDecision(1, INCLUDED, 'title'), storedDecision(1, EXCLUDED, 'full', 'só texto')],
+      ),
+    );
+
+    expect(await screen.findByText('1 de 2 decididos por título e resumo')).toBeInTheDocument();
+    showStage('Texto completo');
+
+    expect(await screen.findByText('1 de 1 decididos por texto completo')).toBeInTheDocument();
+  });
+
+  it('decides at the stage on screen', async () => {
+    const service = screeningService([reviewArticle(1, 'GPM')], [storedDecision(1, INCLUDED, 'title')]);
+    renderReview(service);
+    await screen.findByRole('heading', { name: 'Triagem' });
+    showStage('Texto completo');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Dúvida GPM' }));
+
+    await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([1], MAYBE, 'full', null));
   });
 });

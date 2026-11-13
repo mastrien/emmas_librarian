@@ -81,6 +81,38 @@ describe('buildReview (#49)', () => {
   });
 });
 
+describe('buildReview at a stage (board 164)', () => {
+  const articles = [article(1), article(2), article(3), article(4, 'archived')];
+  // 1: included at title, excluded at full text. 2: included at title only. 3: doubt at title. 4: archived by hand.
+  const decisions = [decision(1, 1), decision(1, 3, 'full'), decision(2, 1), decision(3, 2)];
+
+  it('shows the title stage alone: every decision at title, even for an article that has a full-text one', () => {
+    const view = buildReview(articles, LABELS, decisions, 'title');
+
+    expect(view.counts).toMatchObject({ include: 2, maybe: 1, exclude: 0, pending: 0 });
+    expect(view.sections[0].rows.map((r) => r.article.id)).toEqual([1, 2]);
+  });
+
+  it('shows full text with only the articles kept at title, and those still undecided there as pending', () => {
+    const view = buildReview(articles, LABELS, decisions, 'full');
+
+    expect(view.counts).toMatchObject({ include: 0, maybe: 0, exclude: 1, pending: 2 });
+    expect(view.pending.map((r) => r.article.id)).toEqual([2, 3]);
+  });
+
+  it('keeps the articles archived by hand in their own bucket at the title stage', () => {
+    const view = buildReview(articles, LABELS, decisions, 'title');
+
+    expect(view.unlabeled.map((r) => r.article.id)).toEqual([4]);
+  });
+
+  it('keeps the latest decision of each article when no stage is given', () => {
+    const view = buildReview(articles, LABELS, decisions);
+
+    expect(view.counts).toMatchObject({ include: 1, maybe: 1, exclude: 1 });
+  });
+});
+
 describe('guidedPool (#49)', () => {
   const articles = [article(1), article(2), article(3, 'archived'), article(4, 'archived')];
   const decisions = [decision(1, 1), decision(2, 3), decision(3, 3)];
