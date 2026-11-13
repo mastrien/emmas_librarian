@@ -91,13 +91,20 @@ test.describe('Agenda & Prazos E2E Tests', () => {
     await window.locator('button', { hasText: 'Criar evento' }).click();
     await expect(window.getByText(title)).toBeVisible({ timeout: 10000 });
 
-    await window.getByTitle('Excluir Evento').first().click();
+    const openDelete = async () => {
+      await window
+        .getByRole('button', { name: /^Ações de / })
+        .first()
+        .click();
+      await window.getByRole('menuitem', { name: 'Excluir evento' }).click();
+    };
+    await openDelete();
     const dialog = window.getByRole('dialog', { name: 'Excluir evento' });
     await dialog.getByRole('button', { name: 'Cancelar' }).click();
     await expect(dialog).toBeHidden();
     await expect(window.getByText(title)).toBeVisible();
 
-    await window.getByTitle('Excluir Evento').first().click();
+    await openDelete();
     await dialog.getByRole('button', { name: 'Excluir evento' }).click();
     await expect(window.getByText(title)).toBeHidden();
     expect(nativeDialogs).toEqual([]);
