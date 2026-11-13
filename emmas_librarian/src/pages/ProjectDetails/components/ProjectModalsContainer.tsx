@@ -112,6 +112,10 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
           title={AI_KEY_TITLE}
           onCancel={() => setShowKeyAlert(false)}
           onOpenSettings={() => navigate('/settings')}
+          onKeySaved={() => {
+            setShowKeyAlert(false);
+            void fetchData();
+          }}
         >
           {AI_KEY_TEXT}
         </KeyRequiredModal>

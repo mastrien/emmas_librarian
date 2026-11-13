@@ -3,6 +3,8 @@ import { Key } from 'lucide-react';
 import { Modal } from '../Modal';
 import { ModalFooter } from '../ModalFooter';
 import { Button } from '../Button';
+import { AiKeyForm } from './AiKeyForm';
+import { useSaveAiKey } from './useSaveAiKey';
 import './keyRequired.css';
 
 interface KeyRequiredModalProps {
@@ -11,6 +13,11 @@ interface KeyRequiredModalProps {
   children: ReactNode;
   onCancel: () => void;
   onOpenSettings: () => void;
+  /**
+   * With it, the window asks for the key right there (board 181): "Salvar e continuar" writes it and calls this, and
+   * the Settings button becomes "Usar outro provedor". Without it, the window only points to Settings.
+   */
+  onKeySaved?: () => void;
 }
 
 /**
@@ -19,26 +26,50 @@ interface KeyRequiredModalProps {
  *
  * @example <KeyRequiredModal title="Chave de IA Necessária" onCancel={close} onOpenSettings={goToSettings}>…</KeyRequiredModal>
  */
-export const KeyRequiredModal: React.FC<KeyRequiredModalProps> = (props) => (
-  <Modal
-    label={props.title}
-    title={props.title}
-    onClose={props.onCancel}
-    width={450}
-    icon={<Key size={18} aria-hidden="true" />}
-    tone="info"
-  >
-    <p className="key-required-text">{props.children}</p>
-    <ModalFooter>
-      <Button variant="ghost" onClick={props.onCancel}>
-        Cancelar
-      </Button>
-      <Button variant="primary" onClick={props.onOpenSettings}>
-        Configurações
-      </Button>
-    </ModalFooter>
-  </Modal>
-);
+export const KeyRequiredModal: React.FC<KeyRequiredModalProps> = (props) => {
+  const key = useSaveAiKey(props.onKeySaved ?? (() => undefined));
+  const inline = props.onKeySaved !== undefined;
+  return (
+    <Modal
+      label={props.title}
+      title={props.title}
+      onClose={props.onCancel}
+      width={450}
+      icon={<Key size={18} aria-hidden="true" />}
+      tone="info"
+    >
+      <p className="key-required-text">{props.children}</p>
+      {inline && (
+        <AiKeyForm
+          provider={key.provider}
+          apiKey={key.apiKey}
+          onProviderChange={key.setProvider}
+          onKeyChange={key.setApiKey}
+          onSubmit={key.save}
+        />
+      )}
+      {key.error && (
+        <p role="alert" className="key-required-error">
+          {key.error}
+        </p>
+      )}
+      <ModalFooter>
+        <Button variant="ghost" onClick={inline ? props.onOpenSettings : props.onCancel}>
+          {inline ? 'Usar outro provedor' : 'Cancelar'}
+        </Button>
+        {inline ? (
+          <Button variant="primary" disabled={!key.canSave} onClick={key.save}>
+            Salvar e continuar
+          </Button>
+        ) : (
+          <Button variant="primary" onClick={props.onOpenSettings}>
+            Configurações
+          </Button>
+        )}
+      </ModalFooter>
+    </Modal>
+  );
+};
 
 /** The AI-key text, shared by the project page and the reader. */
 export const AI_KEY_TITLE = 'Chave de IA Necessária';
