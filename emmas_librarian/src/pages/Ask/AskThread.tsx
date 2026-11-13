@@ -10,7 +10,7 @@ import {
   stepText,
   unverifiedReason,
 } from './askDisplay';
-import { AskRings, AskRingsStill } from './AskRings';
+import { AskRings } from './AskRings';
 import { useSpeakingAfterAnswer } from './useSpeakingAfterAnswer';
 
 /** The citation open in the side panel. */
@@ -109,14 +109,17 @@ const Empty: React.FC<{ note?: React.ReactNode }> = ({ note }) => (
   </div>
 );
 
-/** An answer with the rings beside it (board 168): alive on the last one, still on the ones before. */
+/**
+ * An answer (board 168). The rings sit beside the latest one only: alive while it is on its way or just came; the
+ * older answers keep an empty place of the same width, so their text stays aligned with it.
+ */
 const Reply: React.FC<{ live: boolean; state?: 'idle' | 'thinking' | 'speaking'; children: React.ReactNode }> = ({
   live,
   state = 'idle',
   children,
 }) => (
   <div className="ask-reply">
-    {live ? <AskRings size="avatar" state={state} /> : <AskRingsStill />}
+    {live ? <AskRings size="avatar" state={state} /> : <span className="ask-reply__gap" aria-hidden="true" />}
     <div className="ask-reply__body">{children}</div>
   </div>
 );

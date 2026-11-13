@@ -9,7 +9,6 @@ configure({ asyncUtilTimeout: 4000 });
 // The rings are a WebGL canvas, which jsdom cannot draw; the pages that carry them only need their place.
 vi.mock('./components/gyroscope/GyroscopeCanvas', () => ({
   GyroscopeCanvas: () => null,
-  renderRingsStill: () => null,
 }));
 
 // Suites that opt into `@vitest-environment node` (e.g. real zip/SQLite round trips) have no window.

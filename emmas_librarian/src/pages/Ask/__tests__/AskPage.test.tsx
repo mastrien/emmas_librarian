@@ -201,6 +201,32 @@ describe('AskPage (#53)', () => {
     expect(screen.getAllByRole('img', { name: 'Anéis animados da Emma' })).toHaveLength(1);
   });
 
+  // The rings belong to the latest answer only: the older ones keep their text and nothing beside it.
+  it('keeps the rings on the latest answer only, with none beside the older ones', async () => {
+    const service = serviceWith();
+    const twoAnswers = conversation([checked]);
+    twoAnswers.messages.push(
+      { id: 3, role: 'user', content: 'E o desvio?', answer: null, created_at: '' },
+      {
+        id: 4,
+        role: 'assistant',
+        content: '',
+        created_at: '',
+        answer: { claims: [{ ...checked, text: 'O desvio é 2,1.' }], steps: [] },
+      },
+    );
+    service.getAskConversation.mockResolvedValue(twoAnswers);
+    await open(service, '/ask/5');
+
+    await screen.findByText('O desvio é 2,1.');
+
+    expect(screen.getByText('A série tem 60 anos.')).toBeInTheDocument();
+    expect(screen.getAllByRole('img', { name: 'Anéis animados da Emma' })).toHaveLength(1);
+    expect(screen.queryByRole('img', { name: 'Anéis da Emma' })).not.toBeInTheDocument();
+    const older = screen.getByText('A série tem 60 anos.').closest('.ask-reply') as HTMLElement;
+    expect(older.querySelector('.ask-rings')).toBeNull();
+  });
+
   it('starts asking for a project, and cannot send without one', async () => {
     await open(serviceWith());
 
