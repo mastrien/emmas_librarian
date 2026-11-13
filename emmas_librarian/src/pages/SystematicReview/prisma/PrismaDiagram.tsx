@@ -203,9 +203,10 @@ export const PrismaDiagram: React.FC<PrismaDiagramProps> = ({
           transform={`translate(${BAND_W / 2 + 4} ${band.y + band.h / 2}) rotate(-90)`}
           textAnchor="middle"
           fontFamily={FONT}
-          fontSize={12}
+          fontSize={fixedSize ? 12 : 11}
           fontWeight={600}
           fill={p.bandText}
+          style={fixedSize ? undefined : { textTransform: 'uppercase', letterSpacing: '0.06em' }}
         >
           {band.label}
         </text>

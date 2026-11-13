@@ -96,7 +96,7 @@ test('draws the PRISMA diagram from the screening and exports it with its tables
     await expect(panel.getByRole('note')).toContainText('Triagem em andamento: 1 artigo(s)');
     await expect(panel).toContainText('Artigo beta');
 
-    await window.getByRole('button', { name: 'Exportar ▾' }).click();
+    await window.getByRole('button', { name: 'Exportar' }).click();
     await window.getByRole('menuitem', { name: /SVG \+ tabelas/ }).click();
     const note = window.getByText(`Diagrama salvo em ${target}, com as duas tabelas ao lado.`);
     await expect(note).toBeVisible();

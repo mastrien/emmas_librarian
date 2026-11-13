@@ -37,8 +37,8 @@ describe('PrismaTab (#50)', () => {
 
     expect(await screen.findByRole('img', { name: 'Diagrama PRISMA 2020 da revisão' })).toBeInTheDocument();
     // Title: 1 article still in doubt; full text: the included one has no decision yet.
-    expect(await screen.findByText('2 aguardando decisões')).toBeInTheDocument();
-    expect(screen.getByText('1 podem ser parciais')).toBeInTheDocument();
+    expect(await screen.findByText('2 aguardando decisão')).toBeInTheDocument();
+    expect(screen.getByText('1 caixa com busca parcial')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Registros identificados \(n = 0\)/ })).not.toBeInTheDocument();
   });
 
@@ -48,7 +48,7 @@ describe('PrismaTab (#50)', () => {
 
     const warnings = await screen.findByRole('group', { name: 'Avisos do diagrama' });
 
-    expect(warnings).toHaveTextContent('aguardando decisões');
+    expect(warnings).toHaveTextContent('aguardando decisão');
     expect(warnings).toHaveTextContent('Números batem');
     expect(warnings).not.toHaveTextContent('com números que não batem');
   });
@@ -71,6 +71,28 @@ describe('PrismaTab (#50)', () => {
     expect(within(panel()).getByRole('heading', { name: 'Registros triados' })).toBeInTheDocument();
     expect(within(panel()).getByRole('note')).toHaveTextContent('Triagem em andamento: 1 artigo(s)');
     expect(within(panel()).getByRole('list', { name: 'Artigos' })).toHaveTextContent('Estudo 3');
+  });
+
+  it('has the title, "Tabela de dados" and "Exportar" in its own header, as the board does (166)', async () => {
+    renderPrisma(prismaService());
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Diagrama PRISMA 2020' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tabela de dados' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Exportar' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Rótulos|Critérios/ })).not.toBeInTheDocument();
+  });
+
+  it('shows the number big, without "n =", and closes the panel with its X', async () => {
+    renderPrisma(prismaService());
+    const identified = await screen.findByRole('complementary', { name: 'De onde vem o número' });
+
+    expect(within(identified).getByText('Por base')).toBeInTheDocument();
+    expect(within(identified).queryByText(/^n = /)).not.toBeInTheDocument();
+    fireEvent.click(within(identified).getByRole('button', { name: 'Fechar o painel' }));
+
+    expect(screen.queryByRole('complementary', { name: 'De onde vem o número' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Registros triados \(n = 3\)/ }));
+    expect(panel()).toBeInTheDocument();
   });
 
   it('lists the searches behind the identification and flags the base that hit its limit', async () => {
@@ -155,7 +177,7 @@ describe('PrismaTab (#50)', () => {
     const service = prismaService();
     renderPrisma(service);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Exportar ▾' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Exportar' }));
     fireEvent.click(screen.getByRole('menuitem', { name: /SVG \+ tabelas/ }));
 
     const note = await screen.findByText('Diagrama salvo em /out/prisma.svg, com as duas tabelas ao lado.');
@@ -173,7 +195,7 @@ describe('PrismaTab (#50)', () => {
     service.exportPrismaDiagram.mockRejectedValueOnce(new Error('disco cheio'));
     renderPrisma(service);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Exportar ▾' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Exportar' }));
     fireEvent.click(screen.getByRole('menuitem', { name: /SVG \+ tabelas/ }));
 
     const note = await screen.findByText(/Não foi possível exportar: .*disco cheio/);

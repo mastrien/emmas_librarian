@@ -274,14 +274,16 @@ export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'scr
       <ProjectNavPortal>
         <ReviewNavList projectId={projectId} pending={screening.view.counts.pending} />
       </ProjectNavPortal>
-      <ReviewHeader
-        projectId={projectId}
-        tab={tab}
-        counts={stagedView.counts}
-        stage={stage}
-        onManageLabels={() => setManaging(true)}
-        onWriteCriteria={() => setWritingCriteria(true)}
-      />
+      {tab !== 'prisma' && (
+        <ReviewHeader
+          projectId={projectId}
+          tab={tab}
+          counts={stagedView.counts}
+          stage={stage}
+          onManageLabels={() => setManaging(true)}
+          onWriteCriteria={() => setWritingCriteria(true)}
+        />
+      )}
       {tab === 'prisma' && <PrismaTab projectId={projectId} screening={screening} />}
       {tab === 'evaluation' && (
         <div className="review-evaluation-columns">

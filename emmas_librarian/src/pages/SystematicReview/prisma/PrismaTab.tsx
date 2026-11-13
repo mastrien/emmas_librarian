@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Check, Info } from 'lucide-react';
 import type { Article, PrismaImageFormat, PrismaRecords, SearchHistoryItem } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import { describeError } from '../../../utils/describeError';
+import { PageHeader } from '../../../components/common/PageHeader';
+import { buildReview } from '../../../utils/screeningView';
 import {
   prismaFlow,
   prismaOrder,
@@ -18,6 +19,7 @@ import { prismaLayout } from './prismaLayout';
 import { exportPrismaDiagram } from './prismaExport';
 import { ExportMenu } from './ExportMenu';
 import { DataTable, ExcludedTable } from './PrismaTables';
+import { PrismaStatusBar } from './PrismaStatusBar';
 import './prisma.css';
 
 // "Tabela de dados" (board 166) takes the person to the two tables under the diagram.
@@ -54,47 +56,6 @@ function usePrismaData(projectId: number) {
   return { searches, records, actions, loaded };
 }
 
-/**
- * The bar of warnings above the diagram (board 166): only what applies is shown, each with its icon, and a green
- * "Números batem" when no box disagrees with the others. The app never fixes a number by itself.
- *
- * @example <WarningChips flow={flow} order={prismaOrder(flow)} />
- */
-const WarningChips: React.FC<{ flow: PrismaFlow; order: PrismaBoxKey[] }> = ({ flow, order }) => {
-  const all = order.flatMap((k) => flow[k].warnings);
-  const count = (kind: string) => all.filter((w) => w.kind === kind).length;
-  return (
-    <div className="prisma-row" role="group" aria-label="Avisos do diagrama">
-      {count('pending') > 0 && (
-        <span className="review-chip review-chip--maybe">
-          <AlertTriangle size={12} aria-hidden="true" /> {count('pending')} aguardando decisões
-        </span>
-      )}
-      {count('mismatch') > 0 && (
-        <span className="review-chip review-chip--maybe">
-          <AlertTriangle size={12} aria-hidden="true" /> {count('mismatch')} com números que não batem
-        </span>
-      )}
-      {count('partial') > 0 && (
-        <span className="review-chip review-chip--maybe">
-          <AlertTriangle size={12} aria-hidden="true" /> {count('partial')} podem ser parciais
-        </span>
-      )}
-      {count('nodata') > 0 && (
-        <span className="review-chip review-chip--removed">
-          <Info size={12} aria-hidden="true" /> {count('nodata')} sem dados para conferir
-        </span>
-      )}
-      {count('mismatch') === 0 && (
-        <span className="review-chip review-chip--include">
-          <Check size={12} aria-hidden="true" /> Números batem
-        </span>
-      )}
-      <span className="review-muted">Clique numa caixa para ver de onde vem o número.</span>
-    </div>
-  );
-};
-
 function useExport(projectId: number, input: PrismaInput, flow: PrismaFlow) {
   const service = useProjectService();
   const [message, setMessage] = useState<{ text: string; failed: boolean } | null>(null);
@@ -129,7 +90,7 @@ function viaFrom(searches: SearchHistoryItem[]): (article: Article) => string {
  */
 export const PrismaTab: React.FC<{ projectId: number; screening: ScreeningState }> = ({ projectId, screening }) => {
   const { searches, records, actions, loaded } = usePrismaData(projectId);
-  const [selected, setSelected] = useState<PrismaBoxKey>('identified');
+  const [selected, setSelected] = useState<PrismaBoxKey | null>('identified');
   const input = useMemo<PrismaInput>(
     () => ({
       searches,
@@ -142,21 +103,32 @@ export const PrismaTab: React.FC<{ projectId: number; screening: ScreeningState 
   );
   const flow = useMemo(() => prismaFlow(input), [input]);
   const order = prismaOrder(flow);
-  const layout = useMemo(() => prismaLayout(flow, new Date()), [flow]);
+  const layout = useMemo(() => prismaLayout(flow, new Date(), { screen: true }), [flow]);
   const exporting = useExport(projectId, input, flow);
+  const { articles, labels, decisions } = screening;
+  const waiting = useMemo(
+    () =>
+      buildReview(articles, labels, decisions, 'title').counts.pending +
+      buildReview(articles, labels, decisions, 'full').counts.pending,
+    [articles, labels, decisions],
+  );
   if (!loaded) return <div className="review-muted">Carregando o diagrama…</div>;
-  const box = flow[order.includes(selected) ? selected : 'identified'];
+  const box = selected && order.includes(selected) ? flow[selected] : null;
   return (
     <>
-      <div className="review-list-head">
-        <WarningChips flow={flow} order={order} />
-        <span className="prisma-row">
-          <button type="button" className="review-small" onClick={() => scrollToTables()}>
-            Tabela de dados
-          </button>
-          <ExportMenu onPick={(format) => void exporting.run(format)} />
-        </span>
-      </div>
+      <PageHeader
+        eyebrow="Revisão sistemática"
+        title="Diagrama PRISMA 2020"
+        actions={
+          <>
+            <button type="button" className="btn-ghost" onClick={() => scrollToTables()}>
+              Tabela de dados
+            </button>
+            <ExportMenu onPick={(format) => void exporting.run(format)} />
+          </>
+        }
+      />
+      <PrismaStatusBar flow={flow} order={order} waiting={waiting} />
       {/* A plain line under the export button, not a boxed banner (validation of epic #44). */}
       {exporting.message && (
         <p
@@ -167,17 +139,20 @@ export const PrismaTab: React.FC<{ projectId: number; screening: ScreeningState 
         </p>
       )}
       <div className="prisma-columns">
-        <div className="review-section prisma-canvas">
-          <PrismaDiagram layout={layout} palette={SCREEN_PALETTE} selected={box.key} onSelect={setSelected} />
+        <div className="prisma-canvas">
+          <PrismaDiagram layout={layout} palette={SCREEN_PALETTE} selected={box?.key ?? null} onSelect={setSelected} />
         </div>
-        <PrismaPanel
-          box={box}
-          flow={flow}
-          articles={screening.articles}
-          records={records}
-          viaOf={viaFrom(searches)}
-          actions={actions}
-        />
+        {box && (
+          <PrismaPanel
+            box={box}
+            flow={flow}
+            articles={screening.articles}
+            records={records}
+            viaOf={viaFrom(searches)}
+            actions={actions}
+            onClose={() => setSelected(null)}
+          />
+        )}
       </div>
       <div id={TABLES_ID}>
         <DataTable flow={flow} order={order} />

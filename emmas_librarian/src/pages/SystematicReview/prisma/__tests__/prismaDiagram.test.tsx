@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { boxLines, fit, PAD, prismaLayout, warningLines, withCount } from '../prismaLayout';
+import { boxLines, fit, PAD, prismaLayout, screenBox, warningLines, withCount } from '../prismaLayout';
 import { prismaOrder } from '../../../../utils/prismaFlow';
 import { abntDate, referenceTokens, wrapTokens } from '../prismaReference';
 import { PrismaDiagram, PRINT_PALETTE, SCREEN_PALETTE } from '../PrismaDiagram';
@@ -12,6 +12,38 @@ import { warningTone } from '../PrismaPanel';
 
 const TODAY = new Date(2026, 10, 1);
 const TABLES = { data: 'dados', excluded: 'excluídas' };
+
+describe('screenBox (board 166)', () => {
+  it('gives the box the short names of the board and keeps its numbers and warnings', () => {
+    const flow = smallFlow();
+
+    const short = screenBox(flow.removed);
+
+    expect(short.title).toBe('Removidos antes da triagem');
+    expect(short.n).toBe(flow.removed.n);
+    expect(short.lines.map((l) => l.label)).toContain('Duplicados');
+    expect(screenBox(flow.included).title).toBe('Estudos incluídos');
+  });
+
+  it('leaves the titles the board does not shorten, and the original box, untouched', () => {
+    const flow = smallFlow();
+
+    expect(screenBox(flow.screened).title).toBe('Registros triados');
+    expect(flow.removed.title).toBe('Registros removidos antes da triagem');
+  });
+
+  it('shortens the names in the screen layout only: the exported figure keeps the PRISMA template names', () => {
+    const flow = smallFlow();
+    const text = (screen: boolean) =>
+      prismaLayout(flow, new Date(2026, 10, 13), { screen })
+        .boxes.find((b) => b.key === 'removed')!
+        .lines.map((l) => l.text)
+        .join(' ');
+
+    expect(text(true)).toContain('Removidos antes da triagem');
+    expect(text(false)).toContain('Registros removidos antes da triagem');
+  });
+});
 
 describe('prismaLayout (#50): one column', () => {
   const flow = smallFlow();
