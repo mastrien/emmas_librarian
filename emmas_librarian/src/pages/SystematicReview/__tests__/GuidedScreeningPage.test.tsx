@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 import { GuidedScreeningPage } from '../GuidedScreeningPage';
@@ -62,7 +62,7 @@ describe('GuidedScreeningPage (#49)', () => {
 
     expect(await heading('ConvLSTM')).toBeInTheDocument();
     expect(screen.getByText('Resumo de ConvLSTM')).toBeInTheDocument();
-    fireEvent.keyDown(window, { key: '1' });
+    fireEvent.keyDown(window, { key: 'a' });
 
     await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([1], INCLUDED, 'title', null));
     expect(await heading('MetNet')).toBeInTheDocument();
@@ -76,9 +76,30 @@ describe('GuidedScreeningPage (#49)', () => {
     const onlyPending = screen.getByRole('switch', { name: 'Só pendentes' });
     fireEvent.click(onlyPending);
 
-    fireEvent.keyDown(onlyPending, { key: '1' });
+    fireEvent.keyDown(onlyPending, { key: 'a' });
 
     await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([1], INCLUDED, 'title', null));
+  });
+
+  it('shows A, E and R on the buttons of the first label of each kind', async () => {
+    renderGuided(screeningService(articles));
+    await heading('ConvLSTM');
+
+    const decision = screen.getByRole('complementary', { name: 'Decisão' });
+
+    expect(within(decision).getByRole('button', { name: /Incluso/ })).toHaveTextContent('A');
+    expect(within(decision).getByRole('button', { name: /Em dúvida/ })).toHaveTextContent('E');
+    expect(within(decision).getByRole('button', { name: /Excluído/ })).toHaveTextContent('R');
+  });
+
+  it('no longer decides with the numbers', async () => {
+    const service = screeningService(articles);
+    renderGuided(service);
+    await heading('ConvLSTM');
+
+    for (const key of ['1', '2', '3']) fireEvent.keyDown(window, { key });
+
+    expect(service.decideScreening).not.toHaveBeenCalled();
   });
 
   it('sends the note with the decision, and does not decide while the note is being typed', async () => {
@@ -87,7 +108,7 @@ describe('GuidedScreeningPage (#49)', () => {
 
     const note = await screen.findByRole('textbox', { name: /Nota/ });
     fireEvent.change(note, { target: { value: 'só radar' } });
-    fireEvent.keyDown(note, { key: '3' });
+    fireEvent.keyDown(note, { key: 'r' });
     fireEvent.click(screen.getByRole('button', { name: /Excluído/ }));
 
     await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([1], EXCLUDED, 'title', 'só radar'));
@@ -113,7 +134,7 @@ describe('GuidedScreeningPage (#49)', () => {
     renderGuided(service);
 
     await heading('Attention');
-    fireEvent.keyDown(window, { key: '1' });
+    fireEvent.keyDown(window, { key: 'a' });
     expect(await heading('Triagem por título e resumo concluída')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Ir para texto completo' }));
 
@@ -139,7 +160,7 @@ describe('GuidedScreeningPage (#49)', () => {
     const service = screeningService(articles);
     renderGuided(service);
     expect(await heading('ConvLSTM')).toBeInTheDocument();
-    fireEvent.keyDown(window, { key: '1' });
+    fireEvent.keyDown(window, { key: 'a' });
     expect(await heading('MetNet')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '← Anterior' }));

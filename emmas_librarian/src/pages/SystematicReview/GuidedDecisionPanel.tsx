@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { isTextEntry } from '../../utils/isTextEntry';
+import { labelForKey, optionKeys } from './decisionKeys';
 import { CircleCheck, CircleHelp, CircleX } from 'lucide-react';
 import type { ScreeningDecision, ScreeningLabel } from '../../types';
 import './guided.css';
@@ -23,7 +24,8 @@ interface GuidedDecisionPanelProps {
 
 const typing = isTextEntry;
 
-// The keys of the guided screening: 1-9 decide, D duplicate, ← → move, Z undo, S asks for a suggestion, N writes a note. While typing a
+// The keys of the guided screening: A includes, E marks a doubt and R excludes (the audit's keys; further labels of a
+// kind are numbered 1-9), D duplicate, ← → move, Z undo, S asks for a suggestion, N writes a note. While typing a
 // note the keys type; Escape leaves the note.
 function useGuidedKeys(
   props: GuidedDecisionPanelProps,
@@ -39,7 +41,7 @@ function useGuidedKeys(
         if (e.key === 'Escape') (e.target as HTMLElement).blur();
         return;
       }
-      const option = props.options[Number(e.key) - 1];
+      const option = labelForKey(props.options, e.key);
       if (option) props.onDecide(option, note);
       else if (e.key.toLowerCase() === 'd' && props.duplicate) props.onDecide(props.duplicate, note);
       else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') props.onMove(e.key === 'ArrowLeft' ? -1 : 1);
@@ -66,7 +68,7 @@ const KIND_ICONS: Partial<Record<ScreeningLabel['kind'], React.ReactNode>> = {
 
 /**
  * The decision side of the guided screening (board 165): one button per label of the stage, coloured by its kind and
- * with its key (1-9) at the end, the note that goes with the decision (N), the duplicate link at title and abstract
+ * with its key (A, E, R, or a number for further labels) at the end, the note that goes with the decision (N), the duplicate link at title and abstract
  * (D), the AI's suggestion and the way to move on: before, undo and skip. Rendered with key={article.id}, so the note
  * starts from the article's own.
  *
@@ -74,6 +76,7 @@ const KIND_ICONS: Partial<Record<ScreeningLabel['kind'], React.ReactNode>> = {
  */
 export const GuidedDecisionPanel: React.FC<GuidedDecisionPanelProps> = (props) => {
   const { options, duplicate, decision, onDecide, suggestion, suggestedLabelId } = props;
+  const keys = optionKeys(options);
   const [note, setNote] = useState(decision?.note ?? '');
   const noteRef = useRef<HTMLTextAreaElement>(null);
   useGuidedKeys(props, note, noteRef);
@@ -81,7 +84,7 @@ export const GuidedDecisionPanel: React.FC<GuidedDecisionPanelProps> = (props) =
     <aside aria-label="Decisão" className="guided-decision">
       <div className="guided-decision__body">
         <h2 className="guided-decision__title">Sua decisão</h2>
-        {options.map((label, i) => (
+        {options.map((label) => (
           <button
             key={label.id}
             type="button"
@@ -92,7 +95,7 @@ export const GuidedDecisionPanel: React.FC<GuidedDecisionPanelProps> = (props) =
             {KIND_ICONS[label.kind] ?? <span className={`review-dot review-dot--${label.kind}`} aria-hidden="true" />}
             <span>{label.name}</span>
             {suggestedLabelId === label.id && <span className="review-suggested">sugerido</span>}
-            {i < 9 && <Key>{i + 1}</Key>}
+            {keys.has(label.id) && <Key>{keys.get(label.id)!.toUpperCase()}</Key>}
           </button>
         ))}
         <label className="guided-note">

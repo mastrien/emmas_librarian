@@ -208,18 +208,18 @@ describe('SystematicReviewPage (#49)', () => {
     await screen.findByText('ConvLSTM');
 
     expect(within(pendingRow('ConvLSTM')).getByText('sem decisão')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Incluir ConvLSTM' })).toHaveTextContent('1');
-    expect(screen.getByRole('button', { name: 'Dúvida ConvLSTM' })).toHaveTextContent('2');
-    expect(screen.getByRole('button', { name: 'Excluir ConvLSTM' })).toHaveTextContent('3');
+    expect(screen.getByRole('button', { name: 'Incluir ConvLSTM' })).toHaveTextContent('A');
+    expect(screen.getByRole('button', { name: 'Dúvida ConvLSTM' })).toHaveTextContent('E');
+    expect(screen.getByRole('button', { name: 'Excluir ConvLSTM' })).toHaveTextContent('R');
   });
 
-  it('decides the line under the pointer with the keys 1, 2 and 3', async () => {
+  it('decides the line under the pointer with A, E and R, the keys of the audit', async () => {
     const service = screeningService([reviewArticle(3, 'ConvLSTM'), reviewArticle(4, 'GPM')]);
     renderReview(service);
     await screen.findByText('ConvLSTM');
 
     fireEvent.mouseEnter(pendingRow('GPM'));
-    fireEvent.keyDown(window, { key: '2' });
+    fireEvent.keyDown(window, { key: 'e' });
 
     await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([4], MAYBE, 'title', null));
   });
@@ -231,9 +231,9 @@ describe('SystematicReviewPage (#49)', () => {
     await screen.findByText('GPM');
     fireEvent.mouseEnter(pendingRow('GPM'));
 
-    fireEvent.keyDown(window, { key: '1' });
+    fireEvent.keyDown(window, { key: 'a' });
     await waitFor(() => expect(screen.queryByText('GPM')).not.toBeInTheDocument());
-    fireEvent.keyDown(window, { key: '1' });
+    fireEvent.keyDown(window, { key: 'a' });
 
     expect(service.decideScreening).toHaveBeenCalledTimes(1);
   });
@@ -244,7 +244,7 @@ describe('SystematicReviewPage (#49)', () => {
     await screen.findByText('ConvLSTM');
     fireEvent.mouseEnter(pendingRow('ConvLSTM'));
 
-    fireEvent.keyDown(window, { key: '1', repeat: true });
+    fireEvent.keyDown(window, { key: 'a', repeat: true });
 
     expect(service.decideScreening).not.toHaveBeenCalled();
   });
@@ -261,16 +261,28 @@ describe('SystematicReviewPage (#49)', () => {
     expect(await screen.findByRole('button', { name: 'Selecionar vários' })).toBeInTheDocument();
   });
 
+  // The numbers were the keys before; the author wants the audit's A, E and R instead (departs from board 164).
+  it('no longer decides with the numbers 1, 2 and 3', async () => {
+    const service = screeningService([reviewArticle(4, 'GPM')]);
+    renderReview(service);
+    await screen.findByText('GPM');
+    fireEvent.mouseEnter(pendingRow('GPM'));
+
+    for (const key of ['1', '2', '3']) fireEvent.keyDown(window, { key });
+
+    expect(service.decideScreening).not.toHaveBeenCalled();
+  });
+
   it('ignores the keys when no line is under the pointer, or while typing', async () => {
     const service = screeningService([reviewArticle(3, 'ConvLSTM')]);
     renderReview(service);
     await screen.findByText('ConvLSTM');
 
-    fireEvent.keyDown(window, { key: '1' });
+    fireEvent.keyDown(window, { key: 'a' });
     fireEvent.mouseEnter(pendingRow('ConvLSTM'));
     const field = document.createElement('input');
     document.body.appendChild(field);
-    fireEvent.keyDown(field, { key: '1' });
+    fireEvent.keyDown(field, { key: 'a' });
     field.remove();
 
     expect(service.decideScreening).not.toHaveBeenCalled();

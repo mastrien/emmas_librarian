@@ -36,8 +36,8 @@ test('#55 turns the predicted order on, asking before generating, and simulates 
     await window.getByRole('button', { name: 'Gerar e ordenar' }).click();
     await expect(window.getByText(/Faltam 3 relevantes e 3 excluídos/)).toBeVisible({ timeout: 15000 });
 
-    // Three of each by the keyboard: 1 includes, 3 excludes; then the order begins, and nothing else was decided.
-    for (const key of ['1', '1', '1', '3', '3', '3']) {
+    // Three of each by the keyboard: A includes, R excludes; then the order begins, and nothing else was decided.
+    for (const key of ['a', 'a', 'a', 'r', 'r', 'r']) {
       await window.keyboard.press(key);
       await window.waitForTimeout(150);
     }

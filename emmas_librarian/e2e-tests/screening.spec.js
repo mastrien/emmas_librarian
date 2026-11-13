@@ -42,10 +42,10 @@ test('screens articles on the review page and the guided screening, archiving ex
     await showStatus(window, 'Incluídos');
     await expect(window.getByRole('region', { name: 'Incluso (1)' })).toContainText('Artigo beta');
 
-    // The guided screening opens on the one article still undecided; "2" puts it in doubt and ends the stage.
+    // The guided screening opens on the one article still undecided; "E" (the audit's key) puts it in doubt and ends the stage.
     await window.getByRole('link', { name: /Iniciar triagem guiada/ }).click();
     await expect(window.getByRole('heading', { name: 'Artigo gama', level: 2 })).toBeVisible();
-    await window.keyboard.press('2');
+    await window.keyboard.press('e');
     await expect(window.getByRole('heading', { name: 'Triagem por título e resumo concluída' })).toBeVisible();
 
     // Decisions are in the database: they survive a reload of the review page.

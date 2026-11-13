@@ -6,6 +6,7 @@ import type { ScreeningLabel } from '../../types';
 import type { ReviewRow } from '../../utils/screeningView';
 import { KINDS_BY_STAGE } from '../../utils/screeningPresets';
 import { LabelMenu } from './LabelMenu';
+import { KIND_KEYS } from './decisionKeys';
 import { ReviewArticleRow } from './ReviewArticleRow';
 import { NumberedPages } from '../../components/common/NumberedPages';
 import { usePagedRows } from '../../hooks/usePagedRows';
@@ -93,17 +94,17 @@ const BatchBar: React.FC<{ selection: Selection; labels: ScreeningLabel[]; onPic
   );
 };
 
-/** The key that picks each quick decision while the pointer is over a row (board 164). */
-export const QUICK_KEYS: Record<QuickKind, string> = { include: '1', maybe: '2', exclude: '3' };
+/** The key that picks each quick decision while the pointer is over a row: A, E and R, as in the audit (see decisionKeys). */
+export const QUICK_KEYS: Record<QuickKind, string> = KIND_KEYS;
 
-// 1, 2 and 3 decide the row under the pointer, as the keys on the buttons say; typing in a field, a window or menu
+// A, E and R decide the row under the pointer, as the keys on the buttons say; typing in a field, a window or menu
 // open over the page, and a key held down (which repeats) are left alone.
 function useQuickKeys(row: ReviewRow | null, labels: ScreeningLabel[], onPick: PendingListProps['onPick']) {
   useEffect(() => {
     if (!row) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.repeat || keyBelongsElsewhere(e)) return;
-      const kind = QUICK_KINDS.find((q) => QUICK_KEYS[q.kind] === e.key)?.kind;
+      const kind = QUICK_KINDS.find((q) => QUICK_KEYS[q.kind] === e.key.toLowerCase())?.kind;
       const target = kind && quickLabel(labels, kind);
       if (target) onPick([row], target);
     };
@@ -141,7 +142,7 @@ const QuickDecision: React.FC<{ row: ReviewRow; labels: ScreeningLabel[]; onPick
           onClick={() => onPick([row], target)}
         >
           {QUICK_ICONS[kind]} {label}
-          <kbd className="review-kbd">{QUICK_KEYS[kind]}</kbd>
+          <kbd className="review-kbd">{QUICK_KEYS[kind].toUpperCase()}</kbd>
         </button>
       );
     })}

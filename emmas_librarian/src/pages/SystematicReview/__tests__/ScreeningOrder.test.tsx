@@ -176,7 +176,7 @@ describe('the predicted order in the guided screening (#55)', () => {
     await guided(service);
     await heading('Terceiro');
 
-    fireEvent.keyDown(window, { key: '1' });
+    fireEvent.keyDown(window, { key: 'a' });
     await settle();
 
     expect(service.decideScreening).toHaveBeenCalledTimes(1);
