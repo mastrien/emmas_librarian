@@ -70,7 +70,7 @@ describe('VenueFormModal initial state', () => {
     expect(screen.getByText('Editar evento')).toBeInTheDocument();
     expect(titleInput()).toHaveValue('SBBD');
     expect(screen.getByPlaceholderText('Ex: SBBD 2026')).toHaveValue('');
-    expect(screen.getByRole('button', { name: 'Periódico / Revista' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Periódico' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByDisplayValue('Prazo')).toBeInTheDocument();
     expect(screen.getByDisplayValue('14:30')).toBeInTheDocument();
   });
@@ -98,7 +98,7 @@ describe('VenueFormModal initial state', () => {
     });
     fireEvent.submit(form());
 
-    expect(screen.getByRole('button', { name: 'Congresso / Conferência' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Congresso' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('Adicione e preencha pelo menos um prazo válido para o evento.')).toBeInTheDocument();
   });
 });

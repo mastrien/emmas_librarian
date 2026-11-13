@@ -168,7 +168,7 @@ describe('DashboardPage', () => {
       const modalSaveButton = screen.queryByText('Criar evento');
       if (modalSaveButton) {
         // mock the form input
-        const titleInput = screen.getByLabelText(/Nome do evento/i);
+        const titleInput = screen.getByLabelText('Nome');
         fireEvent.change(titleInput, { target: { value: 'New Venue' } });
         fireEvent.click(modalSaveButton);
       }

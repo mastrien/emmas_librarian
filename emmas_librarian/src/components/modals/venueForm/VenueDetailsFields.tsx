@@ -35,28 +35,26 @@ const FieldText: React.FC<{
   );
 };
 
+// The badge colour, small and on the line of "Tipo": the board does not draw it, so it takes no line of its own.
 const ColorPicker: React.FC<{ color: string; onChange: (color: string) => void }> = ({ color, onChange }) => (
-  <div className="venue-field">
-    <span className="venue-field__label">Cor do emblema</span>
-    <div className="venue-colors">
-      {PRESET_COLORS.map((c) => (
-        <button
-          key={c}
-          type="button"
-          aria-label={`Cor ${c}`}
-          aria-pressed={color === c}
-          className="venue-color"
-          style={{ backgroundColor: c }}
-          onClick={() => onChange(c)}
-        />
-      ))}
-    </div>
+  <div className="venue-colors" role="group" aria-label="Cor do emblema">
+    {PRESET_COLORS.map((c) => (
+      <button
+        key={c}
+        type="button"
+        aria-label={`Cor ${c}`}
+        aria-pressed={color === c}
+        className="venue-color"
+        style={{ backgroundColor: c }}
+        onClick={() => onChange(c)}
+      />
+    ))}
   </div>
 );
 
 /**
- * The event's own fields (board 180): name and acronym, the kind as a segmented control, the badge colour and the
- * call's address.
+ * The event's own fields (board 180): name and acronym, the kind as a segmented control (with the badge colour small
+ * beside its name) and the call's address.
  *
  * Usage:
  *   <VenueDetailsFields details={details} onChange={(changes) => setDetails({ ...details, ...changes })} />
@@ -65,7 +63,7 @@ export const VenueDetailsFields: React.FC<VenueDetailsFieldsProps> = ({ details,
   <>
     <div className="venue-row">
       <FieldText
-        label="Nome do evento *"
+        label="Nome"
         value={details.title}
         onChange={(title) => onChange({ title })}
         placeholder="Ex: Simpósio Brasileiro de BD"
@@ -79,7 +77,10 @@ export const VenueDetailsFields: React.FC<VenueDetailsFieldsProps> = ({ details,
       />
     </div>
     <div className="venue-field">
-      <span className="venue-field__label">Tipo</span>
+      <div className="venue-field__line">
+        <span className="venue-field__label">Tipo</span>
+        <ColorPicker color={details.color} onChange={(color) => onChange({ color })} />
+      </div>
       <SegmentedControl<VenueCategory>
         label="Tipo do evento"
         value={details.category}
@@ -87,7 +88,6 @@ export const VenueDetailsFields: React.FC<VenueDetailsFieldsProps> = ({ details,
         options={CATEGORY_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
       />
     </div>
-    <ColorPicker color={details.color} onChange={(color) => onChange({ color })} />
     <FieldText
       label={
         <>

@@ -223,7 +223,7 @@ describe('ProjectDetailsPage delete', () => {
     fireEvent.click(deleteButton());
 
     expect(await screen.findByText('Lista de projetos')).toBeInTheDocument();
-    expect(dialogs.confirmMessage.mock.calls[0][0]).toContain('excluir o projeto "Tese"');
+    expect(dialogs.confirmMessage.mock.calls[0][0]).toContain('"Tese" vai para a lixeira');
     expect(service.deleteProject).toHaveBeenCalledWith(1);
   });
 

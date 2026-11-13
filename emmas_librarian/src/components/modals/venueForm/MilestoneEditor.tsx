@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from 'lucide-react';
+import { Clock, X } from 'lucide-react';
 import type { ScientificMilestone } from '../../../types';
 import './venueForm.css';
 
@@ -27,18 +27,15 @@ const DateInput: React.FC<{ caption: string; value: string; onChange: (value: st
 const RangeDates: React.FC<Omit<MilestoneEditorProps, 'onRemove'>> = ({ milestone, onChange }) => (
   <>
     <DateInput caption="De" value={milestone.target_date} onChange={(target_date) => onChange({ target_date })} />
-    <span className="venue-milestone__to">até</span>
+    <span className="venue-milestone__to">a</span>
     <DateInput caption="Até" value={milestone.end_date || ''} onChange={(end_date) => onChange({ end_date })} />
   </>
 );
 
+// The clock is a switch (a checkbox behind it, so a screen reader and the keyboard get a checkbox).
 const SingleDate: React.FC<Omit<MilestoneEditorProps, 'onRemove'>> = ({ milestone, onChange }) => (
   <>
     <DateInput caption="Data" value={milestone.target_date} onChange={(target_date) => onChange({ target_date })} />
-    <label className="venue-milestone__time-toggle">
-      <input type="checkbox" checked={milestone.has_time} onChange={(e) => onChange({ has_time: e.target.checked })} />
-      Incluir horário
-    </label>
     {milestone.has_time && (
       <input
         type="time"
@@ -48,6 +45,16 @@ const SingleDate: React.FC<Omit<MilestoneEditorProps, 'onRemove'>> = ({ mileston
         onChange={(e) => onChange({ target_time: e.target.value })}
       />
     )}
+    <label className={`venue-milestone__clock${milestone.has_time ? ' is-on' : ''}`} title="Incluir horário">
+      <input
+        type="checkbox"
+        className="visually-hidden"
+        aria-label="Incluir horário"
+        checked={milestone.has_time}
+        onChange={(e) => onChange({ has_time: e.target.checked })}
+      />
+      <Clock size={14} aria-hidden="true" />
+    </label>
   </>
 );
 
@@ -67,7 +74,7 @@ export const MilestoneEditor: React.FC<MilestoneEditorProps> = ({ milestone, onC
       value={milestone.label}
       onChange={(e) => onChange({ label: e.target.value })}
     />
-    <div className="venue-milestone__dates">
+    <div className="venue-when">
       {milestone.field_type === 'range' ? (
         <RangeDates milestone={milestone} onChange={onChange} />
       ) : (

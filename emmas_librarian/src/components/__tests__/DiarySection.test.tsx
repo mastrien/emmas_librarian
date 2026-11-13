@@ -256,23 +256,55 @@ describe('DiarySection deletion', () => {
 });
 
 describe('DiarySection history', () => {
-  const longText = 'x'.repeat(151);
+  const version = (id: number, content: string, updated_at = '2026-03-05 10:00:00') => ({ id, content, updated_at });
+  const openHistory = async () => {
+    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
+    return screen.findByRole('dialog', { name: 'Histórico de Versões' });
+  };
 
-  it('lists previous versions with truncated previews', async () => {
-    givenEntries(entry(PAST, 'a'));
+  it('lists the current page and the versions with what differs from it (board 180)', async () => {
+    givenEntries(entry(PAST, '# Critérios\nlinha nova\nlinha igual'));
     service.getDiaryEntryHistory.mockResolvedValue([
-      { id: 10, content: longText, updated_at: '2026-03-05T10:00:00Z' },
-      { id: 11, content: '', updated_at: '2026-03-05T09:00:00Z' },
+      version(11, '# Critérios\nlinha velha\nlinha igual'),
+      version(10, '# Critérios'),
     ]);
     renderDiary();
-    await openEntry(PAST, 'a');
+    await openEntry(PAST, '# Critérios\nlinha nova\nlinha igual');
 
-    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
+    const dialog = await openHistory();
 
-    await screen.findByText('Histórico de Versões');
     expect(service.getDiaryEntryHistory).toHaveBeenCalledWith(PROJECT_ID, PAST);
-    expect(screen.getByText(`${'x'.repeat(150)}...`)).toBeInTheDocument();
-    expect(screen.getByText('(Vazio)')).toBeInTheDocument();
+    expect(within(dialog).getByRole('heading', { name: 'Versões de “Critérios”' })).toBeInTheDocument();
+    const list = within(dialog).getByRole('group', { name: 'Versões' });
+    expect(within(list).getByText('a página como está')).toBeInTheDocument();
+    expect(within(list).getByText('−1 linha, +1 linha')).toBeInTheDocument();
+    expect(within(list).getByText('primeira versão')).toBeInTheDocument();
+  });
+
+  it('shows the chosen version with what came in after it in green and what went out in red', async () => {
+    givenEntries(entry(PAST, 'um dois novo'));
+    service.getDiaryEntryHistory.mockResolvedValue([version(10, 'um dois velho')]);
+    renderDiary();
+    await openEntry(PAST, 'um dois novo');
+
+    const dialog = await openHistory();
+
+    expect(dialog.querySelector('.diary-history__text ins')).toHaveTextContent('novo');
+    expect(dialog.querySelector('.diary-history__text del')).toHaveTextContent('velho');
+  });
+
+  it('chooses another version from the list', async () => {
+    givenEntries(entry(PAST, 'atual'));
+    service.getDiaryEntryHistory.mockResolvedValue([version(11, 'segunda'), version(10, 'primeira')]);
+    renderDiary();
+    await openEntry(PAST, 'atual');
+    const dialog = await openHistory();
+    expect(within(dialog).getAllByRole('button', { pressed: true })).toHaveLength(1);
+
+    fireEvent.click(within(dialog).getByText('primeira versão').closest('button')!);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Restaurar esta versão' }));
+
+    await waitFor(() => expect(service.restoreDiaryEntryVersion).toHaveBeenCalledWith(10));
   });
 
   it('shows an empty history and closes it', async () => {
@@ -280,30 +312,40 @@ describe('DiarySection history', () => {
     renderDiary();
     await openEntry(PAST, 'a');
 
-    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
-    await screen.findByText('Nenhuma versão anterior encontrada.');
+    const dialog = await openHistory();
+    expect(within(dialog).getByText('Nenhuma versão anterior encontrada.')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Restaurar esta versão' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
 
-    expect(screen.queryByText('Histórico de Versões')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Histórico de Versões' })).not.toBeInTheDocument();
+  });
+
+  it('cannot restore the current page, which is not a version', async () => {
+    givenEntries(entry(PAST, 'a'));
+    service.getDiaryEntryHistory.mockResolvedValue([version(10, 'antes')]);
+    renderDiary();
+    await openEntry(PAST, 'a');
+    const dialog = await openHistory();
+
+    fireEvent.click(within(dialog).getByText('Atual').closest('button')!);
+
+    expect(within(dialog).getByRole('button', { name: 'Restaurar esta versão' })).toBeDisabled();
   });
 
   it('restores a version into the editor', async () => {
     givenEntries(entry(PAST, 'old'));
-    service.getDiaryEntryHistory.mockResolvedValue([
-      { id: 10, content: 'restored', updated_at: '2026-03-05T10:00:00Z' },
-    ]);
+    service.getDiaryEntryHistory.mockResolvedValue([version(10, 'restored')]);
     renderDiary();
     await openEntry(PAST, 'old');
-    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
-    await screen.findByText('Histórico de Versões');
+    await openHistory();
     service.getDiaryEntry.mockResolvedValue(entry(PAST, 'restored'));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Restaurar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Restaurar esta versão' }));
 
     // The restored page is read again into a new editor.
     await waitFor(() => expect(screen.getByLabelText<HTMLTextAreaElement>('editor').value).toBe('restored'));
     expect(service.restoreDiaryEntryVersion).toHaveBeenCalledWith(10);
-    expect(screen.queryByText('Histórico de Versões')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Histórico de Versões' })).not.toBeInTheDocument();
   });
 
   it('logs and stays open when history fails to load or restore', async () => {
@@ -315,17 +357,17 @@ describe('DiarySection history', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
     await waitFor(() => expect(consoleError).toHaveBeenCalledWith('Failed to load diary history:', expect.any(Error)));
-    expect(screen.queryByText('Histórico de Versões')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Histórico de Versões' })).not.toBeInTheDocument();
 
-    service.getDiaryEntryHistory.mockResolvedValue([{ id: 10, content: 'v', updated_at: '2026-03-05T10:00:00Z' }]);
+    service.getDiaryEntryHistory.mockResolvedValue([version(10, 'v')]);
     service.restoreDiaryEntryVersion.mockRejectedValueOnce(new Error('locked'));
-    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Restaurar' }));
+    await openHistory();
+    fireEvent.click(screen.getByRole('button', { name: 'Restaurar esta versão' }));
 
     await waitFor(() =>
       expect(consoleError).toHaveBeenCalledWith('Failed to restore diary version:', expect.any(Error)),
     );
-    expect(screen.getByText('Histórico de Versões')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Histórico de Versões' })).toBeInTheDocument();
     consoleError.mockRestore();
   });
 });
@@ -466,7 +508,7 @@ describe('DiarySection never mixes the text of two pages', () => {
     typeInto(await openEntry(PAST, 'a'), 'a editado');
 
     fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
-    await screen.findByText('Histórico de Versões');
+    await screen.findByRole('dialog', { name: 'Histórico de Versões' });
 
     expect(order).toEqual(['save', 'history']);
   });

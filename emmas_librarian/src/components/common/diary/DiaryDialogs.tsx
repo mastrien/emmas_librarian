@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../Modal';
-import { formatDiaryDate } from './diaryDates';
+import { ModalFooter } from '../ModalFooter';
+import { Button } from '../Button';
+import { changeSummary, diffWords } from './diffText';
+import { versionStamp } from './diaryDates';
+import './diary.css';
 
 export interface DiaryVersion {
   id: number;
@@ -8,110 +12,125 @@ export interface DiaryVersion {
   updated_at: string;
 }
 
-const PREVIEW_LENGTH = 150;
-
 interface DiaryHistoryDialogProps {
-  date: string;
+  /** The page's name (its first line), for the title. */
+  title: string;
+  /** What the page says now: what each version is compared with. */
+  current: string;
+  /** The versions before the current one, the newest first. */
   versions: DiaryVersion[];
   onRestore: (versionId: number) => void;
   onClose: () => void;
 }
 
+const CURRENT = 'current';
+
+const Legend: React.FC = () => (
+  <div className="diary-history__legend">
+    <span>
+      <ins className="diary-diff diary-diff--add">verde</ins> entrou depois
+    </span>
+    <span>
+      <del className="diary-diff diary-diff--del">vermelho</del> saiu depois
+    </span>
+  </div>
+);
+
+/** A version as it differs from the current text: what came in after it in green, what went out after it in red. */
+const VersionText: React.FC<{ version: string; current: string }> = ({ version, current }) => (
+  <div className="diary-history__text">
+    {diffWords(version, current).map((part, i) => {
+      if (part.kind === 'add') {
+        return (
+          <ins key={i} className="diary-diff diary-diff--add">
+            {part.text}
+          </ins>
+        );
+      }
+      if (part.kind === 'del') {
+        return (
+          <del key={i} className="diary-diff diary-diff--del">
+            {part.text}
+          </del>
+        );
+      }
+      return <span key={i}>{part.text}</span>;
+    })}
+  </div>
+);
+
+const VersionButton: React.FC<{ on: boolean; head: string; note: string; onSelect: () => void }> = ({
+  on,
+  head,
+  note,
+  onSelect,
+}) => (
+  <button type="button" className={`diary-history__version${on ? ' is-on' : ''}`} aria-pressed={on} onClick={onSelect}>
+    <span className="diary-history__when">{head}</span>
+    <span className="diary-history__note">{note}</span>
+  </button>
+);
+
 /**
- * Previous saved versions of a diary page, each restorable.
+ * The versions of a diary page (board 180): the list at the left, the current page first, each version with what
+ * differs from the current text; at the right the chosen version with that difference marked. The current text becomes
+ * a version before being replaced, so restoring loses nothing.
  *
  * Usage:
- *   {showHistory && <DiaryHistoryDialog date={date} versions={versions} onRestore={restore} onClose={close} />}
+ *   {showHistory && <DiaryHistoryDialog title="Critérios" current={text} versions={versions} onRestore={restore} onClose={close} />}
  */
-export const DiaryHistoryDialog: React.FC<DiaryHistoryDialogProps> = ({ date, versions, onRestore, onClose }) => (
-  <Modal
-    label="Histórico de Versões"
-    title="Histórico de Versões"
-    description={
-      <>
-        Selecione uma versão anterior para restaurar no diário de <strong>{formatDiaryDate(date)}</strong>.
-      </>
-    }
-    onClose={onClose}
-    width={500}
-  >
-    <div
-      style={{
-        flex: 1,
-        overflowY: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.75rem',
-        marginBottom: '1.5rem',
-        paddingRight: '0.5rem',
-      }}
-    >
-      {versions.length === 0 ? (
-        <NoVersions />
-      ) : (
-        versions.map((v) => <VersionCard key={v.id} version={v} onRestore={onRestore} />)
-      )}
-    </div>
-  </Modal>
-);
-
-const NoVersions: React.FC = () => (
-  <div
-    style={{
-      textAlign: 'center',
-      padding: '2rem',
-      border: '1px dashed var(--border-color)',
-      borderRadius: 'var(--radius-md)',
-      color: 'var(--text-muted)',
-    }}
-  >
-    Nenhuma versão anterior encontrada.
-  </div>
-);
-
-const previewOf = (content: string) =>
-  !content ? '(Vazio)' : content.length > PREVIEW_LENGTH ? content.substring(0, PREVIEW_LENGTH) + '...' : content;
-
-const VersionCard: React.FC<{ version: DiaryVersion; onRestore: (versionId: number) => void }> = ({
-  version,
+export const DiaryHistoryDialog: React.FC<DiaryHistoryDialogProps> = ({
+  title,
+  current,
+  versions,
   onRestore,
-}) => (
-  <div
-    style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.5rem',
-      padding: '1rem',
-      background: 'var(--bg-main)',
-      borderRadius: 'var(--radius-md)',
-      border: '1px solid var(--border-color)',
-    }}
-  >
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-heading)' }}>
-        {new Date(version.updated_at).toLocaleString('pt-BR')}
-      </span>
-      <button
-        onClick={() => onRestore(version.id)}
-        className="btn-primary"
-        style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-      >
-        Restaurar
-      </button>
-    </div>
-    <div
-      style={{
-        fontSize: '0.8rem',
-        color: 'var(--text-muted)',
-        whiteSpace: 'pre-wrap',
-        maxHeight: '60px',
-        overflow: 'hidden',
-        borderLeft: '2px solid var(--border-color)',
-        paddingLeft: '0.5rem',
-        fontStyle: version.content ? 'normal' : 'italic',
-      }}
+  onClose,
+}) => {
+  const [chosen, setChosen] = useState<string>(versions.length > 0 ? String(versions[0].id) : CURRENT);
+  const version = versions.find((v) => String(v.id) === chosen) ?? null;
+  const oldest = versions[versions.length - 1];
+  return (
+    <Modal
+      label="Histórico de Versões"
+      title={`Versões de “${title}”`}
+      description="Salvas sozinhas enquanto você escreve"
+      onClose={onClose}
+      width={700}
     >
-      {previewOf(version.content)}
-    </div>
-  </div>
-);
+      <div className="diary-history">
+        <div className="diary-history__list" role="group" aria-label="Versões">
+          <VersionButton
+            on={chosen === CURRENT}
+            head="Atual"
+            note="a página como está"
+            onSelect={() => setChosen(CURRENT)}
+          />
+          {versions.map((v) => (
+            <VersionButton
+              key={v.id}
+              on={chosen === String(v.id)}
+              head={versionStamp(v.updated_at)}
+              note={v === oldest ? 'primeira versão' : changeSummary(v.content, current)}
+              onSelect={() => setChosen(String(v.id))}
+            />
+          ))}
+        </div>
+        <div className="diary-history__body">
+          {versions.length === 0 && <p className="diary-history__empty">Nenhuma versão anterior encontrada.</p>}
+          {version && (
+            <>
+              <Legend />
+              <VersionText version={version.content} current={current} />
+            </>
+          )}
+          {versions.length > 0 && !version && <div className="diary-history__text">{current}</div>}
+        </div>
+      </div>
+      <ModalFooter hint="A versão atual vira uma versão antes de ser trocada">
+        <Button variant="primary" disabled={!version} onClick={() => version && onRestore(version.id)}>
+          Restaurar esta versão
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+};

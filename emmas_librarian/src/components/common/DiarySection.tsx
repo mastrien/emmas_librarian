@@ -6,6 +6,7 @@ import type { DiaryMode } from './diary/DiaryPageToolbar';
 import { DiaryEmptyState } from './diary/DiaryEditor';
 import { DiaryPage, type DiaryPageHandle } from './diary/DiaryPage';
 import { DiaryHistoryDialog, type DiaryVersion } from './diary/DiaryDialogs';
+import { diaryPageSummary } from './diary/diaryPages';
 import { formatDiaryDate } from './diary/diaryDates';
 import { localIsoDate } from '../../utils/localDate';
 import { useDialogs } from './dialogs/DialogProvider';
@@ -76,7 +77,7 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
   const [pageVersion, setPageVersion] = useState(0);
   const [mode, setMode] = useDiaryMode();
   const [showHistory, setShowHistory] = useState(false);
-  const [historyList, setHistoryList] = useState<DiaryVersion[]>([]);
+  const [history, setHistory] = useState<{ versions: DiaryVersion[]; current: string }>({ versions: [], current: '' });
   const pageRef = useRef<DiaryPageHandle>(null);
   const todayStr = localIsoDate();
 
@@ -103,7 +104,11 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
     if (!selectedDate) return;
     try {
       await pageRef.current?.flush();
-      setHistoryList((await projectService.getDiaryEntryHistory(projectId, selectedDate)) as DiaryVersion[]);
+      const [versions, entry] = await Promise.all([
+        projectService.getDiaryEntryHistory(projectId, selectedDate),
+        projectService.getDiaryEntry(projectId, selectedDate),
+      ]);
+      setHistory({ versions: versions as DiaryVersion[], current: entry?.content ?? '' });
       setShowHistory(true);
     } catch (err) {
       console.error('Failed to load diary history:', err);
@@ -172,8 +177,10 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
       </div>
       {showHistory && selectedDate && (
         <DiaryHistoryDialog
-          date={selectedDate}
-          versions={historyList}
+          key={`${selectedDate}:${pageVersion}`}
+          title={diaryPageSummary(history.current) || formatDiaryDate(selectedDate)}
+          current={history.current}
+          versions={history.versions}
           onRestore={handleRestoreVersion}
           onClose={() => setShowHistory(false)}
         />

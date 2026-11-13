@@ -64,15 +64,12 @@ test.describe('Project diary', () => {
       await saveNow(window);
 
       await window.getByTitle('Histórico de Versões').click();
-      const dialog = window.locator('.card', { hasText: 'Histórico de Versões' });
+      const dialog = window.getByRole('dialog', { name: 'Histórico de Versões' });
       await expect(dialog).toBeVisible();
-      // The innermost element holding both the preview and a button is that version's card.
-      const versionOne = dialog
-        .locator('div')
-        .filter({ hasText: 'Versão um do diário.' })
-        .filter({ has: window.getByRole('button', { name: 'Restaurar' }) })
-        .last();
-      await versionOne.getByRole('button', { name: 'Restaurar' }).click();
+      // Board 180: the newest earlier version is chosen, and the diff against the current text is marked.
+      await expect(dialog.locator('.diary-history__text del')).toHaveText('um');
+      await expect(dialog.locator('.diary-history__text ins')).toHaveText('dois');
+      await dialog.getByRole('button', { name: 'Restaurar esta versão' }).click();
 
       await expect(editor(window)).toContainText('Versão um do diário.');
       await expect(editor(window)).not.toContainText('Versão dois do diário.');

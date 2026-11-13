@@ -78,7 +78,7 @@ export const VenueFormModal: React.FC<VenueFormModalProps> = ({
   // The accessible name keeps the old wording; the title on screen is the board's (180).
   const name = initialData ? 'Editar Evento / Periódico' : 'Novo Evento / Periódico';
   return (
-    <Modal label={name} title={initialData ? 'Editar evento' : 'Novo evento'} onClose={onClose} width={620}>
+    <Modal label={name} title={initialData ? 'Editar evento' : 'Novo evento'} onClose={onClose} width={520}>
       <form onSubmit={handleSubmit} className="venue-form">
         {errorMsg && <VenueFormError message={errorMsg} />}
         <span className="app-modal-group">Evento ou revista</span>
