@@ -111,7 +111,7 @@ const EditArticleForm: React.FC<Omit<EditArticleModalProps, 'isOpen'>> = ({ onCl
           <LabeledField label="Edição (Issue)" value={fields.issue} onChange={set('issue')} />
           <LabeledField label="Páginas" value={fields.pages} onChange={set('pages')} />
         </div>
-        <LabeledField label="Resumo" value={fields.abstract} onChange={set('abstract')} multiline />
+        <LabeledField label="Resumo" value={fields.abstract} onChange={set('abstract')} multiline reading />
 
         <ModalFooter hint={<span className="app-modal-kbd">Ctrl Enter</span>}>
           <Button variant="ghost" onClick={onClose} disabled={submitting}>

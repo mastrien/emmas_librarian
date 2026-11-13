@@ -166,6 +166,7 @@ const ManualArticleForm: React.FC<Omit<ManualArticleModalProps, 'isOpen'>> = ({ 
           onChange={set('abstract')}
           placeholder="Resumo do artigo..."
           multiline
+          reading
           textareaHeight="80px"
         />
         <PdfPicker filePath={filePath} onPick={handleSelectFile} onClear={() => setFilePath(undefined)} />

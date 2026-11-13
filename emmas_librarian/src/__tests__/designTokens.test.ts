@@ -27,7 +27,19 @@ function undefinedUses(): string[] {
   );
 }
 
+// The same, for uses WITH a fallback: `var(--font-reading, sans)` named a token that never existed, so the reading text
+// of three screens was never set in the serif face and nobody saw it, because the fallback always rendered something.
+function undefinedUsesWithFallback(): string[] {
+  return files.flatMap(({ file, text }) =>
+    [...text.matchAll(/var\((--[a-z][\w-]*)\s*,/g)].filter((m) => !defined.has(m[1])).map((m) => `${file}: ${m[1]}`),
+  );
+}
+
 describe('design tokens (Arca 134)', () => {
+  it('names only tokens that exist, even where a fallback would hide a wrong name', () => {
+    expect(undefinedUsesWithFallback()).toEqual([]);
+  });
+
   // Fifteen tokens were used without being defined, so their rule silently did nothing: an invisible progress
   // track, no menu hover, the current AI model's border gone.
   it('defines every token the code uses without a fallback', () => {

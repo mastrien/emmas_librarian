@@ -26,8 +26,8 @@ export const AskRings: React.FC<AskRingsProps> = ({ size, state = 'idle' }) => {
   );
 };
 
-/** The size, in pixels, the still frame is drawn at: three times the 28 the avatar shows, so it is sharp. */
-const STILL_PX = 84;
+/** The size, in pixels, the still frame is drawn at: six times the 28 the avatar shows, so it is sharp. */
+const STILL_PX = 168;
 
 /**
  * The same rings, still, for the answers that are not the last: a frame of the 3D drawing as an image, so that only one

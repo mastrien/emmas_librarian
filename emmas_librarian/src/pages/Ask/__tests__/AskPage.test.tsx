@@ -346,7 +346,7 @@ describe('AskPage (#53)', () => {
 
       await press(await screen.findByRole('button', { name: 'Almeida 2021, p. 4' }));
       const list = screen.getByRole('list', { name: 'Fontes' });
-      expect(within(list).getAllByRole('button')).toHaveLength(2);
+      expect(within(list).getAllByRole('button', { name: /^Ver a fonte/ })).toHaveLength(2);
       await press(within(list).getByRole('button', { name: 'Ver a fonte 2: Outro estudo' }));
 
       expect(screen.getByText('segundo trecho')).toBeInTheDocument();

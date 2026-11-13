@@ -256,12 +256,13 @@ export const AnnotationsTab: React.FC<AnnotationsTabProps> = ({
                   )}
                   <div
                     style={{
-                      borderLeft: '3px solid var(--color-primary)',
-                      paddingLeft: '0.75rem',
+                      borderLeft: '3px solid #facc15',
+                      paddingLeft: '8px',
                       marginBottom: '0.5rem',
-                      color: 'var(--text-muted)',
-                      fontStyle: 'italic',
-                      fontSize: '0.85rem',
+                      color: 'var(--text-main)',
+                      fontFamily: 'var(--font-read)',
+                      fontSize: '13px',
+                      lineHeight: 1.5,
                       paddingRight: '2.5rem',
                     }}
                   >

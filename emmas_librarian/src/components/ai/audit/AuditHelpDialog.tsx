@@ -11,7 +11,7 @@ import { AxisScale, ForestPlot } from './ForestPlot';
  *   {helpOpen && <AuditHelpDialog onClose={() => setHelpOpen(false)} />}
  */
 export const AuditHelpDialog: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <Modal label="Como ler a auditoria" title="Como ler a auditoria" onClose={onClose} width={560}>
+  <Modal label="Como ler a auditoria" title="Como ler a auditoria" onClose={onClose} width={560} className="audit-help">
     <h4 className="audit-m0">Acerto estimado</h4>
     <p className="audit-m0">
       A auditoria não confere todas as respostas, só uma amostra sorteada. A porcentagem diz quantas respostas da

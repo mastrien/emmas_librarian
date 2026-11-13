@@ -37,7 +37,7 @@ export const UpdateNotificationBanner: React.FC<UpdateNotificationBannerProps> =
   return (
     <div
       style={{
-        backgroundColor: 'var(--color-primary-dark, #1e3a8a)',
+        backgroundColor: 'var(--color-primary-hover, #1e3a8a)',
         color: '#ffffff',
         padding: '0.6rem 1.5rem',
         display: 'flex',
@@ -62,7 +62,7 @@ export const UpdateNotificationBanner: React.FC<UpdateNotificationBannerProps> =
           disabled={downloading}
           style={{
             backgroundColor: '#ffffff',
-            color: 'var(--color-primary-dark, #1e3a8a)',
+            color: 'var(--color-primary-hover, #1e3a8a)',
             border: 'none',
             borderRadius: 'var(--radius-sm, 4px)',
             padding: '0.3rem 0.75rem',

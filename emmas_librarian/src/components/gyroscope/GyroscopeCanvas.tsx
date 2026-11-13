@@ -295,8 +295,15 @@ export function GyroscopeCanvas({
 let stillRenderer: THREE.WebGLRenderer | null = null;
 const stills = new Map<string, string | null>();
 
-/** Quanto cada anel já girou no quadro parado: uma pose que não é a de partida, para os anéis não ficarem alinhados. */
-const STILL_POSE_SECONDS = 3;
+/**
+ * A pose para o quadro parado: os três anéis aparecem como elipses abertas. Os giros de partida do canvas animado
+ * deixam o anel de fora quase de lado, e de lado ele vira uma barra, que não lembra um anel.
+ */
+const STILL_POSE: [number, number, number][] = [
+  [0.7, 0.25, 0],
+  [0.25, 0.95, 0.3],
+  [-0.85, -0.55, 0.4],
+];
 
 /**
  * Um quadro dos anéis, parado, como imagem (data URL): o mesmo desenho do canvas animado, desenhado uma vez num
@@ -334,11 +341,7 @@ function drawStill(renderer: THREE.WebGLRenderer, colors: RingColors): string {
   const geometries = RINGS.map((ring) => {
     const geometry = createBandGeometry(ring.radius, RING_WALL, RING_HEIGHT, RING_CURVE, RING_SEGMENTS);
     const mesh = new THREE.Mesh(geometry, materials);
-    mesh.rotation.set(
-      ring.tilt[0] + ring.spin[0] * STILL_POSE_SECONDS,
-      ring.tilt[1] + ring.spin[1] * STILL_POSE_SECONDS,
-      ring.tilt[2] + ring.spin[2] * STILL_POSE_SECONDS,
-    );
+    mesh.rotation.set(...STILL_POSE[RINGS.indexOf(ring)]);
     scene.add(mesh);
     return geometry;
   });

@@ -91,7 +91,7 @@ const CallInspector: React.FC<{ item: NumberedCall }> = ({ item }) => {
       </Field>
       {call.status === 'success' ? (
         <Field label="Resposta do modelo">
-          <span className="inv-wrap-anywhere">{call.answer}</span>
+          <span className="inv-wrap-anywhere inv-reading">{call.answer}</span>
         </Field>
       ) : (
         <Field label="Erro">
