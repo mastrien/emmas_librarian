@@ -250,7 +250,9 @@ Regra que o autor fixou: a interface fica igual ao board; só se diverge quando 
 
 Corrigidos depois do teste no app: a primeira seção das Configurações (Aparência) não aparecia destacada na barra lateral ao entrar pela primeira vez.
 
-Ainda abertos desta rodada: confirmações e erros (não conferi ainda); acesso rápido e investigações da sidebar com muitos itens (proposta: mostrar os mais recentes e "Ver todos"); o PDF que sumiu do leitor depois de dois destaques (não reproduzi, ver o PR).
+- [ ] **Sidebar com muitos itens**: o acesso rápido mostra só os mais recentes, com "Ver todos na Visão geral"; as investigações mostram as 5 mais recentes (mais a que está aberta, se for antiga) e "Ver todas (N)" / "Mostrar menos" expandem ali mesmo.
+
+Ainda aberto desta rodada: o PDF que sumiu do leitor depois de dois destaques (não reproduzi, ver o PR).
 
 ## Fim do redesign
 

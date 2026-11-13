@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import type { InvestigationHistoryRecord } from '../../types';
 import { parseJsonList } from '../../utils/parseJsonList';
 import { investigationPath } from './investigationView';
@@ -34,6 +34,25 @@ export function savedDetails(
   if (pending) parts.push(`${pending} para revisar`);
   if (audited) parts.push('auditada');
   return parts.join(' · ');
+}
+
+/** How many saved investigations the sidebar lists before "Ver todas". */
+export const SIDEBAR_INVESTIGATIONS = 5;
+
+/**
+ * The saved investigations the sidebar shows: the `limit` most recent (the list comes newest first), plus the one open
+ * on screen when it is an older one, so the line you are on never disappears behind "Ver todas".
+ *
+ * @example visibleInvestigations(history, 3).map((r) => r.id) // [9, 8, 7, 2] when #2 is the one open
+ */
+export function visibleInvestigations(
+  history: InvestigationHistoryRecord[],
+  openId: number | null,
+  limit = SIDEBAR_INVESTIGATIONS,
+): InvestigationHistoryRecord[] {
+  const recent = history.slice(0, limit);
+  const open = history.find((r) => r.id === openId);
+  return open && !recent.includes(open) ? [...recent, open] : recent;
 }
 
 const subClass = ({ isActive }: { isActive: boolean }) => `project-nav__sub${isActive ? ' is-active' : ''}`;
@@ -102,13 +121,17 @@ interface InvestigationNavListProps {
 export const InvestigationNavList: React.FC<InvestigationNavListProps> = (props) => {
   const { projectId, history, run, pendingById, auditedIds, onPick } = props;
   const running = run?.isRunning && run.projectId === projectId ? run : null;
+  const [showAll, setShowAll] = useState(false);
+  const { pathname } = useLocation();
+  const openId = history.find((r) => pathname === investigationPath(projectId, r.id))?.id ?? null;
+  const listed = showAll ? history : visibleInvestigations(history, openId);
   return (
     <nav className="project-nav__sub-list" aria-label="Investigações do projeto">
       <NavLink to={investigationPath(projectId, 'new')} className={subClass} onClick={onPick}>
         <span className="project-nav__sub-label">+ Nova investigação</span>
       </NavLink>
       {running && <RunningItem projectId={projectId} run={running} onPick={onPick} />}
-      {history.map((record) => (
+      {listed.map((record) => (
         <SavedItem
           key={record.id}
           projectId={projectId}
@@ -118,6 +141,11 @@ export const InvestigationNavList: React.FC<InvestigationNavListProps> = (props)
           onPick={onPick}
         />
       ))}
+      {history.length > SIDEBAR_INVESTIGATIONS && (
+        <button type="button" className="project-nav__see-all" onClick={() => setShowAll((all) => !all)}>
+          {showAll ? 'Mostrar menos' : `Ver todas (${history.length})`}
+        </button>
+      )}
       {!running && history.length === 0 && <span className="project-nav__sub-empty">Nenhuma investigação ainda.</span>}
     </nav>
   );
