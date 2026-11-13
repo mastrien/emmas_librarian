@@ -68,4 +68,47 @@ describe('useProjectAbout', () => {
 
     expect(service.updateProjectAbout).toHaveBeenCalledWith(3, 'última frase');
   });
+
+  // The overwrite: the hook stayed mounted when the project changed, and what was waiting for project 3 was saved on
+  // the way out under the project that was open by then.
+  it('saves a change that was waiting under the project it was written in, even if the project changed since', async () => {
+    service.aboutByProject.set(4, 'outro projeto');
+    const { result, rerender, unmount } = renderHook(({ id }) => useProjectAbout(id, 10_000), {
+      wrapper,
+      initialProps: { id: 3 },
+    });
+    await waitFor(() => expect(result.current.markdown).toBe('## Objetivo'));
+
+    act(() => result.current.onChange('texto do projeto 3'));
+    rerender({ id: 4 });
+    unmount();
+
+    expect(service.updateProjectAbout).toHaveBeenCalledWith(3, 'texto do projeto 3');
+    expect(service.updateProjectAbout).not.toHaveBeenCalledWith(4, 'texto do projeto 3');
+  });
+
+  it('does not show the text of one project while it loads another', async () => {
+    service.aboutByProject.set(4, 'outro projeto');
+    const { result, rerender } = renderHook(({ id }) => useProjectAbout(id, 10_000), {
+      wrapper,
+      initialProps: { id: 3 },
+    });
+    await waitFor(() => expect(result.current.markdown).toBe('## Objetivo'));
+
+    rerender({ id: 4 });
+
+    expect(result.current.markdown).not.toBe('## Objetivo');
+  });
+
+  it('does not save the text the page already had, or an edit the editor made by itself while loading', async () => {
+    const { result } = renderHook(() => useProjectAbout(3, 100), { wrapper });
+    await waitFor(() => expect(result.current.markdown).toBe('## Objetivo'));
+    vi.useFakeTimers();
+
+    act(() => result.current.onChange('## Objetivo'));
+    act(() => result.current.onChange('## Objetivo reescrito', true));
+    await act(async () => vi.advanceTimersByTime(500));
+
+    expect(service.updateProjectAbout).not.toHaveBeenCalled();
+  });
 });

@@ -285,8 +285,8 @@ export const projectService: IProjectService = {
   getDiaryEntry: (projectId: number, entryDate: string): Promise<DiaryEntry | null> =>
     safeInvoke(IpcChannel.DIARY_GET_ONE, projectId, entryDate),
 
-  async saveDiaryEntry(projectId: number, entryDate: string, content: string): Promise<void> {
-    await safeInvoke(IpcChannel.DIARY_SAVE, projectId, entryDate, content);
+  async saveDiaryEntry(projectId: number, entryDate: string, content: string, expected?: string | null): Promise<void> {
+    await safeInvoke(IpcChannel.DIARY_SAVE, projectId, entryDate, content, expected);
   },
 
   async deleteDiaryEntry(projectId: number, entryDate: string): Promise<void> {

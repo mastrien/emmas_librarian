@@ -247,7 +247,8 @@ export interface IProjectService {
   // ── Diary ─────────────────────────────────────────────────────────
   getDiaryEntries(projectId: number): Promise<unknown[]>;
   getDiaryEntry(projectId: number, entryDate: string): Promise<DiaryEntry | null>;
-  saveDiaryEntry(projectId: number, entryDate: string, content: string): Promise<void>;
+  /** `expected`: the text this page had when it was read (null: it did not exist); another text in the database refuses the write. */
+  saveDiaryEntry(projectId: number, entryDate: string, content: string, expected?: string | null): Promise<void>;
   deleteDiaryEntry(projectId: number, entryDate: string): Promise<void>;
   getDiaryEntryHistory(projectId: number, entryDate: string): Promise<unknown[]>;
   restoreDiaryEntryVersion(versionId: number): Promise<void>;

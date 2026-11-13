@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
-import { HistoryRepository } from '../HistoryRepository';
+import { DIARY_CONFLICT, HistoryRepository } from '../HistoryRepository';
 
 describe('HistoryRepository', () => {
   let db: Database.Database;
@@ -166,6 +166,59 @@ describe('HistoryRepository', () => {
       const history = repo.getDiaryEntryHistory(projectId, '2023-01-01') as any[];
       expect(history).toHaveLength(1);
       expect(history[0].content).toBe('Old content');
+    });
+
+    describe('when the caller says what it last saw (expected)', () => {
+      it('writes when the page still holds that text', () => {
+        repo.saveDiaryEntry(projectId, '2023-01-01', 'A');
+
+        repo.saveDiaryEntry(projectId, '2023-01-01', 'B', 'A');
+
+        expect(repo.getDiaryEntry(projectId, '2023-01-01')?.content).toBe('B');
+      });
+
+      // The bug: a late save carrying the text of one page landed on another and the page lost what it had.
+      it('refuses to write over text it has not seen, and leaves the page as it was', () => {
+        repo.saveDiaryEntry(projectId, '2023-01-01', 'texto da página B');
+
+        expect(() => repo.saveDiaryEntry(projectId, '2023-01-01', 'texto da página A', 'o que A abriu')).toThrow(
+          /alterada em outro lugar/,
+        );
+
+        expect(repo.getDiaryEntry(projectId, '2023-01-01')?.content).toBe('texto da página B');
+        expect(repo.getDiaryEntryHistory(projectId, '2023-01-01')).toHaveLength(0);
+      });
+
+      it('says the conflict with its own code', () => {
+        repo.saveDiaryEntry(projectId, '2023-01-01', 'X');
+
+        expect(() => repo.saveDiaryEntry(projectId, '2023-01-01', 'Y', 'Z')).toThrow(
+          expect.objectContaining({ code: DIARY_CONFLICT }),
+        );
+      });
+
+      it('creates a page that did not exist when expected is null, and refuses if it exists now', () => {
+        repo.saveDiaryEntry(projectId, '2023-01-02', 'nova', null);
+        expect(repo.getDiaryEntry(projectId, '2023-01-02')?.content).toBe('nova');
+
+        expect(() => repo.saveDiaryEntry(projectId, '2023-01-02', 'outra', null)).toThrow(/alterada em outro lugar/);
+      });
+
+      it('treats an empty page and a page that does not exist as the same starting point', () => {
+        repo.saveDiaryEntry(projectId, '2023-01-03', '');
+
+        repo.saveDiaryEntry(projectId, '2023-01-03', 'texto', null);
+
+        expect(repo.getDiaryEntry(projectId, '2023-01-03')?.content).toBe('texto');
+      });
+
+      it('still always writes when expected is left out', () => {
+        repo.saveDiaryEntry(projectId, '2023-01-01', 'A');
+
+        repo.saveDiaryEntry(projectId, '2023-01-01', 'Z');
+
+        expect(repo.getDiaryEntry(projectId, '2023-01-01')?.content).toBe('Z');
+      });
     });
 
     it('should delete diary entry and save history', () => {

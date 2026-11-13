@@ -93,4 +93,31 @@ test.describe('Project diary', () => {
       await expect(editor(window)).toBeHidden();
     });
   });
+
+  // The page that overwrote another: with the pages opened one after the other with no pause, the text of one could
+  // arrive in the editor of another and be saved under it.
+  test('opening pages in quick succession never moves text from one page to another', async () => {
+    await withProject(async (window) => {
+      const projectId = Number((await window.evaluate(() => location.hash)).match(/projects\/(\d+)/)[1]);
+      const call = (channel, ...args) =>
+        window.evaluate(([c, a]) => window.electronAPI.invoke(c, ...a), [channel, args]);
+      await call('diary:save', projectId, '2026-03-04', 'Página A original');
+      await call('diary:save', projectId, '2026-03-05', 'Página B original');
+      await window.getByTestId('tab-diary').click();
+      const pages = window.getByRole('navigation', { name: 'Páginas do diário' });
+      const pageA = pages.getByRole('button', { name: /^04\/03/ });
+      const pageB = pages.getByRole('button', { name: /^05\/03/ });
+
+      for (let i = 0; i < 8; i += 1) {
+        await pageA.click();
+        await pageB.click();
+      }
+      await expect(editor(window)).toContainText('Página B original');
+      await writePage(window, 'Página B editada');
+      await saveNow(window);
+
+      expect((await call('diary:getOne', projectId, '2026-03-04')).content).toBe('Página A original');
+      expect((await call('diary:getOne', projectId, '2026-03-05')).content).toContain('Página B editada');
+    });
+  });
 });

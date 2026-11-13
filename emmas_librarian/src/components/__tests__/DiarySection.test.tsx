@@ -125,7 +125,7 @@ describe('DiarySection today page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Página de hoje' }));
 
     await screen.findByRole('heading', { name: longDate(TODAY) });
-    expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, TODAY, '');
+    expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, TODAY, '', null);
     expect(service.getDiaryEntries).toHaveBeenCalledTimes(2);
   });
 
@@ -165,7 +165,7 @@ describe('DiarySection saving', () => {
     expect(service.saveDiaryEntry).not.toHaveBeenCalled();
     await act(() => vi.advanceTimersByTimeAsync(1));
 
-    expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, PAST, 'abc');
+    expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, PAST, 'abc', 'a');
     vi.useRealTimers();
     expect(await screen.findByText(/^Salvo às \d{2}:\d{2}$/)).toBeInTheDocument();
   });
@@ -192,7 +192,7 @@ describe('DiarySection saving', () => {
     await openEntry(OTHER, 'b');
     await act(() => vi.advanceTimersByTimeAsync(2500));
 
-    expect(service.saveDiaryEntry.mock.calls).toEqual([[PROJECT_ID, PAST, 'a2']]);
+    expect(service.saveDiaryEntry.mock.calls).toEqual([[PROJECT_ID, PAST, 'a2', 'a']]);
   });
 });
 
@@ -293,14 +293,15 @@ describe('DiarySection history', () => {
       { id: 10, content: 'restored', updated_at: '2026-03-05T10:00:00Z' },
     ]);
     renderDiary();
-    const editor = await openEntry(PAST, 'old');
+    await openEntry(PAST, 'old');
     fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
     await screen.findByText('Histórico de Versões');
     service.getDiaryEntry.mockResolvedValue(entry(PAST, 'restored'));
 
     fireEvent.click(screen.getByRole('button', { name: 'Restaurar' }));
 
-    await waitFor(() => expect(editor.value).toBe('restored'));
+    // The restored page is read again into a new editor.
+    await waitFor(() => expect(screen.getByLabelText<HTMLTextAreaElement>('editor').value).toBe('restored'));
     expect(service.restoreDiaryEntryVersion).toHaveBeenCalledWith(10);
     expect(screen.queryByText('Histórico de Versões')).not.toBeInTheDocument();
   });
@@ -326,5 +327,144 @@ describe('DiarySection history', () => {
     );
     expect(screen.getByText('Histórico de Versões')).toBeInTheDocument();
     consoleError.mockRestore();
+  });
+});
+
+// The page that overwrote another: opening A then B quickly, A's text arrived after B's and an editor event then saved
+// it under B. Each page is its own instance now, so there is nowhere for it to land.
+describe('DiarySection never mixes the text of two pages', () => {
+  const deferred = <T,>() => {
+    let resolve: (value: T) => void = () => undefined;
+    const promise = new Promise<T>((r) => (resolve = r));
+    return { promise, resolve };
+  };
+
+  it('shows page B and saves only B under B, even when A answers last', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    givenEntries(entry(PAST, 'texto de A'), entry(OTHER, 'texto de B'));
+    const slowA = deferred<DiaryEntry>();
+    service.getDiaryEntry.mockImplementation((_p, date) =>
+      date === PAST ? slowA.promise : Promise.resolve(entry(OTHER, 'texto de B')),
+    );
+    renderDiary();
+    fireEvent.click(await screen.findByText(shortDate(PAST)));
+    fireEvent.click(await screen.findByText(shortDate(OTHER)));
+    const editor = await screen.findByLabelText<HTMLTextAreaElement>('editor');
+    await waitFor(() => expect(editor.value).toBe('texto de B'));
+
+    await act(async () => slowA.resolve(entry(PAST, 'texto de A')));
+    typeInto(screen.getByLabelText('editor'), 'texto de B, editado');
+    await act(() => vi.advanceTimersByTimeAsync(2500));
+
+    expect(screen.getByLabelText<HTMLTextAreaElement>('editor').value).toBe('texto de B, editado');
+    expect(service.saveDiaryEntry.mock.calls).toEqual([[PROJECT_ID, OTHER, 'texto de B, editado', 'texto de B']]);
+  });
+
+  it('does not save a page just because the editor rewrote it while loading', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    givenEntries(entry(PAST, '* item um\n* item dois'));
+    renderDiary();
+    await openEntry(PAST, '- item um\n- item dois');
+
+    await act(() => vi.advanceTimersByTimeAsync(3000));
+
+    expect(service.saveDiaryEntry).not.toHaveBeenCalled();
+    expect(screen.queryByText('Não salvo')).not.toBeInTheDocument();
+  });
+
+  it('does not save when the text is put back as it was', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    givenEntries(entry(PAST, 'a'));
+    renderDiary();
+    const editor = await openEntry(PAST, 'a');
+
+    typeInto(editor, 'ab');
+    typeInto(editor, 'a');
+    await act(() => vi.advanceTimersByTimeAsync(3000));
+
+    expect(service.saveDiaryEntry).not.toHaveBeenCalled();
+    expect(screen.queryByText('Não salvo')).not.toBeInTheDocument();
+  });
+
+  it('keeps the text of a page that was left before it was saved, under that same page', async () => {
+    givenEntries(entry(PAST, 'a'), entry(OTHER, 'b'));
+    renderDiary();
+    typeInto(await openEntry(PAST, 'a'), 'a editado');
+
+    await openEntry(OTHER, 'b');
+
+    await waitFor(() => expect(service.saveDiaryEntry.mock.calls).toEqual([[PROJECT_ID, PAST, 'a editado', 'a']]));
+  });
+
+  it('says so and writes nothing more when the page changed somewhere else, and reads it again on request', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    givenEntries(entry(PAST, 'a'));
+    service.saveDiaryEntry.mockRejectedValue(Object.assign(new Error('alterada'), { code: 'ERR_DIARY_CONFLICT' }));
+    renderDiary();
+    const editor = await openEntry(PAST, 'a');
+
+    typeInto(editor, 'a1');
+    await act(() => vi.advanceTimersByTimeAsync(2500));
+    expect(await screen.findByRole('alert')).toHaveTextContent('a página mudou em outro lugar');
+    typeInto(editor, 'a12');
+    await act(() => vi.advanceTimersByTimeAsync(2500));
+
+    expect(service.saveDiaryEntry).toHaveBeenCalledTimes(1);
+    service.getDiaryEntry.mockResolvedValue(entry(PAST, 'texto que está no banco'));
+    fireEvent.click(screen.getByRole('button', { name: 'Recarregar' }));
+    await waitFor(() =>
+      expect(screen.getByLabelText<HTMLTextAreaElement>('editor').value).toBe('texto que está no banco'),
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('says a save failed, and tries again with the next change', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    givenEntries(entry(PAST, 'a'));
+    service.saveDiaryEntry.mockRejectedValueOnce(new Error('disco cheio'));
+    renderDiary();
+    const editor = await openEntry(PAST, 'a');
+
+    typeInto(editor, 'a1');
+    await act(() => vi.advanceTimersByTimeAsync(2500));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível salvar');
+    typeInto(editor, 'a12');
+    await act(() => vi.advanceTimersByTimeAsync(2500));
+
+    expect(service.saveDiaryEntry).toHaveBeenLastCalledWith(PROJECT_ID, PAST, 'a12', 'a');
+    consoleError.mockRestore();
+  });
+
+  it('does not bring a deleted page back by saving what was waiting', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    givenEntries(entry(PAST, 'a'));
+    renderDiary();
+    typeInto(await openEntry(PAST, 'a'), 'a editado');
+
+    fireEvent.click(deleteButton());
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }));
+    await screen.findByText('Diário do projeto');
+    await act(() => vi.advanceTimersByTimeAsync(3000));
+
+    expect(service.deleteDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, PAST);
+    expect(service.saveDiaryEntry).not.toHaveBeenCalled();
+  });
+
+  it('saves what is waiting before it reads the versions, so they include it', async () => {
+    givenEntries(entry(PAST, 'a'));
+    const order: string[] = [];
+    service.saveDiaryEntry.mockImplementation(async () => void order.push('save'));
+    service.getDiaryEntryHistory.mockImplementation(async () => {
+      order.push('history');
+      return [];
+    });
+    renderDiary();
+    typeInto(await openEntry(PAST, 'a'), 'a editado');
+
+    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
+    await screen.findByText('Histórico de Versões');
+
+    expect(order).toEqual(['save', 'history']);
   });
 });

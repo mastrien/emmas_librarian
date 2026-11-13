@@ -1,10 +1,10 @@
-import React, { forwardRef, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 
 interface FakeMdxEditorProps {
   markdown: string;
   readOnly?: boolean;
   placeholder?: string;
-  onChange?: (markdown: string) => void;
+  onChange?: (markdown: string, initialMarkdownNormalize: boolean) => void;
 }
 
 export interface FakeMdxEditorMethods {
@@ -27,11 +27,21 @@ export const FakeMdxEditor = forwardRef<FakeMdxEditorMethods, FakeMdxEditorProps
 ) {
   const [value, setValue] = useState(markdown);
 
+  // The real editor rewrites what it loads into its own markdown ("* item" becomes "- item") and reports it as an
+  // onChange flagged as normalization, not as an edit of the person.
+  useEffect(() => {
+    if (!/^\* /m.test(markdown)) return;
+    const normalized = markdown.replace(/^\* /gm, '- ');
+    setValue(normalized);
+    onChange?.(normalized, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when it loads
+  }, []);
+
   useImperativeHandle(ref, () => ({ setMarkdown: setValue, getMarkdown: () => value }), [value]);
 
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValue(event.target.value);
-    onChange?.(event.target.value);
+    onChange?.(event.target.value, false);
   };
 
   return (

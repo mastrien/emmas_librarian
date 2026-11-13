@@ -70,7 +70,7 @@ const cases: DelegationCase[] = [
   viaDb(IpcChannel.PDF_LIBRARY_LINK, 'linkPdfToArticle', [2, '/lib/a.pdf'], 'void'),
   viaDb(IpcChannel.DIARY_GET_ALL, 'getDiaryEntries', [1]),
   viaDb(IpcChannel.DIARY_GET_ONE, 'getDiaryEntry', [1, '2026-01-01']),
-  viaDb(IpcChannel.DIARY_SAVE, 'saveDiaryEntry', [1, '2026-01-01', 'texto']),
+  viaDb(IpcChannel.DIARY_SAVE, 'saveDiaryEntry', [1, '2026-01-01', 'texto', 'antes']),
   viaDb(IpcChannel.DIARY_DELETE, 'deleteDiaryEntry', [1, '2026-01-01']),
   viaDb(IpcChannel.DIARY_GET_HISTORY, 'getDiaryEntryHistory', [1, '2026-01-01']),
   viaDb(IpcChannel.DIARY_RESTORE_VERSION, 'restoreDiaryEntryVersion', [7]),

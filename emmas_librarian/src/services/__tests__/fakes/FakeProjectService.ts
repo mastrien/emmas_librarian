@@ -340,7 +340,10 @@ export class FakeProjectService implements IProjectService {
 
   getDiaryEntry = vi.fn(async (_projectId: number, _entryDate: string): Promise<DiaryEntry | null> => null);
 
-  saveDiaryEntry = vi.fn(async (_projectId: number, _entryDate: string, _content: string): Promise<void> => undefined);
+  saveDiaryEntry = vi.fn(
+    async (_projectId: number, _entryDate: string, _content: string, _expected?: string | null): Promise<void> =>
+      undefined,
+  );
 
   deleteDiaryEntry = vi.fn(async (_projectId: number, _entryDate: string): Promise<void> => undefined);
 
