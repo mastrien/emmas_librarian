@@ -97,7 +97,9 @@ describe('AttachPdfModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'escolha um arquivo' }));
 
     await waitFor(() =>
-      expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao realizar upload do PDF: disco cheio'),
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({ message: 'O arquivo não foi anexado ao artigo.', details: 'disco cheio' }),
+      ),
     );
     expect(onClose).not.toHaveBeenCalled();
   });

@@ -3,6 +3,7 @@ import { Info, Trash2, HelpCircle, CheckCircle2, AlertTriangle } from 'lucide-re
 import { Modal, type ModalTone } from '../Modal';
 import { ModalFooter } from '../ModalFooter';
 import { Button } from '../Button';
+import { TechnicalDetails } from './TechnicalDetails';
 import './dialogs.css';
 
 export interface ConfirmOptions {
@@ -21,6 +22,8 @@ export interface InformOptions {
   okLabel?: string;
   /** What the icon says (board 181): done (green), a problem (red), a caution (amber) or plain news. Default: from the title. */
   tone?: ModalTone;
+  /** What the program said (the error's own text): shown folded under "Detalhes técnicos", with a button to copy it. */
+  details?: string;
 }
 
 export interface Dialogs {
@@ -39,6 +42,7 @@ interface PendingDialog {
   cancelLabel: string;
   danger: boolean;
   tone: ModalTone;
+  details?: string;
   settle: (confirmed: boolean) => void;
 }
 
@@ -62,6 +66,7 @@ function toRequest(
     cancelLabel: confirm.cancelLabel ?? 'Cancelar',
     danger: kind === 'confirm' && Boolean(confirm.danger),
     tone: inform.tone ?? informToneFromTitle(options.title),
+    details: inform.details,
     settle,
   };
 }
@@ -97,6 +102,7 @@ const DialogWindow: React.FC<{ dialog: PendingDialog; onSettle: (confirmed: bool
 }) => (
   <Modal label={dialog.title} title={dialog.title} onClose={() => onSettle(false)} width={460} {...dialogIcon(dialog)}>
     <div className="app-dialog-message">{dialog.message}</div>
+    {dialog.details && <TechnicalDetails text={dialog.details} />}
     <ModalFooter plain>
       {dialog.kind === 'confirm' && (
         <Button variant="ghost" onClick={() => onSettle(false)}>

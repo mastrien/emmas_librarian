@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { failureNotice } from '../components/common/dialogs/failureNotice';
 import { Search, Upload } from 'lucide-react';
 import { useProjectService } from '../contexts/ServicesContext';
 import { PageHeader } from '../components/common/PageHeader';
@@ -109,7 +110,7 @@ export const PdfLibraryPage: React.FC = () => {
         loadData();
       }
     } catch (err) {
-      await inform({ title: 'Erro no upload', message: 'Erro ao realizar upload do PDF: ' + err });
+      await inform(failureNotice('Não conseguimos enviar o PDF', 'O arquivo não foi adicionado à biblioteca.', err));
     }
   };
 
@@ -129,7 +130,7 @@ export const PdfLibraryPage: React.FC = () => {
         await projectService.deletePdfLibraryRecord(pdf.file_path);
         loadData();
       } catch (err) {
-        await inform({ title: 'Erro ao excluir', message: 'Erro ao excluir PDF: ' + err });
+        await inform(failureNotice('Não conseguimos excluir o PDF', 'O arquivo continua na biblioteca.', err));
       }
     }
   };

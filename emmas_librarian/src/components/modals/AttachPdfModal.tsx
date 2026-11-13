@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { failureNotice } from '../common/dialogs/failureNotice';
 import { Download, Link2 } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { describeError } from '../../utils/describeError';
@@ -41,7 +42,7 @@ const AttachPdfModalContent: React.FC<AttachPdfModalProps> = ({ articleId, onClo
       await projectService.uploadPdf(articleId, filePath);
       attached();
     } catch (err) {
-      await inform({ title: 'Erro no upload', message: 'Erro ao realizar upload do PDF: ' + err });
+      await inform(failureNotice('Não conseguimos enviar o PDF', 'O arquivo não foi anexado ao artigo.', err));
     }
   };
 
@@ -50,7 +51,7 @@ const AttachPdfModalContent: React.FC<AttachPdfModalProps> = ({ articleId, onClo
       const filePath = await projectService.openPdfDialog();
       if (filePath) await upload(filePath);
     } catch (err) {
-      await inform({ title: 'Erro no upload', message: 'Erro ao realizar upload do PDF: ' + err });
+      await inform(failureNotice('Não conseguimos enviar o PDF', 'O arquivo não foi anexado ao artigo.', err));
     }
   };
 
@@ -59,7 +60,7 @@ const AttachPdfModalContent: React.FC<AttachPdfModalProps> = ({ articleId, onClo
       await projectService.linkPdfToArticle(articleId, filePath);
       attached();
     } catch (err) {
-      await inform({ title: 'Erro ao vincular', message: 'Erro ao vincular PDF existente: ' + err });
+      await inform(failureNotice('Não conseguimos vincular o PDF', 'O PDF escolhido não foi ligado ao artigo.', err));
     }
   };
 
