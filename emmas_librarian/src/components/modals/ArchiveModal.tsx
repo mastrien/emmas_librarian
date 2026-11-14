@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
+import { ModalFooter } from '../common/ModalFooter';
 import { Button } from '../common/Button';
 
 interface ArchiveModalProps {
@@ -16,10 +17,12 @@ const ArchiveForm: React.FC<Omit<ArchiveModalProps, 'isOpen'>> = ({ onClose, onS
   const many = count > 1;
   return (
     <Modal
-      label={many ? `Arquivar ${count} artigos` : 'Motivo do Arquivamento'}
-      title={many ? `Arquivar ${count} artigos` : 'Motivo do Arquivamento (Opcional)'}
+      label={many ? `Arquivar ${count} artigos` : 'Arquivar artigo'}
+      title={many ? `Arquivar ${count} artigos` : 'Arquivar este artigo?'}
       description={
-        many ? `O motivo (opcional) vale para todos os ${count} artigos e aparece na exportação.` : undefined
+        many
+          ? `O motivo (opcional) vale para todos os ${count} artigos e aparece na exportação.`
+          : 'Ele sai da lista de ativos e volta quando você quiser.'
       }
       onClose={onClose}
       width={400}
@@ -34,7 +37,8 @@ const ArchiveForm: React.FC<Omit<ArchiveModalProps, 'isOpen'>> = ({ onClose, onS
           autoFocus
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder={many ? 'Por que estes artigos não são relevantes?' : 'Por que este artigo não é relevante?'}
+          placeholder="ex.: fora do escopo"
+          aria-label="Motivo (opcional)"
           style={{
             width: '100%',
             height: '100px',
@@ -49,12 +53,14 @@ const ArchiveForm: React.FC<Omit<ArchiveModalProps, 'isOpen'>> = ({ onClose, onS
             color: 'var(--text-main)',
           }}
         />
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-          <Button onClick={onClose}>Cancelar</Button>
-          <Button type="submit" variant="danger">
-            {many ? `Arquivar ${count}` : 'Confirmar Arquivamento'}
+        <ModalFooter>
+          <Button variant="ghost" onClick={onClose}>
+            Cancelar
           </Button>
-        </div>
+          <Button type="submit" variant="primary">
+            {many ? `Arquivar ${count}` : 'Arquivar'}
+          </Button>
+        </ModalFooter>
       </form>
     </Modal>
   );

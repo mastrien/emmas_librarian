@@ -131,6 +131,15 @@ Feito: resumo da busca com os números em cartões (Novos em verde), uma linha p
 - [ ] **Subtítulo** da janela: o app mantém "Nada foi salvo ainda…"; o board mostra a consulta ("título contém …"), que a janela não recebe.
 - [ ] **Chave necessária**: o board pede a chave ali mesmo (campo, "Salvar e buscar", "Buscar sem a Scopus"); o app só leva para as Configurações. Fazer o campo inline é trabalho novo (salvar chave e retomar a busca), não só visual.
 
+## 176 · Janelas de artigo (#181)
+
+Feito: **Editar metadados** (grupos Identificação, Publicação e Resumo, Ctrl Enter salva e aparece como dica na barra de baixo, "Cancelar" e "Salvar"); **Arquivar** ("Arquivar este artigo?", "Ele sai da lista de ativos e volta quando você quiser.", campo "Motivo (opcional)" com "ex.: fora do escopo", "Cancelar" e "Arquivar"); **Importar de outro projeto** (barra com "N escolhidos" e "Importar N").
+
+- [ ] **Anexar PDF** ficou como estava: o board tem uma área "Solte o PDF aqui", "Buscar em acesso aberto" e "Usar um PDF da biblioteca". Arrastar e soltar e a busca em acesso aberto a partir da janela são recursos novos, não só visuais.
+- [ ] **Importar de outro projeto**: falta o selo "já está neste projeto" e o campo "Filtrar" continua com o nome antigo; o app não sabe, ao listar, quais artigos o projeto de destino já tem.
+- [ ] **Editar metadados**: o autor do board é um campo de chips ("Hersbach, H." etc., "+38"); o app mantém um campo de texto com ";" entre os nomes. "Preencher com IA" continua no alto da janela.
+- [ ] O texto "Por que este artigo não é relevante?" do campo de motivo virou "ex.: fora do escopo", como no board, e o rótulo "Motivo (opcional)" ficou só para leitores de tela.
+
 ## Próximas telas (este documento ganha uma seção por PR)
 
 175–181 Janelas (restante)

@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Search } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { Modal } from '../common/Modal';
+import { ModalFooter } from '../common/ModalFooter';
+import { Button } from '../common/Button';
 import { useDialogs } from '../common/dialogs/DialogProvider';
 import { Article, Project } from '../../types';
 
@@ -100,8 +102,8 @@ const ImportArticlesModalContent: React.FC<ImportArticlesModalProps> = ({
 
   return (
     <Modal
-      label="Importar Artigos de Outro Projeto"
-      title="Importar Artigos de Outro Projeto"
+      label="Importar artigos de outro projeto"
+      title="Importar artigos de outro projeto"
       description="Copie metadados e PDFs compartilhados de outros projetos locais de forma transparente."
       onClose={onClose}
       busy={loading}
@@ -242,35 +244,14 @@ const ImportArticlesModalContent: React.FC<ImportArticlesModalProps> = ({
         </div>
       )}
 
-      {/* Footer */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '1.5rem',
-          borderTop: '1px solid var(--border-color)',
-          paddingTop: '1.25rem',
-        }}
-      >
-        <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-          {selectedCount > 0 ? (
-            <span>
-              <strong>{selectedCount}</strong> artigo(s) selecionado(s) para cópia.
-            </span>
-          ) : (
-            <span>Selecione artigos para importar.</span>
-          )}
-        </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="btn-secondary" onClick={onClose} disabled={loading}>
-            Cancelar
-          </button>
-          <button className="btn-primary" onClick={handleImport} disabled={selectedCount === 0 || loading}>
-            Confirmar Importação
-          </button>
-        </div>
-      </div>
+      <ModalFooter hint={selectedCount > 0 ? `${selectedCount} escolhidos` : 'Selecione artigos para importar.'}>
+        <Button variant="ghost" onClick={onClose} disabled={loading}>
+          Cancelar
+        </Button>
+        <Button variant="primary" onClick={handleImport} disabled={selectedCount === 0 || loading}>
+          {selectedCount > 0 ? `Importar ${selectedCount}` : 'Importar'}
+        </Button>
+      </ModalFooter>
     </Modal>
   );
 };

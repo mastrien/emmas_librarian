@@ -36,7 +36,7 @@ describe('ImportArticlesModal', () => {
       <ImportArticlesModal isOpen={true} destProjectId={1} onClose={vi.fn()} onImportComplete={vi.fn()} />,
     );
 
-    expect(screen.getByText('Importar Artigos de Outro Projeto')).toBeInTheDocument();
+    expect(screen.getByText('Importar artigos de outro projeto')).toBeInTheDocument();
     expect(await screen.findByRole('option', { name: 'Origem' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: '-- Selecione o projeto de origem --' })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Destino' })).not.toBeInTheDocument();
@@ -50,7 +50,7 @@ describe('ImportArticlesModal', () => {
 
     rerender(modal(true));
 
-    expect(screen.getByText('Importar Artigos de Outro Projeto')).toBeInTheDocument();
+    expect(screen.getByText('Importar artigos de outro projeto')).toBeInTheDocument();
     expect(await screen.findByRole('option', { name: 'Origem' })).toBeInTheDocument();
   });
 });
@@ -80,7 +80,7 @@ describe('ImportArticlesModal copying articles', () => {
     await screen.findByText('Redes neurais');
     return handlers;
   };
-  const confirm = () => screen.getByRole('button', { name: 'Confirmar Importação' });
+  const confirm = () => screen.getByRole('button', { name: /^Importar( \d+)?$/ });
 
   it('copies the chosen articles into the destination project, then closes', async () => {
     const { onClose, onImportComplete } = await openWithSource();
@@ -108,14 +108,14 @@ describe('ImportArticlesModal copying articles', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('keeps "Confirmar Importação" disabled until an article is selected', async () => {
+  it('keeps "Importar" disabled until an article is selected', async () => {
     await openWithSource();
     expect(confirm()).toBeDisabled();
 
     fireEvent.click(screen.getByText('Aprendizado profundo'));
 
     expect(confirm()).toBeEnabled();
-    expect(screen.getByText('artigo(s) selecionado(s) para cópia.').parentElement).toHaveTextContent('1 artigo(s)');
+    expect(screen.getByText('1 escolhidos')).toBeInTheDocument();
   });
 
   it('selects only the articles the search leaves when selecting all filtered', async () => {
