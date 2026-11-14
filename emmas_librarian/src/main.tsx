@@ -11,6 +11,7 @@ import { AskPage } from './pages/Ask/AskPage';
 import { AppShell } from './AppShell';
 import { GlobalErrorProvider } from './contexts/GlobalErrorContext';
 import { ErrorModal } from './components/modals/ErrorModal';
+import './theme/fonts';
 import './style.css';
 
 // Suppress React 19 warnings originating from third-party libraries (e.g. react-pdf-highlighter)
@@ -114,6 +115,7 @@ if (rootEl)
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/new-project" element={<NewProjectPage />} />
                 <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+                <Route path="/projects/:id/:section" element={<ProjectDetailsPage />} />
                 <Route path="/projects/:id/search" element={<SearchPage />} />
                 <Route path="/projects/:id/investigation" element={<InvestigationPage />} />
                 <Route path="/projects/:id/investigation/:view" element={<InvestigationPage />} />

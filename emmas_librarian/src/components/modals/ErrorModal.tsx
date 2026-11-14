@@ -65,7 +65,7 @@ export const ErrorModal = () => {
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-color)',
             fontSize: '0.85rem',
-            fontFamily: 'monospace',
+            fontFamily: 'var(--font-mono)',
             color: 'var(--text-muted)',
             overflowX: 'auto',
             maxHeight: '150px',

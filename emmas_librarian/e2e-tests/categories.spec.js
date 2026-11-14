@@ -84,6 +84,9 @@ test('F-11 Create categories, classify an article in the reader and export the v
         await dismissChangelog(window);
       }
       await window.getByTestId('tab-categories').click();
+      // The section is a navigation now; categoryCell reads the headers once, so wait for the new table.
+      await window.waitForURL(/\/categories$/);
+      await expect(window.locator('table thead th', { hasText: 'Metodologia' })).toBeVisible();
       await expect(await categoryCell(window, IMPORTED_TITLE, 'Metodologia')).toHaveText('Survey online');
       await expect(await categoryCell(window, IMPORTED_TITLE, 'Tipo de estudo')).toHaveText('Quantitativa');
       await expect(await categoryCell(window, IMPORTED_TITLE, 'Revisado')).toHaveText('Sim');

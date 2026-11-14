@@ -40,6 +40,7 @@ import type {
   SearchPreview,
   SavedSearchSummary,
   Project,
+  ProjectNavCounts,
   Article,
   Highlight,
   Annotation,
@@ -123,6 +124,7 @@ export interface IProjectService {
   createProject(name: string): Promise<Project>;
   getProject(projectId: number): Promise<Project>;
   updateProject(id: number, name: string): Promise<void>;
+  getProjectNavCounts(projectId: number): Promise<ProjectNavCounts>;
   getProjectWritingPad(id: number): Promise<string | null>;
   updateProjectWritingPad(id: number, content: string): Promise<void>;
   deleteProject(id: number): Promise<void>;
@@ -234,6 +236,7 @@ export interface IProjectService {
   ): Promise<void>;
   reorderProjectDocuments(projectId: number, orderedIds: number[]): Promise<void>;
   deleteProjectDocument(id: number): Promise<void>;
+  markProjectDocumentOpened(id: number): Promise<void>;
   openProjectDocumentExternal(url?: string, filePath?: string): Promise<void>;
 
   // ── Diary ─────────────────────────────────────────────────────────

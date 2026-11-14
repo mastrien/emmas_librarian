@@ -1,5 +1,5 @@
 import type { Database } from 'better-sqlite3';
-import { Project, ProjectCategory, CategoryOption } from '../../src/types';
+import { Project, ProjectCategory, CategoryOption, ProjectNavCounts } from '../../src/types';
 import fs from 'fs';
 import { deletePdfIfUnused } from './sharedPdfFiles';
 import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
@@ -21,6 +21,24 @@ export class ProjectRepository {
 
   getProject(id: number): Project | undefined {
     return this.db.prepare('SELECT * FROM projects WHERE id = ? AND deleted_at IS NULL').get(id) as Project | undefined;
+  }
+
+  /**
+   * The counts the project sidebar shows, in one query so it does not load every article to count them.
+   * Articles count like the article list: every status, without the ones in the trash.
+   *
+   * @example repo.getNavCounts(1) // { articles: 96, categories: 4, searches: 2, investigations: 2 }
+   */
+  getNavCounts(projectId: number): ProjectNavCounts {
+    return this.db
+      .prepare(
+        `SELECT
+           (SELECT COUNT(*) FROM articles WHERE project_id = @id AND deleted_at IS NULL) AS articles,
+           (SELECT COUNT(*) FROM project_categories WHERE project_id = @id) AS categories,
+           (SELECT COUNT(*) FROM search_history WHERE project_id = @id) AS searches,
+           (SELECT COUNT(*) FROM massive_investigations WHERE project_id = @id) AS investigations`,
+      )
+      .get({ id: projectId }) as ProjectNavCounts;
   }
 
   updateProjectWritingPad(id: number, content: string) {

@@ -12,12 +12,18 @@ async function triggerImport(window) {
   await answerAppDialog(window, 'PDFs importados', 'Entendi');
 }
 
-// #73: without the app's side margins (12px kept at the edge), and with nothing spilling sideways.
+// #73: without the app's side margins (12px kept at the edge), and with nothing spilling sideways. Since the
+// redesign the screen area starts after the module rail, so the left edge is measured from there.
 async function expectEdgeToEdge(window) {
   const layout = await window.locator('.inv-page').evaluate((node) => {
     const box = node.getBoundingClientRect();
+    const screenArea = document.querySelector('.app-frame__main').getBoundingClientRect();
     const root = document.documentElement;
-    return { left: box.left, right: root.clientWidth - box.right, spill: root.scrollWidth - root.clientWidth };
+    return {
+      left: box.left - screenArea.left,
+      right: root.clientWidth - box.right,
+      spill: root.scrollWidth - root.clientWidth,
+    };
   });
   expect(layout.left).toBeCloseTo(12, 0);
   expect(layout.right).toBeCloseTo(12, 0);

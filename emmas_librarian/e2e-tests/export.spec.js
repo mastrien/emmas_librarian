@@ -30,7 +30,7 @@ test('F-06 exports the project articles to CSV, XLSX and Biblioshiny', async () 
   try {
     await createProject(window, 'Export Project ' + Date.now());
     await addManualArticle(window, TITLE);
-    await window.click('button[data-testid="tab-categories"]');
+    await window.getByTestId('tab-categories').click();
 
     await exportAndConfirm(
       window,

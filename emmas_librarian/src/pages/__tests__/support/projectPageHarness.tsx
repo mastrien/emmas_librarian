@@ -10,7 +10,7 @@ import type { Article } from '../../../types';
 
 /**
  * Shared setup for ProjectDetailsPage characterization tests: renders the real
- * page (and real children) at /projects/1 against a FakeProjectService, with a
+ * page (and real children) at /projects/1 (which opens a section) against a FakeProjectService, with a
  * probe that exposes whatever reached the global error modal.
  *
  * Usage:
@@ -56,6 +56,7 @@ export async function renderProjectPage(service: FakeProjectService, path = '/pr
           <FakeDialogsProvider dialogs={dialogs}>
             <Routes>
               <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+              <Route path="/projects/:id/:section" element={<ProjectDetailsPage />} />
               <Route path="/" element={<p>Lista de projetos</p>} />
             </Routes>
             <GlobalErrorProbe />

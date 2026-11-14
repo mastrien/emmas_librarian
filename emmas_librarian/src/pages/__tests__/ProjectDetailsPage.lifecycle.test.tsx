@@ -7,7 +7,12 @@ import { GlobalErrorProvider } from '../../contexts/GlobalErrorContext';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 import { givenProject, renderProjectPage, article, PROJECT } from './support/projectPageHarness';
-import type { SearchHistoryItem } from '../../types';
+
+// jsdom has no canvas, so chart.js cannot draw the overview charts; the charts have tests of their own.
+vi.mock('react-chartjs-2', () => ({
+  Pie: () => <div data-testid="pie-chart" />,
+  Bar: () => <div data-testid="bar-chart" />,
+}));
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -27,6 +32,7 @@ describe('ProjectDetailsPage loading', () => {
             <FakeDialogsProvider>
               <Routes>
                 <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+                <Route path="/projects/:id/:section" element={<ProjectDetailsPage />} />
               </Routes>
             </FakeDialogsProvider>
           </GlobalErrorProvider>
@@ -68,6 +74,7 @@ describe('ProjectDetailsPage loading', () => {
             <FakeDialogsProvider>
               <Routes>
                 <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+                <Route path="/projects/:id/:section" element={<ProjectDetailsPage />} />
               </Routes>
             </FakeDialogsProvider>
           </GlobalErrorProvider>
@@ -80,40 +87,41 @@ describe('ProjectDetailsPage loading', () => {
   });
 });
 
-describe('ProjectDetailsPage tabs', () => {
-  it('labels tabs with article and history counts and starts on articles', async () => {
-    const service = givenProject([article({ id: 1 }), article({ id: 2 })]);
-    service.getSearchHistory.mockResolvedValue([{ id: 1 } as SearchHistoryItem]);
+describe('ProjectDetailsPage sections', () => {
+  afterEach(() => sessionStorage.clear());
 
-    await renderProjectPage(service);
-
-    expect(screen.getByTestId('tab-articles')).toHaveTextContent('Artigos (2)');
-    expect(screen.getByTestId('tab-history')).toHaveTextContent('Histórico (1)');
-    expect(screen.getByTestId('main-articles-table')).toBeInTheDocument();
-  });
-
-  it('switches between tab contents', async () => {
+  it('opens the articles section on a first visit to the project', async () => {
     await renderProjectPage(givenProject([article({ id: 1 })]));
 
-    fireEvent.click(screen.getByTestId('tab-overview'));
-    expect(await screen.findByText('Status dos Artigos')).toBeInTheDocument();
-    expect(screen.queryByTestId('main-articles-table')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId('tab-diary'));
-    expect(await screen.findByRole('button', { name: /Página de Hoje/ })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId('tab-articles'));
     expect(screen.getByTestId('main-articles-table')).toBeInTheDocument();
   });
 
-  it('highlights the active tab', async () => {
-    await renderProjectPage(givenProject());
+  it('shows the section named in the URL', async () => {
+    await renderProjectPage(givenProject([article({ id: 1 })]), '/projects/1/overview');
 
-    fireEvent.click(screen.getByTestId('tab-overview'));
+    expect(await screen.findByText('Status dos Artigos')).toBeInTheDocument();
+    expect(screen.queryByTestId('main-articles-table')).not.toBeInTheDocument();
+  });
 
-    // The highlight is the is-active class of projectPage.css now (Arca 134).
-    expect(screen.getByTestId('tab-overview')).toHaveClass('is-active');
-    expect(screen.getByTestId('tab-articles')).not.toHaveClass('is-active');
+  it('shows the diary section', async () => {
+    await renderProjectPage(givenProject(), '/projects/1/diary');
+
+    expect(await screen.findByRole('button', { name: /Página de Hoje/ })).toBeInTheDocument();
+  });
+
+  // The sidebar links to sections; coming back to /projects/:id must reopen the one the user left.
+  it('reopens the last section of the session on the bare project path', async () => {
+    sessionStorage.setItem('project.1.view.activeTab', JSON.stringify('overview'));
+
+    await renderProjectPage(givenProject([article({ id: 1 })]));
+
+    expect(await screen.findByText('Status dos Artigos')).toBeInTheDocument();
+  });
+
+  it('remembers the section shown in the URL for the next visit', async () => {
+    await renderProjectPage(givenProject(), '/projects/1/diary');
+
+    expect(JSON.parse(sessionStorage.getItem('project.1.view.activeTab') ?? 'null')).toBe('diary');
   });
 });
 
@@ -130,8 +138,7 @@ describe('ProjectDetailsPage search history', () => {
   it('reverts a search and reloads the project', async () => {
     const service = givenProject();
     service.getSearchHistory.mockResolvedValue([entry]);
-    await renderProjectPage(service);
-    fireEvent.click(screen.getByTestId('tab-history'));
+    await renderProjectPage(service, '/projects/1/history');
 
     fireEvent.click(await screen.findByRole('button', { name: /Desfazer Busca/ }));
 
@@ -143,8 +150,7 @@ describe('ProjectDetailsPage search history', () => {
     const service = givenProject();
     service.getSearchHistory.mockResolvedValue([entry]);
     service.revertSearch.mockRejectedValue(new Error('locked'));
-    const dialogs = await renderProjectPage(service);
-    fireEvent.click(screen.getByTestId('tab-history'));
+    const dialogs = await renderProjectPage(service, '/projects/1/history');
 
     fireEvent.click(await screen.findByRole('button', { name: /Desfazer Busca/ }));
 

@@ -1,6 +1,7 @@
 import {
   IpcChannel,
   type Project,
+  type ProjectNavCounts,
   type Article,
   type Highlight,
   type Annotation,
@@ -91,6 +92,9 @@ export const projectService: IProjectService = {
   async updateProject(id: number, name: string): Promise<void> {
     await safeInvoke(IpcChannel.PROJECTS_UPDATE, id, name);
   },
+
+  getProjectNavCounts: (projectId: number): Promise<ProjectNavCounts> =>
+    safeInvoke<ProjectNavCounts>(IpcChannel.PROJECTS_GET_NAV_COUNTS, projectId),
 
   getProjectWritingPad: (id: number): Promise<string | null> => safeInvoke(IpcChannel.PROJECTS_GET_WRITING_PAD, id),
 
@@ -447,6 +451,10 @@ export const projectService: IProjectService = {
 
   async deleteProjectDocument(id: number): Promise<void> {
     await safeInvoke(IpcChannel.PROJECT_DOCUMENTS_DELETE, id);
+  },
+
+  async markProjectDocumentOpened(id: number): Promise<void> {
+    await safeInvoke(IpcChannel.PROJECT_DOCUMENTS_MARK_OPENED, id);
   },
 
   async openProjectDocumentExternal(url?: string, filePath?: string): Promise<void> {

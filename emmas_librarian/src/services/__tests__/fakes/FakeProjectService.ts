@@ -53,6 +53,7 @@ import type {
 } from '../../ProjectServiceInterface';
 import type {
   Project,
+  ProjectNavCounts,
   Article,
   Highlight,
   Annotation,
@@ -106,6 +107,15 @@ export class FakeProjectService implements IProjectService {
   );
 
   updateProject = vi.fn(async (_id: number, _name: string): Promise<void> => undefined);
+
+  getProjectNavCounts = vi.fn(
+    async (_projectId: number): Promise<ProjectNavCounts> => ({
+      articles: 0,
+      categories: 0,
+      searches: 0,
+      investigations: 0,
+    }),
+  );
 
   getProjectWritingPad = vi.fn(async (_id: number): Promise<string | null> => null);
 
@@ -304,6 +314,10 @@ export class FakeProjectService implements IProjectService {
 
   deleteProjectDocument = vi.fn(async (id: number): Promise<void> => {
     this.documents = this.documents.filter((d) => d.id !== id);
+  });
+
+  markProjectDocumentOpened = vi.fn(async (id: number): Promise<void> => {
+    this.documents = this.documents.map((d) => (d.id === id ? { ...d, last_opened_at: new Date().toISOString() } : d));
   });
 
   openProjectDocumentExternal = vi.fn(async (_url?: string, _filePath?: string): Promise<void> => undefined);

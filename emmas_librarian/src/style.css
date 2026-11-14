@@ -1,8 +1,10 @@
 :root,
 /* Also on [data-theme='light'], so a nested preview (the tone swatches in Settings) gets the light tokens back. */
 [data-theme='light'] {
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Lexend Variable', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Lexend Variable', system-ui, -apple-system, sans-serif;
+  --font-read: 'Source Serif 4 Variable', Georgia, serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, Consolas, monospace;
 
   --color-primary: #4f46e5; /* Indigo 600 */
   --color-primary-hover: #4338ca; /* Indigo 700 */
@@ -20,7 +22,8 @@
 
   --text-main: #334155; /* Slate 700 */
   --text-heading: #0f172a; /* Slate 900 */
-  --text-muted: #64748b; /* Slate 500 */
+  /* Between Slate 500 and 600: Slate 500 read 4.2:1 on the sunken surface of inputs. */
+  --text-muted: #5b6b80;
 
   --border-color: #e2e8f0; /* Slate 200 */
 
@@ -62,6 +65,29 @@
 
   --transition-fast: 150ms ease;
   --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Redesign surfaces (Arca 134): depth by lightness, not by shadow. Sunken = rail, inputs, code;
+     raised = buttons, chips, the selected item; subtle border = lines between rows. */
+  --bg-sunken: #eef0f3;
+  --bg-raised: #ffffff;
+  --border-subtle: #eef1f5;
+
+  /* Status as text: the -500 fills above fail 4.5:1 as text on white, so text uses the -700 shade
+     (dark mode the -400). Status never relies on colour alone: icon and label go with it. */
+  --color-success-text: #047857;
+  --color-warning-text: #92400e; /* Amber 800: Amber 700 read 4.2:1 on the sunken surface */
+  --color-danger-text: #b91c1c;
+  --color-info-text: #1d4ed8;
+  /* AI-made content (suggestions, answers) gets its own hue so it is never mistaken for the user's own. */
+  --color-ai: #8b5cf6;
+  --color-ai-text: #6d28d9;
+  --color-ai-subtle: rgba(139, 92, 246, 0.1);
+
+  /* Motion: hover 120 ms, menus and dialogs 180 ms, side panels 220 ms; all off with reduced motion. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-hover: 120ms;
+  --duration-menu: 180ms;
+  --duration-panel: 220ms;
 }
 
 /* Tones (Arca 134, chosen by the author): light mode is white or warm white, dark mode neutral or warm graphite.
@@ -74,6 +100,9 @@
   --text-heading: #1c1917; /* Stone 900 */
   --text-muted: #6f6964;
   --border-color: #e7e2da;
+  --bg-sunken: #efebe5;
+  --bg-raised: #fffdf9;
+  --border-subtle: #f0ebe4;
 }
 
 /* Neutral graphite: the earlier Slate dark was navy, and the accent as text read at 2.3:1 on it. */
@@ -88,6 +117,15 @@
   --color-warning: #fbbf24; /* Amber 400, readable on graphite */
   --color-primary-text: #a5b4fc;
   --color-primary-text-hover: #c7d2fe;
+  --bg-sunken: #0f0f11;
+  --bg-raised: #25252b;
+  --border-subtle: #232329;
+  --color-success-text: #34d399;
+  --color-warning-text: #fbbf24;
+  --color-danger-text: #f87171;
+  --color-info-text: #60a5fa;
+  --color-ai-text: #c4b5fd;
+  --color-ai-subtle: rgba(167, 139, 250, 0.14);
 }
 
 [data-theme='dark'][data-tone='warm'] {
@@ -98,6 +136,17 @@
   --text-heading: #fafaf9;
   --text-muted: #a8a29e; /* Stone 400 */
   --border-color: #37322e;
+  --bg-sunken: #110f0e;
+  --bg-raised: #2a2623;
+  --border-subtle: #2a2622;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-hover: 0ms;
+    --duration-menu: 0ms;
+    --duration-panel: 0ms;
+  }
 }
 
 /* Accent Colors */

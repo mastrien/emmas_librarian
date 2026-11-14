@@ -112,8 +112,31 @@ async function createProject(window, projectName) {
   await window.waitForURL(/.*\/projects\/\d+/);
 }
 
+// Modules live in the rail as icon links named by aria-label (redesign, board 150); projects are under "Início".
+const RAIL_LINKS = {
+  Projetos: 'Início',
+  Início: 'Início',
+  Agenda: 'Agenda',
+  'Biblioteca de PDFs': 'Biblioteca de PDFs',
+  Configurações: 'Configurações',
+  'Perguntar aos projetos': 'Perguntar aos projetos',
+};
+
+// The release tests (release-tests/) also drive PUBLISHED versions, which have the old header with "Mais opções"
+// and no rail: wait until either frame is on screen, then take the rail only when there is one.
+async function hasModuleRail(window) {
+  const rail = window.getByRole('navigation', { name: 'Módulos' });
+  await window.locator('nav[aria-label="Módulos"], button[title^="Mais op"]').first().waitFor({ timeout: 15000 });
+  return (await rail.count()) > 0;
+}
+
 async function navigateTo(window, label) {
   await dismissChangelog(window);
+  if (RAIL_LINKS[label] && (await hasModuleRail(window))) {
+    const rail = window.getByRole('navigation', { name: 'Módulos' });
+    await rail.getByRole('link', { name: RAIL_LINKS[label], exact: true }).click();
+    return;
+  }
   // Case-sensitive, unlike a plain hasText: "Projetos" must not take the dashboard's "Perguntar aos projetos" (#53).
   const target = new RegExp(label);
 
@@ -137,12 +160,16 @@ async function navigateTo(window, label) {
     }
   }
 
-  // Fallback: open "Mais opções" dropdown and click the menu item
+  // Published versions before the redesign: the modules sit in the "Mais opções" menu of the header.
   const moreBtn = window.locator('button[title^="Mais op"]').first();
+  if ((await moreBtn.count()) === 0) {
+    throw new Error(
+      `navigateTo: no link or button with the text ${JSON.stringify(label)} and no rail module of that name`,
+    );
+  }
   await moreBtn.hover();
   await window.waitForTimeout(300);
-  const menuLink = window.locator('.menu-dropdown-item, a, button').filter({ hasText: target }).first();
-  await menuLink.click();
+  await window.locator('.menu-dropdown-item, a, button').filter({ hasText: target }).first().click();
 }
 
 async function clickAddArticlesOption(window, optionText) {

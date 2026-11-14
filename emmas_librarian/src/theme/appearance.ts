@@ -85,14 +85,15 @@ export function applyAppearance(root: HTMLElement, appearance: Appearance): void
 }
 
 /**
- * The title bar colours of the applied tone: the page background and its text colour.
+ * The colours of the OS window buttons: the title bar's sunken background (redesign, board 150) and the
+ * text colour, so the buttons blend into the app's own title bar.
  *
- * @example titleBarColors(document.documentElement) // { color: '#141416', symbolColor: '#e4e4e7' }
+ * @example titleBarColors(document.documentElement) // { color: '#0f0f11', symbolColor: '#e4e4e7' }
  */
 export function titleBarColors(root: HTMLElement): TitleBarColors {
   const style = getComputedStyle(root);
   return {
-    color: style.getPropertyValue('--bg-main').trim(),
+    color: style.getPropertyValue('--bg-sunken').trim(),
     symbolColor: style.getPropertyValue('--text-main').trim(),
   };
 }

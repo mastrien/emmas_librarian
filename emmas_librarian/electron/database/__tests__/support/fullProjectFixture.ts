@@ -39,8 +39,8 @@ export function seedFullProject(db: Database.Database, files: { pdfPath: string;
   );
   run(
     db,
-    `INSERT INTO project_documents (project_id, title, url, local_file_path, category, position)
-     VALUES (?, 'Edital', 'https://example.org/edital', ?, 'Chamadas', 3)`,
+    `INSERT INTO project_documents (project_id, title, url, local_file_path, category, position, last_opened_at)
+     VALUES (?, 'Edital', 'https://example.org/edital', ?, 'Chamadas', 3, '2026-11-09 10:00:00')`,
     project,
     files.docPath,
   );

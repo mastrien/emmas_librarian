@@ -74,6 +74,15 @@ export class DocumentRepository {
     transaction(validIds);
   }
 
+  /**
+   * Records that a quick access link was opened now, so the project sidebar can list the recent ones.
+   *
+   * @example repo.markProjectDocumentOpened(4)
+   */
+  public markProjectDocumentOpened(id: number): void {
+    this.db.prepare("UPDATE project_documents SET last_opened_at = datetime('now') WHERE id = ?").run(id);
+  }
+
   public deleteProjectDocument(id: number): void {
     const stmtGet = this.db.prepare('SELECT local_file_path FROM project_documents WHERE id = ?');
     const doc = stmtGet.get(id) as { local_file_path?: string } | undefined;

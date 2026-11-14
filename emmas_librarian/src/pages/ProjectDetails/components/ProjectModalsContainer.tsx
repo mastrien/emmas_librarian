@@ -16,7 +16,6 @@ import { ImportArticlesModal } from '../../../components/modals/ImportArticlesMo
 import { Project, Article, ProjectDocument } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { ProjectModals } from '../hooks/useProjectModals';
-import type { ProjectTabId } from './ProjectTabs';
 
 interface ProjectModalsContainerProps {
   projectId: number;
@@ -34,7 +33,8 @@ interface ProjectModalsContainerProps {
   handleRevertSearch: (searchId: number) => void;
   showKeyAlert: boolean;
   setShowKeyAlert: (val: boolean) => void;
-  setActiveTab: (tab: ProjectTabId) => void;
+  /** Shows the search history section (the article details link to the search that brought the article). */
+  onShowHistory: () => void;
 }
 
 export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
@@ -52,7 +52,7 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
   handleRevertSearch,
   showKeyAlert,
   setShowKeyAlert,
-  setActiveTab,
+  onShowHistory,
 }) => {
   const projectService = useProjectService();
   const navigate = useNavigate();
@@ -160,7 +160,7 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
         history={history}
         onNavigateToSearch={() => {
           modals.setSelectedArticleForDetails(null);
-          setActiveTab('history');
+          onShowHistory();
         }}
         onArticleUpdated={fetchData}
         onAttachPdf={(art) => {

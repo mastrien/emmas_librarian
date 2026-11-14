@@ -43,7 +43,7 @@ function createBrowserWindow(): BrowserWindow {
     icon: nativeImage.createFromPath(windowIconFile(app.getAppPath(), process.platform, isDev)),
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#f8fafc',
+      color: '#eef0f3', // --bg-sunken of the light theme, until the page sends its own
       symbolColor: '#334155',
     },
     webPreferences: {

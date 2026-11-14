@@ -1,0 +1,431 @@
+/* App frame (redesign, board 150): title bar on top, module rail on the left, the screen in the rest. */
+
+/* The document still scrolls (not an inner box): the screens measure their height and stick their
+   toolbars against the window, and changing that is per-screen work. Title bar and rail stay put. */
+.app-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-main);
+}
+
+.app-frame__body {
+  display: flex;
+  flex: 1 1 auto;
+}
+
+.app-frame__main {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 2rem;
+}
+
+/* Reader: the PDF fills the window under the title bar, no rail, no page scroll. */
+.app-frame--reader {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-frame__main--bare {
+  flex: 1 1 0;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Title bar: the drag area of the frameless window. The OS buttons (titleBarOverlay) cover its right end,
+   so the env() inset keeps our content clear of them; outside Electron it falls back to 0. */
+.app-titlebar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  height: 32px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw)) 0 var(--space-3);
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border-color);
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.app-titlebar a,
+.app-titlebar button {
+  -webkit-app-region: no-drag;
+}
+
+.app-titlebar__logo {
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+}
+
+.app-titlebar__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.app-breadcrumbs {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.app-breadcrumbs ol {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 0;
+}
+
+.app-breadcrumbs li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* The project name is the long one: it shrinks first, with an ellipsis. */
+.app-breadcrumbs li:nth-child(2) {
+  flex: 0 1 auto;
+  overflow: hidden;
+}
+
+.app-breadcrumbs a,
+.app-breadcrumbs span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-breadcrumbs a:hover {
+  color: var(--text-heading);
+}
+
+.app-breadcrumbs [aria-current='page'] {
+  color: var(--text-heading);
+  font-weight: 500;
+}
+
+/* Module rail */
+.app-rail {
+  position: sticky;
+  top: 32px;
+  height: calc(100vh - 32px);
+  z-index: 50;
+  width: 56px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+  background: var(--bg-sunken);
+  border-right: 1px solid var(--border-color);
+}
+
+.app-rail__bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.app-rail__item {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background var(--duration-hover) var(--ease-out),
+    color var(--duration-hover) var(--ease-out);
+}
+
+.app-rail__item:hover {
+  color: var(--text-heading);
+  background: var(--bg-surface-hover);
+}
+
+.app-rail__item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.app-rail__item.is-active {
+  color: var(--text-heading);
+  background: var(--bg-raised);
+}
+
+/* The lit module: a short accent bar against the rail's left edge. */
+.app-rail__item.is-active::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--color-primary);
+}
+
+/* Project sidebar: sticks next to the rail while the screen scrolls; only its own list scrolls if it is long. */
+.project-nav {
+  position: sticky;
+  top: 32px;
+  height: calc(100vh - 32px);
+  width: 232px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-2);
+  overflow-y: auto;
+  background: var(--bg-sunken);
+  border-right: 1px solid var(--border-subtle);
+  z-index: 40;
+}
+
+.project-nav__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+}
+
+.project-nav__eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0 var(--space-2);
+}
+
+.project-nav__head .project-nav__eyebrow {
+  padding: 0;
+}
+
+/* A long name wraps to two lines, then ends in an ellipsis. */
+.project-nav__name {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-heading);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.project-nav__meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.project-nav__group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-nav__group .project-nav__eyebrow {
+  margin-bottom: var(--space-1);
+}
+
+.project-nav__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  padding: 0 var(--space-2);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: background var(--duration-hover) var(--ease-out);
+}
+
+.project-nav__item svg {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.project-nav__item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.project-nav__item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.project-nav__item.is-active {
+  background: var(--bg-raised);
+  color: var(--text-heading);
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px var(--border-subtle);
+}
+
+.project-nav__item.is-active svg {
+  color: var(--color-primary);
+}
+
+.project-nav__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-nav__count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Narrow windows: the sidebar folds to an icon strip so the screen keeps its width (the article table with its
+   filters open overflowed by 149px at 900px). Labels are hidden only visually: links keep their names for screen
+   readers, and the title attribute gives a tooltip. */
+@media (max-width: 1199px) {
+  .project-nav {
+    width: 52px;
+    padding: var(--space-3) 6px;
+    gap: var(--space-2);
+  }
+
+  .project-nav__head {
+    display: none;
+  }
+
+  .project-nav__eyebrow,
+  .project-nav__label,
+  .project-nav__count {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .project-nav__group + .project-nav__group {
+    border-top: 1px solid var(--border-subtle);
+    padding-top: var(--space-2);
+  }
+
+  .project-nav__item {
+    justify-content: center;
+    padding: 0;
+  }
+}
+
+/* Quick access at the foot of the sidebar: the recent links only (see recentQuickAccess.ts). */
+.project-nav__quick-access {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.project-nav__quick-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: var(--space-1);
+  margin-bottom: var(--space-1);
+}
+
+.project-nav__icon-button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.project-nav__icon-button:hover {
+  color: var(--text-heading);
+  background: var(--bg-surface-hover);
+}
+
+.project-nav__quick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+}
+
+.project-nav__quick svg {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.project-nav__quick:hover {
+  background: var(--bg-surface-hover);
+}
+
+.project-nav__icon-button:focus-visible,
+.project-nav__quick:focus-visible,
+.project-nav__see-all:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.project-nav__empty {
+  margin: 0;
+  padding: 0 var(--space-2);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.project-nav__see-all {
+  padding: var(--space-1) var(--space-2);
+  font-size: 12px;
+  color: var(--color-primary-text);
+  text-decoration: none;
+}
+
+.project-nav__see-all:hover {
+  text-decoration: underline;
+}
+
+/* The folded strip has no room for link titles; the full list stays on the overview. */
+@media (max-width: 1199px) {
+  .project-nav__quick-access {
+    display: none;
+  }
+}

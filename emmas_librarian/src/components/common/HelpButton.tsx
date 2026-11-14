@@ -369,25 +369,26 @@ export const HelpModal: React.FC<{ isOpen: boolean; onClose: () => void; pageKey
   );
 };
 
+/**
+ * The help topic of a route. Shared by this button and the rail's help item (redesign, board 150).
+ *
+ * @example helpPageKey('/projects/3/review/prisma') // 'review'
+ */
+export function helpPageKey(pathname: string): string {
+  if (pathname.startsWith('/projects/') && pathname.includes('/review')) return 'review';
+  if (pathname.startsWith('/projects/') && pathname.includes('/search')) return 'search';
+  if (pathname.startsWith('/projects/')) return 'project-details';
+  if (pathname.startsWith('/articles/')) return 'reader';
+  return pathname;
+}
+
 export const HelpButton: React.FC<{ forcePageKey?: string; style?: React.CSSProperties }> = ({
   forcePageKey,
   style,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-
-  let pageKey = location.pathname;
-  if (forcePageKey) {
-    pageKey = forcePageKey;
-  } else if (location.pathname.startsWith('/projects/') && location.pathname.includes('/review')) {
-    pageKey = 'review';
-  } else if (location.pathname.startsWith('/projects/') && location.pathname.includes('/search')) {
-    pageKey = 'search';
-  } else if (location.pathname.startsWith('/projects/')) {
-    pageKey = 'project-details';
-  } else if (location.pathname.startsWith('/articles/')) {
-    pageKey = 'reader';
-  }
+  const pageKey = forcePageKey ?? helpPageKey(location.pathname);
 
   return (
     <>

@@ -236,7 +236,7 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
                 maxHeight: '300px',
                 overflowY: 'auto',
                 whiteSpace: format === 'html' ? 'normal' : 'pre-wrap',
-                fontFamily: format === 'html' ? 'inherit' : 'monospace',
+                fontFamily: format === 'html' ? 'inherit' : 'var(--font-mono)',
                 fontSize: format === 'html' ? '1rem' : '0.9rem',
                 lineHeight: '1.6',
               }}

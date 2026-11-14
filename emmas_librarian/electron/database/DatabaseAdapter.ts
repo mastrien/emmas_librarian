@@ -24,6 +24,7 @@ import type { CategorySetEntry, CategorySetResult } from '../../src/utils/catego
 
 import {
   Project,
+  ProjectNavCounts,
   Article,
   Annotation,
   Highlight,
@@ -154,6 +155,9 @@ export class DatabaseAdapter {
   }
   getProject(id: number): Project | undefined {
     return this.projectRepo.getProject(id);
+  }
+  getProjectNavCounts(id: number): ProjectNavCounts {
+    return this.projectRepo.getNavCounts(id);
   }
   updateProjectWritingPad(id: number, content: string) {
     return this.projectRepo.updateProjectWritingPad(id, content);
@@ -350,6 +354,9 @@ export class DatabaseAdapter {
   }
   public reorderProjectDocuments(projectId: number, orderedIds: number[]): void {
     return this.documentRepo.reorderProjectDocuments(projectId, orderedIds);
+  }
+  public markProjectDocumentOpened(id: number): void {
+    return this.documentRepo.markProjectDocumentOpened(id);
   }
   public deleteProjectDocument(id: number): void {
     return this.documentRepo.deleteProjectDocument(id);

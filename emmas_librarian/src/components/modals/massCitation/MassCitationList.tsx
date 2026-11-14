@@ -36,7 +36,7 @@ const rowStyle: React.CSSProperties = {
 const textStyle = (isHtml: boolean): React.CSSProperties => ({
   flex: 1,
   whiteSpace: isHtml ? 'normal' : 'pre-wrap',
-  fontFamily: isHtml ? 'inherit' : 'monospace',
+  fontFamily: isHtml ? 'inherit' : 'var(--font-mono)',
   fontSize: isHtml ? '0.95rem' : '0.85rem',
   lineHeight: '1.5',
 });

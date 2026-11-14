@@ -54,7 +54,7 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
     await review.getByRole('button', { name: /Descartar/ }).click();
     await expect(review).toBeHidden();
     await window.getByRole('link', { name: 'Voltar ao projeto' }).click();
-    await expect(window.getByText('Nova busca')).toBeVisible();
+    await expect(window.getByTestId('project-details-container')).toBeVisible();
     await expect(resultRow).toHaveCount(0);
 
     await runSearch(window, 'aprendizado de maquina', () => chooseLimits(window));
@@ -67,6 +67,8 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
 
     // The table follows its own width: with the filters sidebar open (the default) there is no room
     // for an authors column, so the authors move into the article cell; closing the sidebar brings it back.
+    // Since the redesign the module rail and project sidebar take 288px, so this needs a wider window than 1200px.
+    await window.setViewportSize({ width: 1440, height: 900 });
     const authorsHeader = window.getByRole('columnheader', { name: 'AUTORES' });
     await expect(authorsHeader).toBeHidden();
     await window.getByRole('button', { name: /^Filtros/ }).click();

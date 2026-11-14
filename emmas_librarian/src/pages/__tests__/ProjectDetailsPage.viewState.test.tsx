@@ -19,6 +19,7 @@ async function renderPageWithReader(service: FakeProjectService): Promise<void> 
           <FakeDialogsProvider>
             <Routes>
               <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+              <Route path="/projects/:id/:section" element={<ProjectDetailsPage />} />
               <Route path="/articles/:id" element={<ReaderStub />} />
             </Routes>
           </FakeDialogsProvider>
