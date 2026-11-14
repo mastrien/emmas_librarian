@@ -46,7 +46,7 @@ export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = (
             const articleCat = articleCategories.find((ac: ArticleCategory) => ac.category_id === cat.id);
             return (
               <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>{cat.name}</span>
+                <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>{cat.name}</label>
                 <CategoryCell
                   articleId={articleId}
                   category={cat}

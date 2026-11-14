@@ -85,6 +85,8 @@ test('F-11 Create categories, classify an article in the reader and export the v
     await categoryEditor(window, 'Tipo de estudo').locator('select').selectOption('Quantitativa');
     await categoryEditor(window, 'Revisado').locator('select').selectOption('true');
     await expect(categoryEditor(window, 'Metodologia')).toContainText('Survey online');
+    // The panel is the app window now (it was a floating card): close it with its X before leaving the reader.
+    await window.getByRole('dialog', { name: 'Categorias' }).getByRole('button', { name: 'Fechar' }).click();
 
     // The project's Categories tab lists the saved values, also after reloading the app.
     await window.goBack();
