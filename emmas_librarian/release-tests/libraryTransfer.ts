@@ -1,11 +1,11 @@
 import Database from 'better-sqlite3';
 import * as sqliteVec from 'sqlite-vec';
-import { initializeSchema } from '../electron/database/schemaMigrations';
+import { initializeSchema } from '../core/database/schemaMigrations';
 import {
   libraryTables,
   seedFullLibrary,
   writeLibraryFiles,
-} from '../electron/database/__tests__/support/fullLibraryFixture';
+} from '../core/database/__tests__/support/fullLibraryFixture';
 
 export interface TransferReport {
   /** Tables the older schema does not have; their rows cannot exist in that version. */

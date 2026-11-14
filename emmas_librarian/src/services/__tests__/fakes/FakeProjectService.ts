@@ -43,6 +43,7 @@ import type {
   DownloadProgressPayload,
 } from '../../../types';
 import { vi, type Mock } from 'vitest';
+import type { RemoteAccessStatus, RemotePairingInvite } from '../../../types/remoteAccess';
 import type {
   IProjectService,
   QuestionSetInput,
@@ -87,6 +88,17 @@ import type {
  *   const svc = FakeProjectService.create();
  *   svc.getProjects.mockResolvedValueOnce([mockProject]);
  */
+/** The LAN server as a new installation has it: off, nobody paired. */
+export const REMOTE_ACCESS_OFF: RemoteAccessStatus = {
+  enabled: false,
+  running: false,
+  port: null,
+  addresses: ['192.168.0.10'],
+  fingerprint: null,
+  devices: [],
+  error: null,
+};
+
 export class FakeProjectService implements IProjectService {
   // ── Projects ────────────────────────────────────────────────────────
   getProjects = vi.fn(async (): Promise<Project[]> => []);
@@ -376,6 +388,26 @@ export class FakeProjectService implements IProjectService {
   restoreAutoBackup = vi.fn(async (_filename: string): Promise<boolean> => false);
 
   getAppVersion = vi.fn(async (): Promise<string> => '0.0.0-fake');
+
+  // ── Access from a phone ─────────────────────────────────────────────
+  getRemoteAccessStatus = vi.fn(async (): Promise<RemoteAccessStatus> => REMOTE_ACCESS_OFF);
+
+  setRemoteAccessEnabled = vi.fn(
+    async (enabled: boolean): Promise<RemoteAccessStatus> => ({ ...REMOTE_ACCESS_OFF, enabled, running: enabled }),
+  );
+
+  startRemotePairing = vi.fn(
+    async (): Promise<RemotePairingInvite> => ({
+      url: 'https://192.168.0.10:47810/#pair=fake',
+      expiresAt: '2026-11-14T10:05:00.000Z',
+      fingerprint: 'AB:CD',
+      qrSvg: '<svg xmlns="http://www.w3.org/2000/svg"/>',
+    }),
+  );
+
+  cancelRemotePairing = vi.fn(async (): Promise<void> => undefined);
+
+  revokeRemoteDevice = vi.fn(async (_deviceId: string): Promise<RemoteAccessStatus> => REMOTE_ACCESS_OFF);
 
   // ── AI ──────────────────────────────────────────────────────────────
   generateSummary = vi.fn(

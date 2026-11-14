@@ -1,6 +1,6 @@
 // The sections of the settings (board 170): each is a screen of its own, reached from the list on the left.
 
-export type SettingsSection = 'appearance' | 'keys' | 'ai' | 'backup' | 'updates' | 'trash';
+export type SettingsSection = 'appearance' | 'keys' | 'ai' | 'backup' | 'mobile' | 'updates' | 'trash';
 
 export interface SettingsSectionInfo {
   id: SettingsSection;
@@ -14,6 +14,8 @@ export const SETTINGS_SECTIONS: readonly SettingsSectionInfo[] = [
   { id: 'keys', label: 'Chaves das bases', subtitle: 'O que as buscas pedem para consultar cada base' },
   { id: 'ai', label: 'Inteligência artificial', subtitle: 'Quem responde cada tarefa e com quais chaves' },
   { id: 'backup', label: 'Backup e segurança', subtitle: 'Cópias da biblioteca e como restaurá-las' },
+  // Not on the canvas of board 170: added with the LAN server (#32).
+  { id: 'mobile', label: 'Acesso pelo celular', subtitle: 'Ler a biblioteca no celular pela rede local' },
   { id: 'updates', label: 'Atualizações', subtitle: 'A versão instalada e as novas' },
   { id: 'trash', label: 'Lixeira', subtitle: 'O que foi apagado e ainda pode voltar' },
 ];

@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { SETTINGS_SECTIONS, isSettingsSection, keysCount, sectionOf } from '../settingsSections';
 
 describe('settingsSections', () => {
-  it('lists the six sections of the canvas in order', () => {
+  it('lists the six sections of the canvas in order, with the phone access after the backups', () => {
     expect(SETTINGS_SECTIONS.map((section) => section.id)).toEqual([
       'appearance',
       'keys',
       'ai',
       'backup',
+      'mobile',
       'updates',
       'trash',
     ]);

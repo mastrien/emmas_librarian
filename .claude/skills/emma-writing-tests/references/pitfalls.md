@@ -44,5 +44,5 @@ Each of these cost time during the audit. Check here before debugging a strange 
 ## Data code
 - A mocked `db.prepare(...).run(...)` cannot tell you a column does not exist. Use real SQLite.
 - Copying rows between schemas: copy by column intersection and override only ids/foreign keys
-  (`electron/database/backup/rowCopy.ts`), and cover it with `fullProjectFixture`.
+  (`core/database/backup/rowCopy.ts`), and cover it with `fullProjectFixture`.
 - Soft delete: most lists filter `deleted_at IS NULL`; tests that count rows must account for trashed ones.

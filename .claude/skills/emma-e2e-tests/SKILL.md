@@ -27,10 +27,14 @@ npx concurrently --kill-others --success first "vite" \
   "wait-on http://localhost:5173 && npx playwright test e2e-tests/reader.spec.js --config=playwright.config.js --workers=1 --retries=0"
 ```
 Add `-g "<test name>"` to run a single test. `tsc -p tsconfig.electron.json` is required after any change in
-`electron/` (the specs launch `dist-electron/electron/main.js`); renderer changes are served live by Vite.
+`adapters/electron/` (the specs launch `dist-electron/adapters/electron/main.js`); renderer changes are served live by Vite.
 Each spec opens real app windows, one at a time; runs need a display (they refuse to run headless). On Linux CI
 that is `xvfb-run -a npm run test:e2e` (workflow `.github/workflows/e2e-linux.yml`); locally on Windows, WSLg's
 display also works for running the suite on Ubuntu.
+
+The app's CLI (`<app> cli <command>`, `docs/cli.md`) is driven with
+`runAppUntilExit({}, { userDataDir, cliArgs: ['projects:getAll'] })`: no window, one JSON document on stdout and
+the exit code in `code` (`e2e-tests/cli.spec.js`).
 
 ## Safety: data isolation (do not bypass)
 

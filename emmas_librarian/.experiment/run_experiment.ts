@@ -1,9 +1,9 @@
 import path from 'path';
 import fs from 'fs';
 import Database from 'better-sqlite3';
-import { DatabaseAdapter } from '../electron/database/DatabaseAdapter';
-import { AIModelConfigRepository } from '../electron/database/AIModelConfigRepository';
-import { AIService } from '../electron/services/AIService';
+import { DatabaseAdapter } from '../core/database/DatabaseAdapter';
+import { AIModelConfigRepository } from '../core/database/AIModelConfigRepository';
+import { AIService } from '../core/services/AIService';
 
 async function runExperiment() {
   console.log('====================================================');
@@ -19,7 +19,7 @@ async function runExperiment() {
 
   // Setup temporary database and schema
   const rawDb = new Database(tempDbPath);
-  const schemaPath = path.join(__dirname, '../electron/database/schema.sql');
+  const schemaPath = path.join(__dirname, '../core/database/schema.sql');
   const schemaSql = fs.readFileSync(schemaPath, 'utf8');
   rawDb.exec(schemaSql);
 

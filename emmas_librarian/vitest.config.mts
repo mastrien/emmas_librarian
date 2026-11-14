@@ -19,6 +19,7 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/dist-electron/**',
+      '**/dist-mobile/**',
       '**/release/**',
       '**/.stryker-tmp/**',
       // Playwright specs; e2e-tests/__tests__ holds unit tests of the E2E helpers and runs here.
@@ -28,13 +29,18 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      include: ['electron/**/*', 'src/**/*'],
+      include: ['adapters/**/*', 'core/**/*', 'src/**/*', 'mobile/src/**/*'],
       exclude: [
-        'electron/**/__tests__/**',
+        'adapters/**/__tests__/**',
+        'core/**/__tests__/**',
         'src/**/__tests__/**',
-        'electron/preload.ts',
-        'electron/main.ts',
-        'electron/types.ts',
+        'mobile/src/**/__tests__/**',
+        // Entry point and the thin wrapper around pdf.js, which needs a real browser canvas (covered by E2E).
+        'mobile/src/main.tsx',
+        'mobile/src/pdf/pdfDocument.ts',
+        'adapters/electron/preload.ts',
+        'adapters/electron/main.ts',
+        'adapters/electron/types.ts',
         'src/main.tsx',
         'src/vite-env.d.ts',
       ],
@@ -44,11 +50,18 @@ export default defineConfig({
         branches: 91,
         functions: 89,
         statements: 93,
-        'electron/**/*': {
+        'adapters/**/*': {
           lines: 95,
           branches: 91,
           functions: 99,
           statements: 95,
+        },
+        // The library without a shell (epic #27); it held most of what adapters/electron/ covered before the split.
+        'core/**/*': {
+          lines: 96,
+          branches: 94,
+          functions: 99,
+          statements: 96,
         },
       },
     },
