@@ -17,7 +17,7 @@ const renderPage = async () => {
   render(
     <BrowserRouter>
       <FakeDialogsProvider dialogs={dialogs}>
-        <SettingsPage />
+        <SettingsPage section="backup" />
       </FakeDialogsProvider>
     </BrowserRouter>,
   );

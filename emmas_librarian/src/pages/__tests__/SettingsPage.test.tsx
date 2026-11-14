@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { SettingsPage } from '../SettingsPage';
 import { FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
@@ -25,12 +25,12 @@ describe('SettingsPage', () => {
     render(
       <BrowserRouter>
         <FakeDialogsProvider>
-          <SettingsPage />
+          <SettingsPage section="keys" />
         </FakeDialogsProvider>
       </BrowserRouter>,
     );
 
-    expect(screen.getByRole('heading', { name: 'Configurações' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Seções das configurações' })).toBeInTheDocument();
     expect(await screen.findByText("Emma's Librarian v1.2.3")).toBeInTheDocument();
     expect(screen.getByDisplayValue('scopus-123')).toBeInTheDocument();
   });
@@ -42,7 +42,7 @@ describe('SettingsPage', () => {
     render(
       <BrowserRouter>
         <FakeDialogsProvider>
-          <SettingsPage />
+          <SettingsPage section="keys" />
         </FakeDialogsProvider>
       </BrowserRouter>,
     );
@@ -58,7 +58,7 @@ describe('SettingsPage', () => {
     render(
       <BrowserRouter>
         <FakeDialogsProvider>
-          <SettingsPage />
+          <SettingsPage section="keys" />
         </FakeDialogsProvider>
       </BrowserRouter>,
     );
@@ -75,7 +75,7 @@ describe('SettingsPage', () => {
     render(
       <BrowserRouter>
         <FakeDialogsProvider>
-          <SettingsPage />
+          <SettingsPage section="keys" />
         </FakeDialogsProvider>
       </BrowserRouter>,
     );
@@ -90,7 +90,7 @@ describe('SettingsPage', () => {
     render(
       <BrowserRouter>
         <FakeDialogsProvider>
-          <SettingsPage />
+          <SettingsPage section="ai" />
         </FakeDialogsProvider>
       </BrowserRouter>,
     );
@@ -109,7 +109,7 @@ describe('SettingsPage', () => {
     render(
       <BrowserRouter>
         <FakeDialogsProvider>
-          <SettingsPage />
+          <SettingsPage section="ai" />
         </FakeDialogsProvider>
       </BrowserRouter>,
     );
@@ -127,7 +127,7 @@ describe('SettingsPage', () => {
     const { unmount } = render(
       <BrowserRouter>
         <FakeDialogsProvider>
-          <SettingsPage />
+          <SettingsPage section="keys" />
         </FakeDialogsProvider>
       </BrowserRouter>,
     );
@@ -146,7 +146,7 @@ describe('SettingsPage', () => {
     render(
       <BrowserRouter>
         <FakeDialogsProvider>
-          <SettingsPage />
+          <SettingsPage section="keys" />
         </FakeDialogsProvider>
       </BrowserRouter>,
     );
@@ -154,5 +154,48 @@ describe('SettingsPage', () => {
     fireEvent.change(await screen.findByLabelText('IEEE Xplore API Key (experimental)'), { target: { value: 'x' } });
 
     expect(await screen.findByText(/Não foi possível salvar uma alteração/)).toBeInTheDocument();
+  });
+
+  // Board 170: a list of sections, each a screen of its own, with its counts.
+  it('opens on the first section, lists all of them and counts the keys that are filled in', async () => {
+    fakeService.getSetting.mockImplementation(async (key: string) =>
+      key === 'scopus_api_key' || key === 'wos_api_key' ? 'chave' : null,
+    );
+    render(
+      <BrowserRouter>
+        <FakeDialogsProvider>
+          <SettingsPage />
+        </FakeDialogsProvider>
+      </BrowserRouter>,
+    );
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Aparência' })).toBeInTheDocument();
+    const nav = screen.getByRole('navigation', { name: 'Seções das configurações' });
+    expect(
+      within(nav)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href')),
+    ).toEqual([
+      '/settings/appearance',
+      '/settings/keys',
+      '/settings/ai',
+      '/settings/backup',
+      '/settings/updates',
+      '/settings/trash',
+    ]);
+    expect(await within(nav).findByRole('link', { name: /Chaves das bases 2\/4/ })).toBeInTheDocument();
+  });
+
+  it('shows only the chosen section, under its own title', async () => {
+    render(
+      <BrowserRouter>
+        <FakeDialogsProvider>
+          <SettingsPage section="trash" />
+        </FakeDialogsProvider>
+      </BrowserRouter>,
+    );
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Lixeira' })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Scopus API Key/)).not.toBeInTheDocument();
   });
 });

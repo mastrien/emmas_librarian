@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { SettingsPage } from '../SettingsPage';
+import type { SettingsSection } from '../Settings/settingsSections';
 import { FakeDialogs, FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 import { FakeProjectService } from '../../services/__tests__/fakes/FakeProjectService';
 import { projectService } from '../../services/api';
@@ -15,11 +16,11 @@ vi.mock('../../services/api', () => ({
 const TRASHED = { type: 'article', id: 7, title: 'Artigo na lixeira', deleted_at: '2026-11-01T10:00:00Z' };
 const BACKUP = { filename: 'emma_backup_2026-09-28.db.gz', date: '2026-09-28', sizeBytes: 2048 };
 
-const renderPage = async () => {
+const renderPage = async (section: SettingsSection) => {
   render(
     <BrowserRouter>
       <FakeDialogsProvider dialogs={dialogs}>
-        <SettingsPage />
+        <SettingsPage section={section} />
       </FakeDialogsProvider>
     </BrowserRouter>,
   );
@@ -39,6 +40,7 @@ const answered = async () => {
 const ACTIONS = [
   {
     name: 'Restaurar padrões de IA',
+    section: 'ai' as SettingsSection,
     // Settings come back to the defaults, nothing is deleted: a plain button.
     danger: false,
     start: () => fireEvent.click(screen.getByRole('button', { name: /Restaurar Padrões/ })),
@@ -46,6 +48,7 @@ const ACTIONS = [
   },
   {
     name: 'Excluir permanentemente',
+    section: 'trash' as SettingsSection,
     danger: true,
     start: async () => {
       const row = (await screen.findByText('Artigo na lixeira')).closest('.trash-item') as HTMLElement;
@@ -55,12 +58,14 @@ const ACTIONS = [
   },
   {
     name: 'Esvaziar lixeira',
+    section: 'trash' as SettingsSection,
     danger: true,
     start: async () => fireEvent.click(await screen.findByRole('button', { name: /Esvaziar Lixeira/ })),
     call: () => fakeService.emptyTrash,
   },
   {
     name: 'Restaurar backup automático',
+    section: 'backup' as SettingsSection,
     danger: true,
     start: async () => {
       const row = (await screen.findByText('2026-09-28')).closest('div')!.parentElement!;
@@ -70,6 +75,7 @@ const ACTIONS = [
   },
   {
     name: 'Restaurar e sobrescrever',
+    section: 'backup' as SettingsSection,
     danger: true,
     start: () => fireEvent.click(screen.getByRole('button', { name: 'Restaurar e Sobrescrever' })),
     call: () => fakeService.restoreBackupOverride,
@@ -91,7 +97,7 @@ describe('SettingsPage confirmations', () => {
   });
 
   it.each(ACTIONS)('$name: asks first, and does it once confirmed', async (action) => {
-    await renderPage();
+    await renderPage(action.section);
 
     await action.start();
     await answered();
@@ -103,7 +109,7 @@ describe('SettingsPage confirmations', () => {
 
   it.each(ACTIONS)('$name: does nothing when declined', async (action) => {
     dialogs.confirmMessage.mockReturnValue(false);
-    await renderPage();
+    await renderPage(action.section);
 
     await action.start();
     await answered();
