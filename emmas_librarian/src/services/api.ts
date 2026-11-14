@@ -2,6 +2,7 @@ import {
   IpcChannel,
   type Project,
   type ProjectNavCounts,
+  type ScreeningSummary,
   type Article,
   type Highlight,
   type Annotation,
@@ -100,6 +101,11 @@ export const projectService: IProjectService = {
 
   getProjectNavCounts: (projectId: number): Promise<ProjectNavCounts> =>
     safeInvoke<ProjectNavCounts>(IpcChannel.PROJECTS_GET_NAV_COUNTS, projectId),
+
+  markProjectOpened: (projectId: number): Promise<void> => safeInvoke(IpcChannel.PROJECTS_MARK_OPENED, projectId),
+
+  getScreeningSummaries: (): Promise<Record<number, ScreeningSummary>> =>
+    safeInvoke<Record<number, ScreeningSummary>>(IpcChannel.PROJECTS_GET_SCREENING_SUMMARIES),
 
   getProjectWritingPad: (id: number): Promise<string | null> => safeInvoke(IpcChannel.PROJECTS_GET_WRITING_PAD, id),
 

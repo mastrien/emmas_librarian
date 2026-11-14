@@ -42,7 +42,17 @@ export interface Project {
   name: string;
   created_at: string;
   last_executed_at?: string;
+  /** When the project was last opened (ISO), so the home lists the ones with recent activity first. */
+  last_opened_at?: string | null;
   stats?: ProjectStats;
+  /** How far the screening of a project that had one went; absent for projects that never opened the review. */
+  screening?: ScreeningSummary;
+}
+
+/** The progress of a project's screening by title and abstract, for its card on the home screen. */
+export interface ScreeningSummary {
+  /** Articles with a decision at title and abstract. */
+  decided: number;
 }
 
 export interface Article {
@@ -156,6 +166,8 @@ export enum IpcChannel {
   PROJECTS_GET_WRITING_PAD = 'projects:getWritingPad',
   PROJECTS_UPDATE_WRITING_PAD = 'projects:updateWritingPad',
   PROJECTS_GET_NAV_COUNTS = 'projects:getNavCounts',
+  PROJECTS_MARK_OPENED = 'projects:markOpened',
+  PROJECTS_GET_SCREENING_SUMMARIES = 'projects:getScreeningSummaries',
   PROJECTS_GET_ABOUT = 'projects:getAbout',
   PROJECTS_UPDATE_ABOUT = 'projects:updateAbout',
   SEARCH_PREVIEW = 'search:preview',

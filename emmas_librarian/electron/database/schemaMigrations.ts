@@ -27,6 +27,8 @@ const COLUMN_MIGRATIONS = [
   'ALTER TABLE projects ADD COLUMN writing_pad TEXT',
   // "Sobre o projeto" (markdown), the first thing the project overview shows (redesign, board 154).
   'ALTER TABLE projects ADD COLUMN about_markdown TEXT',
+  // When the project was last opened: the home lists the ones with recent activity first (redesign, board 151).
+  'ALTER TABLE projects ADD COLUMN last_opened_at DATETIME DEFAULT NULL',
   'ALTER TABLE projects ADD COLUMN screening_inclusion TEXT',
   'ALTER TABLE projects ADD COLUMN screening_exclusion TEXT',
   'ALTER TABLE projects ADD COLUMN screening_predicted_order INTEGER',

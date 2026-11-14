@@ -41,6 +41,7 @@ import type {
   SavedSearchSummary,
   Project,
   ProjectNavCounts,
+  ScreeningSummary,
   Article,
   Highlight,
   Annotation,
@@ -127,6 +128,8 @@ export interface IProjectService {
   getProjectAbout(projectId: number): Promise<string>;
   updateProjectAbout(projectId: number, markdown: string): Promise<void>;
   getProjectNavCounts(projectId: number): Promise<ProjectNavCounts>;
+  markProjectOpened(projectId: number): Promise<void>;
+  getScreeningSummaries(): Promise<Record<number, ScreeningSummary>>;
   getProjectWritingPad(id: number): Promise<string | null>;
   updateProjectWritingPad(id: number, content: string): Promise<void>;
   deleteProject(id: number): Promise<void>;

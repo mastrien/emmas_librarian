@@ -25,6 +25,7 @@ import type { CategorySetEntry, CategorySetResult } from '../../src/utils/catego
 import {
   Project,
   ProjectNavCounts,
+  ScreeningSummary,
   Article,
   Annotation,
   Highlight,
@@ -164,6 +165,12 @@ export class DatabaseAdapter {
   }
   getProjectNavCounts(id: number): ProjectNavCounts {
     return this.projectRepo.getNavCounts(id);
+  }
+  markProjectOpened(id: number): void {
+    return this.projectRepo.markProjectOpened(id);
+  }
+  getScreeningSummaries(): Record<number, ScreeningSummary> {
+    return this.projectRepo.getScreeningSummaries();
   }
   updateProjectWritingPad(id: number, content: string) {
     return this.projectRepo.updateProjectWritingPad(id, content);

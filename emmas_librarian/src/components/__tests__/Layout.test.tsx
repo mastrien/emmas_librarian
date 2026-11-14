@@ -56,6 +56,19 @@ describe('Layout Component', () => {
     expect(screen.getByText('Test Children')).toBeInTheDocument();
   });
 
+  // Board 151: entering a project on any screen records it, so the home lists the recent ones first.
+  it('records that a project was opened when one of its screens shows, and not on other screens', async () => {
+    const { unmount } = renderAt('/projects/3/articles');
+    await waitFor(() => expect(fakeService.markProjectOpened).toHaveBeenCalledWith(3));
+    unmount();
+    fakeService.markProjectOpened.mockClear();
+
+    renderAt('/agenda');
+    await waitFor(() => expect(fakeService.getAppVersion).toHaveBeenCalled());
+
+    expect(fakeService.markProjectOpened).not.toHaveBeenCalled();
+  });
+
   it('marks the module of the current route as the current page', async () => {
     renderAt('/agenda');
 

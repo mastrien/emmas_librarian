@@ -22,6 +22,8 @@ export function registerProjectHandlers(ipc: IpcRegistrar, db: DatabaseAdapter):
     db.updateProjectAbout(projectId, markdown),
   );
   handle(ipc, IpcChannel.PROJECTS_GET_NAV_COUNTS, (_e, projectId: number) => db.getProjectNavCounts(projectId));
+  handle(ipc, IpcChannel.PROJECTS_MARK_OPENED, (_e, projectId: number) => db.markProjectOpened(projectId));
+  handle(ipc, IpcChannel.PROJECTS_GET_SCREENING_SUMMARIES, () => db.getScreeningSummaries());
   handle(ipc, IpcChannel.PROJECTS_GET_WRITING_PAD, (_e, projectId: number) => db.getProjectWritingPad(projectId));
   handle(ipc, IpcChannel.PROJECTS_UPDATE_WRITING_PAD, (_e, projectId: number, content: string) =>
     db.updateProjectWritingPad(projectId, content),

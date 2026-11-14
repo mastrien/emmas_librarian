@@ -14,6 +14,7 @@ describe('ProjectRepository', () => {
     db.exec(schema);
     db.exec('ALTER TABLE projects ADD COLUMN writing_pad TEXT;');
     db.exec('ALTER TABLE projects ADD COLUMN about_markdown TEXT;');
+    db.exec('ALTER TABLE projects ADD COLUMN last_opened_at DATETIME DEFAULT NULL;');
 
     repo = new ProjectRepository(db);
     vi.clearAllMocks();
@@ -296,6 +297,64 @@ describe('ProjectRepository', () => {
       const project = repo.createProject('Vazio');
 
       expect(repo.getNavCounts(project.id)).toEqual({ articles: 0, categories: 0, searches: 0, investigations: 0 });
+    });
+  });
+
+  // Board 151: the home lists the projects with recent activity first and tells how far a screening went.
+  describe('markProjectOpened', () => {
+    it('stores when the project was opened, for that project only', () => {
+      const project = repo.createProject('Tese');
+      const other = repo.createProject('Outro');
+      expect(repo.getProject(project.id)?.last_opened_at).toBeNull();
+
+      repo.markProjectOpened(project.id);
+
+      expect(new Date(repo.getProject(project.id)!.last_opened_at!).getTime()).toBeGreaterThan(Date.now() - 60_000);
+      expect(repo.getProject(other.id)?.last_opened_at).toBeNull();
+    });
+  });
+
+  describe('getScreeningSummaries', () => {
+    const addArticle = (projectId: number, deleted = false) =>
+      Number(
+        db
+          .prepare('INSERT INTO articles (project_id, title, status, deleted_at) VALUES (?, ?, ?, ?)')
+          .run(projectId, 'A', 'new', deleted ? '2026-01-01' : null).lastInsertRowid,
+      );
+    const addLabel = (projectId: number) =>
+      Number(
+        db
+          .prepare("INSERT INTO screening_labels (project_id, name, kind) VALUES (?, 'Incluso', 'include')")
+          .run(projectId).lastInsertRowid,
+      );
+    const decide = (articleId: number, labelId: number, stage: 'title' | 'full') =>
+      db
+        .prepare('INSERT INTO screening_decisions (article_id, label_id, stage) VALUES (?, ?, ?)')
+        .run(articleId, labelId, stage);
+
+    it('leaves out the projects that never opened the review', () => {
+      repo.createProject('Sem revisão');
+
+      expect(repo.getScreeningSummaries()).toEqual({});
+    });
+
+    it('lists a project that opened the review (it has labels) even with nothing decided', () => {
+      const project = repo.createProject('Tese');
+      addLabel(project.id);
+
+      expect(repo.getScreeningSummaries()).toEqual({ [project.id]: { decided: 0 } });
+    });
+
+    it('counts the articles decided at title and abstract, not the full-text ones nor the trashed', () => {
+      const project = repo.createProject('Tese');
+      const label = addLabel(project.id);
+      const [a, b, trashed] = [addArticle(project.id), addArticle(project.id), addArticle(project.id, true)];
+      decide(a, label, 'title');
+      decide(a, label, 'full');
+      decide(b, label, 'full');
+      decide(trashed, label, 'title');
+
+      expect(repo.getScreeningSummaries()[project.id]).toEqual({ decided: 1 });
     });
   });
 });
