@@ -1,7 +1,7 @@
 import { act } from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { AuditView, type AuditViewProps } from '../AuditView';
 import { ServicesProvider } from '../../../../contexts/ServicesContext';
 import { FakeProjectService } from '../../../../services/__tests__/fakes/FakeProjectService';
@@ -99,12 +99,20 @@ function renderAudit(audit: InvestigationAudit | null, overrides: Partial<AuditV
   return { service, onReview };
 }
 
-async function openFirstItem() {
-  fireEvent.click(await screen.findByText('Qual o desenho?'));
-  fireEvent.click(screen.getByRole('button', { name: /Estudo 1/ }));
+// Board 163: the drawn items are listed on the left; picking one shows it in the middle.
+async function openItem(title: RegExp) {
+  const sample = await screen.findByRole('navigation', { name: 'Amostra' });
+  fireEvent.click(within(sample).getByRole('button', { name: title }));
 }
+const openFirstItem = () => openItem(/Estudo 1/);
+
+// A wide window: the audit shows its three columns and picks the first pending item by itself (board 163).
+const setWidth = (width: number) => Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
 
 describe('AuditView (#48)', () => {
+  beforeEach(() => setWidth(1600));
+  afterEach(() => setWidth(1024));
+
   it('draws a sample with a fresh seed when there is no audit yet', async () => {
     const { service } = renderAudit(null);
 
@@ -126,7 +134,7 @@ describe('AuditView (#48)', () => {
 
     const row = (await screen.findByText('Há conflito de interesses?')).closest('tr')!;
     expect(within(row).getByText('nada a auditar')).toBeInTheDocument();
-    expect(within(row).getByText('+1 com erro')).toBeInTheDocument();
+    expect(row).toHaveTextContent('+1 com erro');
   });
 
   it('shows the selected answer and what the AI cited, and marks it from the panel', async () => {
@@ -144,8 +152,7 @@ describe('AuditView (#48)', () => {
 
   it('warns when an answer cites nothing', async () => {
     renderAudit(fullDraw);
-    fireEvent.click(await screen.findByText('Qual o desenho?'));
-    fireEvent.click(screen.getByRole('button', { name: /Estudo 2/ }));
+    await openItem(/Estudo 2/);
 
     expect(screen.getByText(/A IA não citou nenhum trecho/)).toBeInTheDocument();
   });
@@ -202,10 +209,10 @@ describe('AuditView (#48)', () => {
     const withPdf = (pdf: string | null) =>
       [{ id: 1, title: 'Estudo 1', status: 'new', project_id: 1, local_file_path: pdf }] as Article[];
 
-    it('opens the PDF with P in the review in sequence, with the way back', async () => {
+    it('opens the PDF with P on the item in view, with the way back', async () => {
       renderAudit(fullDraw, { results: [uncited(1)], articles: withPdf('a.pdf') });
 
-      fireEvent.click(await screen.findByRole('button', { name: 'Revisar em sequência' }));
+      await screen.findByRole('complementary', { name: 'Evidência do item selecionado' });
       fireEvent.keyDown(window, { key: 'p' });
 
       expect(JSON.parse(screen.getByTestId('reader').textContent!)).toEqual({
@@ -224,7 +231,7 @@ describe('AuditView (#48)', () => {
 
     it('does nothing without a PDF, and offers no button', async () => {
       renderAudit(fullDraw, { results: [uncited(1)], articles: withPdf(null) });
-      fireEvent.click(await screen.findByRole('button', { name: 'Revisar em sequência' }));
+      await screen.findByRole('complementary', { name: 'Evidência do item selecionado' });
 
       fireEvent.keyDown(window, { key: 'p' });
 
@@ -233,15 +240,36 @@ describe('AuditView (#48)', () => {
     });
   });
 
-  it('reviews in sequence: the next pending item, its evidence beside it', async () => {
+  // Board 163: the review in sequence is the default; a verdict brings up the next pending item.
+  it('opens on the first pending item and moves on to the next one after a verdict', async () => {
     const { onReview } = renderAudit(fullDraw);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Revisar em sequência' }));
-    const queue = screen.getByRole('region', { name: 'Revisão em sequência' });
-    expect(within(queue).getByText('Trecho citado 1')).toBeInTheDocument();
+    const panel = await screen.findByRole('complementary', { name: 'Evidência do item selecionado' });
+    expect(within(panel).getByText('Trecho citado 1')).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'a' });
 
     expect(onReview).toHaveBeenCalledWith(1, { status: 'accepted' });
+    const current = within(screen.getByRole('navigation', { name: 'Amostra' })).getByRole('button', {
+      current: true,
+    });
+    expect(current).not.toHaveTextContent('Estudo 1');
+  });
+
+  it('on a narrow window opens an item only when it is picked, in a drawer', async () => {
+    setWidth(1000);
+    renderAudit(fullDraw);
+    await screen.findByRole('navigation', { name: 'Amostra' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await openItem(/Estudo 2/);
+
+    expect(screen.getByRole('dialog', { name: 'Item da amostra' })).toHaveTextContent('P1 · Estudo 2');
+  });
+
+  it('says when the whole sample is marked', async () => {
+    renderAudit(fullDraw, { results: results.map((r) => ({ ...r, review_status: 'accepted' as const })) });
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Amostra toda marcada');
   });
 
   it('reopens on the item it came back from the reader to', async () => {

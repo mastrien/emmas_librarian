@@ -49,7 +49,7 @@ describe('the audit on the investigation page', () => {
 
     fireEvent.click(await screen.findByRole('tab', { name: 'Auditoria' }));
 
-    expect(await screen.findByText('Auditoria da investigação #19')).toBeInTheDocument();
+    expect(await screen.findByRole('navigation', { name: 'Amostra' })).toBeInTheDocument();
   });
 
   it('puts the audit in the CSV export when there is one', async () => {
@@ -88,7 +88,7 @@ describe('the audit on the investigation page', () => {
     fireEvent.click(within(drawer).getByRole('button', { name: 'Fechar' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByText('Auditoria da investigação #19')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Amostra' })).toBeInTheDocument();
   });
 });
 

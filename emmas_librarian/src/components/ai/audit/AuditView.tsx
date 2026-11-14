@@ -14,10 +14,11 @@ import { AuditSetup } from './AuditSetup';
 import { AuditEstimate } from './AuditEstimate';
 import { AuditQuestionTable } from './AuditQuestionTable';
 import { AuditEvidencePanel } from './AuditEvidencePanel';
-import { AuditQueue } from './AuditQueue';
+import { AuditSampleList } from './AuditSampleList';
 import { AuditModelComparison } from './AuditModelComparison';
 import { AuditHelpDialog } from './AuditHelpDialog';
 import './audit.css';
+import './auditLayout.css';
 
 export interface AuditViewProps {
   investigation: InvestigationHistoryRecord;
@@ -47,9 +48,27 @@ function useAuditKeys(handle: (key: 'a' | 'e' | 'r' | 'p') => void) {
   }, [handle]);
 }
 
+// Which item is in the middle (board 163): the one picked, else the first pending one, so the audit is a review in
+// sequence by default. On a narrow window nothing is picked for the person: the item opens over the page, as a drawer.
+function useAuditSelection(sampled: InvestigationResult[], initialResultId: number | undefined, narrow: boolean) {
+  const [selectedId, setSelectedId] = useState<number | null>(initialResultId ?? null);
+  const firstPending = sampled.find((r) => r.review_status === 'pending') ?? null;
+  const fallback = narrow ? null : (firstPending ?? sampled[0] ?? null);
+  const inView = sampled.find((r) => r.id === selectedId) ?? fallback;
+  // After a verdict the next pending item after this one comes up; nothing left after it, the first one left.
+  const advanceFrom = (resultId: number) => {
+    const from = sampled.findIndex((r) => r.id === resultId);
+    const pending = (r: InvestigationResult) => r.review_status === 'pending' && r.id !== resultId;
+    const next = sampled.slice(from + 1).find(pending) ?? sampled.find(pending);
+    if (next) setSelectedId(next.id);
+  };
+  return { inView, setSelectedId, advanceFrom, allMarked: sampled.length > 0 && !firstPending };
+}
+
 /**
- * The audit of an investigation by stratified sample (#48): the estimate, the table per question with the evidence
- * panel, the review queue and the comparison between models. Prototype: https://claude.ai/artifact/WFaJacvtFbUuW9mv1Zuatx
+ * The audit of an investigation by stratified sample (#48), in three columns (board 163): the drawn items on the
+ * left, the one in view in the middle with its evidence and verdict, and on the right the estimate, the rates per
+ * question and the comparison between models. Prototype: https://claude.ai/artifact/WFaJacvtFbUuW9mv1Zuatx
  *
  * Usage:
  *   <AuditView investigation={inv} projectId={1} articles={articles} results={results} history={history} ... />
@@ -59,9 +78,6 @@ export const AuditView: React.FC<AuditViewProps> = (props) => {
   const narrow = useNarrowWindow();
   const navigate = useNavigate();
   const { audit, loading, draw, modelRows } = useInvestigationAudit({ investigationId: investigation.id, ...props });
-  const [view, setView] = useState<'table' | 'queue'>('table');
-  const [selectedId, setSelectedId] = useState<number | null>(initialResultId ?? null);
-  const [open, setOpen] = useState<Set<number>>(new Set());
   const [editing, setEditing] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
@@ -76,17 +92,16 @@ export const AuditView: React.FC<AuditViewProps> = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results, audit, investigation.questions]);
   const sampled = sampledInOrder(rows);
-  const nextPending = sampled.find((r) => r.review_status === 'pending') ?? null;
-  const inView = view === 'queue' ? nextPending : (sampled.find((r) => r.id === selectedId) ?? null);
+  const selection = useAuditSelection(sampled, initialResultId, narrow);
+  const { inView } = selection;
   const questionOf = (r: InvestigationResult | null) => rows.find((row) => row.question === r?.question)?.number;
   const articleOf = (r: InvestigationResult | null) => articles.find((a) => a.id === r?.article_id);
 
-  // Coming back from the reader, the item's question starts open (derived, so no state is synced in an effect).
-  const [toggledAny, setToggledAny] = useState(false);
-  const initialQuestion = questionOf(sampled.find((r) => r.id === initialResultId) ?? null);
-  const openQuestions = !toggledAny && initialQuestion ? new Set(open).add(initialQuestion) : open;
-
-  const review = (r: InvestigationResult | null) => (v: ResultReview) => r && onReview(r.id, v);
+  const review = (r: InvestigationResult | null) => (v: ResultReview) => {
+    if (!r) return;
+    void onReview(r.id, v);
+    if (v.status !== 'pending') selection.advanceFrom(r.id);
+  };
   const openEvidence = (r: InvestigationResult) => (evidence: AuditEvidenceItem) =>
     navigate(`/articles/${r.article_id}`, {
       state: readerStateForAudit(evidence, {
@@ -136,15 +151,15 @@ export const AuditView: React.FC<AuditViewProps> = (props) => {
 
   return (
     <div className="audit">
-      <div className="audit-row audit-spread audit-items-end">
-        <div className="audit-stack-4">
-          <h3 className="audit-m0">Auditoria da investigação #{investigation.id}</h3>
-          <span className="audit-muted audit-text-sm">
-            {investigation.model_used || 'Modelo desconhecido'} · {rows.length} perguntas · amostra de {sampled.length}{' '}
-            itens
-          </span>
-        </div>
+      <div className="audit-toolbar">
+        <span className="audit-muted audit-text-sm">
+          {investigation.model_used || 'Modelo desconhecido'} · {rows.length} perguntas · amostra de {sampled.length}{' '}
+          itens
+        </span>
         <AuditSetup key={audit?.id ?? 'new'} audit={audit} onDraw={(p) => void draw(p)} />
+        <button type="button" className="btn-ghost" onClick={() => setHelpOpen(true)}>
+          Como ler
+        </button>
       </div>
 
       {!audit ? (
@@ -153,66 +168,44 @@ export const AuditView: React.FC<AuditViewProps> = (props) => {
           e a semente fica guardada para o mesmo sorteio poder ser repetido.
         </div>
       ) : (
-        <>
-          <AuditEstimate
-            stats={auditStats(sampled)}
-            onReviewInSequence={() => setView('queue')}
-            onHelp={() => setHelpOpen(true)}
+        <div className="audit-columns">
+          <AuditSampleList
+            sampled={sampled}
+            questionNumberOf={questionOf}
+            articles={articles}
+            currentId={inView?.id ?? null}
+            onSelect={(id) => {
+              selection.setSelectedId(id);
+              setEditing(false);
+            }}
           />
-          {view === 'queue' ? (
-            <AuditQueue
-              current={nextPending}
-              pending={sampled.filter((r) => r.review_status === 'pending').length}
-              questionNumber={questionOf(nextPending)}
-              article={articleOf(nextPending)}
-              editing={editing}
-              onEdit={setEditing}
-              onReview={review(nextPending)}
-              onOpenEvidence={nextPending ? openEvidence(nextPending) : () => undefined}
-              onOpenArticle={openArticle(nextPending)}
-              onBack={() => setView('table')}
-            />
-          ) : (
-            <div className="audit-split">
-              <AuditQuestionTable
-                rows={rows}
-                articles={articles}
-                open={openQuestions}
-                selectedId={selectedId}
-                onToggle={(n) => {
-                  setOpen(toggled(openQuestions, n));
-                  setToggledAny(true);
-                }}
-                onSelect={(id) => {
-                  setSelectedId(id);
-                  setEditing(false);
-                }}
-              />
-              {/* On a narrow window the item opens over the table, as the answer does in the "Respostas" tab. */}
-              {!narrow && evidencePanel}
-            </div>
-          )}
-          <AuditModelComparison rows={modelRows} currentId={investigation.id} onHelp={() => setHelpOpen(true)} />
-          <div className="audit-foot">
-            <span>Correto = aceita; corrigido e incorreto contam como erro.</span>
-            <span>Só os itens sorteados entram na taxa.</span>
-            <span>Intervalo de Wilson, 95%.</span>
+          <div className="audit-center">
+            {!narrow && evidencePanel}
+            {selection.allMarked && (
+              <div className="audit-callout" role="status">
+                <strong>Amostra toda marcada</strong>
+                <span className="audit-muted">A estimativa ao lado já é o resultado desta auditoria.</span>
+              </div>
+            )}
           </div>
-        </>
+          <div className="audit-right">
+            <AuditEstimate stats={auditStats(sampled)} onHelp={() => setHelpOpen(true)} />
+            <AuditQuestionTable rows={rows} />
+            <AuditModelComparison rows={modelRows} currentId={investigation.id} onHelp={() => setHelpOpen(true)} />
+            <div className="audit-foot">
+              <span>Correto = aceita; corrigido e incorreto contam como erro.</span>
+              <span>Só os itens sorteados entram na taxa.</span>
+              <span>Intervalo de Wilson, 95%.</span>
+            </div>
+          </div>
+        </div>
       )}
       {helpOpen && <AuditHelpDialog onClose={() => setHelpOpen(false)} />}
-      {narrow && view === 'table' && inView && (
-        <SideDrawer side="right" label="Item da amostra" onClose={() => setSelectedId(null)}>
+      {narrow && inView && (
+        <SideDrawer side="right" label="Item da amostra" onClose={() => selection.setSelectedId(null)}>
           {evidencePanel}
         </SideDrawer>
       )}
     </div>
   );
 };
-
-function toggled(set: Set<number>, n: number): Set<number> {
-  const next = new Set(set);
-  if (next.has(n)) next.delete(n);
-  else next.add(n);
-  return next;
-}

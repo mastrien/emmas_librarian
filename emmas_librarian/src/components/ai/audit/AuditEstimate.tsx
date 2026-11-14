@@ -6,48 +6,39 @@ import { AuditHelpButton } from './AuditHelpDialog';
 
 interface AuditEstimateProps {
   stats: AuditStats;
-  onReviewInSequence: () => void;
   onHelp: () => void;
 }
 
 /**
- * The number the audit exists for: the estimated accuracy over the whole sample, its interval in words and on the
- * axis, how much of the sample is marked, and the way into the review queue.
+ * The number the audit exists for (board 163, top of the right column): the estimated accuracy over the whole
+ * sample, how many marks were correct, the interval on the axis and in words.
  *
  * Usage:
- *   <AuditEstimate stats={auditStats(sampledInOrder(rows))} onReviewInSequence={openQueue} onHelp={openHelp} />
+ *   <AuditEstimate stats={auditStats(sampledInOrder(rows))} onHelp={openHelp} />
  */
-export const AuditEstimate: React.FC<AuditEstimateProps> = ({ stats, onReviewInSequence, onHelp }) => {
-  const { interval, marked, sampled, correct } = stats;
+export const AuditEstimate: React.FC<AuditEstimateProps> = ({ stats, onHelp }) => {
+  const { interval, marked, correct } = stats;
   return (
     <section className="audit-panel audit-estimate" aria-label="Acerto estimado">
-      <div>
-        <div className="audit-row audit-gap-6">
-          <span className="audit-eyebrow">Acerto estimado</span>
-          <AuditHelpButton onClick={onHelp} label="O que é o acerto estimado e o IC 95%" />
-        </div>
-        <div className="audit-big audit-num">{interval ? percent(interval.estimate) : '—'}</div>
+      <div className="audit-row audit-gap-6">
+        <span className="audit-eyebrow">Acerto estimado</span>
+        <AuditHelpButton onClick={onHelp} label="O que é o acerto estimado e o IC 95%" />
       </div>
-      <div className="audit-stack-6">
-        <span className="audit-muted audit-text-sm">
-          {interval
-            ? `IC 95%: ${percent(interval.low)} a ${percent(interval.high)} · ${correct} de ${marked} corretos`
-            : 'Marque itens da amostra para ver a estimativa'}
-        </span>
-        <ForestPlot interval={interval} />
-        <AxisScale />
+      <div className="audit-row audit-baseline">
+        <span className="audit-big audit-num">{interval ? percent(interval.estimate) : '—'}</span>
+        {interval && (
+          <span className="audit-muted audit-num audit-text-sm">
+            {correct} de {marked} corretas
+          </span>
+        )}
       </div>
-      <div className="audit-done">
-        <span className="audit-num audit-text-md">
-          <b>{marked}</b> de {sampled} marcados
-        </span>
-        <div className="audit-bar" role="progressbar" aria-valuemin={0} aria-valuemax={sampled} aria-valuenow={marked}>
-          <span style={{ '--progress': `${sampled ? (marked / sampled) * 100 : 0}%` } as React.CSSProperties} />
-        </div>
-        <button type="button" className="btn-primary" disabled={marked >= sampled} onClick={onReviewInSequence}>
-          Revisar em sequência
-        </button>
-      </div>
+      <ForestPlot interval={interval} />
+      <AxisScale />
+      <span className="audit-muted audit-text-sm">
+        {interval
+          ? `IC 95% de ${percent(interval.low)} a ${percent(interval.high)} (Wilson). Corrigida e incorreta contam como erro.`
+          : 'Marque itens da amostra para ver a estimativa.'}
+      </span>
     </section>
   );
 };
