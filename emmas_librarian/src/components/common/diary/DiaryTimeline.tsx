@@ -1,7 +1,7 @@
 import React from 'react';
-import { Plus, Calendar } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { DiaryEntry } from '../../../types';
-import { formatDiaryDateShort } from './diaryDates';
+import { diaryDayMonth, diaryPageSummary, groupDiaryPages } from './diaryPages';
 
 interface DiaryTimelineProps {
   entries: DiaryEntry[];
@@ -11,67 +11,68 @@ interface DiaryTimelineProps {
   onSelect: (date: string) => void;
 }
 
+const PageItem: React.FC<{ entry: DiaryEntry; isToday: boolean; isSelected: boolean; onSelect: () => void }> = (
+  props,
+) => (
+  <button
+    type="button"
+    className={`diary-page${props.isSelected ? ' is-on' : ''}`}
+    aria-current={props.isSelected || undefined}
+    onClick={props.onSelect}
+  >
+    <span className="diary-page__date">{props.isToday ? 'Hoje' : diaryDayMonth(props.entry.entry_date)}</span>
+    <span className="diary-page__summary">{diaryPageSummary(props.entry.content ?? '')}</span>
+  </button>
+);
+
+// Today without a page: the way to start it, in the accent (decision on the redesign canvas, board 155).
+const CreateToday: React.FC<{ onToday: () => void }> = ({ onToday }) => (
+  <button type="button" className="diary-page diary-page--create" onClick={onToday}>
+    <span className="diary-page__date">Hoje</span>
+    <span className="diary-page__summary">
+      <Plus size={13} aria-hidden="true" /> Criar a página de hoje
+    </span>
+  </button>
+);
+
 /**
- * Left column of the diary: "today" shortcut and the list of existing pages.
+ * The diary's page list (board 155): "+" and today first, then every page under its month, named by its first line.
  *
  * Usage:
  *   <DiaryTimeline entries={entries} selectedDate={date} today={today} onToday={openToday} onSelect={open} />
  */
-export const DiaryTimeline: React.FC<DiaryTimelineProps> = ({ entries, selectedDate, today, onToday, onSelect }) => (
-  <div style={{ width: '220px', flexShrink: 0 }}>
-    <button
-      onClick={onToday}
-      className="btn-primary"
-      style={{ width: '100%', padding: '0.75rem', marginBottom: '1.5rem' }}
-    >
-      <Plus size={18} /> Página de Hoje
-    </button>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-      {entries.length === 0 && (
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
-          Nenhuma entrada ainda. Clique em "Página de Hoje" para começar.
-        </p>
-      )}
-      {entries.map((entry) => (
-        <TimelineItem
-          key={entry.entry_date}
-          date={entry.entry_date}
-          isSelected={entry.entry_date === selectedDate}
-          isToday={entry.entry_date === today}
-          onSelect={onSelect}
-        />
+export const DiaryTimeline: React.FC<DiaryTimelineProps> = ({ entries, selectedDate, today, onToday, onSelect }) => {
+  const hasToday = entries.some((e) => e.entry_date === today);
+  return (
+    <nav className="diary-pages" aria-label="Páginas do diário">
+      <div className="diary-pages__head">
+        <span className="diary-label">Páginas</span>
+        <button
+          type="button"
+          className="row-icon-button"
+          aria-label="Página de hoje"
+          title="Página de hoje"
+          onClick={onToday}
+        >
+          <Plus size={15} />
+        </button>
+      </div>
+      {!hasToday && <CreateToday onToday={onToday} />}
+      {groupDiaryPages(entries, today).map((month) => (
+        <div key={month.label} className="diary-pages__month">
+          <span className="diary-pages__month-label">{month.label}</span>
+          {month.entries.map((entry) => (
+            <PageItem
+              key={entry.entry_date}
+              entry={entry}
+              isToday={entry.entry_date === today}
+              isSelected={entry.entry_date === selectedDate}
+              onSelect={() => onSelect(entry.entry_date)}
+            />
+          ))}
+        </div>
       ))}
-    </div>
-  </div>
-);
-
-const TimelineItem: React.FC<{
-  date: string;
-  isSelected: boolean;
-  isToday: boolean;
-  onSelect: (date: string) => void;
-}> = ({ date, isSelected, isToday, onSelect }) => (
-  <button
-    onClick={() => onSelect(date)}
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.75rem',
-      padding: '0.75rem 1rem',
-      borderRadius: 'var(--radius-md)',
-      border: 'none',
-      background: isSelected ? 'var(--color-primary-subtle)' : 'transparent',
-      borderLeft: isSelected ? '3px solid var(--color-primary)' : '3px solid transparent',
-      cursor: 'pointer',
-      textAlign: 'left',
-      transition: 'all var(--transition-fast)',
-      color: isSelected ? 'var(--color-primary)' : 'var(--text-main)',
-    }}
-  >
-    <Calendar size={14} style={{ flexShrink: 0, opacity: 0.6 }} />
-    <div>
-      <div style={{ fontSize: '0.875rem', fontWeight: isSelected ? 600 : 400 }}>{formatDiaryDateShort(date)}</div>
-      {isToday && <div style={{ fontSize: '0.7rem', color: 'var(--color-primary)', fontWeight: 600 }}>Hoje</div>}
-    </div>
-  </button>
-);
+      {entries.length === 0 && <p className="diary-pages__empty">Nenhuma página ainda.</p>}
+    </nav>
+  );
+};

@@ -3,18 +3,43 @@ import type { MDXEditorMethods } from '@mdxeditor/editor';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { DiaryEntry } from '../../types';
 import { DiaryTimeline } from './diary/DiaryTimeline';
-import { DiaryPageToolbar } from './diary/DiaryPageToolbar';
+import { DiaryPageToolbar, type DiaryMode } from './diary/DiaryPageToolbar';
 import { DiaryEditor, DiaryEmptyState } from './diary/DiaryEditor';
 import { DiaryHistoryDialog, type DiaryVersion } from './diary/DiaryDialogs';
 import { formatDiaryDate } from './diary/diaryDates';
 import { localIsoDate } from '../../utils/localDate';
 import { useDialogs } from './dialogs/DialogProvider';
+import './diary/diary.css';
 
 interface DiarySectionProps {
   projectId: number;
 }
 
 const AUTOSAVE_DELAY_MS = 2000;
+const MODE_KEY = 'diary_mode';
+
+// Ler/Editar stays as the user left it, from page to page and from one visit to the next (decision on the redesign
+// canvas, board 155). Storage can be blocked: then it lasts for this visit only.
+function useDiaryMode(): [DiaryMode, (mode: DiaryMode) => void] {
+  const [mode, setMode] = useState<DiaryMode>(() => {
+    try {
+      return localStorage.getItem(MODE_KEY) === 'read' ? 'read' : 'edit';
+    } catch {
+      return 'edit';
+    }
+  });
+  const change = (next: DiaryMode) => {
+    setMode(next);
+    try {
+      localStorage.setItem(MODE_KEY, next);
+    } catch {
+      /* blocked storage: keep the mode for this visit */
+    }
+  };
+  return [mode, change];
+}
+
+const clockTime = () => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
 /**
  * Per-project research diary: one markdown page per day, auto-saved, with version history.
@@ -30,7 +55,8 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
   const [content, setContent] = useState('');
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(true);
+  const [mode, setMode] = useDiaryMode();
+  const [savedAt, setSavedAt] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [historyList, setHistoryList] = useState<DiaryVersion[]>([]);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -59,6 +85,7 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
       setSelectedDate(date);
       currentEditDateRef.current = date;
       setHasChanges(false);
+      setSavedAt(null);
       const entry = await projectService.getDiaryEntry(projectId, date);
       const newContent = entry?.content || '';
       setContent(newContent);
@@ -81,6 +108,7 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
     await loadEntries();
     setSaving(false);
     setHasChanges(false);
+    setSavedAt(clockTime());
   };
 
   const handleContentChange = (newContent: string) => {
@@ -92,12 +120,6 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
     saveTimerRef.current = setTimeout(async () => {
       if (dateToSave && newContent.trim()) await persist(dateToSave, newContent);
     }, AUTOSAVE_DELAY_MS);
-  };
-
-  const handleSave = async () => {
-    if (!selectedDate) return;
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    await persist(selectedDate, content);
   };
 
   const handleDelete = async () => {
@@ -138,7 +160,7 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
   };
 
   return (
-    <div style={{ display: 'flex', gap: '1.5rem', minHeight: '500px' }}>
+    <div className="diary">
       <DiaryTimeline
         entries={entries}
         selectedDate={selectedDate}
@@ -146,27 +168,28 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
         onToday={handleToday}
         onSelect={selectDate}
       />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div className="diary-main">
         {selectedDate ? (
           <>
             <DiaryPageToolbar
-              date={selectedDate}
-              isEditMode={isEditMode}
+              mode={mode}
+              onModeChange={setMode}
               saving={saving}
               hasChanges={hasChanges}
-              hasContent={!!content}
-              onSave={handleSave}
+              savedAt={savedAt}
               onOpenHistory={handleOpenHistory}
-              onToggleEditMode={() => setIsEditMode(!isEditMode)}
               onDelete={() => void handleDelete()}
             />
-            <DiaryEditor
-              ref={editorRef}
-              date={selectedDate}
-              markdown={content}
-              readOnly={!isEditMode}
-              onChange={handleContentChange}
-            />
+            <article className="diary-doc">
+              <h2 className="diary-label diary-doc__date">{formatDiaryDate(selectedDate)}</h2>
+              <DiaryEditor
+                ref={editorRef}
+                date={selectedDate}
+                markdown={content}
+                readOnly={mode === 'read'}
+                onChange={handleContentChange}
+              />
+            </article>
           </>
         ) : (
           <DiaryEmptyState />

@@ -35,9 +35,11 @@ function longDate(iso: string): string {
   });
 }
 
+// The page list names a day "05/03", and today "Hoje" (board 155).
 function shortDate(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  if (iso === TODAY) return 'Hoje';
+  const [, m, d] = iso.split('-');
+  return `${d}/${m}`;
 }
 
 function givenEntries(...entries: DiaryEntry[]): void {
@@ -64,11 +66,12 @@ async function openEntry(iso: string, expectedContent: string): Promise<HTMLText
 }
 
 const typeInto = (editor: HTMLElement, text: string) => fireEvent.change(editor, { target: { value: text } });
-const deleteButton = () =>
-  screen.getAllByRole('button').find((b) => b.style.color === 'var(--color-danger)') as HTMLElement;
+const deleteButton = () => screen.getByRole('button', { name: 'Excluir página' });
 
 beforeEach(() => {
   service = FakeProjectService.create();
+  // Ler/Editar is remembered between visits.
+  localStorage.clear();
 });
 
 afterEach(() => {
@@ -79,19 +82,28 @@ describe('DiarySection timeline', () => {
   it('shows empty states when there are no entries', async () => {
     renderDiary();
 
-    expect(await screen.findByText(/Nenhuma entrada ainda/)).toBeInTheDocument();
-    expect(screen.getByText('Diário do Projeto')).toBeInTheDocument();
+    expect(await screen.findByText('Nenhuma página ainda.')).toBeInTheDocument();
+    expect(screen.getByText('Diário do projeto')).toBeInTheDocument();
     expect(service.getDiaryEntries).toHaveBeenCalledWith(PROJECT_ID);
   });
 
-  it('lists entries and flags today', async () => {
-    givenEntries(entry(TODAY), entry(PAST));
+  it('lists the pages by their first line, today as "Hoje"', async () => {
+    givenEntries(entry(TODAY, '## Critérios'), entry(PAST, 'Busca #2 salva'));
     renderDiary();
 
-    const todayButton = (await screen.findByText(shortDate(TODAY))).closest('button') as HTMLElement;
+    const todayButton = (await screen.findByText('Critérios')).closest('button') as HTMLElement;
     expect(within(todayButton).getByText('Hoje')).toBeInTheDocument();
     const pastButton = screen.getByText(shortDate(PAST)).closest('button') as HTMLElement;
-    expect(within(pastButton).queryByText('Hoje')).not.toBeInTheDocument();
+    expect(within(pastButton).getByText('Busca #2 salva')).toBeInTheDocument();
+    expect(screen.queryByText('Criar a página de hoje')).not.toBeInTheDocument();
+  });
+
+  // Decision on the redesign canvas (board 155): today without a page shows the way to start it.
+  it("offers to create today's page when it is missing", async () => {
+    givenEntries(entry(PAST));
+    renderDiary();
+
+    expect(await screen.findByRole('button', { name: /Criar a página de hoje/ })).toBeInTheDocument();
   });
 
   it('opens an entry and loads its content into the editor', async () => {
@@ -101,7 +113,6 @@ describe('DiarySection timeline', () => {
     await openEntry(PAST, '# notas');
 
     expect(service.getDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, PAST);
-    expect(screen.getByText('✓ Salvo')).toBeInTheDocument();
   });
 });
 
@@ -111,7 +122,7 @@ describe('DiarySection today page', () => {
     renderDiary();
     await screen.findByText(shortDate(PAST));
 
-    fireEvent.click(screen.getByRole('button', { name: /Página de Hoje/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Página de hoje' }));
 
     await screen.findByRole('heading', { name: longDate(TODAY) });
     expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, TODAY, '');
@@ -123,7 +134,7 @@ describe('DiarySection today page', () => {
     renderDiary();
     await screen.findByText(shortDate(TODAY));
 
-    fireEvent.click(screen.getByRole('button', { name: /Página de Hoje/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Página de hoje' }));
 
     await screen.findByRole('heading', { name: longDate(TODAY) });
     expect(service.saveDiaryEntry).not.toHaveBeenCalled();
@@ -131,18 +142,15 @@ describe('DiarySection today page', () => {
 });
 
 describe('DiarySection saving', () => {
-  it('marks unsaved changes and saves on demand', async () => {
+  it('marks unsaved changes; the page saves by itself, with no save button', async () => {
     givenEntries(entry(PAST, 'a'));
     renderDiary();
     const editor = await openEntry(PAST, 'a');
-    expect(screen.getByRole('button', { name: /Salvar/ })).toBeDisabled();
 
     typeInto(editor, 'ab');
-    expect(screen.getByText('Não salvo')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Salvar/ }));
 
-    await screen.findByText('✓ Salvo');
-    expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, PAST, 'ab');
+    expect(screen.getByText('Não salvo')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Salvar/ })).not.toBeInTheDocument();
   });
 
   it('auto-saves after 2 seconds of inactivity', async () => {
@@ -159,7 +167,7 @@ describe('DiarySection saving', () => {
 
     expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, PAST, 'abc');
     vi.useRealTimers();
-    await screen.findByText('✓ Salvo');
+    expect(await screen.findByText(/^Salvo às \d{2}:\d{2}$/)).toBeInTheDocument();
   });
 
   it('does not auto-save whitespace-only content', async () => {
@@ -189,17 +197,32 @@ describe('DiarySection saving', () => {
 });
 
 describe('DiarySection view mode', () => {
-  it('toggles between editing and read-only preview', async () => {
+  it('toggles between Ler and Editar', async () => {
     givenEntries(entry(PAST, 'a'));
     renderDiary();
     const editor = await openEntry(PAST, 'a');
 
-    fireEvent.click(screen.getByRole('button', { name: /Visualizar/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Ler/ }));
 
     expect(screen.getByLabelText('editor')).toHaveAttribute('readonly');
-    expect(screen.queryByRole('button', { name: /Salvar/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Editar/ }));
     expect(editor).not.toHaveAttribute('readonly');
+  });
+
+  // Decision on the redesign canvas (board 155): the mode stays from page to page and from one visit to the next.
+  it('keeps Ler on other pages and on the next visit', async () => {
+    givenEntries(entry(PAST, 'a'), entry(OTHER, 'b'));
+    const first = renderDiary();
+    await openEntry(PAST, 'a');
+    fireEvent.click(screen.getByRole('button', { name: /Ler/ }));
+
+    await openEntry(OTHER, 'b');
+    expect(screen.getByLabelText('editor')).toHaveAttribute('readonly');
+
+    first.unmount();
+    renderDiary();
+    await openEntry(PAST, 'a');
+    expect(screen.getByRole('button', { name: /Ler/ })).toHaveAttribute('aria-pressed', 'true');
   });
 });
 
@@ -214,7 +237,7 @@ describe('DiarySection deletion', () => {
     expect(await screen.findByRole('dialog', { name: 'Excluir página?' })).toHaveTextContent(longDate(PAST));
     fireEvent.click(screen.getByRole('button', { name: 'Excluir' }));
 
-    await screen.findByText('Diário do Projeto');
+    await screen.findByText('Diário do projeto');
     expect(service.deleteDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, PAST);
     expect(screen.queryByText('Excluir página?')).not.toBeInTheDocument();
   });
@@ -244,7 +267,7 @@ describe('DiarySection history', () => {
     renderDiary();
     await openEntry(PAST, 'a');
 
-    fireEvent.click(screen.getByRole('button', { name: /Histórico/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
 
     await screen.findByText('Histórico de Versões');
     expect(service.getDiaryEntryHistory).toHaveBeenCalledWith(PROJECT_ID, PAST);
@@ -257,7 +280,7 @@ describe('DiarySection history', () => {
     renderDiary();
     await openEntry(PAST, 'a');
 
-    fireEvent.click(screen.getByRole('button', { name: /Histórico/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
     await screen.findByText('Nenhuma versão anterior encontrada.');
     fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
 
@@ -271,7 +294,7 @@ describe('DiarySection history', () => {
     ]);
     renderDiary();
     const editor = await openEntry(PAST, 'old');
-    fireEvent.click(screen.getByRole('button', { name: /Histórico/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
     await screen.findByText('Histórico de Versões');
     service.getDiaryEntry.mockResolvedValue(entry(PAST, 'restored'));
 
@@ -289,13 +312,13 @@ describe('DiarySection history', () => {
     renderDiary();
     await openEntry(PAST, 'a');
 
-    fireEvent.click(screen.getByRole('button', { name: /Histórico/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
     await waitFor(() => expect(consoleError).toHaveBeenCalledWith('Failed to load diary history:', expect.any(Error)));
     expect(screen.queryByText('Histórico de Versões')).not.toBeInTheDocument();
 
     service.getDiaryEntryHistory.mockResolvedValue([{ id: 10, content: 'v', updated_at: '2026-03-05T10:00:00Z' }]);
     service.restoreDiaryEntryVersion.mockRejectedValueOnce(new Error('locked'));
-    fireEvent.click(screen.getByRole('button', { name: /Histórico/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
     fireEvent.click(await screen.findByRole('button', { name: 'Restaurar' }));
 
     await waitFor(() =>
