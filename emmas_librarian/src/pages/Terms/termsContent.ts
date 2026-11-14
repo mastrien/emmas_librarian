@@ -68,9 +68,9 @@ export const BASE_POLICIES: readonly BasePolicy[] = [
     name: 'Web of Science',
     tone: 'restricted',
     badge: 'Restritivo',
-    text: 'A API é para uso acadêmico: os dados valem só para quem tem a assinatura, não podem ser redistribuídos (só trechos eventuais entre colaboradores), os resumos exigem o direito do detentor e, ao acabar a assinatura, o que foi baixado deve ser apagado. Os termos de produto da API não citam IA, mas a Clarivate proíbe IA em outros produtos dela e os termos gerais não foram conferidos: na dúvida, não envie resultados da Web of Science a uma IA.',
-    linkLabel: 'Termos de produto da Clarivate',
-    href: 'https://clarivate.com/legal-center/terms-of-business/product-service-terms/',
+    text: 'Os termos gerais da Clarivate (versão 3.3, dezembro de 2025) proíbem usar os dados dela com IA (generativa, aprendizado de máquina, modelos de linguagem) sem um adendo escrito, e proíbem mineração de texto ou de dados. Não envie resultados da Web of Science a uma IA. Além disso, a API é para uso acadêmico: os dados valem só para quem tem a assinatura, não podem ser redistribuídos e, ao acabar a assinatura, o que foi baixado deve ser apagado.',
+    linkLabel: 'Termos da Clarivate',
+    href: 'https://clarivate.com/legal-center/terms-of-business/',
   },
   {
     name: 'IEEE Xplore',
