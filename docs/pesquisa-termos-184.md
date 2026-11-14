@@ -139,3 +139,8 @@ Não. Lacunas:
 - Europe PMC: https://europepmc.org/Copyright; https://europepmc.org/Help; https://europepmc.org/downloads
 - arXiv: https://info.arxiv.org/help/api/tou.html
 - IEEE: https://developer.ieee.org/API_Terms_of_Use2
+
+## Atualização (2026-11-13): documentos que o autor baixou
+
+- **Clarivate, "Product/Service Terms" v3.7** (`emmas_termos/Product-Terms-v3.7.pdf`), seção "Web of Science APIs" (pp. 44 a 47): uso acadêmico individual e pesquisa; dados limitados à assinatura e aos mesmos usuários; distribuição só de trechos eventuais entre colaboradores; resumos exigem o direito legal ou do detentor; ao fim da assinatura os dados baixados devem ser apagados; registros de uso por 3 anos. **Não há proibição de IA nessa seção.** As proibições de IA do PDF estão em outros produtos (Derwent, IP Data API, e uma adenda de plataforma de e-books/ProQuest). Os "Clarivate Terms" gerais, que o PDF cita, não foram fornecidos. Isso corrige o resumo anterior, que afirmava a proibição com base num guia de biblioteca.
+- **Europe PMC, página Copyright** (`emmas_termos/Copyright - Europe PMC.html`): quase todo o material tem direitos autorais; o usuário é direta e exclusivamente responsável pela conformidade; robôs não podem baixar lotes de artigos do site; só API, OAI, SOAP e downloads em bloco; cada artigo traz a sua licença (CC ou similar). O app só usa a API de busca (não baixa PDFs da Europe PMC).
