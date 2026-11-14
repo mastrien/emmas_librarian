@@ -2,7 +2,8 @@ import { IpcChannel } from '../../src/types';
 import type { CommandRegistry, RegisteredCommand } from '../commands/CommandRegistry';
 import { surfaceOf } from '../commands/channelSurfaces';
 import { AppError, type ErrorType } from '../errors/AppError';
-import { appErrorFrom } from '../errors/appErrorFrom';
+import { shellFailureFrom } from '../errors/shellFailureFrom';
+import { libraryInUse, replacesLibrary } from '../commands/libraryReplacement';
 import { parseCliArguments, usageError, type CliOptions, type CliRequest } from './cliArguments';
 
 /** Exit codes of the CLI; scripts and tool-calling agents branch on these. */
@@ -33,12 +34,6 @@ export interface CliHost {
   isAppRunning: () => boolean;
 }
 
-// These swap the database file under whoever has it open; the app must be closed first.
-const REPLACES_LIBRARY: ReadonlySet<string> = new Set([
-  IpcChannel.BACKUP_RESTORE_OVERRIDE,
-  IpcChannel.BACKUP_RESTORE_AUTO,
-]);
-
 const USAGE_CODES = new Set(['ERR_CLI_USAGE', 'ERR_UNKNOWN_COMMAND', 'ERR_GUI_ONLY', 'ERR_MISSING_FILE_ARGUMENT']);
 const EXIT_BY_TYPE: Record<ErrorType, number> = {
   SYSTEM_ERROR: CLI_EXIT.failed,
@@ -46,7 +41,6 @@ const EXIT_BY_TYPE: Record<ErrorType, number> = {
   VALIDATION_ERROR: CLI_EXIT.rejected,
   NETWORK_ERROR: CLI_EXIT.network,
 };
-const BRACKET_CODE = /^\[(ERR_[A-Z_]+)\]/;
 
 const isChannel = (name: string): name is IpcChannel => (Object.values(IpcChannel) as string[]).includes(name);
 
@@ -56,22 +50,8 @@ function exitCodeOf(error: AppError): number {
   return EXIT_BY_TYPE[error.type] ?? CLI_EXIT.failed;
 }
 
-/**
- * The failure as the CLI reports it. Commands written before AppError throw plain errors whose message
- * starts with their code ("[ERR_NOT_FOUND] ..."): those keep that code and count as rejected input.
- *
- * Usage:
- *   cliFailureFrom(new Error('[ERR_NOT_FOUND] Projeto não encontrado')).code; // 'ERR_NOT_FOUND'
- */
-export function cliFailureFrom(error: unknown): AppError {
-  const classified = appErrorFrom(error);
-  const bracketed = BRACKET_CODE.exec(classified.message)?.[1];
-  if (classified.code !== 'ERR_INTERNAL' || !bracketed) return classified;
-  return new AppError(bracketed, 'USER_ERROR', classified.message);
-}
-
 function failure(error: unknown, pretty: boolean): CliOutcome {
-  const reported = cliFailureFrom(error);
+  const reported = shellFailureFrom(error);
   const { code, type, message } = reported;
   const document = { ok: false, error: { code, type, message } };
   return { exitCode: exitCodeOf(reported), stderr: JSON.stringify(document, null, pretty ? 2 : 0) };
@@ -104,12 +84,7 @@ function requireFileArgument(command: RegisteredCommand, args: unknown[]): void 
 }
 
 function refuseWhileAppRuns(name: string, host: CliHost): void {
-  if (!REPLACES_LIBRARY.has(name) || !host.isAppRunning()) return;
-  throw new AppError(
-    'ERR_LIBRARY_IN_USE',
-    'USER_ERROR',
-    `[ERR_LIBRARY_IN_USE] O aplicativo está aberto nesta biblioteca e "${name}" substituiria o banco de dados em uso. Expected shape: feche o Emma's Librarian e rode o comando de novo.`,
-  );
+  if (replacesLibrary(name) && host.isAppRunning()) throw libraryInUse(name);
 }
 
 /** What `commands` prints: every command a terminal can run, with the file argument it takes, if any. */

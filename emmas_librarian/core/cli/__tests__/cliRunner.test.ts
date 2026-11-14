@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { IpcChannel } from '../../../src/types';
 import { CommandRegistry } from '../../commands/CommandRegistry';
 import { AppError } from '../../errors/AppError';
-import { CLI_EXIT, CLI_USAGE, cliFailureFrom, listCliCommands, runCli, type OpenedCliHost } from '../cliRunner';
+import { CLI_EXIT, CLI_USAGE, listCliCommands, runCli, type OpenedCliHost } from '../cliRunner';
 
 const savedFile = { at: 1, mode: 'save' as const, describe: () => ({ title: 'Exportar', filters: [] }) };
 
@@ -155,20 +155,5 @@ describe('exit codes by kind of failure', () => {
     [new Error('database is locked'), CLI_EXIT.failed],
   ])('%s exits %i', async (failure, exitCode) => {
     expect(await exitFor(failure)).toBe(exitCode);
-  });
-});
-
-describe('cliFailureFrom', () => {
-  it('keeps the code a plain error carries at the start of its message', () => {
-    expect(cliFailureFrom(new Error('[ERR_NOT_FOUND] PDF não encontrado'))).toMatchObject({
-      code: 'ERR_NOT_FOUND',
-      type: 'USER_ERROR',
-      message: '[ERR_NOT_FOUND] PDF não encontrado',
-    });
-  });
-
-  it('leaves classified failures as they are', () => {
-    expect(cliFailureFrom(new Error('UNIQUE constraint failed: projects.name')).code).toBe('ERR_DUPLICATE');
-    expect(cliFailureFrom(new Error('sem código')).code).toBe('ERR_INTERNAL');
   });
 });
