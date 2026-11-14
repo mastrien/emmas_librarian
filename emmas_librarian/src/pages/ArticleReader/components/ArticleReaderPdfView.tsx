@@ -1,5 +1,5 @@
-import React from 'react';
-import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { PdfLoader, PdfHighlighter, Highlight, Popup, AreaHighlight } from 'react-pdf-highlighter';
 
 import { TipContent } from '../../../components/reader/TipContent';
@@ -18,11 +18,12 @@ interface ArticleReaderPdfViewProps {
   highlights: any[];
   addHighlight: (h: any) => void;
   showToast: (msg: string) => void;
-  currentPage: number;
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
-  inputPage: string;
-  setInputPage: React.Dispatch<React.SetStateAction<string>>;
   goToPage: (pageNum: number) => void;
+  /** Tells the page how many pages the PDF has, for the bar's page navigation. */
+  onDocumentReady: (numPages: number) => void;
+  /** The colour a new highlight starts with, chosen on the bar. */
+  highlightColor: string;
+  sidebarOpen: boolean;
   sidebarWidth: number;
   isDraggingSidebar: React.MutableRefObject<boolean>;
   sidebarTab: 'annotations' | 'search' | 'ai' | 'writer';
@@ -53,6 +54,12 @@ interface ArticleReaderPdfViewProps {
   onCategorySaved?: () => void;
 }
 
+/** Reports the page count once the document is there (it is only known inside the loader). */
+const DocumentReady: React.FC<{ numPages: number; onReady: (numPages: number) => void }> = ({ numPages, onReady }) => {
+  useEffect(() => onReady(numPages), [numPages, onReady]);
+  return null;
+};
+
 export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
   pdfUrl,
   pdfWorkerUrl,
@@ -61,10 +68,10 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
   highlights,
   addHighlight,
   showToast,
-  currentPage,
-  inputPage,
-  setInputPage,
   goToPage,
+  onDocumentReady,
+  highlightColor,
+  sidebarOpen,
   sidebarWidth,
   isDraggingSidebar,
   sidebarTab,
@@ -92,17 +99,6 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
   saveEdit,
   setEditingId,
 }) => {
-  const handlePageInputSubmit = (e: React.KeyboardEvent<HTMLInputElement>, totalPages: number) => {
-    if (e.key === 'Enter') {
-      const p = parseInt(inputPage);
-      if (!isNaN(p) && p >= 1 && p <= totalPages) {
-        goToPage(p);
-      } else {
-        setInputPage(currentPage.toString());
-      }
-    }
-  };
-
   const renderTip = (
     position: unknown,
     content: { text?: string; image?: string },
@@ -114,6 +110,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
         content={content}
         hideTipAndSelection={hideTipAndSelection}
         addHighlight={addHighlight as unknown as (h: unknown) => void}
+        initialColor={highlightColor}
       />
     );
   };
@@ -225,131 +222,67 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
                 highlights={highlights as unknown as Array<import('react-pdf-highlighter').IHighlight>}
               />
 
-              {/* Floating Page Navigator */}
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: '1rem',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  background: 'var(--bg-surface)',
-                  padding: '0.5rem 1rem',
-                  borderRadius: 'var(--radius-full)',
-                  boxShadow: 'var(--shadow-md)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  zIndex: 10,
-                  border: '1px solid var(--border-color)',
-                }}
-              >
-                <button
-                  onClick={() => goToPage(Math.max(1, currentPage - 1))}
-                  title="Página anterior"
-                  aria-label="Página anterior"
-                  disabled={currentPage <= 1}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: currentPage <= 1 ? 'var(--text-muted)' : 'var(--text-main)',
-                    cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                  }}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Pág</span>
-                <input
-                  type="text"
-                  aria-label="Página atual"
-                  value={inputPage}
-                  onChange={(e) => setInputPage(e.target.value)}
-                  onBlur={() => setInputPage(currentPage.toString())}
-                  onKeyDown={(e) => handlePageInputSubmit(e, pdfDocument.numPages)}
-                  style={{
-                    width: '40px',
-                    textAlign: 'center',
-                    padding: '0.2rem',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: '0.85rem',
-                    background: 'var(--bg-surface)',
-                    color: 'var(--text-main)',
-                  }}
-                />
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>de {pdfDocument.numPages}</span>
-                <button
-                  onClick={() => goToPage(Math.min(pdfDocument.numPages, currentPage + 1))}
-                  title="Próxima página"
-                  aria-label="Próxima página"
-                  disabled={currentPage >= pdfDocument.numPages}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: currentPage >= pdfDocument.numPages ? 'var(--text-muted)' : 'var(--text-main)',
-                    cursor: currentPage >= pdfDocument.numPages ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                  }}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+              <DocumentReady numPages={pdfDocument.numPages} onReady={onDocumentReady} />
             </div>
 
-            <ReaderSidebar
-              width={sidebarWidth}
-              sidebarTab={sidebarTab}
-              setSidebarTab={setSidebarTab}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              searchResults={searchResults}
-              isSearching={isSearching}
-              onResultClick={(pageNum) => goToPage(pageNum)}
-              onSearch={(e) => {
-                // The search box is a <form>; without preventDefault the submit reloaded the whole reader.
-                e.preventDefault();
-                onSearch(pdfDocument as unknown as PdfDocumentProxy);
-              }}
-              aiSummary={aiSummary}
-              isGeneratingAi={isGeneratingAi}
-              onGenerateSummary={generateSummary}
-              highlights={highlights}
-              standaloneAnnotations={standaloneAnnotations}
-              newAnnotationText={newAnnotationText}
-              setNewAnnotationText={setNewAnnotationText}
-              onCreateStandaloneAnnotation={handleCreateStandaloneAnnotation}
-              onDeleteHighlight={handleDeleteHighlight}
-              onDeleteStandaloneAnnotation={handleDeleteStandaloneAnnotation}
-              onEditHighlightAnnotation={handleEditHighlightAnnotation}
-              onEditStandaloneAnnotation={handleEditStandaloneAnnotation}
-              onRetryAnchor={handleRetryAnchor}
-              editingId={editingId}
-              editContent={editContent}
-              setEditContent={setEditContent}
-              onSaveEdit={saveEdit}
-              setEditingId={setEditingId}
-              onHighlightClick={(h) => scrollViewerTo(highlighterRef, h)}
-            />
+            {sidebarOpen && (
+              <ReaderSidebar
+                width={sidebarWidth}
+                sidebarTab={sidebarTab}
+                setSidebarTab={setSidebarTab}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                searchResults={searchResults}
+                isSearching={isSearching}
+                onResultClick={(pageNum) => goToPage(pageNum)}
+                onSearch={(e) => {
+                  // The search box is a <form>; without preventDefault the submit reloaded the whole reader.
+                  e.preventDefault();
+                  onSearch(pdfDocument as unknown as PdfDocumentProxy);
+                }}
+                aiSummary={aiSummary}
+                isGeneratingAi={isGeneratingAi}
+                onGenerateSummary={generateSummary}
+                highlights={highlights}
+                standaloneAnnotations={standaloneAnnotations}
+                newAnnotationText={newAnnotationText}
+                setNewAnnotationText={setNewAnnotationText}
+                onCreateStandaloneAnnotation={handleCreateStandaloneAnnotation}
+                onDeleteHighlight={handleDeleteHighlight}
+                onDeleteStandaloneAnnotation={handleDeleteStandaloneAnnotation}
+                onEditHighlightAnnotation={handleEditHighlightAnnotation}
+                onEditStandaloneAnnotation={handleEditStandaloneAnnotation}
+                onRetryAnchor={handleRetryAnchor}
+                editingId={editingId}
+                editContent={editContent}
+                setEditContent={setEditContent}
+                onSaveEdit={saveEdit}
+                setEditingId={setEditingId}
+                onHighlightClick={(h) => scrollViewerTo(highlighterRef, h)}
+              />
+            )}
 
             {/* Resizer Handle */}
-            <div
-              onMouseDown={(e) => {
-                e.preventDefault();
-                isDraggingSidebar.current = true;
-                document.body.style.cursor = 'col-resize';
-                document.body.style.userSelect = 'none';
-              }}
-              style={{
-                width: '4px',
-                cursor: 'col-resize',
-                position: 'absolute',
-                right: `${sidebarWidth}px`,
-                top: 0,
-                bottom: 0,
-                zIndex: 20,
-                backgroundColor: isDraggingSidebar.current ? 'var(--color-primary)' : 'transparent',
-              }}
-            />
+            {sidebarOpen && (
+              <div
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  isDraggingSidebar.current = true;
+                  document.body.style.cursor = 'col-resize';
+                  document.body.style.userSelect = 'none';
+                }}
+                style={{
+                  width: '4px',
+                  cursor: 'col-resize',
+                  position: 'absolute',
+                  right: `${sidebarWidth}px`,
+                  top: 0,
+                  bottom: 0,
+                  zIndex: 20,
+                  backgroundColor: isDraggingSidebar.current ? 'var(--color-primary)' : 'transparent',
+                }}
+              />
+            )}
           </div>
         )}
       </PdfLoader>

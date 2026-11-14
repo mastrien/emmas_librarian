@@ -44,6 +44,9 @@ export const ArticleReaderPage: React.FC = () => {
   const [showQuotaModal, setShowQuotaModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [numPages, setNumPages] = useState(0);
+  const [highlightColor, setHighlightColor] = useState<string>('yellow');
 
   // Sidebar State
   const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -215,6 +218,13 @@ export const ArticleReaderPage: React.FC = () => {
     showToast('Citação ancorada no PDF.');
   };
 
+  // "Marcar como lido" (board 169) is the same status the project page sets; pressing it again takes it back.
+  const toggleRead = async () => {
+    if (!article) return;
+    await projectService.updateArticleStatus(article.id, article.status === 'read' ? 'new' : 'read');
+    await fetchData();
+  };
+
   const handleEditMetadataSubmit = async (data: Record<string, unknown>) => {
     if (!article) return;
     await projectService.updateArticleMetadata(article.id, data);
@@ -273,6 +283,20 @@ export const ArticleReaderPage: React.FC = () => {
         handleUnlinkClick={handleUnlinkClick}
         setIsEditingMetadata={setIsEditingMetadata}
         setIsCitationModalOpen={setIsCitationModalOpen}
+        numPages={numPages}
+        currentPage={currentPage}
+        inputPage={inputPage}
+        setInputPage={setInputPage}
+        goToPage={goToPage}
+        highlightColor={highlightColor}
+        setHighlightColor={setHighlightColor}
+        isRead={article.status === 'read'}
+        canMarkRead={article.status !== 'archived'}
+        onToggleRead={() => void toggleRead()}
+        isCategoriesOpen={isCategoriesOpen}
+        onToggleCategories={() => setIsCategoriesOpen(!isCategoriesOpen)}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
 
       <div style={{ flexGrow: 1, position: 'relative', minHeight: 0 }}>
@@ -287,11 +311,10 @@ export const ArticleReaderPage: React.FC = () => {
             highlights={highlights}
             addHighlight={addHighlight}
             showToast={showToast}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            inputPage={inputPage}
-            setInputPage={setInputPage}
             goToPage={goToPage}
+            onDocumentReady={setNumPages}
+            highlightColor={highlightColor}
+            sidebarOpen={sidebarOpen}
             sidebarWidth={sidebarWidth}
             isDraggingSidebar={isDraggingSidebar}
             sidebarTab={sidebarTab}

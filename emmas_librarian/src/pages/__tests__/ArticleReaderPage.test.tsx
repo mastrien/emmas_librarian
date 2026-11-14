@@ -74,6 +74,33 @@ describe('ArticleReaderPage', () => {
     fakeService.getPdfBuffer.mockResolvedValue(new ArrayBuffer(8));
   });
 
+  // Board 169: the bar shows the page count once the document is there, and marks the article as read.
+  it('shows the page count of the document in the bar', async () => {
+    renderReader();
+
+    expect(await screen.findByText(/^\/ \d+$/)).toBeInTheDocument();
+  });
+
+  it('marks the article as read from the bar, and takes it back when pressed again', async () => {
+    renderReader();
+
+    fireEvent.click(await screen.findByRole('button', { name: /Marcar como lido/ }));
+    await waitFor(() => expect(fakeService.updateArticleStatus).toHaveBeenCalledWith(1, 'read'));
+
+    fakeService.getArticle.mockResolvedValue(article({ status: 'read' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Marcar como lido/ }));
+  });
+
+  it('hides the side panel from the bar', async () => {
+    renderReader();
+    await screen.findByTestId('pdf-highlighter');
+    expect(screen.getByRole('button', { name: 'Anotações' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Painel lateral' }));
+
+    expect(screen.queryByRole('button', { name: 'Anotações' })).not.toBeInTheDocument();
+  });
+
   it('shows the article title and the PDF viewer once loaded', async () => {
     renderReader();
 

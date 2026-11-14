@@ -32,7 +32,7 @@ async function expectRoomyCategoriesModal(electronApp, window) {
   expect(spill).toBeLessThanOrEqual(0);
 }
 
-/** In the reader's "Categorizar" panel: the editor for one category, found by its label. */
+/** In the reader's categories panel (opened by "Categorias" on the bar, board 169): the editor for one category, found by its label. */
 const categoryEditor = (window, category) => window.locator('label', { hasText: category }).locator('..');
 
 /** The cell of `articleTitle` under the column `category` in the project's categories matrix (board 156). */
@@ -68,13 +68,13 @@ test('F-11 Create categories, classify an article in the reader and export the v
     await expectRoomyCategoriesModal(electronApp, window);
     await window.getByRole('button', { name: 'Fechar', exact: true }).click();
 
-    // Classify the article where users do it: the reader's floating "Categorizar" panel.
+    // Classify the article where users do it: the reader's categories panel.
     await window.getByTestId('tab-articles').click();
     // The categories section has a table too: wait for the articles one before clicking a title in it.
     await window.waitForURL(/\/articles$/);
     await expect(window.getByTestId('main-articles-table')).toBeVisible();
     await openReader(window);
-    await window.getByTitle('Categorias do Artigo').click();
+    await window.getByRole('button', { name: 'Categorias', exact: true }).click();
     await categoryEditor(window, 'Metodologia').getByText('Adicionar').click();
     await window.keyboard.type('Survey online');
     await window.keyboard.press('Enter');

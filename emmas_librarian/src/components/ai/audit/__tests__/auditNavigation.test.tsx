@@ -1,8 +1,9 @@
 import { act } from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, it, expect } from 'vitest';
 import { ArticleReaderToolbar } from '../../../../pages/ArticleReader/components/ArticleReaderToolbar';
+import { toolbarProps } from '../../../../pages/ArticleReader/__tests__/toolbarProps';
 import {
   answer,
   article,
@@ -102,22 +103,7 @@ describe('back from the reader to the audit', () => {
     render(
       <MemoryRouter initialEntries={[{ pathname: '/articles/1', state }]}>
         <Routes>
-          <Route
-            path="/articles/1"
-            element={
-              <ArticleReaderToolbar
-                article={study}
-                hasLocalFile
-                uploading={false}
-                scale={1}
-                handleZoom={vi.fn()}
-                handleFileUpload={vi.fn()}
-                handleUnlinkClick={vi.fn()}
-                setIsEditingMetadata={vi.fn()}
-                setIsCitationModalOpen={vi.fn()}
-              />
-            }
-          />
+          <Route path="/articles/1" element={<ArticleReaderToolbar {...toolbarProps(study)} />} />
           <Route path="/projects/*" element={<Probe />} />
         </Routes>
       </MemoryRouter>,

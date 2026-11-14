@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
 
+/** The colours a highlight can have; the reader's bar sets the one a new highlight starts with (board 169). */
+export const HIGHLIGHT_COLORS = ['yellow', 'lightgreen', 'lightblue', 'lightpink', 'plum'] as const;
+
 interface TipContentProps {
   position: unknown;
   content: unknown;
   hideTipAndSelection: () => void;
   addHighlight: (highlight: unknown) => void;
+  /** The colour chosen on the bar; the popup starts with it. */
+  initialColor?: string;
 }
 
-export const TipContent: React.FC<TipContentProps> = ({ position, content, hideTipAndSelection, addHighlight }) => {
-  const [color, setColor] = useState('yellow');
+export const TipContent: React.FC<TipContentProps> = ({
+  position,
+  content,
+  hideTipAndSelection,
+  addHighlight,
+  initialColor = 'yellow',
+}) => {
+  const [color, setColor] = useState(initialColor);
   const [text, setText] = useState('');
 
   return (
@@ -22,7 +33,7 @@ export const TipContent: React.FC<TipContentProps> = ({ position, content, hideT
       }}
     >
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', justifyContent: 'center' }}>
-        {['yellow', 'lightgreen', 'lightblue', 'lightpink', 'plum'].map((c) => (
+        {HIGHLIGHT_COLORS.map((c) => (
           <button
             key={c}
             onClick={() => setColor(c)}
