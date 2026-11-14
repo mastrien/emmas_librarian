@@ -106,6 +106,15 @@ async function openItem(title: RegExp) {
 }
 const openFirstItem = () => openItem(/Estudo 1/);
 
+// The key listener is bound by an effect that can still be pending the instant the panel shows (it was on the slow CI
+// runners: "Number of calls: 0", twice on main). Press again until the key has done its thing; a key that already did
+// it is not pressed twice, because the outcome check passes right after the first press.
+const pressUntil = (key: string, outcome: () => void) =>
+  waitFor(() => {
+    fireEvent.keyDown(window, { key });
+    outcome();
+  });
+
 // A wide window: the audit shows its three columns and picks the first pending item by itself (board 163).
 const setWidth = (width: number) => Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
 
@@ -213,7 +222,7 @@ describe('AuditView (#48)', () => {
       renderAudit(fullDraw, { results: [uncited(1)], articles: withPdf('a.pdf') });
 
       await screen.findByRole('complementary', { name: 'Evidência do item selecionado' });
-      fireEvent.keyDown(window, { key: 'p' });
+      await pressUntil('p', () => expect(screen.getByTestId('reader')).toBeInTheDocument());
 
       expect(JSON.parse(screen.getByTestId('reader').textContent!)).toEqual({
         returnTo: { projectId: 1, investigationId: 19, resultId: 1 },
@@ -246,9 +255,8 @@ describe('AuditView (#48)', () => {
 
     const panel = await screen.findByRole('complementary', { name: 'Evidência do item selecionado' });
     expect(within(panel).getByText('Trecho citado 1')).toBeInTheDocument();
-    fireEvent.keyDown(window, { key: 'a' });
+    await pressUntil('a', () => expect(onReview).toHaveBeenCalledWith(1, { status: 'accepted' }));
 
-    expect(onReview).toHaveBeenCalledWith(1, { status: 'accepted' });
     const current = within(screen.getByRole('navigation', { name: 'Amostra' })).getByRole('button', {
       current: true,
     });
