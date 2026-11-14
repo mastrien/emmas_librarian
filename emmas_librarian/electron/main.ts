@@ -15,7 +15,9 @@ import { askWhileInstalling } from './updateInstallDialog';
 import { runStartupUpdateGuard } from './updateInstallGuard';
 import { attachExternalLinkGuard } from './externalLinks';
 import { cliArgumentsFrom, keepStdoutForResults, runElectronCli, streamSink } from './cli/electronCli';
-import { openCliLibrary } from '../core/cli/openCliLibrary';
+import { cliHostFor } from '../core/cli/openCliLibrary';
+import { LocalChannel } from './remote/LocalChannel';
+import type { IpcRegistriesResult } from './ipc/ipcRegistries';
 import { clearAppRunning, markAppRunning } from '../core/cli/appRunningMarker';
 import { SafeStorageSecretStore } from './ports/SafeStorageSecretStore';
 
@@ -193,16 +195,33 @@ logShutdownTimeline(app as unknown as ShutdownEmitter, log);
 function startCli(args: string[]): void {
   void runElectronCli(args, {
     ready: () => app.whenReady(),
-    open: ({ dataDir }) =>
-      openCliLibrary({
-        paths: appPathsIn(dataDir ?? app.getPath('userData')),
-        secrets: new SafeStorageSecretStore(),
-        appVersion: app.getVersion(),
-        env: process.env,
-      }),
+    open: ({ dataDir }) => {
+      const paths = appPathsIn(dataDir ?? app.getPath('userData'));
+      const secrets = new SafeStorageSecretStore();
+      return cliHostFor({ paths, secrets, appVersion: app.getVersion(), env: process.env }, process.cwd());
+    },
     stdout: streamSink(process.stdout),
     stderr: streamSink(process.stderr),
     exit: (code) => app.exit(code),
+  });
+}
+
+// Beside IPC: the loopback channel the CLI uses while the app is open (#31), and the LAN server for
+// paired phones when the person turned it on (#32). Neither may stop the app from starting.
+function startOtherTransports({ commands, remoteAccess }: IpcRegistriesResult): void {
+  const userData = app.getPath('userData');
+  const localChannel = new LocalChannel(commands);
+  // The marker goes down first, without a channel: a CLI that runs before the channel is up opens the library.
+  markAppRunning(userData, process.pid);
+  localChannel
+    .start()
+    .then((address) => markAppRunning(userData, process.pid, address))
+    .catch((err: unknown) => log.warn('Local channel for the CLI did not start:', err));
+  void remoteAccess.startIfEnabled();
+  app.on('will-quit', () => {
+    localChannel.stop();
+    remoteAccess.stop();
+    clearAppRunning(userData, process.pid);
   });
 }
 
@@ -215,10 +234,9 @@ function startDesktopApp(): void {
         return;
       }
       try {
-        const { db, safetyService, updateManager } = setupIpcRegistries({ updater: autoUpdater });
-        // Lets the CLI see that this library is open before it replaces the database (#31).
-        markAppRunning(app.getPath('userData'), process.pid);
-        app.on('will-quit', () => clearAppRunning(app.getPath('userData'), process.pid));
+        const library = setupIpcRegistries({ updater: autoUpdater });
+        const { db, safetyService, updateManager } = library;
+        startOtherTransports(library);
 
         const healthChecker = new UpdateHealthChecker(db, safetyService);
         const healthResult = healthChecker.runStartupHealthCheck();

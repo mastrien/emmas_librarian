@@ -1,6 +1,6 @@
 import { IpcChannel } from '../../src/types';
 import type { CommandRegistry, RegisteredCommand } from '../commands/CommandRegistry';
-import { surfaceOf } from '../commands/channelSurfaces';
+import { listTerminalCommands, requireTerminalCommand, type TerminalCommandInfo } from '../commands/terminalCommands';
 import { libraryInUse, replacesLibrary } from '../commands/libraryReplacement';
 import { AppError } from '../errors/AppError';
 
@@ -81,12 +81,11 @@ function deviceCommand(command: RegisteredCommand): RegisteredCommand {
   return command;
 }
 
-function localCommand(command: RegisteredCommand): RegisteredCommand {
-  if (isChannel(command.name) && surfaceOf(command.name) === 'gui-only') {
-    throw forbidden(command.name, 'Comando disponível só no aplicativo');
-  }
-  // Served by the app itself, which has the database open.
-  if (replacesLibrary(command.name)) throw libraryInUse(command.name);
+// The CLI of this same computer, served by the app: the same checks the CLI makes when it opens the
+// library itself, plus one: the app has the database open, so nothing may replace it.
+function localCommand(commands: CommandRegistry, name: string, args: unknown[]): RegisteredCommand {
+  const command = requireTerminalCommand(commands, name, args);
+  if (replacesLibrary(name)) throw libraryInUse(name);
   return command;
 }
 
@@ -104,8 +103,22 @@ export function authorizeRemoteCommand(
   name: string,
   args: unknown[],
 ): { command: RegisteredCommand; args: unknown[] } {
+  if (principal.kind === 'local') return { command: localCommand(commands, name, args), args };
   const command = commands.get(name);
-  if (principal.kind === 'local') return { command: localCommand(command), args };
   const rule = isChannel(name) ? DEVICE_ARGUMENT_RULES[name] : undefined;
   return { command: deviceCommand(command), args: rule ? rule(args) : args };
+}
+
+/**
+ * The commands a caller may run, for a client to discover what it can do.
+ *
+ * Usage:
+ *   listRemoteCommands(commands, { kind: 'device', deviceId }); // [{ name: 'projects:getAll' }, ...]
+ */
+export function listRemoteCommands(commands: CommandRegistry, principal: RemotePrincipal): TerminalCommandInfo[] {
+  // The ones that would replace the open library are listed too: the CLI knows them and explains the refusal.
+  if (principal.kind === 'local') return listTerminalCommands(commands);
+  // Not the terminal list: a phone also reads PDFs, which a terminal cannot show.
+  const allowed = commands.list().filter((command) => DEVICE_CHANNELS.has(command.name) && !command.file);
+  return allowed.map(({ name }) => ({ name }));
 }

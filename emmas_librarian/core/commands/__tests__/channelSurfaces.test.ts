@@ -22,7 +22,7 @@ describe('channel surfaces', () => {
     expect(surfaceOf(channel)).toBe(surface);
   });
 
-  it('offers a CLI everything but dialogs, the updater, opening outside the app and the PDF reader', () => {
+  it('offers a CLI everything but dialogs, the updater, opening outside the app, the LAN controls and the PDF reader', () => {
     const guiOnly = Object.values(IpcChannel).filter((channel) => !cliChannels().includes(channel));
 
     expect(guiOnly.sort()).toEqual(
@@ -36,6 +36,11 @@ describe('channel surfaces', () => {
         IpcChannel.UPDATE_INSTALL,
         IpcChannel.UPDATE_GET_STATUS,
         IpcChannel.UPDATE_RESTORE_SNAPSHOT,
+        IpcChannel.REMOTE_ACCESS_GET_STATUS,
+        IpcChannel.REMOTE_ACCESS_SET_ENABLED,
+        IpcChannel.REMOTE_ACCESS_START_PAIRING,
+        IpcChannel.REMOTE_ACCESS_CANCEL_PAIRING,
+        IpcChannel.REMOTE_ACCESS_REVOKE_DEVICE,
         IpcChannel.PDF_GET,
         IpcChannel.HIGHLIGHTS_CREATE,
         IpcChannel.HIGHLIGHTS_DELETE,

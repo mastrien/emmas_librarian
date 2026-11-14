@@ -10,7 +10,7 @@ import { appPathsIn, type AppPaths } from '../../ports/AppPaths';
 import { FakeSecretStore } from '../../ports/__tests__/fakes/FakeSecretStore';
 import { markAppRunning } from '../appRunningMarker';
 import { CLI_EXIT, runCli } from '../cliRunner';
-import { openCliLibrary } from '../openCliLibrary';
+import { cliHostFor, openCliLibrary } from '../openCliLibrary';
 
 let workDir: string;
 let paths: AppPaths;
@@ -88,5 +88,43 @@ describe('openCliLibrary', () => {
     expect(whileOpen.exitCode).toBe(CLI_EXIT.libraryInUse);
     // Past the guard, the command itself fails: there is no such backup file.
     expect(afterCrash.exitCode).not.toBe(CLI_EXIT.libraryInUse);
+  });
+});
+
+describe('cliHostFor', () => {
+  const host = (alive: () => boolean) => ({
+    paths,
+    secrets: new FakeSecretStore(),
+    appVersion: '1.4.0',
+    env: {},
+    alive,
+  });
+
+  it('opens the library itself when no app is running on it', async () => {
+    createLibrary();
+
+    const outcome = await runCli([IpcChannel.PROJECTS_CREATE, 'Tese'], () =>
+      cliHostFor(
+        host(() => false),
+        workDir,
+      ),
+    );
+
+    expect(outcome.exitCode).toBe(CLI_EXIT.ok);
+  });
+
+  // A marker left by a crash, whose process id now belongs to something else: nobody answers on that port.
+  it('falls back to opening the library when the marked app does not answer', async () => {
+    createLibrary();
+    markAppRunning(paths.userData, 4242, { port: 1, token: 'velho' });
+
+    const outcome = await runCli([IpcChannel.PROJECTS_GET_ALL], () =>
+      cliHostFor(
+        host(() => true),
+        workDir,
+      ),
+    );
+
+    expect(JSON.parse(outcome.stdout!)).toEqual({ ok: true, result: [] });
   });
 });

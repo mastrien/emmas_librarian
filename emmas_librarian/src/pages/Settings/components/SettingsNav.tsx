@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { KeyRound, RefreshCw, ShieldCheck, Sparkles, Sun, Trash2 } from 'lucide-react';
+import { KeyRound, RefreshCw, ShieldCheck, Smartphone, Sparkles, Sun, Trash2 } from 'lucide-react';
 import { SETTINGS_SECTIONS, type SettingsSection } from '../settingsSections';
 import { AutosaveNotice } from './AutosaveNotice';
 import type { AutosaveStatus } from '../useSettingsAutosave';
@@ -10,6 +10,7 @@ const ICONS: Record<SettingsSection, React.ReactNode> = {
   keys: <KeyRound size={16} />,
   ai: <Sparkles size={16} />,
   backup: <ShieldCheck size={16} />,
+  mobile: <Smartphone size={16} />,
   updates: <RefreshCw size={16} />,
   trash: <Trash2 size={16} />,
 };

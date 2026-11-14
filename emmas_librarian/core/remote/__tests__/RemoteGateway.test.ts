@@ -65,6 +65,7 @@ beforeEach(() => {
       return device ? { kind: 'device', deviceId: device.id } : null;
     },
     pairing: { desk, devices },
+    hideInternalErrors: true,
     now: () => clock,
   });
 });
@@ -82,6 +83,7 @@ describe('RemoteGateway: ping and unknown routes', () => {
   it.each([
     ['GET', '/'],
     ['GET', '/api/commands/projects:getAll'],
+    ['PUT', '/api/commands'],
     ['DELETE', '/api/pair'],
   ])('answers 404 for %s %s', async (method, route) => {
     const response = await gateway.handle(request(method, route));
@@ -218,6 +220,53 @@ describe('RemoteGateway: commands', () => {
 
     expect(response.status).toBe(400);
     expect(parsed(response).error.message).toContain(problem);
+  });
+});
+
+describe('RemoteGateway: what a caller may run', () => {
+  it('lists a device only the commands on its list', async () => {
+    const response = await gateway.handle(request('GET', '/api/commands', undefined, withToken(await pairPhone())));
+
+    const names = (parsed(response).result as { name: string }[]).map((listed) => listed.name);
+    const allowed = [
+      IpcChannel.ARTICLES_GET_ONE,
+      IpcChannel.DIARY_SAVE,
+      IpcChannel.PDF_GET,
+      IpcChannel.PROJECTS_GET_ALL,
+    ];
+    expect(names.sort()).toEqual(allowed.sort());
+    expect(names).not.toContain(IpcChannel.SETTINGS_GET);
+  });
+
+  it('asks for a token before listing anything', async () => {
+    expect((await gateway.handle(request('GET', '/api/commands'))).status).toBe(401);
+  });
+});
+
+describe('RemoteGateway: the local channel (the CLI on this computer)', () => {
+  const local = () =>
+    new RemoteGateway({ commands, authenticate: (token) => (token === 'local' ? { kind: 'local' } : null) });
+  const run = (name: string, args: unknown[] = []) =>
+    local().handle(request('POST', `/api/commands/${name}`, { args }, withToken('local')));
+
+  it('runs what a terminal can run, settings included, and shows internal failures in full', async () => {
+    expect(parsed(await run(IpcChannel.SETTINGS_GET, ['theme'])).result).toBe('sk-segredo');
+    expect(parsed(await run(IpcChannel.ARTICLES_GET_ONE, [1])).error.message).toContain('/home/ana/segredo.db');
+  });
+
+  it('refuses desktop-only commands like the CLI itself does', async () => {
+    const response = await run(IpcChannel.PDF_GET, [1]);
+
+    expect(response.status).toBe(400);
+    expect(parsed(response).error.code).toBe('ERR_GUI_ONLY');
+  });
+
+  it('lists the terminal commands', async () => {
+    const response = await local().handle(request('GET', '/api/commands', undefined, withToken('local')));
+
+    const names = (parsed(response).result as { name: string }[]).map((listed) => listed.name);
+    expect(names).toContain(IpcChannel.SETTINGS_GET);
+    expect(names).not.toContain(IpcChannel.PDF_GET);
   });
 });
 

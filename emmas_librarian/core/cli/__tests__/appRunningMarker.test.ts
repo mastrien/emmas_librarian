@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { clearAppRunning, isAppRunningOn, isProcessAlive, markAppRunning } from '../appRunningMarker';
+import { clearAppRunning, isAppRunningOn, isProcessAlive, localChannelOf, markAppRunning } from '../appRunningMarker';
 
 let userData: string;
 const everyoneAlive = () => true;
@@ -48,6 +48,32 @@ describe('app running marker', () => {
     fs.writeFileSync(path.join(userData, 'app-running.json'), content);
 
     expect(isAppRunningOn(userData, everyoneAlive)).toBe(false);
+  });
+});
+
+describe('local channel in the marker', () => {
+  it('says where the running app answers the CLI', () => {
+    markAppRunning(userData, 4242, { port: 51234, token: 'segredo' });
+
+    expect(localChannelOf(userData, everyoneAlive)).toEqual({ port: 51234, token: 'segredo' });
+    expect(isAppRunningOn(userData, everyoneAlive)).toBe(true);
+  });
+
+  it('answers no channel when the app died, or runs without one', () => {
+    markAppRunning(userData, 4242, { port: 51234, token: 'segredo' });
+    expect(localChannelOf(userData, nobodyAlive)).toBeNull();
+
+    markAppRunning(userData, 4242);
+    expect(localChannelOf(userData, everyoneAlive)).toBeNull();
+  });
+
+  it('keeps the marker readable only by its owner, since it carries the token', () => {
+    markAppRunning(userData, 4242);
+    markAppRunning(userData, 4242, { port: 51234, token: 'segredo' });
+
+    const mode = fs.statSync(path.join(userData, 'app-running.json')).mode & 0o777;
+    // Windows has no owner-only bit to check; there the user's profile folder protects the file.
+    if (process.platform !== 'win32') expect(mode).toBe(0o600);
   });
 });
 

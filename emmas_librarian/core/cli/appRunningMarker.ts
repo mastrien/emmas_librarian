@@ -24,17 +24,27 @@ export const isProcessAlive: ProcessProbe = (pid) => {
 
 const markerPath = (userData: string) => path.join(userData, MARKER);
 
+/** Where the running app answers the CLI of the same computer: a loopback port and its token. */
+export interface LocalChannelAddress {
+  port: number;
+  token: string;
+}
+
 /**
  * The desktop app leaves its process id in the library folder while it runs, so another shell (the
  * CLI) can tell the library is open before replacing its database.
  *
+ * With `channel`, it also says where the app answers the CLI. The file is owner-only: the token in it
+ * lets a process of this user run commands on the library, which that user could do anyway.
+ *
  * Usage:
- *   markAppRunning(paths.userData, process.pid);
+ *   markAppRunning(paths.userData, process.pid, { port, token });
  *   app.on('will-quit', () => clearAppRunning(paths.userData, process.pid));
  */
-export function markAppRunning(userData: string, pid: number): void {
+export function markAppRunning(userData: string, pid: number, channel?: LocalChannelAddress): void {
   fs.mkdirSync(userData, { recursive: true });
-  fs.writeFileSync(markerPath(userData), JSON.stringify({ pid }));
+  fs.rmSync(markerPath(userData), { force: true });
+  fs.writeFileSync(markerPath(userData), JSON.stringify({ pid, ...channel }), { mode: 0o600 });
 }
 
 /** Removes the marker, unless another instance of the app has written its own since. */
@@ -42,13 +52,24 @@ export function clearAppRunning(userData: string, pid: number): void {
   if (readMarkedPid(userData) === pid) fs.rmSync(markerPath(userData), { force: true });
 }
 
-function readMarkedPid(userData: string): number | null {
+interface Marker {
+  pid?: unknown;
+  port?: unknown;
+  token?: unknown;
+}
+
+function readMarker(userData: string): Marker {
   try {
-    const { pid } = JSON.parse(fs.readFileSync(markerPath(userData), 'utf8')) as { pid?: unknown };
-    return typeof pid === 'number' ? pid : null;
+    const parsed: unknown = JSON.parse(fs.readFileSync(markerPath(userData), 'utf8'));
+    return parsed && typeof parsed === 'object' ? (parsed as Marker) : {};
   } catch {
-    return null;
+    return {};
   }
+}
+
+function readMarkedPid(userData: string): number | null {
+  const { pid } = readMarker(userData);
+  return typeof pid === 'number' ? pid : null;
 }
 
 /**
@@ -61,4 +82,18 @@ function readMarkedPid(userData: string): number | null {
 export function isAppRunningOn(userData: string, alive: ProcessProbe = isProcessAlive): boolean {
   const pid = readMarkedPid(userData);
   return pid !== null && alive(pid);
+}
+
+/**
+ * Where the app running on this library answers the CLI, or null when it is not running (or runs a
+ * version that opens no channel).
+ *
+ * Usage:
+ *   const channel = localChannelOf(paths.userData);
+ *   if (channel) forwardTo(channel); else openTheLibrary();
+ */
+export function localChannelOf(userData: string, alive: ProcessProbe = isProcessAlive): LocalChannelAddress | null {
+  if (!isAppRunningOn(userData, alive)) return null;
+  const { port, token } = readMarker(userData);
+  return typeof port === 'number' && typeof token === 'string' ? { port, token } : null;
 }

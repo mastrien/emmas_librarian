@@ -30,6 +30,13 @@ export const CHANNEL_SURFACES: Record<IpcChannel, ChannelSurface> = {
   [IpcChannel.UPDATE_GET_STATUS]: G,
   [IpcChannel.UPDATE_RESTORE_SNAPSHOT]: G,
 
+  // Turning the LAN server on, pairing a phone and revoking it are done at the desktop, by who sits at it.
+  [IpcChannel.REMOTE_ACCESS_GET_STATUS]: G,
+  [IpcChannel.REMOTE_ACCESS_SET_ENABLED]: G,
+  [IpcChannel.REMOTE_ACCESS_START_PAIRING]: G,
+  [IpcChannel.REMOTE_ACCESS_CANCEL_PAIRING]: G,
+  [IpcChannel.REMOTE_ACCESS_REVOKE_DEVICE]: G,
+
   // The PDF reader: the bytes it renders and the marks made on the page (positions only the reader can produce).
   [IpcChannel.PDF_GET]: G,
   [IpcChannel.HIGHLIGHTS_CREATE]: G,

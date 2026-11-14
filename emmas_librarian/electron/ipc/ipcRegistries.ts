@@ -15,6 +15,12 @@ import { registerWindowHandlers } from './handlers/windowHandlers';
 import { registerDialogHandlers } from './handlers/dialogHandlers';
 import { registerExternalDocumentHandlers } from './handlers/externalDocumentHandlers';
 import { registerUpdateHandlers } from './handlers/updateHandlers';
+import { registerRemoteAccessHandlers } from './handlers/remoteAccessHandlers';
+import { RemoteAccessService } from '../remote/RemoteAccessService';
+import { issueSelfSigned } from '../remote/tlsIdentity';
+import { encodeQrSvg } from '../remote/qrEncoder';
+import { lanAddresses } from '../remote/lanAddresses';
+import type { CommandRegistry } from '../../core/commands/CommandRegistry';
 
 export interface IpcRegistriesDeps {
   db?: DatabaseAdapter;
@@ -27,6 +33,10 @@ export interface IpcRegistriesDeps {
 
 export interface IpcRegistriesResult {
   db: DatabaseAdapter;
+  /** The core's commands, for the transports main.ts starts beside IPC (the CLI's local channel). */
+  commands: CommandRegistry;
+  /** Built here, started by main.ts: nothing listens on the network until `startIfEnabled`. */
+  remoteAccess: RemoteAccessService;
   safetyService: UpdateSafetyService;
   updateManager: UpdateManager;
 }
@@ -68,7 +78,21 @@ function registerLibraryServices(db: DatabaseAdapter, paths: AppPaths, deps?: Ip
   registerWindowHandlers(ipcMain);
   registerDialogHandlers(ipcMain, picker);
   registerExternalDocumentHandlers(ipcMain);
-  return { db, ...registerAppUpdate(db, paths, deps) };
+  const remoteAccess = lanAccessFor(db, paths, commands);
+  registerRemoteAccessHandlers(ipcMain, remoteAccess);
+  return { db, commands, remoteAccess, ...registerAppUpdate(db, paths, deps) };
+}
+
+function lanAccessFor(db: DatabaseAdapter, paths: AppPaths, commands: CommandRegistry): RemoteAccessService {
+  return new RemoteAccessService({
+    commands,
+    userData: paths.userData,
+    secrets: new SafeStorageSecretStore(),
+    settings: db,
+    issueCertificate: issueSelfSigned,
+    encodeQr: encodeQrSvg,
+    addresses: lanAddresses,
+  });
 }
 
 function registerAppUpdate(db: DatabaseAdapter, paths: AppPaths, deps?: IpcRegistriesDeps) {

@@ -1,4 +1,4 @@
-import { AppError } from '../errors/AppError';
+import { usageError } from '../errors/usageError';
 
 export interface CliOptions {
   /** Library folder to open instead of the app's own. */
@@ -11,16 +11,6 @@ export type CliRequest =
   | { kind: 'help'; options: CliOptions }
   | { kind: 'list'; options: CliOptions }
   | { kind: 'run'; command: string; args: unknown[]; options: CliOptions };
-
-/**
- * A mistake in how the CLI was called (not a failure of a command): exit code 2.
- *
- * Usage:
- *   throw usageError('ERR_CLI_USAGE', `--data-dir sem valor`, 'um caminho de pasta depois de --data-dir');
- */
-export function usageError(code: string, problem: string, expected: string): AppError {
-  return new AppError(code, 'VALIDATION_ERROR', `[${code}] ${problem}. Expected shape: ${expected}.`);
-}
 
 // A value is JSON when it parses (3, true, null, [1,2], {"a":1}, "text"); anything else is taken as text,
 // so `emma projects:create Tese` needs no quoting. Text that looks like JSON is passed as '"123"'.

@@ -180,6 +180,7 @@ describe('SettingsPage', () => {
       '/settings/keys',
       '/settings/ai',
       '/settings/backup',
+      '/settings/mobile',
       '/settings/updates',
       '/settings/trash',
     ]);

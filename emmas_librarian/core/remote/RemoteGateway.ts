@@ -3,7 +3,7 @@ import { AppError } from '../errors/AppError';
 import { shellFailureFrom } from '../errors/shellFailureFrom';
 import type { PairedDevices } from './PairedDevices';
 import type { PairingDesk } from './PairingDesk';
-import { authorizeRemoteCommand, type RemotePrincipal } from './remoteAccessPolicy';
+import { authorizeRemoteCommand, listRemoteCommands, type RemotePrincipal } from './remoteAccessPolicy';
 
 /** An HTTP request as the gateway needs it, whatever server received it. */
 export interface GatewayRequest {
@@ -33,6 +33,11 @@ export interface GatewayOptions {
   authenticate: (token: string) => RemotePrincipal | null;
   /** Present on the LAN server; the local channel pairs nobody. */
   pairing?: GatewayPairing;
+  /**
+   * Hide the message of internal failures, which may name files of this computer. On for the LAN;
+   * off for the local channel, whose caller is the same person on the same machine.
+   */
+  hideInternalErrors?: boolean;
   now?: () => number;
 }
 
@@ -66,6 +71,7 @@ const json = (status: number, document: object): GatewayResponse => ({
  *
  *   GET  /api/ping              -> { ok, result: { app } }             no token
  *   POST /api/pair              -> { ok, result: { token, deviceId } }  one-time code, LAN only
+ *   GET  /api/commands          -> { ok, result: [{ name, file? }] }    Authorization: Bearer <token>
  *   POST /api/commands/<name>   -> { ok, result } | bytes               Authorization: Bearer <token>
  *
  * Usage:
@@ -93,6 +99,7 @@ export class RemoteGateway {
     const { method, path } = request;
     if (method === 'GET' && path === '/api/ping') return json(200, { ok: true, result: { app: 'emmas-librarian' } });
     if (method === 'POST' && path === '/api/pair') return this.pair(request);
+    if (method === 'GET' && path === '/api/commands') return this.listCommands(request);
     if (method === 'POST' && path.startsWith(COMMAND_PREFIX)) return this.runCommand(request);
     throw remoteError(
       'ERR_REMOTE_NOT_FOUND',
@@ -115,6 +122,11 @@ export class RemoteGateway {
     }
     const { device, token } = pairing.devices.add(deviceName);
     return json(200, { ok: true, result: { token, deviceId: device.id, deviceName: device.name } });
+  }
+
+  private listCommands(request: GatewayRequest): GatewayResponse {
+    const principal = this.requirePrincipal(request);
+    return json(200, { ok: true, result: listRemoteCommands(this.options.commands, principal) });
   }
 
   private async runCommand(request: GatewayRequest): Promise<GatewayResponse> {
@@ -164,8 +176,8 @@ export class RemoteGateway {
   private failure(error: unknown): GatewayResponse {
     const { code, type, message } = shellFailureFrom(error);
     const status = STATUS_BY_CODE[code] ?? STATUS_BY_TYPE[type] ?? 500;
-    // An internal failure may name files and folders of this computer; the caller only needs to know it failed.
-    const shown = status === 500 ? 'Erro interno ao executar o comando.' : message;
+    const hidden = status === 500 && this.options.hideInternalErrors;
+    const shown = hidden ? 'Erro interno ao executar o comando.' : message;
     return json(status, { ok: false, error: { code, type, message: shown } });
   }
 }

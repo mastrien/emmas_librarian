@@ -38,7 +38,7 @@ export type TextSink = (text: string) => Promise<void>;
 export interface CliProcess {
   /** Resolves once the shell can open the library (Electron: app ready, so safeStorage works). */
   ready: () => Promise<unknown>;
-  open: (options: CliOptions) => OpenedCliHost;
+  open: (options: CliOptions) => OpenedCliHost | Promise<OpenedCliHost>;
   stdout: TextSink;
   stderr: TextSink;
   exit: (code: number) => void;

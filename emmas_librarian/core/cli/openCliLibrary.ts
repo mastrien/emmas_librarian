@@ -4,7 +4,8 @@ import { DatabaseAdapter } from '../database/DatabaseAdapter';
 import { AppError } from '../errors/AppError';
 import type { AppPaths } from '../ports/AppPaths';
 import type { SecretStore } from '../ports/SecretStore';
-import { isAppRunningOn, type ProcessProbe } from './appRunningMarker';
+import { isAppRunningOn, localChannelOf, type ProcessProbe } from './appRunningMarker';
+import { connectToRunningApp, httpChannelTransport } from './localChannelClient';
 import type { OpenedCliHost } from './cliRunner';
 
 export interface CliLibraryHost {
@@ -48,5 +49,23 @@ function closeOnce(db: DatabaseAdapter): void {
     db.close();
   } catch {
     // Already closed by the command.
+  }
+}
+
+/**
+ * The library for one CLI run: through the open app when it is running on that folder (one writer,
+ * and the app's own services), otherwise opened here. An app that does not answer (a marker left by a
+ * crash whose process id was reused) falls back to opening the library.
+ *
+ * Usage:
+ *   const host = await cliHostFor({ paths, secrets, appVersion, env }, process.cwd());
+ */
+export async function cliHostFor(host: CliLibraryHost, cwd: string): Promise<OpenedCliHost> {
+  const channel = localChannelOf(host.paths.userData, host.alive);
+  if (!channel) return openCliLibrary(host);
+  try {
+    return await connectToRunningApp(httpChannelTransport(channel), cwd);
+  } catch {
+    return openCliLibrary(host);
   }
 }

@@ -1,10 +1,9 @@
-import { IpcChannel } from '../../src/types';
-import type { CommandRegistry, RegisteredCommand } from '../commands/CommandRegistry';
-import { surfaceOf } from '../commands/channelSurfaces';
+import type { CommandRegistry } from '../commands/CommandRegistry';
+import { listTerminalCommands, requireTerminalCommand } from '../commands/terminalCommands';
 import { AppError, type ErrorType } from '../errors/AppError';
 import { shellFailureFrom } from '../errors/shellFailureFrom';
 import { libraryInUse, replacesLibrary } from '../commands/libraryReplacement';
-import { parseCliArguments, usageError, type CliOptions, type CliRequest } from './cliArguments';
+import { parseCliArguments, type CliOptions, type CliRequest } from './cliArguments';
 
 /** Exit codes of the CLI; scripts and tool-calling agents branch on these. */
 export const CLI_EXIT = {
@@ -42,8 +41,6 @@ const EXIT_BY_TYPE: Record<ErrorType, number> = {
   NETWORK_ERROR: CLI_EXIT.network,
 };
 
-const isChannel = (name: string): name is IpcChannel => (Object.values(IpcChannel) as string[]).includes(name);
-
 function exitCodeOf(error: AppError): number {
   if (error.code === 'ERR_LIBRARY_IN_USE') return CLI_EXIT.libraryInUse;
   if (USAGE_CODES.has(error.code)) return CLI_EXIT.usage;
@@ -61,38 +58,8 @@ function success(result: unknown, pretty: boolean): CliOutcome {
   return { exitCode: CLI_EXIT.ok, stdout: JSON.stringify({ ok: true, result: result ?? null }, null, pretty ? 2 : 0) };
 }
 
-function requireCliCommand(commands: CommandRegistry, name: string): RegisteredCommand {
-  if (isChannel(name) && surfaceOf(name) === 'gui-only') {
-    throw usageError(
-      'ERR_GUI_ONLY',
-      `Comando disponível só no aplicativo. Offending value: "${name}"`,
-      'um comando listado por `commands`',
-    );
-  }
-  return commands.get(name);
-}
-
-function requireFileArgument(command: RegisteredCommand, args: unknown[]): void {
-  const { file } = command;
-  if (!file || (typeof args[file.at] === 'string' && args[file.at] !== '')) return;
-  const purpose = file.mode === 'save' ? 'a gravar' : 'a ler';
-  throw usageError(
-    'ERR_MISSING_FILE_ARGUMENT',
-    `Falta o caminho do arquivo ${purpose}. Offending value: argumento ${file.at + 1} = ${JSON.stringify(args[file.at])}`,
-    `o caminho do arquivo como argumento ${file.at + 1} de "${command.name}"`,
-  );
-}
-
 function refuseWhileAppRuns(name: string, host: CliHost): void {
   if (replacesLibrary(name) && host.isAppRunning()) throw libraryInUse(name);
-}
-
-/** What `commands` prints: every command a terminal can run, with the file argument it takes, if any. */
-export function listCliCommands(commands: CommandRegistry) {
-  return commands
-    .list()
-    .filter((command) => !isChannel(command.name) || surfaceOf(command.name) === 'cli')
-    .map(({ name, file }) => (file ? { name, file: { argument: file.at + 1, mode: file.mode } } : { name }));
 }
 
 export const CLI_USAGE = [
@@ -129,10 +96,9 @@ export const CLI_USAGE = [
 export async function runCliRequest(request: CliRequest, host: CliHost): Promise<CliOutcome> {
   const { pretty } = request.options;
   if (request.kind === 'help') return { exitCode: CLI_EXIT.ok, stdout: CLI_USAGE };
-  if (request.kind === 'list') return success(listCliCommands(host.commands), pretty);
+  if (request.kind === 'list') return success(listTerminalCommands(host.commands), pretty);
   try {
-    const command = requireCliCommand(host.commands, request.command);
-    requireFileArgument(command, request.args);
+    const command = requireTerminalCommand(host.commands, request.command, request.args);
     refuseWhileAppRuns(command.name, host);
     return success(await host.commands.run(command.name, ...request.args), pretty);
   } catch (error) {
@@ -152,11 +118,14 @@ export interface OpenedCliHost extends CliHost {
  * Usage:
  *   const outcome = await runCli(['projects:getAll'], (options) => openLibraryFor(options));
  */
-export async function runCli(argv: string[], open: (options: CliOptions) => OpenedCliHost): Promise<CliOutcome> {
+export async function runCli(
+  argv: string[],
+  open: (options: CliOptions) => OpenedCliHost | Promise<OpenedCliHost>,
+): Promise<CliOutcome> {
   try {
     const request = parseCliArguments(argv);
     if (request.kind === 'help') return { exitCode: CLI_EXIT.ok, stdout: CLI_USAGE };
-    const host = open(request.options);
+    const host = await open(request.options);
     try {
       return await runCliRequest(request, host);
     } finally {

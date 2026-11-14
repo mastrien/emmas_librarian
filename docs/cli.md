@@ -62,10 +62,17 @@ Logs e avisos do Chromium vão para stderr; stdout só carrega o resultado.
 
 ## Com o aplicativo aberto
 
-O CLI abre o mesmo `emma.db` (modo WAL, que aceita leitores e escritores ao mesmo tempo). Só os comandos que
-trocam o arquivo do banco (`backup:restoreOverride`, `backup:restoreAuto`) são recusados com o código 5 enquanto
-o aplicativo estiver aberto. A tela do aplicativo não é avisada do que o CLI gravou: ela mostra a mudança quando
-recarregar os dados. Falar com o aplicativo aberto em vez de abrir o banco fica para o servidor local (#32).
+Se o aplicativo estiver aberto na mesma biblioteca, o CLI não abre o banco: ele manda o comando para o próprio
+aplicativo, por um canal local (`127.0.0.1`, token em `app-running.json`, ver `docs/acesso-pelo-celular.md`). O
+resultado, os erros e os códigos de saída são os mesmos.
+
+- O caminho do arquivo que o comando lê ou grava (o argumento indicado por `cli commands`) pode ser relativo: o
+  CLI o torna absoluto a partir da pasta do terminal. Outros argumentos que sejam caminhos (por exemplo o PDF de
+  `pdf:upload`) devem ser absolutos, porque quem os lê é o aplicativo.
+- Os comandos que trocam o arquivo do banco (`backup:restoreOverride`, `backup:restoreAuto`) são recusados com o
+  código 5 enquanto o aplicativo estiver aberto.
+- A tela do aplicativo não é avisada do que o CLI gravou: ela mostra a mudança quando recarregar os dados.
+- Se o aplicativo não responder (marcador deixado por um travamento), o CLI abre o banco diretamente, em modo WAL.
 
 ## Limitações conhecidas
 

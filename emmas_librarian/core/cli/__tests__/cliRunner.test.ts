@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { IpcChannel } from '../../../src/types';
 import { CommandRegistry } from '../../commands/CommandRegistry';
 import { AppError } from '../../errors/AppError';
-import { CLI_EXIT, CLI_USAGE, listCliCommands, runCli, type OpenedCliHost } from '../cliRunner';
+import { listTerminalCommands } from '../../commands/terminalCommands';
+import { CLI_EXIT, CLI_USAGE, runCli, type OpenedCliHost } from '../cliRunner';
 
 const savedFile = { at: 1, mode: 'save' as const, describe: () => ({ title: 'Exportar', filters: [] }) };
 
@@ -77,7 +78,7 @@ describe('runCli', () => {
   it('lists only what a terminal can run, with the file argument each command takes', async () => {
     const listed = JSON.parse((await run('commands')).stdout!).result;
 
-    expect(listed).toEqual(listCliCommands(library.commands));
+    expect(listed).toEqual(listTerminalCommands(library.commands));
     expect(listed).toContainEqual({ name: IpcChannel.EXPORT_CSV, file: { argument: 2, mode: 'save' } });
     expect(listed).toContainEqual({ name: IpcChannel.PROJECTS_GET_ALL });
     expect(listed).not.toContainEqual({ name: IpcChannel.PDF_GET });

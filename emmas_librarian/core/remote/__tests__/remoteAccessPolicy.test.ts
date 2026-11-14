@@ -109,7 +109,7 @@ describe('authorizeRemoteCommand', () => {
   });
 
   it('refuses the local CLI what only the app can do and what would replace the open library', () => {
-    expect(refusal(local, IpcChannel.PDF_GET)).toBe('ERR_REMOTE_FORBIDDEN');
+    expect(refusal(local, IpcChannel.PDF_GET)).toBe('ERR_GUI_ONLY');
     expect(refusal(local, IpcChannel.BACKUP_RESTORE_AUTO)).toBe('ERR_LIBRARY_IN_USE');
   });
 
