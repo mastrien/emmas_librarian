@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { SystematicReviewPage } from '../../SystematicReviewPage';
 import { ServicesProvider } from '../../../../contexts/ServicesContext';
 import type { FakeProjectService } from '../../../../services/__tests__/fakes/FakeProjectService';
@@ -40,6 +40,27 @@ describe('PrismaTab (#50)', () => {
     expect(await screen.findByText('2 aguardando decisões')).toBeInTheDocument();
     expect(screen.getByText('1 podem ser parciais')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Registros identificados \(n = 0\)/ })).not.toBeInTheDocument();
+  });
+
+  // Board 166: only the warnings that apply are shown, and a green "Números batem" when nothing disagrees.
+  it('shows the warnings that apply and says when the numbers agree', async () => {
+    renderPrisma(prismaService());
+
+    const warnings = await screen.findByRole('group', { name: 'Avisos do diagrama' });
+
+    expect(warnings).toHaveTextContent('aguardando decisões');
+    expect(warnings).toHaveTextContent('Números batem');
+    expect(warnings).not.toHaveTextContent('com números que não batem');
+  });
+
+  it('takes the person to the data tables from the button', async () => {
+    const scrollIntoView = vi.fn();
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    renderPrisma(prismaService());
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Tabela de dados' }));
+
+    expect(scrollIntoView).toHaveBeenCalled();
   });
 
   it('says where a number comes from, that the screening is under way, and lists the articles behind it', async () => {

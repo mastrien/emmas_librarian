@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, Check, Info } from 'lucide-react';
 import type { Article, PrismaImageFormat, PrismaRecords, SearchHistoryItem } from '../../../types';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import { describeError } from '../../../utils/describeError';
@@ -18,6 +19,10 @@ import { exportPrismaDiagram } from './prismaExport';
 import { ExportMenu } from './ExportMenu';
 import { DataTable, ExcludedTable } from './PrismaTables';
 import './prisma.css';
+
+// "Tabela de dados" (board 166) takes the person to the two tables under the diagram.
+const TABLES_ID = 'prisma-tables';
+const scrollToTables = () => document.getElementById(TABLES_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
 const NO_RECORDS: PrismaRecords = { sources: [], origins: [], studyLinks: [] };
 
@@ -49,15 +54,42 @@ function usePrismaData(projectId: number) {
   return { searches, records, actions, loaded };
 }
 
+/**
+ * The bar of warnings above the diagram (board 166): only what applies is shown, each with its icon, and a green
+ * "Números batem" when no box disagrees with the others. The app never fixes a number by itself.
+ *
+ * @example <WarningChips flow={flow} order={prismaOrder(flow)} />
+ */
 const WarningChips: React.FC<{ flow: PrismaFlow; order: PrismaBoxKey[] }> = ({ flow, order }) => {
   const all = order.flatMap((k) => flow[k].warnings);
   const count = (kind: string) => all.filter((w) => w.kind === kind).length;
   return (
-    <div className="prisma-row">
-      <span className="review-chip review-chip--maybe">{count('pending')} aguardando decisões</span>
-      <span className="review-chip review-chip--maybe">{count('mismatch')} com números que não batem</span>
-      <span className="review-chip review-chip--maybe">{count('partial')} podem ser parciais</span>
-      <span className="review-chip review-chip--removed">{count('nodata')} sem dados para conferir</span>
+    <div className="prisma-row" role="group" aria-label="Avisos do diagrama">
+      {count('pending') > 0 && (
+        <span className="review-chip review-chip--maybe">
+          <AlertTriangle size={12} aria-hidden="true" /> {count('pending')} aguardando decisões
+        </span>
+      )}
+      {count('mismatch') > 0 && (
+        <span className="review-chip review-chip--maybe">
+          <AlertTriangle size={12} aria-hidden="true" /> {count('mismatch')} com números que não batem
+        </span>
+      )}
+      {count('partial') > 0 && (
+        <span className="review-chip review-chip--maybe">
+          <AlertTriangle size={12} aria-hidden="true" /> {count('partial')} podem ser parciais
+        </span>
+      )}
+      {count('nodata') > 0 && (
+        <span className="review-chip review-chip--removed">
+          <Info size={12} aria-hidden="true" /> {count('nodata')} sem dados para conferir
+        </span>
+      )}
+      {count('mismatch') === 0 && (
+        <span className="review-chip review-chip--include">
+          <Check size={12} aria-hidden="true" /> Números batem
+        </span>
+      )}
       <span className="review-muted">Clique numa caixa para ver de onde vem o número.</span>
     </div>
   );
@@ -118,7 +150,12 @@ export const PrismaTab: React.FC<{ projectId: number; screening: ScreeningState 
     <>
       <div className="review-list-head">
         <WarningChips flow={flow} order={order} />
-        <ExportMenu onPick={(format) => void exporting.run(format)} />
+        <span className="prisma-row">
+          <button type="button" className="review-small" onClick={() => scrollToTables()}>
+            Tabela de dados
+          </button>
+          <ExportMenu onPick={(format) => void exporting.run(format)} />
+        </span>
       </div>
       {/* A plain line under the export button, not a boxed banner (validation of epic #44). */}
       {exporting.message && (
@@ -142,7 +179,9 @@ export const PrismaTab: React.FC<{ projectId: number; screening: ScreeningState 
           actions={actions}
         />
       </div>
-      <DataTable flow={flow} order={order} />
+      <div id={TABLES_ID}>
+        <DataTable flow={flow} order={order} />
+      </div>
       <ExcludedTable reports={excludedReports(input, flow)} />
     </>
   );

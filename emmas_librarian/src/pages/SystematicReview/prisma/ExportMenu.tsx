@@ -24,7 +24,7 @@ export const ExportMenu: React.FC<{ onPick: (format: PrismaImageFormat) => void 
     <div className="review-menu-anchor" ref={ref}>
       <button
         type="button"
-        className="review-small"
+        className="btn-primary review-small"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
