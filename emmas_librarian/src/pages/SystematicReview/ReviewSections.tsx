@@ -187,15 +187,18 @@ export const ExcludedSection: React.FC<{
   open: boolean;
   onToggle: () => void;
   actions: RowActions;
-}> = ({ groups, unlabeled, open, onToggle, actions }) => {
+  /** "Removidos antes da triagem" lists its groups the same way (board 164). */
+  title?: string;
+  word?: string;
+}> = ({ groups, unlabeled, open, onToggle, actions, title = 'Excluídos', word = 'arquivados no projeto' }) => {
   const count = groups.reduce((n, g) => n + g.rows.length, 0) + unlabeled.length;
   if (count === 0) return null;
   return (
     <SectionShell
-      title="Excluídos"
+      title={title}
       count={count}
-      kind="exclude"
-      word="arquivados no projeto"
+      kind={groups[0]?.label.kind ?? 'exclude'}
+      word={word}
       open={open}
       onToggle={onToggle}
     >

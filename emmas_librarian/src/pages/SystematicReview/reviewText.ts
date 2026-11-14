@@ -1,5 +1,6 @@
 import type { Article, ScreeningKind } from '../../types';
 import type { ReviewRow } from '../../utils/screeningView';
+import { shortAuthorList } from '../../utils/authors';
 
 /** How each kind is titled in the label menus. */
 export const KIND_MENU_TITLE: Readonly<Record<ScreeningKind, string>> = {
@@ -32,6 +33,16 @@ export const KIND_WORD: Readonly<Record<ScreeningKind, string>> = {
  */
 export function articleMeta(article: Article): string {
   return [article.authors, article.year ?? 's/ ano', article.journal].filter(Boolean).join(' · ');
+}
+
+/**
+ * The short line under a title in the screening list (board 164): the first authors, the year and the journal.
+ *
+ * @example reviewByline({ authors: 'Shi, X.; Li, Y.; Wu, Z.; Ma, Q.', year: 2015, journal: 'NeurIPS' } as Article)
+ *   // 'Shi, X.; Li, Y.; Wu, Z.; +1 · 2015 · NeurIPS'
+ */
+export function reviewByline(article: Article): string {
+  return [shortAuthorList(article.authors), article.year ?? 's/ ano', article.journal].filter(Boolean).join(' · ');
 }
 
 /**

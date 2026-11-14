@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { splitAuthorNames } from '../authors';
+import { shortAuthorList, splitAuthorNames } from '../authors';
 
 describe('splitAuthorNames', () => {
   it.each([
@@ -17,5 +17,16 @@ describe('splitAuthorNames', () => {
     ['null', null, []],
   ])('splits %s', (_label, raw, expected) => {
     expect(splitAuthorNames(raw)).toEqual(expected);
+  });
+});
+
+describe('shortAuthorList', () => {
+  it('keeps the first three authors and counts the rest', () => {
+    expect(shortAuthorList('Silva, A.; Costa, B.; Lima, C.; Rocha, D.')).toBe('Silva, A.; Costa, B.; Lima, C.; +1');
+    expect(shortAuthorList('Silva, A.; Costa, B.')).toBe('Silva, A.; Costa, B.');
+  });
+
+  it('says when there are no authors', () => {
+    expect(shortAuthorList(null)).toBe('Autores desconhecidos');
   });
 });

@@ -18,3 +18,16 @@ export function splitAuthorNames(authors?: string | null): string[] {
   const raw = authors.includes(';') ? authors.split(';') : authors.includes(',') ? splitCommaList(authors) : [authors];
   return raw.map((name) => name.trim()).filter(Boolean);
 }
+
+/**
+ * The first authors and how many more, for one line under a title (boards 153 and 164); 'Autores desconhecidos'
+ * when there are none.
+ *
+ * @example shortAuthorList('Silva, A.; Costa, B.; Lima, C.; Rocha, D.') // 'Silva, A.; Costa, B.; Lima, C.; +1'
+ */
+export function shortAuthorList(authors?: string | null, visible = 3): string {
+  const names = splitAuthorNames(authors);
+  if (names.length === 0) return 'Autores desconhecidos';
+  const hidden = names.length - visible;
+  return [...names.slice(0, visible), ...(hidden > 0 ? [`+${hidden}`] : [])].join('; ');
+}
