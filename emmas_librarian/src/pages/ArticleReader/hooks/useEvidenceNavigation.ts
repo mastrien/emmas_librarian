@@ -2,7 +2,7 @@ import { useEffect, useRef, type MutableRefObject } from 'react';
 import { stripForMatching } from '../../../utils/pdfTextSearch';
 import type { ViewerHighlight } from '../viewerHighlight';
 
-/** Where "Visualizar no Documento" asked the reader to go: the evidence's text and its page. */
+/** Where "Abrir no PDF" (ex-"Visualizar no Documento") asked the reader to go: the evidence's text and its page. */
 export interface EvidenceTarget {
   searchQuery?: string;
   page?: number;
@@ -49,7 +49,7 @@ const POLL_MS = 250;
 const MAX_POLLS = 40;
 
 /**
- * After "Visualizar no Documento", scrolls once to the evidence's highlight, or to its page when the quote did not
+ * After "Abrir no PDF" (ex-"Visualizar no Documento"), scrolls once to the evidence's highlight, or to its page when the quote did not
  * anchor. The viewer mounts after the PDF loads, so it waits for it (up to 10 s).
  *
  * Usage:

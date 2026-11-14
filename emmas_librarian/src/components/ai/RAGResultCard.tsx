@@ -21,29 +21,30 @@ export function confidenceLevel(score: number): 'high' | 'medium' | 'low' {
 }
 
 /**
- * One RAG answer: the question, the AI's confidence, the synthesized answer and each evidence with its page.
+ * One RAG answer (board 162): the question as the title with the AI's confidence beside it, the synthesized answer
+ * in the reading face, then each evidence with its page.
  *
  * @example <RAGResultCard result={rag} onViewDocument={open} />
  */
 export const RAGResultCard: React.FC<RAGResultCardProps> = ({ result, onViewDocument }) => (
   <div className="rag-card">
     <div className="rag-card-head">
-      <div className="rag-card-question">Q: {result.question}</div>
+      <div className="rag-card-question">{result.question}</div>
       <div
         className={`rag-card-confidence rag-card-confidence--${confidenceLevel(result.confidenceScore)}`}
         title="Nível de confiança da IA"
       >
-        {Math.round(result.confidenceScore * 100)}% Confiança
+        {Math.round(result.confidenceScore * 100)}% confiança
       </div>
     </div>
 
-    <div className="markdown-body">
+    <div className="markdown-body rag-card-answer">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.synthesizedAnswer}</ReactMarkdown>
     </div>
 
     {result.evidences && result.evidences.length > 0 && (
       <div className="rag-card-evidences">
-        <h6>Evidências ({result.evidences.length}):</h6>
+        <span className="rag-card-evidences-title">Evidências · {result.evidences.length}</span>
         <div className="rag-card-evidence-list">
           {result.evidences.map((evidence, idx) => (
             <EvidenceCard key={idx} evidence={evidence} onViewDocument={onViewDocument} />

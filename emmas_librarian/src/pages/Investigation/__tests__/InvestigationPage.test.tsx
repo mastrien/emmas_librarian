@@ -88,6 +88,17 @@ describe('InvestigationPage (#73): where it opens', () => {
 });
 
 describe('InvestigationPage (#73): answers', () => {
+  // Board 162: how much was reviewed replaces the line of shortcuts, and the panel says where the answer sits.
+  it('shows how many answers were reviewed and where the selected one sits in the list', async () => {
+    const { service } = reviewProject();
+    renderInvestigation(service, '/projects/3/investigation/14');
+
+    const panel = await screen.findByRole('complementary', { name: 'Resposta selecionada' });
+    expect(panel).toHaveTextContent('1/3');
+    expect(screen.getByText('0 de 3').parentElement).toHaveTextContent('Revisadas 0 de 3');
+    expect(screen.getByRole('progressbar', { name: 'Respostas revisadas' })).toHaveAttribute('value', '0');
+  });
+
   it('starts on what is pending, as a grid, with the selected answer beside it', async () => {
     const { service } = reviewProject();
     renderInvestigation(service, '/projects/3/investigation/14');
@@ -173,7 +184,7 @@ describe('InvestigationPage (#73): answers', () => {
     const { service } = reviewProject();
     renderInvestigation(service, '/projects/3/investigation/14');
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Visualizar no Documento' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir no PDF' }));
 
     const where = JSON.parse((await screen.findByTestId('where')).textContent ?? '{}');
     expect(where.path).toBe('/articles/1');

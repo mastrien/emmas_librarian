@@ -101,9 +101,16 @@ export const AnswersTab: React.FC<AnswersTabProps> = (props) => {
 
   const answer = selected && (
     <div ref={panel} className="inv-answer" onKeyDown={onPanelKey}>
-      <span className="inv-muted">
-        {articles.find((a) => a.id === selected.article_id)?.title ?? `Artigo #${selected.article_id}`}
-      </span>
+      <div className="inv-answer-head">
+        <span className="inv-muted inv-answer-article">
+          {articles.find((a) => a.id === selected.article_id)?.title ?? `Artigo #${selected.article_id}`}
+        </span>
+        {visible.includes(selected) && (
+          <span className="inv-muted inv-answer-position">
+            {visible.indexOf(selected) + 1}/{visible.length}
+          </span>
+        )}
+      </div>
       <InvestigationResultBlock
         key={selected.id}
         result={selected}
@@ -187,6 +194,26 @@ const AnswersToolbar: React.FC<{
         </option>
       ))}
     </select>
-    <span className="inv-muted inv-toolbar-end">A aceita · E edita · R rejeita · → próxima pendente</span>
+    <ReviewProgress results={results} />
   </div>
 );
+
+/**
+ * How much of the investigation was reviewed (board 162), in place of the old line of shortcuts: the keys now show
+ * on the review buttons themselves.
+ */
+const ReviewProgress: React.FC<{ results: InvestigationResult[] }> = ({ results }) => {
+  const answered = results.filter((r) => r.status === 'success');
+  const reviewed = answered.filter((r) => !isPendingReview(r)).length;
+  return (
+    <div className="inv-toolbar-end inv-review-progress">
+      <span className="inv-muted">
+        Revisadas{' '}
+        <strong>
+          {reviewed} de {answered.length}
+        </strong>
+      </span>
+      <progress max={answered.length || 1} value={reviewed} aria-label="Respostas revisadas" />
+    </div>
+  );
+};

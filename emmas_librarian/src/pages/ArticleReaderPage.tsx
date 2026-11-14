@@ -194,7 +194,7 @@ export const ArticleReaderPage: React.FC = () => {
     }
   };
 
-  // "Visualizar no Documento" from an investigation: open on the evidence's highlight, or on its page.
+  // "Abrir no PDF" from an investigation: open on the evidence's highlight, or on its page.
   const location = useLocation();
   const evidenceTarget = useMemo(() => evidenceTargetFrom(location.state), [location.state]);
   useEvidenceNavigation({ target: evidenceTarget, ready: !loading && !!pdfUrl, highlights, highlighterRef, goToPage });
