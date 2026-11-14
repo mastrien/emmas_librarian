@@ -1,5 +1,6 @@
 import React from 'react';
-import { X as XIcon } from 'lucide-react';
+import { Tag } from 'lucide-react';
+import { Modal } from '../common/Modal';
 import { CategoryCell } from '../common/CategoryCell';
 
 import { ProjectCategory, ArticleCategory } from '../../types';
@@ -13,6 +14,12 @@ interface FloatingCategoriesPanelProps {
   onCategorySaved?: () => void;
 }
 
+/**
+ * The article's categories in the reader, in the app's own window (a hand-made floating card before: validation,
+ * step 28). Each project category has its value editor; closes with the X or Esc.
+ *
+ * @example <FloatingCategoriesPanel articleId={4} isCategoriesOpen setIsCategoriesOpen={set} projectCategories={cats} articleCategories={mine} />
+ */
 export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = ({
   articleId,
   isCategoriesOpen,
@@ -21,59 +28,36 @@ export const FloatingCategoriesPanel: React.FC<FloatingCategoriesPanelProps> = (
   articleCategories,
   onCategorySaved,
 }) => {
+  if (!isCategoriesOpen) return null;
   return (
-    <div style={{ position: 'fixed', bottom: '2rem', left: '2rem', zIndex: 100 }}>
-      {isCategoriesOpen && (
-        <div
-          className="card fade-in"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            width: '300px',
-            background: 'var(--bg-main)',
-            padding: '1rem',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-heading)' }}>Categorias</h3>
-            <button
-              aria-label="Fechar painel de categorias"
-              onClick={() => setIsCategoriesOpen(false)}
-              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-            >
-              <XIcon size={16} />
-            </button>
-          </div>
-          {projectCategories.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>
-              Nenhuma categoria cadastrada.
-            </div>
-          ) : (
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '300px', overflowY: 'auto' }}
-            >
-              {projectCategories.map((cat) => {
-                const articleCat = articleCategories.find((ac: ArticleCategory) => ac.category_id === cat.id);
-                return (
-                  <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>
-                      {cat.name}
-                    </label>
-                    <CategoryCell
-                      articleId={articleId}
-                      category={cat}
-                      initialValue={articleCat?.value || ''}
-                      onCategorySaved={onCategorySaved}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          )}
+    <Modal
+      label="Categorias"
+      title="Categorias"
+      description="Os valores deste artigo em cada categoria do projeto."
+      icon={<Tag size={18} aria-hidden="true" />}
+      width={420}
+      onClose={() => setIsCategoriesOpen(false)}
+    >
+      {projectCategories.length === 0 ? (
+        <p style={{ margin: 0, color: 'var(--text-muted)' }}>Nenhuma categoria cadastrada.</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {projectCategories.map((cat) => {
+            const articleCat = articleCategories.find((ac: ArticleCategory) => ac.category_id === cat.id);
+            return (
+              <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>{cat.name}</span>
+                <CategoryCell
+                  articleId={articleId}
+                  category={cat}
+                  initialValue={articleCat?.value || ''}
+                  onCategorySaved={onCategorySaved}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
-    </div>
+    </Modal>
   );
 };

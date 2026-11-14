@@ -49,6 +49,7 @@ export function useSelection(rows: ReviewRow[], resetKey: string) {
     setIds(new Set());
   };
   const all = () => setIds(new Set(rows.map((r) => r.article.id)));
+  const none = () => setIds(new Set());
   return {
     selecting,
     selected,
@@ -57,6 +58,9 @@ export function useSelection(rows: ReviewRow[], resetKey: string) {
     start: () => setSelecting(true),
     exit,
     all,
+    none,
+    /** Every pending article is picked, so the same button takes them all back. */
+    allSelected: rows.length > 0 && selected.length === rows.length,
   };
 }
 
@@ -73,8 +77,8 @@ const BatchBar: React.FC<{ selection: Selection; labels: ScreeningLabel[]; onPic
       <strong aria-live="polite">
         {count === 0 ? 'Nenhum selecionado' : `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`}
       </strong>
-      <button type="button" className="review-small" onClick={selection.all}>
-        Selecionar todos
+      <button type="button" className="review-small" onClick={selection.allSelected ? selection.none : selection.all}>
+        {selection.allSelected ? 'Desmarcar todos' : 'Selecionar todos'}
       </button>
       <LabelMenu
         labels={labels}
