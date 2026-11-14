@@ -76,17 +76,6 @@ vi.mock('../../../components/modals/MassCitationModal', () => ({
       </div>
     ) : null,
 }));
-vi.mock('../../../components/modals/ArticleDetailsModal', () => ({
-  ArticleDetailsModal: ({ isOpen, onClose, onNavigateToSearch, onArticleUpdated, onAttachPdf }: any) =>
-    isOpen ? (
-      <div data-testid="ArticleDetailsModal">
-        <button onClick={() => onNavigateToSearch(1)}>Navigate Search</button>
-        <button onClick={onArticleUpdated}>Updated Article</button>
-        <button onClick={() => onAttachPdf({ id: 1 })}>Attach</button>
-        <button onClick={onClose}>Close Details</button>
-      </div>
-    ) : null,
-}));
 vi.mock('../../../components/modals/ImportArticlesModal', () => ({
   ImportArticlesModal: ({ isOpen, onClose, onImportComplete }: any) =>
     isOpen ? (
@@ -150,7 +139,6 @@ describe('ProjectModalsContainer', () => {
   const defaultProps = {
     projectId: 1,
     project: { id: 1 } as any,
-    articles: [{ id: 1, title: 'Test Article' }] as any[],
     projectDocuments: [],
     history: [],
     readArticles: [],
@@ -162,7 +150,6 @@ describe('ProjectModalsContainer', () => {
     handleRevertSearch: vi.fn(),
     showKeyAlert: false,
     setShowKeyAlert: vi.fn(),
-    onShowHistory: vi.fn(),
   };
 
   beforeEach(() => {
@@ -255,29 +242,6 @@ describe('ProjectModalsContainer', () => {
     expect(defaultProps.fetchData).toHaveBeenCalled();
     fireEvent.click(screen.getByText('Close Mass'));
     expect(defaultModalsState.setIsMassCitationModalOpen).toHaveBeenCalledWith(false);
-  });
-
-  it('renders and handles ArticleDetailsModal with finding article', () => {
-    renderComponent({ modals: { ...defaultModalsState, selectedArticleForDetails: { id: 1 } } });
-    expect(screen.getByTestId('ArticleDetailsModal')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('Navigate Search'));
-    expect(defaultModalsState.setSelectedArticleForDetails).toHaveBeenCalledWith(null);
-    expect(defaultProps.onShowHistory).toHaveBeenCalled();
-
-    fireEvent.click(screen.getByText('Updated Article'));
-    expect(defaultProps.fetchData).toHaveBeenCalled();
-
-    fireEvent.click(screen.getByText('Attach'));
-    expect(defaultModalsState.setAttachPdfArticle).toHaveBeenCalledWith({ id: 1 });
-
-    fireEvent.click(screen.getByText('Close Details'));
-    expect(defaultModalsState.setSelectedArticleForDetails).toHaveBeenCalledWith(null);
-  });
-
-  it('renders and handles ArticleDetailsModal without finding article in list', () => {
-    renderComponent({ modals: { ...defaultModalsState, selectedArticleForDetails: { id: 999 } } });
-    expect(screen.getByTestId('ArticleDetailsModal')).toBeInTheDocument();
   });
 
   it('renders and handles ImportArticlesModal', () => {

@@ -286,3 +286,40 @@ describe('ProjectDetailsPage PDF links', () => {
     expect(screen.getByText('Artigo sem PDF', { selector: 'strong' })).toBeInTheDocument();
   });
 });
+
+// Board 153: the details are a panel beside the table, following the keyboard.
+describe('ProjectDetailsPage article details panel', () => {
+  const articles = [article({ id: 1, title: 'Artigo um' }), article({ id: 2, title: 'Artigo dois' })];
+  const panel = () => screen.queryByRole('complementary', { name: 'Detalhes do artigo' });
+
+  it('opens beside the table from the title and closes with Escape', async () => {
+    await renderProjectPage(givenProject(articles));
+
+    fireEvent.click(within(mainTable()).getByRole('button', { name: 'Artigo um' }));
+
+    expect(within(panel() as HTMLElement).getByRole('heading', { name: 'Artigo um' })).toBeInTheDocument();
+    expect(mainTable()).toBeInTheDocument();
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(panel()).not.toBeInTheDocument();
+  });
+
+  it('opens with Space on the current row and follows J', async () => {
+    await renderProjectPage(givenProject(articles));
+    // Whatever the saved order: the panel shows the row the keyboard is on.
+    const currentTitle = () =>
+      within(mainTable()).getByRole('row', { current: true }).querySelector('.article-title')?.textContent;
+    const panelTitle = () => within(panel() as HTMLElement).getByRole('heading', { level: 2 }).textContent;
+
+    fireEvent.keyDown(document.body, { key: 'j' });
+    fireEvent.keyDown(document.body, { key: ' ' });
+    expect(panelTitle()).toBe(currentTitle());
+    const first = panelTitle();
+
+    fireEvent.keyDown(document.body, { key: 'j' });
+    expect(panelTitle()).toBe(currentTitle());
+    expect(panelTitle()).not.toBe(first);
+
+    fireEvent.keyDown(document.body, { key: ' ' });
+    expect(panel()).not.toBeInTheDocument();
+  });
+});

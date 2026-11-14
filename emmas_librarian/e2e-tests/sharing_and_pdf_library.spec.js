@@ -106,14 +106,14 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
     // Wait for article to appear in the table before interacting
     await window.waitForSelector('text="Article with PDF A"', { timeout: 10000 });
 
-    // Upload PDF for Article A — open details modal first
-    await window.click('text="Article with PDF A"');
-    await window.waitForSelector('button:has-text("Anexar PDF")', { timeout: 5000 });
-    await window.click('button:has-text("Anexar PDF")');
+    // Upload PDF for Article A — from the details panel (board 153)
+    const details = window.getByRole('complementary', { name: 'Detalhes do artigo' });
+    await window.getByTestId('main-articles-table').getByRole('button', { name: 'Article with PDF A' }).click();
+    await details.getByRole('button', { name: /Vincular PDF/ }).click();
     await window.waitForSelector('button:has-text("Upload do Computador")', { timeout: 5000 });
     await window.click('button:has-text("Upload do Computador")');
-    await window.waitForSelector('text="Visualizar PDF"', { timeout: 10000 });
-    await window.getByRole('dialog', { name: 'Detalhes do artigo' }).getByRole('button', { name: 'Fechar' }).click();
+    await expect(details.getByRole('link', { name: /Ler PDF/ })).toBeVisible({ timeout: 10000 });
+    await details.getByRole('button', { name: 'Fechar detalhes' }).click();
 
     // 2. Go to PDF Library Page
     await navigateTo(window, 'Biblioteca de PDFs');
@@ -151,9 +151,8 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
     await window.waitForSelector('text="Article with PDF B"', { timeout: 10000 });
 
     // Link existing PDF from Library to Article B
-    await window.click('text="Article with PDF B"');
-    await window.waitForSelector('button:has-text("Anexar PDF")', { timeout: 5000 });
-    await window.click('button:has-text("Anexar PDF")');
+    await window.getByTestId('main-articles-table').getByRole('button', { name: 'Article with PDF B' }).click();
+    await details.getByRole('button', { name: /Vincular PDF/ }).click();
     await window.waitForSelector('button:has-text("Selecionar da Biblioteca")', { timeout: 5000 });
     await window.click('button:has-text("Selecionar da Biblioteca")');
 
@@ -162,8 +161,8 @@ test('F-16 Global PDF Library and Deduplicated Reuse', async () => {
       timeout: 10000,
     });
     await window.click(`div:has-text("${pdfFilename}") button[title="Vincular este PDF"]`);
-    await window.waitForSelector('text="Visualizar PDF"', { timeout: 10000 });
-    await window.getByRole('dialog', { name: 'Detalhes do artigo' }).getByRole('button', { name: 'Fechar' }).click();
+    await expect(details.getByRole('link', { name: /Ler PDF/ })).toBeVisible({ timeout: 10000 });
+    await details.getByRole('button', { name: 'Fechar detalhes' }).click();
 
     // 4. Return to PDF Library and verify reference count is 2 (scoped to unique pdfRow)
     await navigateTo(window, 'Biblioteca de PDFs');

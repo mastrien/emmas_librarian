@@ -46,6 +46,8 @@ function renderTab({ articles, pageSize = 50 }: HarnessProps) {
     onStatusChangeMany: vi.fn(),
     onUnlinkPdf: vi.fn(),
     onAttachPdf: vi.fn(),
+    history: [],
+    onShowHistory: vi.fn(),
   };
   const service = FakeProjectService.create();
   const reload = vi.fn(async () => undefined);
