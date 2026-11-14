@@ -60,9 +60,9 @@ export const BASE_POLICIES: readonly BasePolicy[] = [
     name: 'Scopus',
     tone: 'restricted',
     badge: 'Restritivo',
-    text: 'A chave sozinha não dá acesso: é preciso a assinatura da sua instituição. Pelas políticas de uso da API, a pesquisa acadêmica com dados da Scopus é só não comercial, feita por representante aprovado da instituição, limitada a uma disciplina (não se minera a base inteira) e com a Scopus citada como fonte. Os dados baixados só podem ser guardados para arquivo e para reproduzir os resultados, e usá-los fora da pesquisa original não é permitido. A Elsevier reserva os direitos de mineração e de treinamento de IA. Mandar resumos da Scopus a uma IA externa não é coberto por essas políticas: não faça sem autorização.',
-    linkLabel: 'Políticas de uso da API da Elsevier',
-    href: 'https://dev.elsevier.com/policy.html',
+    text: 'A chave sozinha não dá acesso: é preciso a assinatura da sua instituição. O contrato da API só admite usar o conteúdo com uma IA se ela rodar num ambiente fechado e corporativo, só para uso individual, sem treinar IA externa, sem dar acesso a terceiros e sem guardar localmente nem reproduzir o conteúdo, inclusive as respostas geradas. Mandar resumos da Scopus a um provedor de IA externo (Gemini, OpenAI, Anthropic) ou guardar as respostas no app foge disso, e quem responde é você. Além disso, a pesquisa com a Scopus é só não comercial, limitada a uma disciplina, e os dados baixados só valem para arquivo e para reproduzir os resultados.',
+    linkLabel: 'Contrato da API da Elsevier',
+    href: 'https://dev.elsevier.com/api_service_agreement.html',
   },
   {
     name: 'Web of Science',
