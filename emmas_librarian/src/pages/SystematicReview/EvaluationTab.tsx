@@ -195,8 +195,8 @@ export const EvaluationTab: React.FC<{ projectId: number; screening: ScreeningSt
       <ExperimentalTag reason="A avaliação ainda não foi usada numa triagem real. Os números valem para este projeto e dependem de quantos relevantes ele tem." />
       <p style={{ margin: 0, maxWidth: '72ch' }}>
         Compara os motores com as suas decisões de título e resumo. A IA não vê essas decisões, só título, resumo e
-        critérios. Para comparar outro motor, troque o modelo em <Link to="/settings/ai">Configurações</Link> e avalie de
-        novo: os resultados ficam lado a lado.
+        critérios. Para comparar outro motor, troque o modelo em <Link to="/settings/ai">Configurações</Link> e avalie
+        de novo: os resultados ficam lado a lado.
       </p>
       <EvaluationChecklist
         projectId={projectId}
