@@ -13,6 +13,8 @@ import { CITATION_STYLE_OPTIONS } from '../common/citation/citationStyles';
 import { useCitationCopy } from '../common/citation/useCitationCopy';
 import { useDialogs } from '../common/dialogs/DialogProvider';
 import { Modal } from '../common/Modal';
+import { ModalFooter } from '../common/ModalFooter';
+import { Button } from '../common/Button';
 
 interface CitationModalProps {
   isOpen: boolean;
@@ -73,7 +75,7 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
   const setField = (field: keyof CitationFields, value: string) => setFields({ ...fields, [field]: value });
 
   return (
-    <Modal label="Gerar Citação" title="Gerar Citação" onClose={onClose} width={700}>
+    <Modal label="Citar artigo" title="Citar artigo" description={article.title} onClose={onClose} width={700}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div>
@@ -225,10 +227,11 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
             </button>
           </div>
 
-          <div style={{ position: 'relative' }}>
+          <div>
             <div
+              data-testid="citation-preview"
               style={{
-                padding: '1.5rem 1.5rem 4rem 1.5rem',
+                padding: '1.5rem',
                 background: 'var(--bg-main)',
                 border: '1px solid var(--border-color)',
                 borderRadius: 'var(--radius-md)',
@@ -243,24 +246,19 @@ export function CitationModal({ isOpen, onClose, article, onArticleUpdated }: Ci
             >
               {format === 'html' ? <div dangerouslySetInnerHTML={{ __html: citationText }} /> : citationText}
             </div>
-            <button
-              onClick={() => copy([citationText], format)}
-              className="btn-primary"
-              style={{
-                position: 'absolute',
-                bottom: '1rem',
-                right: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              {copied ? <Check size={16} /> : <Copy size={16} />}
-              {copied ? 'Copiado!' : 'Copiar'}
-            </button>
           </div>
         </div>
       </div>
+      <ModalFooter>
+        <Button
+          variant="primary"
+          className={copied ? 'app-modal-copied' : undefined}
+          onClick={() => copy([citationText], format)}
+        >
+          {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+          {copied ? 'Copiado!' : 'Copiar'}
+        </Button>
+      </ModalFooter>
     </Modal>
   );
 }

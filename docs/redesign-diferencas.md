@@ -140,6 +140,17 @@ Feito: **Editar metadados** (grupos Identificação, Publicação e Resumo, Ctrl
 - [ ] **Editar metadados**: o autor do board é um campo de chips ("Hersbach, H." etc., "+38"); o app mantém um campo de texto com ";" entre os nomes. "Preencher com IA" continua no alto da janela.
 - [ ] O texto "Por que este artigo não é relevante?" do campo de motivo virou "ex.: fora do escopo", como no board, e o rótulo "Motivo (opcional)" ficou só para leitores de tela.
 
+## 177 · Janelas de citação (#182)
+
+Feito: **Citar artigo** (título "Citar artigo" com o título do artigo embaixo; "Copiar" na barra de baixo, que fica verde com "Copiado!"); **Citar N artigos** (título com a contagem, "Copiar tudo" na barra de baixo); **Explorar citações** com a barra de baixo ("Cancelar", "Buscar").
+
+- [ ] **Estilos**: o board tem um controle ABNT / APA / BibTeX / RIS; o app mantém o seletor de estilo com todos os estilos que já tinha, e a forma de exibição (HTML, texto, BibTeX) como botões. Trocar pelos quatro do board tiraria estilos que o app oferece.
+- [ ] **"Lembra o último formato"** (dica do board) não existe no app: ele não guarda a escolha.
+- [ ] **Baixar .bib** (citação em massa) não existe; é recurso novo.
+- [ ] **Citação em massa** cita os artigos lidos do projeto, não "os selecionados na lista"; o subtítulo diz isso. A ordem tem seletor (autor ou ano), não só a alfabética do board.
+- [ ] **Explorar citações** no board mostra a lista de referências/quem cita dentro da janela, com "Adicionar" por artigo; o app mostra o volume e passa pelo resumo da busca (decisão do #51: nada entra sem revisão). Só a barra de baixo foi refeita.
+- [ ] O bloco da citação continua com o estilo de antes (sem a fonte serifada do board); o metadado editável segue no acordeão.
+
 ## Próximas telas (este documento ganha uma seção por PR)
 
 175–181 Janelas (restante)

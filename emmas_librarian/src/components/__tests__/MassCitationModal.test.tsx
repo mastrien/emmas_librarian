@@ -72,12 +72,12 @@ describe('MassCitationModal', () => {
 
   it('does not render when isOpen is false', () => {
     renderWithDialogs(<MassCitationModal isOpen={false} onClose={vi.fn()} articles={mockArticles} />);
-    expect(screen.queryByText('Citação em Massa (Artigos Lidos)')).toBeNull();
+    expect(screen.queryByRole('heading', { name: /^Citar \d+ artigos?$/ })).toBeNull();
   });
 
   it('renders correctly and lists citations', () => {
     renderWithDialogs(<MassCitationModal isOpen={true} onClose={vi.fn()} articles={mockArticles} />);
-    expect(screen.getByText('Citação em Massa (Artigos Lidos)')).toBeDefined();
+    expect(screen.getByRole('heading', { name: /^Citar \d+ artigos?$/ })).toBeDefined();
 
     const items = screen.getAllByText(/Article/);
     expect(items).toHaveLength(2);

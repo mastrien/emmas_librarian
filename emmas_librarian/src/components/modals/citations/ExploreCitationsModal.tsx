@@ -10,6 +10,8 @@ import {
 } from '../../../utils/citationSeeds';
 import { describeError } from '../../../utils/describeError';
 import { SearchSummaryModal } from '../SearchSummaryModal';
+import { ModalFooter } from '../../common/ModalFooter';
+import { Button } from '../../common/Button';
 import { Modal } from '../../common/Modal';
 
 interface ExploreCitationsModalProps {
@@ -207,19 +209,14 @@ export const ExploreCitationsModal: React.FC<ExploreCitationsModalProps> = ({
           {run.error}
         </div>
       )}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-        <button type="button" className="btn-secondary" onClick={onClose}>
+      <ModalFooter>
+        <Button variant="ghost" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          type="button"
-          className="btn-primary"
-          disabled={!canSearch}
-          onClick={() => void run.search(directions, limit)}
-        >
+        </Button>
+        <Button variant="primary" disabled={!canSearch} onClick={() => void run.search(directions, limit)}>
           {run.busy ? <Loader2 size={16} className="spin" aria-hidden="true" /> : null} Buscar
-        </button>
-      </div>
+        </Button>
+      </ModalFooter>
     </Modal>
   );
 };
