@@ -1,6 +1,6 @@
 import { IpcChannel } from '../../types';
-import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import { InvestigationAuditRepository } from '../../database/InvestigationAuditRepository';
+import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
+import { InvestigationAuditRepository } from '../../../core/database/InvestigationAuditRepository';
 import type { AuditParams } from '../../../src/utils/auditSampling';
 import { handle, type IpcRegistrar } from './handle';
 

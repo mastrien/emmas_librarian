@@ -1,10 +1,10 @@
 import { IpcChannel } from '../../types';
-import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import { LlmScreeningEngine, type ScreeningCompletion } from '../../services/screening/ScreeningEngine';
+import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
+import { LlmScreeningEngine, type ScreeningCompletion } from '../../../core/services/screening/ScreeningEngine';
 import {
   ScreeningSuggestionService,
   type SuggestionSources,
-} from '../../services/screening/ScreeningSuggestionService';
+} from '../../../core/services/screening/ScreeningSuggestionService';
 import type { ScreeningCriteria, ScreeningEngineInfo } from '../../../src/types/screeningSuggestion';
 import { handle, type IpcRegistrar } from './handle';
 

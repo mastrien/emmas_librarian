@@ -4,7 +4,7 @@ import path from 'path';
 import { gunzipSync } from 'zlib';
 import Database from 'better-sqlite3';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import { UpdateSafetyService } from '../UpdateSafetyService';
 
 vi.mock('electron', () => ({ safeStorage: {} }));

@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const adapterContent = fs.readFileSync('electron/database/DatabaseAdapter.ts', 'utf8');
+const adapterContent = fs.readFileSync('core/database/DatabaseAdapter.ts', 'utf8');
 
 const lines = adapterContent.split('\n');
 const initSchemaEndIndex = lines.findIndex((line) => line.includes('// Projects')) - 1;
@@ -173,5 +173,5 @@ newAdapter += `
 }
 `;
 
-fs.writeFileSync('electron/database/DatabaseAdapter.ts', newAdapter);
+fs.writeFileSync('core/database/DatabaseAdapter.ts', newAdapter);
 console.log('DatabaseAdapter successfully refactored.');

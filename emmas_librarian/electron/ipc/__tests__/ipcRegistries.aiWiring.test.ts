@@ -5,19 +5,23 @@ import { resetIpcHarness, aiServiceConstructions, USER_DATA } from './fakes/ipcH
 
 vi.mock('electron', () => import('./fakes/ipcHarness').then((h) => h.electronModule));
 vi.mock('fs', () => import('./fakes/ipcHarness').then((h) => h.fsModule));
-vi.mock('../../database/DatabaseAdapter', () => import('./fakes/ipcHarness').then((h) => h.databaseAdapterModule));
-vi.mock('../../database/ScientificVenueRepository', () =>
+vi.mock('../../../core/database/DatabaseAdapter', () =>
+  import('./fakes/ipcHarness').then((h) => h.databaseAdapterModule),
+);
+vi.mock('../../../core/database/ScientificVenueRepository', () =>
   import('./fakes/ipcHarness').then((h) => h.venueRepositoryModule),
 );
-vi.mock('../../database/SyncService', () => import('./fakes/ipcHarness').then((h) => h.syncServiceModule));
-vi.mock('../../services/SearchOrchestrator', () =>
+vi.mock('../../../core/database/SyncService', () => import('./fakes/ipcHarness').then((h) => h.syncServiceModule));
+vi.mock('../../../core/services/SearchOrchestrator', () =>
   import('./fakes/ipcHarness').then((h) => h.searchOrchestratorModule),
 );
-vi.mock('../../services/QueryTranslator', () => import('./fakes/ipcHarness').then((h) => h.queryTranslatorModule));
-vi.mock('../../services/ApiIntegrator', () => import('./fakes/ipcHarness').then((h) => h.apiIntegratorModule));
-vi.mock('../../services/ExportService', () => import('./fakes/ipcHarness').then((h) => h.exportServiceModule));
-vi.mock('../../services/AIService', () => import('./fakes/ipcHarness').then((h) => h.aiServiceModule));
-vi.mock('../../services/BackupService', () => import('./fakes/ipcHarness').then((h) => h.backupServiceModule));
+vi.mock('../../../core/services/QueryTranslator', () =>
+  import('./fakes/ipcHarness').then((h) => h.queryTranslatorModule),
+);
+vi.mock('../../../core/services/ApiIntegrator', () => import('./fakes/ipcHarness').then((h) => h.apiIntegratorModule));
+vi.mock('../../../core/services/ExportService', () => import('./fakes/ipcHarness').then((h) => h.exportServiceModule));
+vi.mock('../../../core/services/AIService', () => import('./fakes/ipcHarness').then((h) => h.aiServiceModule));
+vi.mock('../../../core/services/BackupService', () => import('./fakes/ipcHarness').then((h) => h.backupServiceModule));
 
 describe('setupIpcRegistries: AI service wiring', () => {
   beforeEach(() => {

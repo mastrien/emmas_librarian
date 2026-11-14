@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { shell } from 'electron';
 import { IpcChannel } from '../../types';
-import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import { handle, type IpcRegistrar } from './handle';
-import { ensureStorageDir } from './pdfStorage';
+import { ensureStorageDir } from '../../../core/services/pdfStorage';
 
 type Optional<T> = T | null | undefined;
 

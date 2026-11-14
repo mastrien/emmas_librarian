@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import { registerSearchMonitorHandlers } from '../handlers/searchMonitorHandlers';
 import { IpcChannel } from '../../types';
-import type { SearchMonitorService } from '../../services/SearchMonitorService';
+import type { SearchMonitorService } from '../../../core/services/SearchMonitorService';
 import { FakeIpcMain } from './fakes/FakeIpcMain';
 
 vi.mock('electron', () => ({ safeStorage: {}, app: { isPackaged: false } }));

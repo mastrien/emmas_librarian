@@ -1,6 +1,6 @@
 import { IpcChannel } from '../../types';
-import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import type { SearchMonitorService } from '../../services/SearchMonitorService';
+import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
+import type { SearchMonitorService } from '../../../core/services/SearchMonitorService';
 import type { MonitorInterval } from '../../../src/utils/searchMonitor';
 import { handle, type IpcRegistrar } from './handle';
 

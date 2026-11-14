@@ -1,11 +1,11 @@
 import { IpcChannel } from '../../types';
-import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import {
   ScreeningOrderService,
   type ScreeningOrderSources,
   type TextEmbedder,
-} from '../../services/screening/ScreeningOrderService';
-import { ClassifierEvaluationService } from '../../services/screening/ClassifierEvaluationService';
+} from '../../../core/services/screening/ScreeningOrderService';
+import { ClassifierEvaluationService } from '../../../core/services/screening/ClassifierEvaluationService';
 import { handle, type IpcRegistrar } from './handle';
 
 /** The embedding model set in the settings. */

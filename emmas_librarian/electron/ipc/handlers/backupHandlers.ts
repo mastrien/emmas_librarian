@@ -1,7 +1,7 @@
 import { app } from 'electron';
 import { IpcChannel } from '../../types';
-import type { SyncService } from '../../database/SyncService';
-import type { BackupService } from '../../services/BackupService';
+import type { SyncService } from '../../../core/database/SyncService';
+import type { BackupService } from '../../../core/services/BackupService';
 import { handle, type IpcRegistrar } from './handle';
 
 /**

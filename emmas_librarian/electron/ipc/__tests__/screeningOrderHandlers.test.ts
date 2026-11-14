@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import { registerScreeningOrderHandlers } from '../handlers/screeningOrderHandlers';
 import { IpcChannel } from '../../types';
 import type { ScreeningRank } from '../../../src/types/screeningOrder';

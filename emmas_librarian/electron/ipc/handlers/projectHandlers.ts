@@ -1,8 +1,8 @@
 import { IpcChannel, type QueryASTNode, type QuerySort } from '../../types';
 import type { CitationRequest, CitationSeed } from '../../../src/types';
-import { queryTranslator } from '../../services/QueryTranslator';
-import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import type { SearchOrchestrator } from '../../services/SearchOrchestrator';
+import { queryTranslator } from '../../../core/services/QueryTranslator';
+import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
+import type { SearchOrchestrator } from '../../../core/services/SearchOrchestrator';
 import { AppError } from '../errorHandler';
 import { handle, type IpcRegistrar } from './handle';
 import type { SearchLimits } from '../../../src/utils/searchLimits';

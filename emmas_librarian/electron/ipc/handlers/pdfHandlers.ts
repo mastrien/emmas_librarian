@@ -1,10 +1,10 @@
 import fs from 'fs';
 import { IpcChannel } from '../../types';
-import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import { handle, type IpcRegistrar } from './handle';
-import { savePdfToStorage } from './pdfStorage';
-import type { OpenAccessService } from '../../services/openAccess/OpenAccessService';
-import { openAccessServiceFor } from '../../services/openAccess/openAccessServiceFor';
+import { savePdfToStorage } from '../../../core/services/pdfStorage';
+import type { OpenAccessService } from '../../../core/services/openAccess/OpenAccessService';
+import { openAccessServiceFor } from '../../../core/services/openAccess/openAccessServiceFor';
 
 /**
  * Article PDFs and the global PDF library (upload, read, link, unlink, delete).

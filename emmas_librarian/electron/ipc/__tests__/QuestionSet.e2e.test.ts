@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import { setupAiIpcHandlers } from '../aiIpcHandlers';
-import { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import fs from 'fs';
 import path from 'path';
 import { IpcChannel } from '../../types';
@@ -33,7 +33,7 @@ describe('QuestionSet E2E Integration', () => {
     db = new Database(':memory:');
 
     // Apply schema
-    const schemaPath = path.join(__dirname, '../../database/schema.sql');
+    const schemaPath = path.join(__dirname, '../../../core/database/schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf-8');
     db.exec(schema);
 

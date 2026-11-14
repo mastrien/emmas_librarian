@@ -1,14 +1,14 @@
 import { ipcMain } from 'electron';
 import fs from 'fs';
 import { withErrorHandling } from './errorHandler';
-import { DatabaseAdapter } from '../database/DatabaseAdapter';
-import { AIService } from '../services/AIService';
-import { QuestionSetRepository } from '../database/QuestionSetRepository';
-import { InvestigationResultRepository } from '../database/InvestigationResultRepository';
-import { AIModelConfigRepository } from '../database/AIModelConfigRepository';
+import { DatabaseAdapter } from '../../core/database/DatabaseAdapter';
+import { AIService } from '../../core/services/AIService';
+import { QuestionSetRepository } from '../../core/database/QuestionSetRepository';
+import { InvestigationResultRepository } from '../../core/database/InvestigationResultRepository';
+import { AIModelConfigRepository } from '../../core/database/AIModelConfigRepository';
 import { IpcChannel } from '../types';
 import type { AISkill, AIProvider, ResultReview } from '../types';
-import type { InvestigationResultInput } from '../database/InvestigationResultRepository';
+import type { InvestigationResultInput } from '../../core/database/InvestigationResultRepository';
 
 export function setupAiIpcHandlers(db: DatabaseAdapter, aiService: AIService, ipcMainModule: typeof ipcMain = ipcMain) {
   const qsRepo = new QuestionSetRepository(db.getDB());

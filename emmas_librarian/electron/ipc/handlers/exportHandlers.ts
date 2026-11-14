@@ -1,14 +1,14 @@
 import fs from 'fs';
 import { dialog } from 'electron';
 import { IpcChannel, type Project, type SearchHistoryItem } from '../../types';
-import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import type { ExportService } from '../../services/ExportService';
+import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
+import type { ExportService } from '../../../core/services/ExportService';
 import {
   searchReportMarkdown,
   searchReportRows,
   searchReportXlsx,
   type SearchReportFormat,
-} from '../../services/SearchReportService';
+} from '../../../core/services/SearchReportService';
 import { handle, type IpcRegistrar } from './handle';
 
 export interface SaveTarget {

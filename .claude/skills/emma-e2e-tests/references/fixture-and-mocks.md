@@ -35,11 +35,11 @@ await openReader(window);                                // details → "Visuali
 | `E2E_MOCK_OPEN_FILE` | Path returned by the single-file open dialog (PDF attach) |
 | `E2E_MOCK_OPEN_MULTIPLE_FILES` | `;`-separated paths returned by the multi-file dialog (batch PDF import) |
 | `E2E_MOCK_SAVE_FILE_PATH` | Target of save dialogs: CSV/XLSX/Biblioshiny/text exports, "Pacote .emmapcarc" and "Criar Backup Completo" |
-| `E2E_MOCK_OPEN_ACCESS_PDF` | Path of a PDF: every open access lookup (OpenAlex) finds one repository copy, "Repositório E2E", that downloads this file (`electron/services/openAccess/e2eMockHttpClient.ts`) |
+| `E2E_MOCK_OPEN_ACCESS_PDF` | Path of a PDF: every open access lookup (OpenAlex) finds one repository copy, "Repositório E2E", that downloads this file (`core/services/openAccess/e2eMockHttpClient.ts`) |
 | `E2E_MOCK_PROJECT_FILE` | `.emmapcarc` chosen by "Importar" on the Dashboard (project sharing) |
 | `E2E_MOCK_BACKUP_FILE` | `.emmabak` chosen by "Restaurar e Sobrescrever" / "Importar e Mesclar" |
-| `E2E_MOCK_SEARCH=true` | Bibliographic search uses `electron/services/E2eMockApiIntegrator.ts`: OpenAlex returns one fixed article ("Aprendizado de Maquina E2E"), other bases none. The review dialog appears; click "Salvar no projeto" to persist |
-| `E2E_MOCK_AI_ASK=true` | "Perguntar aos projetos" uses `electron/services/projectQuestion/e2eAskModels.ts` instead of AI providers: indexing, search and saving stay real, and the answer has one checked and one invented statement. Screening suggestions use `electron/services/screening/e2eScreeningModel.ts` under the same variable, and the predicted order of the screening uses the same embedder |
+| `E2E_MOCK_SEARCH=true` | Bibliographic search uses `core/services/E2eMockApiIntegrator.ts`: OpenAlex returns one fixed article ("Aprendizado de Maquina E2E"), other bases none. The review dialog appears; click "Salvar no projeto" to persist |
+| `E2E_MOCK_AI_ASK=true` | "Perguntar aos projetos" uses `core/services/projectQuestion/e2eAskModels.ts` instead of AI providers: indexing, search and saving stay real, and the answer has one checked and one invented statement. Screening suggestions use `electron/services/screening/e2eScreeningModel.ts` under the same variable, and the predicted order of the screening uses the same embedder |
 | `E2E_MOCK_AI_EXTRACTION=true` | Mass AI extraction returns a canned answer (shape differs from `RAGExtractionResult`; the UI answer is not asserted yet) |
 | `E2E_MOCK_RECOVERY_CHOICE` | Button index that answers the post-update recovery box (0 restore, 1 download, 2 copy report, 3 quit) and the boxes that follow; each box's title and detail go to the main process stdout as `[E2E recovery dialog] …` (read it with `app.process().stdout`) |
 | `E2E_ELECTRON_ARGS` | Extra switches for the Electron launch in `launchApp` (space-separated), e.g. `--no-sandbox` (see pitfalls) |

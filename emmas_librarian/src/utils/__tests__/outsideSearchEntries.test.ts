@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { isOutsideSearchBreakdown, outsideSearchIds } from '../outsideSearchEntries';
-import { DatabaseAdapter } from '../../../electron/database/DatabaseAdapter';
+import { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import { registerArticleHandlers } from '../../../electron/ipc/handlers/articleHandlers';
 import { IpcChannel } from '../../types';
 

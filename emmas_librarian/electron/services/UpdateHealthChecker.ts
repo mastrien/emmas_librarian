@@ -1,4 +1,4 @@
-import type { DatabaseAdapter } from '../database/DatabaseAdapter';
+import type { DatabaseAdapter } from '../../core/database/DatabaseAdapter';
 import type { UpdateSafetyService } from './UpdateSafetyService';
 import type { HealthCheckResult, UpdateStateRecord } from './UpdateTypes';
 

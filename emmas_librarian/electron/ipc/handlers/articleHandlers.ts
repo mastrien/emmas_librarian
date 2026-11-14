@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { IpcChannel, type Article } from '../../types';
-import type { ArticleInput, DatabaseAdapter } from '../../database/DatabaseAdapter';
+import type { ArticleInput, DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import { handle, type IpcRegistrar } from './handle';
-import { ensureStorageDir, savePdfToStorage } from './pdfStorage';
+import { ensureStorageDir, savePdfToStorage } from '../../../core/services/pdfStorage';
 import { OUTSIDE_SEARCH_BASES } from '../../../src/utils/outsideSearchEntries';
 
 type ManualArticleData = Partial<Omit<Article, 'year'>> & { title: string; year?: string | number };

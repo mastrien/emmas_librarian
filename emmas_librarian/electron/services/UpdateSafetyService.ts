@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { gzipSync, gunzipSync } from 'zlib';
-import type { DatabaseAdapter } from '../database/DatabaseAdapter';
+import type { DatabaseAdapter } from '../../core/database/DatabaseAdapter';
 import type { SnapshotCreationResult, SnapshotRestoreResult, UpdateStateRecord } from './UpdateTypes';
 
 export type SafetyDatabase = Pick<DatabaseAdapter, 'checkpoint' | 'close'>;

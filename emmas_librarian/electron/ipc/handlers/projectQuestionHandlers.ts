@@ -1,6 +1,6 @@
 import { IpcChannel } from '../../types';
-import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import { buildAskServices, type AskModels, type AskServices } from '../../services/projectQuestion/askServices';
+import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
+import { buildAskServices, type AskModels, type AskServices } from '../../../core/services/projectQuestion/askServices';
 import type { AskIndexProgress, AskIndexResult, AskIndexTarget, AskQuestionInput } from '../../../src/types/ask';
 import { handle, type IpcRegistrar } from './handle';
 

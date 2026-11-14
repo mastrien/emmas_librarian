@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { IpcChannel } from '../../types';
-import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import { registerPdfHandlers } from '../handlers/pdfHandlers';
 import { FakeIpcMain } from './fakes/FakeIpcMain';
 

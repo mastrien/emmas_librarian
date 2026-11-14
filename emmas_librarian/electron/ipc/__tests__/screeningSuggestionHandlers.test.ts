@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import { registerScreeningSuggestionHandlers } from '../handlers/screeningSuggestionHandlers';
 import { IpcChannel } from '../../types';
 import type { ScreeningSuggestion } from '../../../src/types/screeningSuggestion';

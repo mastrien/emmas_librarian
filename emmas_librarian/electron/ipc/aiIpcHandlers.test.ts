@@ -33,15 +33,15 @@ const mockAmcRepo = {
   restoreDefaults: vi.fn(),
 };
 
-vi.mock('../database/QuestionSetRepository', () => ({
+vi.mock('../../core/database/QuestionSetRepository', () => ({
   QuestionSetRepository: vi.fn(() => mockQsRepo),
 }));
 
-vi.mock('../database/InvestigationResultRepository', () => ({
+vi.mock('../../core/database/InvestigationResultRepository', () => ({
   InvestigationResultRepository: vi.fn(() => mockIrRepo),
 }));
 
-vi.mock('../database/AIModelConfigRepository', () => ({
+vi.mock('../../core/database/AIModelConfigRepository', () => ({
   AIModelConfigRepository: vi.fn(() => mockAmcRepo),
 }));
 

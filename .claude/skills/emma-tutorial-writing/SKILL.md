@@ -251,7 +251,7 @@ Capítulo zero (Introdução), 2026-09-24. O autor aprovou o tom do rascunho e p
 - **Verifique no código antes de perguntar.** `[CONFIRMAR]` é só para o que o código
   não responde (comportamento do Windows, planos futuros, intenção). O que está no
   código (ex.: o que vai dentro de um `.emmapcarc`, em
-  `electron/database/backup/projectRows.ts`) deve ser lido, não perguntado.
+  `core/database/backup/projectRows.ts`) deve ser lido, não perguntado.
 - **Processos externos longos (ex.: gerar chave de API):** pesquise, resuma em
   poucos passos e deixe os links oficiais, em vez de descrever tela por tela.
 - **Não repita o mesmo fechamento em todo capítulo.** "E é isso!" é a marca dele,

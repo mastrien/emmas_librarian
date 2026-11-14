@@ -62,7 +62,7 @@ const adapter = new DatabaseAdapter(':memory:'); // runs the real schema + migra
 afterEach(() => adapter.close());
 ```
 For file-based scenarios (backups, legacy DB migrations) create the DB in `fs.mkdtempSync(path.join(os.tmpdir(), 'x-'))`.
-`electron/database/__tests__/support/fullProjectFixture.ts` seeds a project with a row in every table and
+`core/database/__tests__/support/fullProjectFixture.ts` seeds a project with a row in every table and
 `expectFullProjectCopied(db, id)` checks every column and remapped foreign key — use it for anything that copies
 projects (import, export, merge).
 

@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import { VectorStore } from '../../services/VectorStore';
+import { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
+import { VectorStore } from '../../../core/services/VectorStore';
 import { registerProjectQuestionHandlers } from '../handlers/projectQuestionHandlers';
 import { IpcChannel } from '../../types';
 import type { AskConversation, AskConversationSummary, ProjectIndexCoverage } from '../../../src/types/ask';
-import { FakeAnswerModel, FakeEmbedder } from '../../services/projectQuestion/__tests__/fakes';
+import { FakeAnswerModel, FakeEmbedder } from '../../../core/services/projectQuestion/__tests__/fakes';
 import { FakeIpcMain } from './fakes/FakeIpcMain';
 
 vi.mock('electron', () => ({ safeStorage: {}, app: { isPackaged: false } }));
 
-vi.mock('../../services/PdfExtractor', () => ({
+vi.mock('../../../core/services/PdfExtractor', () => ({
   extractTextWithCoordinates: vi.fn(async () => {
     await pdfRead.wait;
     return { chunks: [{ text: 'do pdf', page: 1, bbox: { x: 0, y: 0, w: 1, h: 1 } }] };

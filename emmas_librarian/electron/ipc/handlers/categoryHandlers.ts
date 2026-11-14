@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { dialog } from 'electron';
 import { IpcChannel } from '../../types';
-import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
+import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import { parseCategorySet, validateCategorySetEntries } from '../../../src/utils/categoryTemplates';
 import { handle, type IpcRegistrar } from './handle';
 

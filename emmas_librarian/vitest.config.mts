@@ -28,9 +28,10 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      include: ['electron/**/*', 'src/**/*'],
+      include: ['electron/**/*', 'core/**/*', 'src/**/*'],
       exclude: [
         'electron/**/__tests__/**',
+        'core/**/__tests__/**',
         'src/**/__tests__/**',
         'electron/preload.ts',
         'electron/main.ts',

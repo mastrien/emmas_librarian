@@ -1,5 +1,5 @@
 import { IpcChannel, type MilestoneStatus, type ScientificVenue } from '../../types';
-import type { ScientificVenueRepository } from '../../database/ScientificVenueRepository';
+import type { ScientificVenueRepository } from '../../../core/database/ScientificVenueRepository';
 import { handle, type IpcRegistrar } from './handle';
 
 type VenueInput = Omit<ScientificVenue, 'id' | 'created_at'>;
