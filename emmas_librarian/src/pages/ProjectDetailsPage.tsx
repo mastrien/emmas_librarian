@@ -9,8 +9,8 @@ import { useProjectActions } from './ProjectDetails/hooks/useProjectActions';
 import { useProjectPdfImport } from './ProjectDetails/hooks/useProjectPdfImport';
 import { useHoverMenu } from './ProjectDetails/hooks/useHoverMenu';
 import { ProjectDetailsSkeleton } from './ProjectDetails/components/ProjectDetailsSkeleton';
-import { ProjectHeader } from './ProjectDetails/components/ProjectHeader';
-import { ProjectToolbar } from './ProjectDetails/components/ProjectToolbar';
+import { ProjectSectionHeader } from './ProjectDetails/components/ProjectSectionHeader';
+import { ProjectQuickAccess } from './ProjectDetails/components/overview/ProjectQuickAccess';
 import { DEFAULT_PROJECT_SECTION, isProjectSection, type ProjectSection } from '../components/common/shell/projectNav';
 import { ProjectArticlesTab } from './ProjectDetails/components/ProjectArticlesTab';
 import { ProjectOverviewTab } from './ProjectDetails/components/ProjectOverviewTab';
@@ -21,7 +21,6 @@ import { DiarySection } from '../components/common/DiarySection';
 import { SearchHistoryModal } from '../components/modals/SearchHistoryModal';
 import { outsideSearchIds } from '../utils/outsideSearchEntries';
 import { useOpenAccessPdfs } from './ProjectDetails/hooks/useOpenAccessPdfs';
-import { BackLink } from '../components/common/BackLink';
 import './ProjectDetails/projectPage.css';
 
 const ARTICLES_PER_PAGE = 50;
@@ -85,41 +84,31 @@ export const ProjectDetailsPage: React.FC = () => {
       {...pdfImport.dropZone}
     >
       {pdfImport.isDragging && <PdfDropOverlay />}
-      <BackLink to="/" className="page-back">
-        Voltar aos projetos
-      </BackLink>
-
-      <div className="project-page-top">
-        <ProjectHeader
-          project={project}
-          articlesCount={data.articles.length}
-          isEditingName={actions.isEditingName}
-          setIsEditingName={actions.setIsEditingName}
-          newName={actions.newName}
-          setNewName={actions.setNewName}
-          handleUpdateName={actions.saveName}
-          handleDeleteProject={actions.deleteProject}
-        />
-        <ProjectToolbar
-          project={project}
-          projectDocuments={data.projectDocuments}
-          isAddArticlesMenuOpen={addMenu.isOpen}
-          setIsAddArticlesMenuOpen={addMenu.setIsOpen}
-          isExportMenuOpen={exportMenu.isOpen}
-          setIsExportMenuOpen={exportMenu.setIsOpen}
-          handleBatchPdfImport={pdfImport.importFromDialog}
-          setIsImportArticlesModalOpen={modals.setIsImportArticlesModalOpen}
-          setIsManualModalOpen={modals.setIsManualModalOpen}
-          setIsCategoriesModalOpen={modals.setIsCategoriesModalOpen}
-          setIsQuickAccessModalOpen={modals.setIsQuickAccessModalOpen}
-          addArticlesMenuRef={addMenu.ref}
-          exportMenuRef={exportMenu.ref}
-          handleAddMenuMouseEnter={addMenu.onMouseEnter}
-          handleAddMenuMouseLeave={addMenu.onMouseLeave}
-          handleExportMenuMouseEnter={exportMenu.onMouseEnter}
-          handleExportMenuMouseLeave={exportMenu.onMouseLeave}
-        />
-      </div>
+      <ProjectSectionHeader
+        section={activeTab}
+        project={project}
+        articles={data.articles}
+        historyCount={data.history.length}
+        categoryCount={data.projectCategories.length}
+        actions={actions}
+        onManageCategories={() => modals.setIsCategoriesModalOpen(true)}
+        articleActions={{
+          projectId: project.id,
+          isAddArticlesMenuOpen: addMenu.isOpen,
+          setIsAddArticlesMenuOpen: addMenu.setIsOpen,
+          isExportMenuOpen: exportMenu.isOpen,
+          setIsExportMenuOpen: exportMenu.setIsOpen,
+          handleBatchPdfImport: pdfImport.importFromDialog,
+          setIsImportArticlesModalOpen: modals.setIsImportArticlesModalOpen,
+          setIsManualModalOpen: modals.setIsManualModalOpen,
+          addArticlesMenuRef: addMenu.ref,
+          exportMenuRef: exportMenu.ref,
+          handleAddMenuMouseEnter: addMenu.onMouseEnter,
+          handleAddMenuMouseLeave: addMenu.onMouseLeave,
+          handleExportMenuMouseEnter: exportMenu.onMouseEnter,
+          handleExportMenuMouseLeave: exportMenu.onMouseLeave,
+        }}
+      />
 
       {activeTab === 'articles' && (
         <ProjectArticlesTab
@@ -134,6 +123,9 @@ export const ProjectDetailsPage: React.FC = () => {
           openAccess={openAccess}
           outsideSearchIds={outsideSearchIds(data.history)}
         />
+      )}
+      {activeTab === 'overview' && (
+        <ProjectQuickAccess documents={data.projectDocuments} onManage={() => modals.setIsQuickAccessModalOpen(true)} />
       )}
       {activeTab === 'overview' && (
         <ProjectOverviewTab

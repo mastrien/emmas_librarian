@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ProjectToolbar } from '../components/ProjectToolbar';
+import { ArticleActions } from '../components/ArticleActions';
 import { MemoryRouter } from 'react-router-dom';
 import { projectService } from '../../../services/api';
 import { FakeDialogs, withFakeDialogs } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
@@ -15,10 +15,9 @@ vi.mock('../../../services/api', async () => {
   return { projectService: FakeProjectService.create() };
 });
 
-describe('ProjectToolbar', () => {
+describe('ArticleActions', () => {
   const defaultProps = {
-    project: { id: 1 } as any,
-    projectDocuments: [],
+    projectId: 1,
     isAddArticlesMenuOpen: false,
     setIsAddArticlesMenuOpen: vi.fn(),
     isExportMenuOpen: false,
@@ -26,8 +25,6 @@ describe('ProjectToolbar', () => {
     handleBatchPdfImport: vi.fn(),
     setIsImportArticlesModalOpen: vi.fn(),
     setIsManualModalOpen: vi.fn(),
-    setIsCategoriesModalOpen: vi.fn(),
-    setIsQuickAccessModalOpen: vi.fn(),
     addArticlesMenuRef: { current: null },
     exportMenuRef: { current: null },
     handleAddMenuMouseEnter: vi.fn(),
@@ -43,18 +40,18 @@ describe('ProjectToolbar', () => {
   const renderComponent = (props = {}) => {
     return render(
       <MemoryRouter>
-        <ProjectToolbar {...defaultProps} {...props} />
+        <ArticleActions {...defaultProps} {...props} />
       </MemoryRouter>,
       { wrapper: withFakeDialogs(dialogs) },
     );
   };
 
-  it('renders all buttons', () => {
+  // Board 153: Exportar first, then the screen's one primary button.
+  it('shows Exportar, then Adicionar artigos as the primary button', () => {
     renderComponent();
-    expect(screen.getByText('Adicionar Artigos')).toBeInTheDocument();
-    expect(screen.getByText('Exportar')).toBeInTheDocument();
-    expect(screen.getByText('Criar categorias')).toBeInTheDocument();
-    expect(screen.getByText('Acesso rápido')).toBeInTheDocument();
+    const buttons = screen.getAllByRole('button');
+    expect(buttons.map((b) => b.textContent?.trim())).toEqual(['Exportar', 'Adicionar artigos']);
+    expect(buttons[1]).toHaveClass('btn-primary');
   });
 
   // Redesign board 153: search, investigation and review moved to the project sidebar (tested with the Layout).
@@ -63,13 +60,13 @@ describe('ProjectToolbar', () => {
     expect(screen.queryByRole('link', { name: /Nova busca|Investigação com IA|Revisão sistemática/ })).toBeNull();
   });
 
-  it('handles Adicionar Artigos click to open menu', () => {
+  it('handles Adicionar artigos click to open menu', () => {
     renderComponent();
-    fireEvent.click(screen.getByText('Adicionar Artigos'));
+    fireEvent.click(screen.getByText('Adicionar artigos'));
     expect(defaultProps.setIsAddArticlesMenuOpen).toHaveBeenCalledWith(true);
   });
 
-  it('renders and handles Adicionar Artigos dropdown items', () => {
+  it('renders and handles Adicionar artigos dropdown items', () => {
     renderComponent({ isAddArticlesMenuOpen: true });
 
     // Batch import
@@ -156,54 +153,5 @@ describe('ProjectToolbar', () => {
       await waitFor(() => expect(projectService[method]).toHaveBeenCalledWith(1));
       expect(dialogs.informMessage).not.toHaveBeenCalled();
     });
-  });
-
-  it('handles Criar categorias click', () => {
-    renderComponent();
-    fireEvent.click(screen.getByText('Criar categorias'));
-    expect(defaultProps.setIsCategoriesModalOpen).toHaveBeenCalledWith(true);
-  });
-
-  it('handles quick access modal open', () => {
-    renderComponent();
-    const settingsBtn = screen.getByTitle('Gerenciar acessos rápidos');
-    fireEvent.click(settingsBtn);
-    expect(defaultProps.setIsQuickAccessModalOpen).toHaveBeenCalledWith(true);
-  });
-
-  it('renders empty quick access state', () => {
-    renderComponent();
-    expect(
-      screen.getByText('Nenhum link ou documento cadastrado. Clique na engrenagem para adicionar.'),
-    ).toBeInTheDocument();
-  });
-
-  it('renders and handles quick access documents', async () => {
-    const projectDocuments = [
-      { id: 1, project_id: 1, created_at: '', title: 'Google', url: 'https://google.com', category: 'General' },
-      { id: 2, project_id: 1, created_at: '', title: 'Local File', local_file_path: '/local/file.pdf', category: '' },
-    ];
-
-    renderComponent({ projectDocuments });
-
-    expect(screen.getByText('General')).toBeInTheDocument();
-
-    const googleBtn = screen.getByText('Google');
-    act(() => {
-      fireEvent.click(googleBtn);
-    });
-    await waitFor(() =>
-      expect(projectService.openProjectDocumentExternal).toHaveBeenCalledWith('https://google.com', undefined),
-    );
-
-    const localBtn = screen.getByText('Local File');
-    act(() => {
-      fireEvent.click(localBtn);
-    });
-    await waitFor(() =>
-      expect(projectService.openProjectDocumentExternal).toHaveBeenCalledWith(undefined, '/local/file.pdf'),
-    );
-    // The visit orders the recent links in the project sidebar.
-    expect(projectService.markProjectDocumentOpened).toHaveBeenCalledTimes(2);
   });
 });

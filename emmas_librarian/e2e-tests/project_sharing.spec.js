@@ -43,9 +43,10 @@ test('F-17 a project shared as .emmapcarc opens in another installation with its
       const window = await getFirstWindow(receiver);
       await window.getByTitle('Importar projeto (.emmapcarc)').click();
 
-      await expect(window.getByRole('heading', { name: 'Projeto Compartilhado (Importado)' })).toBeVisible({
-        timeout: 15000,
-      });
+      // The project name shows in the title bar path; the page itself opens on "Artigos".
+      await expect(
+        window.getByRole('navigation', { name: 'Caminho' }).getByText('Projeto Compartilhado (Importado)'),
+      ).toBeVisible({ timeout: 15000 });
       await expect(window.locator('table').getByText(IMPORTED_TITLE)).toBeVisible();
       await openReader(window);
     } finally {

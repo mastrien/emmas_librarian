@@ -21,11 +21,12 @@ test('every back link looks the same, with no border and no fill', async () => {
 
   try {
     await createProject(window, 'Voltar ' + Date.now());
-    const projectBack = window.getByRole('link', { name: 'Voltar aos projetos' });
-    const reference = await look(projectBack);
+    // The project page lost its "Voltar aos projetos" to the title bar path (redesign); the inner screens keep theirs.
+    await window.getByRole('link', { name: 'Nova busca' }).click();
+    const reference = await look(window.getByRole('link', { name: 'Voltar ao projeto' }));
     expect(reference).toMatchObject({ border: '0px', background: 'rgba(0, 0, 0, 0)', arrow: 18 });
 
-    await window.getByRole('link', { name: /Revisão sistemática/ }).click();
+    await window.getByRole('link', { name: 'Revisão sistemática' }).click();
     expect(await look(window.getByRole('link', { name: 'Voltar ao projeto' }))).toEqual(reference);
 
     await window.getByRole('link', { name: 'Voltar ao projeto' }).click();

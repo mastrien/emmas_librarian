@@ -166,3 +166,5 @@ async function informOnFailure(inform: Dialogs['inform'], message: string, actio
     await inform({ title: 'Algo deu errado', message });
   }
 }
+
+export type ProjectActions = ReturnType<typeof useProjectActions>;

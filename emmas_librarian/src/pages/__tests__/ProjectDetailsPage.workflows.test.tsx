@@ -4,7 +4,7 @@ import { givenProject, renderProjectPage, article, mainTable } from './support/p
 
 afterEach(() => vi.restoreAllMocks());
 
-const openAddMenu = () => fireEvent.click(screen.getByRole('button', { name: /Adicionar Artigos/ }));
+const openAddMenu = () => fireEvent.click(screen.getByRole('button', { name: /Adicionar artigos/ }));
 const container = () => screen.getByTestId('project-details-container');
 const pdf = (name: string) => new File(['%PDF'], name, { type: 'application/pdf' });
 // "Editar Metadados" lives in the row's "⋯" menu.

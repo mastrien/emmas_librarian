@@ -53,6 +53,8 @@ test('F-06 exports the project articles to CSV, XLSX and Biblioshiny', async () 
     const sheet = xlsx.readFile(target).Sheets.Artigos;
     expect(xlsx.utils.sheet_to_json(sheet)[0]).toMatchObject({ title: TITLE, authors: 'Emma Watson' });
 
+    // The project "Exportar" menu sits in the Artigos header since the redesign (board 153).
+    await window.getByTestId('tab-articles').click();
     await exportAndConfirm(
       window,
       async () => {
