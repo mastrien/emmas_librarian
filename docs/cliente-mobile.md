@@ -35,7 +35,8 @@ Arquivo aberto no celular é sempre somente leitura.
   comandos que um dispositivo pareado pode rodar.
 - O `.emmapcarc` fica compactado na memória; cada PDF é descompactado ao abrir.
 - Pareamento: a página lê o código de `#pair=<código>`, troca por um token em `POST /api/pair` e guarda o token no
-  `localStorage` daquele endereço. "Desconectar" apaga o token do celular; revogar é no desktop.
+  `localStorage` daquele endereço. "Desconectar" apaga o token do celular; revogar é no desktop, e o celular
+  revogado volta sozinho para a tela inicial, com o aviso.
 - O desktop serve `dist-mobile/` com uma Content-Security-Policy que só permite scripts e conexões do próprio
   servidor.
 - Tipos e utilitários vêm de `src/types`, `src/utils` e `core/database/backup/projectFileFormat.ts`.
@@ -59,6 +60,5 @@ O segundo sobe o cliente com recarga automática; sem o desktop por trás ele se
   celular. Safari do iOS e Chrome do Android ficam por conferir, em especial o aviso de certificado e o pdf.js.
 - Um `.emmapcarc` com muitos PDFs ocupa a memória do celular inteiro enquanto está aberto.
 - Recarregar a página com um arquivo aberto volta à tela inicial (o arquivo não é guardado).
-- Token revogado aparece como erro de carregamento; é preciso tocar em "Desconectar" e parear de novo.
 - O diário é mostrado como texto puro (o Markdown não é formatado).
 - A cópia da web depende do deploy do GitHub Pages, que só roda a partir da `main`.

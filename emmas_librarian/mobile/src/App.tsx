@@ -34,9 +34,11 @@ interface Boot {
   notice: string | null;
 }
 
-const desktopReader = (token: string, send: typeof fetch) => new HttpProjectReader(fetchTransport(token, send));
+const REVOKED =
+  'O acesso deste aparelho foi revogado no computador. Para voltar, abra um novo código em Configurações › Acesso pelo celular e leia o QR de novo.';
 
-async function boot(env: AppEnvironment): Promise<Boot> {
+async function boot(env: AppEnvironment, onRevoked: () => void): Promise<Boot> {
+  const desktopReader = (token: string) => new HttpProjectReader(fetchTransport(token, env.send, onRevoked));
   const code = pairingCodeFrom(env.initialHash);
   let notice: string | null = null;
   if (code) {
@@ -48,7 +50,7 @@ async function boot(env: AppEnvironment): Promise<Boot> {
   }
   const servedByDesktop = await isServedByDesktop(env.send);
   const token = servedByDesktop ? env.tokens.read() : null;
-  return { reader: token ? desktopReader(token, env.send) : null, servedByDesktop, notice };
+  return { reader: token ? desktopReader(token) : null, servedByDesktop, notice };
 }
 
 // FileReader rather than file.arrayBuffer(): older mobile browsers (and the test DOM) lack the latter.
@@ -77,7 +79,12 @@ const RequireLibrary: React.FC<{ open: boolean; children: React.ReactElement }> 
 export const App: React.FC<{ environment: AppEnvironment }> = ({ environment }) => {
   const [state, setState] = useState<Boot | null>(null);
   useEffect(() => {
-    void boot(environment).then(setState);
+    // The desktop refused the token: forget it and say why, instead of an error on every screen.
+    const revoked = () => {
+      environment.tokens.clear();
+      setState((current) => current && { ...current, reader: null, notice: REVOKED });
+    };
+    void boot(environment, revoked).then(setState);
   }, [environment]);
   if (!state) return <p className="m-note">Abrindo…</p>;
 

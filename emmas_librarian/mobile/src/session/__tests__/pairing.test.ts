@@ -140,6 +140,26 @@ describe('fetchTransport', () => {
     });
   });
 
+  it('tells the app when the desktop no longer accepts the token, and only then', async () => {
+    const desktop = new FakeDesktopServer();
+    desktop.results['projects:getAll'] = [];
+    let refused = 0;
+    const count = () => {
+      refused += 1;
+    };
+
+    await fetchTransport(desktop.token, desktop.send, count).run('projects:getAll');
+    await fetchTransport(desktop.token, desktop.send, count)
+      .run('nope')
+      .catch(() => undefined);
+    expect(refused).toBe(0);
+
+    await fetchTransport('revogado', desktop.send, count)
+      .run('projects:getAll')
+      .catch(() => undefined);
+    expect(refused).toBe(1);
+  });
+
   it('still fails clearly when the answer is not JSON', async () => {
     const broken: typeof fetch = async () => new Response('<html>502</html>', { status: 502 });
 

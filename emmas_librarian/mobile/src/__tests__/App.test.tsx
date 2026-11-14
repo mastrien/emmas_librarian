@@ -74,6 +74,28 @@ describe('App on a later visit', () => {
     expect(tokens.stored).toBeNull();
   });
 
+  // #192: before this, every screen showed a loading error with a "try again" that could never work.
+  it('returns to the start screen and says the access was revoked when the desktop refuses the token', async () => {
+    tokens.stored = 'token-revogado';
+    render(<App environment={environment()} />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('O acesso deste aparelho foi revogado no computador.');
+    expect(screen.getByText('Conectar a este computador')).toBeInTheDocument();
+    expect(tokens.stored).toBeNull();
+  });
+
+  it('does the same when the phone is revoked in the middle of a visit', async () => {
+    tokens.stored = desktop.token;
+    render(<App environment={environment()} />);
+    await screen.findByText('Tese do computador');
+    desktop.token = 'trocado-pela-revogacao';
+
+    fireEvent.click(screen.getByText('Tese do computador'));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('foi revogado');
+    expect(tokens.stored).toBeNull();
+  });
+
   it('explains how to pair when served by the desktop and not paired yet', async () => {
     render(<App environment={environment()} />);
 

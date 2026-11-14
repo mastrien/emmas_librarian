@@ -43,18 +43,25 @@ async function failureOf(response: Response): Promise<DesktopError> {
 
 /**
  * The real transport: HTTPS to the desktop that served this page, with the device's token.
+ * `onUnauthorized` is told when the desktop no longer accepts the token (the phone was revoked), so
+ * the app can stop using it instead of failing on every screen (#192).
  *
  * Usage:
- *   const transport = fetchTransport(token);
+ *   const transport = fetchTransport(token, fetch, () => forgetToken());
  *   await transport.run('projects:getAll');
  */
-export function fetchTransport(token: string, send: typeof fetch = (...args) => fetch(...args)): DesktopTransport {
+export function fetchTransport(
+  token: string,
+  send: typeof fetch = (...args) => fetch(...args),
+  onUnauthorized: () => void = () => undefined,
+): DesktopTransport {
   const call = async (channel: string, args: unknown[]) => {
     const response = await send(`/api/commands/${encodeURIComponent(channel)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ args }),
     });
+    if (response.status === 401) onUnauthorized();
     if (!response.ok) throw await failureOf(response);
     return response;
   };
