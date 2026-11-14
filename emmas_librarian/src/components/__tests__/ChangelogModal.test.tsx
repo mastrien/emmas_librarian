@@ -5,7 +5,7 @@ import { ChangelogModal } from '../modals/ChangelogModal';
 describe('ChangelogModal', () => {
   it('does not render when isOpen is false', () => {
     render(<ChangelogModal isOpen={false} version="2.0.0" onClose={vi.fn()} />);
-    expect(screen.queryByText(/Novidades da Versão/)).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('renders correctly with version and closes on button click', () => {
@@ -13,15 +13,22 @@ describe('ChangelogModal', () => {
     render(<ChangelogModal isOpen={true} version="2.0.0" onClose={onClose} />);
 
     // Check if version is rendered
-    expect(screen.getByText('Novidades da Versão 2.0.0')).toBeDefined();
+    expect(screen.getByRole('dialog', { name: 'Novidades da Versão 2.0.0' })).toBeDefined();
 
     // Check if new features text is present (may appear in multiple version sections)
     expect(screen.getAllByText('Categorias de Seleção Múltipla:').length).toBeGreaterThan(0);
 
     // Click to close
-    const btn = screen.getByText('Entendido, vamos lá!');
+    const btn = screen.getByRole('button', { name: 'Continuar' });
     fireEvent.click(btn);
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('shows the version as the title, under a line saying these are the news (board 181)', () => {
+    render(<ChangelogModal isOpen={true} version="1.3.1" onClose={vi.fn()} />);
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Versão 1.3.1' })).toBeInTheDocument();
+    expect(screen.getByText(/^Novidades: o que mudou/)).toBeInTheDocument();
   });
 
   it('lists every release from newest to oldest', () => {

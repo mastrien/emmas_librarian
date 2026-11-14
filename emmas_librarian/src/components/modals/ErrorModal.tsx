@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { AlertCircle, AlertTriangle, Clipboard, Check } from 'lucide-react';
 import { useGlobalError } from '../../contexts/GlobalErrorContext';
 import { Modal } from '../common/Modal';
+import { ModalFooter } from '../common/ModalFooter';
+import { Button } from '../common/Button';
 import { appErrorView, technicalReport } from './errorModal/appErrorView';
 import './errorModal/errorModal.css';
 
@@ -21,8 +23,6 @@ export const ErrorModal = () => {
   const view = appErrorView(currentError);
   const { code, rawMessage, details, isUserError } = view;
   const Icon = isUserError ? AlertTriangle : AlertCircle;
-  const colorVar = isUserError ? 'var(--color-warning)' : 'var(--color-danger)';
-  const bgColorVar = isUserError ? 'rgba(234, 179, 8, 0.1)' : 'rgba(239, 68, 68, 0.1)';
 
   const handleCopyDetails = () => {
     navigator.clipboard.writeText(technicalReport(view));
@@ -33,24 +33,9 @@ export const ErrorModal = () => {
   return (
     <Modal
       label={view.title}
-      title={
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span
-            style={{
-              background: bgColorVar,
-              color: colorVar,
-              padding: '0.5rem',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Icon size={24} />
-          </span>
-          {view.title}
-        </span>
-      }
+      title={view.title}
+      icon={<Icon size={20} aria-hidden="true" />}
+      tone={isUserError ? 'warn' : 'danger'}
       onClose={hideError}
       width={500}
       className={isUserError ? 'error-modal--user' : 'error-modal--system'}
@@ -79,37 +64,23 @@ export const ErrorModal = () => {
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--color-primary)',
-            cursor: 'pointer',
-            fontSize: '0.9rem',
-            textDecoration: 'underline',
-          }}
-        >
-          {showDetails ? 'Ocultar detalhes' : 'Ver detalhes técnicos'}
-        </button>
-
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          {showDetails && (
-            <button
-              onClick={handleCopyDetails}
-              className="btn-secondary"
-              style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-            >
-              {copied ? <Check size={16} /> : <Clipboard size={16} />}
-              {copied ? 'Copiado' : 'Copiar Logs'}
-            </button>
-          )}
-          <button onClick={hideError} className="btn-primary" style={{ padding: '0.5rem 1.5rem' }}>
-            Entendi
-          </button>
-        </div>
-      </div>
+      <ModalFooter
+        leading={
+          <Button variant="ghost" size="sm" onClick={() => setShowDetails(!showDetails)}>
+            {showDetails ? 'Ocultar detalhes' : 'Ver detalhes técnicos'}
+          </Button>
+        }
+      >
+        {showDetails && (
+          <Button size="sm" onClick={handleCopyDetails}>
+            {copied ? <Check size={14} aria-hidden="true" /> : <Clipboard size={14} aria-hidden="true" />}
+            {copied ? 'Copiado' : 'Copiar Logs'}
+          </Button>
+        )}
+        <Button variant="primary" onClick={hideError}>
+          Entendi
+        </Button>
+      </ModalFooter>
     </Modal>
   );
 };

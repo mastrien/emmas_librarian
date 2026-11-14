@@ -1,6 +1,8 @@
 import React from 'react';
-import { Sparkles, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Modal } from '../common/Modal';
+import { ModalFooter } from '../common/ModalFooter';
+import { Button } from '../common/Button';
 import { CHANGELOG_RELEASES, type ChangelogRelease } from './changelog/releases';
 
 interface ChangelogModalProps {
@@ -21,13 +23,8 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
   return (
     <Modal
       label={`Novidades da Versão ${version}`}
-      title={
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Sparkles size={24} color="var(--color-primary)" />
-          Novidades da Versão {version}
-        </span>
-      }
-      description="Veja o que mudou no Emma's Librarian."
+      title={`Versão ${version}`}
+      description="Novidades: o que mudou no Emma's Librarian."
       onClose={onClose}
       width={550}
     >
@@ -38,11 +35,11 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, version,
         <ApiKeyReminder />
       </div>
 
-      <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-        <button onClick={onClose} className="btn-primary">
-          Entendido, vamos lá!
-        </button>
-      </div>
+      <ModalFooter>
+        <Button variant="primary" onClick={onClose}>
+          Continuar
+        </Button>
+      </ModalFooter>
     </Modal>
   );
 };
