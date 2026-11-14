@@ -74,6 +74,15 @@ Feito: lista de seções à esquerda (Aparência, Chaves das bases com "2/4", In
 - [ ] A lista de seções é desenhada dentro da página, não na coluna lateral do shell; visualmente é igual.
 - [ ] As outras seções (Aparência, Backup, Atualizações, Lixeira) mantêm o conteúdo de antes, só sem a moldura de cartão e com o título da seção no cabeçalho.
 
+## 171 · Biblioteca de PDFs (#176)
+
+Feito: título e subtítulo do board, "Adicionar PDF" no cabeçalho, quatro cartões (Arquivos, Espaço usado, Reutilizados, Órfãos, com a nota do que significam), busca "Nome do arquivo ou título do artigo", filtro Todos/Reutilizados/Órfãos com contagem, "Ordenar" (Tamanho ↓ por padrão; também Mais recentes e Nome), tabela Arquivo (mono) · Tamanho · Adicionado (dd/mm/aaaa) · Artigo vinculado, "Abrir" e o menu "⋯" (Vincular a outro artigo, Excluir PDF). Sem link de voltar.
+
+- [ ] **Artigo vinculado**: o app mostra "Utilizado em N artigos" e a lista de artigos com o projeto, não só o primeiro título com o projeto em cinza como no board.
+- [ ] **"Abrir"** só aparece quando há artigo; abre o leitor do primeiro artigo ligado. Para um PDF órfão o board não diz o que "Abrir" faria.
+- [ ] A coluna "Adicionado" perdeu a hora (o board mostra só a data).
+- [ ] O link "Voltar aos projetos" saiu; o teste E2E de aparência dos links de voltar passou a conferir só a página de Termos (até o board 174).
+
 ## Próximas telas (este documento ganha uma seção por PR)
 
-171 Biblioteca de PDFs · 172–173 Agenda · 174 Termos · 175–181 Janelas
+172–173 Agenda · 174 Termos · 175–181 Janelas

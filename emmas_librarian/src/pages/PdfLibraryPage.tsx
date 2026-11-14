@@ -1,8 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Search, Upload } from 'lucide-react';
 import { useProjectService } from '../contexts/ServicesContext';
-import { BackLink } from '../components/common/BackLink';
-import { filterPdfs, type PdfFileRecord } from './PdfLibrary/pdfLibraryData';
+import { PageHeader } from '../components/common/PageHeader';
+import { SegmentedControl, type SegmentedOption } from '../components/common/SegmentedControl';
+import {
+  PDF_SORTS,
+  filterByUse,
+  filterPdfs,
+  libraryMetrics,
+  sortPdfs,
+  type PdfFileRecord,
+  type PdfFilter,
+  type PdfSort,
+} from './PdfLibrary/pdfLibraryData';
 import { PdfMetrics } from './PdfLibrary/PdfMetrics';
 import { PdfTable } from './PdfLibrary/PdfTable';
 import { PdfLinkDialog } from './PdfLibrary/PdfLinkDialog';
@@ -10,33 +20,50 @@ import { usePdfLink } from './PdfLibrary/usePdfLink';
 import { useDialogs } from '../components/common/dialogs/DialogProvider';
 import './PdfLibrary/pdfLibrary.css';
 
-const LibraryHeader: React.FC<{ onUpload: () => void }> = ({ onUpload }) => (
-  <div className="pdf-library-head">
-    <div className="pdf-library-title">
-      <BackLink to="/" label="Voltar aos projetos" />
-      <div>
-        <h1>Biblioteca Global de PDFs</h1>
-        <p>Gerencie e deduplique de forma transparente todos os arquivos PDF salvos localmente.</p>
-      </div>
-    </div>
-    <button className="btn-primary pdf-library-add" onClick={onUpload}>
-      <Upload size={18} /> Adicionar PDF
-    </button>
-  </div>
-);
-
 const SearchBox: React.FC<{ value: string; onChange: (value: string) => void }> = ({ value, onChange }) => (
   <div className="pdf-search">
-    <Search size={18} className="pdf-search-icon" />
+    <Search size={16} className="pdf-search-icon" aria-hidden="true" />
     <input
       type="text"
       className="input-field pdf-search-input"
-      placeholder="Pesquisar por nome do PDF ou título do artigo associado..."
+      placeholder="Nome do arquivo ou título do artigo"
+      aria-label="Pesquisar PDFs"
       value={value}
       onChange={(e) => onChange(e.target.value)}
     />
   </div>
 );
+
+/** Todos / Reutilizados / Órfãos with their counts, and the order of the table (board 171). */
+const LibraryFilters: React.FC<{
+  pdfs: PdfFileRecord[];
+  filter: PdfFilter;
+  onFilter: (filter: PdfFilter) => void;
+  sort: PdfSort;
+  onSort: (sort: PdfSort) => void;
+}> = ({ pdfs, filter, onFilter, sort, onSort }) => {
+  const metrics = libraryMetrics(pdfs);
+  const options: SegmentedOption<PdfFilter>[] = [
+    { value: 'all', label: `Todos ${metrics.total}` },
+    { value: 'shared', label: `Reutilizados ${metrics.shared}` },
+    { value: 'orphans', label: `Órfãos ${metrics.orphans}` },
+  ];
+  return (
+    <>
+      <SegmentedControl label="Mostrar" value={filter} options={options} onChange={onFilter} />
+      <label className="pdf-sort">
+        Ordenar:
+        <select className="pdf-sort__select" value={sort} onChange={(e) => onSort(e.target.value as PdfSort)}>
+          {PDF_SORTS.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    </>
+  );
+};
 
 // The stored PDFs, reloaded after every change.
 function useStoredPdfs() {
@@ -68,6 +95,8 @@ function useStoredPdfs() {
 export const PdfLibraryPage: React.FC = () => {
   const { pdfs, loading, loadData, projectService } = useStoredPdfs();
   const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState<PdfFilter>('all');
+  const [sort, setSort] = useState<PdfSort>('size');
   // The app's own windows, not window.confirm/alert (Arca 103/134).
   const { confirm, inform } = useDialogs();
   const link = usePdfLink(projectService, loadData, (message) => void inform({ title: 'Erro ao vincular', message }));
@@ -109,14 +138,25 @@ export const PdfLibraryPage: React.FC = () => {
     return <div className="p-8 text-center text-muted">Carregando Biblioteca de PDFs...</div>;
   }
 
+  const shown = sortPdfs(filterByUse(filterPdfs(pdfs, searchTerm), filter), sort);
+
   return (
     <div className="pdf-library">
-      <LibraryHeader onUpload={handleUploadDirectPdf} />
+      <PageHeader
+        title="Biblioteca de PDFs"
+        subtitle="Todos os PDFs guardados neste computador, de todos os projetos"
+        actions={
+          <button type="button" className="btn-primary" onClick={handleUploadDirectPdf}>
+            <Upload size={18} aria-hidden="true" /> Adicionar PDF
+          </button>
+        }
+      />
       <PdfMetrics pdfs={pdfs} />
-      <div className="glass-panel pdf-browser">
+      <div className="pdf-filters">
         <SearchBox value={searchTerm} onChange={setSearchTerm} />
-        <PdfTable pdfs={filterPdfs(pdfs, searchTerm)} onLink={link.open} onDelete={handleDeletePdf} />
+        <LibraryFilters pdfs={pdfs} filter={filter} onFilter={setFilter} sort={sort} onSort={setSort} />
       </div>
+      <PdfTable pdfs={shown} onLink={link.open} onDelete={handleDeletePdf} />
       {link.pdf && (
         <PdfLinkDialog
           pdf={link.pdf}
