@@ -65,14 +65,14 @@ test('F-05 Semantic / relevance search via QueryBuilder', async () => {
     await expect(resultRow).toContainText('Author E2E');
     await expect(resultRow).toContainText('2026');
 
-    // The table follows its own width: with the filters sidebar open (the default) there is no room
-    // for an authors column, so the authors move into the article cell; closing the sidebar brings it back.
-    // Since the redesign the module rail and project sidebar take 288px, so this needs a wider window than 1200px.
-    await window.setViewportSize({ width: 1440, height: 900 });
+    // The table follows its own width (container query): on a wide window it has an authors column; on a
+    // narrow one the authors move into the article cell. The module rail and project sidebar take part of it.
     const authorsHeader = window.getByRole('columnheader', { name: 'AUTORES' });
-    await expect(authorsHeader).toBeHidden();
-    await window.getByRole('button', { name: /^Filtros/ }).click();
+    await window.setViewportSize({ width: 1440, height: 900 });
     await expect(authorsHeader).toBeVisible();
+    await window.setViewportSize({ width: 1000, height: 900 });
+    await expect(authorsHeader).toBeHidden();
+    await window.setViewportSize({ width: 1440, height: 900 });
 
     // The history records what was asked of each base and what came back (traceability).
     await window.getByTestId('tab-history').click();

@@ -51,11 +51,17 @@ test('screens articles on the review page and the guided screening, archiving ex
     // On the project page the exclusion is an archived article with the label as reason; restoring it there
     // brings it back to the review as undecided.
     await window.getByRole('link', { name: /Voltar ao projeto/ }).click();
-    const archived = window.getByText('Artigos Arquivados (1)');
-    await expect(archived).toBeVisible({ timeout: 10000 });
+    // Since the redesign the archived articles are a status of the one list (board 153).
+    const archived = window
+      .getByRole('group', { name: 'Status dos artigos' })
+      .getByRole('button', { name: /^Arquivados/ });
+    await expect(archived).toHaveText(/Arquivados\s*1/, { timeout: 10000 });
     await archived.click();
     await expect(window.getByText('Motivo: Excluído')).toBeVisible();
-    await window.getByRole('button', { name: 'Restaurar' }).click();
+    // The row shortcuts show on hover (style.css .row-actions__shortcuts), so hover the row like a person would.
+    const archivedRow = window.getByTestId('main-articles-table').getByRole('row', { name: /Artigo alfa/ });
+    await archivedRow.hover();
+    await archivedRow.getByTitle('Restaurar Artigo').click();
     await window.getByRole('link', { name: /Revisão sistemática/ }).click();
     await expect(window.getByTestId('review-row').filter({ hasText: 'Artigo alfa' })).toContainText('Rótulo');
     await expect(window.getByRole('status', { name: 'Contagem da triagem' })).toContainText('0 excluídos');

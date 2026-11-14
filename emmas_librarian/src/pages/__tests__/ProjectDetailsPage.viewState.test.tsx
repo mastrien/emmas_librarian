@@ -30,37 +30,31 @@ async function renderPageWithReader(service: FakeProjectService): Promise<void> 
   await screen.findByTestId('project-details-container');
 }
 
-const accordion = (label: RegExp) => screen.getByText(label).closest('details') as HTMLDetailsElement;
-
-function expand(details: HTMLDetailsElement): void {
-  details.open = true;
-  fireEvent(details, new Event('toggle'));
-}
+const statusButton = (name: RegExp) =>
+  within(screen.getByRole('group', { name: 'Status dos artigos' })).getByRole('button', { name });
 
 describe('ProjectDetailsPage view state', () => {
   afterEach(() => {
     window.sessionStorage.clear();
   });
 
-  it('keeps the filter and the open sections after a visit to the PDF reader', async () => {
+  it('keeps the search and the status after a visit to the PDF reader', async () => {
     await renderPageWithReader(
       givenProject([
         article({ id: 1, title: 'Alfa novo' }),
-        article({ id: 2, title: 'Beta lido', status: 'read' }),
-        article({ id: 3, title: 'Gama arquivado', status: 'archived' }),
+        article({ id: 2, title: 'Beta lido', status: 'read', local_file_path: '/b.pdf' }),
+        article({ id: 3, title: 'Gama lido', status: 'read' }),
       ]),
     );
-    fireEvent.change(screen.getByPlaceholderText('Buscar por título ou autor'), { target: { value: 'Alfa' } });
-    expand(accordion(/Artigos Lidos/));
-    expand(accordion(/Artigos Arquivados/));
+    fireEvent.click(statusButton(/^Lidos/));
+    fireEvent.change(screen.getByPlaceholderText('Buscar por título ou autor'), { target: { value: 'Beta' } });
 
-    fireEvent.click(within(accordion(/Artigos Lidos/)).getByRole('link', { name: 'Ver' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Ler' }));
     fireEvent.click(await screen.findByRole('link', { name: 'Voltar ao projeto' }));
     await screen.findByTestId('project-details-container');
 
-    expect(screen.getByPlaceholderText('Buscar por título ou autor')).toHaveValue('Alfa');
-    expect(accordion(/Artigos Lidos/).open).toBe(true);
-    expect(accordion(/Artigos Arquivados/).open).toBe(true);
+    expect(screen.getByPlaceholderText('Buscar por título ou autor')).toHaveValue('Beta');
+    expect(statusButton(/^Lidos/)).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('does not carry one project view state over to another project', async () => {

@@ -1,5 +1,6 @@
 import type { Article } from '../../../../types';
 import { parseSourceDatabases } from '../../../../utils/sourceDatabases';
+export { yearHistogram, type YearHistogram } from '../../../../utils/publicationYears';
 
 // The compact numbers of the project overview (board 154): tiles, articles per year and two ranked lists. They
 // replace the six Chart.js charts of the old Estatísticas tab.
@@ -35,34 +36,6 @@ export function overviewTiles(articles: Article[]): OverviewTiles {
  */
 export function percentOf(part: number, whole: number): number {
   return whole === 0 ? 0 : Math.round((part / whole) * 100);
-}
-
-export interface YearHistogram {
-  bars: { year: number; count: number }[];
-  withoutYear: number;
-}
-
-const yearOf = (a: Article): number | null => {
-  const year = Number(a.year);
-  return Number.isInteger(year) && year > 0 ? year : null;
-};
-
-/**
- * Articles per year from the first to the last year found, empty years included so the gaps show.
- *
- * @example yearHistogram(articles) // { bars: [{ year: 2019, count: 2 }, { year: 2020, count: 0 }, …], withoutYear: 3 }
- */
-export function yearHistogram(articles: Article[]): YearHistogram {
-  const years = articles.map(yearOf);
-  const known = years.filter((y): y is number => y !== null);
-  const withoutYear = years.length - known.length;
-  if (known.length === 0) return { bars: [], withoutYear };
-  const first = Math.min(...known);
-  const bars = Array.from({ length: Math.max(...known) - first + 1 }, (_, i) => ({
-    year: first + i,
-    count: known.filter((y) => y === first + i).length,
-  }));
-  return { bars, withoutYear };
 }
 
 export interface RankedCount {

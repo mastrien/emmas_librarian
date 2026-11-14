@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Article } from '../../../types';
 import { useSessionState } from '../../../hooks/useSessionState';
 import { parseSourceDatabases } from '../../../utils/sourceDatabases';
+import { yearHistogram } from '../../../utils/publicationYears';
 import { articleKeywords, countWith, matchesFilters, type ArticleFilterCriteria } from './articleFilters';
 
 /**
@@ -27,6 +28,9 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
   const [selectedDatabases, setSelectedDatabases] = useProjectViewState<string[]>(projectId, 'databases', []);
   const [selectedDocType, setSelectedDocType] = useProjectViewState(projectId, 'docType', '');
   const [selectedKeyword, setSelectedKeyword] = useProjectViewState(projectId, 'keyword', '');
+  const [yearFrom, setYearFrom] = useProjectViewState<number | null>(projectId, 'yearFrom', null);
+  const [yearTo, setYearTo] = useProjectViewState<number | null>(projectId, 'yearTo', null);
+  const [includeNoYear, setIncludeNoYear] = useProjectViewState(projectId, 'includeNoYear', false);
 
   const [sortOrder, setSortOrder] = useState(() => {
     return localStorage.getItem('emmas_librarian_sort_order') || 'added-desc';
@@ -55,6 +59,9 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
     return Array.from(dbs);
   }, [articles]);
 
+  // Every article of the project, whatever the filters: the year slider's ends do not move while filtering.
+  const yearBars = useMemo(() => yearHistogram(articles), [articles]);
+
   const uniqueDocTypes = useMemo(() => {
     const types = new Set<string>();
     articles.forEach((a) => {
@@ -66,8 +73,6 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
   }, [articles]);
 
   const [currentPage, setCurrentPage] = useProjectViewState(projectId, 'currentPage', 1);
-  const [isReadArticlesOpen, setIsReadArticlesOpen] = useProjectViewState(projectId, 'readOpen', false);
-  const [isArchivedArticlesOpen, setIsArchivedArticlesOpen] = useProjectViewState(projectId, 'archivedOpen', false);
 
   const criteria: ArticleFilterCriteria = useMemo(
     () => ({
@@ -79,6 +84,9 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
       databases: selectedDatabases,
       docType: selectedDocType,
       keyword: selectedKeyword,
+      yearFrom,
+      yearTo,
+      includeNoYear,
     }),
     [
       searchTerm,
@@ -89,6 +97,9 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
       selectedDatabases,
       selectedDocType,
       selectedKeyword,
+      yearFrom,
+      yearTo,
+      includeNoYear,
     ],
   );
 
@@ -103,6 +114,9 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
       setSelectedDatabases(next.databases);
       setSelectedDocType(next.docType);
       setSelectedKeyword(next.keyword);
+      setYearFrom(next.yearFrom);
+      setYearTo(next.yearTo);
+      setIncludeNoYear(next.includeNoYear);
       setCurrentPage(1);
     },
     [
@@ -114,6 +128,9 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
       setSelectedDatabases,
       setSelectedDocType,
       setSelectedKeyword,
+      setYearFrom,
+      setYearTo,
+      setIncludeNoYear,
       setCurrentPage,
     ],
   );
@@ -168,16 +185,13 @@ export const useProjectFiltering = (articles: Article[], itemsPerPage: number, p
     keywordFrequencies,
     uniqueDatabases,
     uniqueDocTypes,
+    yearBars,
     activeArticles,
     readArticles,
     archivedArticles,
     filteredArticles,
     totalPages,
     paginatedArticles,
-    isReadArticlesOpen,
-    setIsReadArticlesOpen,
-    isArchivedArticlesOpen,
-    setIsArchivedArticlesOpen,
   };
 };
 

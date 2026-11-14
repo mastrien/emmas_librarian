@@ -1,0 +1,279 @@
+/* ArticlesToolbar, FiltersPopover, YearRangeGroup (redesign, board 153). The filter options themselves
+   (.filter-option, .keyword-chip, .opt-count, .filter-chip) keep their rules in style.css. */
+.articles-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.articles-toolbar__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.articles-toolbar__row:first-child {
+  justify-content: space-between;
+}
+
+/* Search with its "/" shortcut shown at the right end. */
+.articles-search {
+  position: relative;
+  flex: 0 1 320px;
+  min-width: 200px;
+}
+
+.articles-search svg {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.articles-search input {
+  width: 100%;
+  height: 34px;
+  padding: 0 34px 0 34px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 13px;
+}
+
+.articles-search input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.articles-search kbd {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  min-width: 18px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-align: center;
+}
+
+/* While typing, the shortcut hint has done its job. */
+.articles-search input:focus ~ kbd,
+.articles-search input:not(:placeholder-shown) ~ kbd {
+  display: none;
+}
+
+.articles-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.articles-sort select {
+  height: 30px;
+  padding: 0 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-heading);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* "Filtros" and its popover. The popover opens under the button and stays inside the screen area. */
+.filters-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.filters-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filters-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 40;
+  width: 340px;
+  max-width: calc(100vw - 2rem);
+  max-height: min(70vh, 640px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-raised);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+/* Only the options scroll; the footer with "Mostrar N artigos" stays in view. */
+.filters-popover__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: 14px 16px;
+  overflow-y: auto;
+}
+
+.filters-popover fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.filters-popover legend,
+.filters-popover .filters-panel__label {
+  display: block;
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.filters-popover select {
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 13px;
+}
+
+.filters-popover__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-color);
+  border-radius: 0 0 12px 12px;
+  background: var(--bg-sunken);
+}
+
+/* Year range: histogram, two-handle slider, two fields. */
+.year-range {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.year-range__count {
+  align-self: flex-end;
+  margin-top: -22px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.year-range__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 48px;
+}
+
+.year-range__bars i {
+  flex: 1 1 0;
+  border-radius: 2px 2px 0 0;
+  background: var(--border-color);
+}
+
+.year-range__bars i.is-in {
+  background: var(--color-primary);
+}
+
+/* Two native range inputs stacked on one track: only their thumbs take the pointer. */
+.year-range__slider {
+  position: relative;
+  height: 18px;
+}
+
+.year-range__slider input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  margin: 0;
+  background: none;
+  pointer-events: none;
+  appearance: none;
+}
+
+.year-range__slider input::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-color);
+}
+
+.year-range__slider input + input::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+.year-range__slider input::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 2px var(--color-primary),
+    0 1px 3px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+  appearance: none;
+  cursor: grab;
+}
+
+.year-range__slider input:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 2px var(--color-primary),
+    0 0 0 5px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.year-range__fields {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.year-range__input {
+  width: 72px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.filter-chips__more {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

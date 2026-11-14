@@ -21,7 +21,7 @@ const lineCount = (locator) =>
     return new Set(centres).size;
   });
 
-test('filters show as chips in the result line and several articles are archived with one reason', async () => {
+test('filters show as chips beside "Filtros" and several articles are archived with one reason', async () => {
   test.setTimeout(120000);
   const electronApp = await launchApp();
   const window = await getFirstWindow(electronApp);
@@ -32,15 +32,19 @@ test('filters show as chips in the result line and several articles are archived
     const table = window.getByTestId('main-articles-table');
     await expect(table.getByText('Artigo gama')).toBeVisible();
 
-    // At 1000px with the sidebar open, the bar and the result line must not wrap.
+    // At 1000px each line above the table (search and order; status, "Filtros" and chips) stays on one line.
     await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1000, 850));
-    const sidebar = window.getByRole('complementary', { name: 'Filtros' });
-    await expect(sidebar).toBeVisible();
-    await expect.poll(() => lineCount(window.locator('.filter-bar'))).toBe(1);
+    const rows = window.locator('.articles-toolbar__row');
+    await expect.poll(() => lineCount(rows.nth(0))).toBe(1);
 
-    // A filter becomes a chip with the count it leaves; the chip removes it again.
-    await sidebar.getByRole('checkbox', { name: /^Com PDF,/ }).check();
+    // A filter chosen in the popover becomes a chip with the count it leaves; the chip removes it again.
+    await window.getByRole('button', { name: /^Filtros/ }).click();
+    const popover = window.getByRole('dialog', { name: 'Filtros' });
+    await popover.getByRole('checkbox', { name: /^Com PDF,/ }).check();
+    await window.keyboard.press('Escape');
+    await expect(popover).toBeHidden();
     await expect(window.getByText('0 de 3 artigos')).toBeVisible();
+    await expect.poll(() => lineCount(rows.nth(1))).toBe(1);
     await expect.poll(() => lineCount(window.locator('.result-line'))).toBe(1);
     await window.getByRole('button', { name: 'Remover filtro Com PDF' }).click();
     await expect(window.getByText('3 artigos', { exact: true })).toBeVisible();
@@ -63,10 +67,12 @@ test('filters show as chips in the result line and several articles are archived
 
     // The status and the shared reason were saved: they survive a reload.
     await window.reload();
-    const archived = window.getByText('Artigos Arquivados (2)');
-    await expect(archived).toBeVisible({ timeout: 10000 });
+    const archived = window
+      .getByRole('group', { name: 'Status dos artigos' })
+      .getByRole('button', { name: /^Arquivados/ });
+    await expect(archived).toHaveText(/Arquivados\s*2/, { timeout: 10000 });
     await archived.click();
-    await expect(window.getByText('Motivo: fora do escopo')).toHaveCount(2);
+    await expect(table.getByText('Motivo: fora do escopo')).toHaveCount(2);
   } finally {
     await electronApp.close();
   }

@@ -36,14 +36,12 @@ function modalsDouble(): ProjectModals {
 
 interface HarnessProps {
   articles: Article[];
-  isSidebarOpen?: boolean;
   pageSize?: number;
 }
 
-function renderTab({ articles, isSidebarOpen = true, pageSize = 50 }: HarnessProps) {
+function renderTab({ articles, pageSize = 50 }: HarnessProps) {
   const handlers = {
     modals: modalsDouble(),
-    onToggleSidebar: vi.fn(),
     onStatusChange: vi.fn(),
     onStatusChangeMany: vi.fn(),
     onUnlinkPdf: vi.fn(),
@@ -55,9 +53,7 @@ function renderTab({ articles, isSidebarOpen = true, pageSize = 50 }: HarnessPro
   function Harness() {
     const filtering = useProjectFiltering(articles, pageSize);
     const openAccess = useOpenAccessPdfs(reload);
-    return (
-      <ProjectArticlesTab filtering={filtering} isSidebarOpen={isSidebarOpen} openAccess={openAccess} {...handlers} />
-    );
+    return <ProjectArticlesTab filtering={filtering} openAccess={openAccess} {...handlers} />;
   }
   render(
     <ServicesProvider apiService={service}>
@@ -70,23 +66,18 @@ function renderTab({ articles, isSidebarOpen = true, pageSize = 50 }: HarnessPro
 }
 
 const mainList = () => screen.getByTestId('main-articles-table');
-const section = (label: RegExp) => screen.getByText(label).closest('details') as HTMLElement;
+const status = (name: RegExp) =>
+  within(screen.getByRole('group', { name: 'Status dos artigos' })).getByRole('button', { name });
+const openFilters = () => fireEvent.click(screen.getByRole('button', { name: /^Filtros/ }));
+const popover = () => within(screen.getByRole('dialog', { name: 'Filtros' }));
 
 describe('ProjectArticlesTab layout', () => {
-  it('shows the filter bar, the sidebar and the active articles', () => {
+  it('shows the search, the status control and the active articles', () => {
     renderTab({ articles: [article(1)] });
 
-    expect(screen.getByPlaceholderText('Buscar por título ou autor')).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /^Todos,/ })).toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'Buscar por título ou autor' })).toBeInTheDocument();
+    expect(status(/^Ativos/)).toHaveAttribute('aria-pressed', 'true');
     expect(within(mainList()).getByText('Artigo 1')).toBeInTheDocument();
-  });
-
-  it('hides the sidebar when closed and asks the page to toggle it', () => {
-    const handlers = renderTab({ articles: [], isSidebarOpen: false });
-
-    expect(screen.queryByRole('radio', { name: /^Todos,/ })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Filtros/ }));
-    expect(handlers.onToggleSidebar).toHaveBeenCalledTimes(1);
   });
 
   it('filters the list through the shared filtering state', () => {
@@ -97,53 +88,44 @@ describe('ProjectArticlesTab layout', () => {
     expect(within(mainList()).getByText('Genes')).toBeInTheDocument();
     expect(within(mainList()).queryByText('Proteínas')).not.toBeInTheDocument();
   });
+
+  // Board 153: "/" goes to the search from anywhere, but typing a "/" in a field stays a "/".
+  it('focuses the search with "/" unless the user is typing', () => {
+    renderTab({ articles: [article(1)] });
+    const search = screen.getByRole('searchbox', { name: 'Buscar por título ou autor' });
+
+    fireEvent.keyDown(document.body, { key: '/' });
+    expect(search).toHaveFocus();
+
+    const other = document.body.appendChild(document.createElement('input'));
+    other.focus();
+    fireEvent.keyDown(other, { key: '/' });
+    expect(other).toHaveFocus();
+    other.remove();
+  });
 });
 
-describe('ProjectArticlesTab read and archived sections', () => {
+describe('ProjectArticlesTab status', () => {
   const read = article(2, { title: 'Lido', status: 'read' });
   const archived = article(3, { title: 'Arquivado', status: 'archived', archive_note: 'fora do tema' });
 
-  it('wires the read section actions', () => {
-    const { modals, onStatusChange } = renderTab({ articles: [read] });
-    const readSection = within(section(/Artigos Lidos \(1\)/));
+  it('counts each status and lists the chosen one in the same table', () => {
+    renderTab({ articles: [article(1), read, archived] });
 
-    fireEvent.click(readSection.getByRole('button', { name: 'Detalhes' }));
-    fireEvent.click(readSection.getByRole('button', { name: 'Citar' }));
-    fireEvent.click(readSection.getByRole('button', { name: 'Desmarcar' }));
-    fireEvent.click(readSection.getByRole('button', { name: /Citação em Massa/ }));
+    expect(status(/^Todos/)).toHaveTextContent('Todos 3');
+    fireEvent.click(status(/^Lidos/));
 
-    expect(modals.setSelectedArticleForDetails).toHaveBeenCalledWith(read);
-    expect(modals.setCitationArticle).toHaveBeenCalledWith(read);
-    expect(onStatusChange).toHaveBeenCalledWith(2, 'new');
-    expect(modals.setIsMassCitationModalOpen).toHaveBeenCalledWith(true);
-    expect(readSection.getByRole('link', { name: 'Ver' })).toHaveAttribute('href', '/articles/2');
+    expect(within(mainList()).getByText('Lido')).toBeInTheDocument();
+    expect(within(mainList()).queryByText('Artigo 1')).not.toBeInTheDocument();
   });
 
-  it('shows the archive reason and restores an archived article', () => {
+  it('restores an archived article from its row', () => {
     const { onStatusChange } = renderTab({ articles: [archived] });
-    const archivedSection = within(section(/Artigos Arquivados \(1\)/));
 
-    expect(archivedSection.getByText('Motivo: fora do tema')).toBeInTheDocument();
-    fireEvent.click(archivedSection.getByRole('button', { name: 'Restaurar' }));
+    fireEvent.click(status(/^Arquivados/));
+    fireEvent.click(within(mainList()).getByTitle('Restaurar Artigo'));
 
     expect(onStatusChange).toHaveBeenCalledWith(3, 'new');
-  });
-
-  it('omits empty sections', () => {
-    renderTab({ articles: [article(1)] });
-
-    expect(screen.queryByText(/Artigos Lidos/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Artigos Arquivados/)).not.toBeInTheDocument();
-  });
-
-  it('tracks whether each section is expanded', () => {
-    renderTab({ articles: [read] });
-    const details = section(/Artigos Lidos \(1\)/) as HTMLDetailsElement;
-
-    details.open = true;
-    fireEvent(details, new Event('toggle'));
-
-    expect(details.querySelector('.lucide-chevron-down')).not.toBeNull();
   });
 });
 
@@ -189,60 +171,94 @@ describe('ProjectArticlesTab pagination', () => {
   });
 });
 
-describe('ProjectArticlesTab filter panel', () => {
+describe('ProjectArticlesTab filters popover', () => {
   const articles = [
-    article(1, { source_databases: '["Scopus"]', local_file_path: '/a.pdf' }),
-    article(2, { source_databases: '["Scopus"]' }),
+    article(1, { source_databases: '["Scopus"]', local_file_path: '/a.pdf', year: 2004 }),
+    article(2, { source_databases: '["Scopus"]', year: 2010 }),
     article(3, { source_databases: '["OpenAlex"]', is_oa: 1 }),
   ];
-  const panel = () => within(screen.getByRole('complementary', { name: 'Filtros' }));
 
-  it('shows how many articles each option would leave', () => {
+  it('opens under "Filtros" and shows how many articles each option would leave', () => {
     renderTab({ articles });
+    expect(screen.queryByRole('dialog', { name: 'Filtros' })).not.toBeInTheDocument();
 
-    expect(panel().getByRole('checkbox', { name: 'Scopus, 2 artigos' })).toBeInTheDocument();
-    expect(panel().getByRole('checkbox', { name: 'Com PDF, 1 artigo' })).toBeInTheDocument();
-    expect(panel().getByRole('radio', { name: 'Lidos, 0 artigos' })).toBeInTheDocument();
+    openFilters();
+
+    expect(popover().getByRole('checkbox', { name: 'Scopus, 2 artigos' })).toBeInTheDocument();
+    expect(popover().getByRole('checkbox', { name: 'Com PDF, 1 artigo' })).toBeInTheDocument();
   });
 
   it('updates the counts with the other filters and dims options that would leave nothing', () => {
     renderTab({ articles });
+    openFilters();
 
-    fireEvent.click(panel().getByRole('checkbox', { name: /^Com PDF,/ }));
+    fireEvent.click(popover().getByRole('checkbox', { name: /^Com PDF,/ }));
 
-    expect(panel().getByRole('checkbox', { name: 'OpenAlex, 0 artigos' }).closest('label')).toHaveClass('is-empty');
-    expect(panel().getByRole('checkbox', { name: 'Scopus, 1 artigo' }).closest('label')).not.toHaveClass('is-empty');
+    expect(popover().getByRole('checkbox', { name: 'OpenAlex, 0 artigos' }).closest('label')).toHaveClass('is-empty');
+    expect(popover().getByRole('checkbox', { name: 'Scopus, 1 artigo' }).closest('label')).not.toHaveClass('is-empty');
   });
 
-  it('clears every filter from the panel header', () => {
+  it('clears the filters with "Limpar" and closes with the count it leaves', () => {
     renderTab({ articles });
-    fireEvent.click(panel().getByRole('checkbox', { name: /^Scopus,/ }));
+    openFilters();
+    fireEvent.click(popover().getByRole('checkbox', { name: /^Scopus,/ }));
+    expect(popover().getByRole('button', { name: 'Mostrar 2 artigos' })).toBeInTheDocument();
 
-    fireEvent.click(panel().getByRole('button', { name: 'Limpar' }));
+    fireEvent.click(popover().getByRole('button', { name: 'Limpar' }));
+    fireEvent.click(popover().getByRole('button', { name: 'Mostrar 3 artigos' }));
 
-    expect(panel().getByRole('checkbox', { name: /^Scopus,/ })).not.toBeChecked();
+    expect(screen.queryByRole('dialog', { name: 'Filtros' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Filtros/ })).toHaveFocus();
+  });
+
+  it('closes with Escape', () => {
+    renderTab({ articles });
+    openFilters();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(screen.queryByRole('dialog', { name: 'Filtros' })).not.toBeInTheDocument();
+  });
+
+  it('narrows the list to a year range typed in its fields, leaving out the articles without a year', () => {
+    renderTab({ articles });
+    openFilters();
+    const from = popover().getByRole('spinbutton', { name: 'De' });
+
+    fireEvent.change(from, { target: { value: '2005' } });
+    fireEvent.keyDown(from, { key: 'Enter' });
+
+    expect(within(mainList()).getByText('Artigo 2')).toBeInTheDocument();
+    expect(within(mainList()).queryByText('Artigo 1')).not.toBeInTheDocument();
+    expect(within(mainList()).queryByText('Artigo 3')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remover filtro desde 2005' })).toBeInTheDocument();
+
+    fireEvent.click(popover().getByRole('checkbox', { name: 'Incluir os 1 artigos sem ano' }));
     expect(within(mainList()).getByText('Artigo 3')).toBeInTheDocument();
   });
 });
 
-describe('ProjectArticlesTab result line', () => {
+describe('ProjectArticlesTab active filter chips', () => {
   const articles = [article(1, { local_file_path: '/a.pdf', is_oa: 1 }), article(2, { is_oa: 1 }), article(3)];
+  const chooseTwoFilters = () => {
+    openFilters();
+    fireEvent.click(popover().getByRole('checkbox', { name: /^Acesso aberto,/ }));
+    fireEvent.click(popover().getByRole('checkbox', { name: /^Com PDF,/ }));
+  };
 
-  it('says how many articles the filters leave and lists them as chips', () => {
+  it('says how many articles the filters leave and lists them as chips beside "Filtros"', () => {
     renderTab({ articles });
 
-    fireEvent.click(screen.getByRole('checkbox', { name: /^Acesso aberto,/ }));
-    fireEvent.click(screen.getByRole('checkbox', { name: /^Com PDF,/ }));
+    chooseTwoFilters();
 
     expect(screen.getByText('1 de 3 artigos')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Filtros (2 ativos)' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Remover filtro Com PDF' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Remover filtro Acesso aberto' })).toBeInTheDocument();
   });
 
   it('removes one filter from its chip and all of them with "Limpar"', () => {
     renderTab({ articles });
-    fireEvent.click(screen.getByRole('checkbox', { name: /^Acesso aberto,/ }));
-    fireEvent.click(screen.getByRole('checkbox', { name: /^Com PDF,/ }));
+    chooseTwoFilters();
     const chips = () => within(screen.getByLabelText('Filtros ativos'));
 
     fireEvent.click(chips().getByRole('button', { name: 'Remover filtro Com PDF' }));

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, GraduationCap, Unlock } from 'lucide-react';
+import { Archive, Calendar, GraduationCap, Unlock } from 'lucide-react';
 import type { Article } from '../../../../types';
 import { splitAuthorNames } from '../../../../utils/authors';
 import { SourceDatabaseBadges } from '../../../../components/common/SourceDatabaseBadges';
@@ -10,7 +10,7 @@ const META_ICON = 13;
 const citationLabel = (count: number): string => `${count} ${count === 1 ? 'citação' : 'citações'}`;
 
 /**
- * Year, DOI, citations and open access under the title. Open access lives here, not among the bases,
+ * Year, DOI, citations, open access and, for an archived article, why it was archived, under the title. Open access lives here, not among the bases,
  * because it describes the article, not where it was found.
  *
  * @example <ArticleMetaLine article={article} />
@@ -29,6 +29,12 @@ export const ArticleMetaLine: React.FC<{ article: Article }> = ({ article }) => 
     {article.is_oa === 1 && (
       <span className="article-meta__item article-meta__oa">
         <Unlock size={META_ICON} /> Acesso aberto
+      </span>
+    )}
+    {/* The archived articles used to show their reason in a section of their own; they now share the table. */}
+    {article.status === 'archived' && article.archive_note && (
+      <span className="article-meta__item">
+        <Archive size={META_ICON} /> Motivo: {article.archive_note}
       </span>
     )}
   </div>
