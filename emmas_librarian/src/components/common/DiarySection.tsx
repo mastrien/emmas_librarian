@@ -1,21 +1,23 @@
+import { DIARY_CONFLICT } from './diary/useDiaryPageSave';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import type { MDXEditorMethods } from '@mdxeditor/editor';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { DiaryEntry } from '../../types';
 import { DiaryTimeline } from './diary/DiaryTimeline';
-import { DiaryPageToolbar, type DiaryMode } from './diary/DiaryPageToolbar';
-import { DiaryEditor, DiaryEmptyState } from './diary/DiaryEditor';
+import type { DiaryMode } from './diary/DiaryPageToolbar';
+import { DiaryEmptyState } from './diary/DiaryEditor';
+import { DiaryPage, type DiaryPageHandle } from './diary/DiaryPage';
 import { DiaryHistoryDialog, type DiaryVersion } from './diary/DiaryDialogs';
+import { diaryPageSummary } from './diary/diaryPages';
 import { formatDiaryDate } from './diary/diaryDates';
 import { localIsoDate } from '../../utils/localDate';
 import { useDialogs } from './dialogs/DialogProvider';
+import { usePageCommands } from './shell/palette/PageCommandsContext';
 import './diary/diary.css';
 
 interface DiarySectionProps {
   projectId: number;
 }
 
-const AUTOSAVE_DELAY_MS = 2000;
 const MODE_KEY = 'diary_mode';
 
 // Ler/Editar stays as the user left it, from page to page and from one visit to the next (decision on the redesign
@@ -28,21 +30,41 @@ function useDiaryMode(): [DiaryMode, (mode: DiaryMode) => void] {
       return 'edit';
     }
   });
-  const change = (next: DiaryMode) => {
+  const change = useCallback((next: DiaryMode) => {
     setMode(next);
     try {
       localStorage.setItem(MODE_KEY, next);
     } catch {
       /* blocked storage: keep the mode for this visit */
     }
-  };
+  }, []);
   return [mode, change];
 }
 
-const clockTime = () => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+/**
+ * The diary's list of pages, as the service gives it, kept in step with what the open page saves: the first line of a
+ * page changes in the list when it is saved, with no new read.
+ */
+function useDiaryEntries(projectId: number) {
+  const projectService = useProjectService();
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const reload = useCallback(async () => {
+    setEntries((await projectService.getDiaryEntries(projectId)) as DiaryEntry[]);
+  }, [projectService, projectId]);
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+  const saved = useCallback((date: string, text: string) => {
+    setEntries((all) => all.map((e) => (e.entry_date === date ? { ...e, content: text } : e)));
+  }, []);
+  return { entries, reload, saved };
+}
 
 /**
  * Per-project research diary: one markdown page per day, auto-saved, with version history.
+ *
+ * Which page is open is just a date. The page itself (`DiaryPage`) reads its own text and saves its own text under its
+ * own date, so opening another page cannot carry text from one to the other.
  *
  * Usage:
  *   <DiarySection projectId={project.id} />
@@ -50,115 +72,87 @@ const clockTime = () => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit'
 export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
   const projectService = useProjectService();
   const { confirm } = useDialogs();
-  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const { entries, reload, saved } = useDiaryEntries(projectId);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [content, setContent] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  // Bumped to open the same page again from the database (a version restored, a change made elsewhere).
+  const [pageVersion, setPageVersion] = useState(0);
   const [mode, setMode] = useDiaryMode();
-  const [savedAt, setSavedAt] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
-  const [historyList, setHistoryList] = useState<DiaryVersion[]>([]);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const editorRef = useRef<MDXEditorMethods>(null);
-  // The editor can emit a late onChange for the previous page right after switching dates.
-  const currentEditDateRef = useRef<string | null>(null);
-
+  const [history, setHistory] = useState<{ versions: DiaryVersion[]; current: string }>({ versions: [], current: '' });
+  const pageRef = useRef<DiaryPageHandle>(null);
   const todayStr = localIsoDate();
-
-  const loadEntries = useCallback(async () => {
-    const data = await projectService.getDiaryEntries(projectId);
-    setEntries(data as DiaryEntry[]);
-  }, [projectId]);
-
-  useEffect(() => {
-    loadEntries();
-  }, [loadEntries]);
-
-  const selectDate = useCallback(
-    async (date: string) => {
-      // Auto-save current before switching
-      if (selectedDate && hasChanges && content.trim()) {
-        await projectService.saveDiaryEntry(projectId, selectedDate, content);
-      }
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      setSelectedDate(date);
-      currentEditDateRef.current = date;
-      setHasChanges(false);
-      setSavedAt(null);
-      const entry = await projectService.getDiaryEntry(projectId, date);
-      const newContent = entry?.content || '';
-      setContent(newContent);
-      setTimeout(() => editorRef.current?.setMarkdown(newContent), 50);
-    },
-    [projectId, selectedDate, hasChanges, content],
-  );
 
   const handleToday = async () => {
     if (!entries.some((e) => e.entry_date === todayStr)) {
-      await projectService.saveDiaryEntry(projectId, todayStr, '');
-      await loadEntries();
+      // The list may be older than the database: today's page can already exist (made in another window). The
+      // database then refuses the empty write; the page is there, so it is read again and opened.
+      await projectService.saveDiaryEntry(projectId, todayStr, '', null).catch((err: unknown) => {
+        if ((err as { code?: string } | null)?.code !== DIARY_CONFLICT) throw err;
+      });
+      await reload();
     }
-    selectDate(todayStr);
+    setSelectedDate(todayStr);
   };
 
-  const persist = async (date: string, text: string) => {
-    setSaving(true);
-    await projectService.saveDiaryEntry(projectId, date, text);
-    await loadEntries();
-    setSaving(false);
-    setHasChanges(false);
-    setSavedAt(clockTime());
-  };
-
-  const handleContentChange = (newContent: string) => {
-    if (currentEditDateRef.current !== selectedDate) return;
-    setContent(newContent);
-    setHasChanges(true);
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    const dateToSave = selectedDate;
-    saveTimerRef.current = setTimeout(async () => {
-      if (dateToSave && newContent.trim()) await persist(dateToSave, newContent);
-    }, AUTOSAVE_DELAY_MS);
-  };
-
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!selectedDate) return;
     const message = `A página de ${formatDiaryDate(selectedDate)} será excluída permanentemente.`;
     if (!(await confirm({ title: 'Excluir página?', message, confirmLabel: 'Excluir', danger: true }))) return;
+    // What is waiting would be saved on the way out and bring the page back.
+    pageRef.current?.discard();
     await projectService.deleteDiaryEntry(projectId, selectedDate);
     setSelectedDate(null);
-    setContent('');
-    await loadEntries();
-  };
+    await reload();
+  }, [confirm, projectService, projectId, selectedDate, reload]);
 
-  const handleOpenHistory = async () => {
+  const handleOpenHistory = useCallback(async () => {
     if (!selectedDate) return;
     try {
-      setHistoryList((await projectService.getDiaryEntryHistory(projectId, selectedDate)) as DiaryVersion[]);
+      await pageRef.current?.flush();
+      const [versions, entry] = await Promise.all([
+        projectService.getDiaryEntryHistory(projectId, selectedDate),
+        projectService.getDiaryEntry(projectId, selectedDate),
+      ]);
+      setHistory({ versions: versions as DiaryVersion[], current: entry?.content ?? '' });
       setShowHistory(true);
     } catch (err) {
       console.error('Failed to load diary history:', err);
     }
-  };
+  }, [projectService, projectId, selectedDate]);
 
   const handleRestoreVersion = async (versionId: number) => {
     try {
       await projectService.restoreDiaryEntryVersion(versionId);
-      if (selectedDate) {
-        const entry = await projectService.getDiaryEntry(projectId, selectedDate);
-        const newContent = entry?.content || '';
-        setContent(newContent);
-        editorRef.current?.setMarkdown(newContent);
-        setHasChanges(false);
-      }
-      await loadEntries();
+      setPageVersion((version) => version + 1);
+      await reload();
       setShowHistory(false);
     } catch (err) {
       console.error('Failed to restore diary version:', err);
     }
   };
 
+  const handleReload = useCallback(() => {
+    setPageVersion((version) => version + 1);
+    void reload();
+  }, [reload]);
+
+  usePageCommands('diary', [
+    { id: 'diary:today', label: 'Diário: página de hoje', run: () => void handleToday() },
+    ...(selectedDate
+      ? [
+          {
+            id: 'diary:history',
+            label: 'Diário: histórico de versões desta página',
+            run: () => void handleOpenHistory(),
+          },
+          {
+            id: 'diary:mode',
+            label: mode === 'read' ? 'Diário: editar esta página' : 'Diário: só ler esta página',
+            run: () => setMode(mode === 'read' ? 'edit' : 'read'),
+          },
+        ]
+      : []),
+  ]);
   return (
     <div className="diary">
       <DiaryTimeline
@@ -166,39 +160,32 @@ export const DiarySection: React.FC<DiarySectionProps> = ({ projectId }) => {
         selectedDate={selectedDate}
         today={todayStr}
         onToday={handleToday}
-        onSelect={selectDate}
+        onSelect={setSelectedDate}
       />
       <div className="diary-main">
         {selectedDate ? (
-          <>
-            <DiaryPageToolbar
-              mode={mode}
-              onModeChange={setMode}
-              saving={saving}
-              hasChanges={hasChanges}
-              savedAt={savedAt}
-              onOpenHistory={handleOpenHistory}
-              onDelete={() => void handleDelete()}
-            />
-            <article className="diary-doc">
-              <h2 className="diary-label diary-doc__date">{formatDiaryDate(selectedDate)}</h2>
-              <DiaryEditor
-                ref={editorRef}
-                date={selectedDate}
-                markdown={content}
-                readOnly={mode === 'read'}
-                onChange={handleContentChange}
-              />
-            </article>
-          </>
+          <DiaryPage
+            key={`${projectId}:${selectedDate}:${pageVersion}`}
+            ref={pageRef}
+            projectId={projectId}
+            date={selectedDate}
+            mode={mode}
+            onModeChange={setMode}
+            onSaved={saved}
+            onOpenHistory={handleOpenHistory}
+            onDelete={() => void handleDelete()}
+            onReload={handleReload}
+          />
         ) : (
           <DiaryEmptyState />
         )}
       </div>
       {showHistory && selectedDate && (
         <DiaryHistoryDialog
-          date={selectedDate}
-          versions={historyList}
+          key={`${selectedDate}:${pageVersion}`}
+          title={diaryPageSummary(history.current) || formatDiaryDate(selectedDate)}
+          current={history.current}
+          versions={history.versions}
           onRestore={handleRestoreVersion}
           onClose={() => setShowHistory(false)}
         />

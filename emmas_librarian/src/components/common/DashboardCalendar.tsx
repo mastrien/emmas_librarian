@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ScientificVenue } from '../../types';
 import { MONTH_NAMES, WEEKDAYS, dayTitle, deadlineColorsByDate, isoDay } from './calendar/calendarDays';
 import './calendar/calendar.css';
@@ -23,10 +23,16 @@ interface DayProps {
 const isSameDay = (a: Date, b: Date) =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
-// A day: the number, its state (today, diary, clickable) as classes, and up to three deadline dots in venue colours.
+// A day: the number and its state (today, diary, deadline, clickable) as classes.
 const CalendarDay: React.FC<DayProps> = ({ date, iso, diary, colors, onSelect }) => {
   const today = isSameDay(date, new Date());
-  const className = ['month-calendar-day', onSelect && 'is-clickable', diary && 'has-diary', today && 'is-today']
+  const className = [
+    'month-calendar-day',
+    onSelect && 'is-clickable',
+    diary && 'has-diary',
+    today && 'is-today',
+    colors.length > 0 && 'has-deadline',
+  ]
     .filter(Boolean)
     .join(' ');
   return (
@@ -36,38 +42,28 @@ const CalendarDay: React.FC<DayProps> = ({ date, iso, diary, colors, onSelect })
       onClick={() => onSelect && onSelect(iso)}
     >
       {date.getDate()}
-      {colors.length > 0 && !today && (
-        <div className="month-calendar-dots">
-          {colors.slice(0, 3).map((color, idx) => (
-            <span key={idx} className="month-calendar-dot" style={{ '--dot-color': color } as React.CSSProperties} />
-          ))}
-        </div>
-      )}
     </div>
   );
 };
 
 const MonthHeader: React.FC<{ year: number; month: number; onMove: (delta: number) => void }> = (props) => (
   <div className="month-calendar-head">
-    <div className="month-calendar-title">
-      <CalendarIcon size={16} />
-      <span>
-        {MONTH_NAMES[props.month]} {props.year}
-      </span>
-    </div>
+    <h2 className="month-calendar-title">
+      {MONTH_NAMES[props.month]} {props.year}
+    </h2>
     <div className="month-calendar-nav">
-      <button type="button" onClick={() => props.onMove(-1)}>
-        <ChevronLeft size={16} />
+      <button type="button" aria-label="Mês anterior" onClick={() => props.onMove(-1)}>
+        <ChevronLeft size={14} />
       </button>
-      <button type="button" onClick={() => props.onMove(1)}>
-        <ChevronRight size={16} />
+      <button type="button" aria-label="Próximo mês" onClick={() => props.onMove(1)}>
+        <ChevronRight size={14} />
       </button>
     </div>
   </div>
 );
 
 /**
- * The month calendar of the dashboard and the agenda: diary days shaded, deadline dots in the venues' colours, today
+ * The month calendar of the dashboard and the agenda: diary days shaded, a line under the days with a deadline, today
  * highlighted. Clicking a day passes its date (yyyy-mm-dd) to `onSelectDate`.
  *
  * @example <DashboardCalendar diarySet={diary} venues={venues} onSelectDate={(d) => addVenue(d)} />
@@ -83,8 +79,10 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({ diarySet, 
     <div data-testid="date-calendar" className="month-calendar">
       <MonthHeader year={year} month={month} onMove={(delta) => setShown(new Date(year, month + delta, 1))} />
       <div className="month-calendar-weekdays">
-        {WEEKDAYS.map((day) => (
-          <div key={day}>{day}</div>
+        {WEEKDAYS.map((day, i) => (
+          <div key={i} title={day}>
+            {day[0]}
+          </div>
         ))}
       </div>
       <div className="month-calendar-days">

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { describe, it, expect } from 'vitest';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { DialogProvider, useDialogs, type Dialogs } from '../DialogProvider';
+import { describe, it, expect, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { DialogProvider, informToneFromTitle, useDialogs, type Dialogs } from '../DialogProvider';
 
 // Hands the test the dialogs of the provider it is rendered in.
 const Grab: React.FC<{ onReady: (dialogs: Dialogs) => void }> = ({ onReady }) => {
@@ -28,6 +28,91 @@ const DELETE = {
   confirmLabel: 'Excluir evento',
   danger: true,
 };
+
+describe('informToneFromTitle', () => {
+  it('reads a title that starts with "Erro" or "Falha" as a problem and anything else as news', () => {
+    expect(informToneFromTitle('Erro ao salvar')).toBe('danger');
+    expect(informToneFromTitle('  Falha na cópia')).toBe('danger');
+    expect(informToneFromTitle('Não foi possível abrir o PDF')).toBe('danger');
+    expect(informToneFromTitle('Backup criado')).toBe('info');
+  });
+});
+
+describe('DialogProvider notice tones (board 181)', () => {
+  const toneOfNotice = async (options: { title: string; tone?: 'ok' | 'warn' }) => {
+    const dialogs = renderProvider();
+    act(() => {
+      void dialogs.current.inform({ message: 'Texto.', ...options });
+    });
+    const dialog = await screen.findByRole('dialog', { name: options.title });
+    return dialog.querySelector('.app-modal-icon');
+  };
+
+  it('draws the icon in the tone the caller chose', async () => {
+    expect(await toneOfNotice({ title: 'PDFs importados', tone: 'ok' })).toHaveClass('is-ok');
+  });
+
+  it('draws an error notice in red without the caller asking', async () => {
+    expect(await toneOfNotice({ title: 'Erro ao importar' })).toHaveClass('is-danger');
+  });
+});
+
+describe('DialogProvider technical details (board 181)', () => {
+  const openWithDetails = async () => {
+    const dialogs = renderProvider();
+    act(() => {
+      void dialogs.current.inform({
+        title: 'Não conseguimos abrir o PDF',
+        message: 'O arquivo não abriu.',
+        details: "ENOENT: no such file or directory, open 'a.pdf'",
+      });
+    });
+    return screen.findByRole('dialog', { name: 'Não conseguimos abrir o PDF' });
+  };
+
+  it('keeps the technical text folded under "Detalhes técnicos", away from the plain sentence', async () => {
+    const dialog = await openWithDetails();
+
+    expect(within(dialog).getByText('Detalhes técnicos')).toBeInTheDocument();
+    expect(dialog.querySelector('details')).not.toHaveAttribute('open');
+    expect(dialog.querySelector('pre')).toHaveTextContent("ENOENT: no such file or directory, open 'a.pdf'");
+  });
+
+  it('copies the details to the clipboard', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    const dialog = await openWithDetails();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Copiar detalhes' }));
+
+    expect(writeText).toHaveBeenCalledWith("ENOENT: no such file or directory, open 'a.pdf'");
+    expect(await within(dialog).findByRole('button', { name: 'Copiado' })).toBeInTheDocument();
+  });
+
+  it('does not say "Copiado" when the clipboard refuses', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    Object.assign(navigator, { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('negado')) } });
+    const dialog = await openWithDetails();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Copiar detalhes' }));
+
+    await waitFor(() => expect(consoleError).toHaveBeenCalled());
+    expect(within(dialog).getByRole('button', { name: 'Copiar detalhes' })).toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: 'Copiado' })).not.toBeInTheDocument();
+    consoleError.mockRestore();
+  });
+
+  it('shows no details block when the notice has none', async () => {
+    const dialogs = renderProvider();
+    act(() => {
+      void dialogs.current.inform({ title: 'Backup criado', message: 'Pronto.' });
+    });
+
+    const dialog = await screen.findByRole('dialog', { name: 'Backup criado' });
+
+    expect(dialog.querySelector('details')).toBeNull();
+  });
+});
 
 describe('DialogProvider (Arca 103/134)', () => {
   it('asks with the app window and resolves true on the confirm button', async () => {

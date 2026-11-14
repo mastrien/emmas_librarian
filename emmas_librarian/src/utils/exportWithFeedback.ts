@@ -1,4 +1,4 @@
-import { describeError } from './describeError';
+import { failureNotice } from '../components/common/dialogs/failureNotice';
 import type { Dialogs } from '../components/common/dialogs/DialogProvider';
 
 /** Window titles of the two outcomes; the E2E answers them by these names. */
@@ -24,6 +24,6 @@ export async function exportWithFeedback(
     if (savedPath)
       await inform({ title: EXPORT_DONE_TITLE, message: `${kind} exportado com sucesso para: ${savedPath}` });
   } catch (err) {
-    await inform({ title: EXPORT_FAILED_TITLE, message: `Erro ao exportar ${kind}: ${describeError(err)}` });
+    await inform(failureNotice(EXPORT_FAILED_TITLE, `A exportação em ${kind} não foi concluída.`, err));
   }
 }

@@ -39,7 +39,9 @@ const ListItem: React.FC<{ item: SearchHistoryItem; selected: boolean; watched: 
     <span className="history-item__query">{props.item.unified_query}</span>
     <span className="history-item__foot">
       <span>{historyBasesLine(props.item)}</span>
-      <span className="history-item__saved">{props.item.total_results} salvos</span>
+      <span className="history-item__saved">
+        {props.item.total_results} {props.item.total_results === 1 ? 'salvo' : 'salvos'}
+      </span>
     </span>
   </button>
 );
@@ -98,6 +100,7 @@ const Detail: React.FC<DetailProps> = ({ item, projectId, monitor, onMonitorChan
     <div className="history-detail__columns">
       <HistoryBreakdown
         breakdown={parseStoredObject<SearchBreakdown>(item.results_breakdown)}
+        saved={item.total_results}
         uniqueResults={item.unique_results}
       />
       <BaseQueries item={item} />

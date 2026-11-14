@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 import type { Article, PrismaRecords } from '../../../types';
 import {
   brazilianDate,
@@ -25,6 +26,8 @@ interface PrismaPanelProps {
   records: PrismaRecords;
   viaOf: (article: Article) => string;
   actions: PrismaPanelActions;
+  /** The X of the panel's header (board 166): the diagram then takes the whole width. */
+  onClose: () => void;
 }
 
 /**
@@ -70,17 +73,28 @@ function articleItems(box: PrismaBox, articles: Article[]) {
     .map((a) => ({ key: String(a.id), label: a.title, detail: a.year ? String(a.year) : '' }));
 }
 
-const Lines: React.FC<{ lines: PrismaLine[]; label: string }> = ({ lines, label }) =>
+// "POR BASE   N": a small heading over a list, with the column it counts (board 166).
+const ListHeading: React.FC<{ children: string }> = ({ children }) => (
+  <div className="prisma-list-heading">
+    <span>{children}</span>
+    <span>N</span>
+  </div>
+);
+
+const Lines: React.FC<{ lines: PrismaLine[]; label: string; heading?: string }> = ({ lines, label, heading }) =>
   lines.length ? (
-    <ul className="prisma-list" aria-label={label}>
-      {lines.map((l) => (
-        <ItemRow
-          key={l.label}
-          label={l.label + (l.note ? ` (${l.note})` : '')}
-          detail={l.n === null ? 'sem dados' : String(l.n)}
-        />
-      ))}
-    </ul>
+    <>
+      {heading && <ListHeading>{heading}</ListHeading>}
+      <ul className="prisma-list" aria-label={label}>
+        {lines.map((l) => (
+          <ItemRow
+            key={l.label}
+            label={l.label + (l.note ? ` (${l.note})` : '')}
+            detail={l.n === null ? 'sem dados' : String(l.n)}
+          />
+        ))}
+      </ul>
+    </>
   ) : null;
 
 const Items: React.FC<{ box: PrismaBox; flow: PrismaFlow; articles: Article[] }> = ({ box, flow, articles }) => {
@@ -88,6 +102,7 @@ const Items: React.FC<{ box: PrismaBox; flow: PrismaFlow; articles: Article[] }>
   const items = searchList ? searchItems(flow) : articleItems(box, articles);
   return (
     <>
+      {searchList && items.length > 0 && <ListHeading>Por busca</ListHeading>}
       <ul className="prisma-list" aria-label={searchList ? 'Buscas' : 'Artigos'}>
         {items.slice(0, SHOWN).map((item) => (
           <ItemRow key={item.key} label={item.label} detail={item.detail} />
@@ -126,11 +141,16 @@ const Editors: React.FC<PrismaPanelProps> = ({ box, articles, records, viaOf, ac
 export const PrismaPanel: React.FC<PrismaPanelProps> = (props) => {
   const { box, flow, articles } = props;
   return (
-    <aside aria-label="De onde vem o número" className="review-section prisma-panel">
-      <span className="review-menu-title prisma-p0">De onde vem o número</span>
+    <aside aria-label="De onde vem o número" className="prisma-panel">
+      <div className="prisma-panel__head">
+        <span className="prisma-panel__label">De onde vem o número</span>
+        <button type="button" className="prisma-panel__close" aria-label="Fechar o painel" onClick={props.onClose}>
+          <X size={16} aria-hidden="true" />
+        </button>
+      </div>
       <span className="review-muted">{COLUMN_NAMES[box.column]}</span>
       <h2 className="prisma-m0 prisma-title-sm">{box.title}</h2>
-      <strong className="prisma-title-lg">n = {box.n}</strong>
+      <strong className="prisma-title-lg">{box.n}</strong>
       <p className="prisma-text">{box.how}</p>
       {box.warnings.map((w) => (
         <div key={w.text} role="note" className={`prisma-warning prisma-warning--${warningTone(w.kind)}`}>
@@ -139,7 +159,7 @@ export const PrismaPanel: React.FC<PrismaPanelProps> = (props) => {
       ))}
       {box.key === 'removed' && <p className="review-muted prisma-text">{DUPLICATE_HELP}</p>}
       <Editors {...props} />
-      <Lines lines={box.lines} label="Linhas da caixa" />
+      <Lines lines={box.lines} label="Linhas da caixa" heading={box.key === 'identified' ? 'Por base' : undefined} />
       <Lines lines={box.details} label="Detalhes" />
       {box.key !== 'omIdentified' && <Items box={box} flow={flow} articles={articles} />}
     </aside>

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { keyBelongsElsewhere } from '../ProjectDetails/components/articles/keyboardTargets';
 import { Check, CircleHelp, X } from 'lucide-react';
 import { QUICK_KINDS, quickLabel, type QuickKind } from './screeningFilter';
 import type { ScreeningLabel } from '../../types';
 import type { ReviewRow } from '../../utils/screeningView';
 import { KINDS_BY_STAGE } from '../../utils/screeningPresets';
 import { LabelMenu } from './LabelMenu';
+import { KIND_KEYS } from './decisionKeys';
 import { ReviewArticleRow } from './ReviewArticleRow';
 import { NumberedPages } from '../../components/common/NumberedPages';
 import { usePagedRows } from '../../hooks/usePagedRows';
@@ -12,14 +14,29 @@ import { REVIEW_PAGE_SIZE } from './ReviewSections';
 
 interface PendingListProps {
   rows: ReviewRow[];
+  selection: Selection;
   labels: ScreeningLabel[];
   onPick: (rows: ReviewRow[], label: ScreeningLabel) => void;
 }
 
-// Only rows still pending count as selected, so a decided article leaves the selection by itself.
-function useSelection(rows: ReviewRow[]) {
+/**
+ * The selection mode of the pending list. Only rows still pending count as selected, so a decided article leaves the
+ * selection by itself. The page owns it, because its button sits in the bar with the statuses (board 164).
+ *
+ * It starts over when `resetKey` changes (the status or the stage on screen), so ids picked in one list do not carry
+ * to another where the same articles are pending too.
+ *
+ * @example const selection = useSelection(view.pending, 'pending:title'); <PendingList rows={view.pending} selection={selection} … />
+ */
+export function useSelection(rows: ReviewRow[], resetKey: string) {
   const [selecting, setSelecting] = useState(false);
   const [ids, setIds] = useState<Set<number>>(new Set());
+  const [seenKey, setSeenKey] = useState(resetKey);
+  if (seenKey !== resetKey) {
+    setSeenKey(resetKey);
+    setSelecting(false);
+    setIds(new Set());
+  }
   const selected = rows.filter((r) => ids.has(r.article.id));
   const toggle = (id: number) =>
     setIds((prev) => {
@@ -32,6 +49,7 @@ function useSelection(rows: ReviewRow[]) {
     setIds(new Set());
   };
   const all = () => setIds(new Set(rows.map((r) => r.article.id)));
+  const none = () => setIds(new Set());
   return {
     selecting,
     selected,
@@ -40,10 +58,13 @@ function useSelection(rows: ReviewRow[]) {
     start: () => setSelecting(true),
     exit,
     all,
+    none,
+    /** Every pending article is picked, so the same button takes them all back. */
+    allSelected: rows.length > 0 && selected.length === rows.length,
   };
 }
 
-type Selection = ReturnType<typeof useSelection>;
+export type Selection = ReturnType<typeof useSelection>;
 
 const BatchBar: React.FC<{ selection: Selection; labels: ScreeningLabel[]; onPick: PendingListProps['onPick'] }> = ({
   selection,
@@ -56,8 +77,8 @@ const BatchBar: React.FC<{ selection: Selection; labels: ScreeningLabel[]; onPic
       <strong aria-live="polite">
         {count === 0 ? 'Nenhum selecionado' : `${count} ${count === 1 ? 'selecionado' : 'selecionados'}`}
       </strong>
-      <button type="button" className="review-small" onClick={selection.all}>
-        Selecionar todos
+      <button type="button" className="review-small" onClick={selection.allSelected ? selection.none : selection.all}>
+        {selection.allSelected ? 'Desmarcar todos' : 'Selecionar todos'}
       </button>
       <LabelMenu
         labels={labels}
@@ -76,6 +97,25 @@ const BatchBar: React.FC<{ selection: Selection; labels: ScreeningLabel[]; onPic
     </div>
   );
 };
+
+/** The key that picks each quick decision while the pointer is over a row: A, E and R, as in the audit (see decisionKeys). */
+export const QUICK_KEYS: Record<QuickKind, string> = KIND_KEYS;
+
+// A, E and R decide the row under the pointer, as the keys on the buttons say; typing in a field, a window or menu
+// open over the page, and a key held down (which repeats) are left alone.
+function useQuickKeys(row: ReviewRow | null, labels: ScreeningLabel[], onPick: PendingListProps['onPick']) {
+  useEffect(() => {
+    if (!row) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.repeat || keyBelongsElsewhere(e)) return;
+      const kind = QUICK_KINDS.find((q) => QUICK_KEYS[q.kind] === e.key.toLowerCase())?.kind;
+      const target = kind && quickLabel(labels, kind);
+      if (target) onPick([row], target);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [row, labels, onPick]);
+}
 
 const QUICK_ICONS: Record<QuickKind, React.ReactNode> = {
   include: <Check size={14} className="review-icon--include" aria-hidden="true" />,
@@ -106,6 +146,7 @@ const QuickDecision: React.FC<{ row: ReviewRow; labels: ScreeningLabel[]; onPick
           onClick={() => onPick([row], target)}
         >
           {QUICK_ICONS[kind]} {label}
+          <kbd className="review-kbd">{QUICK_KEYS[kind].toUpperCase()}</kbd>
         </button>
       );
     })}
@@ -118,30 +159,25 @@ const QuickDecision: React.FC<{ row: ReviewRow; labels: ScreeningLabel[]; onPick
  *
  * @example <PendingList rows={view.pending} labels={labels} onPick={(rows, label) => decide(rows, label)} />
  */
-export const PendingList: React.FC<PendingListProps> = ({ rows, labels, onPick }) => {
-  const selection = useSelection(rows);
+export const PendingList: React.FC<PendingListProps> = ({ rows, selection, labels, onPick }) => {
   // "Selecionar todos" takes every pending article, not only this page.
   const paged = usePagedRows(rows, REVIEW_PAGE_SIZE);
-  const read = rows.filter((r) => r.article.status === 'read').length;
+  // The row under the pointer is kept by its article id and read from the current rows: a row that was decided leaves
+  // the list without a mouseleave, and a stale object would be decided again by the next key (review of PR #187).
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const hovered = rows.find((r) => r.article.id === hoveredId) ?? null;
+  useQuickKeys(selection.selecting ? null : hovered, labels, onPick);
   return (
     <>
-      {selection.selecting ? (
-        <BatchBar selection={selection} labels={labels} onPick={onPick} />
-      ) : (
-        <div className="review-list-head">
-          <span className="review-muted">
-            {rows.length} {rows.length === 1 ? 'artigo' : 'artigos'} sem decisão ({read} já lidos no projeto)
-          </span>
-          <button type="button" className="review-small" onClick={selection.start} disabled={rows.length === 0}>
-            Selecionar vários
-          </button>
-        </div>
-      )}
+      {selection.selecting && <BatchBar selection={selection} labels={labels} onPick={onPick} />}
       <div className="review-list">
         {paged.rows.map((row) => (
           <ReviewArticleRow
             key={row.article.id}
             row={row}
+            onHover={(over) =>
+              setHoveredId((current) => (over ? row.article.id : current === row.article.id ? null : current))
+            }
             selection={
               selection.selecting
                 ? { checked: selection.isSelected(row.article.id), onToggle: () => selection.toggle(row.article.id) }
@@ -149,6 +185,9 @@ export const PendingList: React.FC<PendingListProps> = ({ rows, labels, onPick }
             }
             actions={
               <>
+                {!selection.selecting && (
+                  <span className="review-chip review-chip--none review-pending-badge">sem decisão</span>
+                )}
                 {!selection.selecting && <QuickDecision row={row} labels={labels} onPick={onPick} />}
                 <LabelMenu
                   labels={labels}
@@ -163,6 +202,12 @@ export const PendingList: React.FC<PendingListProps> = ({ rows, labels, onPick }
         ))}
         {rows.length === 0 && <div className="review-empty">Todos os artigos já têm decisão.</div>}
       </div>
+      {rows.length > 0 && (
+        <div className="review-range">
+          {(paged.page - 1) * REVIEW_PAGE_SIZE + 1}–{Math.min(paged.page * REVIEW_PAGE_SIZE, rows.length)} de{' '}
+          {rows.length}
+        </div>
+      )}
       <NumberedPages label="Páginas de Sem decisão" page={paged.page} pages={paged.pages} onPage={paged.setPage} />
     </>
   );

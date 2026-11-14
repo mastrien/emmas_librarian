@@ -7,6 +7,11 @@ export interface BoxLine {
   kind: 'title' | 'line' | 'warn' | 'info';
 }
 
+/** What the diagram is for: on screen it uses the board's short names; an exported figure keeps the PRISMA template's. */
+export interface LayoutOptions {
+  screen?: boolean;
+}
+
 export interface BoxPlace {
   key: PrismaBoxKey;
   x: number;
@@ -93,6 +98,32 @@ const WARNING_LINE: Record<PrismaWarning['kind'], BoxLine> = {
   nodata: { text: 'ⓘ sem dados para conferir', kind: 'info' },
 };
 
+// The short names of board 166, for the screen only: the PRISMA 2020 template's wording stays in the export, the
+// panel and the tables, where the paper's reader expects it.
+const SCREEN_TITLES: Record<string, string> = {
+  'Registros removidos antes da triagem': 'Removidos antes da triagem',
+  'Publicações não recuperadas': 'Não recuperadas',
+  'Publicações avaliadas para elegibilidade': 'Avaliadas para elegibilidade',
+  'Estudos incluídos na revisão': 'Estudos incluídos',
+};
+const SCREEN_LINES: Record<string, string> = {
+  'Registros duplicados removidos': 'Duplicados',
+  'Publicações dos estudos incluídos': 'Publicações dos estudos',
+};
+
+/**
+ * The box with the board's short names, for the screen.
+ *
+ * @example screenBox(flow.removed).title // 'Removidos antes da triagem'
+ */
+export function screenBox(box: PrismaBox): PrismaBox {
+  return {
+    ...box,
+    title: SCREEN_TITLES[box.title] ?? box.title,
+    lines: box.lines.map((l) => ({ ...l, label: SCREEN_LINES[l.label] ?? l.label })),
+  };
+}
+
 /**
  * Cuts a line to the characters that fit the box, with an ellipsis; the full text is in the panel and the table.
  *
@@ -158,8 +189,8 @@ export function boxLabel(box: PrismaBox): string {
 
 const heightOf = (lines: BoxLine[]) => PAD * 2 + LINE_H * lines.length;
 
-function place(flow: PrismaFlow, key: PrismaBoxKey, slot: Slot): BoxPlace {
-  const lines = boxLines(flow[key], slot.chars);
+function place(flow: PrismaFlow, key: PrismaBoxKey, slot: Slot, screen: boolean): BoxPlace {
+  const lines = boxLines(screen ? screenBox(flow[key]) : flow[key], slot.chars);
   const warned = flow[key].warnings.some((w) => w.kind !== 'nodata');
   return { key, x: slot.x, y: 0, w: slot.w, h: heightOf(lines), lines, label: boxLabel(flow[key]), warned };
 }
@@ -169,12 +200,12 @@ function slotsOf(flow: PrismaFlow): Record<'main' | 'side' | 'omMain' | 'omSide'
 }
 
 // Every box of a row is centred on the row, so the arrow from a step to its exclusions is straight.
-function placeRow(flow: PrismaFlow, row: (typeof ROWS)[number], top: number) {
+function placeRow(flow: PrismaFlow, row: (typeof ROWS)[number], top: number, screen: boolean) {
   const s = slotsOf(flow);
   const pairs: [Pair, Slot, Slot][] = [[row.databases, s.main, s.side]];
   if (flow.otherMethods) pairs.push([row.other, s.omMain, s.omSide]);
   const placed = pairs.flatMap(([pair, main, side]) =>
-    pair ? [place(flow, pair[0], main), ...(pair[1] ? [place(flow, pair[1], side)] : [])] : [],
+    pair ? [place(flow, pair[0], main, screen), ...(pair[1] ? [place(flow, pair[1], side, screen)] : [])] : [],
   );
   const height = Math.max(...placed.map((p) => p.h));
   placed.forEach((p) => (p.y = top + Math.round((height - p.h) / 2)));
@@ -256,18 +287,18 @@ function headsOf(flow: PrismaFlow): ColumnHead[] {
 /**
  * Places the boxes, arrows, column heads, phase bands and the reference footer of the PRISMA 2020 diagram. The
  * "other methods" column appears only when articles came from outside the searches, as the template asks.
- * `today` is the access date the reference gives for the template.
+ * `today` is the access date the reference gives for the template. `{ screen: true }` uses the board's short box names.
  *
  * @example prismaLayout(flow, new Date()).boxes.find((b) => b.key === 'included')!.y
  */
-export function prismaLayout(flow: PrismaFlow, today: Date): PrismaLayout {
+export function prismaLayout(flow: PrismaFlow, today: Date, options: LayoutOptions = {}): PrismaLayout {
   const width = flow.otherMethods ? TWO.width : ONE.width;
   const boxes: BoxPlace[] = [];
   const tops: number[] = [];
   const bottoms: number[] = [];
   let top = TOP;
   for (const row of ROWS) {
-    const { placed, bottom } = placeRow(flow, row, top);
+    const { placed, bottom } = placeRow(flow, row, top, options.screen === true);
     boxes.push(...placed);
     tops.push(Math.min(...placed.map((p) => p.y)));
     bottoms.push(bottom);

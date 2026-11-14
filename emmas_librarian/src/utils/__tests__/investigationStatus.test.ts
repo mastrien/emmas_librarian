@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { investigationStatus, statusColour, statusTone } from '../investigationStatus';
+import { investigationStatus, statusColour, statusLabel, statusTone } from '../investigationStatus';
 
 describe('investigationStatus', () => {
   it.each([
@@ -18,5 +18,17 @@ describe('statusTone', () => {
       ['success', 'warning', 'danger', 'danger', 'danger'],
     );
     expect(statusColour('Concluída com erros (2 de 5)')).toBe('var(--color-warning)');
+  });
+});
+
+describe('statusLabel', () => {
+  it('says "Concluída" for a run that went through and keeps what the other statuses already say', () => {
+    expect(statusLabel('Sucesso')).toBe('Concluída');
+    expect(statusLabel('Falhou')).toBe('Falhou');
+    expect(statusLabel('Concluída com erros (1 de 3)')).toBe('Concluída com erros (1 de 3)');
+  });
+
+  it('names an old run with no status', () => {
+    expect(statusLabel(null)).toBe('Desconhecido');
   });
 });

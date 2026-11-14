@@ -31,6 +31,13 @@ describe('TermsOfUsePage (board 174)', () => {
     expect(screen.getByText('Livre (CC0)')).toBeInTheDocument();
   });
 
+  it('covers the bases the app searches, IEEE included, and warns in red that no lawyer reviewed it', () => {
+    render(<TermsOfUsePage />);
+
+    for (const name of ['IEEE Xplore', 'arXiv', 'Europe PMC']) expect(screen.getByText(name)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(/NÃO foram revistos por um advogado/);
+  });
+
   it('has a section anchor for each entry of "Nesta página"', () => {
     const { container } = render(<TermsOfUsePage />);
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { failureNotice } from '../common/dialogs/failureNotice';
 import { Search } from 'lucide-react';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { Modal } from '../common/Modal';
@@ -86,7 +87,7 @@ const ImportArticlesModalContent: React.FC<ImportArticlesModalProps> = ({
       onImportComplete();
       onClose();
     } catch (err) {
-      await inform({ title: 'Erro ao importar', message: 'Erro ao importar artigos: ' + err });
+      await inform(failureNotice('Não conseguimos importar', 'Os artigos não foram trazidos para o projeto.', err));
     } finally {
       setLoading(false);
     }

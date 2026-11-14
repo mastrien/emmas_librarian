@@ -1,5 +1,6 @@
 import React from 'react';
-import { Edit2, ExternalLink, Trash2 } from 'lucide-react';
+import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import { RowActionsButton } from '../RowActionsButton';
 import type { MilestoneStatus, ScientificMilestone, ScientificVenue } from '../../../types';
 import { CATEGORY_LABELS } from './agendaQueries';
 import { formatMilestoneDate, milestoneSituation, situationText } from './deadlineDates';
@@ -41,12 +42,19 @@ const CardActions: React.FC<{ venue: ScientificVenue; onEdit: () => void; onDele
         <ExternalLink size={14} />
       </a>
     )}
-    <button type="button" className="agenda-icon-button" onClick={props.onEdit} title="Editar Evento">
-      <Edit2 size={14} />
-    </button>
-    <button type="button" className="agenda-icon-button" onClick={props.onDelete} title="Excluir Evento">
-      <Trash2 size={14} />
-    </button>
+    {/* The edit and delete of the board's "⋯" (172), in the app's own row menu. */}
+    <RowActionsButton
+      label={`Ações de ${props.venue.acronym || props.venue.title}`}
+      items={[
+        { label: 'Editar evento', icon: <Pencil size={14} aria-hidden="true" />, onSelect: props.onEdit },
+        {
+          label: 'Excluir evento',
+          icon: <Trash2 size={14} aria-hidden="true" />,
+          onSelect: props.onDelete,
+          danger: true,
+        },
+      ]}
+    />
   </div>
 );
 

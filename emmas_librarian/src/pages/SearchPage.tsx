@@ -126,6 +126,13 @@ export const SearchPage: React.FC = () => {
     setSelectedDbs((prev) => (prev.includes(dbId) ? prev.filter((db) => db !== dbId) : [...prev, dbId]));
   };
 
+  // The key was just typed in the window: remember it and select the base the person was reaching for.
+  const adoptSavedKey = (dbId: string, apiKey: string) => {
+    setApiKeys((prev) => ({ ...prev, [dbId]: apiKey }));
+    setSelectedDbs((prev) => (prev.includes(dbId) ? prev : [...prev, dbId]));
+    setMissingKeyDb(null);
+  };
+
   const setCustomQuery = (dbId: string, query: string | undefined) =>
     setCustomQueries((prev) => {
       const next = { ...prev };
@@ -252,7 +259,8 @@ export const SearchPage: React.FC = () => {
         <ApiKeyRequiredDialog
           database={missingKeyDb}
           onCancel={() => setMissingKeyDb(null)}
-          onOpenSettings={() => navigate('/settings')}
+          onOpenSettings={() => navigate('/settings/keys')}
+          onKeySaved={adoptSavedKey}
         />
       )}
     </div>

@@ -8,7 +8,7 @@ import type { Article, InvestigationHistoryRecord, InvestigationResult, ResultRe
 import { auditToReopen } from '../../utils/auditReturn';
 import { auditForExport } from '../../utils/auditExport';
 import { formatResultsAsCsv, formatResultsAsJson } from '../../utils/investigationExporter';
-import { statusTone } from '../../utils/investigationStatus';
+import { statusLabel, statusTone } from '../../utils/investigationStatus';
 import { parseJsonList } from '../../utils/parseJsonList';
 import { Download, RotateCw } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -163,7 +163,7 @@ export const InvestigationDetail: React.FC<InvestigationDetailProps> = (props) =
           <>
             Investigação #{investigation.id}{' '}
             <span className={`inv-chip ${STATUS_CHIP[statusTone(investigation.status)]}`}>
-              {investigation.status || 'Desconhecido'}
+              {statusLabel(investigation.status)}
             </span>
           </>
         }

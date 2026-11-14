@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AiSettings } from '../AiSettings';
+import { isRecommendedEmbedding } from '../ai/AiTaskTable';
+import { providerBadge } from '../ai/ProviderRows';
 import type { AIModelConfig, AISkill, AIProvider } from '../../../../types';
 
 type Props = React.ComponentProps<typeof AiSettings>;
@@ -47,7 +49,7 @@ function renderSettings(overrides: Partial<Props> = {}) {
   return props;
 }
 
-const skillCard = (title: string) => screen.getByRole('heading', { name: title }).parentElement as HTMLElement;
+const taskRow = (title: string) => screen.getByRole('cell', { name: title }).closest('tr') as HTMLElement;
 
 describe('AiSettings provider keys', () => {
   it.each([
@@ -76,11 +78,11 @@ describe('AiSettings provider keys', () => {
   it('links to the terms of use', () => {
     renderSettings();
 
-    expect(screen.getByRole('link', { name: /Termos de Uso/ })).toHaveAttribute('href', '/terms');
+    expect(screen.getByRole('link', { name: /Termos de uso e IA/ })).toHaveAttribute('href', '/terms');
   });
 });
 
-describe('AiSettings per-skill configuration', () => {
+describe('AiSettings per-task configuration', () => {
   const configs = [
     config('metadata', 'gemini', 'gemini-2.5-flash'),
     config('summary', 'openai', 'gpt-4o'),
@@ -88,27 +90,34 @@ describe('AiSettings per-skill configuration', () => {
     config('embeddings', 'ollama', 'nomic-embed-text'),
   ];
 
-  it('renders one titled card per skill with its provider and model', () => {
+  it('renders one row per task with its provider and model', () => {
     renderSettings({ aiConfigs: configs });
 
-    const cards = [
-      ['📄 Extração de Metadados', 'gemini', 'gemini-2.5-flash'],
-      ['📝 Geração de Resumos', 'openai', 'gpt-4o'],
-      ['🔍 Investigação com IA', 'anthropic', 'claude'],
-      ['🧮 Embeddings (Vetorização)', 'ollama', 'nomic-embed-text'],
+    const rows = [
+      ['Extração de metadados', 'gemini', 'gemini-2.5-flash'],
+      ['Geração de resumos', 'openai', 'gpt-4o'],
+      ['Investigação com IA', 'anthropic', 'claude'],
+      ['Vetores (embeddings)', 'ollama', 'nomic-embed-text'],
     ];
-    for (const [title, provider, model] of cards) {
-      const card = skillCard(title);
-      expect(within(card).getByRole('combobox')).toHaveValue(provider);
-      expect(within(card).getByPlaceholderText('Ex: gemini-2.5-flash')).toHaveValue(model);
+    for (const [title, provider, model] of rows) {
+      const row = taskRow(title);
+      expect(within(row).getByRole('combobox', { name: /Provedor/ })).toHaveValue(provider);
+      expect(within(row).getByPlaceholderText('Ex: gemini-2.5-flash')).toHaveValue(model);
     }
   });
 
-  it('shows the embeddings recommendation only on the embeddings card', () => {
+  it('marks the vectors as recommended when they run on the recommended Ollama model', () => {
     renderSettings({ aiConfigs: configs });
 
-    expect(within(skillCard('🧮 Embeddings (Vetorização)')).getByText(/Aviso de Recomendação/)).toBeInTheDocument();
-    expect(screen.getAllByText(/Aviso de Recomendação/)).toHaveLength(1);
+    expect(within(taskRow('Vetores (embeddings)')).getByText('rec.')).toBeInTheDocument();
+    expect(screen.queryByText(/Recomendação:/)).not.toBeInTheDocument();
+  });
+
+  it('recommends Ollama for the vectors when they run on something else', () => {
+    renderSettings({ aiConfigs: [config('embeddings', 'gemini', 'text-embedding-004')] });
+
+    expect(screen.getByText(/Recomendação:/)).toBeInTheDocument();
+    expect(screen.queryByText('rec.')).not.toBeInTheDocument();
   });
 
   it('says what the multilingual local model costs, only when it is the one chosen', () => {
@@ -124,11 +133,13 @@ describe('AiSettings per-skill configuration', () => {
     expect(screen.queryByRole('note')).not.toBeInTheDocument();
   });
 
-  it('reports provider and model edits for the right skill', () => {
+  it('reports provider and model edits for the right task', () => {
     const props = renderSettings({ aiConfigs: configs });
-    const summary = skillCard('📝 Geração de Resumos');
+    const summary = taskRow('Geração de resumos');
 
-    fireEvent.change(within(summary).getByRole('combobox'), { target: { value: 'ollama_cloud' } });
+    fireEvent.change(within(summary).getByRole('combobox', { name: /Provedor/ }), {
+      target: { value: 'ollama_cloud' },
+    });
     fireEvent.change(within(summary).getByPlaceholderText('Ex: gemini-2.5-flash'), { target: { value: 'gpt-5' } });
 
     expect(props.handleUpdateAiConfig).toHaveBeenNthCalledWith(1, 'summary', 'provider', 'ollama_cloud');
@@ -138,41 +149,49 @@ describe('AiSettings per-skill configuration', () => {
   it('offers every supported provider', () => {
     renderSettings({ aiConfigs: [configs[0]] });
 
-    const options = within(screen.getByRole('combobox'))
+    const options = within(screen.getByRole('combobox', { name: /Provedor/ }))
       .getAllByRole('option')
       .map((o) => (o as HTMLOptionElement).value);
     expect(options).toEqual(['local', 'gemini', 'openai', 'anthropic', 'ollama', 'ollama_cloud']);
   });
 
-  it('hides suggestions when there are none', () => {
-    renderSettings({ aiConfigs: [configs[0]] });
-
-    expect(screen.queryByText('Sugestões:')).not.toBeInTheDocument();
-  });
-
-  it('lists model suggestions, highlights the current one and applies a click', () => {
+  it('suggests the known models of the chosen provider in the model field, which still takes any name', () => {
     const getModelSuggestions = vi.fn((skill: AISkill, provider: AIProvider) =>
       skill === 'metadata' && provider === 'gemini' ? ['gemini-2.5-flash', 'gemini-2.5-pro'] : [],
     );
-    const props = renderSettings({ aiConfigs: [configs[0]], getModelSuggestions });
+    renderSettings({ aiConfigs: [configs[0]], getModelSuggestions });
 
-    const current = screen.getByRole('button', { name: 'gemini-2.5-flash' });
-    const other = screen.getByRole('button', { name: 'gemini-2.5-pro' });
-    // The highlight is a class driven by aria-pressed now (Arca 134), which also tells a screen reader.
-    expect(current).toHaveAttribute('aria-pressed', 'true');
-    expect(other).toHaveAttribute('aria-pressed', 'false');
+    const field = screen.getByPlaceholderText('Ex: gemini-2.5-flash');
+    const suggestions = document.getElementById(field.getAttribute('list')!)!;
+    expect([...suggestions.querySelectorAll('option')].map((o) => o.getAttribute('value'))).toEqual([
+      'gemini-2.5-flash',
+      'gemini-2.5-pro',
+    ]);
+  });
+});
 
-    fireEvent.click(other);
+describe('AiSettings providers', () => {
+  it('says whether each provider has a key', () => {
+    renderSettings({ openaiKey: '', geminiKey: 'AIza-1' });
 
-    expect(props.handleUpdateAiConfig).toHaveBeenCalledWith('metadata', 'model_name', 'gemini-2.5-pro');
+    const rows = (name: string) => screen.getByText(name, { selector: 'label' }).closest('.ai-provider') as HTMLElement;
+    expect(within(rows('OpenAI')).getByText('sem chave')).toBeInTheDocument();
+    expect(within(rows('Google Gemini')).getByText('configurada')).toBeInTheDocument();
   });
 });
 
 describe('AiSettings RAG parameters', () => {
+  it('folds them away under a line that already says the numbers', () => {
+    renderSettings();
+
+    expect(screen.getByText('trecho 1000 · sobreposição 200 · 5 trechos')).toBeInTheDocument();
+    expect(screen.getByText('Avançado: busca nos PDFs (RAG)').closest('details')).not.toHaveAttribute('open');
+  });
+
   it.each([
-    ['Tamanho do Chunk (caracteres)', '1000', 'setRagChunkSize'],
-    ['Overlap (caracteres)', '200', 'setRagChunkOverlap'],
-    ['Chunks Recuperados (Top K)', '5', 'setRagTopK'],
+    ['Tamanho do trecho (caracteres)', '1000', 'setRagChunkSize'],
+    ['Sobreposição (caracteres)', '200', 'setRagChunkOverlap'],
+    ['Trechos recuperados (Top K)', '5', 'setRagTopK'],
   ] as const)('shows and edits %s', (label, value, setter) => {
     const props = renderSettings();
     const input = screen.getByText(label).nextElementSibling as HTMLInputElement;
@@ -192,5 +211,18 @@ describe('AiSettings actions', () => {
 
     expect(props.handleRestoreAiDefaults).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('button', { name: /Salvar/ })).toBeNull();
+  });
+});
+
+describe('isRecommendedEmbedding and providerBadge', () => {
+  it('recommends only the vector task on the recommended Ollama model', () => {
+    expect(isRecommendedEmbedding(config('embeddings', 'ollama', 'nomic-embed-text'))).toBe(true);
+    expect(isRecommendedEmbedding(config('embeddings', 'ollama', 'other'))).toBe(false);
+    expect(isRecommendedEmbedding(config('summary', 'ollama', 'nomic-embed-text'))).toBe(false);
+  });
+
+  it('calls a provider configured as soon as its field has something', () => {
+    expect(providerBadge('  ')).toEqual({ tone: 'none', text: 'sem chave' });
+    expect(providerBadge('sk-1')).toEqual({ tone: 'ok', text: 'configurada' });
   });
 });

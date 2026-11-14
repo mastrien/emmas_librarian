@@ -10,8 +10,11 @@ export interface RowMenuItem {
 }
 
 export interface RowMenuGroup {
+  /** Names the group for screen readers, and is its heading unless `quiet`. */
   label: string;
   items: RowMenuItem[];
+  /** A menu of one group that needs no heading (the "⋯" of a line). */
+  quiet?: boolean;
 }
 
 interface ArticleRowMenuProps {
@@ -101,9 +104,11 @@ export const ArticleRowMenu: React.FC<ArticleRowMenuProps> = ({ anchor, groups, 
     >
       {groups.map((group) => (
         <div key={group.label} className="row-menu__group" role="group" aria-label={group.label}>
-          <div className="row-menu__label" aria-hidden="true">
-            {group.label}
-          </div>
+          {!group.quiet && (
+            <div className="row-menu__label" aria-hidden="true">
+              {group.label}
+            </div>
+          )}
           {group.items.map((item) => (
             <button
               key={item.label}

@@ -138,7 +138,12 @@ describe('ImportArticlesModal copying articles', () => {
     fireEvent.click(confirm());
 
     await waitFor(() =>
-      expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao importar artigos: Error: projeto removido'),
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({
+          message: 'Os artigos não foram trazidos para o projeto.',
+          details: 'projeto removido',
+        }),
+      ),
     );
     expect(onClose).not.toHaveBeenCalled();
     expect(onImportComplete).not.toHaveBeenCalled();

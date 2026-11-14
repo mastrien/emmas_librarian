@@ -111,7 +111,11 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
         <KeyRequiredModal
           title={AI_KEY_TITLE}
           onCancel={() => setShowKeyAlert(false)}
-          onOpenSettings={() => navigate('/settings')}
+          onOpenSettings={() => navigate('/settings/keys')}
+          onKeySaved={() => {
+            setShowKeyAlert(false);
+            void fetchData();
+          }}
         >
           {AI_KEY_TEXT}
         </KeyRequiredModal>
@@ -157,7 +161,6 @@ export const ProjectModalsContainer: React.FC<ProjectModalsContainerProps> = ({
         <AttachPdfModal
           isOpen={!!modals.attachPdfArticle}
           articleId={modals.attachPdfArticle.id}
-          articleTitle={modals.attachPdfArticle.title}
           onClose={() => modals.setAttachPdfArticle(null)}
           onAttached={fetchData}
         />

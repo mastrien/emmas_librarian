@@ -15,6 +15,8 @@ interface LabeledFieldProps {
   textareaHeight?: string;
   /** Lighter label and tighter padding, used by dense metadata editors. */
   compact?: boolean;
+  /** The text is prose to read, so it is set in the reading typeface (the abstract). */
+  reading?: boolean;
 }
 
 /**
@@ -29,10 +31,18 @@ export const LabeledField: React.FC<LabeledFieldProps> = ({
   type = 'text',
   multiline = false,
   textareaHeight = '100px',
+  reading = false,
   ...shared
 }) => {
   if (multiline) {
-    return <TextArea {...shared} height={textareaHeight} onChange={(e) => onChange(e.target.value)} />;
+    return (
+      <TextArea
+        {...shared}
+        frameClassName={reading ? 'field--reading' : undefined}
+        height={textareaHeight}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    );
   }
   return <TextField {...shared} type={type} onChange={(e) => onChange(e.target.value)} />;
 };

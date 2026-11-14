@@ -87,7 +87,7 @@ export const EvaluationChecklist: React.FC<EvaluationChecklistProps> = (props) =
           note={
             <>
               {engine ? `${engine} · ` : ''}
-              <Link to="/settings">trocar em Configurações</Link>
+              <Link to="/settings/ai">trocar em Configurações</Link>
             </>
           }
         />

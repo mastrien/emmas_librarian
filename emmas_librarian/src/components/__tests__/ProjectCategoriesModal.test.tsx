@@ -10,6 +10,12 @@ vi.mock('../../services/api', () => ({
   projectService: {},
 }));
 
+const openNewCategory = () => fireEvent.click(screen.getByRole('button', { name: 'Nova categoria' }));
+const chooseFromMenu = async (category: string, action: 'Editar' | 'Excluir') => {
+  fireEvent.click(await screen.findByRole('button', { name: `Ações de ${category}` }));
+  fireEvent.click(screen.getByRole('menuitem', { name: action }));
+};
+
 describe('ProjectCategoriesModal', () => {
   beforeEach(() => {
     Object.assign(projectService, fakeService);
@@ -24,6 +30,7 @@ describe('ProjectCategoriesModal', () => {
       expect(screen.getByText('Method')).toBeInTheDocument();
     });
 
+    openNewCategory();
     const input = screen.getByPlaceholderText('Nome (ex: Metodologia)');
     fireEvent.change(input, { target: { value: 'New Enum Category' } });
 
@@ -51,8 +58,8 @@ describe('ProjectCategoriesModal', () => {
     });
   });
 
-  // Validation of epic #44: the modal was cramped at 500px and its row said only "Tipo: Lista de Opções".
-  it('is 720px wide, with titled sections and the type and first options of each category', async () => {
+  // Board 178: a narrow window of lines, each with the type as a badge; the sets and the new category open on demand.
+  it('is 470px wide, with each category as a line with its type, and the extras closed', async () => {
     fakeService.getProjectCategories.mockResolvedValue([
       {
         id: 2,
@@ -70,18 +77,31 @@ describe('ProjectCategoriesModal', () => {
     render(<ProjectCategoriesModal isOpen={true} projectId={1} onClose={() => {}} />);
 
     expect(await screen.findByText('Desenho do estudo')).toBeInTheDocument();
-    expect(screen.getByRole('dialog', { name: 'Categorias do Projeto' })).toHaveStyle({ width: '720px' });
+    expect(screen.getByRole('dialog', { name: 'Categorias do Projeto' })).toHaveStyle({ width: '470px' });
+    expect(screen.getByText('Lista')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Começar de um modelo' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('form', { name: 'Nova categoria' })).not.toBeInTheDocument();
+  });
+
+  it('opens the ready-made sets and the new category form from their buttons, and closes them again', async () => {
+    render(<ProjectCategoriesModal isOpen={true} projectId={1} onClose={() => {}} />);
+    await screen.findByText('Method');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Conjuntos e JSON' }));
     expect(screen.getByRole('heading', { name: 'Começar de um modelo' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Nova categoria' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Categorias do projeto (1)' })).toBeInTheDocument();
-    expect(screen.getByText('4 opções: Coorte, Caso-controle, Transversal, …')).toBeInTheDocument();
+    openNewCategory();
+    expect(screen.getByRole('form', { name: 'Nova categoria' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Começar de um modelo' })).not.toBeInTheDocument();
+
+    openNewCategory();
+    expect(screen.queryByRole('form', { name: 'Nova categoria' })).not.toBeInTheDocument();
   });
 
   it('asks inside the row before deleting, never with a native dialog', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm');
     render(<ProjectCategoriesModal isOpen={true} projectId={1} onClose={() => {}} />);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Excluir Method' }));
+    await chooseFromMenu('Method', 'Excluir');
     expect(fakeService.deleteProjectCategory).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Excluir' }));
 
@@ -90,13 +110,13 @@ describe('ProjectCategoriesModal', () => {
     confirmSpy.mockRestore();
   });
 
-  it('edits a category in place with the pencil, keeping the ids of its options', async () => {
+  it('edits a category in place from its menu, keeping the ids of its options', async () => {
     fakeService.getProjectCategories.mockResolvedValue([
       { id: 3, project_id: 1, name: 'Avaliação', type: 'enum', parsedOptions: [{ id: 5, name: 'Alta' }] },
     ]);
     render(<ProjectCategoriesModal isOpen={true} projectId={1} onClose={() => {}} />);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Editar Avaliação' }));
+    await chooseFromMenu('Avaliação', 'Editar');
     const form = screen.getByRole('form', { name: 'Editar Avaliação' });
     fireEvent.change(within(form).getByLabelText('Nome da categoria'), { target: { value: 'Avaliação geral' } });
     fireEvent.click(within(form).getByRole('button', { name: 'Adicionar' }));
@@ -114,6 +134,7 @@ describe('ProjectCategoriesModal', () => {
     fakeService.createProjectCategory.mockRejectedValueOnce(new Error('nome repetido'));
     render(<ProjectCategoriesModal isOpen={true} projectId={1} onClose={() => {}} />);
     await screen.findByText('Method');
+    openNewCategory();
 
     fireEvent.change(screen.getByLabelText('Nome da nova categoria'), { target: { value: 'Method' } });
     fireEvent.click(screen.getByRole('button', { name: 'Criar' }));
@@ -131,7 +152,7 @@ describe('ProjectCategoriesModal', () => {
     const onClose = vi.fn();
     render(<ProjectCategoriesModal isOpen={true} projectId={1} onClose={onClose} />);
 
-    expect(await screen.findByText('Viram colunas na aba Categorias dos artigos.')).toBeInTheDocument();
+    expect(await screen.findByText('Viram colunas na aba Categorias e perguntas na investigação')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Concluir' }));
 
     expect(onClose).toHaveBeenCalledOnce();

@@ -3,10 +3,20 @@ import { AnnotationsTab } from './AnnotationsTab';
 import { SearchTab } from './SearchTab';
 import { AiInsightsTab } from './AiInsightsTab';
 import { Annotation } from '../../types';
+import { SegmentedControl, type SegmentedOption } from '../common/SegmentedControl';
+import './readerSidebar.css';
+
+type SidebarTab = 'annotations' | 'search' | 'ai' | 'writer';
+
+const TAB_OPTIONS: SegmentedOption<SidebarTab>[] = [
+  { value: 'annotations', label: 'Anotações' },
+  { value: 'ai', label: 'Insights IA' },
+  { value: 'search', label: 'Pesquisar' },
+];
 
 interface ReaderSidebarProps {
-  sidebarTab: 'annotations' | 'search' | 'ai' | 'writer';
-  setSidebarTab: (tab: 'annotations' | 'search' | 'ai' | 'writer') => void;
+  sidebarTab: SidebarTab;
+  setSidebarTab: (tab: SidebarTab) => void;
   width?: number;
 
   // AnnotationsTab Props
@@ -86,63 +96,9 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
         overflow: 'hidden',
       }}
     >
-      {/* Tab Selector */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-main)' }}>
-        <button
-          onClick={() => setSidebarTab('annotations')}
-          style={{
-            flex: 1,
-            padding: '0.8rem',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: sidebarTab === 'annotations' ? '2px solid var(--color-primary)' : '2px solid transparent',
-            color: sidebarTab === 'annotations' ? 'var(--color-primary)' : 'var(--text-muted)',
-            fontWeight: sidebarTab === 'annotations' ? 600 : 500,
-            fontSize: '0.9rem',
-            cursor: 'pointer',
-            transition: 'all var(--transition-fast)',
-          }}
-        >
-          Anotações
-        </button>
-        <button
-          onClick={() => setSidebarTab('search')}
-          style={{
-            flex: 1,
-            padding: '0.8rem',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: sidebarTab === 'search' ? '2px solid var(--color-primary)' : '2px solid transparent',
-            color: sidebarTab === 'search' ? 'var(--color-primary)' : 'var(--text-muted)',
-            fontWeight: sidebarTab === 'search' ? 600 : 500,
-            fontSize: '0.9rem',
-            cursor: 'pointer',
-            transition: 'all var(--transition-fast)',
-          }}
-        >
-          Pesquisar
-        </button>
-        <button
-          onClick={() => setSidebarTab('ai')}
-          style={{
-            flex: 1,
-            padding: '0.8rem',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: sidebarTab === 'ai' ? '2px solid var(--color-primary)' : '2px solid transparent',
-            color: sidebarTab === 'ai' ? 'var(--color-primary)' : 'var(--text-muted)',
-            fontWeight: sidebarTab === 'ai' ? 600 : 500,
-            fontSize: '0.9rem',
-            cursor: 'pointer',
-            transition: 'all var(--transition-fast)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.3rem',
-          }}
-        >
-          Insights IA
-        </button>
+      {/* Board 169: the three views as one segmented control across the top of the panel. */}
+      <div className="reader-tabs">
+        <SegmentedControl label="Painel do leitor" value={sidebarTab} onChange={setSidebarTab} options={TAB_OPTIONS} />
       </div>
 
       {/* Tab Content */}

@@ -80,7 +80,6 @@ export class AIService {
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
       }),
-      signal: AbortSignal.timeout(30000),
     });
 
     if (!response.ok) {
@@ -107,7 +106,6 @@ export class AIService {
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
         }),
-        signal: AbortSignal.timeout(30000),
       },
     );
 
@@ -141,7 +139,6 @@ export class AIService {
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
       }),
-      signal: AbortSignal.timeout(30000),
     });
 
     if (!response.ok) {

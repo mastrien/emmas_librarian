@@ -34,6 +34,10 @@ async function showStatus(name: string) {
   const statuses = await screen.findByRole('group', { name: 'Status da triagem' });
   fireEvent.click(within(statuses).getByRole('button', { name: new RegExp(`^${name}`) }));
 }
+// Board 164: "Título e resumo | Texto completo" chooses the stage the list shows.
+function showStage(name: string) {
+  fireEvent.click(within(screen.getByRole('group', { name: 'Etapa' })).getByRole('button', { name }));
+}
 const pendingRow = (title: string) => screen.getByText(title).closest('[data-testid="review-row"]') as HTMLElement;
 
 async function pickLabel(row: HTMLElement, button: RegExp, label: string) {
@@ -96,8 +100,13 @@ describe('SystematicReviewPage (#49)', () => {
 
   it('shows an exclusion with its reason, and takes it back at the stage it was made', async () => {
     const archived = reviewArticle(6, 'Attention', { status: 'archived', archive_note: 'Excluído · só texto' });
-    const service = screeningService([archived], [storedDecision(6, EXCLUDED, 'full', 'só texto')]);
+    const service = screeningService(
+      [archived],
+      [storedDecision(6, INCLUDED, 'title'), storedDecision(6, EXCLUDED, 'full', 'só texto')],
+    );
     renderReview(service);
+    await screen.findByRole('heading', { name: 'Triagem' });
+    showStage('Texto completo');
     await showStatus('Excluídos');
 
     const excluded = await screen.findByRole('region', { name: /^Excluídos \(1\)/ });
@@ -126,6 +135,8 @@ describe('SystematicReviewPage (#49)', () => {
       [storedDecision(1, INCLUDED, 'title'), storedDecision(1, MAYBE, 'full', 'ver métodos')],
     );
     renderReview(service);
+    await screen.findByRole('heading', { name: 'Triagem' });
+    showStage('Texto completo');
     await showStatus('Em dúvida');
 
     await pickLabel(await screen.findByRole('region', { name: /^Em dúvida \(1\)/ }), /Rótulo/, 'Incluso');
@@ -151,7 +162,7 @@ describe('SystematicReviewPage (#49)', () => {
       screeningService([reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')], [storedDecision(1, INCLUDED, 'title')]),
     );
 
-    expect(await screen.findByText('1 de 2 decididos')).toBeInTheDocument();
+    expect(await screen.findByText('1 de 2 decididos por título e resumo')).toBeInTheDocument();
   });
 
   it('closes a section and a label menu', async () => {
@@ -180,6 +191,109 @@ describe('SystematicReviewPage (#49)', () => {
     await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([3], MAYBE, 'title', null));
   });
 
+  it('shows how much is decided as a progress bar over the list', async () => {
+    renderReview(
+      screeningService([reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')], [storedDecision(1, INCLUDED, 'title')]),
+    );
+
+    const bar = await screen.findByRole('progressbar', { name: 'Triagem decidida' });
+
+    expect(bar).toHaveAttribute('aria-valuenow', '1');
+    expect(bar).toHaveAttribute('aria-valuemax', '2');
+  });
+
+  it('labels a pending line "sem decisão", with the keys of the quick decisions on their buttons', async () => {
+    renderReview(screeningService([reviewArticle(3, 'ConvLSTM')]));
+
+    await screen.findByText('ConvLSTM');
+
+    expect(within(pendingRow('ConvLSTM')).getByText('sem decisão')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Incluir ConvLSTM' })).toHaveTextContent('A');
+    expect(screen.getByRole('button', { name: 'Dúvida ConvLSTM' })).toHaveTextContent('E');
+    expect(screen.getByRole('button', { name: 'Excluir ConvLSTM' })).toHaveTextContent('R');
+  });
+
+  it('decides the line under the pointer with A, E and R, the keys of the audit', async () => {
+    const service = screeningService([reviewArticle(3, 'ConvLSTM'), reviewArticle(4, 'GPM')]);
+    renderReview(service);
+    await screen.findByText('ConvLSTM');
+
+    fireEvent.mouseEnter(pendingRow('GPM'));
+    fireEvent.keyDown(window, { key: 'e' });
+
+    await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([4], MAYBE, 'title', null));
+  });
+
+  // Review of PR #187: a decided row leaves the list without a mouseleave, and the next key press decided it again.
+  it('does not decide a row that already left the list when the key is pressed again with the pointer still', async () => {
+    const service = screeningService([reviewArticle(3, 'ConvLSTM'), reviewArticle(4, 'GPM')]);
+    renderReview(service);
+    await screen.findByText('GPM');
+    fireEvent.mouseEnter(pendingRow('GPM'));
+
+    fireEvent.keyDown(window, { key: 'a' });
+    await waitFor(() => expect(screen.queryByText('GPM')).not.toBeInTheDocument());
+    fireEvent.keyDown(window, { key: 'a' });
+
+    expect(service.decideScreening).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a key held down, which would repeat the decision', async () => {
+    const service = screeningService([reviewArticle(3, 'ConvLSTM')]);
+    renderReview(service);
+    await screen.findByText('ConvLSTM');
+    fireEvent.mouseEnter(pendingRow('ConvLSTM'));
+
+    fireEvent.keyDown(window, { key: 'a', repeat: true });
+
+    expect(service.decideScreening).not.toHaveBeenCalled();
+  });
+
+  it('leaves the selection mode when the stage changes, instead of carrying the ids to the other stage', async () => {
+    renderReview(screeningService([reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')]));
+    fireEvent.click(await screen.findByRole('button', { name: 'Selecionar vários' }));
+    expect(screen.getByRole('region', { name: 'Ações para os artigos selecionados' })).toBeInTheDocument();
+
+    showStage('Texto completo');
+    showStage('Título e resumo');
+
+    expect(screen.queryByRole('region', { name: 'Ações para os artigos selecionados' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Selecionar vários' })).toBeInTheDocument();
+  });
+
+  // The numbers were the keys before; the author wants the audit's A, E and R instead (departs from board 164).
+  it('no longer decides with the numbers 1, 2 and 3', async () => {
+    const service = screeningService([reviewArticle(4, 'GPM')]);
+    renderReview(service);
+    await screen.findByText('GPM');
+    fireEvent.mouseEnter(pendingRow('GPM'));
+
+    for (const key of ['1', '2', '3']) fireEvent.keyDown(window, { key });
+
+    expect(service.decideScreening).not.toHaveBeenCalled();
+  });
+
+  it('ignores the keys when no line is under the pointer, or while typing', async () => {
+    const service = screeningService([reviewArticle(3, 'ConvLSTM')]);
+    renderReview(service);
+    await screen.findByText('ConvLSTM');
+
+    fireEvent.keyDown(window, { key: 'a' });
+    fireEvent.mouseEnter(pendingRow('ConvLSTM'));
+    const field = document.createElement('input');
+    document.body.appendChild(field);
+    fireEvent.keyDown(field, { key: 'a' });
+    field.remove();
+
+    expect(service.decideScreening).not.toHaveBeenCalled();
+  });
+
+  it('says which of the pending articles the page shows', async () => {
+    renderReview(screeningService([reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')]));
+
+    expect(await screen.findByText(/1–2 de\s+2/)).toBeInTheDocument();
+  });
+
   it('opens on the included ones once nothing waits for a decision, and says when a status is empty', async () => {
     renderReview(screeningService([reviewArticle(1, 'GPM')], [storedDecision(1, INCLUDED)]));
 
@@ -187,5 +301,34 @@ describe('SystematicReviewPage (#49)', () => {
     await showStatus('Removidos antes');
 
     expect(screen.getByText('Nenhum artigo com este status.')).toBeInTheDocument();
+  });
+});
+
+describe('SystematicReviewPage stage toggle (board 164)', () => {
+  beforeEach(() => sessionStorage.clear());
+
+  it('shows the title stage first, and what is decided at full text only after choosing it', async () => {
+    renderReview(
+      screeningService(
+        [reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')],
+        [storedDecision(1, INCLUDED, 'title'), storedDecision(1, EXCLUDED, 'full', 'só texto')],
+      ),
+    );
+
+    expect(await screen.findByText('1 de 2 decididos por título e resumo')).toBeInTheDocument();
+    showStage('Texto completo');
+
+    expect(await screen.findByText('1 de 1 decididos por texto completo')).toBeInTheDocument();
+  });
+
+  it('decides at the stage on screen', async () => {
+    const service = screeningService([reviewArticle(1, 'GPM')], [storedDecision(1, INCLUDED, 'title')]);
+    renderReview(service);
+    await screen.findByRole('heading', { name: 'Triagem' });
+    showStage('Texto completo');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Dúvida GPM' }));
+
+    await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([1], MAYBE, 'full', null));
   });
 });

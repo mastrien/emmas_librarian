@@ -12,7 +12,7 @@ async function triggerImport(window) {
   await answerAppDialog(window, 'PDFs importados', 'Entendi');
 }
 
-// #73: narrower side margins than the app's (24px since the redesign, board 159), and nothing spilling sideways.
+// #73: narrower side margins than the app's (28px since the redesign, board 150), and nothing spilling sideways.
 // The screen area starts after the module rail and the project sidebar, so the left edge is measured from there.
 async function expectEdgeToEdge(window) {
   const layout = await window.locator('.inv-page').evaluate((node) => {
@@ -25,8 +25,8 @@ async function expectEdgeToEdge(window) {
       spill: root.scrollWidth - root.clientWidth,
     };
   });
-  expect(layout.left).toBeCloseTo(24, 0);
-  expect(layout.right).toBeCloseTo(24, 0);
+  expect(layout.left).toBeCloseTo(28, 0);
+  expect(layout.right).toBeCloseTo(28, 0);
   expect(layout.spill).toBeLessThanOrEqual(0);
 }
 
@@ -72,7 +72,7 @@ test('Investigation page - Checkbox state persists across re-renders', async () 
 
     // Back to the questions to add one, which updates the draft in the page and re-renders the steps
     await modal.getByRole('button', { name: 'Voltar' }).click();
-    await modal.locator('button:has-text("+ Adicionar Pergunta")').click();
+    await modal.getByRole('button', { name: 'Pergunta', exact: true }).click();
     await modal.getByRole('list', { name: 'Passos da investigação' }).getByRole('button', { name: 'Artigos' }).click();
 
     // Verify checkbox is still unchecked after re-render (the original bug)

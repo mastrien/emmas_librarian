@@ -58,25 +58,74 @@
   color: var(--text-muted);
 }
 .review-footnote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
   color: var(--text-muted);
   font-size: 12px;
 }
-/* The quick decisions show on hover or keyboard focus, so the list reads calm (board 164). */
+/* The quick decisions replace the "sem decisão" badge on hover or keyboard focus, so the list reads calm (board 164). */
 .review-quick {
-  display: inline-flex;
+  display: none;
   gap: 4px;
-  opacity: 0;
-  transition: opacity var(--duration-hover, 120ms) var(--ease-out, ease-out);
 }
 .review-row:hover .review-quick,
 .review-row:focus-within .review-quick {
-  opacity: 1;
+  display: inline-flex;
+}
+.review-row:hover .review-pending-badge,
+.review-row:focus-within .review-pending-badge {
+  display: none;
 }
 @media (hover: none) {
   .review-quick {
-    opacity: 1;
+    display: inline-flex;
   }
+  .review-pending-badge {
+    display: none;
+  }
+}
+.review-kbd {
+  padding: 2px 5px;
+  border: 1px solid var(--border-color);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1;
+}
+/* The statuses and "Selecionar vários" share one bar; under it, how much is decided (board 164). */
+.review-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.review-bar__select {
+  margin-left: auto;
+}
+.review-progress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+}
+.review-progress > i {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  background: var(--color-primary);
+}
+.review-range {
+  align-self: flex-end;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 .review-quick .review-small {
   display: inline-flex;

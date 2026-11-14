@@ -101,6 +101,18 @@ describe('the review page pages each group on its own (validation of epic #44)',
     expect(screen.getByText('120 selecionados')).toBeInTheDocument();
   });
 
+  // Validation, step 21: the same button takes the whole selection back.
+  it('"Desmarcar todos" clears the selection once everything is picked', async () => {
+    await openReview(service());
+    fireEvent.click(buttonIn(document.body, 'Selecionar vários'));
+    fireEvent.click(buttonIn(document.body, 'Selecionar todos'));
+
+    fireEvent.click(buttonIn(document.body, 'Desmarcar todos'));
+
+    expect(screen.getByText('Nenhum selecionado')).toBeInTheDocument();
+    expect(buttonIn(document.body, 'Selecionar todos')).toBeInTheDocument();
+  });
+
   it('shows no pages for a group that fits in one', async () => {
     await openReview(screeningService(articles(1, 3, 'Pouco'), [storedDecision(1, INCLUDED)]));
 

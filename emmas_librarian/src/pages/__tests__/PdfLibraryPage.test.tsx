@@ -169,7 +169,6 @@ describe('PdfLibraryPage', () => {
   it('handles upload direct pdf error', async () => {
     fakeService.getStoredPdfs.mockResolvedValue([]);
     fakeService.openPdfDialog.mockRejectedValue(new Error('Dialog fail'));
-    const alertSpy = dialogs.informMessage;
 
     renderPage();
 
@@ -180,7 +179,9 @@ describe('PdfLibraryPage', () => {
     fireEvent.click(screen.getByText('Adicionar PDF'));
 
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith('Erro ao realizar upload do PDF: Error: Dialog fail');
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({ message: 'O arquivo não foi adicionado à biblioteca.', details: 'Dialog fail' }),
+      );
     });
   });
 
@@ -260,7 +261,6 @@ describe('PdfLibraryPage', () => {
       },
     ]);
     fakeService.deletePdfLibraryRecord.mockRejectedValue(new Error('Delete fail'));
-    const alertSpy = dialogs.informMessage;
 
     renderPage();
 
@@ -271,7 +271,9 @@ describe('PdfLibraryPage', () => {
     fireEvent.click(await pickFromMenu('Excluir PDF'));
 
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith('Erro ao excluir PDF: Error: Delete fail');
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({ message: 'O arquivo continua na biblioteca.', details: 'Delete fail' }),
+      );
     });
   });
 

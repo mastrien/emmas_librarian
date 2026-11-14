@@ -12,6 +12,9 @@ import { windowIconFile } from './windowIcon';
 import { logShutdownTimeline, type ShutdownEmitter } from './shutdownTimeline';
 import { askWhileInstalling } from './updateInstallDialog';
 import { runStartupUpdateGuard } from './updateInstallGuard';
+import { attachExternalLinkGuard } from './externalLinks';
+
+const DEV_ORIGIN = 'http://localhost:5173';
 
 // Configure logging for auto-updater
 autoUpdater.logger = log;
@@ -86,10 +89,8 @@ function setupWindowListeners(window: BrowserWindow): void {
   window.webContents.on('unresponsive', () => {
     console.warn('Window unresponsive');
   });
-  window.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
-    return { action: 'deny' };
-  });
+  // Links in the diary and in markdown are plain anchors: without this guard they replaced the app page.
+  attachExternalLinkGuard(window.webContents, (url) => void shell.openExternal(url), isDev ? DEV_ORIGIN : null);
 }
 
 function setupSessionCSP(): void {

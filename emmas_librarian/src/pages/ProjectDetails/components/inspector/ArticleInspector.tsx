@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { CopyPlus, Edit2, FileText, Upload, X } from 'lucide-react';
 import type { Article, SearchHistoryItem } from '../../../../types';
 import { parseSourceDatabases } from '../../../../utils/sourceDatabases';
-import { ArticleOriginSection } from '../../../../components/modals/articleDetails/ArticleOriginSection';
-import { ArticleTextSections } from '../../../../components/modals/articleDetails/ArticleTextSections';
+import { InspectorOrigin, InspectorText } from './InspectorSections';
 import { ArticleRowActions, type ArticleRowHandlers } from '../articles/ArticleRowActions';
 import { accessName, authorsPreview, statusName, venueLine } from './inspectorFacts';
 import './articleInspector.css';
@@ -129,14 +128,8 @@ export const ArticleInspector: React.FC<ArticleInspectorProps> = (props) => {
         </div>
         <Actions article={article} handlers={props.handlers} />
         <Facts article={article} />
-        <ArticleOriginSection
-          searchId={article.search_id}
-          history={props.history}
-          onNavigateToSearch={props.onShowHistory}
-        />
-        <div className="article-inspector__text">
-          <ArticleTextSections article={article} />
-        </div>
+        <InspectorText article={article} />
+        <InspectorOrigin searchId={article.search_id} history={props.history} onShowHistory={props.onShowHistory} />
       </div>
     </aside>
   );

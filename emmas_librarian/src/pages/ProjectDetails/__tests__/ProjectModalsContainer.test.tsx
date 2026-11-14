@@ -265,10 +265,10 @@ describe('ProjectModalsContainer', () => {
   it('renders Key Alert Modal portal', () => {
     renderComponent({ showKeyAlert: true });
     expect(screen.getByText('Chave de IA Necessária')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Cancelar'));
+    fireEvent.click(screen.getByLabelText('Fechar'));
     expect(defaultProps.setShowKeyAlert).toHaveBeenCalledWith(false);
 
-    fireEvent.click(screen.getByText('Configurações'));
-    expect(mockNavigate).toHaveBeenCalledWith('/settings');
+    fireEvent.click(screen.getByText('Usar outro provedor'));
+    expect(mockNavigate).toHaveBeenCalledWith('/settings/keys');
   });
 });

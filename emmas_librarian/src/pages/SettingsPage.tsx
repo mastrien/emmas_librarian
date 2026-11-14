@@ -342,7 +342,7 @@ export const SettingsPage: React.FC<{ section?: SettingsSection }> = ({ section:
 
   return (
     <div className="fade-in settings-layout">
-      <SettingsNav autosaveStatus={autosave.status} appVersion={appVersion} counts={counts} />
+      <SettingsNav current={section} autosaveStatus={autosave.status} appVersion={appVersion} counts={counts} />
       <div className="settings-page">
         <PageHeader title={info.label} subtitle={info.subtitle} />
         <div className="settings-sections">

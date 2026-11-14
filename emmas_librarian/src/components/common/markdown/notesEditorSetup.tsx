@@ -13,6 +13,7 @@ import {
   ListsToggle,
   Separator,
 } from '@mdxeditor/editor';
+import './notesEditor.css';
 
 // One formatting bar for every markdown page of the app (decision on the redesign canvas: the diary and the
 // project overview share it): bold, italic, heading, bullet list, task list and link.

@@ -13,8 +13,8 @@ type TrashItemType = 'project' | 'article' | 'annotation';
 export function registerDiaryAndTrashHandlers(ipc: IpcRegistrar, db: DatabaseAdapter): void {
   handle(ipc, IpcChannel.DIARY_GET_ALL, (_e, projectId: number) => db.getDiaryEntries(projectId));
   handle(ipc, IpcChannel.DIARY_GET_ONE, (_e, projectId: number, date: string) => db.getDiaryEntry(projectId, date));
-  handle(ipc, IpcChannel.DIARY_SAVE, (_e, projectId: number, date: string, content: string) =>
-    db.saveDiaryEntry(projectId, date, content),
+  handle(ipc, IpcChannel.DIARY_SAVE, (_e, projectId: number, date: string, content: string, expected?: string | null) =>
+    db.saveDiaryEntry(projectId, date, content, expected),
   );
   handle(ipc, IpcChannel.DIARY_DELETE, (_e, projectId: number, date: string) => db.deleteDiaryEntry(projectId, date));
   handle(ipc, IpcChannel.DIARY_GET_HISTORY, (_e, projectId: number, date: string) =>

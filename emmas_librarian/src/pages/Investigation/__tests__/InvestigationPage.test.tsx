@@ -107,7 +107,7 @@ describe('InvestigationPage (#73): answers', () => {
       'aria-pressed',
       'true',
     );
-    expect(screen.getByRole('button', { name: 'Pendentes (3)' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Pendentes 3' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.queryByRole('button', { name: /Estudo 2, pergunta 2/ })).not.toBeInTheDocument();
     expect(
       within(screen.getByRole('complementary', { name: 'Resposta selecionada' })).getByText('Resposta de 1 a Q1'),
@@ -118,7 +118,7 @@ describe('InvestigationPage (#73): answers', () => {
     const { service } = reviewProject();
     renderInvestigation(service, '/projects/3/investigation/14');
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Com erro (1)' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Com erro 1' }));
     fireEvent.click(screen.getByRole('button', { name: 'Estudo 2, pergunta 2: erro' }));
 
     const panel = screen.getByRole('complementary', { name: 'Resposta selecionada' });
@@ -139,9 +139,9 @@ describe('InvestigationPage (#73): answers', () => {
       'aria-pressed',
       'true',
     );
-    expect(screen.getByRole('button', { name: 'Pendentes (2)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pendentes 2' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Revisadas (1)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Revisadas 1' }));
     fireEvent.click(screen.getByRole('button', { name: 'Estudo 1, pergunta 1: aceita' }));
     fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
     await waitFor(() =>
@@ -249,7 +249,7 @@ describe('InvestigationPage: the calls as a list (board 161)', () => {
     fireEvent.click(await screen.findByRole('tab', { name: /Chamadas/ }));
 
     expect(within(screen.getByRole('table', { name: 'Chamadas' })).getAllByRole('row')).toHaveLength(5);
-    fireEvent.click(screen.getByRole('button', { name: 'Com erro (1)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Com erro 1' }));
     const rows = within(screen.getByRole('table', { name: 'Chamadas' })).getAllByRole('row');
     expect(rows).toHaveLength(2);
     fireEvent.click(within(rows[1]).getByRole('button'));
@@ -257,6 +257,26 @@ describe('InvestigationPage: the calls as a list (board 161)', () => {
     const detail = screen.getByRole('complementary', { name: 'Chamada selecionada' });
     expect(detail).toHaveTextContent('Chamada 4');
     expect(detail).toHaveTextContent('401 chave recusada');
+  });
+
+  it('copies the chosen call and says so on the button', async () => {
+    const written: string[] = [];
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: async (text: string) => void written.push(text) },
+      configurable: true,
+    });
+    const { service } = reviewProject();
+    renderInvestigation(service, '/projects/3/investigation/14');
+    fireEvent.click(await screen.findByRole('tab', { name: /Chamadas/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Com erro 1' }));
+    fireEvent.click(
+      within(within(screen.getByRole('table', { name: 'Chamadas' })).getAllByRole('row')[1]).getByRole('button'),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copiar' }));
+
+    expect(await screen.findByRole('button', { name: 'Copiado!' })).toBeInTheDocument();
+    expect(written[0]).toContain('401 chave recusada');
   });
 
   it('narrows the list to one question', async () => {
@@ -353,9 +373,8 @@ describe('InvestigationPage (#73): a new investigation', () => {
     });
     await start(service);
 
-    expect(await screen.findByRole('heading', { name: /Investigação em andamento/ })).toHaveTextContent(
-      'Artigo 1 de 1',
-    );
+    expect(await screen.findByRole('heading', { name: /Investigação\s+Rodando/ })).toBeInTheDocument();
+    expect(screen.getByText('Indexar os PDFs').closest('li')).toHaveTextContent('0 de 1');
     expect(screen.getByRole('img', { name: 'Estudo 1, Qual o desenho?: rodando' })).toBeInTheDocument();
     await act(async () => finish([]));
 

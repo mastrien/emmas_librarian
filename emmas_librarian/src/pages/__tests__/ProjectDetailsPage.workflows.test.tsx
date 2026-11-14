@@ -65,7 +65,11 @@ describe('ProjectDetailsPage batch PDF import', () => {
     openAddMenu();
     fireEvent.click(screen.getByRole('button', { name: /Importar PDFs em Lote/ }));
 
-    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao importar PDFs: disk full'));
+    await waitFor(() =>
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({ message: 'Nenhum PDF novo entrou no projeto.', details: 'disk full' }),
+      ),
+    );
   });
 });
 
@@ -144,7 +148,11 @@ describe('ProjectDetailsPage drag and drop', () => {
 
     dropFiles([pdf('a.pdf')]);
 
-    await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao importar PDFs: offline'));
+    await waitFor(() =>
+      expect(dialogs.informed).toContainEqual(
+        expect.objectContaining({ message: 'Nenhum PDF novo entrou no projeto.', details: 'offline' }),
+      ),
+    );
   });
 });
 

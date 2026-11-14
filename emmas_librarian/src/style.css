@@ -1,6 +1,8 @@
 :root,
 /* Also on [data-theme='light'], so a nested preview (the tone swatches in Settings) gets the light tokens back. */
 [data-theme='light'] {
+  /* Browser-drawn parts (selects, date fields, checkboxes, scrollbars) follow the theme instead of staying white in dark mode. */
+  color-scheme: light;
   --font-sans: 'Lexend Variable', system-ui, -apple-system, sans-serif;
   --font-heading: 'Lexend Variable', system-ui, -apple-system, sans-serif;
   --font-read: 'Source Serif 4 Variable', Georgia, serif;
@@ -107,6 +109,7 @@
 
 /* Neutral graphite: the earlier Slate dark was navy, and the accent as text read at 2.3:1 on it. */
 [data-theme='dark'] {
+  color-scheme: dark;
   --bg-main: #141416;
   --bg-surface: #1d1d21;
   --bg-surface-glass: rgba(20, 20, 22, 0.85);
@@ -221,6 +224,9 @@ body {
   font-family: var(--font-sans);
   background-color: var(--bg-main);
   color: var(--text-main);
+  /* Board 150: the canvas sets 13px / 1.45 on the whole app; components that size themselves keep their own. */
+  font-size: 13px;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -308,18 +314,28 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 6px;
   background: var(--color-primary);
   color: white;
-  font-weight: 600;
-  padding: 0.6rem 1.2rem;
-  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
   border: none;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     background-color var(--transition-fast),
     transform var(--transition-fast);
-  box-shadow: var(--shadow-md);
+}
+
+.btn-primary svg,
+.btn-secondary svg,
+.btn-danger svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
 }
 
 .btn-primary:hover {
@@ -335,12 +351,15 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  background: var(--bg-surface);
-  color: var(--text-main);
+  gap: 6px;
+  background: var(--bg-raised);
+  color: var(--text-heading);
+  font-size: 13px;
   font-weight: 500;
-  padding: 0.6rem 1.2rem;
-  border-radius: var(--radius-md);
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  white-space: nowrap;
   border: 1px solid var(--border-color);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -356,16 +375,18 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 6px;
   background: var(--color-danger);
   color: white;
-  font-weight: 600;
-  padding: 0.6rem 1.2rem;
-  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
   border: none;
+  white-space: nowrap;
   cursor: pointer;
   transition: opacity var(--transition-fast);
-  box-shadow: var(--shadow-md);
 }
 
 .btn-danger:hover {
@@ -378,12 +399,12 @@ textarea {
 }
 
 .input-field {
-  padding: 0.6rem 1rem;
-  font-size: 1rem;
+  padding: 7px 10px;
+  font-size: 13px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   outline: none;
-  background: var(--bg-surface);
+  background: var(--bg-sunken);
   color: var(--text-main);
   transition: border-color var(--transition-fast);
 }
@@ -682,7 +703,8 @@ textarea {
 
 .row-menu {
   position: fixed;
-  z-index: 1000;
+  /* Above the app's windows (99999): the "⋯" of a line inside one opens this menu. */
+  z-index: 100000;
   min-width: 220px;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
@@ -894,7 +916,7 @@ textarea {
 
 .batch-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.5rem;
   min-height: 42px;
@@ -905,6 +927,7 @@ textarea {
   color: #fff;
 }
 .batch-bar__count {
+  white-space: nowrap;
   font-weight: 700;
   margin-right: auto;
 }
@@ -922,6 +945,28 @@ textarea {
   font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
+}
+.batch-bar button {
+  flex: none;
+  white-space: nowrap;
+}
+/* The full bar needs about 1060px; below that (the default window is one of them) or while a download runs, the
+   action buttons keep only their icon and the label stays for screen readers and the tooltip. */
+.batch-bar--busy .batch-bar__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+@media (max-width: 1500px) {
+  .batch-bar .batch-bar__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
 }
 .batch-bar button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.26);
@@ -1111,4 +1156,42 @@ textarea {
   font-weight: 600;
   font-size: 0.8rem;
   white-space: nowrap;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--color-primary);
+}
+
+/* LegalReviewNotice: a loud red box, so the missing legal review is never missed (terms page, IEEE key). */
+.legal-notice {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+  padding: 12px 14px;
+  border: 2px solid var(--color-danger);
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+}
+.legal-notice svg {
+  flex: none;
+  margin-top: 2px;
+}
+.legal-notice__text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--color-danger);
+}
+.legal-notice__detail {
+  font-weight: 600;
+}
+.legal-notice--compact {
+  padding: 8px 10px;
+}
+.legal-notice--compact .legal-notice__text {
+  font-size: 0.78rem;
 }

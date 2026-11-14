@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { ModalFooter } from '../common/ModalFooter';
 import { Button } from '../common/Button';
@@ -19,9 +19,8 @@ interface ProjectCategoriesModalProps {
   onClose: () => void;
 }
 
-// 720px, approved in the validation of epic #44: at 500px the name field, the import/export buttons and long
-// option names were cramped. The modal becomes a full page later; until then only its look changes.
-export const CATEGORIES_MODAL_WIDTH = 720;
+// Board 178: a narrow window of lines. The ready-made sets and the JSON, which the board does not show, open below.
+export const CATEGORIES_MODAL_WIDTH = 470;
 
 // The project's categories and the calls that change them; a failure is said in the modal, not in the console only.
 function useProjectCategories(projectId: number, isOpen: boolean) {
@@ -58,15 +57,16 @@ function useProjectCategories(projectId: number, isOpen: boolean) {
 }
 
 const EmptyList: React.FC<{ loading: boolean }> = ({ loading }) => (
-  <div className="categories-row" style={{ justifyContent: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+  <div className="categories-empty">
     {loading ? <Loader2 className="spin" size={24} /> : 'Nenhuma categoria criada.'}
   </div>
 );
 
+type CategoriesPanel = 'new' | 'sets' | null;
+
 /**
- * The project categories modal: ready-made sets and JSON (#46), a new category, and the list, where each category
- * is edited in place and deleted after a question inside its row. 720px wide with titled sections, as approved in
- * the validation of epic #44.
+ * The project categories window (board 178): the categories as lines with a "⋯", each edited in place and deleted
+ * after a question inside its line; "Nova categoria" and the ready-made sets and JSON (#46) open below the list.
  *
  * @example <ProjectCategoriesModal isOpen projectId={3} onClose={() => setOpen(false)} />
  */
@@ -74,6 +74,8 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
   const project = useProjectCategories(projectId, isOpen);
   const { service, categories, loading, failure, change } = project;
   const [adding, setAdding] = useState(false);
+  const [panel, setPanel] = useState<CategoriesPanel>(null);
+  const togglePanel = (which: Exclude<CategoriesPanel, null>) => setPanel((open) => (open === which ? null : which));
   const [editingId, setEditingId] = useState<number | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -123,24 +125,33 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
     <Modal
       label="Categorias do Projeto"
       title="Categorias"
-      description="Viram colunas na aba Categorias dos artigos."
+      description="Viram colunas na aba Categorias e perguntas na investigação"
       onClose={onClose}
       width={CATEGORIES_MODAL_WIDTH}
     >
-      <CategoryTemplatesPanel
-        categories={categories}
-        applySet={(entries) => service.applyCategorySet(projectId, entries)}
-        readSetFile={service.readCategorySetFile}
-        saveFile={service.saveExportedFile}
-        onApplied={project.load}
-      />
-      <NewCategoryForm adding={adding} onCreate={create} />
-      <section aria-label="Categorias do projeto" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <h3 className="categories-section-title">Categorias do projeto ({categories.length})</h3>
+      <section aria-label="Categorias do projeto" className="categories-list">
         {failure && <CategoriesNotice notice={failure} onDismiss={project.clearFailure} />}
         {/* The spinner only stands for an empty list: a reload after a change keeps the rows on screen. */}
         {categories.length === 0 ? <EmptyList loading={loading} /> : rows}
       </section>
+      <div className="categories-actions">
+        <Button size="sm" variant="ghost" aria-expanded={panel === 'new'} onClick={() => togglePanel('new')}>
+          <Plus size={14} aria-hidden="true" /> Nova categoria
+        </Button>
+        <Button size="sm" variant="ghost" aria-expanded={panel === 'sets'} onClick={() => togglePanel('sets')}>
+          Conjuntos e JSON
+        </Button>
+      </div>
+      {panel === 'new' && <NewCategoryForm adding={adding} onCreate={create} />}
+      {panel === 'sets' && (
+        <CategoryTemplatesPanel
+          categories={categories}
+          applySet={(entries) => service.applyCategorySet(projectId, entries)}
+          readSetFile={service.readCategorySetFile}
+          saveFile={service.saveExportedFile}
+          onApplied={project.load}
+        />
+      )}
       <ModalFooter hint="Cada categoria é editada na própria linha">
         <Button onClick={onClose}>Concluir</Button>
       </ModalFooter>

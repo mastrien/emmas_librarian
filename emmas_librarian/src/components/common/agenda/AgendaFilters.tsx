@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search } from 'lucide-react';
 import { SegmentedControl } from '../SegmentedControl';
+import { Switch } from '../Switch';
 import { STALE_AFTER_DAYS } from './deadlineDates';
 import { CATEGORY_LABELS, type CategoryFilter, type StatusCounts, type StatusFilter } from './agendaQueries';
 
@@ -57,14 +58,8 @@ export const AgendaFilters: React.FC<AgendaFiltersProps> = (props) => (
         </option>
       ))}
     </select>
-    <label className="agenda-toggle">
-      <input
-        type="checkbox"
-        role="switch"
-        checked={props.showStale}
-        onChange={(e) => props.onShowStaleChange(e.target.checked)}
-      />
+    <Switch className="agenda-toggle" checked={props.showStale} onChange={props.onShowStaleChange}>
       Mostrar vencidos há mais de {STALE_AFTER_DAYS} dias
-    </label>
+    </Switch>
   </div>
 );

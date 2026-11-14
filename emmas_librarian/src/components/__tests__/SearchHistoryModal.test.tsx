@@ -54,8 +54,8 @@ describe('SearchHistoryModal', () => {
     expect(screen.getAllByText('machine learning OR artificial intelligence')[0]).toBeInTheDocument();
     expect(screen.getByText('15 artigos salvos')).toBeInTheDocument();
     const byBase = within(screen.getByRole('region', { name: 'Resultados por base desta busca' }));
-    expect(byBase.getByText('OpenAlex:', { exact: false })).toHaveTextContent('OpenAlex: 10');
-    expect(byBase.getByText('Web of Science:', { exact: false })).toHaveTextContent('Web of Science: 5');
+    expect(byBase.getByText('OpenAlex').closest('tr')).toHaveTextContent('OpenAlex10');
+    expect(byBase.getByText('Web of Science').closest('tr')).toHaveTextContent('Web of Science5');
     expect(screen.getByText('Citações')).toBeInTheDocument();
     expect(screen.getByText('15 por base')).toBeInTheDocument();
 
@@ -104,11 +104,12 @@ describe('SearchHistoryModal', () => {
     expect(byBase.getByText('Scopus: Chave de API inválida ou expirada')).toBeInTheDocument();
     expect(byBase.getByText('Únicos entre as bases: 1.180')).toBeInTheDocument();
     expect(byBase.getByText('Requisições: OpenAlex 10 · Web of Science 4')).toBeInTheDocument();
-    // The chip's border tells how each base went: fine, stopped early, failed.
-    const chip = (name: string) => byBase.getByText(`${name}:`, { exact: false, selector: '.history-breakdown-chip' });
-    expect(chip('OpenAlex')).toHaveClass('history-breakdown-chip--ok');
-    expect(chip('Web of Science')).toHaveClass('history-breakdown-chip--warning');
-    expect(chip('Scopus')).toHaveClass('history-breakdown-chip--error');
+    // The number's colour tells how each base went: fine, stopped early, failed.
+    const count = (name: string) => byBase.getByText(name).closest('tr')!.querySelector('td:last-child')!;
+    expect(count('OpenAlex')).toHaveClass('history-breakdown-table__num--ok');
+    expect(count('Web of Science')).toHaveClass('history-breakdown-table__num--warning');
+    expect(count('Scopus')).toHaveClass('history-breakdown-table__num--error');
+    expect(byBase.getByText('Salvos no projeto')).toBeInTheDocument();
   });
 
   it('keeps the list readable when an entry has a malformed breakdown', () => {

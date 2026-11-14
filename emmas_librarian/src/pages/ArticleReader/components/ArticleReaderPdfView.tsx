@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { highlightNote } from '../highlightNote';
 import { PdfLoader, PdfHighlighter, Highlight, Popup, AreaHighlight } from 'react-pdf-highlighter';
 
 import { TipContent } from '../../../components/reader/TipContent';
@@ -177,10 +178,8 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
                     }
                   };
 
-                  if (
-                    !(highlight.comment as unknown as { text?: string })?.text &&
-                    !(highlight as unknown as { comment?: string })?.comment
-                  ) {
+                  const note = highlightNote(highlight);
+                  if (!note) {
                     return (
                       <div key={index} onContextMenu={handleContextMenu}>
                         {component}
@@ -206,9 +205,7 @@ export const ArticleReaderPdfView: React.FC<ArticleReaderPdfViewProps> = ({
                               whiteSpace: 'pre-wrap',
                             }}
                           >
-                            {(highlight.comment as { text?: string })?.text ||
-                              (highlight as unknown as { comment: string })?.comment ||
-                              ''}
+                            {note}
                           </div>
                         }
                         onMouseOver={(popupContent) => setTip(highlight, () => popupContent)}

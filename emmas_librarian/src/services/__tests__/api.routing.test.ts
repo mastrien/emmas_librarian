@@ -293,9 +293,9 @@ const routes: RouteCase[] = [
   },
   {
     method: 'saveDiaryEntry',
-    call: () => api.saveDiaryEntry(1, '2026-01-01', 'c'),
+    call: () => api.saveDiaryEntry(1, '2026-01-01', 'c', 'antes'),
     channel: IpcChannel.DIARY_SAVE,
-    args: [1, '2026-01-01', 'c'],
+    args: [1, '2026-01-01', 'c', 'antes'],
   },
   {
     method: 'deleteDiaryEntry',

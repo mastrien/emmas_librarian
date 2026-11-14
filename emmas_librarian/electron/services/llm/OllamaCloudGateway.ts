@@ -32,7 +32,6 @@ export class OllamaCloudGateway implements LLMProviderGateway {
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
       }),
-      signal: AbortSignal.timeout(30000),
     });
 
     if (!response.ok) {

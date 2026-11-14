@@ -141,7 +141,11 @@ describe('ArticleActions', () => {
 
       fireEvent.click(screen.getByText(item));
 
-      await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith(`Erro ao exportar ${kind}: disco cheio`));
+      await waitFor(() =>
+        expect(dialogs.informed).toContainEqual(
+          expect.objectContaining({ message: `A exportação em ${kind} não foi concluída.`, details: 'disco cheio' }),
+        ),
+      );
     });
 
     it('stays quiet when the save dialog is cancelled', async () => {

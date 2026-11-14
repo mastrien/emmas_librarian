@@ -45,10 +45,10 @@ describe('deadline queries (Arca 134)', () => {
   });
 
   it.each([
-    [0, 'today', 'Hoje!'],
-    [-3, 'overdue', 'Venceu há 3 d'],
-    [7, 'urgent', 'Em 7 dias'],
-    [8, 'upcoming', 'Em 8 dias'],
+    [0, 'today', 'hoje'],
+    [-3, 'overdue', 'venceu há 3 d'],
+    [7, 'urgent', 'em 7 d'],
+    [8, 'upcoming', 'em 8 d'],
   ])('labels %i days as %s', (days, tone, text) => {
     expect(deadlineBadge(days)).toEqual({ tone, text });
   });

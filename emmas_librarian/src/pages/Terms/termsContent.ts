@@ -1,5 +1,19 @@
 /** The version of the app in which these terms were last changed (shown as "Atualizado na versão …", board 174). */
-export const TERMS_VERSION = '1.3.1';
+export const TERMS_VERSION = '1.4.0';
+
+/**
+ * The red notice shown in the terms and beside the IEEE key field: the summaries on this page were not reviewed by a
+ * lawyer (the author could not afford one yet), and the IEEE terms are the strictest on AI.
+ */
+export const LEGAL_REVIEW_WARNING =
+  'Atenção: estes resumos NÃO foram revistos por um advogado. Eles vêm da leitura dos termos oficiais por quem ' +
+  'desenvolveu o app, que não é jurista, e os termos mudam. Confira você mesmo a página oficial de cada base antes de ' +
+  'mandar qualquer texto a uma IA.';
+
+/** The extra line beside the IEEE key: its terms forbid feeding the content to AI systems. */
+export const IEEE_AI_WARNING =
+  'Os termos de uso da API da IEEE proíbem usar o conteúdo para treinar, melhorar ou desenvolver sistemas de IA. ' +
+  'Não envie resultados da IEEE Xplore a uma IA sem ter certeza de que a sua licença permite.';
 
 export type PolicyTone = 'free' | 'restricted';
 
@@ -46,16 +60,40 @@ export const BASE_POLICIES: readonly BasePolicy[] = [
     name: 'Scopus',
     tone: 'restricted',
     badge: 'Restritivo',
-    text: 'Mineração só para fins acadêmicos e não comerciais. Mandar resumos da Scopus para uma IA externa pode violar os termos se a licença da sua instituição não autorizar.',
-    linkLabel: 'Política da Elsevier',
-    href: 'https://dev.elsevier.com/tecdoc_text_mining.html',
+    text: 'A chave sozinha não dá acesso: é preciso a assinatura da sua instituição. O contrato da API só admite usar o conteúdo com uma IA se ela rodar num ambiente fechado e corporativo, só para uso individual, sem treinar IA externa, sem dar acesso a terceiros e sem guardar localmente nem reproduzir o conteúdo, inclusive as respostas geradas. Mandar resumos da Scopus a um provedor de IA externo (Gemini, OpenAI, Anthropic) ou guardar as respostas no app foge disso, e quem responde é você. Além disso, a pesquisa com a Scopus é só não comercial, limitada a uma disciplina, e os dados baixados só valem para arquivo e para reproduzir os resultados.',
+    linkLabel: 'Contrato da API da Elsevier',
+    href: 'https://dev.elsevier.com/api_service_agreement.html',
   },
   {
     name: 'Web of Science',
     tone: 'restricted',
     badge: 'Restritivo',
-    text: 'A API proíbe usar os dados com IA não autorizada pela Clarivate.',
+    text: 'Os termos gerais da Clarivate (versão 3.3, dezembro de 2025) proíbem usar os dados dela com IA (generativa, aprendizado de máquina, modelos de linguagem) sem um adendo escrito, e proíbem mineração de texto ou de dados. Não envie resultados da Web of Science a uma IA. Além disso, a API é para uso acadêmico: os dados valem só para quem tem a assinatura, não podem ser redistribuídos e, ao acabar a assinatura, o que foi baixado deve ser apagado.',
     linkLabel: 'Termos da Clarivate',
-    href: 'https://clarivate.com/terms-of-business/',
+    href: 'https://clarivate.com/legal-center/terms-of-business/',
+  },
+  {
+    name: 'IEEE Xplore',
+    tone: 'restricted',
+    badge: 'Muito restritivo',
+    text: 'Só uso acadêmico e não comercial. Os termos proíbem usar o conteúdo para treinar, melhorar ou desenvolver sistemas de IA, proíbem a mineração de texto e pedem que o conteúdo não seja mantido depois do fim da licença. Não envie resultados da IEEE a uma IA.',
+    linkLabel: 'Termos da API da IEEE',
+    href: 'https://developer.ieee.org/API_Terms_of_Use2',
+  },
+  {
+    name: 'arXiv',
+    tone: 'free',
+    badge: 'Metadados livres (CC0)',
+    text: 'Os metadados são CC0. Os artigos (PDFs) são dos autores: você pode guardá-los e usá-los para pesquisa ou uso pessoal, mas não servi-los a outras pessoas. O arXiv pede no máximo uma requisição a cada 3 segundos, e o app respeita isso.',
+    linkLabel: 'Termos da API do arXiv',
+    href: 'https://info.arxiv.org/help/api/tou.html',
+  },
+  {
+    name: 'Europe PMC',
+    tone: 'free',
+    badge: 'Leitura livre',
+    text: 'A leitura é gratuita, mas quase tudo tem direitos autorais, e o que se pode reutilizar (mineração, tradução) depende da licença de cada artigo, em geral Creative Commons. Você é o responsável por cumprir essa licença. Baixar artigos em massa pelo site é proibido; só a API, o OAI e os downloads em bloco servem, e o app usa só a API para buscar.',
+    linkLabel: 'Direitos autorais da Europe PMC',
+    href: 'https://europepmc.org/Copyright',
   },
 ];

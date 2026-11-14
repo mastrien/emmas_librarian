@@ -12,12 +12,13 @@ export interface VenueDetails {
   color: string;
 }
 
+// The names and the order of board 180, with Workshop (which the app has and the board does not draw) before "Outro".
 export const CATEGORY_OPTIONS: ReadonlyArray<{ value: VenueCategory; label: string }> = [
-  { value: 'conference', label: 'Congresso / Conferência' },
-  { value: 'journal', label: 'Periódico / Revista' },
-  { value: 'workshop', label: 'Workshop' },
+  { value: 'journal', label: 'Periódico' },
   { value: 'symposium', label: 'Simpósio' },
-  { value: 'other', label: 'Outro Evento' },
+  { value: 'conference', label: 'Congresso' },
+  { value: 'workshop', label: 'Workshop' },
+  { value: 'other', label: 'Outro' },
 ];
 
 export const PRESET_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];

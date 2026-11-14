@@ -27,9 +27,9 @@ describe('exportWithFeedback', () => {
     await exportWithFeedback(() => Promise.reject(new Error('disco cheio')), 'XLSX', dialogs.inform);
     await exportWithFeedback(() => Promise.reject({ error: 'sem permissão' }), 'XLSX', dialogs.inform);
 
-    expect(dialogs.informMessage.mock.calls).toEqual([
-      ['Erro ao exportar XLSX: disco cheio'],
-      ['Erro ao exportar XLSX: sem permissão'],
+    expect(dialogs.informed.map((d) => [d.message, d.details])).toEqual([
+      ['A exportação em XLSX não foi concluída.', 'disco cheio'],
+      ['A exportação em XLSX não foi concluída.', 'sem permissão'],
     ]);
     expect(dialogs.informed.map((d) => d.title)).toEqual([EXPORT_FAILED_TITLE, EXPORT_FAILED_TITLE]);
   });

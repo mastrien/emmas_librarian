@@ -74,10 +74,22 @@ function groupsOf(labels: ScreeningLabel[], rows: ReviewRow[], kinds: ScreeningK
  * grouped by label (duplicates last), the articles archived on the project page without a label, and the
  * undecided ones.
  *
+ * With a `stage` (board 164's "Título e resumo | Texto completo"), the page is that stage alone: the articles that go
+ * through it (guidedPool) and only the decisions made at it. Without one, each article shows its latest decision.
+ *
  * @example buildReview(articles, labels, decisions).counts.pending // 12
+ * @example buildReview(articles, labels, decisions, 'full').counts.include // included at full text
  */
-export function buildReview(articles: Article[], labels: ScreeningLabel[], decisions: ScreeningDecision[]): ReviewView {
-  const rows = rowsOf(articles, labels, decisions);
+export function buildReview(
+  articles: Article[],
+  labels: ScreeningLabel[],
+  decisions: ScreeningDecision[],
+  stage?: ScreeningStage,
+): ReviewView {
+  const atStage = stage ? decisions.filter((d) => d.stage === stage) : decisions;
+  // Title and abstract takes every article (the hand-archived ones stay in their own bucket); full text only the kept ones.
+  const pool = stage === 'full' ? guidedPool(articles, labels, decisions, 'full') : articles;
+  const rows = rowsOf(pool, labels, atStage);
   const unlabeled = rows.filter((r) => r.label === null && r.article.status === 'archived');
   const pending = rows.filter((r) => r.label === null && r.article.status !== 'archived');
   const count = (kind: ScreeningKind) => rows.filter((r) => r.label?.kind === kind).length;

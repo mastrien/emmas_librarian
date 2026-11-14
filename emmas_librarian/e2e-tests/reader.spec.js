@@ -116,7 +116,10 @@ test.describe('PDF reader', () => {
     const { window, close } = await openFixtureInReader();
     try {
       await window.getByTitle('Gerar Citação').click();
-      await window.getByRole('button', { name: /Metadados do Artigo/ }).click();
+      await window
+        .getByRole('dialog', { name: 'Citar artigo' })
+        .getByRole('button', { name: 'Editar metadados' })
+        .click();
       const fields = {
         title: METADATA.title,
         authors: METADATA.authors,
@@ -129,13 +132,14 @@ test.describe('PDF reader', () => {
       };
       for (const [name, value] of Object.entries(fields)) await window.locator(`input[name="${name}"]`).fill(value);
 
+      await window.getByRole('button', { name: 'Salvar', exact: true }).click();
+      expect(await answerAppDialog(window, 'Metadados salvos', 'Entendi')).toBe('Metadados salvos com sucesso!');
+
+      // Saving goes back to the citation, which now reads the new metadata.
       const preview = window.getByTestId('citation-preview');
       await expect(preview).toContainText('LIMA, Ana Beatriz');
       await expect(preview).toContainText(METADATA.shortTitle);
       await expect(preview).toContainText('2025');
-
-      await window.getByRole('button', { name: 'Salvar Metadados' }).click();
-      expect(await answerAppDialog(window, 'Metadados salvos', 'Entendi')).toBe('Metadados salvos com sucesso!');
 
       // The toolbar title comes from the saved record.
       await expect(window.getByRole('banner').getByRole('heading', { level: 2 })).toHaveText(METADATA.title);

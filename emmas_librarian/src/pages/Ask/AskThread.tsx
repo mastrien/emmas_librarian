@@ -10,6 +10,8 @@ import {
   stepText,
   unverifiedReason,
 } from './askDisplay';
+import { AskRings } from './AskRings';
+import { useSpeakingAfterAnswer } from './useSpeakingAfterAnswer';
 
 /** The citation open in the side panel. */
 export type PickedCitation = AskReadCitation;
@@ -97,10 +99,28 @@ const AnswerBlock: React.FC<{
   );
 };
 
-const Empty: React.FC = () => (
+// The rings above the question wait with the page and go away with it, when the first question is sent.
+const Empty: React.FC<{ note?: React.ReactNode }> = ({ note }) => (
   <div className="ask-empty">
+    <AskRings size="hero" />
     <h2>O que você quer saber?</h2>
     <p className="ask-muted">A resposta vem dos PDFs dos projetos escolhidos, com artigo e página em cada afirmação.</p>
+    {note}
+  </div>
+);
+
+/**
+ * An answer (board 168). The rings sit beside the latest one only: alive while it is on its way or just came; the
+ * older answers keep an empty place of the same width, so their text stays aligned with it.
+ */
+const Reply: React.FC<{ live: boolean; state?: 'idle' | 'thinking' | 'speaking'; children: React.ReactNode }> = ({
+  live,
+  state = 'idle',
+  children,
+}) => (
+  <div className="ask-reply">
+    {live ? <AskRings size="avatar" state={state} /> : <span className="ask-reply__gap" aria-hidden="true" />}
+    <div className="ask-reply__body">{children}</div>
   </div>
 );
 
@@ -114,18 +134,24 @@ export const AskThread: React.FC<{
   pending: string | null;
   picked: PickedCitation | null;
   onPick: (citation: PickedCitation) => void;
-}> = ({ conversation, pending, picked, onPick }) => {
+  /** Shown under the empty page's text: the models that will answer. */
+  note?: React.ReactNode;
+}> = ({ conversation, pending, picked, onPick, note }) => {
   const end = useRef<HTMLDivElement>(null);
   const messages = conversation?.messages ?? [];
+  const speaking = useSpeakingAfterAnswer(pending);
   useEffect(() => {
     end.current?.scrollIntoView?.({ block: 'end' });
   }, [messages.length, pending]);
-  if (messages.length === 0 && !pending) return <Empty />;
+  if (messages.length === 0 && !pending) return <Empty note={note} />;
+  const lastAnswer = messages.filter((m) => m.role === 'assistant' && m.answer).at(-1);
   return (
     <div className="ask-thread" role="log" aria-label="Conversa">
       {messages.map((message) =>
         message.role === 'assistant' && message.answer ? (
-          <AnswerBlock key={message.id} answer={message.answer} picked={picked} onPick={onPick} />
+          <Reply key={message.id} live={!pending && message === lastAnswer} state={speaking ? 'speaking' : 'idle'}>
+            <AnswerBlock answer={message.answer} picked={picked} onPick={onPick} />
+          </Reply>
         ) : (
           <div key={message.id} className="ask-question">
             {message.content}
@@ -135,9 +161,12 @@ export const AskThread: React.FC<{
       {pending && (
         <>
           <div className="ask-question">{pending}</div>
-          <div className="ask-step ask-step--running" role="status">
-            Lendo os PDFs…
-          </div>
+          <Reply live state="thinking">
+            {/* The rings are the loading; the words stay for screen readers only. */}
+            <div className="visually-hidden" role="status">
+              Lendo os PDFs…
+            </div>
+          </Reply>
         </>
       )}
       <div ref={end} />

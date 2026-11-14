@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import { failureNotice } from '../common/dialogs/failureNotice';
 import { Loader2, Save, Sparkles } from 'lucide-react';
 import { Article } from '../../types';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { useGlobalError } from '../../contexts/GlobalErrorContext';
-import { describeError } from '../../utils/describeError';
 import type { FrontendAppError } from '../../utils/AppError';
 import { LabeledField } from '../common/LabeledField';
 import { AUTHORS_SEPARATOR_HINT } from '../common/articleFieldHints';
@@ -44,7 +44,7 @@ const EditArticleForm: React.FC<Omit<EditArticleModalProps, 'isOpen'>> = ({ onCl
       await onSubmit(articleFromForm(fields));
       onClose();
     } catch (err: unknown) {
-      await inform({ title: 'Erro ao editar', message: `Erro ao editar artigo: ${describeError(err)}` });
+      await inform(failureNotice('Não conseguimos salvar a edição', 'As alterações não foram salvas.', err));
     } finally {
       setSubmitting(false);
     }
@@ -60,7 +60,7 @@ const EditArticleForm: React.FC<Omit<EditArticleModalProps, 'isOpen'>> = ({ onCl
       // Typed, user-actionable errors (e.g. missing API key) get the global error modal.
       const appError = err as Partial<FrontendAppError> | null;
       if (appError?.isAppError && appError.code !== 'ERR_INTERNAL') showError(err);
-      else await inform({ title: 'Erro na IA', message: `Erro ao extrair metadados: ${describeError(err)}` });
+      else await inform(failureNotice('Não conseguimos extrair os metadados', 'A IA não conseguiu ler o artigo.', err));
     } finally {
       setIsExtracting(false);
     }
@@ -111,7 +111,7 @@ const EditArticleForm: React.FC<Omit<EditArticleModalProps, 'isOpen'>> = ({ onCl
           <LabeledField label="Edição (Issue)" value={fields.issue} onChange={set('issue')} />
           <LabeledField label="Páginas" value={fields.pages} onChange={set('pages')} />
         </div>
-        <LabeledField label="Resumo" value={fields.abstract} onChange={set('abstract')} multiline />
+        <LabeledField label="Resumo" value={fields.abstract} onChange={set('abstract')} multiline reading />
 
         <ModalFooter hint={<span className="app-modal-kbd">Ctrl Enter</span>}>
           <Button variant="ghost" onClick={onClose} disabled={submitting}>

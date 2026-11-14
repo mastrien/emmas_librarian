@@ -15,6 +15,7 @@ import {
 } from './venueForm/venueFormModel';
 import { VenueDetailsFields } from './venueForm/VenueDetailsFields';
 import { MilestoneEditor } from './venueForm/MilestoneEditor';
+import './venueForm/venueForm.css';
 import { CustomMilestoneForm } from './venueForm/CustomMilestoneForm';
 import { Modal } from '../common/Modal';
 import { ModalFooter } from '../common/ModalFooter';
@@ -77,33 +78,31 @@ export const VenueFormModal: React.FC<VenueFormModalProps> = ({
   // The accessible name keeps the old wording; the title on screen is the board's (180).
   const name = initialData ? 'Editar Evento / Periódico' : 'Novo Evento / Periódico';
   return (
-    <Modal label={name} title={initialData ? 'Editar evento' : 'Novo evento'} onClose={onClose} width={620}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {errorMsg && <VenueFormError message={errorMsg} />}
-          <span className="app-modal-group">Evento ou revista</span>
-          <VenueDetailsFields details={details} onChange={(changes) => setDetails({ ...details, ...changes })} />
-          <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0.25rem 0' }} />
-          <div>
-            <MilestonesHeader onAdd={() => setShowAddCustom(true)} />
-            {showAddCustom && (
-              <CustomMilestoneForm
-                onConfirm={addCustomMilestone}
-                onMissingLabel={() => setErrorMsg('Informe o nome do novo campo/prazo.')}
-                onCancel={() => setShowAddCustom(false)}
-              />
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {milestones.map((m, idx) => (
-                <MilestoneEditor
-                  key={idx}
-                  milestone={m}
-                  onChange={(changes) => updateMilestone(idx, changes)}
-                  onRemove={() => setMilestones((prev) => prev.filter((_, i) => i !== idx))}
-                />
-              ))}
-            </div>
-          </div>
+    <Modal label={name} title={initialData ? 'Editar evento' : 'Novo evento'} onClose={onClose} width={520}>
+      <form onSubmit={handleSubmit} className="venue-form">
+        {errorMsg && <VenueFormError message={errorMsg} />}
+        <span className="app-modal-group">Evento ou revista</span>
+        <VenueDetailsFields details={details} onChange={(changes) => setDetails({ ...details, ...changes })} />
+        <span className="app-modal-group">Prazos</span>
+        {showAddCustom && (
+          <CustomMilestoneForm
+            onConfirm={addCustomMilestone}
+            onMissingLabel={() => setErrorMsg('Informe o nome do novo prazo.')}
+            onCancel={() => setShowAddCustom(false)}
+          />
+        )}
+        <div className="venue-milestones">
+          {milestones.map((m, idx) => (
+            <MilestoneEditor
+              key={idx}
+              milestone={m}
+              onChange={(changes) => updateMilestone(idx, changes)}
+              onRemove={() => setMilestones((prev) => prev.filter((_, i) => i !== idx))}
+            />
+          ))}
+          <Button variant="ghost" size="sm" className="venue-add" onClick={() => setShowAddCustom(true)}>
+            <Plus size={14} aria-hidden="true" /> Prazo
+          </Button>
         </div>
         <VenueFormFooter onClose={onClose} editing={Boolean(initialData)} />
       </form>
@@ -112,35 +111,9 @@ export const VenueFormModal: React.FC<VenueFormModalProps> = ({
 };
 
 const VenueFormError: React.FC<{ message: string }> = ({ message }) => (
-  <div
-    style={{
-      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-      border: '1px solid var(--color-danger)',
-      color: 'var(--color-danger)',
-      padding: '0.75rem 1rem',
-      borderRadius: 'var(--radius-md)',
-      fontSize: '0.85rem',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-    }}
-  >
-    <AlertCircle size={16} />
+  <div className="venue-form__error" role="alert">
+    <AlertCircle size={16} aria-hidden="true" />
     <span>{message}</span>
-  </div>
-);
-
-const MilestonesHeader: React.FC<{ onAdd: () => void }> = ({ onAdd }) => (
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-    <label style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-heading)' }}>Prazos</label>
-    <button
-      type="button"
-      onClick={onAdd}
-      className="btn-secondary"
-      style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-    >
-      <Plus size={14} /> Criar Novo Campo
-    </button>
   </div>
 );
 

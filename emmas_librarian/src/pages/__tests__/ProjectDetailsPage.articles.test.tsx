@@ -282,8 +282,7 @@ describe('ProjectDetailsPage PDF links', () => {
     fireEvent.click(inRow('Artigo sem PDF').getByRole('button', { name: 'Vincular PDF' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Do computador…' }));
 
-    expect(await screen.findByText('Anexar PDF ao Artigo')).toBeInTheDocument();
-    expect(screen.getByText('Artigo sem PDF', { selector: 'strong' })).toBeInTheDocument();
+    expect(await screen.findByText('PDF do artigo')).toBeInTheDocument();
   });
 });
 

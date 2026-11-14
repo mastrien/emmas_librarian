@@ -36,6 +36,17 @@ describe('OllamaCloudGateway', () => {
     );
   });
 
+  it('waits for the answer with no time limit', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: 'ok' } }] }) });
+    global.fetch = fetchMock;
+
+    await new OllamaCloudGateway('https://api.ollama.cloud/v1/', 'key').complete('p', 'm');
+
+    expect((fetchMock.mock.calls[0][1] as RequestInit).signal).toBeUndefined();
+  });
+
   it('should fallback to default URL https://ollama.com/v1 if baseUrl is empty', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

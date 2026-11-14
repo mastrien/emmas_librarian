@@ -147,8 +147,10 @@ function useProjectHeaderActions({ projectId, project, setProject }: ProjectActi
 
   const deleteProject = async () => {
     if (projectId === null || !project) return;
-    const message = `Tem certeza que deseja excluir o projeto "${project.name}"? Todos os artigos e anotações serão perdidos permanentemente.`;
-    if (!(await confirm({ title: 'Excluir projeto', message, confirmLabel: 'Excluir', danger: true }))) return;
+    // Board 181: the project is soft-deleted (deleted_at), so the text must say it goes to the trash and can come back.
+    const message = `"${project.name}" vai para a lixeira com os artigos e as anotações. Dá para restaurar em Configurações › Lixeira.`;
+    const title = 'Excluir este projeto?';
+    if (!(await confirm({ title, message, confirmLabel: 'Excluir projeto', danger: true }))) return;
     await informOnFailure(inform, 'Erro ao excluir projeto', async () => {
       await projectService.deleteProject(projectId);
       navigate('/');

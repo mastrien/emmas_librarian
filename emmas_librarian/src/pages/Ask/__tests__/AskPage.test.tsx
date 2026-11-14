@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ServicesProvider } from '../../../contexts/ServicesContext';
 import { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
 import type {
@@ -152,6 +152,81 @@ describe('AskPage (#53)', () => {
     });
   });
 
+  it('says which model answers and which one searches the PDFs, with the way to change them', async () => {
+    const service = serviceWith();
+    service.getAiModelConfigs.mockResolvedValue([
+      { id: 1, skill: 'extraction', provider: 'gemini', model_name: 'gemini-2.5-flash', updated_at: '' },
+      { id: 2, skill: 'embeddings', provider: 'ollama', model_name: 'nomic-embed-text', updated_at: '' },
+    ]);
+    await open(service);
+
+    const note = screen.getByLabelText('Modelos usados');
+    expect(note).toHaveTextContent('Responde com gemini-2.5-flash (Google Gemini)');
+    expect(note).toHaveTextContent('Busca nos PDFs com nomic-embed-text (Ollama)');
+    expect(within(note).getByRole('link', { name: 'Mudar nas configurações' })).toHaveAttribute('href', '/settings/ai');
+  });
+
+  it('shows no model when the settings could not be read, instead of naming one it does not know', async () => {
+    const service = serviceWith();
+    service.getAiModelConfigs.mockRejectedValue(new Error('banco bloqueado'));
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await open(service);
+
+    expect(screen.queryByLabelText('Modelos usados')).not.toBeInTheDocument();
+    log.mockRestore();
+  });
+
+  it('puts the rings above the question of the empty page, and the models under its text, one to a line', async () => {
+    await open(serviceWith());
+
+    const heading = screen.getByRole('heading', { name: 'O que você quer saber?' });
+    const rings = screen.getByRole('img', { name: 'Anéis animados da Emma' });
+    expect(rings.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const note = screen.getByRole('group', { name: 'Modelos usados' });
+    expect(within(note).getAllByText(/Responde com|Busca nos PDFs com|Mudar nas configurações/)).toHaveLength(3);
+  });
+
+  it('takes the rings and the models away once the first question is sent, keeping one pair beside the answer', async () => {
+    const service = serviceWith();
+    service.sendAskQuestion.mockReturnValue(new Promise(() => undefined));
+    await open(service);
+    await chooseProject('Revisão');
+    await waitFor(() => expect(service.getAskCoverage).toHaveBeenCalledWith([3]));
+    fireEvent.change(box(), { target: { value: 'Qual a amostra?' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Enviar' })).toBeEnabled());
+    await press(screen.getByRole('button', { name: 'Enviar' }));
+
+    expect(screen.queryByRole('heading', { name: 'O que você quer saber?' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Modelos usados' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('img', { name: 'Anéis animados da Emma' })).toHaveLength(1);
+  });
+
+  // The rings belong to the latest answer only: the older ones keep their text and nothing beside it.
+  it('keeps the rings on the latest answer only, with none beside the older ones', async () => {
+    const service = serviceWith();
+    const twoAnswers = conversation([checked]);
+    twoAnswers.messages.push(
+      { id: 3, role: 'user', content: 'E o desvio?', answer: null, created_at: '' },
+      {
+        id: 4,
+        role: 'assistant',
+        content: '',
+        created_at: '',
+        answer: { claims: [{ ...checked, text: 'O desvio é 2,1.' }], steps: [] },
+      },
+    );
+    service.getAskConversation.mockResolvedValue(twoAnswers);
+    await open(service, '/ask/5');
+
+    await screen.findByText('O desvio é 2,1.');
+
+    expect(screen.getByText('A série tem 60 anos.')).toBeInTheDocument();
+    expect(screen.getAllByRole('img', { name: 'Anéis animados da Emma' })).toHaveLength(1);
+    expect(screen.queryByRole('img', { name: 'Anéis da Emma' })).not.toBeInTheDocument();
+    const older = screen.getByText('A série tem 60 anos.').closest('.ask-reply') as HTMLElement;
+    expect(older.querySelector('.ask-rings')).toBeNull();
+  });
+
   it('starts asking for a project, and cannot send without one', async () => {
     await open(serviceWith());
 
@@ -297,7 +372,7 @@ describe('AskPage (#53)', () => {
 
       await press(await screen.findByRole('button', { name: 'Almeida 2021, p. 4' }));
       const list = screen.getByRole('list', { name: 'Fontes' });
-      expect(within(list).getAllByRole('button')).toHaveLength(2);
+      expect(within(list).getAllByRole('button', { name: /^Ver a fonte/ })).toHaveLength(2);
       await press(within(list).getByRole('button', { name: 'Ver a fonte 2: Outro estudo' }));
 
       expect(screen.getByText('segundo trecho')).toBeInTheDocument();
@@ -483,7 +558,7 @@ describe('AskPage (#53)', () => {
         await chooseProject('Revisão');
 
         expect(await screen.findByText(/Eles vieram de nomic-embed-text \(Ollama\)/)).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Configurações' })).toHaveAttribute('href', '/settings');
+        expect(screen.getByRole('link', { name: 'Configurações' })).toHaveAttribute('href', '/settings/ai');
       });
 
       it('says nothing of a previous model it does not know', async () => {

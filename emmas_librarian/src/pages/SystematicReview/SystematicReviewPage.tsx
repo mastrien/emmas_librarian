@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ListChecks, Play, Tag } from 'lucide-react';
-import type { Article, ScreeningLabel } from '../../types';
-import { listStage, type ReviewRow } from '../../utils/screeningView';
+import { Info, ListChecks, Play, SquareCheckBig, Tag } from 'lucide-react';
+import type { Article, ScreeningLabel, ScreeningStage } from '../../types';
+import { buildReview, type ReviewRow } from '../../utils/screeningView';
+import { SegmentedControl } from '../../components/common/SegmentedControl';
 import { MassCitationModal } from '../../components/modals/MassCitationModal';
 import { useScreening, type ScreeningState } from './useScreening';
 import { ExcludedSection, LabelSection, type RowActions } from './ReviewSections';
-import { PendingList } from './PendingList';
+import { PendingList, useSelection, type Selection } from './PendingList';
 import { UndoToast } from './ReviewBits';
 import { ScreeningStatusFilter } from './ScreeningStatusFilter';
 import { defaultFilter, filterCount, type ScreeningFilter } from './screeningFilter';
@@ -14,6 +15,7 @@ import { useSessionState } from '../../hooks/useSessionState';
 import { ManageLabelsModal } from './ManageLabelsModal';
 import { PrismaTab } from './prisma/PrismaTab';
 import { CriteriaModal } from './CriteriaModal';
+import { usePageCommands } from '../../components/common/shell/palette/PageCommandsContext';
 import { EvaluationTab } from './EvaluationTab';
 import { SimulationSection } from './SimulationSection';
 import './review.css';
@@ -35,16 +37,17 @@ function useOpenSections() {
   return { isOpen, toggle };
 }
 
-function rowActions(screening: ScreeningState): RowActions {
+const STAGE_OPTIONS: { value: ScreeningStage; label: string }[] = [
+  { value: 'title', label: 'Título e resumo' },
+  { value: 'full', label: 'Texto completo' },
+];
+
+// A decision made from the list goes to the stage the list is showing (board 164).
+function rowActions(screening: ScreeningState, stage: ScreeningStage): RowActions {
   return {
     labels: screening.labels,
     onPick: (row: ReviewRow, label: ScreeningLabel) =>
-      void screening.decide(
-        [row.article.id],
-        label.id,
-        listStage(row.article.id, screening.decisions),
-        row.decision?.note,
-      ),
+      void screening.decide([row.article.id], label.id, stage, row.decision?.note),
     onUndo: (row: ReviewRow) => row.decision && void screening.undecide([row.article.id], row.decision.stage),
   };
 }
@@ -53,23 +56,32 @@ interface ReviewHeaderProps {
   projectId: number;
   tab: ReviewTab;
   counts: ScreeningState['view']['counts'];
+  stage: ScreeningStage;
   onManageLabels: () => void;
   onWriteCriteria: () => void;
 }
 
 // What each part of the review says under its title (boards 164, 166, 167).
-const decidedLine = (counts: ReviewHeaderProps['counts']) => {
+const decidedLine = (counts: ReviewHeaderProps['counts'], stage: ScreeningStage) => {
   const decided = counts.include + counts.maybe + counts.exclude;
-  return `${decided} de ${decided + counts.pending} decididos`;
+  const by = stage === 'full' ? 'texto completo' : 'título e resumo';
+  return `${decided} de ${decided + counts.pending} decididos por ${by}`;
 };
 
 const EVALUATION_NOTE =
   'Compara as sugestões da IA com as suas decisões. A IA nunca vê as suas decisões: só título, resumo e critérios.';
 
-/** The page's header for each part (boards 164-167); the actions of the screening stay on every part. */
-const ReviewHeader: React.FC<ReviewHeaderProps> = ({ projectId, tab, counts, onManageLabels, onWriteCriteria }) => {
+/** The page's header for each part (boards 164-167); the actions of the screening stay on the screening and the diagram. */
+const ReviewHeader: React.FC<ReviewHeaderProps> = ({
+  projectId,
+  tab,
+  counts,
+  stage,
+  onManageLabels,
+  onWriteCriteria,
+}) => {
   const titles: Record<ReviewTab, { eyebrow: string; title: string; subtitle?: string }> = {
-    screening: { eyebrow: 'Revisão sistemática · PRISMA 2020', title: 'Triagem', subtitle: decidedLine(counts) },
+    screening: { eyebrow: 'Revisão sistemática · PRISMA 2020', title: 'Triagem', subtitle: decidedLine(counts, stage) },
     prisma: { eyebrow: 'Revisão sistemática', title: 'Diagrama PRISMA 2020' },
     evaluation: {
       eyebrow: 'Revisão sistemática',
@@ -84,18 +96,20 @@ const ReviewHeader: React.FC<ReviewHeaderProps> = ({ projectId, tab, counts, onM
       title={title}
       subtitle={subtitle}
       actions={
-        <>
-          <button type="button" className="btn-ghost" onClick={onWriteCriteria}>
-            <ListChecks size={16} aria-hidden="true" /> Critérios
-          </button>
-          {/* The name keeps "Gerenciar" for screen readers; the canvas shows the short label. */}
-          <button type="button" className="btn-ghost" onClick={onManageLabels} aria-label="Gerenciar rótulos">
-            <Tag size={16} aria-hidden="true" /> Rótulos
-          </button>
-          <Link to={`/projects/${projectId}/review/guided`} className="btn-primary">
-            <Play size={16} aria-hidden="true" /> Iniciar triagem guiada
-          </Link>
-        </>
+        tab === 'evaluation' ? undefined : (
+          <>
+            <button type="button" className="btn-ghost" onClick={onWriteCriteria}>
+              <ListChecks size={16} aria-hidden="true" /> Critérios
+            </button>
+            {/* The name keeps "Gerenciar" for screen readers; the canvas shows the short label. */}
+            <button type="button" className="btn-ghost" onClick={onManageLabels} aria-label="Gerenciar rótulos">
+              <Tag size={16} aria-hidden="true" /> Rótulos
+            </button>
+            <Link to={`/projects/${projectId}/review/guided`} className="btn-primary">
+              <Play size={16} aria-hidden="true" /> Iniciar triagem guiada
+            </Link>
+          </>
+        )
       }
     />
   );
@@ -103,25 +117,28 @@ const ReviewHeader: React.FC<ReviewHeaderProps> = ({ projectId, tab, counts, onM
 
 interface FilteredListProps {
   screening: ScreeningState;
+  selection: Selection;
   filter: ScreeningFilter;
+  stage: ScreeningStage;
   onCite: (articles: Article[]) => void;
 }
 
 /** The list of the chosen status: the undecided articles, or the label sections of that kind. */
-const FilteredList: React.FC<FilteredListProps> = ({ screening, filter, onCite }) => {
+const FilteredList: React.FC<FilteredListProps> = ({ screening, selection, filter, stage, onCite }) => {
   const sections = useOpenSections();
-  const actions = rowActions(screening);
+  const actions = rowActions(screening, stage);
   const { view } = screening;
   if (filter === 'pending') {
     return (
       <PendingList
         rows={view.pending}
+        selection={selection}
         labels={screening.labels}
         onPick={(rows, label) =>
           void screening.decide(
             rows.map((r) => r.article.id),
             label.id,
-            'title',
+            stage,
           )
         }
       />
@@ -163,22 +180,59 @@ const FilteredList: React.FC<FilteredListProps> = ({ screening, filter, onCite }
  * The screening (board 164): the statuses with their counts as one control, the chosen one's list under it, and
  * the note that an exclusion archives the article in the project.
  */
-const ReviewBody: React.FC<{ projectId: number; screening: ScreeningState; onCite: (articles: Article[]) => void }> = ({
-  projectId,
-  screening,
-  onCite,
-}) => {
+interface ReviewBodyProps {
+  projectId: number;
+  screening: ScreeningState;
+  stage: ScreeningStage;
+  onStageChange: (stage: ScreeningStage) => void;
+  onCite: (articles: Article[]) => void;
+}
+
+const ReviewBody: React.FC<ReviewBodyProps> = ({ projectId, screening, stage, onStageChange, onCite }) => {
   const { counts } = screening.view;
   const [stored, setFilter] = useSessionState<ScreeningFilter | null>(`review.${projectId}.filter`, null);
   const filter = stored ?? defaultFilter(counts);
+  const selection = useSelection(screening.view.pending, `${filter}:${stage}`);
+  const decided = counts.include + counts.maybe + counts.exclude;
+  const total = decided + counts.pending;
   return (
     <div className="review-screening">
-      <ScreeningStatusFilter counts={counts} value={filter} onChange={setFilter} />
-      <FilteredList screening={screening} filter={filter} onCite={onCite} />
+      <div className="review-bar">
+        <ScreeningStatusFilter counts={counts} value={filter} onChange={setFilter} />
+        <SegmentedControl<ScreeningStage>
+          label="Etapa"
+          options={STAGE_OPTIONS}
+          value={stage}
+          onChange={onStageChange}
+        />
+        {filter === 'pending' && !selection.selecting && (
+          <button
+            type="button"
+            className="btn-secondary btn--sm review-bar__select"
+            onClick={selection.start}
+            disabled={counts.pending === 0}
+          >
+            <SquareCheckBig size={14} aria-hidden="true" /> Selecionar vários
+          </button>
+        )}
+      </div>
+      <div
+        className="review-progress"
+        role="progressbar"
+        aria-label="Triagem decidida"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={decided}
+      >
+        <i style={{ width: `${total === 0 ? 0 : (decided / total) * 100}%` }} />
+      </div>
+      <FilteredList screening={screening} selection={selection} filter={filter} stage={stage} onCite={onCite} />
       {filterCount(counts, filter) === 0 && filter !== 'pending' && (
         <div className="review-empty">Nenhum artigo com este status.</div>
       )}
-      <p className="review-footnote">Excluir aqui também arquiva o artigo no projeto, com o rótulo como motivo.</p>
+      <p className="review-footnote">
+        <Info size={14} aria-hidden="true" /> Excluir aqui também arquiva o artigo no projeto, com o rótulo como motivo.
+      </p>
     </div>
   );
 };
@@ -196,11 +250,23 @@ export type { ReviewTab };
 export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'screening' }) => {
   const projectId = Number(useParams<{ id: string }>().id);
   const screening = useScreening(projectId);
+  // The list shows one stage at a time (board 164); the sidebar, PRISMA and evaluation keep reading every decision.
+  const [stage, setStage] = useSessionState<ScreeningStage>(`review.${projectId}.stage`, 'title');
+  const { articles, labels, decisions } = screening;
+  const stagedView = useMemo(
+    () => buildReview(articles, labels, decisions, stage),
+    [articles, labels, decisions, stage],
+  );
+  const staged: ScreeningState = { ...screening, view: stagedView };
   const [managing, setManaging] = useState(false);
   const [writingCriteria, setWritingCriteria] = useState(false);
   // Criteria written from the header change what the evaluation compares, so it reads them again.
   const [criteriaEdits, setCriteriaEdits] = useState(0);
   const [citing, setCiting] = useState<Article[] | null>(null);
+  usePageCommands('review', [
+    { id: 'review:criteria', label: 'Editar critérios do projeto', run: () => setWritingCriteria(true) },
+    { id: 'review:labels', label: 'Gerenciar rótulos de triagem', run: () => setManaging(true) },
+  ]);
   if (screening.loading) return <div className="review review-muted">Carregando a revisão…</div>;
   return (
     <div className="review fade-in">
@@ -208,21 +274,32 @@ export const SystematicReviewPage: React.FC<{ tab?: ReviewTab }> = ({ tab = 'scr
       <ProjectNavPortal>
         <ReviewNavList projectId={projectId} pending={screening.view.counts.pending} />
       </ProjectNavPortal>
-      <ReviewHeader
-        projectId={projectId}
-        tab={tab}
-        counts={screening.view.counts}
-        onManageLabels={() => setManaging(true)}
-        onWriteCriteria={() => setWritingCriteria(true)}
-      />
+      {tab !== 'prisma' && (
+        <ReviewHeader
+          projectId={projectId}
+          tab={tab}
+          counts={stagedView.counts}
+          stage={stage}
+          onManageLabels={() => setManaging(true)}
+          onWriteCriteria={() => setWritingCriteria(true)}
+        />
+      )}
       {tab === 'prisma' && <PrismaTab projectId={projectId} screening={screening} />}
       {tab === 'evaluation' && (
-        <>
+        <div className="review-evaluation-columns">
           <EvaluationTab key={criteriaEdits} projectId={projectId} screening={screening} />
           <SimulationSection projectId={projectId} />
-        </>
+        </div>
       )}
-      {tab === 'screening' && <ReviewBody projectId={projectId} screening={screening} onCite={setCiting} />}
+      {tab === 'screening' && (
+        <ReviewBody
+          projectId={projectId}
+          screening={staged}
+          stage={stage}
+          onStageChange={setStage}
+          onCite={setCiting}
+        />
+      )}
       {screening.lastChange && <UndoToast change={screening.lastChange} />}
       <ManageLabelsModal
         isOpen={managing}

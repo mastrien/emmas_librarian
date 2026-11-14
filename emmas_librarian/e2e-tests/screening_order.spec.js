@@ -26,15 +26,18 @@ test('#55 turns the predicted order on, asking before generating, and simulates 
     await expect(window.getByRole('heading', { name: 'Artigo Um', level: 2 })).toBeVisible();
 
     // Off by default, and turning it on asks before anything is sent.
-    const toggle = window.getByRole('checkbox', { name: /Ordenar por relevância prevista/ });
+    const toggle = window.getByRole('switch', { name: /Ordenar por relevância prevista/ });
     await expect(toggle).not.toBeChecked();
-    await toggle.click();
+    // The input is hidden behind the styled switch (board 165): its track must show, and the click goes to the label.
+    const label = window.locator('label.app-switch', { hasText: 'Ordenar por relevância prevista' });
+    await expect(label.locator('.app-switch__track')).toBeVisible();
+    await label.click();
     await expect(window.getByText('Gerar os vetores de 7 artigos?')).toBeVisible();
     await window.getByRole('button', { name: 'Gerar e ordenar' }).click();
     await expect(window.getByText(/Faltam 3 relevantes e 3 excluídos/)).toBeVisible({ timeout: 15000 });
 
-    // Three of each by the keyboard: 1 includes, 3 excludes; then the order begins, and nothing else was decided.
-    for (const key of ['1', '1', '1', '3', '3', '3']) {
+    // Three of each by the keyboard: A includes, R excludes; then the order begins, and nothing else was decided.
+    for (const key of ['a', 'a', 'a', 'r', 'r', 'r']) {
       await window.keyboard.press(key);
       await window.waitForTimeout(150);
     }
@@ -44,7 +47,7 @@ test('#55 turns the predicted order on, asking before generating, and simulates 
 
     // The choice belongs to the project.
     await window.reload();
-    await expect(window.getByRole('checkbox', { name: /Ordenar por relevância prevista/ })).toBeChecked({
+    await expect(window.getByRole('switch', { name: /Ordenar por relevância prevista/ })).toBeChecked({
       timeout: 15000,
     });
 

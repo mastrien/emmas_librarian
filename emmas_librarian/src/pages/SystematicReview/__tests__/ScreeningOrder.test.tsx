@@ -46,7 +46,7 @@ async function renderAt(service: FakeProjectService, path: string) {
 const articles = [reviewArticle(1, 'Primeiro'), reviewArticle(2, 'Segundo'), reviewArticle(3, 'Terceiro')];
 const ready = { order: [3, 1, 2], learnedFrom: 67, needRelevant: 0, needExcluded: 0 };
 const plan = (extra = {}) => ({ total: 3, pending: 0, provider: 'ollama', previousModel: null, ...extra });
-const toggle = () => screen.getByRole('checkbox', { name: /Ordenar por relevância prevista/ });
+const toggle = () => screen.getByRole('switch', { name: /Ordenar por relevância prevista/ });
 const heading = (title: string) => screen.findByRole('heading', { name: title, level: 2 });
 
 describe('the predicted order in the guided screening (#55)', () => {
@@ -61,9 +61,9 @@ describe('the predicted order in the guided screening (#55)', () => {
     expect(await heading('Primeiro')).toBeInTheDocument();
     expect(service.getArticleVectorPlan).not.toHaveBeenCalled();
     expect(service.rankScreening).not.toHaveBeenCalled();
-    expect(
-      within(screen.getByRole('group', { name: 'Ordem da triagem' })).getByText('Experimental'),
-    ).toBeInTheDocument();
+    // The switch carries its "Experimental" tag, in the bar; the band under it stays out while there is nothing to say.
+    expect(within(toggle().closest('span')!).getByText('Experimental')).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Ordem da triagem' })).not.toBeInTheDocument();
   });
 
   it('remembers the choice of the project, and opens on the likeliest', async () => {
@@ -141,7 +141,10 @@ describe('the predicted order in the guided screening (#55)', () => {
     await guided(service);
 
     expect(screen.getByTestId('previous-vector-model')).toHaveTextContent('nomic-embed-text (Ollama)');
-    expect(within(screen.getByTestId('previous-vector-model')).getByRole('link')).toHaveAttribute('href', '/settings');
+    expect(within(screen.getByTestId('previous-vector-model')).getByRole('link')).toHaveAttribute(
+      'href',
+      '/settings/ai',
+    );
   });
 
   it('says how many examples are missing, keeping the original order', async () => {
@@ -176,7 +179,7 @@ describe('the predicted order in the guided screening (#55)', () => {
     await guided(service);
     await heading('Terceiro');
 
-    fireEvent.keyDown(window, { key: '1' });
+    fireEvent.keyDown(window, { key: 'a' });
     await settle();
 
     expect(service.decideScreening).toHaveBeenCalledTimes(1);
@@ -208,7 +211,8 @@ describe('the predicted order in the guided screening (#55)', () => {
     await press(toggle());
 
     expect(service.setScreeningOrderOn).toHaveBeenCalledWith(1, false);
-    expect(screen.getByText('Ordem original.')).toBeInTheDocument();
+    expect(toggle()).not.toBeChecked();
+    expect(screen.queryByText(/Ordem prevista, aprendida/)).not.toBeInTheDocument();
   });
 
   it('is not at full text', async () => {

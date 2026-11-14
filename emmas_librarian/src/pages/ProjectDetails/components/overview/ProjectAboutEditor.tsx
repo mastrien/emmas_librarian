@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Check } from 'lucide-react';
 import { MDXEditor } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
@@ -26,8 +26,14 @@ const SaveStatus: React.FC<{ state: AboutSaveState }> = ({ state }) => (
  *
  * @example <ProjectAboutEditor projectId={3} />
  */
-export const ProjectAboutEditor: React.FC<{ projectId: number }> = ({ projectId }) => {
+export const ProjectAboutEditor: React.FC<{ projectId: number }> = ({ projectId }) => (
+  // One instance per project: its text, its pending save and its editor are never carried over to another project.
+  <AboutPage key={projectId} projectId={projectId} />
+);
+
+const AboutPage: React.FC<{ projectId: number }> = ({ projectId }) => {
   const about = useProjectAbout(projectId);
+  const plugins = useMemo(() => notesEditorPlugins(), []);
   return (
     <section className="overview-about" aria-labelledby="overview-about-title">
       <div className="overview-about__head">
@@ -39,14 +45,14 @@ export const ProjectAboutEditor: React.FC<{ projectId: number }> = ({ projectId 
       {about.markdown === null ? (
         <div className="overview-about__loading" aria-busy="true" />
       ) : (
-        <div className="overview-about__editor">
+        <div className="notes-editor overview-about__editor">
           <MDXEditor
             key={projectId}
             markdown={about.markdown}
             onChange={about.onChange}
             placeholder="Objetivo, pergunta de pesquisa, próximos passos…"
             contentEditableClassName="overview-about__content"
-            plugins={notesEditorPlugins()}
+            plugins={plugins}
             translation={notesEditorTranslation}
           />
         </div>

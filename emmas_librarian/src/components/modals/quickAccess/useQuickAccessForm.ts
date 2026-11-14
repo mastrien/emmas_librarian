@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
+import { failureNotice } from '../../common/dialogs/failureNotice';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import type { ProjectDocument } from '../../../types';
-import { describeError } from '../../../utils/describeError';
 import { useDialogs } from '../../common/dialogs/DialogProvider';
 
 export interface QuickAccessDraft {
@@ -87,7 +87,7 @@ export function useQuickAccessForm({ projectId, onSaved }: QuickAccessFormOption
       reset();
       onSaved();
     } catch (err: unknown) {
-      await inform({ title: 'Erro ao salvar', message: `Erro ao salvar documento: ${describeError(err)}` });
+      await inform(failureNotice('Não conseguimos salvar o documento', 'O documento não foi salvo.', err));
     } finally {
       setSubmitting(false);
     }

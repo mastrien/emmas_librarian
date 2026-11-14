@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChevronDown, Download } from 'lucide-react';
 import type { PrismaImageFormat } from '../../../types';
 import { useCloseOnOutside } from '../LabelMenu';
 import './prisma.css';
@@ -24,12 +25,12 @@ export const ExportMenu: React.FC<{ onPick: (format: PrismaImageFormat) => void 
     <div className="review-menu-anchor" ref={ref}>
       <button
         type="button"
-        className="btn-primary review-small"
+        className="btn-primary"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        Exportar ▾
+        <Download size={16} aria-hidden="true" /> Exportar <ChevronDown size={14} aria-hidden="true" />
       </button>
       {open && (
         <div className="review-menu prisma-w320" role="menu" aria-label="Exportar o diagrama">

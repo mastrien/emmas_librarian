@@ -94,11 +94,11 @@ describe('SettingsPage', () => {
         </FakeDialogsProvider>
       </BrowserRouter>,
     );
-    const provider = await screen.findByRole('combobox', { name: 'Provedor: 📝 Geração de Resumos' });
+    const provider = await screen.findByRole('combobox', { name: 'Provedor: Geração de resumos' });
 
     fireEvent.change(provider, { target: { value: 'anthropic' } });
 
-    expect(screen.getByRole('textbox', { name: 'Modelo: 📝 Geração de Resumos' })).toHaveValue('claude-sonnet-5');
+    expect(screen.getByRole('combobox', { name: 'Modelo: Geração de resumos' })).toHaveValue('claude-sonnet-5');
   });
 
   // Validation of epic #44: a provider picked but not saved left a whole investigation failing.
@@ -184,6 +184,21 @@ describe('SettingsPage', () => {
       '/settings/trash',
     ]);
     expect(await within(nav).findByRole('link', { name: /Chaves das bases 2\/4/ })).toBeInTheDocument();
+  });
+
+  // Regression: at /settings the default section was shown, but the address matched no link, so none looked chosen.
+  it('highlights the section on screen even when the address does not name it', async () => {
+    render(
+      <BrowserRouter>
+        <FakeDialogsProvider>
+          <SettingsPage />
+        </FakeDialogsProvider>
+      </BrowserRouter>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Seções das configurações' });
+    expect(within(nav).getByRole('link', { name: /Aparência/ })).toHaveAttribute('aria-current', 'page');
+    expect(within(nav).getByRole('link', { name: /Lixeira/ })).not.toHaveAttribute('aria-current');
   });
 
   it('shows only the chosen section, under its own title', async () => {

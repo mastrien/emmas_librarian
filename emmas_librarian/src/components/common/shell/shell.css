@@ -17,7 +17,8 @@
 .app-frame__main {
   flex: 1 1 0;
   min-width: 0;
-  padding: 2rem;
+  /* Board 150: 28px at the sides, and the screen takes all the room (no centred column). */
+  padding: 20px 28px 24px;
 }
 
 /* Reader: the PDF fills the window under the title bar, no rail, no page scroll. */
@@ -194,10 +195,11 @@
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-2);
+  gap: 14px;
+  padding: 14px 10px;
   overflow-y: auto;
-  background: var(--bg-sunken);
+  /* Board 150: the sidebar is a surface, one step lighter than the rail beside it. */
+  background: var(--bg-surface);
   border-right: 1px solid var(--border-subtle);
   z-index: 40;
 }
@@ -215,7 +217,7 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
-  padding: 0 var(--space-2);
+  padding: 6px 10px 4px;
 }
 
 .project-nav__head .project-nav__eyebrow {
@@ -249,17 +251,18 @@
 }
 
 .project-nav__group .project-nav__eyebrow {
-  margin-bottom: var(--space-1);
+  margin-bottom: 0;
 }
 
 .project-nav__item {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 9px;
   height: 32px;
-  padding: 0 var(--space-2);
-  border-radius: 6px;
+  padding: 0 10px;
+  border-radius: 7px;
   font-size: 13px;
+  font-weight: 500;
   color: var(--text-main);
   text-decoration: none;
   transition: background var(--duration-hover) var(--ease-out);
@@ -267,7 +270,6 @@
 
 .project-nav__item svg {
   flex: none;
-  color: var(--text-muted);
 }
 
 .project-nav__item:hover {
@@ -280,14 +282,12 @@
 }
 
 .project-nav__item.is-active {
-  background: var(--bg-raised);
+  background: var(--bg-surface-hover);
   color: var(--text-heading);
-  font-weight: 500;
-  box-shadow: inset 0 0 0 1px var(--border-subtle);
 }
 
 .project-nav__item.is-active svg {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 /* A screen's own sub-pages under its lit item (projectNavSlot.tsx; board 159: the investigations). */
@@ -307,10 +307,10 @@
   align-items: center;
   gap: 6px;
   height: 28px;
-  padding: 0 var(--space-2) 0 32px;
-  border-radius: 6px;
+  padding: 0 10px 0 35px;
+  border-radius: 7px;
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: 13px;
   text-decoration: none;
   white-space: nowrap;
   transition: background var(--duration-hover) var(--ease-out);
@@ -324,8 +324,9 @@
 .project-nav__sub.is-active,
 .project-nav__sub[aria-current='page'] {
   color: var(--text-heading);
-  font-weight: 500;
-  background: var(--bg-surface-hover);
+  background: transparent;
+  box-shadow: inset 2px 0 0 var(--color-primary);
+  border-radius: 0 7px 7px 0;
 }
 
 .project-nav__sub-label {
@@ -455,7 +456,7 @@
   align-items: center;
   gap: var(--space-2);
   height: 28px;
-  padding: 0 var(--space-2);
+  padding: 0 10px;
   border: 0;
   border-radius: 6px;
   background: transparent;
@@ -468,7 +469,6 @@
 
 .project-nav__quick svg {
   flex: none;
-  color: var(--text-muted);
 }
 
 .project-nav__quick:hover {
@@ -490,6 +490,11 @@
 }
 
 .project-nav__see-all {
+  /* Also a button ("Ver todas" of the investigations), not only a link. */
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
   padding: var(--space-1) var(--space-2);
   font-size: 12px;
   color: var(--color-primary-text);

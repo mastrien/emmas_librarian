@@ -1,77 +1,97 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { CornerDownLeft, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { AskIndexProgress, AskIndexResult, AskReadCitation, ProjectIndexCoverage } from '../../types';
 import { embeddingModelName, pdfCount } from '../../utils/pdfCount';
-import { citationAccessNote, citationReaderState, sourceNumber } from './askDisplay';
+import { citationAccessNote, citationReaderState } from './askDisplay';
 
 /**
- * The chunk a citation points to, kept with the answer, and the way to its page.
+ * "Fontes" (board 168): every source of the answer as a card, with the page and the way into the reader; the picked one
+ * is marked and shows the excerpt the answer rests on, in the reading typeface.
  *
- * @example <AskSourcePanel citation={citation} conversationId={3} onClose={close} />
+ * @example <AskSourcePanel citation={citation} sources={sources} conversationId={3} onClose={close} onPick={pick} />
  */
 export const AskSourcePanel: React.FC<{
   citation: AskReadCitation;
-  /** Every source of the answer, so another one can be picked from here (board 168: "Fontes"). */
+  /** Every source of the answer, so another one can be picked from here. */
   sources?: AskReadCitation[];
   conversationId: number;
   onClose: () => void;
   onPick?: (citation: AskReadCitation) => void;
-}> = ({ citation, sources = [], conversationId, onClose, onPick }) => {
+}> = ({ citation, sources = [citation], conversationId, onClose, onPick }) => {
   const navigate = useNavigate();
-  const note = citationAccessNote(citation);
-  const { access } = citation;
   return (
     <div className="ask-source" aria-label="Trecho citado">
-      {sources.length > 1 && onPick && (
-        <ol className="ask-source-list" aria-label="Fontes">
-          {sources.map((source, i) => (
-            <li key={i}>
-              <button
-                type="button"
-                className={`ask-source-item${source === citation ? ' is-on' : ''}`}
-                aria-label={`Ver a fonte ${i + 1}: ${source.title}`}
-                onClick={() => onPick(source)}
-              >
-                <span className="ask-source-item__number">{i + 1}</span>
-                <span className="ask-source-item__title">{source.title}</span>
-                <span className="ask-muted">pág. {source.page}</span>
-              </button>
-            </li>
-          ))}
-        </ol>
-      )}
-      <div className="ask-source-head">
-        <h2>
-          {sources.length > 1 && <span className="ask-source-head__number">{sourceNumber(sources, citation)} · </span>}
-          {citation.title}
-        </h2>
+      <div className="ask-source__head">
+        <span className="ask-source__label">Fontes</span>
+        <span className="ask-source__count">{sources.length}</span>
         <button type="button" className="ask-x" aria-label="Fechar o trecho" onClick={onClose}>
-          <X size={18} aria-hidden="true" />
+          <X size={16} aria-hidden="true" />
         </button>
       </div>
-      <p className="ask-muted">
-        {[citation.authors, citation.year].filter(Boolean).join(' · ')}
-        {citation.authors || citation.year ? ' · ' : ''}página {citation.page}
-      </p>
-      {note && (
-        <p className="ask-source-note" role="note">
-          {note}
-        </p>
-      )}
-      <blockquote>{citation.text}</blockquote>
-      {access.kind === 'open' && (
-        <button
-          type="button"
-          className="btn-primary"
-          onClick={() =>
-            navigate(`/articles/${access.articleId}`, { state: citationReaderState(citation, conversationId) })
-          }
-        >
-          Abrir no leitor, página {citation.page}
-        </button>
-      )}
+      <ol className="ask-source-list" aria-label="Fontes">
+        {sources.map((source, i) => (
+          <SourceCard
+            key={i}
+            number={i + 1}
+            source={source}
+            picked={source === citation}
+            onPick={onPick}
+            onOpen={() =>
+              navigate(`/articles/${source.access.kind === 'open' ? source.access.articleId : ''}`, {
+                state: citationReaderState(source, conversationId),
+              })
+            }
+          />
+        ))}
+      </ol>
     </div>
+  );
+};
+
+const SourceCard: React.FC<{
+  number: number;
+  source: AskReadCitation;
+  picked: boolean;
+  onPick?: (citation: AskReadCitation) => void;
+  onOpen: () => void;
+}> = ({ number, source, picked, onPick, onOpen }) => {
+  const note = citationAccessNote(source);
+  return (
+    <li className={`ask-src${picked ? ' is-on' : ''}`}>
+      <div className="ask-src__row">
+        <span className={`ask-src__cite${picked ? ' is-on' : ''}`}>{number}</span>
+        <span className="ask-src__page">pág. {source.page}</span>
+        {source.access.kind === 'open' && (
+          <button
+            type="button"
+            className="ask-src__open"
+            aria-label={`Abrir no leitor, página ${source.page}`}
+            onClick={onOpen}
+          >
+            Abrir
+          </button>
+        )}
+      </div>
+      <button
+        type="button"
+        className={`ask-src__title${picked ? ' is-on' : ''}`}
+        aria-label={`Ver a fonte ${number}: ${source.title}`}
+        onClick={() => onPick?.(source)}
+      >
+        {source.title}
+      </button>
+      {picked && (
+        <>
+          {note && (
+            <p className="ask-source-note" role="note">
+              {note}
+            </p>
+          )}
+          <blockquote className="ask-src__excerpt">{source.text}</blockquote>
+        </>
+      )}
+    </li>
   );
 };
 
@@ -114,7 +134,7 @@ export const AskIndexNotice: React.FC<{
                 <>
                   {' '}
                   Prefere não recalcular? Eles vieram de {embeddingModelName(coverage.previousModel)}: volte a esse
-                  modelo em <Link to="/settings">Configurações</Link>.
+                  modelo em <Link to="/settings/ai">Configurações</Link>.
                 </>
               )}
             </span>
@@ -177,22 +197,29 @@ export const AskComposer: React.FC<{
         void submit();
       }}
     >
-      <textarea
-        className="input-field"
-        aria-label="Sua pergunta"
-        rows={2}
-        value={text}
-        placeholder={placeholderFor(hasScope, canAsk)}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key !== 'Enter' || e.shiftKey) return;
-          e.preventDefault();
-          void submit();
-        }}
-      />
-      <button type="submit" className="btn-primary" disabled={blocked}>
-        {sending ? 'Perguntando…' : 'Enviar'}
-      </button>
+      <div className="ask-composer__box">
+        <textarea
+          aria-label="Sua pergunta"
+          rows={2}
+          value={text}
+          placeholder={placeholderFor(hasScope, canAsk)}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter' || e.shiftKey) return;
+            e.preventDefault();
+            void submit();
+          }}
+        />
+        <button
+          type="submit"
+          className="btn-primary ask-composer__send"
+          disabled={blocked}
+          aria-label={sending ? 'Perguntando…' : 'Enviar'}
+          title="Enviar (Enter)"
+        >
+          <CornerDownLeft size={16} strokeWidth={2.25} aria-hidden="true" />
+        </button>
+      </div>
       <span className="ask-composer__hint">
         Enter envia · Shift+Enter quebra a linha · cada afirmação traz artigo e página
       </span>

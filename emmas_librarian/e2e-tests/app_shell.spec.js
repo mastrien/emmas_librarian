@@ -91,6 +91,8 @@ test('quick access links added from the sidebar move up when opened', async () =
       ['Edital CAPES', 'https://exemplo.org/edital'],
       ['Planilha de reuniões', 'https://exemplo.org/planilha'],
     ]) {
+      // Board 178: the list first, and "Link ou arquivo" opens the form; saving goes back to the list.
+      await dialog.getByRole('button', { name: /Link ou arquivo/ }).click();
       await dialog.getByPlaceholder('Ex: Trello do Projeto, Edital CAPES').fill(title);
       await dialog.getByPlaceholder('https://').fill(url);
       await dialog.getByRole('button', { name: 'Adicionar' }).click();

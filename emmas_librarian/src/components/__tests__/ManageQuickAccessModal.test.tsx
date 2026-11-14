@@ -59,6 +59,12 @@ describe('ManageQuickAccessModal', () => {
     );
   };
 
+  const openAdd = () => fireEvent.click(screen.getByRole('button', { name: /Link ou arquivo/ }));
+  const chooseFromMenu = (title: string, action: 'Editar' | 'Remover') => {
+    fireEvent.click(screen.getByRole('button', { name: `Ações de ${title}` }));
+    fireEvent.click(screen.getByRole('menuitem', { name: action }));
+  };
+
   it('renders null when isOpen is false', () => {
     const { container } = renderModal({ isOpen: false });
     expect(container.innerHTML).toBe('');
@@ -80,6 +86,7 @@ describe('ManageQuickAccessModal', () => {
   it('allows creating a new document with category', async () => {
     const onDocsChangedMock = vi.fn();
     renderModal({ isOpen: true, documents: [], onDocumentsChanged: onDocsChangedMock });
+    openAdd();
 
     const titleInput = screen.getByPlaceholderText('Ex: Trello do Projeto, Edital CAPES');
     const categoryInput = screen.getByPlaceholderText('Ex: Reuniões, Modelos');
@@ -108,10 +115,9 @@ describe('ManageQuickAccessModal', () => {
     const onDocsChangedMock = vi.fn();
     renderModal({ isOpen: true, documents: mockDocuments, onDocumentsChanged: onDocsChangedMock });
 
-    const editButtons = screen.getAllByTitle('Editar item');
-    fireEvent.click(editButtons[0]); // Edit first item
+    chooseFromMenu('Trello do Projeto', 'Editar');
 
-    expect(screen.getByText('Editar Acesso Rápido')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Editar item' })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Trello do Projeto')).toBeInTheDocument();
 
     const titleInput = screen.getByDisplayValue('Trello do Projeto');

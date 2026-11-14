@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { DeadlineBanner } from '../common/deadlines/DeadlineBanner';
+import { DeadlineBanner, deadlineSubline } from '../common/deadlines/DeadlineBanner';
+import type { DeadlineItem } from '../common/deadlines/deadlineQueries';
 import { ScientificVenue } from '../../types';
 
 const MOCK_VENUES: ScientificVenue[] = [
@@ -39,7 +40,7 @@ describe('DeadlineBanner (TDD)', () => {
     );
 
     expect(screen.getByText('Chamada de Trabalhos')).toBeInTheDocument();
-    expect(screen.getByText(/2026-01-01 a 2026-12-31/i)).toBeInTheDocument();
+    expect(screen.getByText('SBBD 2026 · 01/01/2026 a 31/12/2026')).toBeInTheDocument();
   });
 
   it('triggers onToggleMilestoneStatus when checkbox is clicked', () => {
@@ -58,21 +59,21 @@ describe('DeadlineBanner (TDD)', () => {
   });
 });
 
-describe('DeadlineBanner call link', () => {
-  it('links each deadline to its event call page when the event has a URL', () => {
-    const venue = { ...MOCK_VENUES[0], url: 'https://sbbd.org.br/2026/chamada' };
-
-    render(<DeadlineBanner venues={[venue]} onToggleMilestoneStatus={vi.fn()} onOpenAgenda={vi.fn()} />);
-
-    expect(screen.getByRole('link', { name: 'Abrir URL do Evento' })).toHaveAttribute(
-      'href',
-      'https://sbbd.org.br/2026/chamada',
-    );
+describe('deadlineSubline', () => {
+  const item = (venue: Partial<ScientificVenue>, end_date?: string): DeadlineItem => ({
+    venue: { ...MOCK_VENUES[0], ...venue },
+    milestone: { ...MOCK_VENUES[0].milestones![0], end_date },
+    effectiveDate: end_date ?? '2026-01-01',
+    daysDiff: 3,
   });
 
-  it('shows no link for an event without a URL', () => {
-    render(<DeadlineBanner venues={MOCK_VENUES} onToggleMilestoneStatus={vi.fn()} onOpenAgenda={vi.fn()} />);
+  it('names the event by its acronym and adds the dates of a range', () => {
+    expect(deadlineSubline(item({}, '2026-12-31'))).toBe('SBBD 2026 · 01/01/2026 a 31/12/2026');
+  });
 
-    expect(screen.queryByRole('link', { name: 'Abrir URL do Evento' })).not.toBeInTheDocument();
+  it('falls back to the title of an event with no acronym, with no dates for a single day', () => {
+    expect(deadlineSubline(item({ acronym: '', title: 'Revista Brasileira de Meteorologia' }))).toBe(
+      'Revista Brasileira de Meteorologia',
+    );
   });
 });

@@ -109,7 +109,7 @@ export const NewInvestigationView: React.FC<NewInvestigationViewProps> = (props)
           />
         )}
         {step === 'articles' && (
-          <section className="inv-card inv-step-body" aria-label="Artigos com PDF">
+          <section className="inv-step-body" aria-label="Artigos com PDF">
             <ArticleSelector
               articles={articlesWithPdf}
               selectedIds={draft.selectedIds}

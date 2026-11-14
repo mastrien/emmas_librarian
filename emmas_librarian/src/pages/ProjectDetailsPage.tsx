@@ -1,3 +1,5 @@
+import { usePageCommands } from '../components/common/shell/palette/PageCommandsContext';
+import { projectPaletteCommands } from './ProjectDetails/hooks/useProjectPaletteCommands';
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useProjectService } from '../contexts/ServicesContext';
@@ -65,6 +67,16 @@ export const ProjectDetailsPage: React.FC = () => {
     onImported: data.reload,
     isDropBlocked: () => modals.isQuickAccessModalOpen,
   });
+
+  usePageCommands(
+    'project',
+    projectPaletteCommands({
+      modals,
+      filtering,
+      importPdfs: pdfImport.importFromDialog,
+      onArticles: activeTab === 'articles',
+    }),
+  );
 
   if (!activeTab) {
     const target = isProjectSection(lastSection) ? lastSection : DEFAULT_PROJECT_SECTION;

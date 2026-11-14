@@ -3,7 +3,8 @@
    <main> down to 24px: the answers grid needs the width (at 1920px it went from 570px to 1226px). */
 .inv-page {
   height: var(--fill-height, auto);
-  margin: 0 calc(24px - 2rem) -2rem;
+  /* The window's own padding is 28px at the sides, 24px under; only the bottom bar bleeds into it (board 159). */
+  margin: 0 0 -24px;
   min-height: 0;
   box-sizing: border-box;
   display: flex;
@@ -174,12 +175,6 @@
   height: 8px;
   margin-right: 6px;
   border-radius: 50%;
-}
-.inv-question-list {
-  margin: 0;
-  padding-left: 1.25rem;
-  font-size: 0.88rem;
-  line-height: 1.7;
 }
 .inv-toolbar {
   flex: none;
@@ -370,10 +365,10 @@
   justify-content: space-between;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.7rem 0.9rem;
+  margin: 0 -28px;
+  padding: 14px 28px;
   background: var(--bg-sunken);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-top: 1px solid var(--border-color);
 }
 @media (max-width: 1100px) {
 }
@@ -391,30 +386,37 @@
 .inv-question-filter {
   max-width: 20rem;
 }
-.inv-question-list {
+.inv-question-editor {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
 .inv-question-row {
-  display: flex;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 12px;
 }
-.inv-question-row .input-field {
-  flex: 1;
+.inv-question-row--head {
+  padding-bottom: 6px;
+}
+.inv-question-row--head .inv-section-title {
+  margin: 0;
+}
+.inv-question-index {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 .inv-question-row .inv-question-remove {
-  padding: 0.5rem;
-  color: var(--color-danger);
+  width: 32px;
+  padding: 0;
+  justify-content: center;
 }
 .inv-question-actions {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-}
-.inv-question-actions .btn-secondary {
-  font-size: 0.85rem;
+  gap: 8px;
 }
 /* In the side panel the answer needs no frame of its own, and the review stays in reach at the bottom however long
    the evidences run (board 162). */

@@ -6,6 +6,7 @@ import { IndexRecalculationModal } from '../../components/modals/IndexRecalculat
 import { useFillWindowHeight } from '../../hooks/useFillWindowHeight';
 import { useNarrowWindow } from '../../hooks/useNarrowWindow';
 import { AskScopeBar } from './AskScopeBar';
+import { AskModelsNote } from './AskModelsNote';
 import { AskSidebar } from './AskSidebar';
 import { AskComposer, AskIndexNotice, AskSourcePanel } from './AskSidePieces';
 import { AskThread, type PickedCitation } from './AskThread';
@@ -83,7 +84,13 @@ export const AskPage: React.FC = () => {
           onChange={ask.setScope}
           indexed={ask.coverage?.indexed.length}
         />
-        <AskThread conversation={ask.conversation} pending={ask.pending} picked={picked} onPick={setPicked} />
+        <AskThread
+          conversation={ask.conversation}
+          pending={ask.pending}
+          picked={picked}
+          onPick={setPicked}
+          note={<AskModelsNote />}
+        />
         {shownError && (
           <div className="ask-error" role="alert">
             <AlertCircle size={16} aria-hidden="true" /> {shownError}

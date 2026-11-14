@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2 } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 interface QuestionListEditorProps {
   questions: string[];
@@ -25,9 +25,15 @@ export const QuestionListEditor: React.FC<QuestionListEditorProps> = ({ question
   const canSave = filled(questions).length > 0;
   return (
     <>
-      <div className="inv-question-list">
+      <div className="inv-question-editor">
+        <div className="inv-question-row inv-question-row--head" aria-hidden="true">
+          <span />
+          <span className="inv-section-title">Pergunta</span>
+          <span />
+        </div>
         {questions.map((q, idx) => (
           <div key={idx} className="inv-question-row">
+            <span className="inv-question-index">P{idx + 1}</span>
             <input
               type="text"
               value={q}
@@ -39,19 +45,20 @@ export const QuestionListEditor: React.FC<QuestionListEditorProps> = ({ question
               type="button"
               onClick={() => remove(idx)}
               aria-label={`Remover a pergunta ${idx + 1}`}
-              className="btn-secondary inv-question-remove"
+              className="btn-ghost inv-question-remove"
             >
-              <Trash2 size={16} />
+              <X size={16} />
             </button>
           </div>
         ))}
       </div>
       <div className="inv-question-actions">
-        <button onClick={() => onChange([...questions, ''])} className="btn-secondary">
-          + Adicionar Pergunta
+        <button type="button" onClick={() => onChange([...questions, ''])} className="btn-ghost">
+          <Plus size={14} aria-hidden="true" /> Pergunta
         </button>
         <button
-          className="btn-secondary"
+          type="button"
+          className="btn-ghost"
           onClick={onSaveAsSet}
           disabled={!canSave}
           title={canSave ? 'Salvar perguntas atuais como novo conjunto' : 'Adicione perguntas acima para salvar'}

@@ -217,8 +217,8 @@ describe('ArticleDetailsModal', () => {
       fireEvent.click(unlinkButton);
     });
 
-    expect(dialogs.informMessage).toHaveBeenCalledWith(
-      expect.stringContaining('Erro ao desvincular o PDF: Network error'),
+    expect(dialogs.informed).toContainEqual(
+      expect.objectContaining({ message: 'O PDF continua ligado ao artigo.', details: 'Network error' }),
     );
   });
 

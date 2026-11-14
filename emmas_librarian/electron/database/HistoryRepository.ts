@@ -1,4 +1,5 @@
 import type { Database } from 'better-sqlite3';
+import { AppError } from '../ipc/errorHandler';
 import { DiaryEntry } from '../../src/types';
 import { deletePdfIfUnused } from './sharedPdfFiles';
 
@@ -9,6 +10,9 @@ export interface SearchRunDetails {
   queryState?: string;
   uniqueResults?: number;
 }
+
+/** The code of the error for a diary page that changed since the caller read it. */
+export const DIARY_CONFLICT = 'ERR_DIARY_CONFLICT';
 
 export class HistoryRepository {
   private db: Database;
@@ -76,8 +80,25 @@ export class HistoryRepository {
   }
 
   // --- Diary ---
-  public saveDiaryEntry(projectId: number, entryDate: string, content: string): void {
+  /**
+   * Saves one diary page, keeping the text it replaces in the history.
+   *
+   * `expected` is the text the caller last saw on this page (null for a page that did not exist). When it is given
+   * and the page holds something else now, the write is refused: another window, a restored version or a late save of
+   * another page changed it, and writing over it would lose that text without anyone knowing. Left out, the write
+   * always goes through (imports, restoring a version).
+   *
+   * @example repo.saveDiaryEntry(1, '2026-03-05', 'novo texto', 'texto que eu tinha aberto');
+   */
+  public saveDiaryEntry(projectId: number, entryDate: string, content: string, expected?: string | null): void {
     const existing = this.getDiaryEntry(projectId, entryDate);
+    if (expected !== undefined && (existing?.content ?? '') !== (expected ?? '')) {
+      throw new AppError(
+        DIARY_CONFLICT,
+        'USER_ERROR',
+        `A página de ${entryDate} foi alterada em outro lugar desde que foi aberta.`,
+      );
+    }
     if (existing) {
       this.db
         .prepare(

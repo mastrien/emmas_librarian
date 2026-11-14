@@ -95,7 +95,7 @@ describe('MassCitationModal list', () => {
   it('orders articles without a year first chronologically', () => {
     renderModal([article(1, { year: 2020 }), article(2, { year: undefined })]);
 
-    fireEvent.change(screen.getByDisplayValue('Ordem Alfabética (Autor)'), { target: { value: 'year' } });
+    fireEvent.change(screen.getByLabelText('Ordenar por'), { target: { value: 'year' } });
 
     const titles = Array.from(document.querySelectorAll('b')).map((b) => b.textContent);
     expect(titles).toEqual(['T2', 'T1']);
@@ -140,14 +140,55 @@ describe('MassCitationModal copy', () => {
   it('joins non-HTML formats with blank lines and resets the label after 2 seconds', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     renderModal([article(1), article(2)]);
-    fireEvent.click(screen.getByRole('button', { name: /Texto/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'BibTeX' }));
 
     fireEvent.click(screen.getByRole('button', { name: /Copiar tudo/ }));
 
     await screen.findByRole('button', { name: /Copiado!/ });
-    expect(clipboard.writeText).toHaveBeenCalledWith('T1 abnt text\n\nT2 abnt text');
+    expect(clipboard.writeText).toHaveBeenCalledWith('T1 abnt bibtex\n\nT2 abnt bibtex');
     await act(() => vi.advanceTimersByTimeAsync(2000));
     expect(screen.getByRole('button', { name: /Copiar tudo/ })).toBeInTheDocument();
+  });
+});
+
+describe('MassCitationModal .bib download', () => {
+  it('offers "Baixar .bib" only while BibTeX is chosen, and saves the references as the file', async () => {
+    renderModal([article(1), article(2)]);
+    expect(screen.queryByRole('button', { name: /Baixar \.bib/ })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'BibTeX' }));
+    fireEvent.click(screen.getByRole('button', { name: /Baixar \.bib/ }));
+
+    await waitFor(() =>
+      expect(service.saveExportedFile).toHaveBeenCalledWith('T1 abnt bibtex\n\nT2 abnt bibtex\n', 'referencias.bib'),
+    );
+  });
+
+  it('confirms the file was saved, and stays quiet when the save dialog was cancelled', async () => {
+    service.saveExportedFile.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    renderModal([article(1)]);
+    fireEvent.click(screen.getByRole('button', { name: 'BibTeX' }));
+
+    fireEvent.click(screen.getByRole('button', { name: /Baixar \.bib/ }));
+    await waitFor(() =>
+      expect(dialogs.informed).toContainEqual(expect.objectContaining({ title: 'Exportação concluída', tone: 'ok' })),
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Baixar \.bib/ }));
+    await waitFor(() => expect(service.saveExportedFile).toHaveBeenCalledTimes(2));
+
+    expect(dialogs.informed).toHaveLength(1);
+  });
+
+  it('tells when the file could not be saved', async () => {
+    service.saveExportedFile.mockRejectedValue(new Error('disco cheio'));
+    renderModal([article(1)]);
+    fireEvent.click(screen.getByRole('button', { name: 'BibTeX' }));
+
+    fireEvent.click(screen.getByRole('button', { name: /Baixar \.bib/ }));
+
+    await waitFor(() =>
+      expect(dialogs.informed).toContainEqual(expect.objectContaining({ message: 'O arquivo não foi gravado.' })),
+    );
   });
 });
 

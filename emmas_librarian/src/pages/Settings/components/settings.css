@@ -4,7 +4,8 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-6);
-  margin: -2rem;
+  /* Undoes the window's own padding (20px 28px 24px): the list of sections reaches the edges. */
+  margin: -20px -28px -24px;
   min-height: calc(100vh - 32px);
 }
 
@@ -12,7 +13,7 @@
   flex: 1 1 0;
   min-width: 0;
   max-width: 980px;
-  padding: 2rem 2rem 2rem 0;
+  padding: 20px 28px 24px;
 }
 
 /* Each section is a screen of its own: the page header names it, so the card's own title is for screen readers. */
@@ -86,6 +87,7 @@
 
 .settings-card-description {
   color: var(--text-muted);
+  font-size: 12px;
   margin-bottom: 1.5rem;
 }
 
@@ -113,7 +115,7 @@
 .settings-hint {
   margin: 0.4rem 0 0;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 12px;
 }
 
 .settings-empty {
@@ -136,20 +138,28 @@
 
 .api-key-icon {
   position: absolute;
-  left: 1rem;
+  left: 10px;
   top: 50%;
+  display: flex;
   transform: translateY(-50%);
   color: var(--text-muted);
 }
 
+/* Board 170: the same field as every other input (34px, 8px radius). */
 .api-key-input {
   width: 100%;
-  padding: 0.8rem 1rem 0.8rem 2.8rem;
+  height: 34px;
+  padding: 0 10px 0 32px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   outline: none;
-  background: var(--bg-main);
+  background: var(--bg-sunken);
   color: var(--text-main);
+  font-size: 13px;
+}
+
+.api-key-input:focus {
+  border-color: var(--color-primary);
 }
 
 /* Backup */
@@ -186,13 +196,16 @@
 }
 
 .settings-subsection h3 {
-  margin-bottom: 0.75rem;
-  font-size: 1.1rem;
+  margin-bottom: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--text-heading);
 }
 
 .settings-subsection-text {
-  margin-bottom: 1.5rem;
+  margin-bottom: 12px;
+  font-size: 12px;
   color: var(--text-muted);
   font-size: 0.85rem;
 }

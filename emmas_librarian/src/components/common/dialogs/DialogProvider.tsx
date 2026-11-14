@@ -1,8 +1,9 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Info, Trash2, HelpCircle } from 'lucide-react';
+import { Info, Trash2, HelpCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Modal, type ModalTone } from '../Modal';
 import { ModalFooter } from '../ModalFooter';
 import { Button } from '../Button';
+import { TechnicalDetails } from './TechnicalDetails';
 import './dialogs.css';
 
 export interface ConfirmOptions {
@@ -19,6 +20,10 @@ export interface InformOptions {
   title: string;
   message: ReactNode;
   okLabel?: string;
+  /** What the icon says (board 181): done (green), a problem (red), a caution (amber) or plain news. Default: from the title. */
+  tone?: ModalTone;
+  /** What the program said (the error's own text): shown folded under "Detalhes técnicos", with a button to copy it. */
+  details?: string;
 }
 
 export interface Dialogs {
@@ -36,6 +41,8 @@ interface PendingDialog {
   confirmLabel: string;
   cancelLabel: string;
   danger: boolean;
+  tone: ModalTone;
+  details?: string;
   settle: (confirmed: boolean) => void;
 }
 
@@ -58,13 +65,33 @@ function toRequest(
     confirmLabel: kind === 'confirm' ? confirm.confirmLabel : (inform.okLabel ?? 'Entendi'),
     cancelLabel: confirm.cancelLabel ?? 'Cancelar',
     danger: kind === 'confirm' && Boolean(confirm.danger),
+    tone: inform.tone ?? informToneFromTitle(options.title),
+    details: inform.details,
     settle,
   };
 }
 
-/** What the window's icon says: a destructive question (red bin), any other question, or a notice. */
+const PROBLEM_TITLE = /^(erro|falha|não (foi possível|conseguimos|deu))/i;
+
+/**
+ * The tone of a notice whose caller did not choose one: "Erro ao…" and "Falha…" titles are problems (red), the rest news.
+ *
+ * @example informToneFromTitle('Erro ao salvar') // 'danger'
+ */
+export function informToneFromTitle(title: string): ModalTone {
+  return PROBLEM_TITLE.test(title.trim()) ? 'danger' : 'info';
+}
+
+const NOTICE_ICONS: Record<ModalTone, React.ReactNode> = {
+  ok: <CheckCircle2 size={20} aria-hidden="true" />,
+  warn: <AlertTriangle size={20} aria-hidden="true" />,
+  danger: <AlertTriangle size={20} aria-hidden="true" />,
+  info: <Info size={20} aria-hidden="true" />,
+};
+
+/** What the window's icon says: a destructive question (red bin), any other question, or a notice by its tone. */
 function dialogIcon(dialog: PendingDialog): { icon: React.ReactNode; tone: ModalTone } {
-  if (dialog.kind === 'inform') return { icon: <Info size={20} aria-hidden="true" />, tone: 'info' };
+  if (dialog.kind === 'inform') return { icon: NOTICE_ICONS[dialog.tone], tone: dialog.tone };
   if (dialog.danger) return { icon: <Trash2 size={20} aria-hidden="true" />, tone: 'danger' };
   return { icon: <HelpCircle size={20} aria-hidden="true" />, tone: 'info' };
 }
@@ -75,6 +102,7 @@ const DialogWindow: React.FC<{ dialog: PendingDialog; onSettle: (confirmed: bool
 }) => (
   <Modal label={dialog.title} title={dialog.title} onClose={() => onSettle(false)} width={460} {...dialogIcon(dialog)}>
     <div className="app-dialog-message">{dialog.message}</div>
+    {dialog.details && <TechnicalDetails text={dialog.details} />}
     <ModalFooter plain>
       {dialog.kind === 'confirm' && (
         <Button variant="ghost" onClick={() => onSettle(false)}>

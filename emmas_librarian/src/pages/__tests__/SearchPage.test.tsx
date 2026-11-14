@@ -134,6 +134,21 @@ describe('SearchPage', () => {
     expect(screen.getByText('IEEE Xplore', { selector: 'strong' })).toBeInTheDocument();
   });
 
+  // Board 181: the window asks for the base key itself; the person need not go to Settings.
+  it('saves the key typed in the window and selects the base', async () => {
+    fakeService.getSetting.mockResolvedValue(null);
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Web of Science' }));
+    fireEvent.change(screen.getByLabelText('Chave da Web of Science'), { target: { value: ' k-wos ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar e usar a Web of Science' }));
+
+    await waitFor(() => expect(fakeService.setSetting).toHaveBeenCalledWith('wos_api_key', 'k-wos'));
+    await waitFor(() => expect(screen.queryByText('Chave de API Necessária')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Web of Science' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('navigates to settings from key alert', async () => {
     fakeService.getSetting.mockResolvedValue(null);
     renderPage();
@@ -152,7 +167,7 @@ describe('SearchPage', () => {
       fireEvent.click(configBtn);
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/settings');
+    expect(mockNavigate).toHaveBeenCalledWith('/settings/keys');
   });
 
   it('handles query translation and custom queries', async () => {

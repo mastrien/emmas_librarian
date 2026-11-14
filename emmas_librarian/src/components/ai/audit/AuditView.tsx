@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { isTextEntry } from '../../../utils/isTextEntry';
 import { useNavigate } from 'react-router-dom';
 import type { Article, InvestigationResult, ResultReview } from '../../../types';
 import type { InvestigationHistoryRecord } from '../../../types';
@@ -36,8 +37,7 @@ export interface AuditViewProps {
 function useAuditKeys(handle: (key: 'a' | 'e' | 'r' | 'p') => void) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target || /INPUT|TEXTAREA|SELECT/.test(target.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (!e.target || isTextEntry(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
       const key = e.key.toLowerCase();
       if (key !== 'a' && key !== 'e' && key !== 'r' && key !== 'p') return;
       e.preventDefault();

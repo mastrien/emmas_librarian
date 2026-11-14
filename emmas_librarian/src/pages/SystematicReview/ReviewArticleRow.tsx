@@ -12,6 +12,8 @@ interface ReviewArticleRowProps {
   nested?: 'section' | 'group';
   reason?: string;
   selection?: { checked: boolean; onToggle: () => void };
+  /** Told when the pointer enters or leaves the row, for the keys that decide the one under it. */
+  onHover?: (over: boolean) => void;
 }
 
 /**
@@ -20,10 +22,22 @@ interface ReviewArticleRowProps {
  *
  * @example <ReviewArticleRow row={row} nested="section" actions={<LabelMenu … />} />
  */
-export const ReviewArticleRow: React.FC<ReviewArticleRowProps> = ({ row, actions, nested, reason, selection }) => {
+export const ReviewArticleRow: React.FC<ReviewArticleRowProps> = ({
+  row,
+  actions,
+  nested,
+  reason,
+  selection,
+  onHover,
+}) => {
   const classes = ['review-row', nested && 'review-row--indent', nested === 'group' && 'review-row--grouped'];
   return (
-    <div className={classes.filter(Boolean).join(' ')} data-testid="review-row">
+    <div
+      className={classes.filter(Boolean).join(' ')}
+      data-testid="review-row"
+      onMouseEnter={() => onHover?.(true)}
+      onMouseLeave={() => onHover?.(false)}
+    >
       {selection && (
         <input
           type="checkbox"

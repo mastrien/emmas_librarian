@@ -6,6 +6,16 @@ import { afterEach, vi } from 'vitest';
 // take longer (flakes in auditNavigation, #48, and the review page, #49), so every suite waits up to 4 s.
 configure({ asyncUtilTimeout: 4000 });
 
+// The rings are a WebGL canvas, which jsdom cannot draw; the pages that carry them only need their place.
+vi.mock('./components/gyroscope/GyroscopeCanvas', () => ({
+  GyroscopeCanvas: () => null,
+}));
+
+// jsdom has no canvas context either: say the machine can draw, so the pages render the (mocked) rings' place.
+vi.mock('./components/gyroscope/webglSupport', () => ({
+  hasWebGl: () => true,
+}));
+
 // Suites that opt into `@vitest-environment node` (e.g. real zip/SQLite round trips) have no window.
 if (typeof window !== 'undefined') {
   Object.defineProperty(window, 'electronAPI', {

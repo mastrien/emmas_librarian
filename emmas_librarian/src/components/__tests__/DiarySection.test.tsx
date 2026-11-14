@@ -117,6 +117,20 @@ describe('DiarySection timeline', () => {
 });
 
 describe('DiarySection today page', () => {
+  it("opens today's page that already exists in the database though the list did not have it", async () => {
+    givenEntries(entry(PAST));
+    service.saveDiaryEntry.mockRejectedValueOnce(
+      Object.assign(new Error('ERR_DIARY_CONFLICT'), { code: 'ERR_DIARY_CONFLICT' }),
+    );
+    renderDiary();
+    await screen.findByText(shortDate(PAST));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Página de hoje' }));
+
+    await screen.findByRole('heading', { name: longDate(TODAY) });
+    expect(service.getDiaryEntries).toHaveBeenCalledTimes(2);
+  });
+
   it("creates today's page when missing, then opens it", async () => {
     givenEntries(entry(PAST));
     renderDiary();
@@ -125,7 +139,7 @@ describe('DiarySection today page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Página de hoje' }));
 
     await screen.findByRole('heading', { name: longDate(TODAY) });
-    expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, TODAY, '');
+    expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, TODAY, '', null);
     expect(service.getDiaryEntries).toHaveBeenCalledTimes(2);
   });
 
@@ -165,7 +179,7 @@ describe('DiarySection saving', () => {
     expect(service.saveDiaryEntry).not.toHaveBeenCalled();
     await act(() => vi.advanceTimersByTimeAsync(1));
 
-    expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, PAST, 'abc');
+    expect(service.saveDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, PAST, 'abc', 'a');
     vi.useRealTimers();
     expect(await screen.findByText(/^Salvo às \d{2}:\d{2}$/)).toBeInTheDocument();
   });
@@ -192,7 +206,7 @@ describe('DiarySection saving', () => {
     await openEntry(OTHER, 'b');
     await act(() => vi.advanceTimersByTimeAsync(2500));
 
-    expect(service.saveDiaryEntry.mock.calls).toEqual([[PROJECT_ID, PAST, 'a2']]);
+    expect(service.saveDiaryEntry.mock.calls).toEqual([[PROJECT_ID, PAST, 'a2', 'a']]);
   });
 });
 
@@ -256,23 +270,71 @@ describe('DiarySection deletion', () => {
 });
 
 describe('DiarySection history', () => {
-  const longText = 'x'.repeat(151);
-
-  it('lists previous versions with truncated previews', async () => {
-    givenEntries(entry(PAST, 'a'));
-    service.getDiaryEntryHistory.mockResolvedValue([
-      { id: 10, content: longText, updated_at: '2026-03-05T10:00:00Z' },
-      { id: 11, content: '', updated_at: '2026-03-05T09:00:00Z' },
-    ]);
+  // The database keeps 10 versions per page, so a full list may have lost the true first one (review of PR #187).
+  it('does not call the oldest version the first when the database keeps its limit of them', async () => {
+    givenEntries(entry(PAST, 'atual'));
+    service.getDiaryEntryHistory.mockResolvedValue(
+      Array.from({ length: 10 }, (_, i) => ({ id: 20 - i, content: `v${i}`, updated_at: '2026-03-05 10:00:00' })),
+    );
     renderDiary();
-    await openEntry(PAST, 'a');
-
+    await openEntry(PAST, 'atual');
     fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
 
-    await screen.findByText('Histórico de Versões');
+    const dialog = await screen.findByRole('dialog', { name: 'Histórico de Versões' });
+
+    expect(within(dialog).getByText('mais antiga guardada')).toBeInTheDocument();
+    expect(within(dialog).queryByText('primeira versão')).not.toBeInTheDocument();
+  });
+
+  const version = (id: number, content: string, updated_at = '2026-03-05 10:00:00') => ({ id, content, updated_at });
+  const openHistory = async () => {
+    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
+    return screen.findByRole('dialog', { name: 'Histórico de Versões' });
+  };
+
+  it('lists the current page and the versions with what differs from it (board 180)', async () => {
+    givenEntries(entry(PAST, '# Critérios\nlinha nova\nlinha igual'));
+    service.getDiaryEntryHistory.mockResolvedValue([
+      version(11, '# Critérios\nlinha velha\nlinha igual'),
+      version(10, '# Critérios'),
+    ]);
+    renderDiary();
+    await openEntry(PAST, '# Critérios\nlinha nova\nlinha igual');
+
+    const dialog = await openHistory();
+
     expect(service.getDiaryEntryHistory).toHaveBeenCalledWith(PROJECT_ID, PAST);
-    expect(screen.getByText(`${'x'.repeat(150)}...`)).toBeInTheDocument();
-    expect(screen.getByText('(Vazio)')).toBeInTheDocument();
+    expect(within(dialog).getByRole('heading', { name: 'Versões de “Critérios”' })).toBeInTheDocument();
+    const list = within(dialog).getByRole('group', { name: 'Versões' });
+    expect(within(list).getByText('a página como está')).toBeInTheDocument();
+    expect(within(list).getByText('−1 linha, +1 linha')).toBeInTheDocument();
+    expect(within(list).getByText('primeira versão')).toBeInTheDocument();
+  });
+
+  it('shows the chosen version with what came in after it in green and what went out in red', async () => {
+    givenEntries(entry(PAST, 'um dois novo'));
+    service.getDiaryEntryHistory.mockResolvedValue([version(10, 'um dois velho')]);
+    renderDiary();
+    await openEntry(PAST, 'um dois novo');
+
+    const dialog = await openHistory();
+
+    expect(dialog.querySelector('.diary-history__text ins')).toHaveTextContent('novo');
+    expect(dialog.querySelector('.diary-history__text del')).toHaveTextContent('velho');
+  });
+
+  it('chooses another version from the list', async () => {
+    givenEntries(entry(PAST, 'atual'));
+    service.getDiaryEntryHistory.mockResolvedValue([version(11, 'segunda'), version(10, 'primeira')]);
+    renderDiary();
+    await openEntry(PAST, 'atual');
+    const dialog = await openHistory();
+    expect(within(dialog).getAllByRole('button', { pressed: true })).toHaveLength(1);
+
+    fireEvent.click(within(dialog).getByText('primeira versão').closest('button')!);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Restaurar esta versão' }));
+
+    await waitFor(() => expect(service.restoreDiaryEntryVersion).toHaveBeenCalledWith(10));
   });
 
   it('shows an empty history and closes it', async () => {
@@ -280,29 +342,40 @@ describe('DiarySection history', () => {
     renderDiary();
     await openEntry(PAST, 'a');
 
-    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
-    await screen.findByText('Nenhuma versão anterior encontrada.');
+    const dialog = await openHistory();
+    expect(within(dialog).getByText('Nenhuma versão anterior encontrada.')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Restaurar esta versão' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
 
-    expect(screen.queryByText('Histórico de Versões')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Histórico de Versões' })).not.toBeInTheDocument();
+  });
+
+  it('cannot restore the current page, which is not a version', async () => {
+    givenEntries(entry(PAST, 'a'));
+    service.getDiaryEntryHistory.mockResolvedValue([version(10, 'antes')]);
+    renderDiary();
+    await openEntry(PAST, 'a');
+    const dialog = await openHistory();
+
+    fireEvent.click(within(dialog).getByText('Atual').closest('button')!);
+
+    expect(within(dialog).getByRole('button', { name: 'Restaurar esta versão' })).toBeDisabled();
   });
 
   it('restores a version into the editor', async () => {
     givenEntries(entry(PAST, 'old'));
-    service.getDiaryEntryHistory.mockResolvedValue([
-      { id: 10, content: 'restored', updated_at: '2026-03-05T10:00:00Z' },
-    ]);
+    service.getDiaryEntryHistory.mockResolvedValue([version(10, 'restored')]);
     renderDiary();
-    const editor = await openEntry(PAST, 'old');
-    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
-    await screen.findByText('Histórico de Versões');
+    await openEntry(PAST, 'old');
+    await openHistory();
     service.getDiaryEntry.mockResolvedValue(entry(PAST, 'restored'));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Restaurar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Restaurar esta versão' }));
 
-    await waitFor(() => expect(editor.value).toBe('restored'));
+    // The restored page is read again into a new editor.
+    await waitFor(() => expect(screen.getByLabelText<HTMLTextAreaElement>('editor').value).toBe('restored'));
     expect(service.restoreDiaryEntryVersion).toHaveBeenCalledWith(10);
-    expect(screen.queryByText('Histórico de Versões')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Histórico de Versões' })).not.toBeInTheDocument();
   });
 
   it('logs and stays open when history fails to load or restore', async () => {
@@ -314,17 +387,159 @@ describe('DiarySection history', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
     await waitFor(() => expect(consoleError).toHaveBeenCalledWith('Failed to load diary history:', expect.any(Error)));
-    expect(screen.queryByText('Histórico de Versões')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Histórico de Versões' })).not.toBeInTheDocument();
 
-    service.getDiaryEntryHistory.mockResolvedValue([{ id: 10, content: 'v', updated_at: '2026-03-05T10:00:00Z' }]);
+    service.getDiaryEntryHistory.mockResolvedValue([version(10, 'v')]);
     service.restoreDiaryEntryVersion.mockRejectedValueOnce(new Error('locked'));
-    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Restaurar' }));
+    await openHistory();
+    fireEvent.click(screen.getByRole('button', { name: 'Restaurar esta versão' }));
 
     await waitFor(() =>
       expect(consoleError).toHaveBeenCalledWith('Failed to restore diary version:', expect.any(Error)),
     );
-    expect(screen.getByText('Histórico de Versões')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Histórico de Versões' })).toBeInTheDocument();
     consoleError.mockRestore();
+  });
+});
+
+// The page that overwrote another: opening A then B quickly, A's text arrived after B's and an editor event then saved
+// it under B. Each page is its own instance now, so there is nowhere for it to land.
+describe('DiarySection never mixes the text of two pages', () => {
+  const deferred = <T,>() => {
+    let resolve: (value: T) => void = () => undefined;
+    const promise = new Promise<T>((r) => (resolve = r));
+    return { promise, resolve };
+  };
+
+  it('shows page B and saves only B under B, even when A answers last', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    givenEntries(entry(PAST, 'texto de A'), entry(OTHER, 'texto de B'));
+    const slowA = deferred<DiaryEntry>();
+    service.getDiaryEntry.mockImplementation((_p, date) =>
+      date === PAST ? slowA.promise : Promise.resolve(entry(OTHER, 'texto de B')),
+    );
+    renderDiary();
+    fireEvent.click(await screen.findByText(shortDate(PAST)));
+    fireEvent.click(await screen.findByText(shortDate(OTHER)));
+    const editor = await screen.findByLabelText<HTMLTextAreaElement>('editor');
+    await waitFor(() => expect(editor.value).toBe('texto de B'));
+
+    await act(async () => slowA.resolve(entry(PAST, 'texto de A')));
+    await act(() => vi.advanceTimersByTimeAsync(100));
+    // The late answer of A must not reach the page of B.
+    expect(screen.getByLabelText<HTMLTextAreaElement>('editor').value).toBe('texto de B');
+    typeInto(screen.getByLabelText('editor'), 'texto de B, editado');
+    await act(() => vi.advanceTimersByTimeAsync(2500));
+
+    expect(screen.getByLabelText<HTMLTextAreaElement>('editor').value).toBe('texto de B, editado');
+    expect(service.saveDiaryEntry.mock.calls).toEqual([[PROJECT_ID, OTHER, 'texto de B, editado', 'texto de B']]);
+  });
+
+  it('does not save a page just because the editor rewrote it while loading', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    givenEntries(entry(PAST, '* item um\n* item dois'));
+    renderDiary();
+    await openEntry(PAST, '- item um\n- item dois');
+
+    await act(() => vi.advanceTimersByTimeAsync(3000));
+
+    expect(service.saveDiaryEntry).not.toHaveBeenCalled();
+    expect(screen.queryByText('Não salvo')).not.toBeInTheDocument();
+  });
+
+  it('does not save when the text is put back as it was', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    givenEntries(entry(PAST, 'a'));
+    renderDiary();
+    const editor = await openEntry(PAST, 'a');
+
+    typeInto(editor, 'ab');
+    typeInto(editor, 'a');
+    await act(() => vi.advanceTimersByTimeAsync(3000));
+
+    expect(service.saveDiaryEntry).not.toHaveBeenCalled();
+    expect(screen.queryByText('Não salvo')).not.toBeInTheDocument();
+  });
+
+  it('keeps the text of a page that was left before it was saved, under that same page', async () => {
+    givenEntries(entry(PAST, 'a'), entry(OTHER, 'b'));
+    renderDiary();
+    typeInto(await openEntry(PAST, 'a'), 'a editado');
+
+    await openEntry(OTHER, 'b');
+
+    await waitFor(() => expect(service.saveDiaryEntry.mock.calls).toEqual([[PROJECT_ID, PAST, 'a editado', 'a']]));
+  });
+
+  it('says so and writes nothing more when the page changed somewhere else, and reads it again on request', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    givenEntries(entry(PAST, 'a'));
+    service.saveDiaryEntry.mockRejectedValue(Object.assign(new Error('alterada'), { code: 'ERR_DIARY_CONFLICT' }));
+    renderDiary();
+    const editor = await openEntry(PAST, 'a');
+
+    typeInto(editor, 'a1');
+    await act(() => vi.advanceTimersByTimeAsync(2500));
+    expect(await screen.findByRole('alert')).toHaveTextContent('a página mudou em outro lugar');
+    typeInto(editor, 'a12');
+    await act(() => vi.advanceTimersByTimeAsync(2500));
+
+    expect(service.saveDiaryEntry).toHaveBeenCalledTimes(1);
+    service.getDiaryEntry.mockResolvedValue(entry(PAST, 'texto que está no banco'));
+    fireEvent.click(screen.getByRole('button', { name: 'Recarregar' }));
+    await waitFor(() =>
+      expect(screen.getByLabelText<HTMLTextAreaElement>('editor').value).toBe('texto que está no banco'),
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('says a save failed, and tries again with the next change', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    givenEntries(entry(PAST, 'a'));
+    service.saveDiaryEntry.mockRejectedValueOnce(new Error('disco cheio'));
+    renderDiary();
+    const editor = await openEntry(PAST, 'a');
+
+    typeInto(editor, 'a1');
+    await act(() => vi.advanceTimersByTimeAsync(2500));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível salvar');
+    typeInto(editor, 'a12');
+    await act(() => vi.advanceTimersByTimeAsync(2500));
+
+    expect(service.saveDiaryEntry).toHaveBeenLastCalledWith(PROJECT_ID, PAST, 'a12', 'a');
+    consoleError.mockRestore();
+  });
+
+  it('does not bring a deleted page back by saving what was waiting', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    givenEntries(entry(PAST, 'a'));
+    renderDiary();
+    typeInto(await openEntry(PAST, 'a'), 'a editado');
+
+    fireEvent.click(deleteButton());
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }));
+    await screen.findByText('Diário do projeto');
+    await act(() => vi.advanceTimersByTimeAsync(3000));
+
+    expect(service.deleteDiaryEntry).toHaveBeenCalledWith(PROJECT_ID, PAST);
+    expect(service.saveDiaryEntry).not.toHaveBeenCalled();
+  });
+
+  it('saves what is waiting before it reads the versions, so they include it', async () => {
+    givenEntries(entry(PAST, 'a'));
+    const order: string[] = [];
+    service.saveDiaryEntry.mockImplementation(async () => void order.push('save'));
+    service.getDiaryEntryHistory.mockImplementation(async () => {
+      order.push('history');
+      return [];
+    });
+    renderDiary();
+    typeInto(await openEntry(PAST, 'a'), 'a editado');
+
+    fireEvent.click(screen.getByRole('button', { name: /Versões/ }));
+    await screen.findByRole('dialog', { name: 'Histórico de Versões' });
+
+    expect(order).toEqual(['save', 'history']);
   });
 });

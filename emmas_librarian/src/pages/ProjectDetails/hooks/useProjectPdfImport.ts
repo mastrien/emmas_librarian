@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { failureNotice } from '../../../components/common/dialogs/failureNotice';
 import { useProjectService } from '../../../contexts/ServicesContext';
 import { droppedFilePath } from '../../../utils/droppedFilePath';
 import { useDialogs } from '../../../components/common/dialogs/DialogProvider';
@@ -22,14 +23,14 @@ export function useProjectPdfImport({ projectId, onImported, isDropBlocked }: Pd
   const { inform } = useDialogs();
   const [isDragging, setIsDragging] = useState(false);
   const informFailure = (err: unknown) =>
-    inform({ title: 'Erro ao importar', message: `Erro ao importar PDFs: ${(err as Error)?.message || err}` });
+    inform(failureNotice('Não conseguimos importar os PDFs', 'Nenhum PDF novo entrou no projeto.', err));
 
   const importPaths = async (filePaths: string[]) => {
     if (projectId === null || filePaths.length === 0) return;
     try {
       const count = await projectService.createArticlesFromPdfs(projectId, filePaths);
       await onImported();
-      await inform({ title: 'PDFs importados', message: `${count} artigo(s) importado(s) com sucesso.` });
+      await inform({ title: 'PDFs importados', message: `${count} artigo(s) importado(s) com sucesso.`, tone: 'ok' });
     } catch (err) {
       await informFailure(err);
     }

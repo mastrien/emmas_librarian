@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { failureNotice } from '../common/dialogs/failureNotice';
 import { generateCitation } from '../../services/citationService';
 import { Article } from '../../types';
 import {
@@ -9,14 +9,18 @@ import {
   type CitationFields,
 } from '../../utils/cslMetadata';
 import { useCitationCopy } from '../common/citation/useCitationCopy';
+import { useProjectService } from '../../contexts/ServicesContext';
+import { useDialogs } from '../common/dialogs/DialogProvider';
+import { EXPORT_DONE_TITLE } from '../../utils/exportWithFeedback';
+import { BIB_FILE_NAME, bibFileContent } from './citation/bibFile';
+import { MassCitationFooter } from './massCitation/MassCitationFooter';
+import './modalForms.css';
 import { MassCitationControls, type MassCitationSettings } from './massCitation/MassCitationControls';
 import { MassCitationList, type RenderedCitation } from './massCitation/MassCitationList';
 import { MassCitationEditPanel } from './massCitation/MassCitationEditPanel';
 import { sortCitableArticles } from './massCitation/sortCitableArticles';
 import { useMassCitationEditor } from './massCitation/useMassCitationEditor';
 import { Modal } from '../common/Modal';
-import { ModalFooter } from '../common/ModalFooter';
-import { Button } from '../common/Button';
 
 interface MassCitationModalProps {
   isOpen: boolean;
@@ -36,6 +40,8 @@ const DEFAULT_SETTINGS: MassCitationSettings = { style: 'abnt', format: 'html', 
 export function MassCitationModal({ isOpen, onClose, articles, onArticlesUpdated }: MassCitationModalProps) {
   const [settings, setSettings] = useState<MassCitationSettings>(DEFAULT_SETTINGS);
   const [citable, setCitable] = useState<CitableArticle[]>([]);
+  const service = useProjectService();
+  const { inform } = useDialogs();
   const { copied, copy } = useCitationCopy();
   const editor = useMassCitationEditor({
     originalFields: (id) => {
@@ -80,13 +86,24 @@ export function MassCitationModal({ isOpen, onClose, articles, onArticlesUpdated
     );
   };
 
+  const downloadBib = async () => {
+    try {
+      const saved = await service.saveExportedFile(bibFileContent(citations.map((c) => c.text)), BIB_FILE_NAME);
+      // A cancelled save dialog needs no message; a saved file gets the same confirmation as every other export.
+      if (saved)
+        await inform({ title: EXPORT_DONE_TITLE, message: 'Referências salvas em um arquivo .bib.', tone: 'ok' });
+    } catch (err) {
+      await inform(failureNotice('Não conseguimos salvar o arquivo .bib', 'O arquivo não foi gravado.', err));
+    }
+  };
+
   return (
     <Modal
       label="Citação em massa"
       title={`Citar ${articles.length} ${articles.length === 1 ? 'artigo' : 'artigos'}`}
       description="Os artigos lidos do projeto"
       onClose={onClose}
-      width={850}
+      width={editor.editing ? 560 : 520}
     >
       {editor.editing ? (
         <MassCitationEditPanel
@@ -98,27 +115,19 @@ export function MassCitationModal({ isOpen, onClose, articles, onArticlesUpdated
           onSave={editor.save}
         />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <MassCitationControls settings={settings} onChange={setSettings} />
-          <MassCitationList citations={citations} format={settings.format} onEdit={startEdit} />
-          <MassCitationFooter copied={copied} canCopy={citations.length > 0} onCopy={copyAll} />
-        </div>
+        <>
+          <div className="modal-form">
+            <MassCitationControls settings={settings} onChange={setSettings} />
+            <MassCitationList citations={citations} format={settings.format} onEdit={startEdit} />
+          </div>
+          <MassCitationFooter
+            copied={copied}
+            canCopy={citations.length > 0}
+            onCopy={copyAll}
+            onDownloadBib={settings.format === 'bibtex' ? downloadBib : undefined}
+          />
+        </>
       )}
     </Modal>
   );
 }
-
-interface MassCitationFooterProps {
-  copied: boolean;
-  canCopy: boolean;
-  onCopy: () => void;
-}
-
-const MassCitationFooter: React.FC<MassCitationFooterProps> = ({ copied, canCopy, onCopy }) => (
-  <ModalFooter>
-    <Button variant="primary" className={copied ? 'app-modal-copied' : undefined} onClick={onCopy} disabled={!canCopy}>
-      {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
-      {copied ? 'Copiado!' : 'Copiar tudo'}
-    </Button>
-  </ModalFooter>
-);

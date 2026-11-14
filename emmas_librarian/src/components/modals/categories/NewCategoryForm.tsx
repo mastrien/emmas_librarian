@@ -43,7 +43,7 @@ export const NewCategoryForm: React.FC<NewCategoryFormProps> = ({ adding, onCrea
     <form
       onSubmit={submit}
       aria-label="Nova categoria"
-      style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '2rem' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}
     >
       <h3 className="categories-section-title">Nova categoria</h3>
       <div style={{ display: 'flex', gap: '0.5rem' }}>

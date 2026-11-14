@@ -1,7 +1,10 @@
 import React from 'react';
+import { LegalReviewNotice } from '../../../components/common/LegalReviewNotice';
+import { IEEE_AI_WARNING } from '../../Terms/termsContent';
 import { IEEE_EXPERIMENTAL_NOTE } from '../../Search/searchQueries';
 import { SettingsCard } from './SettingsCard';
-import { KeyField } from './KeyField';
+import { ProviderRow } from './ai/ProviderRows';
+import './ai/aiSettings.css';
 
 interface ApiKeysSettingsProps {
   scopusKey: string;
@@ -27,32 +30,37 @@ export const ApiKeysSettings: React.FC<ApiKeysSettingsProps> = (props) => (
     spacing="wide"
     description="Insira suas chaves de API para habilitar buscas no Scopus, na Web of Science e na IEEE Xplore. As chaves são armazenadas localmente no seu banco de dados."
   >
-    <div className="settings-stack settings-stack--wide">
-      <KeyField
-        label="Scopus API Key"
+    <div className="ai-section">
+      <ProviderRow
+        name="Scopus API Key"
         placeholder="Insira sua chave Scopus..."
         value={props.scopusKey}
         onChange={props.setScopusKey}
       />
-      <KeyField
-        label="Web of Science API Key"
+      <ProviderRow
+        name="Web of Science API Key"
         placeholder="Insira sua chave WoS..."
         value={props.wosKey}
         onChange={props.setWosKey}
       />
-      <KeyField
-        label="OpenAlex API Key (opcional)"
+      <ProviderRow
+        name="OpenAlex API Key (opcional)"
         placeholder="Insira sua chave OpenAlex..."
         value={props.openAlexKey}
         onChange={props.setOpenAlexKey}
         hint="A OpenAlex funciona sem chave. Com a chave gratuita, o limite diário de buscas fica 10 vezes maior."
       />
-      <KeyField
-        label="IEEE Xplore API Key (experimental)"
+      <ProviderRow
+        name="IEEE Xplore API Key (experimental)"
         placeholder="Insira sua chave IEEE..."
         value={props.ieeeKey}
         onChange={props.setIeeeKey}
-        hint={`Gratuita, com cadastro em developer.ieee.org. A IEEE aprova cada chave manualmente. ${IEEE_EXPERIMENTAL_NOTE}`}
+        hint={
+          <>
+            {`Gratuita, com cadastro em developer.ieee.org. A IEEE aprova cada chave manualmente. ${IEEE_EXPERIMENTAL_NOTE}`}
+            <LegalReviewNotice detail={IEEE_AI_WARNING} compact />
+          </>
+        }
       />
     </div>
   </SettingsCard>

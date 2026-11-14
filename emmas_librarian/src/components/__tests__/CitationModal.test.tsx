@@ -10,6 +10,7 @@ let dialogs = new FakeDialogs();
 const renderWithDialogs = (ui: React.ReactElement) => render(ui, { wrapper: withFakeDialogs(dialogs) });
 beforeEach(() => {
   dialogs = new FakeDialogs();
+  localStorage.clear();
 });
 
 // Deterministic stand-in for citation-js so assertions target the modal, not CSL formatting.
@@ -70,6 +71,9 @@ const readBlob = (blob: Blob) =>
 
 const field = (name: string) => document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
 const preview = () => screen.getByTestId('citation-preview');
+const openEditor = () => fireEvent.click(screen.getByRole('button', { name: 'Editar metadados' }));
+const backToCitation = () => fireEvent.click(screen.getByRole('button', { name: 'Voltar à citação' }));
+const chooseFormat = (name: string) => fireEvent.click(screen.getByRole('button', { name }));
 
 beforeEach(() => {
   service = FakeProjectService.create();
@@ -112,7 +116,7 @@ describe('CitationModal citation preview', () => {
   it('starts with ABNT, rich HTML and et al.', () => {
     renderModal();
 
-    expect(screen.getByRole('combobox')).toHaveValue('abnt');
+    expect(screen.getByRole('button', { name: 'ABNT' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('checkbox')).toBeChecked();
     expect(preview().querySelector('i')).toHaveTextContent('Deep Nets');
     expect(preview()).toHaveTextContent('Deep Nets [abnt|etal|p10-20]');
@@ -121,24 +125,34 @@ describe('CitationModal citation preview', () => {
   it('regenerates when style, et al. or format change', () => {
     renderModal();
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'ieee' } });
+    chooseFormat('IEEE');
     fireEvent.click(screen.getByRole('checkbox'));
     expect(preview()).toHaveTextContent('Deep Nets [ieee|full|p10-20]');
 
-    fireEvent.click(screen.getByRole('button', { name: /Texto Simples/ }));
-    expect(preview()).toHaveTextContent('Deep Nets [ieee|text|full]');
+    chooseFormat('BibTeX');
+    expect(preview()).toHaveTextContent('Deep Nets [abnt|bibtex|full]');
     expect(preview().querySelector('i')).toBeNull();
+    expect(screen.getByRole('button', { name: 'BibTeX' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'IEEE' })).toHaveAttribute('aria-pressed', 'false');
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: /BibTeX/ }));
-    expect(preview()).toHaveTextContent('Deep Nets [ieee|bibtex|full]');
-    expect(screen.getByRole('button', { name: /BibTeX/ })).toHaveClass('btn-primary');
-    expect(screen.getByRole('button', { name: /Visualização/ })).toHaveClass('btn-secondary');
+  it('opens on the format used last ("Lembra o último formato")', () => {
+    const first = renderModal();
+    chooseFormat('Vancouver');
+    first.unmount();
+
+    renderModal();
+
+    expect(screen.getByRole('button', { name: 'Vancouver' })).toHaveAttribute('aria-pressed', 'true');
+    expect(preview()).toHaveTextContent('Deep Nets [vancouver|etal|p10-20]');
   });
 
   it('reflects metadata edits in the preview', () => {
     renderModal();
+    openEditor();
 
     fireEvent.change(field('title'), { target: { value: 'Shallow Nets' } });
+    backToCitation();
 
     expect(preview()).toHaveTextContent('Shallow Nets [abnt|etal|p10-20]');
   });
@@ -146,7 +160,7 @@ describe('CitationModal citation preview', () => {
   it('resets style-independent state when opened for another article', () => {
     const { rerender } = renderModal();
     fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: /Metadados do Artigo/ }));
+    openEditor();
 
     rerender(
       <ServicesProvider apiService={service}>
@@ -155,26 +169,29 @@ describe('CitationModal citation preview', () => {
     );
 
     expect(screen.getByRole('checkbox')).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Editar metadados' })).toBeInTheDocument();
+    openEditor();
     expect(field('title')).toHaveValue('Other');
-    expect(field('title').closest('div[style*="max-height"]')).toHaveStyle({ maxHeight: '0' });
   });
 });
 
-describe('CitationModal metadata accordion', () => {
-  it('toggles open and closed', () => {
+describe('CitationModal metadata view', () => {
+  it('swaps the citation for the fields and back', () => {
     renderModal();
-    const panel = () => field('title').closest('div[style*="max-height"]') as HTMLElement;
-    expect(panel()).toHaveStyle({ maxHeight: '0', opacity: '0' });
+    expect(field('title')).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: /Metadados do Artigo/ }));
-    expect(panel()).toHaveStyle({ maxHeight: '1000px', opacity: '1' });
+    openEditor();
+    expect(field('title')).not.toBeNull();
+    expect(screen.queryByTestId('citation-preview')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Metadados do Artigo/ }));
-    expect(panel()).toHaveStyle({ maxHeight: '0' });
+    backToCitation();
+    expect(field('title')).toBeNull();
+    expect(preview()).toBeInTheDocument();
   });
 
   it('prefills every field from the article', () => {
     renderModal();
+    openEditor();
 
     expect(
       ['title', 'authors', 'year', 'doi', 'journal', 'volume', 'issue', 'pages', 'url', 'accessed'].map(
@@ -185,10 +202,12 @@ describe('CitationModal metadata accordion', () => {
 
   it('lets the user edit the pages field', () => {
     renderModal();
+    openEditor();
 
     fireEvent.change(field('pages'), { target: { value: '33-40' } });
 
     expect(field('pages')).toHaveValue('33-40');
+    backToCitation();
     expect(preview()).toHaveTextContent('p33-40');
   });
 });
@@ -196,10 +215,11 @@ describe('CitationModal metadata accordion', () => {
 describe('CitationModal saving', () => {
   it('persists edited metadata, parsing the year', async () => {
     const { onArticleUpdated } = renderModal();
+    openEditor();
     fireEvent.change(field('year'), { target: { value: '2021' } });
     fireEvent.change(field('pages'), { target: { value: '1-2' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Salvar Metadados/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Salvar/ }));
 
     await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Metadados salvos com sucesso!'));
     expect(service.updateArticleMetadata).toHaveBeenCalledWith(7, {
@@ -219,9 +239,10 @@ describe('CitationModal saving', () => {
 
   it('sends no year when it was cleared and works without an update callback', async () => {
     renderModal({ onArticleUpdated: undefined });
+    openEditor();
     fireEvent.change(field('year'), { target: { value: '' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Salvar Metadados/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Salvar/ }));
 
     await waitFor(() => expect(service.updateArticleMetadata).toHaveBeenCalled());
     expect(service.updateArticleMetadata.mock.calls[0][1]).toMatchObject({ year: undefined });
@@ -231,25 +252,28 @@ describe('CitationModal saving', () => {
     let finish: () => void = () => undefined;
     service.updateArticleMetadata.mockImplementation(() => new Promise<void>((resolve) => (finish = resolve)));
     renderModal();
+    openEditor();
 
-    fireEvent.click(screen.getByRole('button', { name: /Salvar Metadados/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Salvar/ }));
 
     expect(await screen.findByRole('button', { name: /Salvando/ })).toBeDisabled();
     await act(async () => finish());
-    expect(screen.getByRole('button', { name: /Salvar Metadados/ })).toBeEnabled();
+    // A saved edit goes back to the citation it changed.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Copiar' })).toBeInTheDocument());
   });
 
   it('reports a failed save', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     service.updateArticleMetadata.mockRejectedValue(new Error('locked'));
     const { onArticleUpdated } = renderModal();
+    openEditor();
 
-    fireEvent.click(screen.getByRole('button', { name: /Salvar Metadados/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Salvar/ }));
 
     await waitFor(() => expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao salvar metadados.'));
     expect(consoleError).toHaveBeenCalledWith('Erro ao salvar metadados:', expect.any(Error));
     expect(onArticleUpdated).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: /Salvar Metadados/ })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /Salvar/ })).toBeEnabled();
   });
 });
 
@@ -266,13 +290,14 @@ describe('CitationModal reset', () => {
     URL: 'http://csl',
   };
 
-  const resetButton = () => screen.getByRole('button', { name: /Resetar/ });
+  const resetButton = () => screen.getByRole('button', { name: /Restaurar/ });
 
   it.each([
     ['a JSON string', JSON.stringify(csl)],
     ['an object', csl],
   ])('restores metadata from csl_json stored as %s', (_label, cslJson) => {
     renderModal({ article: { ...baseArticle, csl_json: cslJson } as unknown as Article });
+    openEditor();
     fireEvent.change(field('title'), { target: { value: 'edited' } });
 
     fireEvent.click(resetButton());
@@ -297,6 +322,7 @@ describe('CitationModal reset', () => {
 
   it('leaves missing CSL fields empty', () => {
     renderModal({ article: { ...baseArticle, csl_json: '{}' } as unknown as Article });
+    openEditor();
 
     fireEvent.click(resetButton());
 
@@ -306,6 +332,7 @@ describe('CitationModal reset', () => {
   it('falls back to the saved values when csl_json is invalid', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     renderModal({ article: { ...baseArticle, csl_json: '{broken' } as unknown as Article });
+    openEditor();
     fireEvent.change(field('title'), { target: { value: 'edited' } });
     fireEvent.change(field('pages'), { target: { value: '99' } });
 
@@ -318,6 +345,7 @@ describe('CitationModal reset', () => {
 
   it('falls back to the saved values when there is no csl_json', () => {
     renderModal({ article: { ...baseArticle, csl_json: null, year: undefined } as unknown as Article });
+    openEditor();
     fireEvent.change(field('title'), { target: { value: 'edited' } });
 
     fireEvent.click(resetButton());
@@ -367,7 +395,7 @@ describe('CitationModal copy', () => {
   it('copies non-HTML formats verbatim and resets the label after 2 seconds', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     renderModal();
-    fireEvent.click(screen.getByRole('button', { name: /BibTeX/ }));
+    chooseFormat('BibTeX');
 
     fireEvent.click(screen.getByRole('button', { name: /Copiar/ }));
 

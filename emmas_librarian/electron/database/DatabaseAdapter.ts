@@ -324,8 +324,8 @@ export class DatabaseAdapter {
   public revertSearch(searchId: number): void {
     return this.historyRepo.revertSearch(searchId);
   }
-  public saveDiaryEntry(projectId: number, entryDate: string, content: string): void {
-    return this.historyRepo.saveDiaryEntry(projectId, entryDate, content);
+  public saveDiaryEntry(projectId: number, entryDate: string, content: string, expected?: string | null): void {
+    return this.historyRepo.saveDiaryEntry(projectId, entryDate, content, expected);
   }
   public getDiaryEntries(projectId: number): DiaryEntry[] {
     return this.historyRepo.getDiaryEntries(projectId);

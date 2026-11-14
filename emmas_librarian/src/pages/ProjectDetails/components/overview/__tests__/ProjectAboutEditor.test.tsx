@@ -43,4 +43,24 @@ describe('ProjectAboutEditor', () => {
     expect(service.updateProjectAbout).toHaveBeenCalledWith(3, '## Objetivo\n\nPrever a chuva.');
     expect(screen.getByRole('status')).toHaveTextContent('Salvo');
   });
+
+  it('opens the other project with its own text, and saves what was typed in the first one under the first', async () => {
+    const service = FakeProjectService.create();
+    service.aboutByProject.set(3, 'texto do três');
+    service.aboutByProject.set(4, 'texto do quatro');
+    const tree = (id: number) => (
+      <ServicesProvider apiService={service}>
+        <ProjectAboutEditor projectId={id} />
+      </ServicesProvider>
+    );
+    const { rerender } = render(tree(3));
+    fireEvent.change(await screen.findByRole('textbox', { name: 'editor' }), { target: { value: 'editado no três' } });
+
+    rerender(tree(4));
+
+    expect(await screen.findByDisplayValue('texto do quatro')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('editado no três')).not.toBeInTheDocument();
+    expect(service.updateProjectAbout).toHaveBeenCalledWith(3, 'editado no três');
+    expect(service.updateProjectAbout).not.toHaveBeenCalledWith(4, expect.anything());
+  });
 });
