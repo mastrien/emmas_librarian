@@ -83,6 +83,26 @@ Feito: título e subtítulo do board, "Adicionar PDF" no cabeçalho, quatro cart
 - [ ] A coluna "Adicionado" perdeu a hora (o board mostra só a data).
 - [ ] O link "Voltar aos projetos" saiu; o teste E2E de aparência dos links de voltar passou a conferir só a página de Termos (até o board 174).
 
+## 172 · Agenda, calendário (#177)
+
+Feito: título com navegação do mês (anterior, mês, próximo, "Hoje"), seletor Calendário / Lista de prazos, "Novo evento", grade do mês com uma pílula por prazo na cor do evento (um intervalo repete a sigla em cada dia), o dia de hoje marcado, e à direita "Eventos e revistas" com contagem, busca "Evento ou sigla" e um cartão por evento (categoria, "SIGLA · Título", prazos com caixa de marcar, data ou "venceu há N d").
+
+- [ ] **Menu "⋯"** do cartão: o board tem "Abrir site" e "Mais ações"; o app mantém os três ícones (abrir URL, editar, excluir), porque os testes e a E2E os usam pelo título. Dá para trocar por um menu se preferir.
+- [ ] **Selo de vencido no cartão**: mostra "venceu há N d" (o board mostra "venceu 01/02", a data).
+- [ ] **Busca** do painel também filtra a grade (o board não diz).
+- [ ] Clicar num dia vazio abre "Novo evento" com aquela data (comportamento de antes, mantido).
+- [ ] Os pontinhos do calendário pequeno da Início continuam como antes; só a Agenda ganhou a grade com pílulas.
+
+## 173 · Agenda, lista de prazos (#177)
+
+Feito: subtítulo "Eventos, prazos e chamadas de periódicos", barra com busca, Pendentes / Feitos / Todos com contagem, categoria e o interruptor "Mostrar vencidos há mais de 60 dias"; tabela agrupada por mês (Prazo, Evento ou revista com ponto colorido, Tipo, Data, Situação) e o aviso "Os N prazos venceram há mais de 60 dias" com "Marcar os N como feitos".
+
+- [ ] **Ordem dos meses**: crescente (o mais próximo primeiro). O board mostra abril acima de fevereiro; achei crescente mais útil para prazos futuros.
+- [ ] **Padrão do interruptor**: ligado (como no board), então nada some sem o autor desligar; o aviso aparece sempre que há prazo vencido há mais de 60 dias, com o interruptor ligado ou não.
+- [ ] **Filtro padrão**: "Pendentes" (o board também o mostra selecionado).
+- [ ] **Situação** além de "venceu há N d": "hoje", "em N d" e "feito".
+- [ ] Os nomes dos botões mudaram de "Novo Evento" e "Lista de Prazos" para "Novo evento" e "Lista de prazos" (E2E ajustado); a janela "Novo Evento / Periódico" fica para os boards 175–181.
+
 ## Próximas telas (este documento ganha uma seção por PR)
 
-172–173 Agenda · 174 Termos · 175–181 Janelas
+174 Termos · 175–181 Janelas

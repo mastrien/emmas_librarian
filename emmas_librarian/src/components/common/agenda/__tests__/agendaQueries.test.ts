@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { ScientificMilestone, ScientificVenue } from '../../../../types';
-import { filterVenues, milestoneDateText, milestonesByDate, withMilestoneStatus } from '../agendaQueries';
+import { filterVenues, groupByMonth, milestonesByDate, statusCounts, withMilestoneStatus } from '../agendaQueries';
 import { venueColorVars } from '../venueColors';
 
 const milestone = (extra: Partial<ScientificMilestone>): ScientificMilestone => ({
@@ -64,14 +64,12 @@ describe('agenda queries (Arca 134)', () => {
     expect(VENUES[0].milestones[0].status).toBe('pending');
   });
 
-  it('writes a range, a date with time (two joins) or a plain date', () => {
-    expect(milestoneDateText(milestone({ field_type: 'range', end_date: '2026-11-12' }), ' ')).toBe(
-      '2026-11-10 a 2026-11-12',
-    );
-    const timed = milestone({ has_time: true, target_time: '14:00' });
-    expect(milestoneDateText(timed, ' ')).toBe('2026-11-10 14:00');
-    expect(milestoneDateText(timed, ' às ')).toBe('2026-11-10 às 14:00');
-    expect(milestoneDateText(milestone({ has_time: true }), ' às ')).toBe('2026-11-10');
+  it('groups deadlines by month in the order given, and counts them by status', () => {
+    const items = milestonesByDate(VENUES, 'all');
+    expect(groupByMonth(items).map((g) => [g.label, g.items.length])).toEqual([['Novembro de 2026', 3]]);
+    const later = milestonesByDate([venue({ milestones: [milestone({ id: 31, target_date: '2027-01-05' })] })], 'all');
+    expect(groupByMonth([...items, ...later]).map((g) => g.label)).toEqual(['Novembro de 2026', 'Janeiro de 2027']);
+    expect(statusCounts(items)).toEqual({ pending: 2, completed: 1, all: 3 });
   });
 
   it('passes a venue colour and its tint as CSS variables, nothing without a colour', () => {

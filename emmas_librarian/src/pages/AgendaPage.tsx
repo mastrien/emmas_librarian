@@ -81,7 +81,6 @@ export const AgendaPage: React.FC = () => {
     <div className="fade-in agenda-page">
       <ScientificAgendaView
         venues={venues}
-        diarySet={new Set()}
         onAddVenue={handleOpenAddModal}
         onEditVenue={handleOpenEditModal}
         onDeleteVenue={handleDeleteVenue}

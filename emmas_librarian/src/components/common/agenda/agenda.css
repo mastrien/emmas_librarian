@@ -1,220 +1,277 @@
-/* The agenda (AgendaPage, ScientificAgendaView and its parts). Values carried over from the inline styles they
-   replace (Arca 134). */
+/* The agenda (AgendaPage, ScientificAgendaView and its parts), boards 172 and 173 of the redesign canvas. A venue's
+   colour comes from its data, as --venue-color (and --venue-tint, the same colour with alpha). */
 .agenda-page {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
 .agenda {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
 }
 
-.agenda-head {
+/* Month navigation beside the title */
+.month-nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
+  gap: var(--space-1);
 }
 
-.agenda-title {
+.month-nav__arrow {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--color-primary);
+  padding: 4px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
 }
 
-.agenda-title h1 {
-  margin: 0;
-  font-size: 1.6rem;
-  font-weight: 800;
+.month-nav__arrow:hover {
+  background: var(--bg-surface-hover);
   color: var(--text-heading);
 }
 
-.agenda-title p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+.month-nav__label {
+  min-width: 140px;
+  color: var(--text-heading);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
 }
 
-.agenda-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.month-nav__today {
+  padding: 4px 10px;
+  font-size: 13px;
 }
 
 .agenda-add {
   display: flex;
-  height: 38px;
-  padding: 0 1rem;
-  gap: 0.4rem;
-  font-size: 0.85rem;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Calendar view: the month grows, the panel of events keeps its width */
+.agenda-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+
+.month-grid {
+  display: grid;
+  flex: 1 1 0;
+  min-width: 0;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: auto;
+  grid-auto-rows: minmax(112px, auto);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.month-grid__head {
+  padding: 6px 8px;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.month-grid__day {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 6px;
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+}
+
+.month-grid__day:nth-child(7n + 7) {
+  border-right: none;
+}
+
+.month-grid__day:hover {
+  background: var(--bg-surface-hover);
+}
+
+.month-grid__number {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.month-grid__day.is-outside .month-grid__number {
+  opacity: 0.45;
+}
+
+.month-grid__day.is-today .month-grid__number {
+  align-self: flex-start;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
   font-weight: 600;
 }
 
-.agenda-layout {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 1.5rem;
-  align-items: start;
+.month-grid__chip {
+  display: block;
+  overflow: hidden;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--venue-tint, rgba(59, 130, 246, 0.15));
+  color: var(--venue-color, #3b82f6);
+  font-size: 11.5px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.agenda-main {
+.month-grid__chip.is-done {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* The panel of events and journals */
+.venue-panel {
   display: flex;
+  flex: none;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-3);
+  width: 320px;
 }
 
-.agenda-filters {
+.venue-panel__head {
   display: flex;
-  gap: 0.75rem;
   align-items: center;
-  flex-wrap: wrap;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background-color: var(--bg-surface);
+  justify-content: space-between;
+}
+
+.venue-panel__head h2 {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.venue-panel__count {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .agenda-search {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  flex: 1;
+  gap: var(--space-2);
   min-width: 200px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-raised);
   color: var(--text-muted);
 }
 
 .agenda-search input {
   width: 100%;
+  padding: 8px 0;
   border: none;
   outline: none;
   background: none;
   color: var(--text-main);
-  font-size: 0.85rem;
+  font-size: 13px;
 }
 
-.agenda-select {
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-main);
-  color: var(--text-main);
-  font-size: 0.85rem;
-}
-
-.agenda-empty {
-  padding: 3rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  background-color: var(--bg-surface);
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.agenda-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.25rem;
-}
-
-/* A venue's colour comes from its data, as --venue-color (and --venue-tint, the same colour at 0x22 alpha).
-   Two classes, so the card's own background and border win over .glass-panel's whatever order the CSS loads in. */
-.agenda .venue-card {
-  position: relative;
+.venue-card {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1.25rem;
+  gap: var(--space-2);
+  padding: var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  background-color: var(--bg-surface);
+  border-radius: 10px;
+  background: var(--bg-raised);
 }
 
 .venue-card-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.venue-card-names {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.venue-card-names h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-heading);
+  gap: var(--space-2);
 }
 
 .venue-category {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  font-weight: 600;
+  gap: var(--space-2);
   color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .venue-dot {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  flex: none;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background-color: var(--venue-color, #3b82f6);
+}
+
+.venue-card-title {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .venue-card-actions {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 2px;
 }
 
 .agenda-icon-button {
-  padding: 0.2rem;
+  display: flex;
+  padding: 4px;
   border: none;
-  background: none;
+  border-radius: 6px;
+  background: transparent;
   color: var(--text-muted);
   cursor: pointer;
+}
+
+.agenda-icon-button:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-heading);
 }
 
 .venue-milestones {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
 .venue-milestone {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background-color: var(--bg-main);
+  gap: var(--space-2);
+  font-size: 12.5px;
 }
 
 .agenda-check {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.agenda-check input {
+  gap: var(--space-2);
+  color: var(--text-heading);
   cursor: pointer;
-}
-
-.venue-milestone-label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-main);
 }
 
 .venue-milestone-label.is-done {
@@ -223,79 +280,171 @@
 }
 
 .agenda-date {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
   color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.milestone-list {
-  overflow: hidden;
+.agenda-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--bg-surface-hover);
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.agenda-badge.is-bad {
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--color-danger, #ef4444);
+}
+
+.agenda-empty {
+  padding: 2rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  background-color: var(--bg-surface);
-}
-
-.milestone-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.85rem 1.25rem;
-  border-bottom: 1px solid var(--border-color);
-  background-color: transparent;
-}
-
-.milestone-row.is-done {
-  background-color: rgba(0, 0, 0, 0.02);
-}
-
-.milestone-row .agenda-check {
-  gap: 0.75rem;
-}
-
-.milestone-row-names {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.milestone-row-label {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--text-heading);
-}
-
-.milestone-row.is-done .milestone-row-label {
+  background-color: var(--bg-raised);
   color: var(--text-muted);
+  text-align: center;
 }
 
-.venue-chip {
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-  background-color: var(--venue-tint, rgba(59, 130, 246, 0.15));
-  color: var(--venue-color, #3b82f6);
-  font-size: 0.7rem;
-  font-weight: 600;
+/* Deadline list view */
+.agenda-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 1040px;
 }
 
-.milestone-row-venue {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+.agenda-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
 }
 
-.milestone-row-date {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 600;
+.agenda-filters .agenda-search {
+  width: 260px;
+}
+
+.agenda-select {
+  width: 190px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-raised);
   color: var(--text-main);
+  font: inherit;
+  font-size: 13px;
 }
 
-.milestone-row.is-done .milestone-row-date {
+.agenda-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.deadline-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.deadline-table th,
+.deadline-table td {
+  padding: 10px;
+  text-align: left;
+}
+
+.deadline-table td {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.deadline-table thead th {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.deadline-table .deadline-right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.deadline-group th {
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.deadline-table .deadline-name {
+  color: var(--text-heading);
+  font-weight: 500;
+}
+
+.deadline-muted {
   color: var(--text-muted);
 }
 
-.agenda-calendar {
-  padding: 0.85rem;
+.deadline-table tr.is-done .deadline-name {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.deadline-venue {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.deadline-venue__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agenda-callout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  background-color: var(--bg-surface);
+  border-radius: 10px;
+  background: var(--bg-raised);
+  color: var(--text-muted);
+}
+
+.agenda-callout__text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.agenda-callout__text strong {
+  color: var(--text-heading);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+@media (max-width: 1000px) {
+  .agenda-layout {
+    flex-direction: column;
+  }
+
+  .venue-panel {
+    width: 100%;
+  }
 }
