@@ -12,7 +12,7 @@ const ANSWER = JSON.stringify({
  * E2E runs (E2E_MOCK_AI_ASK=true) must not reach AI providers. The prompt, the reading of the answer and the saving
  * stay real.
  *
- * @example registerScreeningSuggestionHandlers(ipcMain, db, e2eScreeningModel);
+ * @example registerScreeningSuggestionCommands(commands, db, e2eScreeningModel);
  */
 export function e2eScreeningModel(): ScreeningModel {
   return { complete: async () => ANSWER, modelId: 'e2e/mock' };

@@ -1,7 +1,7 @@
 // Real SQLite, real zip and a temp userData folder: the previous version mocked fs, adm-zip and better-sqlite3,
 // so it could not tell what a backup contained or what a restore left on disk. The merge path has its own suite
 // (BackupService.merge.test.ts). AdmZip reads back empty entries under jsdom, so this runs in node.
-// Choosing the file (dialogs, E2E variables) is the shell's part: electron/ipc/__tests__/backupHandlers.test.ts.
+// Choosing the file (dialogs, E2E variables) is the shell's part: electron/ipc/__tests__/exposeCommandsOverIpc.test.ts.
 // @vitest-environment node
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import AdmZip from 'adm-zip';

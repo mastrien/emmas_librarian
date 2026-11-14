@@ -50,7 +50,6 @@ module.exports = {
       // run it, so it must not reach for Electron or for the Electron adapter (#28). What the core needs
       // from its host comes in through core/ports.
       files: ['core/**/*.ts'],
-      excludedFiles: ['core/**/__tests__/**'],
       rules: {
         'no-restricted-imports': [
           'error',

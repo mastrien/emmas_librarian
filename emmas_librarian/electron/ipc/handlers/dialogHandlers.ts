@@ -1,43 +1,24 @@
 import fs from 'fs';
-import { dialog } from 'electron';
 import { IpcChannel } from '../../types';
+import type { FilePicker } from '../../ports/FilePicker';
 import { handle, type IpcRegistrar } from './handle';
 
 const PDF_FILTERS = [{ name: 'PDF Files', extensions: ['pdf'] }];
 
 /**
- * Native open/save dialogs. Each honours an E2E_MOCK_* variable because Playwright cannot drive native dialogs.
+ * Native open/save dialogs the renderer asks for directly. E2E runs answer them through the
+ * E2E_MOCK_* variables the FilePicker honours, because Playwright cannot drive native dialogs.
  *
  * Usage:
- *   registerDialogHandlers(ipcMain);
+ *   registerDialogHandlers(ipcMain, new NativeFilePicker(dialog, process.env));
  */
-export function registerDialogHandlers(ipc: IpcRegistrar): void {
-  handle(ipc, IpcChannel.DIALOG_OPEN_FILE, async () => {
-    if (process.env.E2E_MOCK_OPEN_FILE) return process.env.E2E_MOCK_OPEN_FILE;
-    const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile'], filters: PDF_FILTERS });
-    return !canceled && filePaths.length > 0 ? filePaths[0] : null;
+export function registerDialogHandlers(ipc: IpcRegistrar, picker: FilePicker): void {
+  handle(ipc, IpcChannel.DIALOG_OPEN_FILE, () => picker.chooseFile({ filters: PDF_FILTERS }));
+  handle(ipc, IpcChannel.DIALOG_OPEN_MULTIPLE_FILES, () => picker.chooseFiles({ filters: PDF_FILTERS }));
+  handle(ipc, IpcChannel.DIALOG_SAVE_FILE, async (_e, content: string, defaultPath?: string) => {
+    const target = await picker.chooseSavePath({ defaultPath: defaultPath || 'export.csv' });
+    if (!target) return false;
+    fs.writeFileSync(target, content, 'utf8');
+    return true;
   });
-  handle(ipc, IpcChannel.DIALOG_OPEN_MULTIPLE_FILES, async () => {
-    if (process.env.E2E_MOCK_OPEN_MULTIPLE_FILES) return process.env.E2E_MOCK_OPEN_MULTIPLE_FILES.split(';');
-    const { canceled, filePaths } = await dialog.showOpenDialog({
-      properties: ['openFile', 'multiSelections'],
-      filters: PDF_FILTERS,
-    });
-    return !canceled && filePaths.length > 0 ? filePaths : [];
-  });
-  handle(ipc, IpcChannel.DIALOG_SAVE_FILE, (_e, content: string, defaultPath?: string) =>
-    saveTextFile(content, defaultPath),
-  );
-}
-
-async function saveTextFile(content: string, defaultPath?: string): Promise<boolean> {
-  const target = process.env.E2E_MOCK_SAVE_FILE_PATH || (await chooseSavePath(defaultPath));
-  if (!target) return false;
-  fs.writeFileSync(target, content, 'utf8');
-  return true;
-}
-
-async function chooseSavePath(defaultPath?: string): Promise<string | null> {
-  const { canceled, filePath } = await dialog.showSaveDialog({ defaultPath: defaultPath || 'export.csv' });
-  return !canceled && filePath ? filePath : null;
 }

@@ -1,47 +1,20 @@
 import { ipcMain, app, dialog } from 'electron';
 import { DatabaseAdapter } from '../../core/database/DatabaseAdapter';
-import { ScientificVenueRepository } from '../../core/database/ScientificVenueRepository';
-import { SyncService } from '../../core/database/SyncService';
-import { SearchOrchestrator } from '../../core/services/SearchOrchestrator';
-import { QueryTranslator } from '../../core/services/QueryTranslator';
-import { apiIntegratorFor } from '../../core/services/E2eMockApiIntegrator';
-import { ExportService } from '../../core/services/ExportService';
-import { AIService } from '../../core/services/AIService';
-import { BackupService } from '../../core/services/BackupService';
+import { buildLibraryCommands } from '../../core/commands/libraryCommands';
+import { appPathsIn, type AppPaths } from '../../core/ports/AppPaths';
 import { UpdateSafetyService } from '../services/UpdateSafetyService';
 import { UpdateManager } from '../services/UpdateManager';
 import { NoopAppUpdater } from '../services/NoopAppUpdater';
 import type { IAppUpdater } from '../services/UpdateTypes';
-import { setupAiIpcHandlers } from './aiIpcHandlers';
-import { registerWindowHandlers } from './handlers/windowHandlers';
-import { registerProjectHandlers, registerSearchHandlers } from './handlers/projectHandlers';
-import { registerSearchMonitorHandlers } from './handlers/searchMonitorHandlers';
-import { registerProjectQuestionHandlers } from './handlers/projectQuestionHandlers';
-import { e2eAskModels } from '../../core/services/projectQuestion/e2eAskModels';
-import { SearchMonitorService } from '../../core/services/SearchMonitorService';
-import { registerArticleHandlers } from './handlers/articleHandlers';
-import { registerAnnotationHandlers } from './handlers/annotationHandlers';
-import { registerPdfHandlers } from './handlers/pdfHandlers';
-import { registerExportHandlers } from './handlers/exportHandlers';
-import { registerDialogHandlers } from './handlers/dialogHandlers';
-import { registerDocumentHandlers } from './handlers/documentHandlers';
-import { registerDiaryAndTrashHandlers } from './handlers/diaryHandlers';
-import { registerCategoryAndInvestigationHandlers } from './handlers/categoryHandlers';
-import { registerAuditHandlers } from './handlers/auditHandlers';
-import { registerScreeningHandlers } from './handlers/screeningHandlers';
-import { registerScreeningSuggestionHandlers } from './handlers/screeningSuggestionHandlers';
-import { registerScreeningOrderHandlers } from './handlers/screeningOrderHandlers';
-import { e2eScreeningModel } from '../../core/services/screening/e2eScreeningModel';
-import { registerPrismaHandlers } from './handlers/prismaHandlers';
-import { registerBackupHandlers, scheduleStartupBackup } from './handlers/backupHandlers';
-import { registerAgendaHandlers } from './handlers/agendaHandlers';
-import { registerSettingsHandlers } from './handlers/settingsHandlers';
-import { registerUpdateHandlers } from './handlers/updateHandlers';
 import { SafeStorageSecretStore } from '../ports/SafeStorageSecretStore';
 import { NativeFilePicker, type FilePicker } from '../ports/FilePicker';
 import { electronAppRuntime } from '../ports/electronAppRuntime';
-import { appPathsIn, type AppPaths } from '../../core/ports/AppPaths';
-import { LibraryStorage } from '../../core/services/LibraryStorage';
+import { scheduleStartupBackup } from '../startupBackup';
+import { exposeCommandsOverIpc } from './exposeCommandsOverIpc';
+import { registerWindowHandlers } from './handlers/windowHandlers';
+import { registerDialogHandlers } from './handlers/dialogHandlers';
+import { registerExternalDocumentHandlers } from './handlers/externalDocumentHandlers';
+import { registerUpdateHandlers } from './handlers/updateHandlers';
 
 export interface IpcRegistriesDeps {
   db?: DatabaseAdapter;
@@ -59,8 +32,9 @@ export interface IpcRegistriesResult {
 }
 
 /**
- * Composition root of the main process: opens the database, builds the services and
- * registers every IPC handler exactly once.
+ * Composition root of the main process: opens the library, lets the core build its commands and
+ * exposes them over IPC, then adds what only the desktop app has (dialogs, window, updater).
+ * Every IPC handler is registered exactly once.
  *
  * Usage (electron/main.ts):
  *   app.whenReady().then(() => { const { db, updateManager, safetyService } = setupIpcRegistries({ updater: autoUpdater }); createWindow(); });
@@ -86,55 +60,22 @@ function closeQuietly(db: DatabaseAdapter): void {
 }
 
 function registerLibraryServices(db: DatabaseAdapter, paths: AppPaths, deps?: IpcRegistriesDeps): IpcRegistriesResult {
-  const { userData, dbPath, backupsDir } = paths;
   const runtime = electronAppRuntime(deps?.restartApp);
   const picker = deps?.picker || new NativeFilePicker(dialog, process.env);
-  const storage = new LibraryStorage(db, paths);
-  const backupService = new BackupService(db, dbPath, backupsDir, () => runtime.restart());
-  scheduleStartupBackup(backupService);
+  const { commands, autoBackups } = buildLibraryCommands(db, { paths, runtime, env: process.env });
+  scheduleStartupBackup(autoBackups);
+  exposeCommandsOverIpc(ipcMain, commands, picker);
+  registerWindowHandlers(ipcMain);
+  registerDialogHandlers(ipcMain, picker);
+  registerExternalDocumentHandlers(ipcMain);
+  return { db, ...registerAppUpdate(db, paths, deps) };
+}
 
+function registerAppUpdate(db: DatabaseAdapter, paths: AppPaths, deps?: IpcRegistriesDeps) {
+  const { userData, dbPath, backupsDir } = paths;
   const safetyService = deps?.safetyService || new UpdateSafetyService(db, dbPath, backupsDir, userData);
   const updater = deps?.updater || new NoopAppUpdater();
   const updateManager = deps?.updateManager || new UpdateManager(updater, safetyService);
-
-  // E2E runs must not hit the real bibliographic APIs.
-  const orchestrator = new SearchOrchestrator(db, new QueryTranslator(), apiIntegratorFor(process.env));
-  const aiService = new AIService(db, paths.modelsDir);
-  setupAiIpcHandlers(db, aiService);
-  registerProjectQuestionHandlers(ipcMain, db, () =>
-    process.env.E2E_MOCK_AI_ASK === 'true' ? e2eAskModels() : aiService.askModels(),
-  );
-
-  registerWindowHandlers(ipcMain);
-  registerProjectHandlers(ipcMain, db);
-  registerSearchHandlers(ipcMain, db, orchestrator);
-  registerSearchMonitorHandlers(ipcMain, db, new SearchMonitorService(db, new QueryTranslator(), orchestrator));
-  registerSettingsHandlers(ipcMain, db);
-  registerArticleHandlers(ipcMain, db, storage);
-  registerAnnotationHandlers(ipcMain, db);
-  registerPdfHandlers(ipcMain, db, storage);
-  registerExportHandlers(ipcMain, db, new ExportService());
-  registerAuditHandlers(ipcMain, db);
-  registerScreeningHandlers(ipcMain, db);
-  registerScreeningOrderHandlers(ipcMain, db, () =>
-    process.env.E2E_MOCK_AI_ASK === 'true' ? e2eAskModels() : aiService.askModels(),
-  );
-  registerScreeningSuggestionHandlers(ipcMain, db, () =>
-    process.env.E2E_MOCK_AI_ASK === 'true' ? e2eScreeningModel() : aiService.screeningModel(),
-  );
-  registerPrismaHandlers(ipcMain, db);
-  registerDialogHandlers(ipcMain);
-  registerDocumentHandlers(ipcMain, db, storage);
-  registerDiaryAndTrashHandlers(ipcMain, db);
-  registerCategoryAndInvestigationHandlers(ipcMain, db);
-  registerBackupHandlers(ipcMain, {
-    sync: new SyncService(db, paths, runtime),
-    backups: backupService,
-    picker,
-    appVersion: runtime.version,
-  });
-  registerAgendaHandlers(ipcMain, new ScientificVenueRepository(db.getDB()));
   registerUpdateHandlers(ipcMain, updateManager, safetyService, deps?.restartApp);
-
-  return { db, safetyService, updateManager };
+  return { safetyService, updateManager };
 }

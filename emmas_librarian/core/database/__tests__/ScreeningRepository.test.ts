@@ -1,15 +1,9 @@
 // @vitest-environment node
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DatabaseAdapter } from '../DatabaseAdapter';
-import { registerScreeningHandlers } from '../../../electron/ipc/handlers/screeningHandlers';
+import { registerScreeningCommands } from '../../commands/screeningCommands';
 import { IpcChannel, type ScreeningLabel } from '../../../src/types';
-
-class RecordingRegistrar {
-  public handlers = new Map<string, (...args: unknown[]) => unknown>();
-  handle(channel: string, listener: (...args: unknown[]) => unknown): void {
-    this.handlers.set(channel, listener);
-  }
-}
+import { CommandRegistry } from '../../commands/CommandRegistry';
 
 let db: DatabaseAdapter;
 let projectId: number;
@@ -247,9 +241,9 @@ describe('renaming and deleting labels with decisions (#49)', () => {
 
 describe('screening IPC channels (#49)', () => {
   it('answers labels and decisions through the channels', async () => {
-    const ipc = new RecordingRegistrar();
-    registerScreeningHandlers(ipc as never, db);
-    const call = (channel: string, ...args: unknown[]) => ipc.handlers.get(channel)!({}, ...args);
+    const commands = new CommandRegistry();
+    registerScreeningCommands(commands, db);
+    const call = (channel: string, ...args: unknown[]) => commands.run(channel, ...args);
     const id = addArticle('A');
 
     const created = (await call(IpcChannel.SCREENING_LABEL_CREATE, projectId, {
@@ -267,9 +261,9 @@ describe('screening IPC channels (#49)', () => {
   });
 
   it('renames, moves, deletes labels and applies a preset through the channels', async () => {
-    const ipc = new RecordingRegistrar();
-    registerScreeningHandlers(ipc as never, db);
-    const call = (channel: string, ...args: unknown[]) => ipc.handlers.get(channel)!({}, ...args);
+    const commands = new CommandRegistry();
+    registerScreeningCommands(commands, db);
+    const call = (channel: string, ...args: unknown[]) => commands.run(channel, ...args);
 
     await call(IpcChannel.SCREENING_LABEL_RENAME, label('Em dúvida').id, 'Talvez');
     await call(IpcChannel.SCREENING_PRESET_APPLY, projectId, 'prisma2020');

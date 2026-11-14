@@ -80,6 +80,20 @@ vi.mock('electron', () => ({ safeStorage: {}, app: { getPath: () => electron.use
 - `ipcHarness.ts`: wires all of the above; `resetIpcHarness()` + `setupIpcRegistries()` in `beforeEach`, then
   `await invoke(IpcChannel.X, ...)`. There is a contract test that every `IpcChannel` has exactly one handler.
 
+### Commands and ports of the core — `core/commands/`, `core/ports/__tests__/fakes/`
+Every operation is a command in a `CommandRegistry` (the IPC handlers are generated from it by
+`electron/ipc/exposeCommandsOverIpc.ts`). Test a command without Electron:
+```ts
+const commands = new CommandRegistry();
+registerScreeningCommands(commands, new DatabaseAdapter(':memory:'));
+await commands.run(IpcChannel.SCREENING_LABELS_LIST, projectId);
+```
+`buildLibraryCommands(db, { paths: appPathsIn(tempDir), runtime: new FakeAppRuntime(), env: {} })` builds all
+of them over a real library. Port doubles: `FakeSecretStore` (reversible "encryption" for API keys),
+`FakeAppRuntime` (`restarts` counter, fixed version) and, on the Electron side,
+`electron/ports/__tests__/fakes/FakeFilePicker.ts` (the person answering a file dialog) and `FakeNativeDialogs`.
+`core/` must not import or mock `electron`: ESLint refuses it.
+
 ## Adding a new double
 Name it `Fake<Thing>`, put it in the nearest `__tests__/fakes/`, give it a docstring with a usage example, and
 make it implement the real interface so TypeScript catches drift.

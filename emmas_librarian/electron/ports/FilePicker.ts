@@ -1,9 +1,7 @@
 import type { Dialog } from 'electron';
+import type { FileTypeFilter } from '../../core/commands/CommandRegistry';
 
-export interface FileTypeFilter {
-  name: string;
-  extensions: string[];
-}
+export type { FileTypeFilter };
 
 export interface SaveFileRequest {
   title?: string;

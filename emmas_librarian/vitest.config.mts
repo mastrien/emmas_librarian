@@ -51,6 +51,13 @@ export default defineConfig({
           functions: 99,
           statements: 95,
         },
+        // The library without a shell (epic #27); it held most of what electron/ covered before the split.
+        'core/**/*': {
+          lines: 96,
+          branches: 94,
+          functions: 99,
+          statements: 96,
+        },
       },
     },
   },

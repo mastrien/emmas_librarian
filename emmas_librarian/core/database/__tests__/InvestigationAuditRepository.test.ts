@@ -4,16 +4,10 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { InvestigationAuditRepository } from '../InvestigationAuditRepository';
-import { registerAuditHandlers } from '../../../electron/ipc/handlers/auditHandlers';
+import { registerAuditCommands } from '../../commands/auditCommands';
 import { IpcChannel } from '../../../src/types';
 import type { DatabaseAdapter } from '../DatabaseAdapter';
-
-class RecordingRegistrar {
-  public handlers = new Map<string, (...args: unknown[]) => unknown>();
-  handle(channel: string, listener: (...args: unknown[]) => unknown): void {
-    this.handlers.set(channel, listener);
-  }
-}
+import { CommandRegistry } from '../../commands/CommandRegistry';
 
 describe('investigation audits (#48), against real SQLite', () => {
   let db: Database.Database;
@@ -94,9 +88,9 @@ describe('investigation audits (#48), against real SQLite', () => {
   });
 
   it('answers through the IPC channels', async () => {
-    const ipc = new RecordingRegistrar();
-    registerAuditHandlers(ipc as never, { getDB: () => db } as unknown as DatabaseAdapter);
-    const call = (channel: string, ...args: unknown[]) => ipc.handlers.get(channel)!({}, ...args);
+    const commands = new CommandRegistry();
+    registerAuditCommands(commands, { getDB: () => db } as unknown as DatabaseAdapter);
+    const call = (channel: string, ...args: unknown[]) => commands.run(channel, ...args);
 
     await call(IpcChannel.INVESTIGATION_AUDIT_SAVE, investigation, { seed: 5, samplePercent: 10, minPerQuestion: 1 });
 

@@ -8,7 +8,7 @@ import { OpenAccessService } from './OpenAccessService';
  * with PDFs saved to the library through `storage`.
  *
  * Usage:
- *   registerPdfHandlers(ipcMain, db, storage, openAccessServiceFor(db, storage, process.env));
+ *   registerPdfCommands(commands, db, storage, openAccessServiceFor(db, storage, env));
  */
 export function openAccessServiceFor(
   db: DatabaseAdapter,

@@ -1,5 +1,5 @@
 // AdmZip reads back empty entries under jsdom (Buffer/Uint8Array realm mismatch), so this suite runs in node.
-// Choosing the file (dialogs, E2E variables) is the shell's part: electron/ipc/__tests__/backupHandlers.test.ts.
+// Choosing the file (dialogs, E2E variables) is the shell's part: electron/ipc/__tests__/exposeCommandsOverIpc.test.ts.
 // @vitest-environment node
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import AdmZip from 'adm-zip';

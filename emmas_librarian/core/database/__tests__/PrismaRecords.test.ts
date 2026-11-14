@@ -4,20 +4,12 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { DatabaseAdapter } from '../DatabaseAdapter';
-import { registerPrismaHandlers, tablePathFor } from '../../../electron/ipc/handlers/prismaHandlers';
+import { registerPrismaCommands, tablePathFor } from '../../commands/prismaCommands';
 import { LibraryStorage } from '../../services/LibraryStorage';
 import { appPathsIn } from '../../ports/AppPaths';
-import { registerArticleHandlers } from '../../../electron/ipc/handlers/articleHandlers';
+import { registerArticleCommands } from '../../commands/articleCommands';
 import { IpcChannel, type PrismaRecords } from '../../../src/types';
-
-vi.mock('electron', () => ({ dialog: { showSaveDialog: vi.fn() } }));
-
-class RecordingRegistrar {
-  public handlers = new Map<string, (...args: unknown[]) => unknown>();
-  handle(channel: string, listener: (...args: unknown[]) => unknown): void {
-    this.handlers.set(channel, listener);
-  }
-}
+import { CommandRegistry } from '../../commands/CommandRegistry';
 
 let db: DatabaseAdapter;
 let projectId: number;
@@ -140,16 +132,17 @@ describe('Publications of the same study (#50), against real SQLite', () => {
   });
 });
 
-describe('PRISMA IPC channels (#50)', () => {
+describe('PRISMA commands (#50)', () => {
   let dir: string;
-  let call: (channel: string, ...args: unknown[]) => unknown;
+  let commands: CommandRegistry;
+  let call: (channel: string, ...args: unknown[]) => Promise<unknown>;
 
   beforeEach(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-prisma-'));
-    const ipc = new RecordingRegistrar();
-    registerPrismaHandlers(ipc as never, db);
-    registerArticleHandlers(ipc as never, db, new LibraryStorage(db, appPathsIn(dir)));
-    call = (channel, ...args) => ipc.handlers.get(channel)!({}, ...args);
+    commands = new CommandRegistry();
+    registerPrismaCommands(commands, db);
+    registerArticleCommands(commands, db, new LibraryStorage(db, appPathsIn(dir)));
+    call = (channel, ...args) => commands.run(channel, ...args);
   });
 
   afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -187,12 +180,9 @@ describe('PRISMA IPC channels (#50)', () => {
 
   it('saves the SVG and both tables beside it, each with a byte order mark for Excel', async () => {
     const target = path.join(dir, 'diagrama.svg');
-    vi.stubEnv('E2E_MOCK_SAVE_FILE_PATH', target);
+    const tables = { data: 'Caixa;n\nIncluídos;11', excluded: 'Referência;Motivo' };
 
-    const saved = await call(IpcChannel.EXPORT_PRISMA, projectId, 'svg', '<svg>n = 11</svg>', {
-      data: 'Caixa;n\nIncluídos;11',
-      excluded: 'Referência;Motivo',
-    });
+    const saved = await call(IpcChannel.EXPORT_PRISMA, projectId, 'svg', '<svg>n = 11</svg>', tables, target);
 
     expect(saved).toBe(target);
     expect(fs.readFileSync(target, 'utf8')).toBe('<svg>n = 11</svg>');
@@ -202,20 +192,34 @@ describe('PRISMA IPC channels (#50)', () => {
 
   it('writes a PNG from the base64 the renderer sends', async () => {
     const target = path.join(dir, 'diagrama.png');
-    vi.stubEnv('E2E_MOCK_SAVE_FILE_PATH', target);
+    const image = Buffer.from('PNGDATA').toString('base64');
 
-    await call(IpcChannel.EXPORT_PRISMA, projectId, 'png', Buffer.from('PNGDATA').toString('base64'), {
-      data: 'x',
-      excluded: 'y',
-    });
+    await call(IpcChannel.EXPORT_PRISMA, projectId, 'png', image, { data: 'x', excluded: 'y' }, target);
 
     expect(fs.readFileSync(target, 'utf8')).toBe('PNGDATA');
   });
 
   it('refuses another image format, and an unknown project', async () => {
     const tables = { data: '', excluded: '' };
-    await expect(call(IpcChannel.EXPORT_PRISMA, projectId, 'pdf', '', tables)).rejects.toThrow();
-    await expect(call(IpcChannel.EXPORT_PRISMA, 999, 'svg', '', tables)).rejects.toThrow();
+    const target = path.join(dir, 'nada.svg');
+
+    await expect(call(IpcChannel.EXPORT_PRISMA, projectId, 'pdf', '', tables, target)).rejects.toThrow('format="pdf"');
+    await expect(call(IpcChannel.EXPORT_PRISMA, 999, 'svg', '', tables, target)).rejects.toThrow('projectId=999');
+    expect(fs.existsSync(target)).toBe(false);
+  });
+
+  it('describes the file to save from the project name and the format, before anyone is asked', () => {
+    const { file } = commands.get(IpcChannel.EXPORT_PRISMA);
+    const describe = file!.describe as (projectId: number, format: unknown) => unknown;
+
+    expect(file).toMatchObject({ at: 4, mode: 'save' });
+    expect(describe(projectId, 'png')).toEqual({
+      title: 'Exportar diagrama PRISMA',
+      defaultPath: `${db.getProject(projectId)!.name}_prisma.png`,
+      filters: [{ name: 'Imagem PNG', extensions: ['png'] }],
+    });
+    expect(() => describe(999, 'png')).toThrow('projectId=999');
+    expect(() => describe(projectId, 'pdf')).toThrow('format="pdf"');
   });
 
   it('names each table after the image', () => {
