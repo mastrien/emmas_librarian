@@ -1,5 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Modal } from '../Modal';
+import { Info, Trash2, HelpCircle } from 'lucide-react';
+import { Modal, type ModalTone } from '../Modal';
+import { ModalFooter } from '../ModalFooter';
 import { Button } from '../Button';
 import './dialogs.css';
 
@@ -60,18 +62,29 @@ function toRequest(
   };
 }
 
+/** What the window's icon says: a destructive question (red bin), any other question, or a notice. */
+function dialogIcon(dialog: PendingDialog): { icon: React.ReactNode; tone: ModalTone } {
+  if (dialog.kind === 'inform') return { icon: <Info size={20} aria-hidden="true" />, tone: 'info' };
+  if (dialog.danger) return { icon: <Trash2 size={20} aria-hidden="true" />, tone: 'danger' };
+  return { icon: <HelpCircle size={20} aria-hidden="true" />, tone: 'info' };
+}
+
 const DialogWindow: React.FC<{ dialog: PendingDialog; onSettle: (confirmed: boolean) => void }> = ({
   dialog,
   onSettle,
 }) => (
-  <Modal label={dialog.title} title={dialog.title} onClose={() => onSettle(false)} width={460}>
+  <Modal label={dialog.title} title={dialog.title} onClose={() => onSettle(false)} width={460} {...dialogIcon(dialog)}>
     <div className="app-dialog-message">{dialog.message}</div>
-    <div className="app-dialog-actions">
-      {dialog.kind === 'confirm' && <Button onClick={() => onSettle(false)}>{dialog.cancelLabel}</Button>}
+    <ModalFooter plain>
+      {dialog.kind === 'confirm' && (
+        <Button variant="ghost" onClick={() => onSettle(false)}>
+          {dialog.cancelLabel}
+        </Button>
+      )}
       <Button variant={dialog.danger ? 'danger' : 'primary'} autoFocus onClick={() => onSettle(true)}>
         {dialog.confirmLabel}
       </Button>
-    </div>
+    </ModalFooter>
   </Modal>
 );
 

@@ -22,13 +22,21 @@ interface ModalProps {
   width?: number;
   /** Extra classes on the window, for styles of the page it belongs to (portaled, it leaves the page). */
   className?: string;
+  /** An icon in a tinted square before the title: the app's questions and notices say what kind they are (board 181). */
+  icon?: ReactNode;
+  /** The tint of the icon's square. */
+  tone?: ModalTone;
   children: ReactNode;
 }
+
+export type ModalTone = 'danger' | 'ok' | 'warn' | 'info';
 
 /**
  * The app's window over the whole screen: the dark backdrop covers everything, the window is padded, closes with its X
  * or Esc, and scrolls inside when tall. Every modal is built from this one, so none is hand-rolled: two that were broke
  * at the validation of epic #44, one without padding and one pinned to a corner by a class name collision.
+ *
+ * Its bottom bar, for the buttons, is `ModalFooter`.
  *
  * @example <Modal label="Rótulos" title="Rótulos de triagem" onClose={close}>…</Modal>
  */
@@ -53,6 +61,7 @@ export const Modal: React.FC<ModalProps> = (props) => {
         style={{ width: `${width}px`, maxWidth: '100%' }}
       >
         <div className="app-modal-head">
+          {props.icon && <span className={`app-modal-icon is-${props.tone ?? 'info'}`}>{props.icon}</span>}
           <div className="app-modal-titles">
             <h2 className="app-modal-title">{title}</h2>
             {description && <p className="app-modal-description">{description}</p>}
