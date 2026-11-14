@@ -1,4 +1,4 @@
-import { unzipSync, strFromU8 } from 'fflate';
+import { strFromU8 } from 'fflate';
 import { assertReadableProjectFormat } from '../../../core/database/backup/projectFileFormat';
 import type {
   Annotation,
@@ -11,6 +11,7 @@ import type {
   ProjectDocument,
 } from '../../../src/types';
 import type { ProjectReader } from './ProjectReader';
+import { ZipFile, type ByteSource } from './zipFile';
 
 type Row = Record<string, unknown>;
 
@@ -40,8 +41,8 @@ const fileNameOf = (filePath: unknown) =>
     .split(/[\\/]/)
     .pop() ?? '';
 
-function readProjectJson(archive: Uint8Array): ProjectJson {
-  const entry = unzipSync(archive, { filter: (file) => file.name === PROJECT_JSON })[PROJECT_JSON];
+async function readProjectJson(zip: ZipFile): Promise<ProjectJson> {
+  const entry = await zip.read(PROJECT_JSON);
   if (!entry) {
     throw new Error(
       "Arquivo de projeto inválido: o .emmapcarc não contém project.json, esperado um projeto exportado pelo Emma's Librarian",
@@ -54,21 +55,26 @@ function readProjectJson(archive: Uint8Array): ProjectJson {
 
 /**
  * A project exported by the desktop (.emmapcarc), read on the phone with no desktop around: the same
- * screens, nothing to write. The archive stays zipped in memory and each PDF is unpacked when opened,
- * so a project with many PDFs does not need them all at once.
+ * screens, nothing to write. Only the zip's index and project.json are read when it opens; each PDF is
+ * read from the file and unpacked when opened, so a project with many PDFs never sits in memory (#193).
  *
  * Usage:
- *   const reader = new ArchiveProjectReader(new Uint8Array(await file.arrayBuffer()));
+ *   const reader = await ArchiveProjectReader.open(fileSource(file));
  *   const [project] = await reader.listProjects();
  */
 export class ArchiveProjectReader implements ProjectReader {
   readonly source = 'file';
   readonly writer = null;
-  private readonly rows: ProjectJson;
 
-  /** Throws when the file is not a project, or was written in a format newer than this app reads. */
-  constructor(private readonly archive: Uint8Array) {
-    this.rows = readProjectJson(archive);
+  private constructor(
+    private readonly zip: ZipFile,
+    private readonly rows: ProjectJson,
+  ) {}
+
+  /** Rejects when the file is not a project, or was written in a format newer than this app reads. */
+  static async open(source: ByteSource): Promise<ArchiveProjectReader> {
+    const zip = await ZipFile.open(source);
+    return new ArchiveProjectReader(zip, await readProjectJson(zip));
   }
 
   private get projectId(): number {
@@ -106,8 +112,7 @@ export class ArchiveProjectReader implements ProjectReader {
   async readPdf(articleId: number): Promise<Uint8Array | null> {
     const article = await this.getArticle(articleId);
     const name = PDF_FOLDER + fileNameOf(article?.local_file_path);
-    if (name === PDF_FOLDER) return null;
-    return unzipSync(this.archive, { filter: (file) => file.name === name })[name] ?? null;
+    return name === PDF_FOLDER ? null : this.zip.read(name);
   }
 
   async listDiary(projectId: number): Promise<DiaryEntry[]> {

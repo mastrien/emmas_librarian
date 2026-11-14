@@ -16,6 +16,7 @@ import { appPathsIn } from '../../../../core/ports/AppPaths';
 import { FakeAppRuntime } from '../../../../core/ports/__tests__/fakes/FakeAppRuntime';
 import { authorizeRemoteCommand } from '../../../../core/remote/remoteAccessPolicy';
 import { ArchiveProjectReader } from '../ArchiveProjectReader';
+import { bytesSource } from '../zipFile';
 import { DesktopError, HttpProjectReader, type DesktopTransport } from '../HttpProjectReader';
 import type { ProjectReader } from '../ProjectReader';
 
@@ -68,7 +69,7 @@ beforeAll(async () => {
   projectId = seedFullProject(db.getDB(), { pdfPath, docPath });
   const target = path.join(workDir, 'tese.emmapcarc');
   await new ProjectSyncService(db, paths).exportProject(projectId, target);
-  fromFile = new ArchiveProjectReader(new Uint8Array(fs.readFileSync(target)));
+  fromFile = await ArchiveProjectReader.open(bytesSource(new Uint8Array(fs.readFileSync(target))));
   desktop = new PairedDeviceTransport(
     buildLibraryCommands(db, { paths, runtime: new FakeAppRuntime(), env: {} }).commands,
   );
@@ -223,7 +224,9 @@ describe('ArchiveProjectReader with files it cannot read', () => {
   it('refuses a zip without project.json', async () => {
     const { zipSync, strToU8 } = await import('fflate');
 
-    expect(() => new ArchiveProjectReader(zipSync({ 'outro.txt': strToU8('x') }))).toThrow('não contém project.json');
+    const other = bytesSource(zipSync({ 'outro.txt': strToU8('x') }));
+
+    await expect(ArchiveProjectReader.open(other)).rejects.toThrow('não contém project.json');
   });
 
   it('refuses a file written in a newer format, saying to update', async () => {
@@ -232,7 +235,7 @@ describe('ArchiveProjectReader with files it cannot read', () => {
       'project.json': strToU8(JSON.stringify({ formatVersion: 99, project: {}, articles: [] })),
     });
 
-    expect(() => new ArchiveProjectReader(newer)).toThrow('formato 99');
+    await expect(ArchiveProjectReader.open(bytesSource(newer))).rejects.toThrow('formato 99');
   });
 
   it('reads a file from before the optional lists existed', async () => {
@@ -241,7 +244,9 @@ describe('ArchiveProjectReader with files it cannot read', () => {
       project: { id: 1, name: 'Velho' },
       articles: [{ id: 5, project_id: 1, title: 'A', deleted_at: null }],
     };
-    const reader = new ArchiveProjectReader(zipSync({ 'project.json': strToU8(JSON.stringify(old)) }));
+    const reader = await ArchiveProjectReader.open(
+      bytesSource(zipSync({ 'project.json': strToU8(JSON.stringify(old)) })),
+    );
 
     expect(titles(await reader.listArticles(1))).toEqual(['A']);
     expect(await reader.listHighlights(5)).toEqual([]);

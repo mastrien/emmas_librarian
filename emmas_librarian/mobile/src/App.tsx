@@ -3,6 +3,7 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ArchiveProjectReader } from './reader/ArchiveProjectReader';
 import { fetchTransport, HttpProjectReader } from './reader/HttpProjectReader';
 import type { ProjectReader } from './reader/ProjectReader';
+import { fileSource } from './reader/zipFile';
 import {
   deviceNameFrom,
   isServedByDesktop,
@@ -53,19 +54,7 @@ async function boot(env: AppEnvironment, onRevoked: () => void): Promise<Boot> {
   return { reader: token ? desktopReader(token) : null, servedByDesktop, notice };
 }
 
-// FileReader rather than file.arrayBuffer(): older mobile browsers (and the test DOM) lack the latter.
-function bytesOf(file: File): Promise<Uint8Array> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(new Uint8Array(reader.result as ArrayBuffer));
-    reader.onerror = () => reject(new Error(`Não foi possível ler o arquivo "${file.name}".`));
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-async function readerOfFile(file: File): Promise<ProjectReader> {
-  return new ArchiveProjectReader(await bytesOf(file));
-}
+const readerOfFile = (file: File): Promise<ProjectReader> => ArchiveProjectReader.open(fileSource(file));
 
 const RequireLibrary: React.FC<{ open: boolean; children: React.ReactElement }> = ({ open, children }) =>
   open ? children : <Navigate to="/" replace />;

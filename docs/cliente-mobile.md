@@ -33,7 +33,8 @@ Arquivo aberto no celular é sempre somente leitura.
   `HttpProjectReader` (comandos do servidor da LAN) e `ArchiveProjectReader` (o `.emmapcarc`, com `fflate`).
   Um teste de contrato exporta um projeto real pelo núcleo e confere que as duas respondem igual, usando só os
   comandos que um dispositivo pareado pode rodar.
-- O `.emmapcarc` fica compactado na memória; cada PDF é descompactado ao abrir.
+- O `.emmapcarc` não é carregado inteiro: ao abrir, só o índice do zip e o `project.json` são lidos do
+  arquivo; cada PDF é lido e descompactado quando aberto (`mobile/src/reader/zipFile.ts`).
 - Pareamento: a página lê o código de `#pair=<código>`, troca por um token em `POST /api/pair` e guarda o token no
   `localStorage` daquele endereço. "Desconectar" apaga o token do celular; revogar é no desktop, e o celular
   revogado volta sozinho para a tela inicial, com o aviso.
@@ -58,6 +59,6 @@ O segundo sobe o cliente com recarga automática; sem o desktop por trás ele se
 
 - Não testado em celular de verdade: os testes rodam em jsdom e, no E2E, numa janela do Electron com largura de
   celular. Safari do iOS e Chrome do Android ficam por conferir, em especial o aviso de certificado e o pdf.js.
-- Um `.emmapcarc` com muitos PDFs ocupa a memória do celular inteiro enquanto está aberto.
+- Um `.emmapcarc` de mais de 4 GB (zip64) não é aberto.
 - Recarregar a página com um arquivo aberto volta à tela inicial (o arquivo não é guardado).
 - A cópia da web depende do deploy do GitHub Pages, que só roda a partir da `main`.
