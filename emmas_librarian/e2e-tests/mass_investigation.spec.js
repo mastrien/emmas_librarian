@@ -57,6 +57,10 @@ test('Investigation page - Checkbox state persists across re-renders', async () 
     await expect(modal.getByRole('heading', { name: 'Nova investigação' })).toBeVisible({ timeout: 5000 });
     await expectEdgeToEdge(window);
 
+    // Since board 159 the articles are the second step, reached once there is a question.
+    await modal.getByPlaceholder('Pergunta 1').fill('Qual o desenho?');
+    await modal.getByRole('button', { name: /Próximo: artigos/ }).click();
+
     // Wait for ArticleSelector to render; the article checkbox is inside a <label>
     const articleCheckbox = modal.locator('label input[type="checkbox"]').first();
     await expect(articleCheckbox).toBeVisible({ timeout: 5000 });
@@ -66,9 +70,10 @@ test('Investigation page - Checkbox state persists across re-renders', async () 
     await articleCheckbox.uncheck();
     await expect(articleCheckbox).not.toBeChecked();
 
-    // Add a question, which causes state update in parent (aiQuestions) and re-renders AIExtractionModal
-    const addQuestionBtn = modal.locator('button:has-text("+ Adicionar Pergunta")');
-    await addQuestionBtn.click();
+    // Back to the questions to add one, which updates the draft in the page and re-renders the steps
+    await modal.getByRole('button', { name: 'Voltar' }).click();
+    await modal.locator('button:has-text("+ Adicionar Pergunta")').click();
+    await modal.getByRole('list', { name: 'Passos da investigação' }).getByRole('button', { name: 'Artigos' }).click();
 
     // Verify checkbox is still unchecked after re-render (the original bug)
     await expect(articleCheckbox).not.toBeChecked();

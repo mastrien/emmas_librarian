@@ -140,6 +140,7 @@ export const InvestigationPage: React.FC = () => {
               projectId={projectId}
               articlesWithPdf={articlesWithPdf}
               searchHistory={data.searchHistory}
+              lastInvestigation={data.history[0]}
               draft={draft}
               onDraftChange={setDraft}
               modelLabel={data.modelLabel}

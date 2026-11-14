@@ -22,8 +22,11 @@ async function createQuestionSet(window, setName) {
   await expect(window.locator(`.question-set-catalog >> text=${setName}`)).toBeVisible();
 }
 
+// The new investigation goes in steps (board 159): questions, articles, model, then the run.
 async function runExtractionFlow(window) {
+  await window.getByRole('button', { name: /Próximo: artigos/ }).click();
   await window.check('label:has-text("E2E_Import_Test_Article") input[type="checkbox"]');
+  await window.getByRole('list', { name: 'Passos da investigação' }).getByRole('button', { name: 'Executar' }).click();
   await window.getByRole('button', { name: 'Iniciar investigação' }).click();
   // When the run ends the page opens what it saved.
   await expect(window.getByRole('heading', { name: /Investigação #\d+/ })).toBeVisible({ timeout: 10000 });
