@@ -11,6 +11,11 @@ vi.mock('./components/gyroscope/GyroscopeCanvas', () => ({
   GyroscopeCanvas: () => null,
 }));
 
+// jsdom has no canvas context either: say the machine can draw, so the pages render the (mocked) rings' place.
+vi.mock('./components/gyroscope/webglSupport', () => ({
+  hasWebGl: () => true,
+}));
+
 // Suites that opt into `@vitest-environment node` (e.g. real zip/SQLite round trips) have no window.
 if (typeof window !== 'undefined') {
   Object.defineProperty(window, 'electronAPI', {
