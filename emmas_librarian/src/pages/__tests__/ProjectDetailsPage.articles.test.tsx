@@ -289,7 +289,12 @@ describe('ProjectDetailsPage PDF links', () => {
 
 // Board 153: the details are a panel beside the table, following the keyboard.
 describe('ProjectDetailsPage article details panel', () => {
-  const articles = [article({ id: 1, title: 'Artigo um' }), article({ id: 2, title: 'Artigo dois' })];
+  // Three rows: the J pressed inside waitFor may land more than once and must still leave a row below.
+  const articles = [
+    article({ id: 1, title: 'Artigo um' }),
+    article({ id: 2, title: 'Artigo dois' }),
+    article({ id: 3, title: 'Artigo três' }),
+  ];
   const panel = () => screen.queryByRole('complementary', { name: 'Detalhes do artigo' });
 
   it('opens beside the table from the title and closes with Escape', async () => {
@@ -310,8 +315,13 @@ describe('ProjectDetailsPage article details panel', () => {
       within(mainTable()).getByRole('row', { current: true }).querySelector('.article-title')?.textContent;
     const panelTitle = () => within(panel() as HTMLElement).getByRole('heading', { level: 2 }).textContent;
 
-    fireEvent.keyDown(document.body, { key: 'j' });
+    // Wait for each step to show: the list keys are bound once the table has rendered its rows.
+    await waitFor(() => {
+      fireEvent.keyDown(document.body, { key: 'j' });
+      expect(within(mainTable()).getByRole('row', { current: true })).toBeInTheDocument();
+    });
     fireEvent.keyDown(document.body, { key: ' ' });
+    await screen.findByRole('complementary', { name: 'Detalhes do artigo' });
     expect(panelTitle()).toBe(currentTitle());
     const first = panelTitle();
 

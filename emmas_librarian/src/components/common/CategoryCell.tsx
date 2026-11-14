@@ -8,13 +8,21 @@ interface CategoryCellProps {
   category: ProjectCategory;
   initialValue: string;
   onCategorySaved?: () => void;
+  /** Open straight in the editor (the categories matrix opens it on a click on the cell). */
+  startEditing?: boolean;
 }
 
-export const CategoryCell: React.FC<CategoryCellProps> = ({ articleId, category, initialValue, onCategorySaved }) => {
+export const CategoryCell: React.FC<CategoryCellProps> = ({
+  articleId,
+  category,
+  initialValue,
+  onCategorySaved,
+  startEditing = false,
+}) => {
   const projectService = useProjectService();
   const { inform } = useDialogs();
   const [value, setValue] = useState(initialValue);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(startEditing);
 
   const prevInitialValueRef = React.useRef(initialValue);
 
