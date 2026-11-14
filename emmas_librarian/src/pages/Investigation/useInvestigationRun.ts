@@ -24,6 +24,8 @@ export interface InvestigationRunState {
   quotaHit: boolean;
   /** The stored investigation, once the run finished and was saved. */
   savedId: number | null;
+  /** When it started (ms since epoch), for the elapsed time on the running view (board 160). */
+  startedAt: number;
 }
 
 export interface InvestigationRunRequest {
@@ -61,6 +63,7 @@ export function useInvestigationRun(onFatalError: (error: unknown) => void) {
       isRunning: true,
       quotaHit: false,
       savedId: null,
+      startedAt: Date.now(),
     });
     try {
       const { collected, status } = await extractSequentially(service, targets, validQuestions, {

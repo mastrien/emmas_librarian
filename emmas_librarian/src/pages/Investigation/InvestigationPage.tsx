@@ -7,13 +7,12 @@ import { QuotaModal } from '../../components/modals/QuotaModal';
 import { useInvestigationRunContext } from '../../contexts/InvestigationRunContext';
 import { useFillWindowHeight } from '../../hooks/useFillWindowHeight';
 import { useNarrowWindow } from '../../hooks/useNarrowWindow';
-import { CallsTab } from './CallsTab';
 import { InvestigationDetail } from './InvestigationDetail';
 import { InvestigationNavList } from './InvestigationNavList';
+import { RunningView } from './RunningView';
 import { NewInvestigationView, type InvestigationDraft } from './NewInvestigationView';
-import { investigationPath, liveCalls } from './investigationView';
+import { investigationPath } from './investigationView';
 import { useInvestigationPageData } from './useInvestigationPageData';
-import type { InvestigationRunState } from './useInvestigationRun';
 import { useRecalculationBeforeRun } from './useRecalculationBeforeRun';
 import './investigation.css';
 import { fillHeightStyle } from '../../hooks/useFillWindowHeight';
@@ -22,32 +21,6 @@ import { ProjectNavPortal } from '../../components/common/shell/projectNavSlot';
 
 // The project sidebar folds to icons at this width (shell.css); the investigations then go to a drawer.
 const SIDEBAR_FOLDS_PX = 1199;
-
-const RunningView: React.FC<{ run: InvestigationRunState; modelLabel: string; onCancel: () => void }> = ({
-  run,
-  modelLabel,
-  onCancel,
-}) => (
-  <>
-    <PageHeader
-      title={
-        <>
-          Investigação em andamento{' '}
-          <span className="inv-chip inv-chip--run">
-            Artigo {run.current} de {run.targets.length}
-          </span>
-        </>
-      }
-      subtitle={`${run.targets.length} artigos · ${run.questions.length} perguntas · ${modelLabel}. As respostas chegam para revisão quando ela terminar.`}
-      actions={
-        <button type="button" className="btn-secondary inv-danger" onClick={onCancel}>
-          Cancelar
-        </button>
-      }
-    />
-    <CallsTab cells={liveCalls(run)} questions={run.questions} />
-  </>
-);
 
 const NEW_SUBTITLE = 'Perguntas feitas a cada PDF. Cada resposta vem com a página de onde saiu.';
 
@@ -150,7 +123,14 @@ export const InvestigationPage: React.FC = () => {
             />
           </>
         )}
-        {view === 'running' && ownRun && <RunningView run={ownRun} modelLabel={data.modelLabel} onCancel={cancel} />}
+        {view === 'running' && ownRun && (
+          <RunningView
+            run={ownRun}
+            modelLabel={data.modelLabel}
+            onCancel={cancel}
+            onLeave={() => navigate(`/projects/${projectId}/articles`)}
+          />
+        )}
         {opened && (
           <InvestigationDetail
             key={opened.id}

@@ -1,5 +1,6 @@
 import type { Article, InvestigationHistoryRecord, InvestigationResult } from '../../types';
 import { parseJsonList } from '../../utils/parseJsonList';
+import { aiAnswerText, parseRagAnswer } from '../../utils/investigationAnswers';
 import type { InvestigationRunState } from './useInvestigationRun';
 
 export type CallStatus = 'success' | 'error' | 'skipped' | 'running' | 'queued';
@@ -11,6 +12,27 @@ export interface CallCell {
   question: string;
   status: CallStatus;
   error: string | null;
+  /** What the model answered, as text; null while running or when it failed. */
+  answer: string | null;
+  /** The passages it cited, with their page when known. */
+  evidences: CallEvidence[];
+}
+
+/** A passage a call cited. */
+export interface CallEvidence {
+  page: number | null;
+  text: string;
+}
+
+/**
+ * The passages of a stored answer: the RAG evidences, or the single quote of an older answer.
+ *
+ * @example evidencesOf(result) // [{ page: 26, text: 'approach. Combined with…' }]
+ */
+export function evidencesOf(result: Pick<InvestigationResult, 'answer' | 'quote'>): CallEvidence[] {
+  const rag = parseRagAnswer(result.answer);
+  if (rag?.evidences.length) return rag.evidences.map((e) => ({ page: e.page ?? null, text: e.text }));
+  return result.quote ? [{ page: null, text: result.quote }] : [];
 }
 
 export type AnswerFilter = 'pending' | 'reviewed' | 'errors' | 'all';
@@ -52,6 +74,8 @@ export function savedCalls(results: InvestigationResult[], articles: Article[]):
     question: r.question,
     status: r.status,
     error: r.error_message,
+    answer: r.status === 'success' ? aiAnswerText(r) : null,
+    evidences: evidencesOf(r),
   }));
 }
 
@@ -75,6 +99,8 @@ export function liveCalls(run: InvestigationRunState): CallCell[] {
       articleId: article.id,
       articleTitle: article.title,
       question,
+      answer: null,
+      evidences: [],
       ...liveStatus(run, index),
     })),
   );
@@ -140,3 +166,27 @@ export function gridOrder(results: InvestigationResult[], questions: string[]): 
  */
 export const investigationPath = (projectId: number, view?: number | 'new' | 'running'): string =>
   view === undefined ? `/projects/${projectId}/investigation` : `/projects/${projectId}/investigation/${view}`;
+
+/** One row of the call matrix: an article and its calls in the order of the questions. */
+export interface CallMatrixRow {
+  articleId: number;
+  articleTitle: string;
+  calls: (CallCell | undefined)[];
+}
+
+/**
+ * The calls as articles × questions, for the matrix of the run (board 160): articles as they first appear.
+ *
+ * @example callMatrix(cells, ['Q1', 'Q2'])[0].calls.map((c) => c?.status) // ['success', 'running']
+ */
+export function callMatrix(cells: CallCell[], questions: string[]): CallMatrixRow[] {
+  const articleIds = [...new Set(cells.map((c) => c.articleId))];
+  return articleIds.map((articleId) => {
+    const own = cells.filter((c) => c.articleId === articleId);
+    return {
+      articleId,
+      articleTitle: own[0].articleTitle,
+      calls: questions.map((q) => own.find((c) => c.question === q)),
+    };
+  });
+}
