@@ -27,9 +27,9 @@ test('every back link looks the same, with no border and no fill', async () => {
     const reference = await look(window.getByRole('link', { name: 'Voltar ao projeto' }));
     expect(reference).toMatchObject({ border: '0px', background: 'rgba(0, 0, 0, 0)', arrow: 18 });
 
-    await window.getByRole('link', { name: 'Voltar ao projeto' }).click();
-    await window.getByRole('link', { name: /Investigação com IA/ }).click();
-    expect(await look(window.getByRole('link', { name: 'Voltar ao projeto' }))).toEqual(reference);
+    // The investigation lost its back link to the sidebar too (board 159); the PDF library keeps one.
+    await window.getByRole('link', { name: 'Biblioteca de PDFs' }).click();
+    expect(await look(window.getByRole('link', { name: 'Voltar aos projetos' }))).toEqual(reference);
   } finally {
     await electronApp.close();
   }

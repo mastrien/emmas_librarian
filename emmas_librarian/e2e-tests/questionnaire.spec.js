@@ -29,12 +29,18 @@ async function runExtractionFlow(window) {
   await expect(window.getByRole('heading', { name: /Investigação #\d+/ })).toBeVisible({ timeout: 10000 });
 }
 
+// Since the redesign (board 159) the investigations are listed under "Investigação com IA" in the project sidebar,
+// after "+ Nova investigação"; the sidebar is also the way back to the articles.
 async function verifyHistory(window) {
-  await window.getByRole('link', { name: 'Voltar ao projeto' }).click();
+  await window.getByTestId('tab-articles').click();
   await window.getByRole('link', { name: 'Investigação com IA' }).click();
-  await window.getByRole('navigation', { name: 'Investigações do projeto' }).getByRole('link').first().click();
+  await window
+    .getByRole('navigation', { name: 'Investigações do projeto' })
+    .getByRole('link', { name: /^#\d+/ })
+    .first()
+    .click();
   await expect(window.getByRole('heading', { name: /Investigação #\d+/ })).toBeVisible();
-  await window.getByRole('link', { name: 'Voltar ao projeto' }).click();
+  await window.getByTestId('tab-articles').click();
 }
 
 test('F-07 Create and answer investigation questionnaire', async () => {

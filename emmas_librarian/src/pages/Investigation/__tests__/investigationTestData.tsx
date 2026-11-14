@@ -8,6 +8,7 @@ import { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjec
 import { FakeDialogs, FakeDialogsProvider } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
 import type { Article, InvestigationHistoryRecord, InvestigationResult, MassiveInvestigation } from '../../../types';
 import { InvestigationPage } from '../InvestigationPage';
+import { ProjectNavSlotHost, ProjectNavSlotProvider } from '../../../components/common/shell/projectNavSlot';
 
 export const article = (id: number, title = `Estudo ${id}`): Article =>
   ({ id, project_id: 3, title, status: 'read', local_file_path: `/pdf/${id}.pdf` }) as Article;
@@ -95,11 +96,15 @@ export function renderInvestigation(
         <ServicesProvider apiService={service}>
           <FakeDialogsProvider dialogs={dialogs}>
             <InvestigationRunProvider>
-              <Routes>
-                <Route path="/projects/:id/investigation" element={<InvestigationPage />} />
-                <Route path="/projects/:id/investigation/:view" element={<InvestigationPage />} />
-                <Route path="*" element={<Where />} />
-              </Routes>
+              {/* The spot the project sidebar gives the page for its list (board 159). */}
+              <ProjectNavSlotProvider>
+                <ProjectNavSlotHost />
+                <Routes>
+                  <Route path="/projects/:id/investigation" element={<InvestigationPage />} />
+                  <Route path="/projects/:id/investigation/:view" element={<InvestigationPage />} />
+                  <Route path="*" element={<Where />} />
+                </Routes>
+              </ProjectNavSlotProvider>
             </InvestigationRunProvider>
           </FakeDialogsProvider>
         </ServicesProvider>

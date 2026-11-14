@@ -7,6 +7,7 @@ import { openQuickAccessDocument } from '../../../utils/openQuickAccessDocument'
 import { ManageQuickAccessModal } from '../../modals/ManageQuickAccessModal';
 import { PROJECT_NAV, type ProjectNavItem } from './projectNav';
 import { QuickAccessRecents } from './QuickAccessRecents';
+import { ProjectNavSlotHost } from './projectNavSlot';
 
 const ICONS: Record<string, React.ReactNode> = {
   overview: <LayoutDashboard size={16} />,
@@ -91,13 +92,15 @@ const SidebarSections: React.FC<ProjectSidebarProps> = ({ projectId, activeSegme
       <nav key={group.title ?? index} className="project-nav__group" aria-label={group.title ?? 'Seções do projeto'}>
         {group.title && <span className="project-nav__eyebrow">{group.title}</span>}
         {group.items.map((item) => (
-          <SidebarItem
-            key={item.segment}
-            item={item}
-            base={`/projects/${projectId}`}
-            isActive={item.segment === activeSegment}
-            counts={counts}
-          />
+          <React.Fragment key={item.segment}>
+            <SidebarItem
+              item={item}
+              base={`/projects/${projectId}`}
+              isActive={item.segment === activeSegment}
+              counts={counts}
+            />
+            {item.slot && item.segment === activeSegment && <ProjectNavSlotHost />}
+          </React.Fragment>
         ))}
       </nav>
     ))}

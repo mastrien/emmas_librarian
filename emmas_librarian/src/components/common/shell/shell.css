@@ -290,6 +290,78 @@
   color: var(--color-primary);
 }
 
+/* A screen's own sub-pages under its lit item (projectNavSlot.tsx; board 159: the investigations). */
+.project-nav__slot:empty {
+  display: none;
+}
+
+.project-nav__sub-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 2px 0 4px;
+}
+
+.project-nav__sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 var(--space-2) 0 32px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--duration-hover) var(--ease-out);
+}
+
+.project-nav__sub:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-main);
+}
+
+.project-nav__sub.is-active,
+.project-nav__sub[aria-current='page'] {
+  color: var(--text-heading);
+  font-weight: 500;
+  background: var(--bg-surface-hover);
+}
+
+.project-nav__sub-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Its own class: the folded strip hides .project-nav__count, and these also show in a drawer then. */
+.project-nav__sub-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* In a drawer there is no parent item to indent under. */
+.side-drawer .project-nav__sub,
+.side-drawer .project-nav__sub-empty {
+  padding-left: var(--space-2);
+}
+
+.project-nav__sub-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.project-nav__sub-empty {
+  padding: 2px var(--space-2) 2px 32px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 .project-nav__label {
   flex: 1 1 auto;
   min-width: 0;
@@ -337,6 +409,11 @@
   .project-nav__item {
     justify-content: center;
     padding: 0;
+  }
+
+  /* No room for sub-pages on the folded strip: the screen offers them in a drawer instead. */
+  .project-nav__slot {
+    display: none;
   }
 }
 

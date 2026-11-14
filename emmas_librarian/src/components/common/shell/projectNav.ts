@@ -26,6 +26,8 @@ export interface ProjectNavItem {
   count?: keyof ProjectNavCounts;
   /** The old tab test ids, kept so the E2E specs that open a section still find it. */
   testId?: string;
+  /** The screen lists its own sub-pages under the item while it is lit (see projectNavSlot). */
+  slot?: boolean;
 }
 
 export interface ProjectNavGroup {
@@ -53,7 +55,7 @@ export const PROJECT_NAV: readonly ProjectNavGroup[] = [
     title: 'Análise',
     items: [
       { segment: 'review', label: 'Revisão sistemática' },
-      { segment: 'investigation', label: 'Investigação com IA', count: 'investigations' },
+      { segment: 'investigation', label: 'Investigação com IA', count: 'investigations', slot: true },
     ],
   },
 ];

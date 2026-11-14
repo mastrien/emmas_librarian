@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Layout } from '../common/Layout';
 import { useRefreshProjectNav } from '../common/shell/projectNavRefresh';
+import { ProjectNavPortal } from '../common/shell/projectNavSlot';
 import { FakeDialogsProvider } from '../common/dialogs/__tests__/fakes/FakeDialogs';
 import type { ProjectDocument } from '../../types';
 import type { UpdateStatusResponse } from '../../types';
@@ -77,6 +78,31 @@ describe('Layout Component', () => {
         searches: 2,
         investigations: 1,
       });
+    });
+
+    // Board 159: the investigation screen lists its investigations under its own sidebar item.
+    it("puts a screen's sub-pages under its lit sidebar item, and nowhere on other screens", async () => {
+      const renderWithSubPages = (path: string) =>
+        render(
+          <MemoryRouter initialEntries={[path]}>
+            <Layout>
+              <ProjectNavPortal>
+                <a href="/x">#14 · sub</a>
+              </ProjectNavPortal>
+            </Layout>
+          </MemoryRouter>,
+        );
+
+      const { unmount } = renderWithSubPages('/projects/3/investigation/14');
+      const sidebar = screen.getByRole('complementary', { name: 'Projeto' });
+      const sub = within(sidebar).getByRole('link', { name: '#14 · sub' });
+      const item = within(sidebar).getByRole('link', { name: /Investigação com IA/ });
+      expect(item.nextElementSibling).toContainElement(sub);
+      unmount();
+
+      renderWithSubPages('/projects/3/articles');
+      expect(screen.queryByRole('link', { name: '#14 · sub' })).not.toBeInTheDocument();
+      await screen.findByText('96 artigos · desde 06/08/2026');
     });
 
     it('lists the project sections with their counts and lights the current one', async () => {
