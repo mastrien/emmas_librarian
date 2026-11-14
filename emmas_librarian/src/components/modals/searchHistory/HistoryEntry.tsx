@@ -22,7 +22,7 @@ export interface HistoryEntryProps {
 }
 
 // Only database searches can be rebuilt; imports and manual additions have no query to reuse.
-const SearchFromLinks: React.FC<{ projectId: number; item: SearchHistoryItem }> = ({ projectId, item }) =>
+export const SearchFromLinks: React.FC<{ projectId: number; item: SearchHistoryItem }> = ({ projectId, item }) =>
   restoreSearch(item) ? (
     <>
       <Link
@@ -42,7 +42,9 @@ const SearchFromLinks: React.FC<{ projectId: number; item: SearchHistoryItem }> 
     </>
   ) : null;
 
-const UndoButton: React.FC<{ item: SearchHistoryItem; onRevertSearch: (searchId: number) => void }> = (props) => {
+export const UndoButton: React.FC<{ item: SearchHistoryItem; onRevertSearch: (searchId: number) => void }> = (
+  props,
+) => {
   const { confirm } = useDialogs();
   const texts = undoTexts(props.item);
   const ask = async () => {

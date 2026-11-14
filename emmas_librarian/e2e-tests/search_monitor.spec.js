@@ -42,7 +42,10 @@ test('#52 a marked search is checked on the dashboard, and what it finds is save
     await window.getByText(projectName).click();
     // The project remembers its last tab, here the history.
     await expect(window.getByText('Resultado do monitoramento')).toBeVisible({ timeout: 10000 });
-    await expect(window.getByText(/Monitoramento da busca #1/)).toBeVisible();
+    // Board 157: the newest entry opens beside the list; the search itself is chosen in the list.
+    const historyList = window.getByRole('navigation', { name: 'Buscas do projeto' });
+    await expect(historyList.getByText(/Monitoramento da busca #1/)).toBeVisible();
+    await historyList.getByRole('button', { name: /^Busca #1/ }).click();
     await expect(window.getByRole('checkbox', { name: 'Monitorar esta busca' })).toBeChecked();
     await window.getByTestId('tab-articles').click();
     await expect(window.locator('tr', { hasText: 'Artigo Monitorado E2E' })).toBeVisible({ timeout: 10000 });
