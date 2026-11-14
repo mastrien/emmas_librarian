@@ -3,7 +3,7 @@ import type { CitationRequest, CitationSeed } from '../../../src/types';
 import { queryTranslator } from '../../../core/services/QueryTranslator';
 import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import type { SearchOrchestrator } from '../../../core/services/SearchOrchestrator';
-import { AppError } from '../errorHandler';
+import { AppError } from '../../../core/errors/AppError';
 import { handle, type IpcRegistrar } from './handle';
 import type { SearchLimits } from '../../../src/utils/searchLimits';
 

@@ -1,4 +1,4 @@
-import { AppError } from '../../../electron/ipc/errorHandler';
+import { AppError } from '../../errors/AppError';
 import type { AskConversationRepository, StoredMessage } from '../../database/AskConversationRepository';
 import type { PdfChunkIndexRepository } from '../../database/PdfChunkIndexRepository';
 import type {

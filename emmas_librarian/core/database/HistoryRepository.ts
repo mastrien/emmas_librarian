@@ -1,5 +1,5 @@
 import type { Database } from 'better-sqlite3';
-import { AppError } from '../../electron/ipc/errorHandler';
+import { AppError } from '../errors/AppError';
 import { DiaryEntry } from '../../src/types';
 import { deletePdfIfUnused } from './sharedPdfFiles';
 

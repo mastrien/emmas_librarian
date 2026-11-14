@@ -1,4 +1,4 @@
-import { AppError } from '../../../electron/ipc/errorHandler';
+import { AppError } from '../../errors/AppError';
 import type { PdfChunkIndexRepository } from '../../database/PdfChunkIndexRepository';
 import type { SimilarChunk, VectorStore } from '../VectorStore';
 import type {

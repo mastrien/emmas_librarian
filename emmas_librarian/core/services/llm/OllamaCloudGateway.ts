@@ -1,5 +1,5 @@
 import type { LLMProviderGateway } from './LLMProviderGateway';
-import { AppError } from '../../../electron/ipc/errorHandler';
+import { AppError } from '../../errors/AppError';
 
 /**
  * Handles communication with hosted/cloud Ollama instances.

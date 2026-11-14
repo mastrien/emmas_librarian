@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { AppError } from '../errorHandler';
+import { AppError } from '../../../core/errors/AppError';
 import { withErrorHandling } from '../errorHandler';
 
 describe('AppError', () => {

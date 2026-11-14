@@ -4,7 +4,7 @@ import { AIModelConfigRepository } from '../database/AIModelConfigRepository';
 import { EmbeddingService } from './EmbeddingService';
 import { VectorStore } from './VectorStore';
 import { extractTextWithCoordinates } from './PdfExtractor';
-import { AppError } from '../../electron/ipc/errorHandler';
+import { AppError } from '../errors/AppError';
 import { parseAndRepairJson } from './llm/jsonRepair';
 import { OllamaCloudGateway } from './llm/OllamaCloudGateway';
 import { quotePrompt } from './extraction/extractionPrompts';

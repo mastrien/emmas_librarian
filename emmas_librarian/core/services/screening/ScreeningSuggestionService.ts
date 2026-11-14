@@ -1,4 +1,4 @@
-import { AppError } from '../../../electron/ipc/errorHandler';
+import { AppError } from '../../errors/AppError';
 import type { ScreeningSuggestionRepository } from '../../database/ScreeningSuggestionRepository';
 import type { ScreeningCriteria, ScreeningSuggestion } from '../../../src/types/screeningSuggestion';
 import type { ScreeningEngine } from './ScreeningEngine';

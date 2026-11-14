@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { AppError, withErrorHandling } from '../errorHandler';
+import { AppError } from '../../../core/errors/AppError';
+import { withErrorHandling } from '../errorHandler';
 
 interface SerializedAppError {
   isAppError: boolean;

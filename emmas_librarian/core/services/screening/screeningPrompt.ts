@@ -1,4 +1,4 @@
-import { AppError } from '../../../electron/ipc/errorHandler';
+import { AppError } from '../../errors/AppError';
 import { locateInChunk } from '../extraction/evidenceAnchoring';
 import { parseAndRepairJson } from '../llm/jsonRepair';
 import type { ScreeningCriteria } from '../../../src/types/screeningSuggestion';

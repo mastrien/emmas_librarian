@@ -1,5 +1,5 @@
 import { AIModelConfig } from '../../src/types';
-import { AppError } from '../../electron/ipc/errorHandler';
+import { AppError } from '../errors/AppError';
 import {
   importTransformers,
   loadLocalEmbeddingExtractor,
