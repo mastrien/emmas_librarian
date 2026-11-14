@@ -46,13 +46,18 @@ const appEnv = (dataDir, env) => ({ ...process.env, E2E_USER_DATA_DIR: dataDir, 
  *
  * `execFileImpl` is the process launcher, replaced by a fake in the helper's own unit tests.
  *
+ * With `cliArgs` it runs one command of the app's CLI (#31) on that library instead: no window, JSON on stdout.
+ *
  * Usage:
  *   const { code, signal, stdout } = await runAppUntilExit({ E2E_MOCK_RECOVERY_CHOICE: '0' }, { userDataDir });
+ *   const listed = await runAppUntilExit({}, { userDataDir, cliArgs: ['projects:getAll'] });
  */
-function runAppUntilExit(env, { userDataDir, timeoutMs = 60000, execFileImpl = execFile }) {
+function runAppUntilExit(env, { userDataDir, cliArgs, timeoutMs = 60000, execFileImpl = execFile }) {
   checkHeadless();
   // --remote-debugging-port is what marks a launch as automated, as Playwright's does (electron/userDataDir.ts).
-  const args = [...appArgs(), '--remote-debugging-port=0'];
+  // A CLI run needs no mark: `cli` must be the first word after the switches, and the library comes from
+  // E2E_USER_DATA_DIR.
+  const args = cliArgs ? [...appArgs(), 'cli', ...cliArgs] : [...appArgs(), '--remote-debugging-port=0'];
   const options = { env: appEnv(userDataDir, env), timeout: timeoutMs };
   // code is the exit status (0 without an error), or e.g. 'ENOENT' if Electron could not start; signal is set
   // when the timeout killed it.

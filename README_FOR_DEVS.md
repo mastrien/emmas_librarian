@@ -70,6 +70,7 @@ O código da aplicação fica em `emmas_librarian/` (subpasta do repositório). 
 │   │   │   ├── ExportService.ts    # CSV Scopus/Biblioshiny e exportações do projeto
 │   │   │   ├── BackupService.ts    # Backups automáticos com rotação GFS
 │   │   │   └── llm/                # Gateways de LLM (interface comum + provedores)
+│   │   ├── cli/                    # CLI: leitura dos argumentos, execução, códigos de saída (docs/cli.md)
 │   │   ├── errors/                 # AppError e classificação de falhas (igual em todo transporte)
 │   │   └── utils/                  # logger, doi
 │   ├── electron/                   # Adaptador Electron: o shell desktop sobre o núcleo
@@ -77,6 +78,7 @@ O código da aplicação fica em `emmas_librarian/` (subpasta do repositório). 
 │   │   ├── preload.ts              # Ponte segura (contextBridge) entre renderer e main
 │   │   ├── ports/                  # Implementações Electron das portas (safeStorage, app) e o
 │   │   │                           #   FilePicker (diálogos nativos; o núcleo só recebe caminhos)
+│   │   ├── cli/                    # Entrada do modo `cli` no executável do app (sem janela)
 │   │   ├── ipc/
 │   │   │   ├── ipcRegistries.ts    # Raiz de composição do processo principal
 │   │   │   ├── exposeCommandsOverIpc.ts # Expõe o registro do núcleo no ipcMain

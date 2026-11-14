@@ -14,12 +14,27 @@ import { logShutdownTimeline, type ShutdownEmitter } from './shutdownTimeline';
 import { askWhileInstalling } from './updateInstallDialog';
 import { runStartupUpdateGuard } from './updateInstallGuard';
 import { attachExternalLinkGuard } from './externalLinks';
+import { cliArgumentsFrom, keepStdoutForResults, runElectronCli, streamSink } from './cli/electronCli';
+import { openCliLibrary } from '../core/cli/openCliLibrary';
+import { clearAppRunning, markAppRunning } from '../core/cli/appRunningMarker';
+import { SafeStorageSecretStore } from './ports/SafeStorageSecretStore';
 
 const DEV_ORIGIN = 'http://localhost:5173';
 
+// `emmas-librarian cli <command>` runs one command of the library in this process, without a window (#31).
+const cliArgs = cliArgumentsFrom(process.argv, app.isPackaged);
+if (cliArgs) {
+  // stdout carries only the JSON result: logs and stray console.log calls go to stderr or the log file.
+  log.transports.console.level = false;
+  keepStdoutForResults(console);
+  // No window is ever created. On Linux without a display, start with --ozone-platform=headless before
+  // `cli`: Chromium picks its platform before this script runs, so it cannot be set from here.
+  app.disableHardwareAcceleration();
+}
+
 // Configure logging for auto-updater
 autoUpdater.logger = log;
-log.info('App starting...');
+log.info(cliArgs ? 'CLI starting...' : 'App starting...');
 const appStartTime = performance.now();
 
 const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
@@ -120,6 +135,7 @@ function createWindow() {
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
   const isTestOrHeadless =
+    cliArgs !== null ||
     process.env.NODE_ENV === 'test' ||
     process.env.CI === 'true' ||
     process.env.HEADLESS_E2E === 'true' ||
@@ -173,51 +189,76 @@ function shouldQuitForRunningInstaller(): boolean {
 // Electron types `app.on` per event name; the timeline only needs the generic string form.
 logShutdownTimeline(app as unknown as ShutdownEmitter, log);
 
-app
-  .whenReady()
-  .then(() => {
-    if (shouldQuitForRunningInstaller()) {
-      app.quit();
-      return;
-    }
-    try {
-      const { db, safetyService, updateManager } = setupIpcRegistries({ updater: autoUpdater });
+// The CLI opens the same library the app would (or --data-dir), with the OS keychain for the API keys.
+function startCli(args: string[]): void {
+  void runElectronCli(args, {
+    ready: () => app.whenReady(),
+    open: ({ dataDir }) =>
+      openCliLibrary({
+        paths: appPathsIn(dataDir ?? app.getPath('userData')),
+        secrets: new SafeStorageSecretStore(),
+        appVersion: app.getVersion(),
+        env: process.env,
+      }),
+    stdout: streamSink(process.stdout),
+    stderr: streamSink(process.stderr),
+    exit: (code) => app.exit(code),
+  });
+}
 
-      const healthChecker = new UpdateHealthChecker(db, safetyService);
-      const healthResult = healthChecker.runStartupHealthCheck();
-      if (!healthResult.passed) {
-        log.error('Post-update health check failed:', healthResult.error);
-        new RecoveryService(safetyService).handlePostUpdateFailure(
-          healthResult.error || 'Falha na integridade do banco de dados pós-atualização',
-          healthResult.state,
-        );
+function startDesktopApp(): void {
+  app
+    .whenReady()
+    .then(() => {
+      if (shouldQuitForRunningInstaller()) {
+        app.quit();
         return;
       }
+      try {
+        const { db, safetyService, updateManager } = setupIpcRegistries({ updater: autoUpdater });
+        // Lets the CLI see that this library is open before it replaces the database (#31).
+        markAppRunning(app.getPath('userData'), process.pid);
+        app.on('will-quit', () => clearAppRunning(app.getPath('userData'), process.pid));
 
-      createWindow();
+        const healthChecker = new UpdateHealthChecker(db, safetyService);
+        const healthResult = healthChecker.runStartupHealthCheck();
+        if (!healthResult.passed) {
+          log.error('Post-update health check failed:', healthResult.error);
+          new RecoveryService(safetyService).handlePostUpdateFailure(
+            healthResult.error || 'Falha na integridade do banco de dados pós-atualização',
+            healthResult.state,
+          );
+          return;
+        }
 
-      // Check for updates (opt-in metadata query, does not auto-download)
-      if (!isDev) {
-        updateManager.checkForUpdates().catch((err: unknown) => {
-          log.warn('Background update check failed:', err);
-        });
+        createWindow();
+
+        // Check for updates (opt-in metadata query, does not auto-download)
+        if (!isDev) {
+          updateManager.checkForUpdates().catch((err: unknown) => {
+            log.warn('Background update check failed:', err);
+          });
+        }
+      } catch (err: unknown) {
+        log.error('Error during app startup:', err);
+        console.error('Error during app startup:', err);
+        if (offerUpdateRecovery(err)) return;
+        dialog.showErrorBox('Startup Error', (err as Error).message || String(err));
       }
-    } catch (err: unknown) {
-      log.error('Error during app startup:', err);
-      console.error('Error during app startup:', err);
-      if (offerUpdateRecovery(err)) return;
-      dialog.showErrorBox('Startup Error', (err as Error).message || String(err));
-    }
 
-    app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+      app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+      });
+    })
+    .catch((err) => {
+      log.error('Failed to start app:', err);
+      console.error('Failed to start app:', err);
+      dialog.showErrorBox('Initialization Error', (err as Error).message || String(err));
     });
-  })
-  .catch((err) => {
-    log.error('Failed to start app:', err);
-    console.error('Failed to start app:', err);
-    dialog.showErrorBox('Initialization Error', (err as Error).message || String(err));
-  });
+}
+
+if (cliArgs) startCli(cliArgs);
+else startDesktopApp();
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

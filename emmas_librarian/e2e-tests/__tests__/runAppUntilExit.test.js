@@ -30,6 +30,15 @@ describe('runAppUntilExit', () => {
     });
   });
 
+  it('runs a CLI command on the library: `cli` and its arguments after the app, with no automation mark', async () => {
+    const launcher = new FakeExecFile();
+    await run(launcher, {}, { cliArgs: ['projects:create', 'Tese'] });
+    const [{ args, options }] = launcher.calls;
+    expect(args.slice(-3)).toEqual(['cli', 'projects:create', 'Tese']);
+    expect(args).not.toContain('--remote-debugging-port=0');
+    expect(options.env).toMatchObject({ E2E_USER_DATA_DIR: '/tmp/emma-data' });
+  });
+
   it('gives the app 60 s by default and the timeout it is given otherwise', async () => {
     const launcher = new FakeExecFile();
     await run(launcher);
