@@ -22,7 +22,7 @@ describe('runAppUntilExit', () => {
     await run(launcher, { E2E_MOCK_RECOVERY_CHOICE: '0' });
     const [{ args, options }] = launcher.calls;
     expect(args).toContain('--remote-debugging-port=0');
-    expect(args[0]).toBe(path.resolve(__dirname, '../../dist-electron/electron/main.js'));
+    expect(args[0]).toBe(path.resolve(__dirname, '../../dist-electron/adapters/electron/main.js'));
     expect(options.env).toMatchObject({
       E2E_USER_DATA_DIR: '/tmp/emma-data',
       E2E_SKIP_RELAUNCH: 'true',

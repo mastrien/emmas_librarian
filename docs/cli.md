@@ -9,7 +9,7 @@ emmas-librarian cli <comando> [argumentos...] [opções]
 Em desenvolvimento, dentro de `emmas_librarian/` e depois de `npx tsc -p tsconfig.electron.json`:
 
 ```bash
-npx electron dist-electron/electron/main.js cli projects:getAll --pretty
+npx electron dist-electron/adapters/electron/main.js cli projects:getAll --pretty
 ```
 
 ## Comandos

@@ -72,7 +72,7 @@ const electron = vi.hoisted(() => ({ userData: '' }));
 vi.mock('electron', () => ({ safeStorage: {}, app: { getPath: () => electron.userData }, dialog: { showSaveDialog: vi.fn() } }));
 ```
 
-### IPC harness — `electron/ipc/__tests__/fakes/`
+### IPC harness — `adapters/electron/ipc/__tests__/fakes/`
 - `FakeIpcMain`: records `handle(channel, fn)`; `invoke(channel, ...args)` calls it like the renderer would.
 - `FakeFileSystem`: in-memory fs for handlers that copy files.
 - `RecordingDouble` (`createRecordingDouble()`): a Proxy where every property is a `vi.fn()` — use for the DB
@@ -82,7 +82,7 @@ vi.mock('electron', () => ({ safeStorage: {}, app: { getPath: () => electron.use
 
 ### Commands and ports of the core — `core/commands/`, `core/ports/__tests__/fakes/`
 Every operation is a command in a `CommandRegistry` (the IPC handlers are generated from it by
-`electron/ipc/exposeCommandsOverIpc.ts`). Test a command without Electron:
+`adapters/electron/ipc/exposeCommandsOverIpc.ts`). Test a command without Electron:
 ```ts
 const commands = new CommandRegistry();
 registerScreeningCommands(commands, new DatabaseAdapter(':memory:'));
@@ -91,7 +91,7 @@ await commands.run(IpcChannel.SCREENING_LABELS_LIST, projectId);
 `buildLibraryCommands(db, { paths: appPathsIn(tempDir), runtime: new FakeAppRuntime(), env: {} })` builds all
 of them over a real library. Port doubles: `FakeSecretStore` (reversible "encryption" for API keys),
 `FakeAppRuntime` (`restarts` counter, fixed version) and, on the Electron side,
-`electron/ports/__tests__/fakes/FakeFilePicker.ts` (the person answering a file dialog) and `FakeNativeDialogs`.
+`adapters/electron/ports/__tests__/fakes/FakeFilePicker.ts` (the person answering a file dialog) and `FakeNativeDialogs`.
 `core/` must not import or mock `electron`: ESLint refuses it.
 
 ## Adding a new double

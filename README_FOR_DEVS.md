@@ -75,7 +75,7 @@ O código da aplicação fica em `emmas_librarian/` (subpasta do repositório). 
 │   │   │                           #   dispositivos pareados, código de pareamento, gateway HTTP
 │   │   ├── errors/                 # AppError e classificação de falhas (igual em todo transporte)
 │   │   └── utils/                  # logger, doi
-│   ├── electron/                   # Adaptador Electron: o shell desktop sobre o núcleo
+│   ├── adapters/electron/                   # Adaptador Electron: o shell desktop sobre o núcleo
 │   │   ├── main.ts                 # Janela, CSP, protocolo emma-pdf://, auto-update, ciclo de vida
 │   │   ├── preload.ts              # Ponte segura (contextBridge) entre renderer e main
 │   │   ├── ports/                  # Implementações Electron das portas (safeStorage, app) e o

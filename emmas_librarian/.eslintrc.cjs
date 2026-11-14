@@ -58,7 +58,7 @@ module.exports = {
             paths: [{ name: 'electron', message: 'core/ must not import Electron; add a port in core/ports.' }],
             patterns: [
               {
-                group: ['**/electron/**', 'electron/**'],
+                group: ['**/adapters/**', 'adapters/**'],
                 message: 'core/ must not import the Electron adapter; move the code to core/ or inject it.',
               },
             ],

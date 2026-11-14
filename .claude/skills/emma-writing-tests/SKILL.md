@@ -80,7 +80,7 @@ Group with `describe` by feature area. One behavior per test, arrange/act/assert
 
 - `src/**/__tests__/X.test.tsx` next to the component/hook; `X.behavior.test.tsx` for characterization suites.
 - `src/utils/__tests__/`, `src/hooks/*.test.ts` for pure helpers and hooks.
-- `core/**/__tests__/` for repositories and services, `electron/**/__tests__/` for IPC handlers and the app
+- `core/**/__tests__/` for repositories and services, `adapters/electron/**/__tests__/` for IPC handlers and the app
   shell; `core/database/__tests__/support/`
   for shared data fixtures (e.g. `fullProjectFixture.ts`).
 - End-to-end flows: see the `emma-e2e-tests` skill.

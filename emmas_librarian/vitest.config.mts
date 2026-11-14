@@ -29,18 +29,18 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      include: ['electron/**/*', 'core/**/*', 'src/**/*', 'mobile/src/**/*'],
+      include: ['adapters/**/*', 'core/**/*', 'src/**/*', 'mobile/src/**/*'],
       exclude: [
-        'electron/**/__tests__/**',
+        'adapters/**/__tests__/**',
         'core/**/__tests__/**',
         'src/**/__tests__/**',
         'mobile/src/**/__tests__/**',
         // Entry point and the thin wrapper around pdf.js, which needs a real browser canvas (covered by E2E).
         'mobile/src/main.tsx',
         'mobile/src/pdf/pdfDocument.ts',
-        'electron/preload.ts',
-        'electron/main.ts',
-        'electron/types.ts',
+        'adapters/electron/preload.ts',
+        'adapters/electron/main.ts',
+        'adapters/electron/types.ts',
         'src/main.tsx',
         'src/vite-env.d.ts',
       ],
@@ -50,13 +50,13 @@ export default defineConfig({
         branches: 91,
         functions: 89,
         statements: 93,
-        'electron/**/*': {
+        'adapters/**/*': {
           lines: 95,
           branches: 91,
           functions: 99,
           statements: 95,
         },
-        // The library without a shell (epic #27); it held most of what electron/ covered before the split.
+        // The library without a shell (epic #27); it held most of what adapters/electron/ covered before the split.
         'core/**/*': {
           lines: 96,
           branches: 94,
