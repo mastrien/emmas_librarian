@@ -22,22 +22,22 @@ describe('ChangelogModal', () => {
   });
 
   it('shows the version as the title, under a small "Novidades" label (board 181)', () => {
-    render(<ChangelogModal isOpen={true} version="1.3.1" onClose={vi.fn()} />);
+    render(<ChangelogModal isOpen={true} version="1.4.0" onClose={vi.fn()} />);
 
-    expect(screen.getByRole('heading', { level: 2, name: 'Versão 1.3.1' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Versão 1.4.0' })).toBeInTheDocument();
     expect(screen.getByText('Novidades')).toBeInTheDocument();
   });
 
   it('shows only the current release until "Ver todas as versões" is clicked', () => {
-    render(<ChangelogModal isOpen={true} version="1.3.1" onClose={vi.fn()} />);
+    render(<ChangelogModal isOpen={true} version="1.4.0" onClose={vi.fn()} />);
 
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0);
     expect(screen.getAllByRole('listitem').length).toBeLessThan(10);
     fireEvent.click(screen.getByRole('button', { name: 'Ver todas as versões' }));
 
     expect(screen.queryByRole('button', { name: 'Ver todas as versões' })).toBeNull();
-    expect(screen.getAllByRole('heading', { level: 3 })[0]).toHaveTextContent('Versão 1.3.1 — Correções pequenas');
-    expect(screen.getAllByRole('listitem')).toHaveLength(82);
+    expect(screen.getAllByRole('heading', { level: 3 })[0]).toHaveTextContent('Versão 1.4.0 — Visual novo');
+    expect(screen.getAllByRole('listitem')).toHaveLength(86);
   });
 
   it('keeps inline formatting inside release notes', () => {

@@ -8,6 +8,28 @@ export interface ChangelogRelease {
 /** Release notes shown after an update, newest first. Add new releases at the top. */
 export const CHANGELOG_RELEASES: ChangelogRelease[] = [
   {
+    title: 'Versão 1.4.0 — Visual novo',
+    items: [
+      <>
+        <strong>Telas redesenhadas:</strong> o app inteiro ganhou um visual novo, com barra lateral de módulos, paleta
+        de comandos (Ctrl+K), página inicial com atividade recente, visão geral do projeto, tabela de artigos com
+        inspetor, leitor de PDF, revisão sistemática, investigação com IA, agenda e configurações.
+      </>,
+      <>
+        <strong>Janelas:</strong> todas as janelas usam a mesma base, com fechar pelo X ou pelo Esc e rolagem quando o
+        conteúdo é grande. A janela de chave de API agora recebe a chave ali mesmo, sem sair da busca.
+      </>,
+      <>
+        <strong>Termos de uso:</strong> cobrem as sete bases de busca e dizem o que cada uma permite sobre IA. Scopus,
+        Web of Science e IEEE Xplore têm restrições; o texto ainda não foi revisado por um advogado e traz esse aviso.
+      </>,
+      <>
+        <strong>Correções:</strong> links do diário abrem no navegador, passar o mouse sobre um destaque no leitor não
+        apaga mais a página, e &quot;Desmarcar todos&quot; aparece na lista de pendentes da revisão.
+      </>,
+    ],
+  },
+  {
     title: 'Versão 1.3.1 — Correções pequenas',
     items: [
       <>

@@ -1,5 +1,5 @@
 /** The version of the app in which these terms were last changed (shown as "Atualizado na versão …", board 174). */
-export const TERMS_VERSION = '1.3.2';
+export const TERMS_VERSION = '1.4.0';
 
 /**
  * The red notice shown in the terms and beside the IEEE key field: the summaries on this page were not reviewed by a
