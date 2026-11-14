@@ -259,7 +259,7 @@ export const SearchPage: React.FC = () => {
         <ApiKeyRequiredDialog
           database={missingKeyDb}
           onCancel={() => setMissingKeyDb(null)}
-          onOpenSettings={() => navigate('/settings')}
+          onOpenSettings={() => navigate('/settings/keys')}
           onKeySaved={adoptSavedKey}
         />
       )}

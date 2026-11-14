@@ -558,7 +558,7 @@ describe('AskPage (#53)', () => {
         await chooseProject('Revisão');
 
         expect(await screen.findByText(/Eles vieram de nomic-embed-text \(Ollama\)/)).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Configurações' })).toHaveAttribute('href', '/settings');
+        expect(screen.getByRole('link', { name: 'Configurações' })).toHaveAttribute('href', '/settings/ai');
       });
 
       it('says nothing of a previous model it does not know', async () => {

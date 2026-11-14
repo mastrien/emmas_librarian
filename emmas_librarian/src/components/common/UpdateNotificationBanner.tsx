@@ -28,7 +28,7 @@ export const UpdateNotificationBanner: React.FC<UpdateNotificationBannerProps> =
     setDownloading(true);
     try {
       await onDownload();
-      navigate('/settings');
+      navigate('/settings/updates');
     } catch {
       setDownloading(false);
     }
@@ -80,7 +80,7 @@ export const UpdateNotificationBanner: React.FC<UpdateNotificationBannerProps> =
 
         <button
           type="button"
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate('/settings/updates')}
           style={{
             backgroundColor: 'transparent',
             color: '#ffffff',

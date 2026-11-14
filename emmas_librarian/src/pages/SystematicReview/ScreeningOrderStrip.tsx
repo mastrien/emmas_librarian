@@ -133,7 +133,7 @@ const GenerateOffer: React.FC<{ order: ScreeningOrder; firstTime: boolean }> = (
       {plan.previousModel && (
         <span data-testid="previous-vector-model">
           Prefere não gerar agora? Os vetores atuais vieram de {embeddingModelName(plan.previousModel)}: volte a esse
-          modelo em <Link to="/settings">Configurações</Link>.
+          modelo em <Link to="/settings/ai">Configurações</Link>.
         </span>
       )}
       <div>

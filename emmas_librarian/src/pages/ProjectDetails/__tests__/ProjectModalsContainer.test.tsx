@@ -269,6 +269,6 @@ describe('ProjectModalsContainer', () => {
     expect(defaultProps.setShowKeyAlert).toHaveBeenCalledWith(false);
 
     fireEvent.click(screen.getByText('Usar outro provedor'));
-    expect(mockNavigate).toHaveBeenCalledWith('/settings');
+    expect(mockNavigate).toHaveBeenCalledWith('/settings/keys');
   });
 });

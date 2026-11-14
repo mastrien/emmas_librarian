@@ -141,7 +141,7 @@ describe('the predicted order in the guided screening (#55)', () => {
     await guided(service);
 
     expect(screen.getByTestId('previous-vector-model')).toHaveTextContent('nomic-embed-text (Ollama)');
-    expect(within(screen.getByTestId('previous-vector-model')).getByRole('link')).toHaveAttribute('href', '/settings');
+    expect(within(screen.getByTestId('previous-vector-model')).getByRole('link')).toHaveAttribute('href', '/settings/ai');
   });
 
   it('says how many examples are missing, keeping the original order', async () => {

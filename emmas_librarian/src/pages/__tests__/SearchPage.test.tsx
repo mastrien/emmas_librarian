@@ -167,7 +167,7 @@ describe('SearchPage', () => {
       fireEvent.click(configBtn);
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/settings');
+    expect(mockNavigate).toHaveBeenCalledWith('/settings/keys');
   });
 
   it('handles query translation and custom queries', async () => {

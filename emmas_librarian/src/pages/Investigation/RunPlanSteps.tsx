@@ -21,7 +21,7 @@ export const ModelStep: React.FC<RunPlan> = (plan) => (
     <section className="inv-card inv-plan" aria-label="Modelo e custo">
       <span className="inv-section-title">Modelo</span>
       <span className="inv-plan__value">{plan.modelLabel}</span>
-      <Link to="/settings">Trocar em Configurações</Link>
+      <Link to="/settings/ai">Trocar em Configurações</Link>
     </section>
     <section className="inv-card inv-plan" aria-label="Chamadas">
       <span className="inv-section-title">Chamadas</span>

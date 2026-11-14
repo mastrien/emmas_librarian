@@ -134,7 +134,7 @@ export const AskIndexNotice: React.FC<{
                 <>
                   {' '}
                   Prefere não recalcular? Eles vieram de {embeddingModelName(coverage.previousModel)}: volte a esse
-                  modelo em <Link to="/settings">Configurações</Link>.
+                  modelo em <Link to="/settings/ai">Configurações</Link>.
                 </>
               )}
             </span>

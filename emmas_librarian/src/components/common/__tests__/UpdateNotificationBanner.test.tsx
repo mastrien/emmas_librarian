@@ -54,7 +54,7 @@ describe('UpdateNotificationBanner Component', () => {
 
     expect(onDownload).toHaveBeenCalledTimes(1);
     await Promise.resolve();
-    expect(mockNavigate).toHaveBeenCalledWith('/settings');
+    expect(mockNavigate).toHaveBeenCalledWith('/settings/updates');
   });
 
   it('dismisses banner and sets sessionStorage when clicking close button', () => {
@@ -106,6 +106,6 @@ describe('UpdateNotificationBanner Component', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Ver Notas' }));
 
-    expect(mockNavigate).toHaveBeenCalledWith('/settings');
+    expect(mockNavigate).toHaveBeenCalledWith('/settings/updates');
   });
 });
