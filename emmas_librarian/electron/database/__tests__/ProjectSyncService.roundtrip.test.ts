@@ -100,6 +100,13 @@ describe('ProjectSyncService export → import round trip', () => {
     expect(pathOf(second)).toBe(pathOf(first));
   });
 
+  it('writes the format version first in project.json (#30)', async () => {
+    await roundTrip();
+
+    const projectJson = JSON.parse(new AdmZip(electron.savePath).readAsText('project.json')) as object;
+    expect(Object.entries(projectJson)[0]).toEqual(['formatVersion', 2]);
+  });
+
   it('exports and restores project document files', async () => {
     const projectId = await roundTrip();
 
@@ -164,6 +171,21 @@ describe('ProjectSyncService importing hand-made or older files', () => {
     const sql = `SELECT r.answer, r.review_status, r.reviewed_answer FROM investigation_results r
       JOIN massive_investigations m ON m.id = r.investigation_id WHERE m.project_id = ?`;
     expect(one(sql, projectId)).toEqual({ answer: 'R', review_status: 'pending', reviewed_answer: null });
+  });
+
+  it('imports a file without formatVersion as format 1 (#30)', async () => {
+    expect(minimal).not.toHaveProperty('formatVersion');
+
+    const projectId = Number(await service.importProject(writeProjectFile(minimal)));
+
+    expect(one('SELECT name FROM projects WHERE id = ?', projectId).name).toBe('Velho (Importado)');
+  });
+
+  it('refuses a file written in a newer format and imports nothing from it', async () => {
+    const newer = writeProjectFile({ ...minimal, formatVersion: 99 });
+
+    await expect(service.importProject(newer)).rejects.toThrow('formato 99');
+    expect(one('SELECT COUNT(*) AS total FROM projects').total).toBe(0);
   });
 
   it('rejects an archive without project.json', async () => {

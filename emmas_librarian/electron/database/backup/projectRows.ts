@@ -6,6 +6,8 @@ import { rowsOfProject, type SqlRow } from './rowCopy';
  * format of .emmapcarc files, so they must stay stable; older files may lack the optional lists.
  */
 export interface ProjectRows {
+  /** Written on export since #30; files from before it lack the field and are version 1. */
+  formatVersion?: number;
   project: SqlRow;
   articles: SqlRow[];
   searchHistory: SqlRow[];

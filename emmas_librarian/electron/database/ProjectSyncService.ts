@@ -6,6 +6,7 @@ import { DatabaseAdapter } from './DatabaseAdapter';
 import { writeArchive } from './backup/archiveFile';
 import { readProjectRows, type ProjectRows } from './backup/projectRows';
 import { insertProjectRows } from './backup/projectImport';
+import { assertReadableProjectFormat, PROJECT_FORMAT_VERSION } from './backup/projectFileFormat';
 
 const PROJECT_FILTERS = [{ name: "Emma's Librarian Project", extensions: ['emmapcarc'] }];
 const PDF_FOLDER = 'pdfs';
@@ -40,7 +41,7 @@ export class ProjectSyncService {
       const rows = readProjectRows(this.dbAdapter.getDB(), projectId, { includeGlobalQuestionSets: true });
       if (!rows) throw new Error(`Projeto não encontrado (id ${projectId})`);
       const zip = new AdmZip();
-      zip.addFile('project.json', Buffer.from(JSON.stringify(rows, null, 2), 'utf-8'));
+      zip.addFile('project.json', Buffer.from(projectJsonOf(rows), 'utf-8'));
       addStoredFiles(zip, rows.articles, PDF_FOLDER);
       addStoredFiles(zip, rows.projectDocs, DOCUMENT_FOLDER);
       writeArchive(zip, filePath);
@@ -99,5 +100,12 @@ export class ProjectSyncService {
 function readProjectJson(zip: AdmZip): ProjectRows {
   const entry = zip.getEntry('project.json');
   if (!entry) throw new Error('Arquivo de projeto inválido (.emmapcarc não contém project.json)');
-  return JSON.parse(entry.getData().toString('utf8')) as ProjectRows;
+  const rows = JSON.parse(entry.getData().toString('utf8')) as ProjectRows;
+  assertReadableProjectFormat(rows);
+  return rows;
+}
+
+// formatVersion goes first so a reader can decide how to read the rest before parsing it all (#30).
+function projectJsonOf(rows: ProjectRows): string {
+  return JSON.stringify({ formatVersion: PROJECT_FORMAT_VERSION, ...rows }, null, 2);
 }
