@@ -916,7 +916,7 @@ textarea {
 
 .batch-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.5rem;
   min-height: 42px;
@@ -927,6 +927,7 @@ textarea {
   color: #fff;
 }
 .batch-bar__count {
+  white-space: nowrap;
   font-weight: 700;
   margin-right: auto;
 }
@@ -944,6 +945,28 @@ textarea {
   font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
+}
+.batch-bar button {
+  flex: none;
+  white-space: nowrap;
+}
+/* The full bar needs about 1060px; below that (the default window is one of them) or while a download runs, the
+   action buttons keep only their icon and the label stays for screen readers and the tooltip. */
+.batch-bar--busy .batch-bar__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+@media (max-width: 1500px) {
+  .batch-bar .batch-bar__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
 }
 .batch-bar button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.26);

@@ -36,6 +36,21 @@ const DownloadProgress: React.FC<{ progress: { done: number; total: number }; on
   </>
 );
 
+interface BarButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  disabled: boolean;
+}
+
+// One row, always (validation, step 7): when the bar is narrow or a download is running, the label turns into a
+// tooltip and only the icon stays; the label remains in the accessible name.
+const BarButton: React.FC<BarButtonProps> = ({ icon, label, onClick, disabled }) => (
+  <button type="button" onClick={onClick} disabled={disabled} title={label}>
+    {icon} <span className="batch-bar__label">{label}</span>
+  </button>
+);
+
 /**
  * Takes the place of the result line while multi-select is on: how many articles are selected and
  * what can be done to all of them at once.
@@ -58,31 +73,25 @@ export const BatchBar: React.FC<BatchBarProps> = ({
   const none = selectedCount === 0;
   const downloading = openAccessProgress !== null;
   return (
-    <div className="batch-bar" role="region" aria-label="Ações para os artigos selecionados">
+    <div
+      className={`batch-bar${downloading ? ' batch-bar--busy' : ''}`}
+      role="region"
+      aria-label="Ações para os artigos selecionados"
+    >
       <span className="batch-bar__count" aria-live="polite">
         {none ? 'Nenhum selecionado' : `${selectedCount} ${selectedCount === 1 ? 'selecionado' : 'selecionados'}`}
       </span>
       <button type="button" onClick={onToggleAll}>
         {allSelected ? 'Desmarcar todos' : 'Selecionar todos'}
       </button>
-      <button type="button" onClick={onMarkRead} disabled={none}>
-        <CheckCircle size={15} /> Marcar como lido
-      </button>
-      <button type="button" onClick={onArchive} disabled={none}>
-        <Archive size={15} /> Arquivar…
-      </button>
-      <button type="button" onClick={onExploreCitations} disabled={none}>
-        <Network size={16} /> Explorar citações
-      </button>
-      <button type="button" onClick={onCite} disabled={none}>
-        <CopyPlus size={15} /> Citar em massa
-      </button>
+      <BarButton icon={<CheckCircle size={15} />} label="Marcar como lido" onClick={onMarkRead} disabled={none} />
+      <BarButton icon={<Archive size={15} />} label="Arquivar…" onClick={onArchive} disabled={none} />
+      <BarButton icon={<Network size={16} />} label="Explorar citações" onClick={onExploreCitations} disabled={none} />
+      <BarButton icon={<CopyPlus size={15} />} label="Citar em massa" onClick={onCite} disabled={none} />
       {downloading ? (
         <DownloadProgress progress={openAccessProgress} onCancel={onCancelOpenAccess} />
       ) : (
-        <button type="button" onClick={onFetchOpenAccess} disabled={none}>
-          <Globe size={15} /> Baixar PDFs abertos
-        </button>
+        <BarButton icon={<Globe size={15} />} label="Baixar PDFs abertos" onClick={onFetchOpenAccess} disabled={none} />
       )}
       <button type="button" onClick={onExit} aria-label="Sair da seleção" title="Sair da seleção">
         <X size={15} />

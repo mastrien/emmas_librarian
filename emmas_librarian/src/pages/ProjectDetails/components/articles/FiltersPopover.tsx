@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { SlidersHorizontal } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import type { ProjectFiltering } from '../../hooks/useProjectFiltering';
 import { activeFilters, clearedFilters } from '../../hooks/articleFilters';
 import { AvailabilityGroup, DatabasesGroup, DocTypeGroup, KeywordsGroup, type GroupProps } from './filterGroups';
@@ -63,7 +63,7 @@ export const FiltersPopover: React.FC<{ filtering: ProjectFiltering }> = ({ filt
         aria-label={active ? `Filtros (${active} ativos)` : 'Filtros'}
         onClick={() => (open ? close() : setOpen(true))}
       >
-        <SlidersHorizontal size={16} /> Filtros
+        <Filter size={16} /> Filtros
         {active > 0 && <span className="filter-count">{active}</span>}
       </button>
       {open && (

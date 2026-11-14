@@ -115,3 +115,7 @@ O texto novo cita recursos sem imagem. Só vale capturar se o autor quiser:
 
 - O texto do Capítulo 1 tem um `[CONFIRMAR]` sobre os números do card do projeto de exemplo (89 ativos, 7 lidos, 17 com PDF, nenhum arquivado), porque o exemplo hoje tem decisões de triagem (o card mostra "Revisão sistemática" e a barra de triagem). Conferir ao capturar `cap1-dashboard-topo.png` e atualizar a frase.
 - Os números de 19 excluídos e "nenhum arquivado" do exemplo se contradizem entre os Capítulos 1 e 9 (excluir arquiva o artigo). Resolver ao fixar o estado do projeto de exemplo para as capturas.
+
+## Capturas feitas pelo autor (2026-11-13)
+
+As cinco imagens "só o autor" abaixo foram recapturadas por ele e copiadas para `landing_page/assets/tutoriais/`: `cap2-busca-concluida.png`, `cap2-explorar-citacoes.png`, `cap4-baixando.png`, `cap4-relatorio.png` e `cap9-avaliar.png`. O texto e os `alt` do tutorial foram ajustados aos números novos (busca com OpenAlex e Crossref, 10 artigos no download, avaliação com gemini/gemini-2.5-flash). Falta só `cap10-resposta.png` e `cap10-trecho.png`.

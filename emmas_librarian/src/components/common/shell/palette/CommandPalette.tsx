@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { Modal } from '../../Modal';
 import { buildPaletteCommands, filterPaletteCommands, type PaletteCommand } from './paletteCommands';
+import { paletteIcon } from './paletteIcons';
 import { usePaletteSources } from './usePaletteSources';
 import { useRegisteredCommands } from './PageCommandsContext';
 import './palette.css';
@@ -16,6 +17,11 @@ interface PaletteResultsProps {
   onPick: (command: PaletteCommand) => void;
   onHover: (index: number) => void;
 }
+
+// The icon comes from a fixed table of components; createElement keeps the lint rule about components created
+// during render from mistaking the lookup for one.
+const OptionIcon: React.FC<{ command: PaletteCommand }> = ({ command }) =>
+  React.createElement(paletteIcon(command), { size: 16, 'aria-hidden': true, className: 'palette-option__icon' });
 
 const PaletteResults: React.FC<PaletteResultsProps> = ({ results, activeIndex, onPick, onHover }) => (
   <ul id={LISTBOX_ID} role="listbox" aria-label="Resultados" className="palette-results">
@@ -35,6 +41,7 @@ const PaletteResults: React.FC<PaletteResultsProps> = ({ results, activeIndex, o
           onMouseMove={() => onHover(index)}
           onClick={() => onPick(command)}
         >
+          <OptionIcon command={command} />
           <span className="palette-option__label">{command.label}</span>
           {command.hint && <span className="palette-option__hint">{command.hint}</span>}
         </li>
