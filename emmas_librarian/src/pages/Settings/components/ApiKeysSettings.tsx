@@ -1,4 +1,6 @@
 import React from 'react';
+import { LegalReviewNotice } from '../../../components/common/LegalReviewNotice';
+import { IEEE_AI_WARNING } from '../../Terms/termsContent';
 import { IEEE_EXPERIMENTAL_NOTE } from '../../Search/searchQueries';
 import { SettingsCard } from './SettingsCard';
 import { ProviderRow } from './ai/ProviderRows';
@@ -53,7 +55,12 @@ export const ApiKeysSettings: React.FC<ApiKeysSettingsProps> = (props) => (
         placeholder="Insira sua chave IEEE..."
         value={props.ieeeKey}
         onChange={props.setIeeeKey}
-        hint={`Gratuita, com cadastro em developer.ieee.org. A IEEE aprova cada chave manualmente. ${IEEE_EXPERIMENTAL_NOTE}`}
+        hint={
+          <>
+            {`Gratuita, com cadastro em developer.ieee.org. A IEEE aprova cada chave manualmente. ${IEEE_EXPERIMENTAL_NOTE}`}
+            <LegalReviewNotice detail={IEEE_AI_WARNING} compact />
+          </>
+        }
       />
     </div>
   </SettingsCard>

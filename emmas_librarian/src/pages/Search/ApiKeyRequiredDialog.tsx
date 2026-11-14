@@ -4,6 +4,8 @@ import { Modal } from '../../components/common/Modal';
 import { ModalFooter } from '../../components/common/ModalFooter';
 import { Button } from '../../components/common/Button';
 import { TextField } from '../../components/common/fields';
+import { LegalReviewNotice } from '../../components/common/LegalReviewNotice';
+import { IEEE_AI_WARNING } from '../Terms/termsContent';
 import { useProjectService } from '../../contexts/ServicesContext';
 import { API_KEY_SETTINGS, isKeyedDatabase, SEARCH_DATABASES } from './searchQueries';
 import '../../components/common/keyRequired/keyRequired.css';
@@ -64,6 +66,7 @@ export const ApiKeyRequiredDialog: React.FC<ApiKeyRequiredDialogProps> = (props)
           onKeyDown={(e) => e.key === 'Enter' && save()}
         />
       </div>
+      {props.database === 'ieee' && <LegalReviewNotice detail={IEEE_AI_WARNING} compact />}
       {error && (
         <p role="alert" className="key-required-error">
           {error}

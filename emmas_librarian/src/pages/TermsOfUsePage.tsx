@@ -2,6 +2,7 @@ import React from 'react';
 import { AlertTriangle, Check } from 'lucide-react';
 import { TermsToc } from './Terms/TermsToc';
 import { BASE_POLICIES, TERMS_VERSION, type BasePolicy } from './Terms/termsContent';
+import { LegalReviewNotice } from '../components/common/LegalReviewNotice';
 import './Terms/terms.css';
 
 const PolicyRow: React.FC<{ policy: BasePolicy }> = ({ policy }) => (
@@ -48,6 +49,7 @@ export const TermsOfUsePage: React.FC = () => (
         Quando você usa IA ou bases pagas, as informações vão para os serviços que <strong>você</strong> configurou, com
         as suas chaves.
       </p>
+      <LegalReviewNotice />
       <h2 id="dados-por-base">O que cada base permite</h2>
       <div>
         {BASE_POLICIES.map((policy) => (
