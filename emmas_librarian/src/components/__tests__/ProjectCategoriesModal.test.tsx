@@ -126,4 +126,14 @@ describe('ProjectCategoriesModal', () => {
     const { container } = render(<ProjectCategoriesModal isOpen={false} projectId={1} onClose={() => {}} />);
     expect(container.innerHTML).toBe('');
   });
+
+  it('says in the subtitle what the categories become and closes with "Concluir" (board 178)', async () => {
+    const onClose = vi.fn();
+    render(<ProjectCategoriesModal isOpen={true} projectId={1} onClose={onClose} />);
+
+    expect(await screen.findByText('Viram colunas na aba Categorias dos artigos.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Concluir' }));
+
+    expect(onClose).toHaveBeenCalledOnce();
+  });
 });

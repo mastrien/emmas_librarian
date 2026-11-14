@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Modal } from '../common/Modal';
+import { ModalFooter } from '../common/ModalFooter';
+import { Button } from '../common/Button';
 import { useProjectService } from '../../contexts/ServicesContext';
 import type { ProjectCategory } from '../../types';
 import { describeError } from '../../utils/describeError';
@@ -120,13 +122,8 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
   return (
     <Modal
       label="Categorias do Projeto"
-      title={
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Tag className="text-primary" size={24} />
-          Categorias do Projeto
-        </span>
-      }
-      description="Crie campos personalizados para classificar os artigos."
+      title="Categorias"
+      description="Viram colunas na aba Categorias dos artigos."
       onClose={onClose}
       width={CATEGORIES_MODAL_WIDTH}
     >
@@ -144,6 +141,9 @@ export const ProjectCategoriesModal: React.FC<ProjectCategoriesModalProps> = ({ 
         {/* The spinner only stands for an empty list: a reload after a change keeps the rows on screen. */}
         {categories.length === 0 ? <EmptyList loading={loading} /> : rows}
       </section>
+      <ModalFooter hint="Cada categoria é editada na própria linha">
+        <Button onClick={onClose}>Concluir</Button>
+      </ModalFooter>
     </Modal>
   );
 };

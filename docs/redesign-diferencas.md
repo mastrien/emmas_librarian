@@ -151,6 +151,14 @@ Feito: **Citar artigo** (título "Citar artigo" com o título do artigo embaixo;
 - [ ] **Explorar citações** no board mostra a lista de referências/quem cita dentro da janela, com "Adicionar" por artigo; o app mostra o volume e passa pelo resumo da busca (decisão do #51: nada entra sem revisão). Só a barra de baixo foi refeita.
 - [ ] O bloco da citação continua com o estilo de antes (sem a fonte serifada do board); o metadado editável segue no acordeão.
 
+## 178 · Janelas do projeto (#183)
+
+Feito: **PDFs em acesso aberto** (título e "N artigos sem PDF procurados", três números Baixados / Sem versão aberta / Falharam e "Concluir" na barra de baixo; os grupos detalhados continuam embaixo); **Categorias** (título "Categorias", subtítulo, "Concluir" na barra de baixo); **Acesso rápido** (título).
+
+- [ ] **Categorias**: o board mostra uma lista com alça para arrastar, tipo como selo e "⋯"; o app mantém as linhas de antes (tipo como selo, lápis e lixeira, edição na própria linha) e não reordena por arrastar. O subtítulo do board diz que as categorias "viram perguntas na investigação", o que o app ainda não faz; o texto só fala da aba Categorias.
+- [ ] **Acesso rápido**: o board agrupa por nome do grupo ("WorCAP", "Reuniões"), com alças e "⋯" por item, e botões "Link ou arquivo" e "Novo grupo". O app mantém a lista com arrastar para reordenar e o formulário embaixo; só o título mudou.
+- [ ] **PDFs em acesso aberto**: "Falharam" soma as falhas e as cópias abertas que o download automático não conseguiu baixar (o exemplo do board, "o link aberto devolveu uma página, não um PDF", é desse caso). O botão "Abrir link" do board é o "Abrir a página" que já existia.
+
 ## Próximas telas (este documento ganha uma seção por PR)
 
 175–181 Janelas (restante)
