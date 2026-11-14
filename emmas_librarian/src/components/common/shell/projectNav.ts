@@ -54,7 +54,7 @@ export const PROJECT_NAV: readonly ProjectNavGroup[] = [
   {
     title: 'Análise',
     items: [
-      { segment: 'review', label: 'Revisão sistemática' },
+      { segment: 'review', label: 'Revisão sistemática', slot: true },
       { segment: 'investigation', label: 'Investigação com IA', count: 'investigations', slot: true },
     ],
   },

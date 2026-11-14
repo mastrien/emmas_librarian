@@ -6,16 +6,21 @@ import { ServicesProvider } from '../../../../contexts/ServicesContext';
 import type { FakeProjectService } from '../../../../services/__tests__/fakes/FakeProjectService';
 import { prismaService } from './prismaTestData';
 import { FakeDialogsProvider } from '../../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
+import { ProjectNavSlotHost, ProjectNavSlotProvider } from '../../../../components/common/shell/projectNavSlot';
 
 function renderPrisma(service: FakeProjectService, path = '/projects/1/review/prisma') {
   render(
     <MemoryRouter initialEntries={[path]}>
       <ServicesProvider apiService={service}>
         <FakeDialogsProvider>
-          <Routes>
-            <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
-            <Route path="/projects/:id/review/prisma" element={<SystematicReviewPage tab="prisma" />} />
-          </Routes>
+          {/* The spot the project sidebar gives the review for its parts (board 164). */}
+          <ProjectNavSlotProvider>
+            <ProjectNavSlotHost />
+            <Routes>
+              <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
+              <Route path="/projects/:id/review/prisma" element={<SystematicReviewPage tab="prisma" />} />
+            </Routes>
+          </ProjectNavSlotProvider>
         </FakeDialogsProvider>
       </ServicesProvider>
     </MemoryRouter>,

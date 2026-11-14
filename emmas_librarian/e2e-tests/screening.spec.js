@@ -27,7 +27,7 @@ test('screens articles on the review page and the guided screening, archiving ex
     await expect(window.getByTestId('main-articles-table').getByText('Artigo gama')).toBeVisible();
 
     await window.getByRole('link', { name: /Revisão sistemática/ }).click();
-    await expect(window.getByRole('heading', { name: 'Revisão sistemática' })).toBeVisible();
+    await expect(window.getByRole('heading', { level: 1, name: 'Triagem' })).toBeVisible();
     await pickLabel(window, 'Artigo alfa', 'Excluído');
     await expect(window.getByRole('status').filter({ hasText: 'arquivado no projeto' })).toBeVisible();
     await pickLabel(window, 'Artigo beta', 'Incluso');
@@ -50,7 +50,8 @@ test('screens articles on the review page and the guided screening, archiving ex
 
     // On the project page the exclusion is an archived article with the label as reason; restoring it there
     // brings it back to the review as undecided.
-    await window.getByRole('link', { name: /Voltar ao projeto/ }).click();
+    // The review has no back link since board 164: the sidebar leads to the articles.
+    await window.getByTestId('tab-articles').click();
     // Since the redesign the archived articles are a status of the one list (board 153).
     const archived = window
       .getByRole('group', { name: 'Status dos artigos' })

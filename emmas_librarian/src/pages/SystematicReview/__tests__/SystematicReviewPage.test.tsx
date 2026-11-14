@@ -6,16 +6,21 @@ import { ServicesProvider } from '../../../contexts/ServicesContext';
 import type { FakeProjectService } from '../../../services/__tests__/fakes/FakeProjectService';
 import { EXCLUDED, INCLUDED, MAYBE, reviewArticle, screeningService, storedDecision } from './screeningTestData';
 import { FakeDialogsProvider } from '../../../components/common/dialogs/__tests__/fakes/FakeDialogs';
+import { ProjectNavSlotHost, ProjectNavSlotProvider } from '../../../components/common/shell/projectNavSlot';
 
 function renderReview(service: FakeProjectService) {
   render(
     <MemoryRouter initialEntries={['/projects/1/review']}>
       <ServicesProvider apiService={service}>
         <FakeDialogsProvider>
-          <Routes>
-            <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
-            <Route path="/projects/:id" element={<div>Página do projeto</div>} />
-          </Routes>
+          {/* The spot the project sidebar gives the review for its parts (board 164). */}
+          <ProjectNavSlotProvider>
+            <ProjectNavSlotHost />
+            <Routes>
+              <Route path="/projects/:id/review" element={<SystematicReviewPage />} />
+              <Route path="/projects/:id" element={<div>Página do projeto</div>} />
+            </Routes>
+          </ProjectNavSlotProvider>
         </FakeDialogsProvider>
       </ServicesProvider>
     </MemoryRouter>,
@@ -38,7 +43,7 @@ describe('SystematicReviewPage (#49)', () => {
     );
     renderReview(service);
 
-    expect(await screen.findByRole('heading', { name: 'Revisão sistemática' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Triagem' })).toBeInTheDocument();
     expect(within(section(/^Incluso \(1\)/)).getByText('GPM')).toBeInTheDocument();
     expect(within(section(/^Em dúvida \(1\)/)).getByText('MetNet')).toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Contagem da triagem' })).toHaveTextContent('1 incluídos');
@@ -113,12 +118,25 @@ describe('SystematicReviewPage (#49)', () => {
     await waitFor(() => expect(service.decideScreening).toHaveBeenCalledWith([1], INCLUDED, 'full', 'ver métodos'));
   });
 
-  it('goes back to the project page', async () => {
-    renderReview(screeningService([]));
+  // Board 164: the tabs became the review's items in the project sidebar; the way back is the sidebar too.
+  it('lists its parts in the project sidebar, the screening with what is left to decide', async () => {
+    renderReview(screeningService([reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')]));
 
-    fireEvent.click(await screen.findByRole('link', { name: /Voltar ao projeto/ }));
+    const parts = await screen.findByRole('navigation', { name: 'Partes da revisão' });
+    expect(within(parts).getByRole('link', { name: 'Triagem 2 sem decisão' })).toHaveAttribute('aria-current', 'page');
+    expect(within(parts).getByRole('link', { name: 'Diagrama PRISMA' })).toHaveAttribute(
+      'href',
+      '/projects/1/review/prisma',
+    );
+    expect(screen.queryByRole('link', { name: /Voltar ao projeto/ })).not.toBeInTheDocument();
+  });
 
-    expect(screen.getByText('Página do projeto')).toBeInTheDocument();
+  it('says how many articles were decided under the title', async () => {
+    renderReview(
+      screeningService([reviewArticle(1, 'GPM'), reviewArticle(2, 'IMERG')], [storedDecision(1, INCLUDED, 'title')]),
+    );
+
+    expect(await screen.findByText('1 de 2 decididos')).toBeInTheDocument();
   });
 
   it('closes a section and a label menu', async () => {
