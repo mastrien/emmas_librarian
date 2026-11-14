@@ -1,11 +1,54 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { useProjectService } from '../contexts/ServicesContext';
-import { Plus, Loader2 } from 'lucide-react';
+import { useDialogs } from '../components/common/dialogs/DialogProvider';
 import { describeError } from '../utils/describeError';
+import { importProjectWithFeedback } from '../utils/importProjectWithFeedback';
+import './newProject.css';
 
+/** What comes after creating a project (board 152), in the order the work usually goes. */
+const NEXT_STEPS: readonly { title: string; note: string }[] = [
+  {
+    title: 'Buscar nas bases',
+    note: 'OpenAlex, Crossref, Scopus, Web of Science, Europe PMC, arXiv e IEEE numa só busca.',
+  },
+  { title: 'Ou trazer o que já tem', note: 'Solte PDFs ou copie artigos de outro projeto.' },
+  { title: 'Escrever os critérios', note: 'Eles guiam a triagem e as sugestões da IA.' },
+];
+
+// Raw (non-AppError) IPC failures carry Electron's "Error invoking remote method '<channel>':" prefix.
+const creationError = (err: unknown): string =>
+  describeError(err, 'Erro ao criar projeto').replace(/^Error:\s*Error\s*invoking\s*remote\s*method\s*'.*?':\s*/i, '');
+
+const NextSteps: React.FC = () => (
+  <aside className="new-project__after" aria-label="Depois de criar">
+    <span className="new-project__eyebrow">Depois de criar</span>
+    <ol className="new-project__steps">
+      {NEXT_STEPS.map((step, index) => (
+        <li key={step.title} className="new-project__step">
+          <span className="new-project__step-number" aria-hidden="true">
+            {index + 1}
+          </span>
+          <div>
+            <strong>{step.title}</strong>
+            <span>{step.note}</span>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </aside>
+);
+
+/**
+ * "Novo projeto" (board 152): the name, with the way to import an existing project and, beside it, what usually
+ * comes after creating one. Enter creates; Cancelar goes back to the home.
+ *
+ * @example <Route path="/new-project" element={<NewProjectPage />} />
+ */
 export const NewProjectPage: React.FC = () => {
   const projectService = useProjectService();
+  const { inform } = useDialogs();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,87 +64,63 @@ export const NewProjectPage: React.FC = () => {
       const project = await projectService.createProject(name);
       navigate(`/projects/${project.id}`);
     } catch (err: unknown) {
-      // Raw (non-AppError) IPC failures carry Electron's "Error invoking remote method '<channel>':" prefix.
-      setError(
-        describeError(err, 'Erro ao criar projeto').replace(
-          /^Error:\s*Error\s*invoking\s*remote\s*method\s*'.*?':\s*/i,
-          '',
-        ),
-      );
+      setError(creationError(err));
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="fade-in" style={{ maxWidth: '600px', margin: '4rem auto' }}>
-      <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
-        <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>Novo Projeto</h1>
-        <p style={{ margin: 0, color: 'var(--text-muted)' }}>Dê um nome para sua nova biblioteca de artigos.</p>
-      </div>
+  const handleImport = async () => {
+    const newId = await importProjectWithFeedback(projectService, inform);
+    if (newId) navigate(`/projects/${newId}`);
+  };
 
-      <form
-        onSubmit={handleCreate}
-        className="card"
-        style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}
-      >
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-heading)' }}>
-            Nome do Projeto
-          </label>
+  return (
+    <div className="fade-in new-project">
+      <form onSubmit={handleCreate} className="card new-project__card">
+        <div className="new-project__titles">
+          <h1>Novo projeto</h1>
+          <p>Um projeto reúne os artigos, as buscas e as decisões de uma revisão.</p>
+        </div>
+
+        <div className="new-project__field">
+          <label htmlFor="new-project-name">Nome</label>
           <input
+            id="new-project-name"
             type="text"
+            className="input-field"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ex: Sistemas de Recomendação na Educação"
-            style={{
-              width: '100%',
-              padding: '0.8rem 1rem',
-              fontSize: '1rem',
-              border: '1px solid var(--border-color)',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-main)',
-              color: 'var(--text-main)',
-              outline: 'none',
-              transition: 'border-color var(--transition-fast)',
-            }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--color-primary)')}
-            onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border-color)')}
             required
             autoFocus
           />
+          <span className="new-project__hint">Dá para mudar depois, no título do projeto.</span>
         </div>
 
         {error && (
-          <div
-            style={{
-              color: '#ef4444',
-              background: '#fee2e2',
-              padding: '1rem',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid #fca5a5',
-            }}
-          >
+          <div role="alert" className="new-project__error">
             {error}
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={loading || !name.trim()}
-          className="btn-primary"
-          style={{
-            width: '100%',
-            padding: '1rem',
-            fontSize: '1.1rem',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.7 : 1,
-          }}
-        >
-          {loading ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
-          Criar Projeto
-        </button>
+        <div className="new-project__actions">
+          <button type="button" className="btn-ghost new-project__import" onClick={() => void handleImport()}>
+            Importar um projeto (.emmapcarc)
+          </button>
+          <Link to="/" className="btn-ghost">
+            Cancelar
+          </Link>
+          <button type="submit" disabled={loading || !name.trim()} className="btn-primary">
+            {loading && <Loader2 className="animate-spin" size={16} aria-hidden="true" />}
+            Criar projeto
+            <kbd className="new-project__kbd" aria-hidden="true">
+              Enter
+            </kbd>
+          </button>
+        </div>
       </form>
+      <NextSteps />
     </div>
   );
 };
