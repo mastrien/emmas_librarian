@@ -1,17 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { QueryBuilder } from '../components/common/QueryBuilder';
 import { useProjectService } from '../contexts/ServicesContext';
 import { Project, QueryASTNode, DatabaseTranslationMap, QuerySort, SearchHistoryItem, SearchPreview } from '../types';
 import { withPublishedSince } from '../utils/publishedSince';
-import { Search, Loader2 } from 'lucide-react';
 import { SearchSummaryModal } from '../components/modals/SearchSummaryModal';
 import { useDebounce } from '../hooks/useDebounce';
 import { describeError } from '../utils/describeError';
-import { defaultSearchLimits, limitProblems, type SearchLimits } from '../utils/searchLimits';
+import { defaultSearchLimits, limitProblems, maxResults, type SearchLimits } from '../utils/searchLimits';
 import {
   EMPTY_QUERY,
-  SEARCH_DATABASES,
   buildFinalQueries,
   defaultDatabases,
   describeQueryTree,
@@ -24,10 +22,11 @@ import {
   loadSearchApiKeys,
 } from './Search/searchQueries';
 import { DatabaseSelector } from './Search/DatabaseSelector';
-import { QueryTranslationCard } from './Search/QueryTranslationCard';
 import { SearchOptionsCard } from './Search/SearchOptionsCard';
 import { ApiKeyRequiredDialog } from './Search/ApiKeyRequiredDialog';
-import { BackLink } from '../components/common/BackLink';
+import { PageHeader } from '../components/common/PageHeader';
+import { SearchStep } from './Search/SearchStep';
+import { SearchSummaryPanel } from './Search/SearchSummaryPanel';
 import './Search/search.css';
 
 const TRANSLATION_DEBOUNCE_MS = 600;
@@ -41,11 +40,24 @@ const TRANSLATION_DEBOUNCE_MS = 600;
  */
 const RestoredSearchNotice: React.FC<{ searchId: number; isLegacy: boolean }> = ({ searchId, isLegacy }) => (
   <div role="status" className="search-restored">
-    Busca #{searchId} carregada do histórico. Ajuste o que quiser e clique em <strong>Fazer Busca</strong>.
+    Busca #{searchId} carregada do histórico. Ajuste o que quiser e clique em <strong>Fazer busca</strong>.
     {isLegacy &&
       ' Essa busca é de antes do construtor visual ser salvo junto, então a query de cada base veio como query customizada.'}
   </div>
 );
+
+// Ctrl+Enter runs the search from anywhere on the page, as the summary's button says (board 158).
+function useCtrlEnterSubmit(formRef: React.RefObject<HTMLFormElement | null>): void {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey)) return;
+      event.preventDefault();
+      formRef.current?.requestSubmit();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [formRef]);
+}
 
 export const SearchPage: React.FC = () => {
   const projectService = useProjectService();
@@ -73,6 +85,8 @@ export const SearchPage: React.FC = () => {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<SearchApiKeys>({ scopus: '', wos: '', ieee: '' });
   const [missingKeyDb, setMissingKeyDb] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  useCtrlEnterSubmit(formRef);
 
   const applyRestoredSearch = (entry: SearchHistoryItem, restored: RestoredSearch, keys: SearchApiKeys) => {
     const searchId = entry.id;
@@ -180,64 +194,47 @@ export const SearchPage: React.FC = () => {
 
   return (
     <div className="fade-in search-page">
-      <BackLink to={`/projects/${id}`} className="page-back">
-        Voltar ao projeto
-      </BackLink>
-
-      <div className="search-head">
-        <h1>Fazer Nova Busca</h1>
-        <p>Projeto: {project.name}</p>
-      </div>
+      <PageHeader title="Nova busca" subtitle="Uma query, várias bases. Os resultados entram neste projeto." />
 
       {restoredFrom && <RestoredSearchNotice searchId={restoredFrom.id} isLegacy={restoredFrom.isLegacy} />}
 
-      <form onSubmit={handleSearch} className="search-form">
-        <DatabaseSelector selected={selectedDbs} onToggle={toggleDb} />
-
-        <div className="card search-card">
-          <div className="search-builder-head">
-            <label className="search-section-label">Construtor Visual (Árvore Lógica)</label>
-          </div>
-          <div className="search-builder">
-            <QueryBuilder node={ast} onChange={setAst} />
-          </div>
+      <form ref={formRef} onSubmit={handleSearch} className="search-layout">
+        <div className="search-steps">
+          <SearchStep
+            number={1}
+            title="Bases"
+            aside={`${selectedDbs.length} ${selectedDbs.length === 1 ? 'escolhida' : 'escolhidas'}`}
+          >
+            <DatabaseSelector selected={selectedDbs} onToggle={toggleDb} apiKeys={apiKeys} />
+          </SearchStep>
+          <SearchStep number={2} title="Query">
+            <div className="search-builder">
+              <QueryBuilder node={ast} onChange={setAst} />
+            </div>
+          </SearchStep>
+          <SearchStep number={3} title="Opções">
+            <SearchOptionsCard
+              sortBy={sortBy}
+              limits={limits}
+              selected={selectedDbs}
+              onSortByChange={setSortBy}
+              onLimitsChange={setLimits}
+              publishedSince={publishedSince}
+              onPublishedSinceChange={setPublishedSince}
+            />
+          </SearchStep>
         </div>
-
-        <div className="card search-card">
-          <label className="search-section-label search-section-label--block">Tradução e Transparência</label>
-          <div className="search-translations">
-            {selectedDbs.map((dbId) => (
-              <QueryTranslationCard
-                key={dbId}
-                databaseName={SEARCH_DATABASES.find((d) => d.id === dbId)?.label ?? dbId}
-                translation={translations[dbId]}
-                customQuery={customQueries[dbId]}
-                onCustomQueryChange={(query) => setCustomQuery(dbId, query)}
-              />
-            ))}
-          </div>
-        </div>
-
-        <SearchOptionsCard
-          sortBy={sortBy}
-          limits={limits}
+        <SearchSummaryPanel
+          readableQuery={describeQueryTree(ast)}
           selected={selectedDbs}
-          onSortByChange={setSortBy}
-          onLimitsChange={setLimits}
-          publishedSince={publishedSince}
-          onPublishedSinceChange={setPublishedSince}
-        />
-
-        {error && <div className="search-error">{error}</div>}
-
-        <button
-          type="submit"
+          translations={translations}
+          customQueries={customQueries}
+          onCustomQueryChange={setCustomQuery}
+          maxResults={maxResults(limits, selectedDbs)}
+          loading={loading}
           disabled={loading || selectedDbs.length === 0 || limitsBlocked}
-          className={`btn-primary search-submit${loading ? ' is-loading' : ''}`}
-        >
-          {loading ? <Loader2 className="animate-spin" /> : <Search size={22} />}
-          {loading ? 'Pesquisando e extraindo dados (isso pode levar alguns minutos)...' : 'Fazer Busca'}
-        </button>
+          error={error}
+        />
       </form>
 
       {preview && (

@@ -91,7 +91,7 @@ describe('SearchPage', () => {
   it('renders project name and loads initial databases', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument();
     });
 
     expect(screen.getAllByText('OpenAlex').length).toBeGreaterThan(0);
@@ -105,10 +105,10 @@ describe('SearchPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument();
     });
 
-    const scopusBtn = screen.getByRole('button', { name: /Scopus/i });
+    const scopusBtn = screen.getByRole('button', { name: 'Scopus' });
     await act(async () => {
       fireEvent.click(scopusBtn);
     });
@@ -126,7 +126,7 @@ describe('SearchPage', () => {
   it('asks for the IEEE Xplore key before selecting it, naming the base', async () => {
     fakeService.getSetting.mockResolvedValue(null);
     renderPage();
-    await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: /IEEE Xplore/ }));
 
@@ -139,10 +139,10 @@ describe('SearchPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument();
     });
 
-    const wosBtn = screen.getByRole('button', { name: /Web of Science/i });
+    const wosBtn = screen.getByRole('button', { name: 'Web of Science' });
     await act(async () => {
       fireEvent.click(wosBtn);
     });
@@ -165,7 +165,7 @@ describe('SearchPage', () => {
     expect(screen.getByText('Erro de sintaxe wos')).toBeInTheDocument();
     expect(screen.getByText('Aviso scopus')).toBeInTheDocument();
 
-    const customBtns = screen.getAllByRole('button', { name: /Substituir por Query Customizada/i });
+    const customBtns = screen.getAllByRole('button', { name: /Substituir por query customizada/i });
     const customBtn = customBtns[0];
     if (customBtn) {
       await act(async () => {
@@ -180,7 +180,7 @@ describe('SearchPage', () => {
     });
     expect(textarea).toHaveValue('my-custom-query');
 
-    const restoreBtn = screen.getByText(/Restaurar Tradução Automática/);
+    const restoreBtn = screen.getByRole('button', { name: /Restaurar tradução automática/i });
     await act(async () => {
       fireEvent.click(restoreBtn);
     });
@@ -189,12 +189,12 @@ describe('SearchPage', () => {
 
   const runSearchWithWos = async () => {
     renderPage();
-    await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument());
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /Web of Science/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'Web of Science' }));
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /Fazer Busca/i }));
+      fireEvent.click(screen.getByRole('button', { name: /Fazer busca/i }));
     });
   };
 
@@ -248,15 +248,15 @@ describe('SearchPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument();
     });
 
-    const wosBtn = screen.getByRole('button', { name: /Web of Science/i });
+    const wosBtn = screen.getByRole('button', { name: 'Web of Science' });
     await act(async () => {
       fireEvent.click(wosBtn);
     });
 
-    const searchBtn = screen.getByRole('button', { name: /Fazer Busca/i });
+    const searchBtn = screen.getByRole('button', { name: /Fazer busca/i });
     await act(async () => {
       fireEvent.click(searchBtn);
     });
@@ -268,10 +268,10 @@ describe('SearchPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument();
     });
 
-    const searchBtn = screen.getByRole('button', { name: /Fazer Busca/i });
+    const searchBtn = screen.getByRole('button', { name: /Fazer busca/i });
     await act(async () => {
       fireEvent.click(searchBtn);
     });
@@ -284,12 +284,12 @@ describe('SearchPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument();
     });
 
     const dbs = ['OpenAlex', 'Crossref', 'Scopus', 'Web of Science'];
     for (const db of dbs) {
-      const btn = screen.getByRole('button', { name: new RegExp(db, 'i') });
+      const btn = screen.getByRole('button', { name: db });
       await act(async () => {
         fireEvent.click(btn);
       });
@@ -303,14 +303,14 @@ describe('SearchPage', () => {
   it('handles search error of string type', async () => {
     fakeService.previewSearch.mockRejectedValue('String error message');
     renderPage();
-    await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument());
 
-    const wosBtn = screen.getByRole('button', { name: /Web of Science/i });
+    const wosBtn = screen.getByRole('button', { name: 'Web of Science' });
     await act(async () => {
       fireEvent.click(wosBtn);
     });
 
-    const searchBtn = screen.getByRole('button', { name: /Fazer Busca/i });
+    const searchBtn = screen.getByRole('button', { name: /Fazer busca/i });
     await act(async () => {
       fireEvent.click(searchBtn);
     });
@@ -321,14 +321,14 @@ describe('SearchPage', () => {
   it('handles search error of object type with error property', async () => {
     fakeService.previewSearch.mockRejectedValue({ error: 'Object error property' });
     renderPage();
-    await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument());
 
-    const wosBtn = screen.getByRole('button', { name: /Web of Science/i });
+    const wosBtn = screen.getByRole('button', { name: 'Web of Science' });
     await act(async () => {
       fireEvent.click(wosBtn);
     });
 
-    const searchBtn = screen.getByRole('button', { name: /Fazer Busca/i });
+    const searchBtn = screen.getByRole('button', { name: /Fazer busca/i });
     await act(async () => {
       fireEvent.click(searchBtn);
     });
@@ -339,14 +339,14 @@ describe('SearchPage', () => {
   it('handles search error of unknown object type', async () => {
     fakeService.previewSearch.mockRejectedValue({ unknown: 'data' });
     renderPage();
-    await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument());
 
-    const wosBtn = screen.getByRole('button', { name: /Web of Science/i });
+    const wosBtn = screen.getByRole('button', { name: 'Web of Science' });
     await act(async () => {
       fireEvent.click(wosBtn);
     });
 
-    const searchBtn = screen.getByRole('button', { name: /Fazer Busca/i });
+    const searchBtn = screen.getByRole('button', { name: /Fazer busca/i });
     await act(async () => {
       fireEvent.click(searchBtn);
     });
@@ -370,24 +370,56 @@ describe('SearchPage', () => {
 
     // Project won't load since there's no id, the page returns null.
     // So there's nothing to click. We just ensure it renders null (no project title).
-    expect(screen.queryByText('Fazer Nova Busca')).not.toBeInTheDocument();
+    expect(screen.queryByText('Nova busca')).not.toBeInTheDocument();
     expect(fakeService.getProject).not.toHaveBeenCalled();
     expect(fakeService.getSetting).not.toHaveBeenCalled();
   });
 
   describe('search payload and limits', () => {
     const ready = () => waitFor(() => expect(screen.getByText('openalex-query')).toBeInTheDocument());
-    const deselect = (name: RegExp) => fireEvent.click(screen.getByRole('button', { name }));
+    const deselect = (name: string) => fireEvent.click(screen.getByRole('button', { name }));
+
+    // Board 158: the summary's button advertises Ctrl+Enter, so the shortcut runs the same search from anywhere.
+    it('runs the search with Ctrl+Enter', async () => {
+      renderPage();
+      await ready();
+      deselect('Web of Science');
+
+      fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true });
+
+      await screen.findByTestId('mock-summary-modal');
+      expect(fakeService.previewSearch).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores Enter without Ctrl', async () => {
+      renderPage();
+      await ready();
+      deselect('Web of Science');
+
+      fireEvent.keyDown(window, { key: 'Enter' });
+
+      expect(fakeService.previewSearch).not.toHaveBeenCalled();
+    });
+
+    it('sums up the chosen bases and the most results they can bring', async () => {
+      renderPage();
+      await ready();
+
+      const summary = screen.getByRole('complementary', { name: 'Antes de buscar' });
+
+      expect(summary).toHaveTextContent('Bases4');
+      expect(summary).toHaveTextContent('Até4.000resultados');
+    });
 
     it('sends each base its translation or its custom query, plus a readable description of the tree', async () => {
       renderPage();
       await ready();
-      deselect(/Web of Science/);
-      fireEvent.click(screen.getAllByRole('button', { name: /Substituir por Query Customizada/ })[1]);
+      deselect('Web of Science');
+      fireEvent.click(screen.getAllByRole('button', { name: /Substituir por query customizada/i })[1]);
       fireEvent.change(screen.getByPlaceholderText(/Digite a query exata/), { target: { value: 'custom-crossref' } });
-      fireEvent.change(screen.getByDisplayValue('Mais Relevantes (Padrão)'), { target: { value: 'citations' } });
+      fireEvent.change(screen.getByDisplayValue('Mais relevantes'), { target: { value: 'citations' } });
 
-      fireEvent.click(screen.getByRole('button', { name: /Fazer Busca/ }));
+      fireEvent.click(screen.getByRole('button', { name: /Fazer busca/i }));
 
       await screen.findByTestId('mock-summary-modal');
       expect(fakeService.previewSearch).toHaveBeenCalledWith(
@@ -415,17 +447,17 @@ describe('SearchPage', () => {
     it('describes a single rule without parentheses', async () => {
       renderPage();
       await ready();
-      deselect(/Web of Science/);
+      deselect('Web of Science');
       fireEvent.click(screen.getByText('Change Query'));
 
-      fireEvent.click(screen.getByRole('button', { name: /Fazer Busca/ }));
+      fireEvent.click(screen.getByRole('button', { name: /Fazer busca/i }));
 
       await screen.findByTestId('mock-summary-modal');
       expect(fakeService.previewSearch.mock.calls[0][4]).toBe('Título contém "test"');
     });
 
     const commonLimit = () => screen.getByLabelText('Máximo de resultados por base');
-    const searchButton = () => screen.getByRole('button', { name: /Fazer Busca/ });
+    const searchButton = () => screen.getByRole('button', { name: /Fazer busca/i });
 
     // Above a ceiling the search is blocked, never silently cut: the user sees exactly what will run.
     it('blocks the search while the common value passes a chosen base ceiling', async () => {
@@ -439,7 +471,7 @@ describe('SearchPage', () => {
       );
       expect(searchButton()).toBeDisabled();
 
-      deselect(/Web of Science/);
+      deselect('Web of Science');
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       expect(searchButton()).toBeEnabled();
     });
@@ -447,7 +479,7 @@ describe('SearchPage', () => {
     it('sends a per-base adjustment and shows what each base will use', async () => {
       renderPage();
       await ready();
-      deselect(/Web of Science/);
+      deselect('Web of Science');
       fireEvent.change(commonLimit(), { target: { value: '6000' } });
       fireEvent.click(screen.getByText('Ajustar por base'));
 
@@ -507,7 +539,7 @@ describe('SearchPage', () => {
     });
     const search = async () => {
       await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: /Fazer Busca/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Fazer busca/i }));
       });
     };
 
@@ -602,7 +634,7 @@ describe('SearchPage', () => {
       fakeService.getSetting.mockResolvedValue('chave');
       renderPage();
       await screen.findByLabelText('Publicados desde (opcional)');
-      await waitFor(() => expect(screen.getByRole('button', { name: /Scopus/ })).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Scopus' })).toBeInTheDocument());
       await act(async () => undefined);
       expect(screen.queryByRole('note')).not.toBeInTheDocument();
 
@@ -629,7 +661,7 @@ describe('SearchPage', () => {
       ]);
 
       renderPage('1', '?from=7');
-      await waitFor(() => expect(screen.getByText('Projeto: Test Project')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Nova busca' })).toBeInTheDocument());
 
       await waitFor(() => expect(fakeService.getSearchHistory).toHaveBeenCalled());
       expect(screen.queryByRole('status')).not.toBeInTheDocument();

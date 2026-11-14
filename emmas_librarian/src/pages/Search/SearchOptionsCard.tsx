@@ -31,18 +31,16 @@ export const SearchOptionsCard: React.FC<SearchOptionsCardProps> = ({
   publishedSince,
   onPublishedSinceChange,
 }) => (
-  <div className="card search-card">
-    <div className="search-options-grid">
-      <div>
-        <label className="search-section-label search-section-label--field">Critério de Ordenação</label>
-        <select value={sortBy} onChange={(e) => onSortByChange(e.target.value as QuerySort)} className="search-control">
-          <option value="relevance">Mais Relevantes (Padrão)</option>
-          <option value="citations">Mais Citados (Maior Impacto)</option>
-          <option value="date">Mais Recentes</option>
-        </select>
-      </div>
-      <SearchLimitsField limits={limits} selected={selected} onChange={onLimitsChange} />
+  <div className="search-options-grid">
+    <div>
+      <label className="search-section-label search-section-label--field">Ordenação</label>
+      <select value={sortBy} onChange={(e) => onSortByChange(e.target.value as QuerySort)} className="search-control">
+        <option value="relevance">Mais relevantes</option>
+        <option value="citations">Mais citados</option>
+        <option value="date">Mais recentes</option>
+      </select>
     </div>
+    <SearchLimitsField limits={limits} selected={selected} onChange={onLimitsChange} />
     <div className="search-published-since">
       <label htmlFor="published-since" className="search-section-label search-section-label--field">
         Publicados desde (opcional)

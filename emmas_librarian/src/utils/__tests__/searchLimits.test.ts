@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { defaultSearchLimits, effectiveLimit, limitProblems, searchCost, validateSearchLimits } from '../searchLimits';
+import {
+  defaultSearchLimits,
+  effectiveLimit,
+  limitProblems,
+  maxResults,
+  searchCost,
+  validateSearchLimits,
+} from '../searchLimits';
 
 describe('effectiveLimit', () => {
   it('uses the per-base adjustment when there is one, the common value otherwise', () => {
@@ -64,5 +71,16 @@ describe('validateSearchLimits', () => {
     expect(() => validateSearchLimits(null, ['openalex'])).toThrow(
       'perBase: { openalex?: number, crossref?: number, scopus?: number, wos?: number, europepmc?: number, arxiv?: number, ieee?: number } }',
     );
+  });
+});
+
+describe('maxResults', () => {
+  it('adds up the limit of each chosen base, adjustments included', () => {
+    expect(maxResults({ common: 1000, perBase: { wos: 500 } }, ['openalex', 'wos'])).toBe(1500);
+  });
+
+  it('is zero without bases and ignores names that are not search bases', () => {
+    expect(maxResults({ common: 1000, perBase: {} }, [])).toBe(0);
+    expect(maxResults({ common: 1000, perBase: {} }, ['openalex', 'Manual'])).toBe(1000);
   });
 });

@@ -30,14 +30,24 @@ export const QueryTranslationCard: React.FC<QueryTranslationCardProps> = ({
     <div className="translation-card">
       <div className="translation-card-head">
         <div className="translation-card-name">{databaseName}</div>
-        <button type="button" onClick={toggleCustom} className="btn-secondary translation-card-toggle">
+        {/* Short words in the narrow summary panel (board 158); the name says what they do, base included. */}
+        <button
+          type="button"
+          onClick={toggleCustom}
+          className="translation-card-toggle"
+          aria-label={
+            isCustom
+              ? `Restaurar tradução automática (${databaseName})`
+              : `Substituir por query customizada (${databaseName})`
+          }
+        >
           {isCustom ? (
             <>
-              <RotateCcw size={14} /> Restaurar Tradução Automática
+              <RotateCcw size={13} /> Restaurar
             </>
           ) : (
             <>
-              <Edit2 size={14} /> Substituir por Query Customizada
+              <Edit2 size={13} /> Editar
             </>
           )}
         </button>
