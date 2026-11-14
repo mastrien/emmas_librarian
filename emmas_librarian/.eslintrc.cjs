@@ -46,6 +46,27 @@ module.exports = {
   },
   overrides: [
     {
+      // Epic #27: core/ is the library without a shell. The desktop app, the CLI and the HTTP server all
+      // run it, so it must not reach for Electron or for the Electron adapter (#28). What the core needs
+      // from its host comes in through core/ports.
+      files: ['core/**/*.ts'],
+      excludedFiles: ['core/**/__tests__/**'],
+      rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            paths: [{ name: 'electron', message: 'core/ must not import Electron; add a port in core/ports.' }],
+            patterns: [
+              {
+                group: ['**/electron/**', 'electron/**'],
+                message: 'core/ must not import the Electron adapter; move the code to core/ or inject it.',
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
       // Playwright specs and build scripts are plain CommonJS Node scripts.
       files: [
         'e2e-tests/**/*.js',

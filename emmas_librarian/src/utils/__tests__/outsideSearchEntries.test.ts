@@ -2,7 +2,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { isOutsideSearchBreakdown, outsideSearchIds } from '../outsideSearchEntries';
 import { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { registerArticleHandlers } from '../../../electron/ipc/handlers/articleHandlers';
+import { LibraryStorage } from '../../../core/services/LibraryStorage';
+import { appPathsIn } from '../../../core/ports/AppPaths';
 import { IpcChannel } from '../../types';
 
 vi.mock('electron', () => ({ dialog: { showSaveDialog: vi.fn() } }));
@@ -38,19 +43,25 @@ describe('outsideSearchIds', () => {
 // PRISMA diagram would count them as a database called "Manual" (#50).
 describe('history entries written by the article handlers (#50)', () => {
   let db: DatabaseAdapter;
+  let userData: string;
   let call: (channel: string, ...args: unknown[]) => unknown;
 
   beforeEach(() => {
     db = new DatabaseAdapter(':memory:');
+    userData = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-outside-'));
     const handlers = new Map<string, (...args: unknown[]) => unknown>();
     registerArticleHandlers(
       { handle: (c: string, l: (...a: unknown[]) => unknown) => handlers.set(c, l) } as never,
       db,
+      new LibraryStorage(db, appPathsIn(userData)),
     );
     call = (channel, ...args) => handlers.get(channel)!({}, ...args);
   });
 
-  afterEach(() => db.close());
+  afterEach(() => {
+    db.close();
+    fs.rmSync(userData, { recursive: true, force: true });
+  });
 
   const breakdowns = (projectId: number) =>
     (db.getSearchHistory(projectId) as { results_breakdown: string }[]).map(

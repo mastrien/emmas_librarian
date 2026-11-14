@@ -5,8 +5,10 @@ import os from 'os';
 import path from 'path';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 import { registerPrismaHandlers, tablePathFor } from '../../../electron/ipc/handlers/prismaHandlers';
+import { LibraryStorage } from '../../services/LibraryStorage';
+import { appPathsIn } from '../../ports/AppPaths';
 import { registerArticleHandlers } from '../../../electron/ipc/handlers/articleHandlers';
-import { IpcChannel, type PrismaRecords } from '../../../electron/types';
+import { IpcChannel, type PrismaRecords } from '../../../src/types';
 
 vi.mock('electron', () => ({ dialog: { showSaveDialog: vi.fn() } }));
 
@@ -146,7 +148,7 @@ describe('PRISMA IPC channels (#50)', () => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-prisma-'));
     const ipc = new RecordingRegistrar();
     registerPrismaHandlers(ipc as never, db);
-    registerArticleHandlers(ipc as never, db);
+    registerArticleHandlers(ipc as never, db, new LibraryStorage(db, appPathsIn(dir)));
     call = (channel, ...args) => ipc.handlers.get(channel)!({}, ...args);
   });
 

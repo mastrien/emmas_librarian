@@ -13,7 +13,7 @@ import {
   searchReportRows,
   searchReportXlsx,
 } from '../SearchReportService';
-import type { SearchHistoryItem } from '../../../electron/types';
+import type { SearchHistoryItem } from '../../../src/types';
 
 // A query with the characters a report could mangle: quotes, a pipe, parentheses and accents.
 const OPENALEX_QUERY = 'title.search:("revisão sistemática" | "systematic review")';

@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 import { registerScreeningHandlers } from '../../../electron/ipc/handlers/screeningHandlers';
-import { IpcChannel, type ScreeningLabel } from '../../../electron/types';
+import { IpcChannel, type ScreeningLabel } from '../../../src/types';
 
 class RecordingRegistrar {
   public handlers = new Map<string, (...args: unknown[]) => unknown>();

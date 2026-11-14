@@ -1,11 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { DatabaseAdapter } from '../../../database/DatabaseAdapter';
 import { ClassifierEvaluationService, heldOutRelevance, kindForRelevance } from '../ClassifierEvaluationService';
 import type { DecidedArticle } from '../ScreeningOrderService';
 import { normalized, type SimulatedArticle } from '../screeningRanker';
 import { criteriaSnapshot } from '../../../../src/utils/screeningCriteria';
-
-vi.mock('electron', () => ({ safeStorage: {} }));
 
 const side = (id: number, relevant: boolean): SimulatedArticle => ({
   id,

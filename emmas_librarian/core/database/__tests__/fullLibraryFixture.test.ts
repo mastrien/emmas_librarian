@@ -2,12 +2,10 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import type Database from 'better-sqlite3';
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 import { libraryTables as libraryTablesOf, seedFullLibrary, writeLibraryFiles } from './support/fullLibraryFixture';
 import { columnsDatedNow, projectContent, projectScopedTables } from './support/fullProjectFixture';
-
-vi.mock('electron', () => ({ safeStorage: {} }));
 
 // Guards the fixture itself: a table or column added to the schema and left empty here would let an
 // upgrade or backup drop it without any test noticing.

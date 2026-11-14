@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 
-vi.mock('electron', () => ({ safeStorage: {} }));
-
 const ANSWER = { claims: [], steps: [] };
 
 describe('AskConversationRepository (#53), on real SQLite', () => {

@@ -1,4 +1,4 @@
-import type { ScreeningModel } from '../../../electron/ipc/handlers/screeningSuggestionHandlers';
+import type { ScreeningModel } from './ScreeningEngine';
 
 // e2e-tests/screening_suggestion.spec.js asserts on this answer. The quote is in the abstract the spec writes.
 const ANSWER = JSON.stringify({

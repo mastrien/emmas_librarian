@@ -8,18 +8,17 @@ import os from 'os';
 import path from 'path';
 import { gunzipSync, gzipSync } from 'zlib';
 
-const electronApp = vi.hoisted(() => ({ relaunch: vi.fn(), exit: vi.fn() }));
-vi.mock('electron', () => ({ safeStorage: {}, app: electronApp }));
-
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import { BackupService } from '../BackupService';
+import { FakeAppRuntime } from '../../ports/__tests__/fakes/FakeAppRuntime';
 
 let workDir: string;
 let dbPath: string;
 let backupsDir: string;
 let adapter: DatabaseAdapter;
+let runtime: FakeAppRuntime;
 
-const service = (db: DatabaseAdapter = adapter) => new BackupService(db, dbPath, backupsDir);
+const service = (db: DatabaseAdapter = adapter) => new BackupService(db, dbPath, backupsDir, () => runtime.restart());
 const addProject = (name: string) => adapter.getDB().prepare('INSERT INTO projects (name) VALUES (?)').run(name);
 const backupFiles = () => (fs.existsSync(backupsDir) ? fs.readdirSync(backupsDir).sort() : []);
 
@@ -43,6 +42,7 @@ beforeEach(() => {
   dbPath = path.join(workDir, 'emma.db');
   backupsDir = path.join(workDir, 'backups');
   adapter = new DatabaseAdapter(dbPath);
+  runtime = new FakeAppRuntime();
 });
 
 afterEach(() => {
@@ -193,8 +193,7 @@ describe('BackupService.restoreAutoBackup', () => {
 
     expect(fs.existsSync(`${dbPath}-wal`)).toBe(false);
     expect(projectNamesIn(dbPath)).toEqual(['Do backup']);
-    expect(electronApp.relaunch).toHaveBeenCalled();
-    expect(electronApp.exit).toHaveBeenCalledWith(0);
+    expect(runtime.restarts).toBe(1);
   });
 
   // The name comes from the renderer over IPC; only files listed by listAutoBackups may be restored.
@@ -204,7 +203,7 @@ describe('BackupService.restoreAutoBackup', () => {
     expect(() => service().restoreAutoBackup('../outro.db.gz')).toThrow('../outro.db.gz');
 
     expect(adapter.getSetting('enable_auto_backups')).toBeNull();
-    expect(electronApp.exit).not.toHaveBeenCalled();
+    expect(runtime.restarts).toBe(0);
   });
 
   it('reports the missing backup by name and keeps the database open', () => {

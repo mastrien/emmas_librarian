@@ -3,7 +3,7 @@ import path from 'path';
 import { IpcChannel, type Article } from '../../types';
 import type { ArticleInput, DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
 import { handle, type IpcRegistrar } from './handle';
-import { ensureStorageDir, savePdfToStorage } from '../../../core/services/pdfStorage';
+import type { LibraryStorage } from '../../../core/services/LibraryStorage';
 import { OUTSIDE_SEARCH_BASES } from '../../../src/utils/outsideSearchEntries';
 
 type ManualArticleData = Partial<Omit<Article, 'year'>> & { title: string; year?: string | number };
@@ -11,13 +11,19 @@ type ManualArticleData = Partial<Omit<Article, 'year'>> & { title: string; year?
 const { manual: MANUAL, projectImport: PROJECT_IMPORT } = OUTSIDE_SEARCH_BASES;
 const MANUAL_SOURCES = JSON.stringify([MANUAL]);
 
+/** What creating an article with a PDF needs: the database and where its files are kept. */
+interface ArticleFiles {
+  db: DatabaseAdapter;
+  storage: LibraryStorage;
+}
+
 /**
  * Article queries, metadata/status updates, cross-project import and manual/PDF-based creation.
  *
  * Usage:
- *   registerArticleHandlers(ipcMain, db);
+ *   registerArticleHandlers(ipcMain, db, storage);
  */
-export function registerArticleHandlers(ipc: IpcRegistrar, db: DatabaseAdapter): void {
+export function registerArticleHandlers(ipc: IpcRegistrar, db: DatabaseAdapter, storage: LibraryStorage): void {
   handle(ipc, IpcChannel.ARTICLES_GET_BY_PROJECT, (_e, projectId: number) => db.getArticlesByProject(projectId));
   handle(ipc, IpcChannel.ARTICLES_GET_ONE, (_e, id: number) => db.getArticle(id));
   handle(ipc, IpcChannel.ARTICLES_UPDATE_STATUS, (_e, id: number, status: Article['status'], note?: string) =>
@@ -36,10 +42,10 @@ export function registerArticleHandlers(ipc: IpcRegistrar, db: DatabaseAdapter):
     ipc,
     IpcChannel.ARTICLES_CREATE_MANUAL,
     (_e, projectId: number, data: ManualArticleData, sourceFilePath?: string) =>
-      createManualArticle(db, projectId, data, sourceFilePath),
+      createManualArticle({ db, storage }, projectId, data, sourceFilePath),
   );
   handle(ipc, IpcChannel.ARTICLES_CREATE_FROM_PDFS, (_e, projectId: number, filePaths: string[]) =>
-    createArticlesFromPdfs(db, projectId, filePaths),
+    createArticlesFromPdfs({ db, storage }, projectId, filePaths),
   );
 }
 
@@ -61,7 +67,12 @@ function importFromProject(db: DatabaseAdapter, sourceProjectId: number, destPro
   return searchId;
 }
 
-function createManualArticle(db: DatabaseAdapter, projectId: number, data: ManualArticleData, sourceFilePath?: string) {
+function createManualArticle(
+  { db, storage }: ArticleFiles,
+  projectId: number,
+  data: ManualArticleData,
+  sourceFilePath?: string,
+) {
   const searchId = logToHistory('Failed to log manual article creation to search history:', () =>
     db.saveSearchHistory(projectId, `Adição manual de artigo avulso: ${data.title}`, {}, 1, { [MANUAL]: { count: 1 } }),
   );
@@ -77,13 +88,13 @@ function createManualArticle(db: DatabaseAdapter, projectId: number, data: Manua
     csl_json: JSON.stringify({}),
     search_id: searchId,
   });
-  if (sourceFilePath) attachCopiedPdf(db, articleId, sourceFilePath);
+  if (sourceFilePath) attachCopiedPdf({ db, storage }, articleId, sourceFilePath);
   return articleId;
 }
 
-function attachCopiedPdf(db: DatabaseAdapter, articleId: number, sourceFilePath: string): void {
+function attachCopiedPdf({ db, storage }: ArticleFiles, articleId: number, sourceFilePath: string): void {
   try {
-    const destPath = path.join(ensureStorageDir('pdfs'), `${articleId}_${Date.now()}.pdf`);
+    const destPath = path.join(storage.pdfsDir(), `${articleId}_${Date.now()}.pdf`);
     fs.copyFileSync(sourceFilePath, destPath);
     db.updateArticleFilePath(articleId, destPath);
   } catch (err) {
@@ -91,7 +102,8 @@ function attachCopiedPdf(db: DatabaseAdapter, articleId: number, sourceFilePath:
   }
 }
 
-function createArticlesFromPdfs(db: DatabaseAdapter, projectId: number, filePaths: string[]): number {
+function createArticlesFromPdfs(files: ArticleFiles, projectId: number, filePaths: string[]): number {
+  const { db, storage } = files;
   const searchId =
     filePaths.length > 0
       ? logToHistory('Failed to log batch import to search history:', () =>
@@ -100,19 +112,19 @@ function createArticlesFromPdfs(db: DatabaseAdapter, projectId: number, filePath
           }),
         )
       : undefined;
-  ensureStorageDir('pdfs');
-  return filePaths.filter((filePath) => importPdfAsArticle(db, projectId, filePath, searchId)).length;
+  storage.pdfsDir();
+  return filePaths.filter((filePath) => importPdfAsArticle(files, projectId, filePath, searchId)).length;
 }
 
 // Store the PDF first so a failed copy never leaves an article without its file.
 function importPdfAsArticle(
-  db: DatabaseAdapter,
+  { db, storage }: ArticleFiles,
   projectId: number,
   sourceFilePath: string,
   searchId?: number,
 ): boolean {
   try {
-    const { destPath } = savePdfToStorage(db, sourceFilePath);
+    const { destPath } = storage.savePdf(sourceFilePath);
     const articleId = db.saveArticle(projectId, {
       title: path.basename(sourceFilePath, '.pdf'),
       authors: '',

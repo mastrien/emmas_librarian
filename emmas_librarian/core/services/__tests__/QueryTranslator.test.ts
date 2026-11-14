@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { queryTranslator } from '../QueryTranslator';
-import { QueryASTNode } from '../../../electron/types';
+import { QueryASTNode } from '../../../src/types';
 
 describe('QueryTranslator', () => {
   it('translates AST to Scopus, WoS, OpenAlex, and Crossref correctly', () => {

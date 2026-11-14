@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { InvestigationAuditRepository } from '../InvestigationAuditRepository';
 import { registerAuditHandlers } from '../../../electron/ipc/handlers/auditHandlers';
-import { IpcChannel } from '../../../electron/types';
+import { IpcChannel } from '../../../src/types';
 import type { DatabaseAdapter } from '../DatabaseAdapter';
 
 class RecordingRegistrar {

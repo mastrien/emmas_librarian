@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-vi.mock('electron', () => ({ safeStorage: {} }));
-
 import { DatabaseAdapter } from '../DatabaseAdapter';
 
 type RepoName = 'projectRepo' | 'articleRepo' | 'articleCategoryRepo' | 'pdfLibraryRepo' | 'trashRepo' | 'documentRepo';

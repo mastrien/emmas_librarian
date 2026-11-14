@@ -1,24 +1,6 @@
-import path from 'path';
 import type { UpdateSafetyService } from './services/UpdateSafetyService';
 import type { RecoveryService } from './services/RecoveryService';
 import type { UpdateStateRecord } from './services/UpdateTypes';
-
-export interface LibraryPaths {
-  userData: string;
-  dbPath: string;
-  backupsDir: string;
-}
-
-/**
- * Where the library lives inside the userData folder; shared by the normal startup and the recovery
- * that runs when that startup fails.
- *
- * Usage:
- *   const { dbPath, backupsDir } = libraryPaths(app.getPath('userData'));
- */
-export function libraryPaths(userData: string): LibraryPaths {
-  return { userData, dbPath: path.join(userData, 'emma.db'), backupsDir: path.join(userData, 'backups') };
-}
 
 export type StartupRecoveryState = Pick<UpdateSafetyService, 'getUpdateState' | 'saveUpdateState'>;
 export type StartupRecoveryPrompt = Pick<RecoveryService, 'handlePostUpdateFailure'>;

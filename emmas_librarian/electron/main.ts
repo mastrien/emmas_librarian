@@ -6,7 +6,8 @@ import { setupIpcRegistries } from './ipc/ipcRegistries';
 import { UpdateHealthChecker } from './services/UpdateHealthChecker';
 import { RecoveryService } from './services/RecoveryService';
 import { UpdateSafetyService } from './services/UpdateSafetyService';
-import { libraryPaths, offerRecoveryAfterFailedStartup } from './startupRecovery';
+import { offerRecoveryAfterFailedStartup } from './startupRecovery';
+import { appPathsIn } from '../core/ports/AppPaths';
 import { isE2ELaunch, resolveUserDataDir } from './userDataDir';
 import { windowIconFile } from './windowIcon';
 import { logShutdownTimeline, type ShutdownEmitter } from './shutdownTimeline';
@@ -143,7 +144,7 @@ protocol.registerSchemesAsPrivileged([
 
 // The library may not have opened, so the safety service works on the files alone (no adapter).
 function offerUpdateRecovery(err: unknown): boolean {
-  const { userData, dbPath, backupsDir } = libraryPaths(app.getPath('userData'));
+  const { userData, dbPath, backupsDir } = appPathsIn(app.getPath('userData'));
   const safety = new UpdateSafetyService(null, dbPath, backupsDir, userData);
   return offerRecoveryAfterFailedStartup(err, app.getVersion(), safety, new RecoveryService(safety));
 }
@@ -152,7 +153,7 @@ function offerUpdateRecovery(err: unknown): boolean {
 // update that did not land must not be "verified". A failure here never blocks the start.
 function shouldQuitForRunningInstaller(): boolean {
   try {
-    const { userData, dbPath, backupsDir } = libraryPaths(app.getPath('userData'));
+    const { userData, dbPath, backupsDir } = appPathsIn(app.getPath('userData'));
     const safety = new UpdateSafetyService(null, dbPath, backupsDir, userData);
     return (
       runStartupUpdateGuard({

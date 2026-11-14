@@ -1,64 +1,74 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { SyncService } from '../SyncService';
+// Real SQLite and real archives in a temp folder: the previous suite mocked both services, so it only showed
+// that a method with the same name was called. AdmZip reads back empty entries under jsdom, so this runs in node.
+// @vitest-environment node
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { DatabaseAdapter } from '../DatabaseAdapter';
-import { ProjectSyncService } from '../ProjectSyncService';
-import { BackupService } from '../BackupService';
+import { SyncService } from '../SyncService';
+import { appPathsIn } from '../../ports/AppPaths';
+import { FakeAppRuntime } from '../../ports/__tests__/fakes/FakeAppRuntime';
 
-vi.mock('../ProjectSyncService');
-vi.mock('../BackupService');
+let workDir: string;
+let adapter: DatabaseAdapter;
+let runtime: FakeAppRuntime;
+let sync: SyncService;
+
+const projectNames = () =>
+  (adapter.getDB().prepare('SELECT name FROM projects ORDER BY id').all() as { name: string }[]).map((p) => p.name);
+const addProject = (name: string) =>
+  Number(adapter.getDB().prepare('INSERT INTO projects (name) VALUES (?)').run(name).lastInsertRowid);
+
+beforeEach(() => {
+  workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-syncservice-'));
+  const paths = appPathsIn(path.join(workDir, 'userData'));
+  fs.mkdirSync(paths.userData);
+  adapter = new DatabaseAdapter(paths.dbPath);
+  runtime = new FakeAppRuntime();
+  sync = new SyncService(adapter, paths, runtime);
+});
+
+afterEach(() => {
+  try {
+    adapter.close();
+  } catch {
+    // A restore that replaces the library closes the database itself.
+  }
+  fs.rmSync(workDir, { recursive: true, force: true });
+});
 
 describe('SyncService', () => {
-  let syncService: SyncService;
-  let mockDbAdapter: DatabaseAdapter;
+  it('exports a project to the given file and imports it back as a copy', async () => {
+    const target = path.join(workDir, 'tese.emmapcarc');
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockDbAdapter = {} as DatabaseAdapter;
-    syncService = new SyncService(mockDbAdapter);
+    expect(await sync.exportProject(addProject('Tese'), target)).toBe(target);
+    const imported = await sync.importProject(target);
+
+    expect(imported).toBeGreaterThan(1);
+    expect(projectNames()).toEqual(['Tese', 'Tese (Importado)']);
   });
 
-  it('should call ProjectSyncService.exportProject', async () => {
-    const mockExportProject = vi.fn().mockResolvedValue('test/path');
-    vi.mocked(ProjectSyncService.prototype.exportProject).mockImplementation(mockExportProject);
+  it('exports the whole library to the given file and merges only projects whose names are free', async () => {
+    const target = path.join(workDir, 'tudo.emmabak');
+    const kept = addProject('Fica');
+    const removed = addProject('Some');
 
-    const result = await syncService.exportProject(1);
-    expect(mockExportProject).toHaveBeenCalledWith(1);
-    expect(result).toBe('test/path');
+    expect(await sync.exportBackup(target)).toBe(target);
+    adapter.getDB().prepare('DELETE FROM projects WHERE id = ?').run(removed);
+
+    expect(await sync.restoreBackupMerge(target)).toBe(1);
+    expect(projectNames().sort()).toEqual(['Fica', 'Some']);
+    expect(kept).toBe(1);
   });
 
-  it('should call ProjectSyncService.importProject', async () => {
-    const mockImportProject = vi.fn().mockResolvedValue(1);
-    vi.mocked(ProjectSyncService.prototype.importProject).mockImplementation(mockImportProject);
+  it('replaces the library with the backup and asks the host to restart', async () => {
+    const target = path.join(workDir, 'tudo.emmabak');
+    addProject('Do backup');
+    await sync.exportBackup(target);
 
-    const result = await syncService.importProject('test/path');
-    expect(mockImportProject).toHaveBeenCalledWith('test/path');
-    expect(result).toBe(1);
-  });
+    expect(await sync.restoreBackupOverride(target)).toBe(true);
 
-  it('should call BackupService.exportBackup', async () => {
-    const mockExportBackup = vi.fn().mockResolvedValue('test/path');
-    vi.mocked(BackupService.prototype.exportBackup).mockImplementation(mockExportBackup);
-
-    const result = await syncService.exportBackup();
-    expect(mockExportBackup).toHaveBeenCalled();
-    expect(result).toBe('test/path');
-  });
-
-  it('should call BackupService.restoreBackupOverride', async () => {
-    const mockRestoreBackupOverride = vi.fn().mockResolvedValue(true);
-    vi.mocked(BackupService.prototype.restoreBackupOverride).mockImplementation(mockRestoreBackupOverride);
-
-    const result = await syncService.restoreBackupOverride('test/path');
-    expect(mockRestoreBackupOverride).toHaveBeenCalledWith('test/path');
-    expect(result).toBe(true);
-  });
-
-  it('should call BackupService.restoreBackupMerge', async () => {
-    const mockRestoreBackupMerge = vi.fn().mockResolvedValue(1);
-    vi.mocked(BackupService.prototype.restoreBackupMerge).mockImplementation(mockRestoreBackupMerge);
-
-    const result = await syncService.restoreBackupMerge('test/path');
-    expect(mockRestoreBackupMerge).toHaveBeenCalledWith('test/path');
-    expect(result).toBe(1);
+    expect(runtime.restarts).toBe(1);
   });
 });

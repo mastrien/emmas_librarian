@@ -1,22 +1,20 @@
 // The service as the app builds it, end to end: E2E mock network, real SQLite and a temp PDF library.
 // @vitest-environment node
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-const electron = vi.hoisted(() => ({ userData: '' }));
-vi.mock('electron', () => ({ safeStorage: {}, app: { getPath: () => electron.userData } }));
-
 import { DatabaseAdapter } from '../../../database/DatabaseAdapter';
 import { openAccessServiceFor } from '../openAccessServiceFor';
+import { LibraryStorage } from '../../LibraryStorage';
+import { appPathsIn } from '../../../ports/AppPaths';
 
 let dir: string;
 let db: DatabaseAdapter;
 
 beforeEach(() => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-oa-factory-'));
-  electron.userData = dir;
   db = new DatabaseAdapter(':memory:');
 });
 
@@ -38,7 +36,10 @@ describe('openAccessServiceFor', () => {
       csl_json: '{}',
     });
 
-    const outcome = await openAccessServiceFor(db, { E2E_MOCK_OPEN_ACCESS_PDF: pdfPath }).fetchForArticle(articleId);
+    const storage = new LibraryStorage(db, appPathsIn(dir));
+    const e2e = { E2E_MOCK_OPEN_ACCESS_PDF: pdfPath };
+
+    const outcome = await openAccessServiceFor(db, storage, e2e).fetchForArticle(articleId);
 
     expect(outcome).toEqual({ status: 'downloaded', source: 'Repositório E2E' });
     const stored = db.getArticle(articleId)!.local_file_path!;

@@ -1,12 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 import { InvestigationAuditRepository } from '../InvestigationAuditRepository';
-
-vi.mock('electron', () => ({ safeStorage: {} }));
 
 // Real databases written by released versions (see fixtures/README.md), not hand-made schemas.
 const FIXTURES = path.join(__dirname, 'fixtures');

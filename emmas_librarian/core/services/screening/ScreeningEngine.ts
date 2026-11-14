@@ -24,6 +24,12 @@ export interface ScreeningEngine {
 /** The AI model that answers. */
 export type ScreeningCompletion = (prompt: string) => Promise<string>;
 
+/** The model that answers suggestions; AIService gives the configured one. */
+export interface ScreeningModel {
+  complete: ScreeningCompletion;
+  modelId: string;
+}
+
 // The gateways return only text. About 4 characters per token: enough to compare engines, not a bill.
 const CHARS_PER_TOKEN = 4;
 

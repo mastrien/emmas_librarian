@@ -1,18 +1,12 @@
 import { IpcChannel } from '../../types';
 import type { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
-import { LlmScreeningEngine, type ScreeningCompletion } from '../../../core/services/screening/ScreeningEngine';
+import { LlmScreeningEngine, type ScreeningModel } from '../../../core/services/screening/ScreeningEngine';
 import {
   ScreeningSuggestionService,
   type SuggestionSources,
 } from '../../../core/services/screening/ScreeningSuggestionService';
 import type { ScreeningCriteria, ScreeningEngineInfo } from '../../../src/types/screeningSuggestion';
 import { handle, type IpcRegistrar } from './handle';
-
-/** The model that answers suggestions; AIService gives the configured one. */
-export interface ScreeningModel {
-  complete: ScreeningCompletion;
-  modelId: string;
-}
 
 // A suggestion is about title and abstract, so it offers the labels of that stage; duplicates are not its call.
 function sourcesFrom(db: DatabaseAdapter): SuggestionSources {

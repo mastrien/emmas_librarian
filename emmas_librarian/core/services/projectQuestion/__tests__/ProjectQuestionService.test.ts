@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { DatabaseAdapter } from '../../../database/DatabaseAdapter';
 import { VectorStore, type SimilarChunk } from '../../VectorStore';
 import {
@@ -10,8 +10,6 @@ import {
   type QuestionEmbedder,
 } from '../ProjectQuestionService';
 import { FakeAnswerModel, FakeEmbedder } from './fakes';
-
-vi.mock('electron', () => ({ safeStorage: {} }));
 
 const MODEL = 'openai/atual';
 

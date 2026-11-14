@@ -12,7 +12,7 @@ export type PdfDownload = { ok: true; bytes: Buffer } | { ok: false; reason: str
  *
  * Usage:
  *   const result = await downloadPdf('https://arxiv.org/pdf/2609.32552', fetchHttpClient);
- *   if (result.ok) savePdfBytesToStorage(db, result.bytes, 'paper.pdf');
+ *   if (result.ok) storage.savePdfBytes(result.bytes, 'paper.pdf');
  */
 export async function downloadPdf(url: string, http: HttpClient): Promise<PdfDownload> {
   const response = await http.get(url, { Accept: 'application/pdf' });

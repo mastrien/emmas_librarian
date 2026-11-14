@@ -1,7 +1,5 @@
-import path from 'path';
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  libraryPaths,
   offerRecoveryAfterFailedStartup,
   type StartupRecoveryPrompt,
   type StartupRecoveryState,
@@ -34,18 +32,6 @@ const justUpdated: UpdateStateRecord = {
   targetVersion: '1.2.0',
   snapshotPath: 'C:/backups/pre_update_1.1.23_1.db.gz',
 };
-
-describe('libraryPaths', () => {
-  it('places the database and backups inside userData', () => {
-    const userData = path.join('C:', 'data');
-
-    expect(libraryPaths(userData)).toEqual({
-      userData,
-      dbPath: path.join(userData, 'emma.db'),
-      backupsDir: path.join(userData, 'backups'),
-    });
-  });
-});
 
 describe('offerRecoveryAfterFailedStartup', () => {
   let prompt: FakeRecoveryPrompt;

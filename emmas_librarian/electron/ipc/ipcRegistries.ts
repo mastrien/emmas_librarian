@@ -1,5 +1,4 @@
-import { ipcMain, app } from 'electron';
-import path from 'path';
+import { ipcMain, app, dialog } from 'electron';
 import { DatabaseAdapter } from '../../core/database/DatabaseAdapter';
 import { ScientificVenueRepository } from '../../core/database/ScientificVenueRepository';
 import { SyncService } from '../../core/database/SyncService';
@@ -39,7 +38,10 @@ import { registerAgendaHandlers } from './handlers/agendaHandlers';
 import { registerSettingsHandlers } from './handlers/settingsHandlers';
 import { registerUpdateHandlers } from './handlers/updateHandlers';
 import { SafeStorageSecretStore } from '../ports/SafeStorageSecretStore';
-import { libraryPaths, type LibraryPaths } from '../startupRecovery';
+import { NativeFilePicker, type FilePicker } from '../ports/FilePicker';
+import { electronAppRuntime } from '../ports/electronAppRuntime';
+import { appPathsIn, type AppPaths } from '../../core/ports/AppPaths';
+import { LibraryStorage } from '../../core/services/LibraryStorage';
 
 export interface IpcRegistriesDeps {
   db?: DatabaseAdapter;
@@ -47,6 +49,7 @@ export interface IpcRegistriesDeps {
   updater?: IAppUpdater;
   updateManager?: UpdateManager;
   restartApp?: () => void;
+  picker?: FilePicker;
 }
 
 export interface IpcRegistriesResult {
@@ -63,7 +66,7 @@ export interface IpcRegistriesResult {
  *   app.whenReady().then(() => { const { db, updateManager, safetyService } = setupIpcRegistries({ updater: autoUpdater }); createWindow(); });
  */
 export function setupIpcRegistries(deps?: IpcRegistriesDeps): IpcRegistriesResult {
-  const paths = libraryPaths(app.getPath('userData'));
+  const paths = appPathsIn(app.getPath('userData'));
   const db = deps?.db || new DatabaseAdapter(paths.dbPath, new SafeStorageSecretStore());
   try {
     return registerLibraryServices(db, paths, deps);
@@ -82,12 +85,12 @@ function closeQuietly(db: DatabaseAdapter): void {
   }
 }
 
-function registerLibraryServices(
-  db: DatabaseAdapter,
-  { userData, dbPath, backupsDir }: LibraryPaths,
-  deps?: IpcRegistriesDeps,
-): IpcRegistriesResult {
-  const backupService = new BackupService(db, dbPath, backupsDir);
+function registerLibraryServices(db: DatabaseAdapter, paths: AppPaths, deps?: IpcRegistriesDeps): IpcRegistriesResult {
+  const { userData, dbPath, backupsDir } = paths;
+  const runtime = electronAppRuntime(deps?.restartApp);
+  const picker = deps?.picker || new NativeFilePicker(dialog, process.env);
+  const storage = new LibraryStorage(db, paths);
+  const backupService = new BackupService(db, dbPath, backupsDir, () => runtime.restart());
   scheduleStartupBackup(backupService);
 
   const safetyService = deps?.safetyService || new UpdateSafetyService(db, dbPath, backupsDir, userData);
@@ -96,7 +99,7 @@ function registerLibraryServices(
 
   // E2E runs must not hit the real bibliographic APIs.
   const orchestrator = new SearchOrchestrator(db, new QueryTranslator(), apiIntegratorFor(process.env));
-  const aiService = new AIService(db, path.join(userData, 'models'));
+  const aiService = new AIService(db, paths.modelsDir);
   setupAiIpcHandlers(db, aiService);
   registerProjectQuestionHandlers(ipcMain, db, () =>
     process.env.E2E_MOCK_AI_ASK === 'true' ? e2eAskModels() : aiService.askModels(),
@@ -107,9 +110,9 @@ function registerLibraryServices(
   registerSearchHandlers(ipcMain, db, orchestrator);
   registerSearchMonitorHandlers(ipcMain, db, new SearchMonitorService(db, new QueryTranslator(), orchestrator));
   registerSettingsHandlers(ipcMain, db);
-  registerArticleHandlers(ipcMain, db);
+  registerArticleHandlers(ipcMain, db, storage);
   registerAnnotationHandlers(ipcMain, db);
-  registerPdfHandlers(ipcMain, db);
+  registerPdfHandlers(ipcMain, db, storage);
   registerExportHandlers(ipcMain, db, new ExportService());
   registerAuditHandlers(ipcMain, db);
   registerScreeningHandlers(ipcMain, db);
@@ -121,10 +124,15 @@ function registerLibraryServices(
   );
   registerPrismaHandlers(ipcMain, db);
   registerDialogHandlers(ipcMain);
-  registerDocumentHandlers(ipcMain, db);
+  registerDocumentHandlers(ipcMain, db, storage);
   registerDiaryAndTrashHandlers(ipcMain, db);
   registerCategoryAndInvestigationHandlers(ipcMain, db);
-  registerBackupHandlers(ipcMain, new SyncService(db), backupService);
+  registerBackupHandlers(ipcMain, {
+    sync: new SyncService(db, paths, runtime),
+    backups: backupService,
+    picker,
+    appVersion: runtime.version,
+  });
   registerAgendaHandlers(ipcMain, new ScientificVenueRepository(db.getDB()));
   registerUpdateHandlers(ipcMain, updateManager, safetyService, deps?.restartApp);
 

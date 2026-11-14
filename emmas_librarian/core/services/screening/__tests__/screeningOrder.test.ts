@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { DatabaseAdapter } from '../../../database/DatabaseAdapter';
 import {
   examplesNeeded,
@@ -11,8 +11,6 @@ import {
   type SimulatedArticle,
 } from '../screeningRanker';
 import { ScreeningOrderService, type DecidedArticle, type TextEmbedder } from '../ScreeningOrderService';
-
-vi.mock('electron', () => ({ safeStorage: {} }));
 
 const near = (x: number, y: number) => normalized([x, y]);
 const RELEVANT_SIDE = [near(1, 0), near(0.95, 0.1), near(0.9, 0.2)];

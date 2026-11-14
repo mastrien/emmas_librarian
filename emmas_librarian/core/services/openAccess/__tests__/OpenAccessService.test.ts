@@ -1,15 +1,13 @@
 // Real SQLite and a temp userData folder: the service stores the PDF in the library and links it to the article.
 // @vitest-environment node
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-const electron = vi.hoisted(() => ({ userData: '' }));
-vi.mock('electron', () => ({ safeStorage: {}, app: { getPath: () => electron.userData } }));
-
 import { DatabaseAdapter } from '../../../database/DatabaseAdapter';
-import { savePdfBytesToStorage } from '../../pdfStorage';
+import { LibraryStorage } from '../../LibraryStorage';
+import { appPathsIn } from '../../../ports/AppPaths';
 import { OpenAccessService } from '../OpenAccessService';
 import { BOT_CHECK_HTML, FakeWeb, PDF_BYTES } from './fakes/FakeWeb';
 
@@ -22,8 +20,10 @@ let db: DatabaseAdapter;
 let web: FakeWeb;
 let projectId: number;
 
-const service = () =>
-  new OpenAccessService({ db, http: web, storePdf: (bytes, name) => savePdfBytesToStorage(db, bytes, name) });
+const service = () => {
+  const storage = new LibraryStorage(db, appPathsIn(workDir));
+  return new OpenAccessService({ db, http: web, storePdf: (bytes, name) => storage.savePdfBytes(bytes, name) });
+};
 // Each article gets its own title: the project merges articles with the same title or DOI.
 let articleCount = 0;
 const addArticle = (doi: string | undefined, localFile?: string) => {
@@ -54,7 +54,6 @@ const pmc = {
 
 beforeEach(() => {
   workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-oa-'));
-  electron.userData = workDir;
   db = new DatabaseAdapter(':memory:');
   projectId = db.createProject('Tese').id;
   web = new FakeWeb();

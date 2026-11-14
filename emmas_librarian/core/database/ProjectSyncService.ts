@@ -1,14 +1,12 @@
 import AdmZip from 'adm-zip';
 import fs from 'fs';
-import path from 'path';
-import { dialog, app } from 'electron';
 import { DatabaseAdapter } from './DatabaseAdapter';
+import type { AppPaths } from '../ports/AppPaths';
 import { writeArchive } from './backup/archiveFile';
 import { readProjectRows, type ProjectRows } from './backup/projectRows';
 import { insertProjectRows } from './backup/projectImport';
 import { assertReadableProjectFormat, PROJECT_FORMAT_VERSION } from './backup/projectFileFormat';
 
-const PROJECT_FILTERS = [{ name: "Emma's Librarian Project", extensions: ['emmapcarc'] }];
 const PDF_FOLDER = 'pdfs';
 const DOCUMENT_FOLDER = 'docs';
 
@@ -27,16 +25,20 @@ const ensureDir = (dir: string) => {
 /**
  * Shares one project between installations as a .emmapcarc file (project.json + its PDFs and documents).
  *
+ * The file to write or read is always given by the caller: asking the user for it is the shell's job.
+ *
  * Usage:
- *   const sync = new ProjectSyncService(dbAdapter);
- *   await sync.exportProject(3);
+ *   const sync = new ProjectSyncService(dbAdapter, appPathsIn(userData));
+ *   await sync.exportProject(3, '/home/ana/tese.emmapcarc');
  */
 export class ProjectSyncService {
-  constructor(private dbAdapter: DatabaseAdapter) {}
+  constructor(
+    private dbAdapter: DatabaseAdapter,
+    private paths: AppPaths,
+  ) {}
 
-  public async exportProject(projectId: number): Promise<string | null> {
-    const filePath = await this.chooseExportPath(projectId);
-    if (!filePath) return null;
+  /** Writes the project to `filePath` and returns it. */
+  public async exportProject(projectId: number, filePath: string): Promise<string> {
     try {
       const rows = readProjectRows(this.dbAdapter.getDB(), projectId, { includeGlobalQuestionSets: true });
       if (!rows) throw new Error(`Projeto não encontrado (id ${projectId})`);
@@ -53,47 +55,22 @@ export class ProjectSyncService {
   }
 
   /** Imports a .emmapcarc as a new "<name> (Importado)" project and returns its id. */
-  public async importProject(providedPath?: string): Promise<number | null> {
-    const importPath = providedPath ?? (await this.pickProjectFile());
-    if (!importPath) return null;
+  public async importProject(importPath: string): Promise<number> {
     try {
       const zip = new AdmZip(importPath);
       const rows = readProjectJson(zip);
-      const userData = app.getPath('userData');
       const files = {
         zip,
         pdfFolder: PDF_FOLDER,
         documentFolder: DOCUMENT_FOLDER,
-        pdfDir: ensureDir(path.join(userData, 'storage', 'pdfs')),
-        documentDir: ensureDir(path.join(userData, 'storage', 'project_documents')),
+        pdfDir: ensureDir(this.paths.pdfsDir),
+        documentDir: ensureDir(this.paths.documentsDir),
       };
       return insertProjectRows(this.dbAdapter.getDB(), rows, files, `${rows.project.name} (Importado)`);
     } catch (err) {
       console.error('Erro ao importar:', err);
       throw err;
     }
-  }
-
-  // E2E runs cannot answer the native save dialog; they pass the target path like the other export handlers.
-  private async chooseExportPath(projectId: number): Promise<string | null> {
-    if (process.env.E2E_MOCK_SAVE_FILE_PATH) return process.env.E2E_MOCK_SAVE_FILE_PATH;
-    const { canceled, filePath } = await dialog.showSaveDialog({
-      title: 'Exportar Projeto',
-      defaultPath: `projeto_${projectId}.emmapcarc`,
-      filters: PROJECT_FILTERS,
-    });
-    return canceled || !filePath ? null : filePath;
-  }
-
-  // E2E runs cannot answer the native open dialog; they name the .emmapcarc to import instead.
-  private async pickProjectFile(): Promise<string | null> {
-    if (process.env.E2E_MOCK_PROJECT_FILE) return process.env.E2E_MOCK_PROJECT_FILE;
-    const { canceled, filePaths } = await dialog.showOpenDialog({
-      title: 'Importar Projeto',
-      filters: PROJECT_FILTERS,
-      properties: ['openFile'],
-    });
-    return canceled || filePaths.length === 0 ? null : filePaths[0];
   }
 }
 

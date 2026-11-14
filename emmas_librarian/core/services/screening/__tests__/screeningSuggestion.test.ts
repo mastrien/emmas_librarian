@@ -6,8 +6,6 @@ import { ScreeningSuggestionService, type SuggestionSources } from '../Screening
 import { parseScreeningAnswer, screeningPrompt, type OfferedLabel } from '../screeningPrompt';
 import { criteriaSnapshot } from '../../../../src/utils/screeningCriteria';
 
-vi.mock('electron', () => ({ safeStorage: {} }));
-
 const ABSTRACT = 'Ensaio clínico randomizado com 412 adultos\nem atenção primária, por 12 meses.';
 const LABELS: OfferedLabel[] = [
   { id: 10, name: 'Incluir', kind: 'include' },

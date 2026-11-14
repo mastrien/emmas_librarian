@@ -1,28 +1,19 @@
 import AdmZip, { type IZipEntry } from 'adm-zip';
 import fs from 'fs';
 import path from 'path';
-import { dialog, app } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import { DatabaseAdapter } from './DatabaseAdapter';
 import { writeArchive } from './backup/archiveFile';
 import { mergeBackupProjects, type StorageDirs } from './backup/backupMerge';
 import { rebaseStoredPaths } from './backup/storedPaths';
-import { restartApp } from '../../electron/restartApp';
-import { localIsoDate } from '../../src/utils/localDate';
+import type { AppPaths } from '../ports/AppPaths';
+import type { AppRuntime } from '../ports/AppRuntime';
 
-const BACKUP_FILTERS = [{ name: "Emma's Librarian Backup", extensions: ['emmabak'] }];
 const STORAGE_FOLDERS = ['storage/pdfs', 'storage/project_documents'];
 const INVALID_BACKUP = 'Arquivo de backup inválido (não contém emma.db)';
 
 /** Opens a database file with the app's schema and migrations applied. */
 export type BackupDatabaseOpener = (dbPath: string) => DatabaseAdapter;
-
-const userDataPath = (...segments: string[]) => path.join(app.getPath('userData'), ...segments);
-
-const storageDirs = (): StorageDirs => ({
-  pdfs: userDataPath('storage', 'pdfs'),
-  documents: userDataPath('storage', 'project_documents'),
-});
 
 const ensureDir = (dir: string) => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -38,19 +29,26 @@ function readBackupDatabase(zip: AdmZip): Buffer {
  * Full-app backups (.emmabak zip with emma.db, PDFs and project documents): export, restore by
  * overwriting everything, or merge the backup's projects into the current library.
  *
+ * The file to write or read is always given by the caller: asking the user for it is the shell's job.
+ *
  * Usage:
- *   const backups = new BackupService(dbAdapter);
- *   await backups.exportBackup();
+ *   const backups = new BackupService(dbAdapter, appPathsIn(userData), runtime);
+ *   await backups.exportBackup('/home/ana/backup_2026-11-14.emmabak');
  */
 export class BackupService {
   constructor(
     private dbAdapter: DatabaseAdapter,
+    private paths: AppPaths,
+    private runtime: AppRuntime,
     private openBackupDatabase: BackupDatabaseOpener = (dbPath) => new DatabaseAdapter(dbPath),
   ) {}
 
-  public async exportBackup(): Promise<string | null> {
-    const filePath = await this.chooseBackupPath();
-    if (!filePath) return null;
+  private storageDirs(): StorageDirs {
+    return { pdfs: this.paths.pdfsDir, documents: this.paths.documentsDir };
+  }
+
+  /** Writes the whole library to `filePath` and returns it. */
+  public async exportBackup(filePath: string): Promise<string> {
     try {
       writeArchive(this.buildBackupZip(), filePath);
       return filePath;
@@ -60,25 +58,14 @@ export class BackupService {
     }
   }
 
-  // E2E runs cannot answer the native save dialog; they pass the target path like the other export handlers.
-  private async chooseBackupPath(): Promise<string | null> {
-    if (process.env.E2E_MOCK_SAVE_FILE_PATH) return process.env.E2E_MOCK_SAVE_FILE_PATH;
-    const { canceled, filePath } = await dialog.showSaveDialog({
-      title: 'Exportar Backup Completo',
-      defaultPath: `backup_${localIsoDate()}.emmabak`,
-      filters: BACKUP_FILTERS,
-    });
-    return canceled || !filePath ? null : filePath;
-  }
-
   private buildBackupZip(): AdmZip {
     const zip = new AdmZip();
-    const dbPath = userDataPath('emma.db');
+    const { dbPath } = this.paths;
     // Flush the WAL into emma.db first so the copied file is complete.
     this.dbAdapter.checkpoint();
     if (fs.existsSync(dbPath)) zip.addFile('emma.db', fs.readFileSync(dbPath));
     for (const folder of STORAGE_FOLDERS) {
-      const dir = userDataPath(...folder.split('/'));
+      const dir = path.join(this.paths.userData, ...folder.split('/'));
       if (fs.existsSync(dir)) zip.addLocalFolder(dir, folder);
     }
     zip.addFile('backup_metadata.json', Buffer.from(JSON.stringify(this.backupMetadata(), null, 2), 'utf-8'));
@@ -91,39 +78,25 @@ export class BackupService {
       (db.prepare(`SELECT count(*) as count FROM ${table} WHERE deleted_at IS NULL`).get() as { count: number }).count;
     return {
       date: new Date().toISOString(),
-      version: app.getVersion(),
+      version: this.runtime.version,
       projectCount: count('projects'),
       articleCount: count('articles'),
     };
   }
 
-  private async pickBackupFile(title: string, providedPath?: string): Promise<string | null> {
-    if (providedPath) return providedPath;
-    // E2E runs cannot answer the native open dialog; they pass the backup to restore instead.
-    if (process.env.E2E_MOCK_BACKUP_FILE) return process.env.E2E_MOCK_BACKUP_FILE;
-    const { canceled, filePaths } = await dialog.showOpenDialog({
-      title,
-      filters: BACKUP_FILTERS,
-      properties: ['openFile'],
-    });
-    return canceled || filePaths.length === 0 ? null : filePaths[0];
-  }
-
   /** Replaces the whole library with the backup and relaunches the app. */
-  public async restoreBackupOverride(providedPath?: string): Promise<boolean> {
-    const importPath = await this.pickBackupFile('Restaurar Backup Completo (Sobrescrever)', providedPath);
-    if (!importPath) return false;
+  public async restoreBackupOverride(importPath: string): Promise<boolean> {
     try {
       const zip = new AdmZip(importPath);
       const dbData = readBackupDatabase(zip);
       // Checked before anything is touched, so a tampered archive leaves the library as it was.
-      const storedFiles = storageEntries(zip, app.getPath('userData'));
+      const storedFiles = storageEntries(zip, this.paths.userData);
       this.dbAdapter.checkpoint();
       this.dbAdapter.close();
       this.overwriteDatabase(dbData);
       writeStoredFiles(storedFiles);
       this.rebaseRestoredPaths();
-      restartApp();
+      this.runtime.restart();
       return true;
     } catch (err) {
       console.error('Erro ao restaurar backup:', err);
@@ -132,7 +105,7 @@ export class BackupService {
   }
 
   private overwriteDatabase(dbData: Buffer): void {
-    const dbPath = userDataPath('emma.db');
+    const { dbPath } = this.paths;
     // Leftover WAL/SHM files from the old database would be replayed over the restored one.
     for (const sidecar of [`${dbPath}-wal`, `${dbPath}-shm`]) {
       if (fs.existsSync(sidecar)) fs.unlinkSync(sidecar);
@@ -142,22 +115,17 @@ export class BackupService {
 
   // The restored database may come from another computer: point its file links at this userData folder.
   private rebaseRestoredPaths(): void {
-    const restored = this.openBackupDatabase(userDataPath('emma.db'));
+    const restored = this.openBackupDatabase(this.paths.dbPath);
     try {
-      rebaseStoredPaths(restored.getDB(), storageDirs());
+      rebaseStoredPaths(restored.getDB(), this.storageDirs());
     } finally {
       restored.close();
     }
   }
 
-  /**
-   * Imports the backup's projects whose names are not in use yet. Returns how many were imported, or null when
-   * the file dialog was cancelled (so the UI does not report "no new project" for a cancel).
-   */
-  public async restoreBackupMerge(providedPath?: string): Promise<number | null> {
-    const importPath = await this.pickBackupFile('Importar e Mesclar Backup', providedPath);
-    if (!importPath) return null;
-    const tempDir = userDataPath('temp_restore_' + uuidv4());
+  /** Imports the backup's projects whose names are not in use yet and returns how many were imported. */
+  public async restoreBackupMerge(importPath: string): Promise<number> {
+    const tempDir = path.join(this.paths.userData, 'temp_restore_' + uuidv4());
     let backupDb: DatabaseAdapter | null = null;
     try {
       const zip = new AdmZip(importPath);
@@ -166,7 +134,7 @@ export class BackupService {
       fs.writeFileSync(tempDbPath, readBackupDatabase(zip));
       // Opening it like the app database runs the same migrations, so older backups match the current schema.
       backupDb = this.openBackupDatabase(tempDbPath);
-      const storage = storageDirs();
+      const storage = this.storageDirs();
       Object.values(storage).forEach(ensureDir);
       return mergeBackupProjects(this.dbAdapter.getDB(), backupDb.getDB(), zip, storage);
     } catch (err) {

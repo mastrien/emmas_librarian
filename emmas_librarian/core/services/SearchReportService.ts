@@ -1,5 +1,5 @@
 import * as xlsx from 'xlsx';
-import type { SearchBaseOutcome, SearchHistoryItem, SearchReportFormat } from '../../electron/types';
+import type { SearchBaseOutcome, SearchHistoryItem, SearchReportFormat } from '../../src/types';
 import { isSearchBase } from '../../src/utils/searchLimits';
 import { SEARCH_DATABASES } from '../../src/pages/Search/searchQueries';
 

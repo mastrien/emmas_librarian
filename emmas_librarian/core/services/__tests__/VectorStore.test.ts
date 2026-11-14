@@ -8,8 +8,6 @@ import { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import { VectorStore } from '../VectorStore';
 import type { PdfTextChunk } from '../PdfExtractor';
 
-vi.mock('electron', () => ({ safeStorage: {} }));
-
 const chunkAt = (text: string, page = 1): PdfTextChunk => ({ text, page, bbox: { x: 1, y: 2, w: 3, h: 4 } });
 
 describe('VectorStore', () => {

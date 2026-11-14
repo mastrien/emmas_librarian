@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { QuestionSet } from '../../electron/types';
+import { QuestionSet } from '../../src/types';
 
 export class QuestionSetRepository {
   constructor(private db: Database.Database) {}

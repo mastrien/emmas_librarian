@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ScientificVenueRepository } from '../ScientificVenueRepository';
-import { ScientificVenue } from '../../../electron/types';
+import { ScientificVenue } from '../../../src/types';
 
 // ---------------------------------------------------------------------------
 // In-memory table rows

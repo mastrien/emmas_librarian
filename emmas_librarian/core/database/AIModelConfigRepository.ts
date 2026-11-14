@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import type { AIModelConfig, AISkill, AIProvider } from '../../electron/types';
+import type { AIModelConfig, AISkill, AIProvider } from '../../src/types';
 
 export class AIModelConfigRepository {
   private db: Database.Database;

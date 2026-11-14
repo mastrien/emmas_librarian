@@ -12,7 +12,6 @@ vi.mock('sqlite-vec', async (importOriginal) => {
   const original = await importOriginal<typeof import('sqlite-vec')>();
   return { ...original, getLoadablePath: () => loadable.override ?? original.getLoadablePath() };
 });
-vi.mock('electron', () => ({ safeStorage: {} }));
 
 let workDir: string;
 let dbPath: string;

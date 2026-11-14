@@ -3,8 +3,6 @@ import { AIService } from '../AIService';
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import { AIModelConfigRepository } from '../../database/AIModelConfigRepository';
 
-vi.mock('electron', () => ({ safeStorage: {} }));
-
 describe('AIService.askModels (#53)', () => {
   let db: DatabaseAdapter;
   let ai: AIService;

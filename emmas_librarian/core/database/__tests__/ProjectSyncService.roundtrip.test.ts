@@ -1,4 +1,5 @@
 // AdmZip reads back empty entries under jsdom (Buffer/Uint8Array realm mismatch), so this suite runs in node.
+// Choosing the file (dialogs, E2E variables) is the shell's part: electron/ipc/__tests__/backupHandlers.test.ts.
 // @vitest-environment node
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import AdmZip from 'adm-zip';
@@ -8,22 +9,13 @@ import path from 'path';
 import { seedFullProject, projectContent } from './support/fullProjectFixture';
 import { expectFullProjectCopied } from './support/fullProjectAssertions';
 
-const electron = vi.hoisted(() => ({ userData: '', savePath: '' }));
-
-vi.mock('electron', () => ({
-  safeStorage: {},
-  app: { getPath: () => electron.userData },
-  dialog: {
-    showSaveDialog: vi.fn(async () => ({ canceled: false, filePath: electron.savePath })),
-    showOpenDialog: vi.fn(),
-  },
-}));
-
-import { dialog } from 'electron';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 import { ProjectSyncService } from '../ProjectSyncService';
+import { appPathsIn } from '../../ports/AppPaths';
 
 let workDir: string;
+let userData: string;
+let savePath: string;
 let adapter: DatabaseAdapter;
 let service: ProjectSyncService;
 
@@ -43,24 +35,22 @@ function writeFile(name: string, content: string): string {
 function writeProjectFile(projectJson: object): string {
   const zip = new AdmZip();
   zip.addFile('project.json', Buffer.from(JSON.stringify(projectJson)));
-  zip.writeZip(electron.savePath);
-  return electron.savePath;
+  zip.writeZip(savePath);
+  return savePath;
 }
 
 beforeEach(() => {
   workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-sync-'));
-  electron.userData = path.join(workDir, 'userData');
-  electron.savePath = path.join(workDir, 'projeto.emmapcarc');
-  fs.mkdirSync(electron.userData);
-  adapter = new DatabaseAdapter(path.join(electron.userData, 'emma.db'));
-  service = new ProjectSyncService(adapter);
+  userData = path.join(workDir, 'userData');
+  savePath = path.join(workDir, 'projeto.emmapcarc');
+  fs.mkdirSync(userData);
+  adapter = new DatabaseAdapter(path.join(userData, 'emma.db'));
+  service = new ProjectSyncService(adapter, appPathsIn(userData));
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
 });
 
 afterEach(() => {
   adapter.close();
-  vi.unstubAllEnvs();
-  vi.clearAllMocks();
   vi.restoreAllMocks();
   fs.rmSync(workDir, { recursive: true, force: true });
 });
@@ -70,8 +60,8 @@ describe('ProjectSyncService export → import round trip', () => {
   const roundTrip = async () => {
     const files = { pdfPath: writeFile('a.pdf', 'PDF-A'), docPath: writeFile('d.pdf', 'DOC-D') };
     original = seedFullProject(db(), files);
-    await service.exportProject(original);
-    return Number(await service.importProject(electron.savePath));
+    await service.exportProject(original, savePath);
+    return Number(await service.importProject(savePath));
   };
 
   it('keeps every value of every row of the project', async () => {
@@ -89,21 +79,21 @@ describe('ProjectSyncService export → import round trip', () => {
 
   it('stores the imported PDF once and reuses it on the next import of the same file', async () => {
     const first = await roundTrip();
-    const second = Number(await service.importProject(electron.savePath));
+    const second = Number(await service.importProject(savePath));
 
     const pathOf = (projectId: number) =>
       String(
         one("SELECT local_file_path FROM articles WHERE project_id = ? AND title = 'A'", projectId).local_file_path,
       );
     expect(fs.readFileSync(pathOf(first), 'utf-8')).toBe('PDF-A');
-    expect(path.dirname(pathOf(first))).toBe(path.join(electron.userData, 'storage', 'pdfs'));
+    expect(path.dirname(pathOf(first))).toBe(path.join(userData, 'storage', 'pdfs'));
     expect(pathOf(second)).toBe(pathOf(first));
   });
 
   it('writes the format version first in project.json (#30)', async () => {
     await roundTrip();
 
-    const projectJson = JSON.parse(new AdmZip(electron.savePath).readAsText('project.json')) as object;
+    const projectJson = JSON.parse(new AdmZip(savePath).readAsText('project.json')) as object;
     expect(Object.entries(projectJson)[0]).toEqual(['formatVersion', 2]);
   });
 
@@ -191,82 +181,34 @@ describe('ProjectSyncService importing hand-made or older files', () => {
   it('rejects an archive without project.json', async () => {
     const zip = new AdmZip();
     zip.addFile('other.txt', Buffer.from('x'));
-    zip.writeZip(electron.savePath);
+    zip.writeZip(savePath);
 
-    await expect(service.importProject(electron.savePath)).rejects.toThrow('não contém project.json');
+    await expect(service.importProject(savePath)).rejects.toThrow('não contém project.json');
   });
 
   it('reports a target that cannot be written instead of announcing the export', async () => {
-    fs.mkdirSync(electron.savePath);
+    fs.mkdirSync(savePath);
     const projectId = seedFullProject(db(), { pdfPath: writeFile('a.pdf', 'PDF'), docPath: writeFile('d.pdf', 'DOC') });
 
-    await expect(service.exportProject(projectId)).rejects.toThrow();
+    await expect(service.exportProject(projectId, savePath)).rejects.toThrow();
   });
 
   it('reports the missing project id on export', async () => {
-    await expect(service.exportProject(404)).rejects.toThrow('Projeto não encontrado (id 404)');
+    await expect(service.exportProject(404, savePath)).rejects.toThrow('Projeto não encontrado (id 404)');
   });
 });
 
-describe('ProjectSyncService file choice', () => {
-  const pickProjectFile = (filePath: string | undefined) =>
-    vi
-      .mocked(dialog.showOpenDialog)
-      .mockResolvedValueOnce({ canceled: !filePath, filePaths: filePath ? [filePath] : [] });
-
-  it('writes nothing when the export dialog is cancelled', async () => {
-    vi.mocked(dialog.showSaveDialog).mockResolvedValueOnce({ canceled: true, filePath: '' });
-    const projectId = seedFullProject(db(), { pdfPath: writeFile('a.pdf', 'PDF'), docPath: writeFile('d.pdf', 'DOC') });
-
-    expect(await service.exportProject(projectId)).toBeNull();
-
-    expect(fs.existsSync(electron.savePath)).toBe(false);
-  });
-
-  it('suggests a file named after the project id', async () => {
-    vi.mocked(dialog.showSaveDialog).mockResolvedValueOnce({ canceled: true, filePath: '' });
-
-    await service.exportProject(7);
-
-    expect(vi.mocked(dialog.showSaveDialog).mock.calls[0][0].defaultPath).toBe('projeto_7.emmapcarc');
-  });
-
+describe('ProjectSyncService files on disk', () => {
   it('exports a project whose PDF is no longer on disk, without the file', async () => {
     const projectId = seedFullProject(db(), {
       pdfPath: path.join(workDir, 'sumiu.pdf'),
       docPath: writeFile('d.pdf', 'DOC'),
     });
 
-    await service.exportProject(projectId);
+    await service.exportProject(projectId, savePath);
 
-    const names = new AdmZip(electron.savePath).getEntries().map((e) => e.entryName);
+    const names = new AdmZip(savePath).getEntries().map((e) => e.entryName);
     expect(names.sort()).toEqual(['docs/d.pdf', 'project.json']);
-  });
-
-  it('imports the file chosen in the open dialog and nothing when it is cancelled', async () => {
-    const file = writeProjectFile({ ...MINIMAL_PROJECT, project: { id: 1, name: 'Escolhido' } });
-    pickProjectFile(undefined);
-    pickProjectFile(file);
-
-    expect(await service.importProject()).toBeNull();
-    const projectId = Number(await service.importProject());
-
-    expect(one('SELECT name FROM projects WHERE id = ?', projectId).name).toBe('Escolhido (Importado)');
-  });
-
-  // Playwright cannot answer native dialogs; E2E runs name the files through the environment instead.
-  it('uses the E2E paths instead of the save and open dialogs', async () => {
-    const projectId = seedFullProject(db(), { pdfPath: writeFile('a.pdf', 'PDF'), docPath: writeFile('d.pdf', 'DOC') });
-    const e2ePath = path.join(workDir, 'e2e.emmapcarc');
-    vi.stubEnv('E2E_MOCK_SAVE_FILE_PATH', e2ePath);
-    vi.stubEnv('E2E_MOCK_PROJECT_FILE', e2ePath);
-
-    expect(await service.exportProject(projectId)).toBe(e2ePath);
-    const imported = Number(await service.importProject());
-
-    expect(dialog.showSaveDialog).not.toHaveBeenCalled();
-    expect(dialog.showOpenDialog).not.toHaveBeenCalled();
-    expect(one('SELECT name FROM projects WHERE id = ?', imported).name).toBe('Tese (Importado)');
   });
 
   it('leaves no partial project behind when a row cannot be inserted', async () => {

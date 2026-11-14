@@ -1,8 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 import { VectorStore } from '../../services/VectorStore';
-
-vi.mock('electron', () => ({ safeStorage: {} }));
 
 const MODEL = 'openai/atual';
 

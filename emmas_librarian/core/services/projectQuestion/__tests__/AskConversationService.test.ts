@@ -5,8 +5,6 @@ import { buildAskServices, pdfChunkReader, type AskServices } from '../askServic
 import { e2eAskModels } from '../e2eAskModels';
 import { FakeAnswerModel, FakeEmbedder } from './fakes';
 
-vi.mock('electron', () => ({ safeStorage: {} }));
-
 vi.mock('../../PdfExtractor', () => ({
   extractTextWithCoordinates: vi.fn(async (path: string, size: number, overlap: number) => ({
     chunks: [{ text: `${path}:${size}:${overlap}`, page: 1, bbox: { x: 0, y: 0, w: 1, h: 1 } }],

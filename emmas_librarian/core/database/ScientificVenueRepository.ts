@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { ScientificVenue, ScientificMilestone, MilestoneStatus } from '../../electron/types';
+import { ScientificVenue, ScientificMilestone, MilestoneStatus } from '../../src/types';
 
 export class ScientificVenueRepository {
   constructor(private db: InstanceType<typeof Database>) {}

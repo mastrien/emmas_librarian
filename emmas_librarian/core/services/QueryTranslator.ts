@@ -6,7 +6,7 @@ import {
   DatabaseTranslationMap,
   QueryTranslationResult,
   QueryField,
-} from '../../electron/types';
+} from '../../src/types';
 
 import { translateWith } from './queryDialects/shared';
 import { toEuropePmcQuery } from './queryDialects/europePmc';

@@ -9,25 +9,18 @@ import path from 'path';
 import { seedFullProject, projectContent } from './support/fullProjectFixture';
 import { expectFullProjectCopied } from './support/fullProjectAssertions';
 
-const electron = vi.hoisted(() => ({ userData: '' }));
-
-vi.mock('electron', () => ({
-  safeStorage: {},
-  app: {
-    getPath: () => electron.userData,
-    getVersion: () => '9.9.9',
-    relaunch: vi.fn(),
-    exit: vi.fn(),
-  },
-  dialog: { showSaveDialog: vi.fn(), showOpenDialog: vi.fn() },
-}));
-
 import { DatabaseAdapter } from '../DatabaseAdapter';
-import { BackupService } from '../BackupService';
+import { BackupService, type BackupDatabaseOpener } from '../BackupService';
+import { appPathsIn } from '../../ports/AppPaths';
+import { FakeAppRuntime } from '../../ports/__tests__/fakes/FakeAppRuntime';
 
 let workDir: string;
+let userData: string;
 let active: DatabaseAdapter;
 let backupPath: string;
+
+const backups = (opener?: BackupDatabaseOpener) =>
+  new BackupService(active, appPathsIn(userData), new FakeAppRuntime(), opener);
 
 const run = (db: Database.Database, sql: string, ...params: unknown[]) =>
   Number(db.prepare(sql).run(...params).lastInsertRowid);
@@ -36,7 +29,7 @@ const one = (sql: string, ...params: unknown[]) =>
     .getDB()
     .prepare(sql)
     .get(...params) as Record<string, unknown>;
-const tempFolders = () => fs.readdirSync(electron.userData).filter((f) => f.startsWith('temp_restore_'));
+const tempFolders = () => fs.readdirSync(userData).filter((f) => f.startsWith('temp_restore_'));
 
 /** A backup made by the app: a real emma.db plus stored files, zipped like exportBackup does. */
 function createBackup(seed: (db: Database.Database) => void, files: Record<string, string> = {}): string {
@@ -69,9 +62,9 @@ function backedUpProjectContent(): ReturnType<typeof projectContent> {
 
 beforeEach(() => {
   workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-backup-'));
-  electron.userData = path.join(workDir, 'userData');
-  fs.mkdirSync(electron.userData);
-  active = new DatabaseAdapter(path.join(electron.userData, 'emma.db'));
+  userData = path.join(workDir, 'userData');
+  fs.mkdirSync(userData);
+  active = new DatabaseAdapter(path.join(userData, 'emma.db'));
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
 });
 
@@ -89,7 +82,7 @@ describe('BackupService.restoreBackupMerge with real databases', () => {
     });
   });
 
-  const merge = () => new BackupService(active).restoreBackupMerge(backupPath);
+  const merge = () => backups().restoreBackupMerge(backupPath);
   const mergedProjectId = () => Number(one("SELECT id FROM projects WHERE name = 'Tese'").id);
 
   it('imports the project with every row and remapped foreign key', async () => {
@@ -110,7 +103,7 @@ describe('BackupService.restoreBackupMerge with real databases', () => {
     const article = one("SELECT local_file_path FROM articles WHERE title = 'A'");
     const doc = one("SELECT local_file_path FROM project_documents WHERE title = 'Edital'");
     expect(fs.readFileSync(String(article.local_file_path), 'utf-8')).toBe('PDF-A');
-    expect(path.dirname(String(article.local_file_path))).toBe(path.join(electron.userData, 'storage', 'pdfs'));
+    expect(path.dirname(String(article.local_file_path))).toBe(path.join(userData, 'storage', 'pdfs'));
     expect(fs.readFileSync(String(doc.local_file_path), 'utf-8')).toBe('DOC-D');
   });
 
@@ -139,7 +132,7 @@ describe('BackupService.restoreBackupMerge failures', () => {
     backupPath = path.join(workDir, 'bad.emmabak');
     zip.writeZip(backupPath);
 
-    await expect(new BackupService(active).restoreBackupMerge(backupPath)).rejects.toThrow('não contém emma.db');
+    await expect(backups().restoreBackupMerge(backupPath)).rejects.toThrow('não contém emma.db');
     expect(tempFolders()).toEqual([]);
   });
 
@@ -155,7 +148,7 @@ describe('BackupService.restoreBackupMerge failures', () => {
       return adapter;
     };
 
-    expect(await new BackupService(active, opener).restoreBackupMerge(backupPath)).toBe(0);
+    expect(await backups(opener).restoreBackupMerge(backupPath)).toBe(0);
     expect(console.error).toHaveBeenCalledWith('Erro ao fechar tempDb:', expect.any(Error));
   });
 });

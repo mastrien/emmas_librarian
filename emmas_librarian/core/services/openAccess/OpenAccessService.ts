@@ -1,6 +1,6 @@
 import type { OpenAccessOutcome } from '../../../src/types';
 import type { DatabaseAdapter } from '../../database/DatabaseAdapter';
-import type { StoredPdf } from '../pdfStorage';
+import type { StoredPdf } from '../LibraryStorage';
 import { doiKey } from '../../utils/doi';
 import type { HttpClient } from './httpClient';
 import { findOpenCopies, type OpenCopy } from './openCopies';
@@ -24,7 +24,7 @@ const fileNameFor = (doi: string) => `${doi.replace(/[^a-zA-Z0-9.-]/g, '_')}.pdf
  * the least reliable, and links the first real PDF to the article.
  *
  * Usage:
- *   const service = new OpenAccessService({ db, http: fetchHttpClient, storePdf: (b, n) => savePdfBytesToStorage(db, b, n) });
+ *   const service = new OpenAccessService({ db, http: fetchHttpClient, storePdf: (b, n) => storage.savePdfBytes(b, n) });
  *   await service.fetchForArticle(42); // { status: 'downloaded', source: 'PubMed Central' }
  */
 export class OpenAccessService {

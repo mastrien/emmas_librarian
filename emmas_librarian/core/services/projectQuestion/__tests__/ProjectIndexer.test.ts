@@ -1,10 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { DatabaseAdapter } from '../../../database/DatabaseAdapter';
 import { VectorStore } from '../../VectorStore';
 import { ProjectIndexer, type PdfChunkReader } from '../ProjectIndexer';
 import { FakeEmbedder } from './fakes';
-
-vi.mock('electron', () => ({ safeStorage: {} }));
 
 const MODEL = 'openai/atual';
 const chunkOf = (text: string) => ({ text, page: 1, bbox: { x: 0, y: 0, w: 1, h: 1 } });

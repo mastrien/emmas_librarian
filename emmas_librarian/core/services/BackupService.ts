@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { gzipSync, gunzipSync } from 'zlib';
-import { restartApp } from '../../electron/restartApp';
 import { localIsoDate } from '../../src/utils/localDate';
 import type { DatabaseAdapter } from '../database/DatabaseAdapter';
 
@@ -14,7 +13,7 @@ export type AutoBackupDatabase = Pick<DatabaseAdapter, 'getSetting' | 'checkInte
  * Daily gzip copies of emma.db (grandfather-father-son rotation), listed and restored from Settings.
  *
  * Usage:
- *   const backups = new BackupService(db, dbPath, path.join(userData, 'backups'));
+ *   const backups = new BackupService(db, paths.dbPath, paths.backupsDir, () => runtime.restart());
  *   await backups.runAutoBackup();
  */
 export class BackupService {
@@ -22,6 +21,8 @@ export class BackupService {
     private dbAdapter: AutoBackupDatabase,
     private dbPath: string,
     private backupsDir: string,
+    /** Restarts the host after a restore, so it reopens the replaced database. */
+    private restart: () => void,
   ) {}
 
   public async runAutoBackup(): Promise<string | null> {
@@ -203,7 +204,7 @@ export class BackupService {
     fs.writeFileSync(this.dbPath, decompressed);
 
     // Relaunch app to reconnect to new database
-    restartApp();
+    this.restart();
 
     return true;
   }
