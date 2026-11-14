@@ -1,4 +1,6 @@
 import { Modal } from '../../components/common/Modal';
+import { ModalFooter } from '../../components/common/ModalFooter';
+import { Button } from '../../components/common/Button';
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import type { ScreeningKind, ScreeningLabel } from '../../types';
@@ -290,6 +292,9 @@ const ManageLabelsContent: React.FC<Omit<ManageLabelsModalProps, 'isOpen'>> = ({
       )}
       <NewLabelForm projectId={projectId} run={run} />
       <PresetBox projectId={projectId} labels={screening.labels} run={run} />
+      <ModalFooter>
+        <Button onClick={onClose}>Concluir</Button>
+      </ModalFooter>
     </Modal>
   );
 };

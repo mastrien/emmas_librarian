@@ -1,5 +1,7 @@
 import React from 'react';
 import { Modal } from '../common/Modal';
+import { ModalFooter } from '../common/ModalFooter';
+import { Button } from '../common/Button';
 import type { AskIndexPlan } from '../../types';
 import { embeddingModelName, pdfCount } from '../../utils/pdfCount';
 
@@ -19,7 +21,7 @@ export const IndexRecalculationModal: React.FC<{
 }> = ({ plan, running, confirmLabel, onConfirm, onClose }) => (
   <Modal
     label="Recalcular os PDFs"
-    title="Recalcular os PDFs"
+    title="Refazer o índice antes de rodar?"
     closeLabel="Fechar sem recalcular"
     busy={running}
     width={440}
@@ -43,10 +45,13 @@ export const IndexRecalculationModal: React.FC<{
         modelo em Configurações de IA, e só os PDFs ainda sem índice serão processados.
       </p>
     )}
-    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-      <button type="button" className="btn-primary" disabled={running} onClick={onConfirm}>
+    <ModalFooter hint={`${pdfCount(plan.pending)}`}>
+      <Button variant="ghost" disabled={running} onClick={onClose}>
+        Cancelar
+      </Button>
+      <Button variant="primary" disabled={running} onClick={onConfirm}>
         {running ? `Recalculando ${pdfCount(plan.pending)}…` : confirmLabel}
-      </button>
-    </div>
+      </Button>
+    </ModalFooter>
   </Modal>
 );
