@@ -32,6 +32,10 @@ Each spec opens real app windows, one at a time; runs need a display (they refus
 that is `xvfb-run -a npm run test:e2e` (workflow `.github/workflows/e2e-linux.yml`); locally on Windows, WSLg's
 display also works for running the suite on Ubuntu.
 
+The app's CLI (`<app> cli <command>`, `docs/cli.md`) is driven with
+`runAppUntilExit({}, { userDataDir, cliArgs: ['projects:getAll'] })`: no window, one JSON document on stdout and
+the exit code in `code` (`e2e-tests/cli.spec.js`).
+
 ## Safety: data isolation (do not bypass)
 
 `helpers.launchApp(env, { userDataDir })` starts the app with `E2E_USER_DATA_DIR` pointing at a fresh temp folder

@@ -317,6 +317,12 @@ export enum IpcChannel {
   UPDATE_INSTALL = 'update:install',
   UPDATE_GET_STATUS = 'update:getStatus',
   UPDATE_RESTORE_SNAPSHOT = 'update:restoreSnapshot',
+  // Access from a phone over the local network (#32): the desktop's own controls for it.
+  REMOTE_ACCESS_GET_STATUS = 'remoteAccess:getStatus',
+  REMOTE_ACCESS_SET_ENABLED = 'remoteAccess:setEnabled',
+  REMOTE_ACCESS_START_PAIRING = 'remoteAccess:startPairing',
+  REMOTE_ACCESS_CANCEL_PAIRING = 'remoteAccess:cancelPairing',
+  REMOTE_ACCESS_REVOKE_DEVICE = 'remoteAccess:revokeDevice',
 }
 
 export interface CategoryOption {
@@ -762,3 +768,4 @@ export interface UpdateStatusResponse {
 export * from './ask';
 export * from './screeningSuggestion';
 export * from './screeningOrder';
+export * from './remoteAccess';

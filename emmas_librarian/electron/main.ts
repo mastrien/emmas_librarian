@@ -6,19 +6,37 @@ import { setupIpcRegistries } from './ipc/ipcRegistries';
 import { UpdateHealthChecker } from './services/UpdateHealthChecker';
 import { RecoveryService } from './services/RecoveryService';
 import { UpdateSafetyService } from './services/UpdateSafetyService';
-import { libraryPaths, offerRecoveryAfterFailedStartup } from './startupRecovery';
+import { offerRecoveryAfterFailedStartup } from './startupRecovery';
+import { appPathsIn } from '../core/ports/AppPaths';
 import { isE2ELaunch, resolveUserDataDir } from './userDataDir';
 import { windowIconFile } from './windowIcon';
 import { logShutdownTimeline, type ShutdownEmitter } from './shutdownTimeline';
 import { askWhileInstalling } from './updateInstallDialog';
 import { runStartupUpdateGuard } from './updateInstallGuard';
 import { attachExternalLinkGuard } from './externalLinks';
+import { cliArgumentsFrom, keepStdoutForResults, runElectronCli, streamSink } from './cli/electronCli';
+import { cliHostFor } from '../core/cli/openCliLibrary';
+import { LocalChannel } from './remote/LocalChannel';
+import type { IpcRegistriesResult } from './ipc/ipcRegistries';
+import { clearAppRunning, markAppRunning } from '../core/cli/appRunningMarker';
+import { SafeStorageSecretStore } from './ports/SafeStorageSecretStore';
 
 const DEV_ORIGIN = 'http://localhost:5173';
 
+// `emmas-librarian cli <command>` runs one command of the library in this process, without a window (#31).
+const cliArgs = cliArgumentsFrom(process.argv, app.isPackaged);
+if (cliArgs) {
+  // stdout carries only the JSON result: logs and stray console.log calls go to stderr or the log file.
+  log.transports.console.level = false;
+  keepStdoutForResults(console);
+  // No window is ever created. On Linux without a display, start with --ozone-platform=headless before
+  // `cli`: Chromium picks its platform before this script runs, so it cannot be set from here.
+  app.disableHardwareAcceleration();
+}
+
 // Configure logging for auto-updater
 autoUpdater.logger = log;
-log.info('App starting...');
+log.info(cliArgs ? 'CLI starting...' : 'App starting...');
 const appStartTime = performance.now();
 
 const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
@@ -119,6 +137,7 @@ function createWindow() {
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
   const isTestOrHeadless =
+    cliArgs !== null ||
     process.env.NODE_ENV === 'test' ||
     process.env.CI === 'true' ||
     process.env.HEADLESS_E2E === 'true' ||
@@ -143,7 +162,7 @@ protocol.registerSchemesAsPrivileged([
 
 // The library may not have opened, so the safety service works on the files alone (no adapter).
 function offerUpdateRecovery(err: unknown): boolean {
-  const { userData, dbPath, backupsDir } = libraryPaths(app.getPath('userData'));
+  const { userData, dbPath, backupsDir } = appPathsIn(app.getPath('userData'));
   const safety = new UpdateSafetyService(null, dbPath, backupsDir, userData);
   return offerRecoveryAfterFailedStartup(err, app.getVersion(), safety, new RecoveryService(safety));
 }
@@ -152,7 +171,7 @@ function offerUpdateRecovery(err: unknown): boolean {
 // update that did not land must not be "verified". A failure here never blocks the start.
 function shouldQuitForRunningInstaller(): boolean {
   try {
-    const { userData, dbPath, backupsDir } = libraryPaths(app.getPath('userData'));
+    const { userData, dbPath, backupsDir } = appPathsIn(app.getPath('userData'));
     const safety = new UpdateSafetyService(null, dbPath, backupsDir, userData);
     return (
       runStartupUpdateGuard({
@@ -172,51 +191,92 @@ function shouldQuitForRunningInstaller(): boolean {
 // Electron types `app.on` per event name; the timeline only needs the generic string form.
 logShutdownTimeline(app as unknown as ShutdownEmitter, log);
 
-app
-  .whenReady()
-  .then(() => {
-    if (shouldQuitForRunningInstaller()) {
-      app.quit();
-      return;
-    }
-    try {
-      const { db, safetyService, updateManager } = setupIpcRegistries({ updater: autoUpdater });
+// The CLI opens the same library the app would (or --data-dir), with the OS keychain for the API keys.
+function startCli(args: string[]): void {
+  void runElectronCli(args, {
+    ready: () => app.whenReady(),
+    open: ({ dataDir }) => {
+      const paths = appPathsIn(dataDir ?? app.getPath('userData'));
+      const secrets = new SafeStorageSecretStore();
+      return cliHostFor({ paths, secrets, appVersion: app.getVersion(), env: process.env }, process.cwd());
+    },
+    stdout: streamSink(process.stdout),
+    stderr: streamSink(process.stderr),
+    exit: (code) => app.exit(code),
+  });
+}
 
-      const healthChecker = new UpdateHealthChecker(db, safetyService);
-      const healthResult = healthChecker.runStartupHealthCheck();
-      if (!healthResult.passed) {
-        log.error('Post-update health check failed:', healthResult.error);
-        new RecoveryService(safetyService).handlePostUpdateFailure(
-          healthResult.error || 'Falha na integridade do banco de dados pós-atualização',
-          healthResult.state,
-        );
+// Beside IPC: the loopback channel the CLI uses while the app is open (#31), and the LAN server for
+// paired phones when the person turned it on (#32). Neither may stop the app from starting.
+function startOtherTransports({ commands, remoteAccess }: IpcRegistriesResult): void {
+  const userData = app.getPath('userData');
+  const localChannel = new LocalChannel(commands);
+  // The marker goes down first, without a channel: a CLI that runs before the channel is up opens the library.
+  markAppRunning(userData, process.pid);
+  localChannel
+    .start()
+    .then((address) => markAppRunning(userData, process.pid, address))
+    .catch((err: unknown) => log.warn('Local channel for the CLI did not start:', err));
+  void remoteAccess.startIfEnabled();
+  app.on('will-quit', () => {
+    localChannel.stop();
+    remoteAccess.stop();
+    clearAppRunning(userData, process.pid);
+  });
+}
+
+function startDesktopApp(): void {
+  app
+    .whenReady()
+    .then(() => {
+      if (shouldQuitForRunningInstaller()) {
+        app.quit();
         return;
       }
+      try {
+        const library = setupIpcRegistries({ updater: autoUpdater });
+        const { db, safetyService, updateManager } = library;
+        startOtherTransports(library);
 
-      createWindow();
+        const healthChecker = new UpdateHealthChecker(db, safetyService);
+        const healthResult = healthChecker.runStartupHealthCheck();
+        if (!healthResult.passed) {
+          log.error('Post-update health check failed:', healthResult.error);
+          new RecoveryService(safetyService).handlePostUpdateFailure(
+            healthResult.error || 'Falha na integridade do banco de dados pós-atualização',
+            healthResult.state,
+          );
+          return;
+        }
 
-      // Check for updates (opt-in metadata query, does not auto-download)
-      if (!isDev) {
-        updateManager.checkForUpdates().catch((err: unknown) => {
-          log.warn('Background update check failed:', err);
-        });
+        createWindow();
+
+        // Check for updates (opt-in metadata query, does not auto-download)
+        if (!isDev) {
+          updateManager.checkForUpdates().catch((err: unknown) => {
+            log.warn('Background update check failed:', err);
+          });
+        }
+      } catch (err: unknown) {
+        log.error('Error during app startup:', err);
+        console.error('Error during app startup:', err);
+        if (offerUpdateRecovery(err)) return;
+        dialog.showErrorBox('Startup Error', (err as Error).message || String(err));
       }
-    } catch (err: unknown) {
-      log.error('Error during app startup:', err);
-      console.error('Error during app startup:', err);
-      if (offerUpdateRecovery(err)) return;
-      dialog.showErrorBox('Startup Error', (err as Error).message || String(err));
-    }
 
-    app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+      app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+      });
+    })
+    .catch((err) => {
+      log.error('Failed to start app:', err);
+      console.error('Failed to start app:', err);
+      dialog.showErrorBox('Initialization Error', (err as Error).message || String(err));
     });
-  })
-  .catch((err) => {
-    log.error('Failed to start app:', err);
-    console.error('Failed to start app:', err);
-    dialog.showErrorBox('Initialization Error', (err as Error).message || String(err));
-  });
+}
+
+if (cliArgs) startCli(cliArgs);
+else startDesktopApp();
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

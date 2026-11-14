@@ -7,19 +7,23 @@ import type { RecordingDouble } from './fakes/RecordingDouble';
 
 vi.mock('electron', () => import('./fakes/ipcHarness').then((h) => h.electronModule));
 vi.mock('fs', () => import('./fakes/ipcHarness').then((h) => h.fsModule));
-vi.mock('../../database/DatabaseAdapter', () => import('./fakes/ipcHarness').then((h) => h.databaseAdapterModule));
-vi.mock('../../database/ScientificVenueRepository', () =>
+vi.mock('../../../core/database/DatabaseAdapter', () =>
+  import('./fakes/ipcHarness').then((h) => h.databaseAdapterModule),
+);
+vi.mock('../../../core/database/ScientificVenueRepository', () =>
   import('./fakes/ipcHarness').then((h) => h.venueRepositoryModule),
 );
-vi.mock('../../database/SyncService', () => import('./fakes/ipcHarness').then((h) => h.syncServiceModule));
-vi.mock('../../services/SearchOrchestrator', () =>
+vi.mock('../../../core/database/SyncService', () => import('./fakes/ipcHarness').then((h) => h.syncServiceModule));
+vi.mock('../../../core/services/SearchOrchestrator', () =>
   import('./fakes/ipcHarness').then((h) => h.searchOrchestratorModule),
 );
-vi.mock('../../services/QueryTranslator', () => import('./fakes/ipcHarness').then((h) => h.queryTranslatorModule));
-vi.mock('../../services/ApiIntegrator', () => import('./fakes/ipcHarness').then((h) => h.apiIntegratorModule));
-vi.mock('../../services/ExportService', () => import('./fakes/ipcHarness').then((h) => h.exportServiceModule));
-vi.mock('../../services/AIService', () => import('./fakes/ipcHarness').then((h) => h.aiServiceModule));
-vi.mock('../../services/BackupService', () => import('./fakes/ipcHarness').then((h) => h.backupServiceModule));
+vi.mock('../../../core/services/QueryTranslator', () =>
+  import('./fakes/ipcHarness').then((h) => h.queryTranslatorModule),
+);
+vi.mock('../../../core/services/ApiIntegrator', () => import('./fakes/ipcHarness').then((h) => h.apiIntegratorModule));
+vi.mock('../../../core/services/ExportService', () => import('./fakes/ipcHarness').then((h) => h.exportServiceModule));
+vi.mock('../../../core/services/AIService', () => import('./fakes/ipcHarness').then((h) => h.aiServiceModule));
+vi.mock('../../../core/services/BackupService', () => import('./fakes/ipcHarness').then((h) => h.backupServiceModule));
 
 type Outcome = 'passthrough' | 'void' | 'true';
 
@@ -142,43 +146,11 @@ const cases: DelegationCase[] = [
     outcome: 'passthrough',
   },
   {
-    channel: IpcChannel.SYNC_EXPORT_PROJECT,
-    args: [1],
-    target: () => harness.sync,
-    method: 'exportProject',
-    forwarded: [1],
-    outcome: 'passthrough',
-  },
-  {
     channel: IpcChannel.SYNC_IMPORT_PROJECT,
     args: ['/p.zip'],
     target: () => harness.sync,
     method: 'importProject',
     forwarded: ['/p.zip'],
-    outcome: 'passthrough',
-  },
-  {
-    channel: IpcChannel.BACKUP_EXPORT,
-    args: [],
-    target: () => harness.sync,
-    method: 'exportBackup',
-    forwarded: [],
-    outcome: 'passthrough',
-  },
-  {
-    channel: IpcChannel.BACKUP_RESTORE_OVERRIDE,
-    args: [],
-    target: () => harness.sync,
-    method: 'restoreBackupOverride',
-    forwarded: [],
-    outcome: 'passthrough',
-  },
-  {
-    channel: IpcChannel.BACKUP_RESTORE_MERGE,
-    args: [],
-    target: () => harness.sync,
-    method: 'restoreBackupMerge',
-    forwarded: [],
     outcome: 'passthrough',
   },
   {

@@ -38,6 +38,7 @@ import type { IProjectService } from './ProjectServiceInterface';
 import type { SearchLimits } from '../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
 import type { AuditParams } from '../utils/auditSampling';
+import type { RemoteAccessStatus, RemotePairingInvite } from '../types/remoteAccess';
 import type {
   CategoryOption,
   CitationRequest,
@@ -327,6 +328,19 @@ export const projectService: IProjectService = {
   restoreAutoBackup: (filename: string): Promise<boolean> => safeInvoke(IpcChannel.BACKUP_RESTORE_AUTO, filename),
 
   getAppVersion: (): Promise<string> => safeInvoke(IpcChannel.APP_GET_VERSION),
+
+  // Access from a phone over the local network (#32)
+  getRemoteAccessStatus: (): Promise<RemoteAccessStatus> => safeInvoke(IpcChannel.REMOTE_ACCESS_GET_STATUS),
+
+  setRemoteAccessEnabled: (enabled: boolean): Promise<RemoteAccessStatus> =>
+    safeInvoke(IpcChannel.REMOTE_ACCESS_SET_ENABLED, enabled),
+
+  startRemotePairing: (): Promise<RemotePairingInvite> => safeInvoke(IpcChannel.REMOTE_ACCESS_START_PAIRING),
+
+  cancelRemotePairing: (): Promise<void> => safeInvoke(IpcChannel.REMOTE_ACCESS_CANCEL_PAIRING),
+
+  revokeRemoteDevice: (deviceId: string): Promise<RemoteAccessStatus> =>
+    safeInvoke(IpcChannel.REMOTE_ACCESS_REVOKE_DEVICE, deviceId),
 
   // AI
   async generateSummary(articleId: number): Promise<{ generalSummary: string; sectionSummary: string }> {

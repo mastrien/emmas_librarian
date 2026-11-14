@@ -1,11 +1,15 @@
 // @vitest-environment node
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { isOutsideSearchBreakdown, outsideSearchIds } from '../outsideSearchEntries';
-import { DatabaseAdapter } from '../../../electron/database/DatabaseAdapter';
-import { registerArticleHandlers } from '../../../electron/ipc/handlers/articleHandlers';
+import { DatabaseAdapter } from '../../../core/database/DatabaseAdapter';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { registerArticleCommands } from '../../../core/commands/articleCommands';
+import { CommandRegistry } from '../../../core/commands/CommandRegistry';
+import { LibraryStorage } from '../../../core/services/LibraryStorage';
+import { appPathsIn } from '../../../core/ports/AppPaths';
 import { IpcChannel } from '../../types';
-
-vi.mock('electron', () => ({ dialog: { showSaveDialog: vi.fn() } }));
 
 describe('isOutsideSearchBreakdown', () => {
   it.each([
@@ -36,21 +40,23 @@ describe('outsideSearchIds', () => {
 
 // The history entries the app writes for articles that did not come from a search must read as such, or the
 // PRISMA diagram would count them as a database called "Manual" (#50).
-describe('history entries written by the article handlers (#50)', () => {
+describe('history entries written by the article commands (#50)', () => {
   let db: DatabaseAdapter;
+  let userData: string;
   let call: (channel: string, ...args: unknown[]) => unknown;
 
   beforeEach(() => {
     db = new DatabaseAdapter(':memory:');
-    const handlers = new Map<string, (...args: unknown[]) => unknown>();
-    registerArticleHandlers(
-      { handle: (c: string, l: (...a: unknown[]) => unknown) => handlers.set(c, l) } as never,
-      db,
-    );
-    call = (channel, ...args) => handlers.get(channel)!({}, ...args);
+    userData = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-outside-'));
+    const commands = new CommandRegistry();
+    registerArticleCommands(commands, db, new LibraryStorage(db, appPathsIn(userData)));
+    call = (channel, ...args) => commands.run(channel, ...args);
   });
 
-  afterEach(() => db.close());
+  afterEach(() => {
+    db.close();
+    fs.rmSync(userData, { recursive: true, force: true });
+  });
 
   const breakdowns = (projectId: number) =>
     (db.getSearchHistory(projectId) as { results_breakdown: string }[]).map(

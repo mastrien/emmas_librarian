@@ -1,23 +1,28 @@
 import path from 'path';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setupIpcRegistries } from '../ipcRegistries';
-import { resetIpcHarness, aiServiceConstructions, USER_DATA } from './fakes/ipcHarness';
+import { SafeStorageSecretStore } from '../../ports/SafeStorageSecretStore';
+import { resetIpcHarness, aiServiceConstructions, databaseAdapterConstructions, USER_DATA } from './fakes/ipcHarness';
 
 vi.mock('electron', () => import('./fakes/ipcHarness').then((h) => h.electronModule));
 vi.mock('fs', () => import('./fakes/ipcHarness').then((h) => h.fsModule));
-vi.mock('../../database/DatabaseAdapter', () => import('./fakes/ipcHarness').then((h) => h.databaseAdapterModule));
-vi.mock('../../database/ScientificVenueRepository', () =>
+vi.mock('../../../core/database/DatabaseAdapter', () =>
+  import('./fakes/ipcHarness').then((h) => h.databaseAdapterModule),
+);
+vi.mock('../../../core/database/ScientificVenueRepository', () =>
   import('./fakes/ipcHarness').then((h) => h.venueRepositoryModule),
 );
-vi.mock('../../database/SyncService', () => import('./fakes/ipcHarness').then((h) => h.syncServiceModule));
-vi.mock('../../services/SearchOrchestrator', () =>
+vi.mock('../../../core/database/SyncService', () => import('./fakes/ipcHarness').then((h) => h.syncServiceModule));
+vi.mock('../../../core/services/SearchOrchestrator', () =>
   import('./fakes/ipcHarness').then((h) => h.searchOrchestratorModule),
 );
-vi.mock('../../services/QueryTranslator', () => import('./fakes/ipcHarness').then((h) => h.queryTranslatorModule));
-vi.mock('../../services/ApiIntegrator', () => import('./fakes/ipcHarness').then((h) => h.apiIntegratorModule));
-vi.mock('../../services/ExportService', () => import('./fakes/ipcHarness').then((h) => h.exportServiceModule));
-vi.mock('../../services/AIService', () => import('./fakes/ipcHarness').then((h) => h.aiServiceModule));
-vi.mock('../../services/BackupService', () => import('./fakes/ipcHarness').then((h) => h.backupServiceModule));
+vi.mock('../../../core/services/QueryTranslator', () =>
+  import('./fakes/ipcHarness').then((h) => h.queryTranslatorModule),
+);
+vi.mock('../../../core/services/ApiIntegrator', () => import('./fakes/ipcHarness').then((h) => h.apiIntegratorModule));
+vi.mock('../../../core/services/ExportService', () => import('./fakes/ipcHarness').then((h) => h.exportServiceModule));
+vi.mock('../../../core/services/AIService', () => import('./fakes/ipcHarness').then((h) => h.aiServiceModule));
+vi.mock('../../../core/services/BackupService', () => import('./fakes/ipcHarness').then((h) => h.backupServiceModule));
 
 describe('setupIpcRegistries: AI service wiring', () => {
   beforeEach(() => {
@@ -30,5 +35,20 @@ describe('setupIpcRegistries: AI service wiring', () => {
   it('gives the AI service userData/models as the local embedding model cache', () => {
     expect(aiServiceConstructions).toHaveLength(1);
     expect(aiServiceConstructions[0][1]).toBe(path.join(USER_DATA, 'models'));
+  });
+});
+
+describe('setupIpcRegistries: library wiring', () => {
+  beforeEach(() => {
+    resetIpcHarness();
+    setupIpcRegistries();
+  });
+
+  // Without the OS keychain as the secret store the API keys would be written in plain text and the
+  // ones already encrypted would be read back as garbage (#28).
+  it('opens userData/emma.db with the OS keychain as its secret store', () => {
+    expect(databaseAdapterConstructions).toHaveLength(1);
+    expect(databaseAdapterConstructions[0][0]).toBe(path.join(USER_DATA, 'emma.db'));
+    expect(databaseAdapterConstructions[0][1]).toBeInstanceOf(SafeStorageSecretStore);
   });
 });

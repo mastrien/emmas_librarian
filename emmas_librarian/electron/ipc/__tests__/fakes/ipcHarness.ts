@@ -65,7 +65,14 @@ export const electronModule = {
   BrowserWindow: harness.windows,
 };
 export const fsModule = { default: fsFacade, ...fsFacade };
-export const databaseAdapterModule = { DatabaseAdapter: constructing(harness.db) };
+/** Constructor arguments of every `new DatabaseAdapter(...)`, to check how setupIpcRegistries opens the library. */
+export const databaseAdapterConstructions: unknown[][] = [];
+export const databaseAdapterModule = {
+  DatabaseAdapter: function FakeDatabaseAdapter(...args: unknown[]) {
+    databaseAdapterConstructions.push(args);
+    return harness.db;
+  } as unknown as Constructor,
+};
 export const venueRepositoryModule = { ScientificVenueRepository: constructing(harness.venues) };
 export const searchOrchestratorModule = { SearchOrchestrator: constructing(harness.orchestrator) };
 export const queryTranslatorModule = {
@@ -94,6 +101,7 @@ const plainMocks = [harness.app, harness.dialog, harness.shell, harness.windows]
 export function resetIpcHarness(): void {
   harness.ipcMain.reset();
   aiServiceConstructions.length = 0;
+  databaseAdapterConstructions.length = 0;
   disk.reset();
   [...doubles, ...moreDoubles].forEach((double) => double.reset());
   plainMocks.forEach((mock) => mock.mockReset());

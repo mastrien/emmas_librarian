@@ -10,6 +10,7 @@ import { AiSettings } from './Settings/components/AiSettings';
 import { BackupSettings } from './Settings/components/BackupSettings';
 import { UpdateSettings, describeSnapshotDate } from './Settings/components/UpdateSettings';
 import { TrashSettings } from './Settings/components/TrashSettings';
+import { RemoteAccessSettings } from './Settings/components/RemoteAccessSettings';
 import { modelSuggestions, suggestedModelFor } from './Settings/aiModelSuggestions';
 import { TYPING_DELAY_MS, useSettingsAutosave } from './Settings/useSettingsAutosave';
 import { useDialogs } from '../components/common/dialogs/DialogProvider';
@@ -398,6 +399,8 @@ export const SettingsPage: React.FC<{ section?: SettingsSection }> = ({ section:
               handleRestoreAutoBackup={handleRestoreAutoBackup}
             />
           )}
+
+          {section === 'mobile' && <RemoteAccessSettings />}
 
           {section === 'updates' && (
             <UpdateSettings

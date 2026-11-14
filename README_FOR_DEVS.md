@@ -42,20 +42,22 @@ O código da aplicação fica em `emmas_librarian/` (subpasta do repositório). 
 ```
 /                                   # Raiz do repositório
 ├── emmas_librarian/                # Aplicação Electron + React
-│   ├── electron/                   # Processo principal (Node/Electron)
-│   │   ├── main.ts                 # Janela, CSP, protocolo emma-pdf://, auto-update, ciclo de vida
-│   │   ├── preload.ts              # Ponte segura (contextBridge) entre renderer e main
+│   ├── core/                       # Núcleo: a biblioteca sem shell (não importa `electron`; o ESLint trava)
+│   │   ├── ports/                  # O que o núcleo pede a quem o hospeda:
+│   │   │                           #   AppPaths (onde a biblioteca vive), SecretStore (cifra das
+│   │   │                           #   chaves de API), AppRuntime (versão e reinício)
+│   │   ├── commands/               # Registro de comandos neutro de transporte
+│   │   │   ├── CommandRegistry.ts  # nome do canal → função(args); declara argumentos de arquivo
+│   │   │   ├── libraryCommands.ts  # Raiz de composição do núcleo (monta services e comandos)
+│   │   │   ├── channelSurfaces.ts  # Cada IpcChannel classificado como `cli` ou `gui-only`
+│   │   │   └── *Commands.ts        # Um módulo por domínio (projetos, artigos, PDF, backup…)
 │   │   ├── database/               # Persistência
 │   │   │   ├── schema.sql          # Schema completo do SQLite
 │   │   │   ├── DatabaseAdapter.ts  # Conexão, migrações e fachada sobre os repositórios
-│   │   │   ├── *Repository.ts      # Um repositório por agregado (Article, Project, Annotation,
-│   │   │   │                       #   Document, History, QuestionSet, InvestigationResult,
-│   │   │   │                       #   MassiveInvestigation, AIModelConfig, ScientificVenue,
-│   │   │   │                       #   Settings, Trash)
+│   │   │   ├── *Repository.ts      # Um repositório por agregado
 │   │   │   ├── BackupService.ts    # Exportação/restauração de backups (.emmabak)
-│   │   │   ├── SyncService.ts      # Serialização de projetos (.emmapcarc)
-│   │   │   ├── ProjectSyncService.ts
-│   │   │   └── __tests__/
+│   │   │   ├── ProjectSyncService.ts # Projetos em .emmapcarc (project.json com formatVersion)
+│   │   │   └── SyncService.ts      # Fachada dos dois acima
 │   │   ├── services/               # Regras de negócio
 │   │   │   ├── ApiIntegrator.ts    # OpenAlex, Crossref, Scopus e Web of Science
 │   │   │   ├── QueryTranslator.ts  # Query visual → sintaxe nativa de cada base
@@ -64,16 +66,29 @@ O código da aplicação fica em `emmas_librarian/` (subpasta do repositório). 
 │   │   │   ├── EmbeddingService.ts # Embeddings (ONNX local, Ollama, OpenAI, Gemini…)
 │   │   │   ├── VectorStore.ts      # Busca por similaridade sobre chunks de PDF (RAG)
 │   │   │   ├── PdfExtractor.ts     # Extração de texto e chunking de PDFs
+│   │   │   ├── LibraryStorage.ts   # PDFs e documentos guardados em disco (dedup por hash)
 │   │   │   ├── ExportService.ts    # CSV Scopus/Biblioshiny e exportações do projeto
 │   │   │   ├── BackupService.ts    # Backups automáticos com rotação GFS
-│   │   │   └── llm/                # Gateways de LLM
-│   │   │       ├── LLMProviderGateway.ts   # Interface comum
-│   │   │       └── OpenAI/Anthropic/Gemini/Ollama/OllamaCloud Gateway + jsonRepair.ts
-│   │   ├── ipc/                    # Registro dos canais IPC
-│   │   │   ├── ipcRegistries.ts    # Canais de projetos, artigos, backup, agenda etc.
-│   │   │   ├── aiIpcHandlers.ts    # Canais de IA
-│   │   │   └── errorHandler.ts     # Padronização de erros (AppError)
-│   │   └── utils/logger.ts
+│   │   │   └── llm/                # Gateways de LLM (interface comum + provedores)
+│   │   ├── cli/                    # CLI: leitura dos argumentos, execução, códigos de saída (docs/cli.md)
+│   │   ├── remote/                 # Acesso remoto sem transporte: o que cada chamador pode rodar,
+│   │   │                           #   dispositivos pareados, código de pareamento, gateway HTTP
+│   │   ├── errors/                 # AppError e classificação de falhas (igual em todo transporte)
+│   │   └── utils/                  # logger, doi
+│   ├── electron/                   # Adaptador Electron: o shell desktop sobre o núcleo
+│   │   ├── main.ts                 # Janela, CSP, protocolo emma-pdf://, auto-update, ciclo de vida
+│   │   ├── preload.ts              # Ponte segura (contextBridge) entre renderer e main
+│   │   ├── ports/                  # Implementações Electron das portas (safeStorage, app) e o
+│   │   │                           #   FilePicker (diálogos nativos; o núcleo só recebe caminhos)
+│   │   ├── cli/                    # Entrada do modo `cli` no executável do app (sem janela)
+│   │   ├── remote/                 # Servidor HTTPS da LAN, canal local do CLI, certificado, QR
+│   │   │                           #   (docs/acesso-pelo-celular.md)
+│   │   ├── ipc/
+│   │   │   ├── ipcRegistries.ts    # Raiz de composição do processo principal
+│   │   │   ├── exposeCommandsOverIpc.ts # Expõe o registro do núcleo no ipcMain
+│   │   │   ├── handlers/           # Só o que é do desktop: diálogos, janela, updater, abrir externo
+│   │   │   └── errorHandler.ts     # Serializa o AppError para o renderer
+│   │   └── services/               # Atualização do app e recuperação pós-update
 │   ├── src/                        # Renderer (React)
 │   │   ├── main.tsx                # Rotas e providers
 │   │   ├── pages/                  # Dashboard, NewProject, ProjectDetails, Search,
