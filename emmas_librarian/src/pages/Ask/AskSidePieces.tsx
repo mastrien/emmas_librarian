@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { AskIndexProgress, AskIndexResult, AskReadCitation, ProjectIndexCoverage } from '../../types';
 import { embeddingModelName, pdfCount } from '../../utils/pdfCount';
-import { citationAccessNote, citationReaderState } from './askDisplay';
+import { citationAccessNote, citationReaderState, sourceNumber } from './askDisplay';
 
 /**
  * The chunk a citation points to, kept with the answer, and the way to its page.
@@ -12,16 +12,40 @@ import { citationAccessNote, citationReaderState } from './askDisplay';
  */
 export const AskSourcePanel: React.FC<{
   citation: AskReadCitation;
+  /** Every source of the answer, so another one can be picked from here (board 168: "Fontes"). */
+  sources?: AskReadCitation[];
   conversationId: number;
   onClose: () => void;
-}> = ({ citation, conversationId, onClose }) => {
+  onPick?: (citation: AskReadCitation) => void;
+}> = ({ citation, sources = [], conversationId, onClose, onPick }) => {
   const navigate = useNavigate();
   const note = citationAccessNote(citation);
   const { access } = citation;
   return (
     <div className="ask-source" aria-label="Trecho citado">
+      {sources.length > 1 && onPick && (
+        <ol className="ask-source-list" aria-label="Fontes">
+          {sources.map((source, i) => (
+            <li key={i}>
+              <button
+                type="button"
+                className={`ask-source-item${source === citation ? ' is-on' : ''}`}
+                aria-label={`Ver a fonte ${i + 1}: ${source.title}`}
+                onClick={() => onPick(source)}
+              >
+                <span className="ask-source-item__number">{i + 1}</span>
+                <span className="ask-source-item__title">{source.title}</span>
+                <span className="ask-muted">pág. {source.page}</span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
       <div className="ask-source-head">
-        <h2>{citation.title}</h2>
+        <h2>
+          {sources.length > 1 && <span className="ask-source-head__number">{sourceNumber(sources, citation)} · </span>}
+          {citation.title}
+        </h2>
         <button type="button" className="ask-x" aria-label="Fechar o trecho" onClick={onClose}>
           <X size={18} aria-hidden="true" />
         </button>
@@ -169,6 +193,9 @@ export const AskComposer: React.FC<{
       <button type="submit" className="btn-primary" disabled={blocked}>
         {sending ? 'Perguntando…' : 'Enviar'}
       </button>
+      <span className="ask-composer__hint">
+        Enter envia · Shift+Enter quebra a linha · cada afirmação traz artigo e página
+      </span>
     </form>
   );
 };

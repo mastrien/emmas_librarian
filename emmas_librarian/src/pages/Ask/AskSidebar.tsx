@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import type { AskConversationSummary } from '../../types';
-import { BackLink } from '../../components/common/BackLink';
+import { conversationGroup } from './askDisplay';
 
 const projectCount = (count: number) => (count === 1 ? '1 projeto' : `${count} projetos`);
 
@@ -45,8 +45,21 @@ const ConversationRow: React.FC<{
   );
 };
 
+/** The conversations in the order they come, split under their headings ("Hoje", "Agosto"…). */
+function groupedConversations(conversations: AskConversationSummary[], now: Date) {
+  const groups: { title: string; items: AskConversationSummary[] }[] = [];
+  for (const conversation of conversations) {
+    const title = conversationGroup(conversation.updated_at, now);
+    const last = groups[groups.length - 1];
+    if (last?.title === title) last.items.push(conversation);
+    else groups.push({ title, items: [conversation] });
+  }
+  return groups;
+}
+
 /**
- * The kept conversations, and the way back and to a new one.
+ * The kept conversations under their date headings, and "Nova conversa" with its key (Ctrl N, handled by the page).
+ * The way back to the projects is the module rail.
  *
  * @example <AskSidebar conversations={list} onRemove={remove} onPick={closeDrawer} />
  */
@@ -56,18 +69,25 @@ export const AskSidebar: React.FC<{
   onPick: () => void;
 }> = ({ conversations, onRemove, onPick }) => (
   <nav className="ask-side" aria-label="Conversas">
-    <BackLink to="/">Voltar aos projetos</BackLink>
-    <Link to="/ask" className="btn-primary ask-new" onClick={onPick}>
+    <Link to="/ask" className="btn-primary ask-new" onClick={onPick} aria-keyshortcuts="Control+N">
       <Plus size={16} aria-hidden="true" /> Nova conversa
+      <kbd className="ask-new__key" aria-hidden="true">
+        Ctrl N
+      </kbd>
     </Link>
     <div className="ask-convs">
-      {conversations.map((conversation) => (
-        <ConversationRow
-          key={conversation.id}
-          conversation={conversation}
-          onPick={onPick}
-          onRemove={() => onRemove(conversation.id)}
-        />
+      {groupedConversations(conversations, new Date()).map((group) => (
+        <div key={group.title} className="ask-conv-group">
+          <span className="ask-conv-group__title">{group.title}</span>
+          {group.items.map((conversation) => (
+            <ConversationRow
+              key={conversation.id}
+              conversation={conversation}
+              onPick={onPick}
+              onRemove={() => onRemove(conversation.id)}
+            />
+          ))}
+        </div>
       ))}
     </div>
   </nav>
