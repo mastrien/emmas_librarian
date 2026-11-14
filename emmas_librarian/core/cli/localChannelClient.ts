@@ -59,7 +59,9 @@ function proxyCommand(registry: CommandRegistry, info: TerminalCommandInfo, send
     return resultOf(await send('POST', `/api/commands/${encodeURIComponent(info.name)}`, { args: sent }));
   };
   const describe = () => ({ title: info.name, filters: [] });
-  registry.add(info.name, run, info.file ? { file: { at, mode: info.file.mode, describe } } : {});
+  // The proxy takes "...args"; the names are the ones the app reported for the real command.
+  const file = info.file ? { at, mode: info.file.mode, describe } : undefined;
+  registry.add(info.name, run, { parameters: info.args ?? [], file });
 }
 
 /**

@@ -4,12 +4,20 @@ import { parseCliArguments } from '../cliArguments';
 const plain = { pretty: false };
 
 describe('parseCliArguments', () => {
-  it.each([[[]], [['help']], [['--help']], [['-h']], [['projects:getAll', '--help']]])(
-    'asks for the usage text for %j',
+  it.each([[[]], [['help']], [['--help']], [['-h']], [['commands', '--help']]])(
+    'asks for the general usage text for %j',
     (argv) => {
-      expect(parseCliArguments(argv).kind).toBe('help');
+      expect(parseCliArguments(argv)).toEqual({ kind: 'help', options: plain });
     },
   );
+
+  it('asks for the usage of one command when --help comes with it', () => {
+    expect(parseCliArguments(['diary:save', '--help'])).toEqual({
+      kind: 'help',
+      command: 'diary:save',
+      options: plain,
+    });
+  });
 
   it('lists the commands for `commands`', () => {
     expect(parseCliArguments(['commands'])).toEqual({ kind: 'list', options: plain });

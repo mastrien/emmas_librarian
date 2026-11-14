@@ -32,7 +32,9 @@ emmas-librarian cli export:csv 3 ./artigos.csv
 - `--args-json '<array>'` passa os argumentos exatamente como um array JSON; é a forma mais segura para scripts.
 - Onde o aplicativo abriria um diálogo de arquivo, o CLI recebe o caminho como argumento. `cli commands` mostra
   qual argumento é (`"file": { "argument": 2, "mode": "save" }`).
-- Os argumentos são os mesmos que o canal recebe no aplicativo; o CLI ainda não descreve cada um.
+- `cli commands` traz, em `args`, o nome de cada argumento do comando, na ordem. `cli <comando> --help` mostra
+  a linha de uso (`emmas-librarian cli diary:save <projectId> <date> <content> <expected>`). Os últimos
+  argumentos podem ser opcionais: isso não é indicado.
 
 ## Opções
 

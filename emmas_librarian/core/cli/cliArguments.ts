@@ -8,7 +8,7 @@ export interface CliOptions {
 }
 
 export type CliRequest =
-  | { kind: 'help'; options: CliOptions }
+  | { kind: 'help'; command?: string; options: CliOptions }
   | { kind: 'list'; options: CliOptions }
   | { kind: 'run'; command: string; args: unknown[]; options: CliOptions };
 
@@ -59,7 +59,8 @@ function readTokens(argv: string[]): ParsedTokens {
 
 /**
  * Reads what comes after `cli` on the command line: `<command> [arguments...]` plus options.
- * `commands` lists what can be run; no command, `help` or `--help` asks for the usage text.
+ * `commands` lists what can be run; no command, `help` or `--help` asks for the usage text, and
+ * `<command> --help` for the usage of that command.
  *
  * Usage:
  *   parseCliArguments(['projects:create', 'Tese', '--pretty']);
@@ -68,7 +69,9 @@ function readTokens(argv: string[]): ParsedTokens {
 export function parseCliArguments(argv: string[]): CliRequest {
   const { options, positional, help, argsJson } = readTokens(argv);
   const [command, ...rest] = positional;
-  if (help || command === undefined || command === 'help') return { kind: 'help', options };
+  if (command === undefined || command === 'help') return { kind: 'help', options };
+  // `<command> --help` asks how that command is called.
+  if (help) return { kind: 'help', command: command === 'commands' ? undefined : command, options };
   if (command === 'commands') return { kind: 'list', options };
   if (argsJson && rest.length > 0) {
     throw usageError(

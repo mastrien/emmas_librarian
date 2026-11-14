@@ -66,7 +66,9 @@ describe('ZipFile', () => {
 
     expect(source.size).toBeGreaterThan(2_000_000);
     expect(source.bytesRead).toBeLessThan(70_000);
-    expect(await zip.read('pdfs/grande.pdf')).toEqual(pdf);
+    // Compared as buffers: a deep comparison of two million numbers takes seconds.
+    const read = await zip.read('pdfs/grande.pdf');
+    expect(Buffer.compare(Buffer.from(read!), Buffer.from(pdf))).toBe(0);
   });
 
   it.each([

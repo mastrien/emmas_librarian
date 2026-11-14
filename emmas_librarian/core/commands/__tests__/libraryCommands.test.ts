@@ -10,6 +10,7 @@ import { appPathsIn, type AppPaths } from '../../ports/AppPaths';
 import { FakeAppRuntime } from '../../ports/__tests__/fakes/FakeAppRuntime';
 import type { CommandRegistry } from '../CommandRegistry';
 import { cliChannels, surfaceOf } from '../channelSurfaces';
+import { listTerminalCommands } from '../terminalCommands';
 import { buildLibraryCommands } from '../libraryCommands';
 
 // What only the desktop app can do: these channels have no command in the core.
@@ -81,6 +82,21 @@ describe('buildLibraryCommands', () => {
         `${IpcChannel.CATEGORIES_READ_SET_FILE} open@0`,
       ].sort(),
     );
+  });
+
+  // #190: the names come from each command's own signature; a command that hid them (a wrapper taking
+  // "...args") would be listed with nothing to tell a person or an agent how to call it.
+  it('names every argument of every command a terminal can run', () => {
+    const unnamed = listTerminalCommands(commands).filter(({ name, args }) => {
+      const { run } = commands.get(name);
+      return args.length < run.length || args.some((arg) => arg.startsWith('...'));
+    });
+
+    expect(unnamed.map((command) => command.name)).toEqual([]);
+    expect(commands.get(IpcChannel.DIARY_SAVE).parameters).toEqual(['projectId', 'date', 'content', 'expected']);
+    expect(commands.get(IpcChannel.SYNC_EXPORT_PROJECT).parameters).toEqual(['projectId', 'filePath']);
+    expect(commands.get(IpcChannel.SCIENTIFIC_VENUE_UPDATE).parameters).toEqual(['{ id, venueData }']);
+    expect(commands.get(IpcChannel.PROJECTS_GET_ALL).parameters).toEqual([]);
   });
 
   it('runs commands against the library it was given, with no shell around it', async () => {

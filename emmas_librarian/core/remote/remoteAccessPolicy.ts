@@ -120,5 +120,5 @@ export function listRemoteCommands(commands: CommandRegistry, principal: RemoteP
   if (principal.kind === 'local') return listTerminalCommands(commands);
   // Not the terminal list: a phone also reads PDFs, which a terminal cannot show.
   const allowed = commands.list().filter((command) => DEVICE_CHANNELS.has(command.name) && !command.file);
-  return allowed.map(({ name }) => ({ name }));
+  return allowed.map(({ name, parameters: args }) => ({ name, args }));
 }

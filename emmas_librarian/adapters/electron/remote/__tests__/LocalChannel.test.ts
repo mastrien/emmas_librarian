@@ -121,7 +121,12 @@ describe('the CLI through the open app', () => {
     expect(ran).toEqual([]);
 
     const listed = JSON.parse((await cli('commands')).stdout!).result as { name: string }[];
-    expect(listed).toContainEqual({ name: IpcChannel.EXPORT_CSV, file: { argument: 2, mode: 'save' } });
+    // The names are the ones of the command inside the app, not of the proxy that forwards to it.
+    expect(listed).toContainEqual({
+      name: IpcChannel.EXPORT_CSV,
+      args: ['id', 'filePath'],
+      file: { argument: 2, mode: 'save' },
+    });
   });
 
   it('asks for the file path before calling the app', async () => {

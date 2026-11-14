@@ -79,9 +79,33 @@ describe('runCli', () => {
     const listed = JSON.parse((await run('commands')).stdout!).result;
 
     expect(listed).toEqual(listTerminalCommands(library.commands));
-    expect(listed).toContainEqual({ name: IpcChannel.EXPORT_CSV, file: { argument: 2, mode: 'save' } });
-    expect(listed).toContainEqual({ name: IpcChannel.PROJECTS_GET_ALL });
-    expect(listed).not.toContainEqual({ name: IpcChannel.PDF_GET });
+    expect(listed).toContainEqual({
+      name: IpcChannel.EXPORT_CSV,
+      args: ['_id', 'filePath'],
+      file: { argument: 2, mode: 'save' },
+    });
+    expect(listed).toContainEqual({ name: IpcChannel.PROJECTS_UPDATE, args: ['id', 'name'] });
+    expect(listed).toContainEqual({ name: IpcChannel.PROJECTS_GET_ALL, args: [] });
+    expect(listed.map((command: { name: string }) => command.name)).not.toContain(IpcChannel.PDF_GET);
+  });
+
+  it('shows how to call one command, with the names of its arguments (#190)', async () => {
+    expect(await run(IpcChannel.PROJECTS_UPDATE, '--help')).toEqual({
+      exitCode: CLI_EXIT.ok,
+      stdout: [
+        'Uso: emmas-librarian cli projects:update <id> <name>',
+        'Os últimos argumentos podem ser opcionais. Cada um é lido como JSON quando possível, senão como texto.',
+      ].join('\n'),
+    });
+    expect((await run(IpcChannel.EXPORT_CSV, '--help')).stdout).toContain('export:csv <_id> <filePath>');
+  });
+
+  it('explains instead of showing usage when help is asked for a command a terminal cannot run', async () => {
+    expect(await failureOf(IpcChannel.PDF_GET, '--help')).toMatchObject({
+      exitCode: CLI_EXIT.usage,
+      code: 'ERR_GUI_ONLY',
+    });
+    expect(await failureOf('nope', '--help')).toMatchObject({ exitCode: CLI_EXIT.usage, code: 'ERR_UNKNOWN_COMMAND' });
   });
 
   it('refuses an unknown command as a usage error on stderr, naming it', async () => {

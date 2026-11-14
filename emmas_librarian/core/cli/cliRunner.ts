@@ -1,5 +1,5 @@
-import type { CommandRegistry } from '../commands/CommandRegistry';
-import { listTerminalCommands, requireTerminalCommand } from '../commands/terminalCommands';
+import type { CommandRegistry, RegisteredCommand } from '../commands/CommandRegistry';
+import { listTerminalCommands, requireTerminalCommand, terminalUsage } from '../commands/terminalCommands';
 import { AppError, type ErrorType } from '../errors/AppError';
 import { shellFailureFrom } from '../errors/shellFailureFrom';
 import { libraryInUse, replacesLibrary } from '../commands/libraryReplacement';
@@ -67,7 +67,8 @@ export const CLI_USAGE = [
   '',
   'Uso: emmas-librarian cli <comando> [argumentos...] [opções]',
   '',
-  '  commands                 lista os comandos disponíveis',
+  '  commands                 lista os comandos disponíveis, com os nomes dos argumentos de cada um',
+  '  <comando> --help         mostra como chamar aquele comando',
   '  <comando> [args...]      roda um comando; cada argumento é lido como JSON quando possível, senão como texto',
   '',
   'Opções:',
@@ -85,6 +86,19 @@ export const CLI_USAGE = [
   '  emmas-librarian cli export:csv 3 ./artigos.csv',
 ].join('\n');
 
+// Checked like a run, so asking about a desktop-only or unknown command explains why it cannot be called.
+function commandHelp(name: string | undefined, host: CliHost): CliOutcome {
+  if (!name) return { exitCode: CLI_EXIT.ok, stdout: CLI_USAGE };
+  const command = host.commands.get(name);
+  requireTerminalCommand(host.commands, name, fileArgumentPlaceholders(command));
+  const note = 'Os últimos argumentos podem ser opcionais. Cada um é lido como JSON quando possível, senão como texto.';
+  return { exitCode: CLI_EXIT.ok, stdout: `Uso: ${terminalUsage(command)}\n${note}` };
+}
+
+// The file argument is not being given now: a stand-in keeps "missing file" out of a request for help.
+const fileArgumentPlaceholders = (command: RegisteredCommand): unknown[] =>
+  command.parameters.map((name) => `<${name}>`);
+
 /**
  * Runs one CLI request against the library's commands and answers what to print and the exit code.
  * It never throws: every failure becomes a JSON error and a code.
@@ -95,9 +109,9 @@ export const CLI_USAGE = [
  */
 export async function runCliRequest(request: CliRequest, host: CliHost): Promise<CliOutcome> {
   const { pretty } = request.options;
-  if (request.kind === 'help') return { exitCode: CLI_EXIT.ok, stdout: CLI_USAGE };
   if (request.kind === 'list') return success(listTerminalCommands(host.commands), pretty);
   try {
+    if (request.kind === 'help') return commandHelp(request.command, host);
     const command = requireTerminalCommand(host.commands, request.command, request.args);
     refuseWhileAppRuns(command.name, host);
     return success(await host.commands.run(command.name, ...request.args), pretty);
@@ -124,7 +138,8 @@ export async function runCli(
 ): Promise<CliOutcome> {
   try {
     const request = parseCliArguments(argv);
-    if (request.kind === 'help') return { exitCode: CLI_EXIT.ok, stdout: CLI_USAGE };
+    // The general help needs no library; the help of one command is answered by the commands themselves.
+    if (request.kind === 'help' && !request.command) return { exitCode: CLI_EXIT.ok, stdout: CLI_USAGE };
     const host = await open(request.options);
     try {
       return await runCliRequest(request, host);

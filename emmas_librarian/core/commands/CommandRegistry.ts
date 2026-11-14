@@ -1,4 +1,5 @@
 import { AppError } from '../errors/AppError';
+import { parameterNames } from './parameterNames';
 
 // `never[]` accepts functions with any concrete parameter list; arguments are untyped at every transport's edge.
 export type CommandFn = (...args: never[]) => unknown;
@@ -34,11 +35,15 @@ export interface FileArgument {
 
 export interface CommandOptions {
   file?: FileArgument;
+  /** The names of the arguments, where they cannot be read from `run` (a command that only forwards). */
+  parameters?: string[];
 }
 
 export interface RegisteredCommand {
   name: string;
   run: CommandFn;
+  /** What each argument is called, in order; shells show these as the command's usage. */
+  parameters: string[];
   file?: FileArgument;
 }
 
@@ -59,7 +64,8 @@ export class CommandRegistry {
     if (this.commands.has(name)) {
       throw new Error(`Command "${name}" is already registered; expected each command name to be added once`);
     }
-    this.commands.set(name, { name, run, file: options.file });
+    const parameters = options.parameters ?? parameterNames(run);
+    this.commands.set(name, { name, run, parameters, file: options.file });
   }
 
   has(name: string): boolean {

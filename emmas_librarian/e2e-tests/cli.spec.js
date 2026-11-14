@@ -18,7 +18,8 @@ test.describe('Command line interface', () => {
     return {
       code,
       stdout,
-      output: stdout ? JSON.parse(stdout) : null,
+      // Help is plain text; everything else is one JSON document.
+      output: stdout.startsWith('{') ? JSON.parse(stdout) : null,
       error: errorLine ? JSON.parse(errorLine).error : null,
     };
   };
@@ -62,6 +63,17 @@ test.describe('Command line interface', () => {
     expect(duplicate.stdout).toBe('');
     expect((await cli('pdf:get', '1')).code).toBe(2);
     expect((await cli('projects:getAl')).error.code).toBe('ERR_UNKNOWN_COMMAND');
+
+    // #190: each command says what its arguments are called. The names are read from the compiled code,
+    // so this fails if the main process is ever minified.
+    const listed = (await cli('commands')).output.result;
+    expect(listed.find((command) => command.name === 'diary:save').args).toEqual([
+      'projectId',
+      'date',
+      'content',
+      'expected',
+    ]);
+    expect((await cli('export:csv', '--help')).stdout).toContain('export:csv <projectId> <filePath>');
 
     // What the CLI wrote is there when the app opens again.
     app = await launchApp({}, { userDataDir });

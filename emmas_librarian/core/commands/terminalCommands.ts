@@ -9,6 +9,8 @@ const worksInTerminal = (name: string) => !isChannel(name) || surfaceOf(name) ==
 /** A command as `commands` lists it: its name and, if it takes a file, which argument that is. */
 export interface TerminalCommandInfo {
   name: string;
+  /** The names of the command's arguments, in order. */
+  args: string[];
   file?: { argument: number; mode: 'open' | 'save' };
 }
 
@@ -16,13 +18,17 @@ export interface TerminalCommandInfo {
  * Every command a terminal can run, with the file argument it takes, if any.
  *
  * Usage:
- *   listTerminalCommands(commands); // [{ name: 'projects:getAll' }, { name: 'export:csv', file: { argument: 2, mode: 'save' } }]
+ *   listTerminalCommands(commands);
+ *   // [{ name: 'projects:getOne', args: ['projectId'] },
+ *   //  { name: 'export:csv', args: ['projectId', 'filePath'], file: { argument: 2, mode: 'save' } }]
  */
 export function listTerminalCommands(commands: CommandRegistry): TerminalCommandInfo[] {
   return commands
     .list()
     .filter((command) => worksInTerminal(command.name))
-    .map(({ name, file }) => (file ? { name, file: { argument: file.at + 1, mode: file.mode } } : { name }));
+    .map(({ name, parameters: args, file }) =>
+      file ? { name, args, file: { argument: file.at + 1, mode: file.mode } } : { name, args },
+    );
 }
 
 function requireFileArgument(command: RegisteredCommand, args: unknown[]): void {
@@ -54,4 +60,16 @@ export function requireTerminalCommand(commands: CommandRegistry, name: string, 
   const command = commands.get(name);
   requireFileArgument(command, args);
   return command;
+}
+
+/**
+ * The usage line of one command, for `cli <command> --help`. Which trailing arguments are optional is
+ * not known here: TypeScript's `?` does not exist at run time.
+ *
+ * Usage:
+ *   terminalUsage(commands.get('diary:save')); // 'emmas-librarian cli diary:save <projectId> <date> <content> <expected>'
+ */
+export function terminalUsage(command: RegisteredCommand): string {
+  const args = command.parameters.map((name) => `<${name}>`);
+  return ['emmas-librarian cli', command.name, ...args].join(' ');
 }
