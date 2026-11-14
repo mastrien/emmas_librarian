@@ -10,10 +10,9 @@ import { useProjectPdfImport } from './ProjectDetails/hooks/useProjectPdfImport'
 import { useHoverMenu } from './ProjectDetails/hooks/useHoverMenu';
 import { ProjectDetailsSkeleton } from './ProjectDetails/components/ProjectDetailsSkeleton';
 import { ProjectSectionHeader } from './ProjectDetails/components/ProjectSectionHeader';
-import { ProjectQuickAccess } from './ProjectDetails/components/overview/ProjectQuickAccess';
+import { ProjectOverview } from './ProjectDetails/components/overview/ProjectOverview';
 import { DEFAULT_PROJECT_SECTION, isProjectSection, type ProjectSection } from '../components/common/shell/projectNav';
 import { ProjectArticlesTab } from './ProjectDetails/components/ProjectArticlesTab';
-import { ProjectOverviewTab } from './ProjectDetails/components/ProjectOverviewTab';
 import { ProjectCategoriesTab } from './ProjectDetails/components/ProjectCategoriesTab';
 import { ProjectModalsContainer } from './ProjectDetails/components/ProjectModalsContainer';
 import { PdfDropOverlay } from './ProjectDetails/components/PdfDropOverlay';
@@ -125,14 +124,11 @@ export const ProjectDetailsPage: React.FC = () => {
         />
       )}
       {activeTab === 'overview' && (
-        <ProjectQuickAccess documents={data.projectDocuments} onManage={() => modals.setIsQuickAccessModalOpen(true)} />
-      )}
-      {activeTab === 'overview' && (
-        <ProjectOverviewTab
-          activeArticles={filtering.activeArticles}
-          readArticles={filtering.readArticles}
-          archivedArticles={filtering.archivedArticles}
-          filteredArticles={filtering.filteredArticles}
+        <ProjectOverview
+          projectId={project.id}
+          articles={data.articles}
+          documents={data.projectDocuments}
+          onManageQuickAccess={() => modals.setIsQuickAccessModalOpen(true)}
         />
       )}
       {activeTab === 'categories' && (

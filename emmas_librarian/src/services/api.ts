@@ -93,6 +93,11 @@ export const projectService: IProjectService = {
     await safeInvoke(IpcChannel.PROJECTS_UPDATE, id, name);
   },
 
+  getProjectAbout: (projectId: number): Promise<string> => safeInvoke<string>(IpcChannel.PROJECTS_GET_ABOUT, projectId),
+
+  updateProjectAbout: (projectId: number, markdown: string): Promise<void> =>
+    safeInvoke(IpcChannel.PROJECTS_UPDATE_ABOUT, projectId, markdown),
+
   getProjectNavCounts: (projectId: number): Promise<ProjectNavCounts> =>
     safeInvoke<ProjectNavCounts>(IpcChannel.PROJECTS_GET_NAV_COUNTS, projectId),
 

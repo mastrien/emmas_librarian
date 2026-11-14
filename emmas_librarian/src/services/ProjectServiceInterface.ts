@@ -124,6 +124,8 @@ export interface IProjectService {
   createProject(name: string): Promise<Project>;
   getProject(projectId: number): Promise<Project>;
   updateProject(id: number, name: string): Promise<void>;
+  getProjectAbout(projectId: number): Promise<string>;
+  updateProjectAbout(projectId: number, markdown: string): Promise<void>;
   getProjectNavCounts(projectId: number): Promise<ProjectNavCounts>;
   getProjectWritingPad(id: number): Promise<string | null>;
   updateProjectWritingPad(id: number, content: string): Promise<void>;

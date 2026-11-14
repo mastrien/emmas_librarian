@@ -1,60 +1,282 @@
-/* ProjectOverviewTab. Values carried over from the inline styles they replace (Arca 134). */
+/* Project overview (redesign, board 154). Two columns: the about page and quick access, then the numbers. */
 .overview {
   display: flex;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+.overview-main {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--space-5);
 }
 
-.overview-grid {
+.overview-stats {
+  flex: none;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Narrow windows: one column, the page first. Two columns need about 1180px with the rail and the sidebar
+   (288px) and the screen padding: the page keeps at least ~460px beside the 340px of numbers. */
+@media (max-width: 1180px) {
+  .overview {
+    flex-direction: column;
+  }
+  .overview-stats {
+    width: 100%;
+  }
+}
+
+.overview-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.overview-muted {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.overview-section-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-heading);
+}
+
+/* About page */
+.overview-about__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.overview-save {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.overview-save--saved svg {
+  color: var(--color-success-text);
+}
+
+.overview-save--error {
+  color: var(--color-danger-text);
+}
+
+.overview-about__loading {
+  height: 160px;
+}
+
+/* The editor blends into the page: no frame, the toolbar quiet until needed. */
+.overview-about__editor .mdxeditor {
+  background: transparent;
+}
+
+.overview-about__editor [role='toolbar'] {
+  background: transparent;
+  padding: var(--space-1) 0;
+}
+
+.overview-about__content {
+  min-height: 160px;
+  padding: var(--space-3) 0;
+  font-family: var(--font-read);
+  font-size: 15px;
+  line-height: 1.65;
+  max-width: 68ch;
+  color: var(--text-main);
+}
+
+/* Tiles */
+.overview-tiles {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
+.overview-tile,
 .overview-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 2rem;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-surface);
 }
 
-.overview-card h3 {
-  margin: 0 0 1rem 0;
+.overview-card {
+  gap: var(--space-2);
 }
 
-.overview-chart {
-  position: relative;
-  width: 100%;
-  height: 300px;
+.overview-tile__value {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text-heading);
+  font-variant-numeric: tabular-nums;
 }
 
-.overview-legend {
+.overview-progress {
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: var(--bg-sunken);
+}
+
+.overview-progress i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--color-primary);
+}
+
+.overview-progress i.is-ok {
+  background: var(--color-success);
+}
+
+/* Cards with bars */
+.overview-card__head {
   display: flex;
-  gap: 1.5rem;
-  margin-top: 1rem;
+  align-items: baseline;
+  gap: var(--space-2);
 }
 
-.overview-legend-item {
+.overview-card__head .overview-muted {
+  margin-left: auto;
+}
+
+.overview-card__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.overview-years {
   display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 80px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.overview-years i {
+  flex: 1 1 0;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--color-primary);
+}
+
+.overview-years i.is-unknown {
+  background: var(--text-muted);
+  opacity: 0.5;
+}
+
+.overview-ranked {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.overview-ranked li {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) 32px;
   align-items: center;
-  gap: 0.5rem;
+  gap: 10px;
+  font-size: 12px;
 }
 
-.overview-legend-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+.overview-ranked i {
+  display: block;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--color-primary);
 }
 
-/* The status pie's colours (STATUS_COLORS in ProjectOverviewTab), in its order: active, read, archived. */
-.overview-legend-dot--0 {
-  background-color: #3b82f6;
+.overview-ranked li.is-unknown i {
+  background: var(--text-muted);
+  opacity: 0.5;
 }
 
-.overview-legend-dot--1 {
-  background-color: #10b981;
+.overview-ranked li.is-unknown .overview-ranked__name {
+  color: var(--text-muted);
 }
 
-.overview-legend-dot--2 {
-  background-color: #6b7280;
+.overview-ranked__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-main);
+}
+
+.overview-ranked__count {
+  text-align: right;
+  font-weight: 600;
+  color: var(--text-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.overview-link {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: var(--color-primary-text);
+  cursor: pointer;
+}
+
+.overview-link:hover {
+  text-decoration: underline;
+}
+
+/* The quick access card's title at the size of "Sobre o projeto" (board 154: both are section titles). */
+.overview-main .quick-access-head h3 {
+  font-size: 15px;
+}
+
+/* Headings inside the page stay quiet labels in the interface font (board 154), not display titles. */
+.overview-about__content :is(h1, h2, h3, h4) {
+  margin: var(--space-3) 0 var(--space-1);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-heading);
+}
+
+.overview-about__content h1 {
+  font-size: 17px;
+}
+
+.overview-about__content h2 {
+  font-size: 15px;
+}
+
+.overview-about__content :is(h3, h4) {
+  font-size: 14px;
 }
