@@ -68,6 +68,12 @@ function renderTab({ articles, pageSize = 50 }: HarnessProps) {
 const mainList = () => screen.getByTestId('main-articles-table');
 const status = (name: RegExp) =>
   within(screen.getByRole('group', { name: 'Status dos artigos' })).getByRole('button', { name });
+// Status, reading and reference actions live in the row's "⋯" (board 153).
+const chooseFromRowMenu = (title: string, item: string) => {
+  const row = within(within(mainList()).getByText(title).closest('tr') as HTMLElement);
+  fireEvent.click(row.getByRole('button', { name: 'Mais ações' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: item }));
+};
 const openFilters = () => fireEvent.click(screen.getByRole('button', { name: /^Filtros/ }));
 const popover = () => within(screen.getByRole('dialog', { name: 'Filtros' }));
 
@@ -123,7 +129,7 @@ describe('ProjectArticlesTab status', () => {
     const { onStatusChange } = renderTab({ articles: [archived] });
 
     fireEvent.click(status(/^Arquivados/));
-    fireEvent.click(within(mainList()).getByTitle('Restaurar Artigo'));
+    chooseFromRowMenu('Arquivado', 'Restaurar Artigo');
 
     expect(onStatusChange).toHaveBeenCalledWith(3, 'new');
   });
@@ -142,8 +148,8 @@ describe('ProjectArticlesTab list actions', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: 'Desvincular PDF' }));
     fireEvent.click(row('Sem PDF').getByRole('button', { name: 'Vincular PDF' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Do computador…' }));
-    fireEvent.click(row('Sem PDF').getByTitle('Marcar como Lido'));
-    fireEvent.click(row('Sem PDF').getByTitle('Arquivar'));
+    chooseFromRowMenu('Sem PDF', 'Marcar como Lido');
+    chooseFromRowMenu('Sem PDF', 'Arquivar');
     fireEvent.click(row('Sem PDF').getByRole('button', { name: 'Mais ações' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Editar Metadados' }));
 
@@ -160,14 +166,11 @@ describe('ProjectArticlesTab pagination', () => {
     renderTab({ articles: [article(1), article(2), article(3)], pageSize: 2 });
 
     expect(screen.getByText('3 artigos')).toBeInTheDocument();
-    expect(screen.getAllByText('1 / 2')).toHaveLength(2);
-    fireEvent.click(screen.getByRole('button', { name: /^Próxima$/ }));
-    expect(screen.getAllByText('2 / 2')).toHaveLength(2);
-    expect(
-      within(mainList())
-        .getAllByRole('row')
-        .filter((r) => r.textContent?.includes('Artigo')),
-    ).toHaveLength(1);
+    expect(screen.getByText('1–2 de 3')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Próxima página' }));
+    expect(screen.getByText('3–3 de 3')).toBeInTheDocument();
+    // Body rows only: the header reads "Artigo" too.
+    expect(within(mainList()).getAllByRole('row').slice(1)).toHaveLength(1);
   });
 });
 
@@ -361,9 +364,9 @@ describe('ProjectArticlesTab open access PDFs', () => {
 
     const row = findOpenCopy('Artigo 1');
 
-    expect(await row.findByRole('status')).toHaveTextContent(
-      'Há cópia aberta, mas o download automático não funcionou.',
-    );
+    expect(
+      await row.findByText('Há cópia aberta, mas o download automático não funcionou.', { exact: false }),
+    ).toBeInTheDocument();
     expect(row.getByRole('link', { name: 'Abrir a página' })).toHaveAttribute('href', 'https://doi.org/10.1056/x');
     expect(service.fetchOpenAccessPdf).toHaveBeenCalledWith(1);
   });
@@ -374,7 +377,7 @@ describe('ProjectArticlesTab open access PDFs', () => {
     service.fetchOpenAccessPdf.mockReturnValue(new Promise((resolve) => (answer = resolve)));
 
     const row = findOpenCopy('Artigo 1');
-    expect(row.getByRole('button', { name: /Buscando PDF/ })).toBeDisabled();
+    expect(row.getByRole('status', { name: 'Buscando PDF…' })).toBeInTheDocument();
     answer({ status: 'downloaded', source: 'PubMed Central' });
 
     expect(await row.findByText('PDF baixado. Fonte: PubMed Central.')).toBeInTheDocument();
@@ -433,5 +436,77 @@ describe('ProjectArticlesTab open access PDFs', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Fechar' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+// Board 153 footer: "J K linha · Enter abrir · X selecionar".
+describe('ProjectArticlesTab keyboard', () => {
+  const press = (key: string) => fireEvent.keyDown(document.body, { key });
+  const currentRow = () =>
+    within(mainList())
+      .getAllByRole('row')
+      .find((r) => r.classList.contains('is-current'));
+
+  // Newest first by default: Artigo 2, then Artigo 1.
+  it('moves the current row with J and K, stopping at the ends', () => {
+    renderTab({ articles: [article(1), article(2)] });
+
+    press('j');
+    expect(currentRow()).toHaveTextContent('Artigo 2');
+    press('j');
+    press('j');
+    expect(currentRow()).toHaveTextContent('Artigo 1');
+    press('k');
+    press('k');
+    expect(currentRow()).toHaveTextContent('Artigo 2');
+  });
+
+  it('opens the details of the current row with Enter when it has no PDF', () => {
+    const { modals } = renderTab({ articles: [article(1, { title: 'Sem PDF' })] });
+
+    press('j');
+    press('Enter');
+
+    expect(modals.setSelectedArticleForDetails).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+  });
+
+  it('leaves Enter to a focused button, like the row menu reached with Tab', () => {
+    const { modals } = renderTab({ articles: [article(1)] });
+    press('j');
+
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Mais ações' }), { key: 'Enter' });
+
+    expect(modals.setSelectedArticleForDetails).not.toHaveBeenCalled();
+  });
+
+  it('selects the current row with X, starting multi-select', () => {
+    renderTab({ articles: [article(1)] });
+
+    press('j');
+    press('x');
+
+    expect(screen.getByRole('checkbox', { name: 'Selecionar "Artigo 1"' })).toBeChecked();
+    expect(screen.getByRole('button', { name: /Sair da seleção/, pressed: true })).toBeInTheDocument();
+  });
+
+  it('leaves the keys alone while the user types in a field', () => {
+    renderTab({ articles: [article(1)] });
+    const search = screen.getByRole('searchbox', { name: 'Buscar por título ou autor' });
+
+    fireEvent.keyDown(search, { key: 'j' });
+
+    expect(currentRow()).toBeUndefined();
+  });
+});
+
+describe('ProjectArticlesTab "Selecionar"', () => {
+  it('turns multi-select on and off from the toolbar', () => {
+    renderTab({ articles: [article(1)] });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Selecionar$/ }));
+    expect(screen.getByRole('checkbox', { name: 'Selecionar "Artigo 1"' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Sair da seleção/, pressed: true }));
+    expect(screen.queryByRole('checkbox', { name: 'Selecionar "Artigo 1"' })).not.toBeInTheDocument();
   });
 });

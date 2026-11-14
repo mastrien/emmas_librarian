@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, SquareCheck, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { ActiveFilter, FilterKey } from '../../hooks/articleFilters';
 import { chipsThatFit } from './chipsThatFit';
 
@@ -95,36 +95,6 @@ export const FilterChips: React.FC<FilterChipsProps> = ({ filters, onRemove, onS
   );
 };
 
-interface PagerProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (updater: (page: number) => number) => void;
-}
-
-const CompactPager: React.FC<PagerProps> = ({ currentPage, totalPages, onPageChange }) => (
-  <span className="result-line__pager">
-    <button
-      type="button"
-      className="btn-ghost btn-ghost--icon"
-      aria-label="Página anterior"
-      disabled={currentPage === 1}
-      onClick={() => onPageChange((p) => Math.max(1, p - 1))}
-    >
-      <ChevronLeft size={16} />
-    </button>
-    {currentPage} / {totalPages}
-    <button
-      type="button"
-      className="btn-ghost btn-ghost--icon"
-      aria-label="Próxima página"
-      disabled={currentPage === totalPages}
-      onClick={() => onPageChange((p) => Math.min(totalPages, p + 1))}
-    >
-      <ChevronRight size={16} />
-    </button>
-  </span>
-);
-
 /**
  * "3 artigos", "1 artigo" or "8 de 52 artigos": the noun agrees with the total it follows.
  *
@@ -134,27 +104,3 @@ export function resultCountLabel(shown: number, total: number): string {
   const noun = total === 1 ? 'artigo' : 'artigos';
   return shown === total ? `${total} ${noun}` : `${shown} de ${total} ${noun}`;
 }
-
-interface ResultLineProps extends PagerProps {
-  shown: number;
-  total: number;
-  onStartSelection: () => void;
-}
-
-/**
- * The line above the table: how many articles the filters leave, "Selecionar" (multi-select) and the page
- * switcher when there is more than one page. The active filters sit above it, beside "Filtros" (board 153).
- *
- * @example <ResultLine shown={8} total={52} onStartSelection={start} currentPage={1} totalPages={2} … />
- */
-export const ResultLine: React.FC<ResultLineProps> = ({ shown, total, onStartSelection, ...rest }) => (
-  <div className="result-line">
-    <span className="result-line__total">{resultCountLabel(shown, total)}</span>
-    <button type="button" className="btn-ghost" onClick={onStartSelection}>
-      <SquareCheck size={16} /> Selecionar
-    </button>
-    {rest.totalPages > 1 && (
-      <CompactPager currentPage={rest.currentPage} totalPages={rest.totalPages} onPageChange={rest.onPageChange} />
-    )}
-  </div>
-);

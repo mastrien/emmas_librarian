@@ -1,0 +1,242 @@
+/* The article table (redesign, board 153): article, year, bases, PDF and "⋯"; dense rows, one byline, numbers in
+   tabular figures. The table follows its own width (container query): on a narrow screen area the bases go. */
+.articles-table-container {
+  container-type: inline-size;
+  container-name: articles;
+}
+
+.articles-table th {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-sunken);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.articles-table td {
+  padding: 10px 12px;
+  vertical-align: top;
+}
+
+.articles-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.articles-table .articles-th-year,
+.articles-table .articles-cell--year {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.articles-table .articles-cell--year {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.articles-table .articles-th-pdf,
+.articles-table .articles-cell--pdf {
+  width: 1%;
+  text-align: center;
+}
+
+.articles-table .articles-th-menu,
+.articles-table .articles-cell--menu {
+  width: 1%;
+  padding-left: 0;
+  text-align: right;
+}
+
+.articles-table .articles-col-bases {
+  width: 1%;
+}
+
+.articles-table .articles-bases {
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+/* The row J/K moved to: an accent bar on its left edge. */
+.articles-table tr.is-current td:first-child {
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.articles-table tr.is-current td {
+  background: var(--bg-surface-hover);
+}
+
+/* Article cell */
+.article-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.article-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-heading);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.article-title:hover {
+  color: var(--color-primary-text);
+  text-decoration: underline;
+}
+
+.article-title:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* One line: the first authors and the venue; the whole text is in the tooltip. Width 0 + min-width 100% keeps a
+   long byline from widening the column before the ellipsis applies. */
+.article-byline {
+  width: 0;
+  min-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.article-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.article-note a {
+  color: var(--color-primary-text);
+  font-weight: 600;
+}
+
+.article-note--ok {
+  color: var(--color-success-text);
+}
+
+.article-note--warning {
+  color: var(--color-warning-text);
+}
+
+.article-note--error {
+  color: var(--color-danger-text);
+}
+
+/* Quiet icon buttons of a row (PDF, "⋯") and of the footer. */
+.row-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.row-icon-button:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  color: var(--text-heading);
+}
+
+.row-icon-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.row-icon-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.row-icon-button--accent {
+  color: var(--color-primary-text);
+}
+
+.row-icon-button--muted {
+  opacity: 0.55;
+}
+
+/* "⋯" stays faint until its row is hovered, focused or current: always there, never loud. */
+.row-actions-trigger {
+  opacity: 0.45;
+}
+
+tr:hover .row-actions-trigger,
+tr:focus-within .row-actions-trigger,
+tr.is-current .row-actions-trigger,
+.row-actions-trigger[aria-expanded='true'] {
+  opacity: 1;
+}
+
+/* Footer: shortcuts, count, pages */
+.articles-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-3) 0 var(--space-6);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.articles-footer__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.articles-footer kbd {
+  min-width: 18px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-align: center;
+}
+
+.articles-footer__count {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+}
+
+.articles-footer__pages {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Narrow screen area: the bases leave first (their names are in the details). */
+@container articles (max-width: 560px) {
+  .articles-col-bases {
+    display: none;
+  }
+}

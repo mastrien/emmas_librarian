@@ -45,7 +45,7 @@ test('filters show as chips beside "Filtros" and several articles are archived w
     await expect(popover).toBeHidden();
     await expect(window.getByText('0 de 3 artigos')).toBeVisible();
     await expect.poll(() => lineCount(rows.nth(1))).toBe(1);
-    await expect.poll(() => lineCount(window.locator('.result-line'))).toBe(1);
+    await expect.poll(() => lineCount(window.locator('.articles-footer'))).toBe(1);
     await window.getByRole('button', { name: 'Remover filtro Com PDF' }).click();
     await expect(window.getByText('3 artigos', { exact: true })).toBeVisible();
 

@@ -4,11 +4,12 @@ import { givenProject, renderProjectPage, article, mainTable } from './support/p
 
 afterEach(() => vi.restoreAllMocks());
 
+// Body rows only: the header now reads "Artigo" too.
 const rowTitles = () =>
   within(mainTable())
     .getAllByRole('row')
-    .map((row) => row.textContent ?? '')
-    .filter((text) => text.includes('Artigo') || text.includes('Paper'));
+    .slice(1)
+    .map((row) => row.textContent ?? '');
 
 const inRow = (title: string) => within(within(mainTable()).getByText(title).closest('tr') as HTMLElement);
 // Unlink, edit and cite live in each row's "⋯" menu, which opens in a portal.
@@ -122,7 +123,7 @@ describe('ProjectDetailsPage read and archived articles', () => {
     await renderProjectPage(service);
     chooseStatus(/^Lidos/);
 
-    fireEvent.click(inRow('Artigo lido').getByTitle('Desmarcar como Lido'));
+    chooseFromRowMenu('Artigo lido', 'Desmarcar como Lido');
 
     await waitFor(() => expect(statusButton(/^Lidos/)).toHaveTextContent('Lidos 0'));
     expect(service.updateArticleStatus).toHaveBeenCalledWith(2, 'new', undefined);
@@ -133,7 +134,7 @@ describe('ProjectDetailsPage read and archived articles', () => {
     await renderProjectPage(service);
     chooseStatus(/^Arquivados/);
 
-    fireEvent.click(inRow('Artigo arquivado').getByTitle('Restaurar Artigo'));
+    chooseFromRowMenu('Artigo arquivado', 'Restaurar Artigo');
 
     await waitFor(() => expect(statusButton(/^Arquivados/)).toHaveTextContent('Arquivados 0'));
     expect(service.updateArticleStatus).toHaveBeenCalledWith(3, 'new', undefined);
@@ -145,7 +146,7 @@ describe('ProjectDetailsPage status changes from the main list', () => {
     const service = givenProject([article({ id: 1, title: 'Artigo novo' })]);
     await renderProjectPage(service);
 
-    fireEvent.click(inRow('Artigo novo').getByTitle('Marcar como Lido'));
+    chooseFromRowMenu('Artigo novo', 'Marcar como Lido');
 
     await waitFor(() => expect(within(mainTable()).queryByText('Artigo novo')).not.toBeInTheDocument());
     expect(service.updateArticleStatus).toHaveBeenCalledWith(1, 'read', undefined);
@@ -155,7 +156,7 @@ describe('ProjectDetailsPage status changes from the main list', () => {
     const service = givenProject([article({ id: 1, title: 'Artigo novo' })]);
     await renderProjectPage(service);
 
-    fireEvent.click(inRow('Artigo novo').getByTitle('Arquivar'));
+    chooseFromRowMenu('Artigo novo', 'Arquivar');
     fireEvent.change(screen.getByPlaceholderText('Por que este artigo não é relevante?'), {
       target: { value: 'duplicado' },
     });
@@ -171,7 +172,7 @@ describe('ProjectDetailsPage status changes from the main list', () => {
     service.updateArticleStatus.mockRejectedValue(new Error('locked'));
     const dialogs = await renderProjectPage(service);
 
-    fireEvent.click(inRow('Artigo novo').getByTitle('Marcar como Lido'));
+    chooseFromRowMenu('Artigo novo', 'Marcar como Lido');
 
     await waitFor(() =>
       expect(dialogs.informMessage).toHaveBeenCalledWith('Erro ao atualizar status do artigo: locked'),

@@ -17,3 +17,27 @@ export function parseSourceDatabases(raw: unknown): string[] {
     return [raw];
   }
 }
+
+// Short names for the narrow "Bases" column of the article table (redesign, board 153); the full name goes in
+// the tooltip and is what screen readers say.
+const SHORT_NAMES: Record<string, string> = {
+  OpenAlex: 'OA',
+  Scopus: 'SC',
+  'Web of Science': 'WoS',
+  Crossref: 'CR',
+  'Europe PMC': 'EPMC',
+  'IEEE Xplore': 'IEEE',
+  arXiv: 'arXiv',
+  Snowballing: 'Snow',
+  import: 'Imp',
+};
+
+/**
+ * The abbreviation of a base for compact lists; unknown names are kept as they are.
+ *
+ * Usage:
+ *   baseShortName('Web of Science'); // 'WoS'
+ */
+export function baseShortName(base: string): string {
+  return SHORT_NAMES[base] ?? base;
+}

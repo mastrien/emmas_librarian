@@ -1,9 +1,12 @@
 import React from 'react';
-import { MANUAL_SOURCE, parseSourceDatabases } from '../../utils/sourceDatabases';
+import { MANUAL_SOURCE, baseShortName, parseSourceDatabases } from '../../utils/sourceDatabases';
+import './sourceDatabaseBadges.css';
 
 interface SourceDatabaseBadgesProps {
   sourceDatabases: unknown;
   emptyPlaceholder?: React.ReactNode;
+  /** Abbreviated names ("WoS") for narrow columns; the full name stays in the tooltip and for screen readers. */
+  compact?: boolean;
 }
 
 const MANUAL_WARNING = 'Metadados adicionados manualmente (podem conter erros)';
@@ -12,40 +15,36 @@ const MANUAL_WARNING = 'Metadados adicionados manualmente (podem conter erros)';
  * One pill per bibliographic source; manually added articles get a warning pill.
  *
  * Usage:
- *   <SourceDatabaseBadges sourceDatabases={article.source_databases} emptyPlaceholder="-" />
+ *   <SourceDatabaseBadges sourceDatabases={article.source_databases} emptyPlaceholder="-" compact />
  */
 export const SourceDatabaseBadges: React.FC<SourceDatabaseBadgesProps> = ({
   sourceDatabases,
   emptyPlaceholder = null,
+  compact = false,
 }) => {
   const sources = parseSourceDatabases(sourceDatabases);
   if (sources.length === 0) return <>{emptyPlaceholder}</>;
   return (
     <>
       {sources.map((source) => (
-        <SourceBadge key={source} source={source} />
+        <SourceBadge key={source} source={source} compact={compact} />
       ))}
     </>
   );
 };
 
-const SourceBadge: React.FC<{ source: string }> = ({ source }) => {
+const SourceBadge: React.FC<{ source: string; compact: boolean }> = ({ source, compact }) => {
   const isManual = source === MANUAL_SOURCE;
+  const label = isManual ? 'Manual' : compact ? baseShortName(source) : source;
   return (
     <span
-      style={{
-        padding: '0.2rem 0.6rem',
-        background: isManual ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-surface)',
-        border: isManual ? '1px solid var(--color-danger)' : '1px solid var(--border-color)',
-        borderRadius: 'var(--radius-xl)',
-        fontSize: '0.75rem',
-        fontWeight: 600,
-        color: isManual ? 'var(--color-danger)' : 'var(--color-primary)',
-        whiteSpace: 'nowrap',
-      }}
-      title={isManual ? MANUAL_WARNING : undefined}
+      className={`source-badge${isManual ? ' source-badge--manual' : ''}${compact ? ' source-badge--compact' : ''}`}
+      // The full name only where the visible text is not enough: an abbreviation, or the manual warning.
+      title={isManual ? MANUAL_WARNING : compact ? source : undefined}
+      aria-label={isManual ? MANUAL_WARNING : compact ? source : undefined}
     >
-      {isManual ? '⚠️ Manual' : source}
+      {isManual && !compact && '⚠️ '}
+      {label}
     </span>
   );
 };
