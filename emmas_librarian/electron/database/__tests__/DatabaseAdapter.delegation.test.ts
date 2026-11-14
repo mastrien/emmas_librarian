@@ -4,7 +4,7 @@ vi.mock('electron', () => ({ safeStorage: {} }));
 
 import { DatabaseAdapter } from '../DatabaseAdapter';
 
-type RepoName = 'projectRepo' | 'articleRepo' | 'articleCategoryRepo' | 'pdfLibraryRepo' | 'trashRepo';
+type RepoName = 'projectRepo' | 'articleRepo' | 'articleCategoryRepo' | 'pdfLibraryRepo' | 'trashRepo' | 'documentRepo';
 
 /** [adapter method, repository it must forward to, arguments]. */
 const DELEGATIONS: [keyof DatabaseAdapter, RepoName, unknown[]][] = [
@@ -28,6 +28,13 @@ const DELEGATIONS: [keyof DatabaseAdapter, RepoName, unknown[]][] = [
   ['registerPdfInLibrary', 'pdfLibraryRepo', ['/a.pdf', 'hash', 'a.pdf', 10]],
   ['getPdfByHash', 'pdfLibraryRepo', ['hash']],
   ['importArticlesFromProject', 'articleRepo', [1, 2, [3], 4]],
+  ['getProjectAbout', 'projectRepo', [1]],
+  ['updateProjectAbout', 'projectRepo', [1, '# Sobre']],
+  ['markProjectOpened', 'projectRepo', [1]],
+  ['getScreeningSummaries', 'projectRepo', []],
+  ['applyCategorySet', 'projectRepo', [1, [{ name: 'Desenho', type: 'text' }]]],
+  ['syncProjectCategoryOptions', 'projectRepo', [3, [{ name: 'A' }]]],
+  ['markProjectDocumentOpened', 'documentRepo', [5]],
 ];
 
 let adapter: DatabaseAdapter;
@@ -49,6 +56,16 @@ describe('DatabaseAdapter forwards to its repositories', () => {
     const result = (adapter[method] as (...a: unknown[]) => unknown)(...args);
 
     expect(target).toHaveBeenCalledWith(...args);
+    expect(result).toBe('result');
+  });
+
+  // The only forward whose repository method has another name.
+  it('getProjectNavCounts → projectRepo.getNavCounts', () => {
+    const target = vi.spyOn(adapter.projectRepo, 'getNavCounts').mockReturnValue('result' as never);
+
+    const result = adapter.getProjectNavCounts(1);
+
+    expect(target).toHaveBeenCalledWith(1);
     expect(result).toBe('result');
   });
 });
