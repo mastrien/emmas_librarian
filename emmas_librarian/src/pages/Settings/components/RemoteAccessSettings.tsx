@@ -149,7 +149,7 @@ export const RemoteAccessSettings: React.FC = () => {
     <SettingsCard
       title="Acesso pelo celular"
       icon={<Smartphone size={24} />}
-      description="Deixa um celular da mesma rede ler esta biblioteca e anotar no diário. Fica desligado até você ligar. A tela para celular ainda não foi lançada; por enquanto este acesso serve a quem usa a API."
+      description="Deixa um celular da mesma rede ler esta biblioteca e anotar no diário. Fica desligado até você ligar."
     >
       <AccessToggle status={status} onChange={toggle} />
       <ServerDetails status={status} />

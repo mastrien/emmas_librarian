@@ -21,17 +21,19 @@ let addresses: string[];
 let service: RemoteAccessService;
 const started: RemoteAccessService[] = [];
 
+const hostOptions = () => ({
+  commands,
+  userData,
+  secrets: new FakeSecretStore(),
+  settings,
+  issueCertificate: new FakeCertificateIssuer().issue,
+  encodeQr: async (text: string) => `<svg>${text}</svg>`,
+  addresses: () => addresses,
+  bindHost: '127.0.0.1',
+});
+
 const newService = () => {
-  const created = new RemoteAccessService({
-    commands,
-    userData,
-    secrets: new FakeSecretStore(),
-    settings,
-    issueCertificate: new FakeCertificateIssuer().issue,
-    encodeQr: async (text) => `<svg>${text}</svg>`,
-    addresses: () => addresses,
-    bindHost: '127.0.0.1',
-  });
+  const created = new RemoteAccessService(hostOptions());
   started.push(created);
   return created;
 };
@@ -124,7 +126,23 @@ describe('RemoteAccessService: turned on', () => {
     const page = await call(port!, 'GET', '/');
 
     expect(page.status).toBe(200);
-    expect(page.text).toContain('Acesso pelo celular');
+    expect(page.text).toContain('O acesso pelo celular está ligado neste computador');
+  });
+
+  it('serves the mobile client from its folder when the installation has one, with a strict content policy', async () => {
+    const siteDir = path.join(path.dirname(userData), 'dist-mobile');
+    fs.mkdirSync(path.join(siteDir, 'assets'), { recursive: true });
+    fs.writeFileSync(path.join(siteDir, 'index.html'), '<!doctype html><title>Emma mobile</title>');
+    fs.writeFileSync(path.join(siteDir, 'assets', 'app.js'), 'console.log(1)');
+    const withSite = new RemoteAccessService({ ...hostOptions(), siteDir });
+    started.push(withSite);
+    const { port } = await withSite.setEnabled(true);
+
+    expect((await call(port!, 'GET', '/')).text).toContain('Emma mobile');
+    expect((await call(port!, 'GET', '/assets/app.js')).text).toBe('console.log(1)');
+    expect((await call(port!, 'GET', '/assets/missing.js')).status).toBe(404);
+    // The API still answers beside the pages.
+    expect((await call(port!, 'GET', '/api/ping')).json.ok).toBe(true);
   });
 
   it('pairs a phone with the code of the invite and then answers only what phones may run', async () => {

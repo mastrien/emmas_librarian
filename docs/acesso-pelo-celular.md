@@ -1,7 +1,7 @@
 # Acesso pelo celular (servidor na rede local)
 
 O aplicativo pode servir a biblioteca para dispositivos pareados na mesma rede (issue #32, épica #27). É o lado
-do desktop do cliente mobile (#33), que ainda não existe: por enquanto o acesso serve a quem usa a API abaixo.
+do desktop do cliente mobile (#33, `docs/cliente-mobile.md`), que o próprio servidor entrega em `/`.
 
 ## Como ligar
 

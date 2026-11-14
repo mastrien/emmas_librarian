@@ -1,4 +1,5 @@
 import { ipcMain, app, dialog } from 'electron';
+import path from 'path';
 import { DatabaseAdapter } from '../../core/database/DatabaseAdapter';
 import { buildLibraryCommands } from '../../core/commands/libraryCommands';
 import { appPathsIn, type AppPaths } from '../../core/ports/AppPaths';
@@ -20,6 +21,7 @@ import { RemoteAccessService } from '../remote/RemoteAccessService';
 import { issueSelfSigned } from '../remote/tlsIdentity';
 import { encodeQrSvg } from '../remote/qrEncoder';
 import { lanAddresses } from '../remote/lanAddresses';
+import { firstSiteDir } from '../remote/staticSite';
 import type { CommandRegistry } from '../../core/commands/CommandRegistry';
 
 export interface IpcRegistriesDeps {
@@ -92,6 +94,8 @@ function lanAccessFor(db: DatabaseAdapter, paths: AppPaths, commands: CommandReg
     issueCertificate: issueSelfSigned,
     encodeQr: encodeQrSvg,
     addresses: lanAddresses,
+    // Packaged, the mobile client sits beside dist/; in development it is where `npm run build:mobile` leaves it.
+    siteDir: firstSiteDir([path.join(app.getAppPath(), 'dist-mobile'), path.join(process.cwd(), 'dist-mobile')]),
   });
 }
 

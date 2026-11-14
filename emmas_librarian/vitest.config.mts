@@ -19,6 +19,7 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/dist-electron/**',
+      '**/dist-mobile/**',
       '**/release/**',
       '**/.stryker-tmp/**',
       // Playwright specs; e2e-tests/__tests__ holds unit tests of the E2E helpers and runs here.
@@ -28,11 +29,15 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      include: ['electron/**/*', 'core/**/*', 'src/**/*'],
+      include: ['electron/**/*', 'core/**/*', 'src/**/*', 'mobile/src/**/*'],
       exclude: [
         'electron/**/__tests__/**',
         'core/**/__tests__/**',
         'src/**/__tests__/**',
+        'mobile/src/**/__tests__/**',
+        // Entry point and the thin wrapper around pdf.js, which needs a real browser canvas (covered by E2E).
+        'mobile/src/main.tsx',
+        'mobile/src/pdf/pdfDocument.ts',
         'electron/preload.ts',
         'electron/main.ts',
         'electron/types.ts',

@@ -30,7 +30,7 @@ export const harness = {
   ai: createRecordingDouble(),
   sync: createRecordingDouble(),
   venues: createRecordingDouble(),
-  app: { getPath: vi.fn(), getVersion: vi.fn() },
+  app: { getPath: vi.fn(), getVersion: vi.fn(), getAppPath: vi.fn() },
   dialog: { showSaveDialog: vi.fn(), showOpenDialog: vi.fn() },
   shell: { openPath: vi.fn(), openExternal: vi.fn() },
   windows: { fromWebContents: vi.fn(), getAllWindows: vi.fn().mockReturnValue([]) },
@@ -107,6 +107,7 @@ export function resetIpcHarness(): void {
   plainMocks.forEach((mock) => mock.mockReset());
   harness.app.getPath.mockReturnValue(USER_DATA);
   harness.app.getVersion.mockReturnValue('9.9.9');
+  harness.app.getAppPath.mockReturnValue(path.join(path.sep, 'app'));
   harness.db.getDB.mockReturnValue(harness.sqlite);
 }
 

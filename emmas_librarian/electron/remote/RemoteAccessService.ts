@@ -7,6 +7,7 @@ import { PairedDevices } from '../../core/remote/PairedDevices';
 import { PairingDesk } from '../../core/remote/PairingDesk';
 import { RemoteGateway } from '../../core/remote/RemoteGateway';
 import { gatewayListener } from './gatewayListener';
+import { staticSiteIn, type StaticSite } from './staticSite';
 import { loadTlsIdentity, type CertificateIssuer, type TlsIdentity } from './tlsIdentity';
 import type { QrEncoder } from './qrEncoder';
 
@@ -27,6 +28,8 @@ export interface RemoteAccessHost {
   addresses: () => string[];
   /** Interface the server listens on; every interface by default, loopback in tests. */
   bindHost?: string;
+  /** Folder of the built mobile client; without one, the address answers a page saying what it is. */
+  siteDir?: string | null;
 }
 
 const ENABLED_KEY = 'remote_access_enabled';
@@ -36,8 +39,11 @@ export const DEFAULT_REMOTE_PORT = 47810;
 const LANDING_PAGE = `<!doctype html><html lang="pt-BR"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Emma's Librarian</title>
 <body style="font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.5">
-<h1>Emma's Librarian</h1><p>O acesso pelo celular está ligado neste computador.</p>
-<p>Para parear, abra Configurações &rsaquo; Acesso pelo celular no aplicativo e leia o código QR.</p></body></html>`;
+<h1>Emma's Librarian</h1><p>O acesso pelo celular está ligado neste computador, mas esta instalação não traz a
+tela para celular.</p></body></html>`;
+
+const landingOnly: StaticSite = (pathname) =>
+  pathname === '/' ? { status: 200, contentType: 'text/html; charset=utf-8', body: LANDING_PAGE } : null;
 
 function listen(server: https.Server, port: number, host: string): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -133,7 +139,8 @@ export class RemoteAccessService {
     const saved = Number(this.host.settings.getSetting(PORT_KEY)) || DEFAULT_REMOTE_PORT;
     const bindHost = this.host.bindHost ?? '0.0.0.0';
     for (const port of [saved, 0]) {
-      const listener = gatewayListener(this.gateway(), { landingPage: LANDING_PAGE });
+      const site = this.host.siteDir ? staticSiteIn(this.host.siteDir) : landingOnly;
+      const listener = gatewayListener(this.gateway(), { site });
       const server = https.createServer({ key: identity.key, cert: identity.cert }, listener);
       try {
         const bound = await listen(server, port, bindHost);

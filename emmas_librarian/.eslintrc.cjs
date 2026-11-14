@@ -13,6 +13,7 @@ module.exports = {
   ignorePatterns: [
     'dist',
     'dist-electron',
+    'dist-mobile',
     'build',
     'release',
     '.eslintrc.cjs',

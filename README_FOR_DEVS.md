@@ -89,6 +89,8 @@ O código da aplicação fica em `emmas_librarian/` (subpasta do repositório). 
 │   │   │   ├── handlers/           # Só o que é do desktop: diálogos, janela, updater, abrir externo
 │   │   │   └── errorHandler.ts     # Serializa o AppError para o renderer
 │   │   └── services/               # Atualização do app e recuperação pós-update
+│   ├── mobile/                     # Cliente mobile (PWA): telas próprias sobre o ProjectReader
+│   │                               #   (HTTP para o desktop, ou um .emmapcarc); docs/cliente-mobile.md
 │   ├── src/                        # Renderer (React)
 │   │   ├── main.tsx                # Rotas e providers
 │   │   ├── pages/                  # Dashboard, NewProject, ProjectDetails, Search,
