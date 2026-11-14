@@ -169,6 +169,15 @@ Feito: **Critérios do projeto** (título e subtítulo do board, "Incluir quando
 - [ ] **Como ler a auditoria** ficou como estava (o board mostra só o texto curto e um exemplo; o app tem o gráfico e as explicações mais longas).
 - [ ] O nome acessível das janelas não mudou ("Recalcular os PDFs", "Critérios de inclusão e exclusão"), só o título que aparece na tela.
 
+## 180 · Janelas da agenda e do diário (#185)
+
+Feito: **Novo evento / Editar evento** (título do board, grupos "Evento ou revista" e "Prazos", barra de baixo com "Cancelar" e "Criar evento", que vira "Salvar" ao editar). O nome acessível da janela continua "Novo Evento / Periódico".
+
+- [ ] **Tipo do evento**: o board usa um seletor de quatro opções (Periódico, Simpósio, Congresso, Outro); o app mantém a lista de categorias (com Workshop) e o seletor de cor do emblema, que o board não mostra.
+- [ ] **Prazos**: o board mostra uma linha por prazo (nome, data e hora, X para remover) e "+ Prazo"; o app mantém os cartões com tipo "Pontual/Intervalo", data, hora opcional e "Criar Novo Campo".
+- [ ] **Site (opcional)** do board se chama "Link / URL da Chamada" no app.
+- [ ] **Histórico de versões do diário** ficou como estava. O board mostra uma lista de versões à esquerda e, à direita, a comparação com o texto atual (verde o que entrou, vermelho o que saiu) e "Restaurar esta versão"; hoje o app lista as versões com "Restaurar" em cada uma, sem comparar. A comparação é recurso novo.
+
 ## Próximas telas (este documento ganha uma seção por PR)
 
 175–181 Janelas (restante)

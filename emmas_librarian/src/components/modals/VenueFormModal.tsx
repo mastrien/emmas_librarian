@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, AlertCircle } from 'lucide-react';
+import { Plus, AlertCircle } from 'lucide-react';
 import { ScientificVenue, ScientificMilestone, MilestoneFieldType } from '../../types';
 import {
   EMPTY_VENUE_DETAILS,
@@ -17,6 +17,8 @@ import { VenueDetailsFields } from './venueForm/VenueDetailsFields';
 import { MilestoneEditor } from './venueForm/MilestoneEditor';
 import { CustomMilestoneForm } from './venueForm/CustomMilestoneForm';
 import { Modal } from '../common/Modal';
+import { ModalFooter } from '../common/ModalFooter';
+import { Button } from '../common/Button';
 
 interface VenueFormModalProps {
   isOpen: boolean;
@@ -72,22 +74,14 @@ export const VenueFormModal: React.FC<VenueFormModalProps> = ({
     onClose();
   };
 
-  const title = initialData ? 'Editar Evento / Periódico' : 'Novo Evento / Periódico';
+  // The accessible name keeps the old wording; the title on screen is the board's (180).
+  const name = initialData ? 'Editar Evento / Periódico' : 'Novo Evento / Periódico';
   return (
-    <Modal
-      label={title}
-      title={
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <Calendar size={20} color="var(--color-primary)" />
-          {title}
-        </span>
-      }
-      onClose={onClose}
-      width={620}
-    >
+    <Modal label={name} title={initialData ? 'Editar evento' : 'Novo evento'} onClose={onClose} width={620}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {errorMsg && <VenueFormError message={errorMsg} />}
+          <span className="app-modal-group">Evento ou revista</span>
           <VenueDetailsFields details={details} onChange={(changes) => setDetails({ ...details, ...changes })} />
           <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0.25rem 0' }} />
           <div>
@@ -111,7 +105,7 @@ export const VenueFormModal: React.FC<VenueFormModalProps> = ({
             </div>
           </div>
         </div>
-        <VenueFormFooter onClose={onClose} />
+        <VenueFormFooter onClose={onClose} editing={Boolean(initialData)} />
       </form>
     </Modal>
   );
@@ -138,9 +132,7 @@ const VenueFormError: React.FC<{ message: string }> = ({ message }) => (
 
 const MilestonesHeader: React.FC<{ onAdd: () => void }> = ({ onAdd }) => (
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-    <label style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-heading)' }}>
-      Prazos e Datas Associadas
-    </label>
+    <label style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-heading)' }}>Prazos</label>
     <button
       type="button"
       onClick={onAdd}
@@ -152,13 +144,13 @@ const MilestonesHeader: React.FC<{ onAdd: () => void }> = ({ onAdd }) => (
   </div>
 );
 
-const VenueFormFooter: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-    <button type="button" onClick={onClose} className="btn-secondary">
+const VenueFormFooter: React.FC<{ onClose: () => void; editing: boolean }> = ({ onClose, editing }) => (
+  <ModalFooter>
+    <Button variant="ghost" onClick={onClose}>
       Cancelar
-    </button>
-    <button type="submit" className="btn-primary">
-      Salvar Evento
-    </button>
-  </div>
+    </Button>
+    <Button type="submit" variant="primary">
+      {editing ? 'Salvar' : 'Criar evento'}
+    </Button>
+  </ModalFooter>
 );

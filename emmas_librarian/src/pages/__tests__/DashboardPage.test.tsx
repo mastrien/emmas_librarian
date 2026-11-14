@@ -165,7 +165,7 @@ describe('DashboardPage', () => {
 
     // Check if modal opens (look for modal text, e.g., 'Salvar')
     await waitFor(() => {
-      const modalSaveButton = screen.queryByText('Salvar Evento');
+      const modalSaveButton = screen.queryByText('Criar evento');
       if (modalSaveButton) {
         // mock the form input
         const titleInput = screen.getByLabelText(/Nome do Evento/i);
@@ -175,7 +175,7 @@ describe('DashboardPage', () => {
     });
 
     await waitFor(() => {
-      if (screen.queryByText('Salvar Evento')) {
+      if (screen.queryByText('Criar evento')) {
         expect(fakeService.createScientificVenue).toHaveBeenCalled();
       }
     });

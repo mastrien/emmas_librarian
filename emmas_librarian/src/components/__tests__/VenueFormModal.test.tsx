@@ -9,7 +9,7 @@ describe('VenueFormModal (TDD)', () => {
   it('renders modal in portal and displays predefined milestones', () => {
     render(<VenueFormModal isOpen={true} onClose={mockOnClose} onSave={mockOnSave} />);
 
-    expect(screen.getByText('Novo Evento / Periódico')).toBeInTheDocument();
+    expect(screen.getByText('Novo evento')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Inscrição')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Submissão')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Apresentação')).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe('VenueFormModal (TDD)', () => {
     fireEvent.change(targetDateInput, { target: { value: '2026-08-10' } });
     fireEvent.change(endDateInput, { target: { value: '2026-08-05' } });
 
-    const saveBtn = screen.getByText('Salvar Evento');
+    const saveBtn = screen.getByText('Criar evento');
     fireEvent.click(saveBtn);
 
     // Modal should not call onSave because end_date (2026-08-05) < target_date (2026-08-10)
@@ -72,7 +72,7 @@ describe('VenueFormModal (TDD)', () => {
       target: { value: 'Simpósio Teste' },
     });
 
-    fireEvent.click(screen.getByText('Salvar Evento'));
+    fireEvent.click(screen.getByText('Criar evento'));
 
     await waitFor(() => {
       expect(mockOnSave).toHaveBeenCalledWith(
