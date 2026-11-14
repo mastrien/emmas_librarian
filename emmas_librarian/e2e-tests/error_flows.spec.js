@@ -3,7 +3,7 @@ const { launchApp, getFirstWindow, createProject, navigateTo } = require('./help
 
 async function tryCreateDuplicate(window, name) {
   await navigateTo(window, 'Projetos');
-  await window.click('text="Novo Projeto"');
+  await window.click('text="Novo projeto"');
   await window.fill('input[placeholder="Ex: Sistemas de Recomendação na Educação"]', name);
   await window.click('button:has-text("Criar Projeto")');
 }

@@ -70,7 +70,7 @@ test.describe('Agenda & Prazos E2E Tests', () => {
     // 6. Navigate back to Dashboard and verify minimalist clock & upcoming deadlines
     await navigateTo(window, 'Projetos');
 
-    const projectsHeading = window.locator('h1', { hasText: 'Seus Projetos' });
+    const projectsHeading = window.getByRole('heading', { level: 1, name: 'Início' });
     await expect(projectsHeading).toBeVisible({ timeout: 10000 });
 
     // Check upcoming deadline banner displays milestone or venue acronym

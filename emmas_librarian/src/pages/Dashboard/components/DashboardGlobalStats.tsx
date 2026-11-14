@@ -1,76 +1,49 @@
 import React from 'react';
-import { PieChart as PieChartIcon } from 'lucide-react';
-import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { sharePercent, type HomeTotals } from '../homeNumbers';
 import '../dashboard.css';
 
-ChartJS.register(ArcElement, Tooltip, Legend);
-
-/** One pie's numbers, labels and colours, as DashboardPage builds them for Chart.js. */
-export interface PieSummary {
-  labels: string[];
-  datasets: { data: number[]; backgroundColor: string[]; borderWidth?: number }[];
+interface TileProps {
+  label: string;
+  value: number;
+  note?: string;
+  /** Share of the articles, drawn as a bar under the number. */
+  percent?: number;
+  tone?: 'ok' | 'accent';
 }
 
-interface DashboardGlobalStatsProps {
-  statusChartData: PieSummary;
-  chartData: PieSummary;
-}
-
-const PIE_OPTIONS = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false },
-    tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, cornerRadius: 8 },
-  },
-};
-
-// The legend beside the pie: each non-zero slice with its colour (a CSS variable: it comes from the data) and count.
-const PieLegend: React.FC<{ summary: PieSummary }> = ({ summary }) => {
-  const [dataset] = summary.datasets;
-  return (
-    <div className="stats-legend">
-      {dataset.data.map((value, index) =>
-        value === 0 ? null : (
-          <div key={index}>
-            <div className="stats-legend-label">
-              <div
-                className="stats-legend-dot"
-                style={{ '--dot-color': dataset.backgroundColor[index] } as React.CSSProperties}
-              />
-              <span>{summary.labels[index]}</span>
-            </div>
-            <div className="stats-legend-value">{value}</div>
-          </div>
-        ),
-      )}
-    </div>
-  );
-};
-
-const StatsPie: React.FC<{ title: string; summary: PieSummary }> = ({ title, summary }) => (
-  <div className="fade-in stats-block">
-    <div className="stats-pie">
-      <Pie data={summary} options={PIE_OPTIONS} />
-    </div>
-    <div>
-      <h3 className="stats-title">
-        <PieChartIcon size={16} /> {title}
-      </h3>
-      <PieLegend summary={summary} />
-    </div>
+const Tile: React.FC<TileProps> = ({ label, value, note, percent, tone = 'accent' }) => (
+  <div className="home-tile">
+    <span className="home-tile__label">{label}</span>
+    <span className="home-tile__value">{value}</span>
+    {percent !== undefined && (
+      <progress
+        max={100}
+        value={percent}
+        aria-label={`${label}: ${percent}%`}
+        className={`home-progress home-progress--${tone}`}
+      />
+    )}
+    {note && <span className="home-tile__note">{note}</span>}
   </div>
 );
 
 /**
- * The two pies under the project cards: articles by status, and articles with or without a PDF.
+ * "Visão geral" of every project (board 151), in place of the two pies: the articles, how many were read, how many
+ * have a PDF and how many do not.
  *
- * @example <DashboardGlobalStats statusChartData={byStatus} chartData={byPdf} />
+ * @example <DashboardGlobalStats totals={homeTotals(projects)} />
  */
-export const DashboardGlobalStats: React.FC<DashboardGlobalStatsProps> = ({ statusChartData, chartData }) => (
-  <div className="stats-grid">
-    <StatsPie title="Progresso Geral" summary={statusChartData} />
-    <StatsPie title="Arquivos Físicos" summary={chartData} />
-  </div>
+export const DashboardGlobalStats: React.FC<{ totals: HomeTotals }> = ({ totals }) => (
+  <section aria-label="Visão geral" className="home-overview">
+    <div className="home-section-head">
+      <h2>Visão geral</h2>
+      <span className="home-section-head__note">todos os projetos</span>
+    </div>
+    <div className="home-tiles">
+      <Tile label="Artigos" value={totals.total} note={`${totals.active} ativos`} />
+      <Tile label="Lidos" value={totals.read} percent={sharePercent(totals.read, totals.total)} tone="ok" />
+      <Tile label="Com PDF" value={totals.withPdf} percent={sharePercent(totals.withPdf, totals.total)} />
+      <Tile label="Sem PDF" value={totals.withoutPdf} note="sem arquivo vinculado" />
+    </div>
+  </section>
 );

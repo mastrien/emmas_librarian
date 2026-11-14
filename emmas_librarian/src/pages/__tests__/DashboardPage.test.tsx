@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { DashboardPage } from '../DashboardPage';
 import { FakeDialogs, FakeDialogsProvider } from '../../components/common/dialogs/__tests__/fakes/FakeDialogs';
@@ -60,6 +60,7 @@ describe('DashboardPage', () => {
     });
 
     expect(screen.getByText('Nenhum projeto encontrado')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /Novo projeto/ })).toHaveLength(2); // the header and the card
   });
 
   it('fetches projects, calculates stats and displays charts', async () => {
@@ -85,7 +86,11 @@ describe('DashboardPage', () => {
 
     expect(screen.getByText('Project 1')).toBeInTheDocument();
     expect(screen.getAllByText('Ativos')[0]).toBeInTheDocument();
-    expect(screen.getAllByTestId('mock-pie-chart')).toHaveLength(2); // Global stats charts
+    // Board 151: the card shows the reading progress, and "Visão geral" has tiles where the pies were.
+    expect(screen.getByText('1 de 2 lidos')).toBeInTheDocument();
+    const overview = screen.getByRole('region', { name: 'Visão geral' });
+    expect(within(overview).getByText('Com PDF')).toBeInTheDocument();
+    expect(within(overview).getByText('Sem PDF')).toBeInTheDocument();
   });
 
   it('handles error when loading data', async () => {
