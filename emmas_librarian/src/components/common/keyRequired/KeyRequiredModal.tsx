@@ -1,6 +1,7 @@
 import React, { type ReactNode } from 'react';
 import { Key } from 'lucide-react';
 import { Modal } from '../Modal';
+import { ModalFooter } from '../ModalFooter';
 import { Button } from '../Button';
 import './keyRequired.css';
 
@@ -19,19 +20,23 @@ interface KeyRequiredModalProps {
  * @example <KeyRequiredModal title="Chave de IA Necessária" onCancel={close} onOpenSettings={goToSettings}>…</KeyRequiredModal>
  */
 export const KeyRequiredModal: React.FC<KeyRequiredModalProps> = (props) => (
-  <Modal label={props.title} title={props.title} onClose={props.onCancel} width={450}>
-    <div className="key-required-icon">
-      <Key size={32} />
-    </div>
+  <Modal
+    label={props.title}
+    title={props.title}
+    onClose={props.onCancel}
+    width={450}
+    icon={<Key size={18} aria-hidden="true" />}
+    tone="info"
+  >
     <p className="key-required-text">{props.children}</p>
-    <div className="key-required-actions">
-      <Button fill="grow" onClick={props.onCancel}>
+    <ModalFooter>
+      <Button variant="ghost" onClick={props.onCancel}>
         Cancelar
       </Button>
-      <Button variant="primary" fill="grow" onClick={props.onOpenSettings}>
+      <Button variant="primary" onClick={props.onOpenSettings}>
         Configurações
       </Button>
-    </div>
+    </ModalFooter>
   </Modal>
 );
 
