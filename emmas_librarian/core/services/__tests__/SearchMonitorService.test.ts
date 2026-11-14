@@ -7,15 +7,7 @@ import { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import type { PagedResult } from '../searchApis/paginate';
 import type { NormalizedArticle } from '../types';
 import type { SearchHistoryItem } from '../../../src/types';
-
-// Settings are encrypted with safeStorage; a reversible fake keeps the real SettingsRepository path.
-vi.mock('electron', () => ({
-  safeStorage: {
-    isEncryptionAvailable: vi.fn(() => true),
-    encryptString: vi.fn((str: string) => Buffer.from(`encrypted_${str}`)),
-    decryptString: vi.fn((buf: Buffer) => buf.toString().replace('encrypted_', '')),
-  },
-}));
+import { FakeSecretStore } from '../../ports/__tests__/fakes/FakeSecretStore';
 
 const work = (id: string): NormalizedArticle => ({
   doi: `10.1/${id}`,
@@ -60,7 +52,7 @@ describe('SearchMonitorService (#52)', () => {
   let searchId: number;
 
   beforeEach(() => {
-    db = new DatabaseAdapter(':memory:');
+    db = new DatabaseAdapter(':memory:', new FakeSecretStore());
     bases = new FakeBases();
     orchestrator = new SearchOrchestrator(db, new QueryTranslator(), bases);
     service = new SearchMonitorService(db, new QueryTranslator(), orchestrator);

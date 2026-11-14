@@ -15,15 +15,7 @@ import type { CitationSeedInfo } from '../searchApis/openAlexCitations';
 import type { NormalizedArticle } from '../types';
 import type { CitationSeed, SearchHistoryItem } from '../../../src/types';
 import { isOutsideSearchEntry } from '../../../src/utils/outsideSearchEntries';
-
-// Settings are encrypted with safeStorage; a reversible fake keeps the real SettingsRepository path.
-vi.mock('electron', () => ({
-  safeStorage: {
-    isEncryptionAvailable: vi.fn(() => true),
-    encryptString: vi.fn((str: string) => Buffer.from(`encrypted_${str}`)),
-    decryptString: vi.fn((buf: Buffer) => buf.toString().replace('encrypted_', '')),
-  },
-}));
+import { FakeSecretStore } from '../../ports/__tests__/fakes/FakeSecretStore';
 
 const work = (id: string): NormalizedArticle => ({
   doi: `10.1/${id}`,
@@ -172,7 +164,7 @@ describe('SearchOrchestrator snowballing', () => {
   const request = { seeds: [seed(1)], directions: ['references' as const], limit: 10 };
 
   beforeEach(() => {
-    db = new DatabaseAdapter(':memory:');
+    db = new DatabaseAdapter(':memory:', new FakeSecretStore());
     orchestrator = new SearchOrchestrator(db, new QueryTranslator(), api);
     projectId = db.createProject('Revisão').id;
     api.seeds = { '10.9/1': info(['W1', 'W2']) };

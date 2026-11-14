@@ -6,15 +6,7 @@ import { NormalizedArticle } from '../types';
 import { DatabaseAdapter } from '../../database/DatabaseAdapter';
 import type { PagedResult } from '../searchApis/paginate';
 import type { SearchLimits } from '../../../src/utils/searchLimits';
-
-// Settings are encrypted with safeStorage; a reversible fake keeps the real SettingsRepository path.
-vi.mock('electron', () => ({
-  safeStorage: {
-    isEncryptionAvailable: vi.fn(() => true),
-    encryptString: vi.fn((str: string) => Buffer.from(`encrypted_${str}`)),
-    decryptString: vi.fn((buf: Buffer) => buf.toString().replace('encrypted_', '')),
-  },
-}));
+import { FakeSecretStore } from '../../ports/__tests__/fakes/FakeSecretStore';
 
 type DatabaseName = 'openalex' | 'crossref' | 'scopus' | 'wos' | 'europepmc' | 'arxiv' | 'ieee';
 
@@ -90,7 +82,7 @@ describe('SearchOrchestrator', () => {
   let projectId: number;
 
   beforeEach(() => {
-    db = new DatabaseAdapter(':memory:');
+    db = new DatabaseAdapter(':memory:', new FakeSecretStore());
     api = new FakeApiIntegrator();
     orchestrator = new SearchOrchestrator(db, new QueryTranslator(), api);
     projectId = db.createProject('Revisão').id;

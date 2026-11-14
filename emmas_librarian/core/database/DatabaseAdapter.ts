@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import * as sqliteVec from 'sqlite-vec';
 import { ProjectRepository } from './ProjectRepository';
 import { SettingsRepository } from './SettingsRepository';
+import { PlainTextSecretStore, type SecretStore } from '../ports/SecretStore';
 import { ArticleRepository } from './ArticleRepository';
 import { ArticleCategoryRepository } from './ArticleCategoryRepository';
 import { PdfLibraryRepository } from './PdfLibraryRepository';
@@ -91,12 +92,14 @@ export class DatabaseAdapter {
   // A constructor that throws leaves no adapter to close, so the file would stay locked (Windows) for
   // anything that replaces it before the process exits: the post-update restore failed with EPERM on a
   // library that was "not a database" until this closed the connection on every failure.
-  constructor(dbPath: string) {
+  // Without a SecretStore the API keys are read and written as plain text; every shell that opens the
+  // user's library must pass its own (Electron: SafeStorageSecretStore).
+  constructor(dbPath: string, secrets: SecretStore = new PlainTextSecretStore()) {
     this.db = new Database(dbPath);
     try {
       this.configureConnection();
       this.projectRepo = new ProjectRepository(this.db);
-      this.settingsRepo = new SettingsRepository(this.db);
+      this.settingsRepo = new SettingsRepository(this.db, secrets);
       this.articleRepo = new ArticleRepository(this.db);
       this.articleCategoryRepo = new ArticleCategoryRepository(this.db);
       this.pdfLibraryRepo = new PdfLibraryRepository(this.db);

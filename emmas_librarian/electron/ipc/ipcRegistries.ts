@@ -38,6 +38,7 @@ import { registerBackupHandlers, scheduleStartupBackup } from './handlers/backup
 import { registerAgendaHandlers } from './handlers/agendaHandlers';
 import { registerSettingsHandlers } from './handlers/settingsHandlers';
 import { registerUpdateHandlers } from './handlers/updateHandlers';
+import { SafeStorageSecretStore } from '../ports/SafeStorageSecretStore';
 import { libraryPaths, type LibraryPaths } from '../startupRecovery';
 
 export interface IpcRegistriesDeps {
@@ -63,7 +64,7 @@ export interface IpcRegistriesResult {
  */
 export function setupIpcRegistries(deps?: IpcRegistriesDeps): IpcRegistriesResult {
   const paths = libraryPaths(app.getPath('userData'));
-  const db = deps?.db || new DatabaseAdapter(paths.dbPath);
+  const db = deps?.db || new DatabaseAdapter(paths.dbPath, new SafeStorageSecretStore());
   try {
     return registerLibraryServices(db, paths, deps);
   } catch (err) {

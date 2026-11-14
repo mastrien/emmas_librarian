@@ -1,26 +1,21 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
 import { SettingsRepository } from '../SettingsRepository';
 import fs from 'fs';
 import path from 'path';
-
-vi.mock('electron', () => ({
-  safeStorage: {
-    isEncryptionAvailable: vi.fn(() => true),
-    encryptString: vi.fn((str) => Buffer.from(str)),
-    decryptString: vi.fn((buf) => buf.toString()),
-  },
-}));
+import { FakeSecretStore } from '../../ports/__tests__/fakes/FakeSecretStore';
 
 describe('SettingsRepository', () => {
   let db: Database.Database;
   let repo: SettingsRepository;
+  let secrets: FakeSecretStore;
 
   beforeEach(() => {
     db = new Database(':memory:');
     const schema = fs.readFileSync(path.join(__dirname, '../schema.sql'), 'utf-8');
     db.exec(schema);
-    repo = new SettingsRepository(db);
+    secrets = new FakeSecretStore();
+    repo = new SettingsRepository(db, secrets);
   });
 
   afterEach(() => {
@@ -61,5 +56,46 @@ describe('SettingsRepository', () => {
     expect(repo.getSetting('api_key_scopus')).toBeNull();
     expect(repo.getSetting('wos_api_key')).toBeNull();
     expect(repo.getSetting('api_key_wos')).toBeNull();
+  });
+
+  const storedValue = (key: string) =>
+    (db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string }).value;
+
+  it('stores an API key encrypted by the secret store and reads it back', () => {
+    repo.setSetting('api_key_openai', 'sk-123');
+
+    expect(storedValue('api_key_openai')).toBe(Buffer.from('encrypted_sk-123').toString('base64'));
+    expect(repo.getSetting('api_key_openai')).toBe('sk-123');
+  });
+
+  it('stores settings that are not API keys as given', () => {
+    repo.setSetting('theme', 'dark');
+
+    expect(storedValue('theme')).toBe('dark');
+  });
+
+  it('stores and reads an API key as plain text where the machine cannot encrypt', () => {
+    secrets.available = false;
+
+    repo.setSetting('api_key_openai', 'sk-123');
+
+    expect(storedValue('api_key_openai')).toBe('sk-123');
+    expect(repo.getSetting('api_key_openai')).toBe('sk-123');
+  });
+
+  it('returns the stored value when the secret store cannot decrypt it', () => {
+    repo.setSetting('api_key_openai', 'sk-123');
+    secrets.failDecrypt = true;
+
+    expect(repo.getSetting('api_key_openai')).toBe(Buffer.from('encrypted_sk-123').toString('base64'));
+  });
+
+  it('keeps API keys in plain text when no secret store is given', () => {
+    const plain = new SettingsRepository(db);
+
+    plain.setSetting('api_key_openai', 'sk-123');
+
+    expect(storedValue('api_key_openai')).toBe('sk-123');
+    expect(plain.getSetting('api_key_openai')).toBe('sk-123');
   });
 });

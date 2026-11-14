@@ -1,7 +1,8 @@
 import path from 'path';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setupIpcRegistries } from '../ipcRegistries';
-import { resetIpcHarness, aiServiceConstructions, USER_DATA } from './fakes/ipcHarness';
+import { SafeStorageSecretStore } from '../../ports/SafeStorageSecretStore';
+import { resetIpcHarness, aiServiceConstructions, databaseAdapterConstructions, USER_DATA } from './fakes/ipcHarness';
 
 vi.mock('electron', () => import('./fakes/ipcHarness').then((h) => h.electronModule));
 vi.mock('fs', () => import('./fakes/ipcHarness').then((h) => h.fsModule));
@@ -34,5 +35,20 @@ describe('setupIpcRegistries: AI service wiring', () => {
   it('gives the AI service userData/models as the local embedding model cache', () => {
     expect(aiServiceConstructions).toHaveLength(1);
     expect(aiServiceConstructions[0][1]).toBe(path.join(USER_DATA, 'models'));
+  });
+});
+
+describe('setupIpcRegistries: library wiring', () => {
+  beforeEach(() => {
+    resetIpcHarness();
+    setupIpcRegistries();
+  });
+
+  // Without the OS keychain as the secret store the API keys would be written in plain text and the
+  // ones already encrypted would be read back as garbage (#28).
+  it('opens userData/emma.db with the OS keychain as its secret store', () => {
+    expect(databaseAdapterConstructions).toHaveLength(1);
+    expect(databaseAdapterConstructions[0][0]).toBe(path.join(USER_DATA, 'emma.db'));
+    expect(databaseAdapterConstructions[0][1]).toBeInstanceOf(SafeStorageSecretStore);
   });
 });

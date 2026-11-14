@@ -1,10 +1,20 @@
 import type { Database } from 'better-sqlite3';
-import { safeStorage } from 'electron';
+import { PlainTextSecretStore, type SecretStore } from '../ports/SecretStore';
 
+/**
+ * App settings as key/value rows. Keys that hold an API key are encrypted with the shell's SecretStore.
+ *
+ * Usage:
+ *   const settings = new SettingsRepository(db, new SafeStorageSecretStore());
+ *   settings.setSetting('api_key_openai', 'sk-...');
+ */
 export class SettingsRepository {
   private db: Database;
 
-  constructor(db: Database) {
+  constructor(
+    db: Database,
+    private readonly secrets: SecretStore = new PlainTextSecretStore(),
+  ) {
     this.db = db;
   }
 
@@ -35,7 +45,7 @@ export class SettingsRepository {
     if (row && this.isKeyEncrypted(key)) {
       try {
         const buf = Buffer.from(row.value, 'base64');
-        return safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(buf) : row.value;
+        return this.secrets.canEncrypt() ? this.secrets.decrypt(buf) : row.value;
       } catch {
         return row.value;
       }
@@ -46,8 +56,8 @@ export class SettingsRepository {
 
   public setSetting(key: string, value: string): void {
     let finalValue = value;
-    if (this.isKeyEncrypted(key) && safeStorage.isEncryptionAvailable()) {
-      finalValue = safeStorage.encryptString(value).toString('base64');
+    if (this.isKeyEncrypted(key) && this.secrets.canEncrypt()) {
+      finalValue = this.secrets.encrypt(value).toString('base64');
     }
     const stmt = this.db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
     stmt.run(key, finalValue);

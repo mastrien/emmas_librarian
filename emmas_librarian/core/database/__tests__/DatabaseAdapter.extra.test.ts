@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DatabaseAdapter } from '../DatabaseAdapter';
 import fs from 'fs';
 import path from 'path';
-import { safeStorage } from 'electron';
+import { FakeSecretStore } from '../../ports/__tests__/fakes/FakeSecretStore';
 
 const mockLoadablePath: string | null = null;
 vi.mock('sqlite-vec', async (importOriginal) => {
@@ -13,20 +13,13 @@ vi.mock('sqlite-vec', async (importOriginal) => {
   };
 });
 
-// Mock electron's safeStorage before importing it
-vi.mock('electron', () => ({
-  safeStorage: {
-    isEncryptionAvailable: vi.fn(() => true),
-    encryptString: vi.fn((str) => Buffer.from(`encrypted_${str}`)),
-    decryptString: vi.fn((buf) => buf.toString().replace('encrypted_', '')),
-  },
-}));
-
 describe('DatabaseAdapter Settings & Extra', () => {
   let dbAdapter: DatabaseAdapter;
+  let secrets: FakeSecretStore;
 
   beforeEach(() => {
-    dbAdapter = new DatabaseAdapter(':memory:');
+    secrets = new FakeSecretStore();
+    dbAdapter = new DatabaseAdapter(':memory:', secrets);
   });
 
   afterEach(() => {
@@ -176,10 +169,8 @@ describe('DatabaseAdapter Settings & Extra', () => {
     // deletePendingHighlight
     dbAdapter.deletePendingHighlight(999); // shouldn't throw error
 
-    // safeStorage decrypt fallback
-    const spy = vi.spyOn(safeStorage, 'decryptString').mockImplementation(() => {
-      throw new Error('Decryption failed');
-    });
+    // decrypt fallback: the stored value comes back as it is
+    secrets.failDecrypt = true;
 
     const db = (dbAdapter as unknown).db;
     db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(
@@ -189,8 +180,6 @@ describe('DatabaseAdapter Settings & Extra', () => {
 
     const result = dbAdapter.getSetting('api_key_openai');
     expect(result).toBe('raw-api-key-base64');
-
-    spy.mockRestore();
   });
 
   it('handles physical file deletion errors in deleteProjectDocument gracefully', () => {
