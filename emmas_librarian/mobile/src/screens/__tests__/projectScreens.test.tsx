@@ -137,6 +137,13 @@ describe('ProjectScreen: diary', () => {
     expect(pages[1]).toContain('Li o primeiro.');
   });
 
+  it('draws the Markdown of a page formatted (#191)', async () => {
+    reader.diary.push({ id: 9, project_id: 1, entry_date: '2026-11-13', content: 'Achei **importante**.' });
+    renderLibrary(reader, '/projects/1/diary');
+
+    expect((await screen.findByText('importante')).tagName).toBe('STRONG');
+  });
+
   it("saves today's page on the desktop and then shows it in the list", async () => {
     renderLibrary(reader, '/projects/1/diary');
     const editor = await screen.findByLabelText('Página de hoje');

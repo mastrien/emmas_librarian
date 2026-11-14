@@ -21,7 +21,7 @@ A cópia do desktop faz as duas coisas, mas só enquanto o computador estiver li
 - **PDF:** somente leitura (pdf.js), uma página abaixo da outra, desenhadas conforme chegam perto da tela.
 - **Marcações e anotações:** em lista na página do artigo, com a cor do marca-texto, a nota ligada e um link
   para a página do PDF. O marca-texto não é desenhado sobre a página.
-- **Diário:** páginas da mais nova para a mais antiga. Conectado ao desktop, dá para escrever a página de hoje.
+- **Diário:** páginas da mais nova para a mais antiga, com o Markdown formatado (assim como as anotações). Conectado ao desktop, dá para escrever a página de hoje.
 - **Acesso rápido:** links abrem no navegador. Conectado ao desktop, dá para adicionar um link.
 - **Categorias:** valores do artigo. Conectado ao desktop, dá para mudar (texto, uma opção ou várias).
 
@@ -60,5 +60,4 @@ O segundo sobe o cliente com recarga automática; sem o desktop por trás ele se
   celular. Safari do iOS e Chrome do Android ficam por conferir, em especial o aviso de certificado e o pdf.js.
 - Um `.emmapcarc` com muitos PDFs ocupa a memória do celular inteiro enquanto está aberto.
 - Recarregar a página com um arquivo aberto volta à tela inicial (o arquivo não é guardado).
-- O diário é mostrado como texto puro (o Markdown não é formatado).
 - A cópia da web depende do deploy do GitHub Pages, que só roda a partir da `main`.

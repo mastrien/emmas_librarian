@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { Annotation, Article, ArticleCategory, Highlight, ProjectCategory } from '../../../src/types';
 import { Await, Empty, ScreenHeader } from '../components';
+import { Markdown } from '../Markdown';
 import { highlightPage } from '../pdf/highlightPage';
 import type { ProjectReader } from '../reader/ProjectReader';
 import { useReader } from '../session/SessionContext';
@@ -53,7 +54,7 @@ const HighlightItem: React.FC<{ articleId: number; highlight: Highlight }> = ({ 
   return (
     <li className="m-highlight" style={{ borderLeftColor: highlight.color }}>
       {highlight.content_text && <p className="m-prose">{highlight.content_text}</p>}
-      {highlight.comment && <p className="m-highlight__note">{highlight.comment}</p>}
+      {highlight.comment && <Markdown className="m-highlight__note" text={highlight.comment} />}
       {page && (
         <Link className="m-link" to={`/articles/${articleId}/pdf?page=${page}`}>
           Página {page}
@@ -79,7 +80,7 @@ const ReadingNotes: React.FC<{ view: ArticleView }> = ({ view }) => (
       ))}
       {looseNotes(view).map((note) => (
         <li key={`note-${note.id}`} className="m-highlight">
-          <p className="m-highlight__note">{note.content_markdown}</p>
+          <Markdown className="m-highlight__note" text={note.content_markdown} />
         </li>
       ))}
     </ul>

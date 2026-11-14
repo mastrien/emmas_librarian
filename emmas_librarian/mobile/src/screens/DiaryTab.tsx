@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import type { DiaryEntry } from '../../../src/types';
 import { localIsoDate } from '../../../src/utils/localDate';
 import { Await, Empty } from '../components';
+import { Markdown } from '../Markdown';
 import type { ProjectWriter } from '../reader/ProjectReader';
 import { useReader } from '../session/SessionContext';
 import { useLoaded } from '../useLoaded';
@@ -83,7 +84,7 @@ export const DiaryTab: React.FC<{ projectId: number; today?: string }> = ({ proj
             {newestFirst(entries).map((entry) => (
               <article key={entry.id} className="m-card">
                 <h2>{formatDay(entry.entry_date)}</h2>
-                <p className="m-prose">{entry.content}</p>
+                <Markdown text={entry.content} />
               </article>
             ))}
           </>
