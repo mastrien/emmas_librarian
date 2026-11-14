@@ -22,6 +22,7 @@ function renderGuided(service: FakeProjectService) {
           <Routes>
             <Route path="/projects/:id/review/guided" element={<GuidedScreeningPage />} />
             <Route path="/articles/:id" element={<ReaderProbe />} />
+            <Route path="/projects/:id/review" element={<div>Página da revisão</div>} />
           </Routes>
         </FakeDialogsProvider>
       </ServicesProvider>
@@ -34,6 +35,27 @@ const articles = [reviewArticle(1, 'ConvLSTM'), reviewArticle(2, 'MetNet'), revi
 const heading = (title: string) => screen.findByRole('heading', { name: title, level: 2 });
 
 describe('GuidedScreeningPage (#49)', () => {
+  // Board 165: focus mode. The way out has its key, and the bar says where the screening stands.
+  it('leaves with Escape, or by the link, and says how far the screening went', async () => {
+    renderGuided(screeningService(articles, [storedDecision(1, INCLUDED, 'title')]));
+
+    expect(await screen.findByText('Artigo 2 de 3')).toBeInTheDocument();
+    expect(screen.getByText(/^1 decididos · 2 pendentes$/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Sair da triagem/ })).toHaveAttribute('href', '/projects/1/review');
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(await screen.findByText('Página da revisão')).toBeInTheDocument();
+  });
+
+  it('keeps Escape for the note while it is being typed', async () => {
+    renderGuided(screeningService(articles));
+    await heading('ConvLSTM');
+
+    fireEvent.keyDown(screen.getByPlaceholderText(/só usa radar/), { key: 'Escape' });
+
+    expect(screen.queryByText('Página da revisão')).not.toBeInTheDocument();
+  });
+
   it('shows one article with its abstract and decides it with a key, moving to the next', async () => {
     const service = screeningService(articles);
     renderGuided(service);

@@ -7,7 +7,7 @@ import { AppTitleBar } from './shell/AppTitleBar';
 import { ModuleRail } from './shell/ModuleRail';
 import { ProjectSidebar } from './shell/ProjectSidebar';
 import { breadcrumbTrail, projectIdOf } from './shell/breadcrumbs';
-import { projectSegmentOf } from './shell/projectNav';
+import { isFocusRoute, projectSegmentOf } from './shell/projectNav';
 import { ProjectNavRefreshProvider } from './shell/projectNavRefresh';
 import { ProjectNavSlotProvider } from './shell/projectNavSlot';
 import { useShellProject } from './shell/useShellProject';
@@ -28,6 +28,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const projectService = useProjectService();
   const { pathname } = useLocation();
   const isReader = pathname.startsWith('/articles/');
+  const isFocus = isFocusRoute(pathname);
   const projectId = projectIdOf(pathname);
   const [navVersion, refreshProjectNav] = useReducer((version: number) => version + 1, 0);
   const { project, counts, documents } = useShellProject(projectId, `${pathname}#${navVersion}`);
@@ -51,8 +52,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       ) : (
         <ProjectNavSlotProvider>
           <div className="app-frame__body">
-            <ModuleRail onShowChangelog={changelog.show} />
-            {projectId !== undefined && (
+            {!isFocus && <ModuleRail onShowChangelog={changelog.show} />}
+            {projectId !== undefined && !isFocus && (
               <ProjectSidebar
                 projectId={projectId}
                 activeSegment={projectSegmentOf(pathname)}

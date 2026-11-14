@@ -61,6 +61,16 @@ export const PROJECT_NAV: readonly ProjectNavGroup[] = [
 ];
 
 /**
+ * Screens that take the whole window for one task (board 165: the guided screening), with no module rail and no
+ * project sidebar; leaving is on the screen itself.
+ *
+ * @example isFocusRoute('/projects/3/review/guided') // true
+ */
+export function isFocusRoute(pathname: string): boolean {
+  return /^\/projects\/\d+\/review\/guided\/?$/.test(pathname);
+}
+
+/**
  * The first segment after /projects/:id, which names the lit sidebar item ('review' for every review screen).
  * Undefined outside a project or on the bare project path.
  *
