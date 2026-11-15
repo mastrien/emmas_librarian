@@ -54,12 +54,43 @@ describe('parseCliArguments', () => {
     });
   });
 
+  // Regression: `--data-dir=X` used to become a positional argument, so the command ran on the app's own
+  // library instead of X, with no warning.
+  it('reads --data-dir=<folder> and --args-json=<array> written with an equals sign', () => {
+    expect(parseCliArguments(['diary:save', '--args-json=[1,"2026-11-14","a=b"]', '--data-dir=/lib'])).toEqual({
+      kind: 'run',
+      command: 'diary:save',
+      args: [1, '2026-11-14', 'a=b'],
+      options: { pretty: false, dataDir: '/lib' },
+    });
+  });
+
+  it('takes everything after -- as arguments, even what looks like an option', () => {
+    expect(parseCliArguments(['--pretty', '--', 'diary:save', '3', '--', '--pretty'])).toEqual({
+      kind: 'run',
+      command: 'diary:save',
+      args: [3, '--', '--pretty'],
+      options: { pretty: true },
+    });
+  });
+
+  it('keeps -- from hiding a missing command', () => {
+    expect(parseCliArguments(['--'])).toEqual({ kind: 'help', options: plain });
+  });
+
+  it('keeps a value with an equals sign or a single dash as an argument', () => {
+    expect(parseCliArguments(['settings:set', 'a=b', '-1'])).toMatchObject({ args: ['a=b', -1] });
+  });
+
   it.each([
     [['x', '--args-json', '{"a":1}'], '--args-json inválido. Offending value: "{\\"a\\":1}"'],
     [['x', '--args-json'], '--args-json inválido. Offending value: undefined'],
     [['x', '--data-dir'], '--data-dir sem valor. Offending value: undefined'],
     [['x', '--data-dir', '--pretty'], '--data-dir sem valor. Offending value: "--pretty"'],
     [['x', '1', '--args-json', '[2]'], 'Argumentos dados duas vezes. Offending value: ["1"]'],
+    [['projects:getAll', '--nao-existe'], 'Opção desconhecida. Offending value: "--nao-existe"'],
+    [['projects:getAll', '--pretty=true'], 'Opção desconhecida. Offending value: "--pretty=true"'],
+    [['diary:save', '3', '---'], 'Opção desconhecida. Offending value: "---"'],
   ])('refuses %j as a usage error naming the value', (argv, problem) => {
     const failure = (() => {
       try {
