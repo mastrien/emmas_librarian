@@ -42,9 +42,23 @@ function requireFileArgument(command: RegisteredCommand, args: unknown[]): void 
   );
 }
 
+// A command that took `app:getVersion 1 2 3` ran and answered ok: the extra arguments were dropped without
+// a word, and so was the half of a name that a shell had split at its spaces (`projects:create Minha tese`).
+function requireNoExtraArguments(command: RegisteredCommand, args: unknown[]): void {
+  const { name, parameters } = command;
+  const takesAny = parameters.some((parameter) => parameter.startsWith('...'));
+  if (takesAny || args.length <= parameters.length) return;
+  throw usageError(
+    'ERR_CLI_USAGE',
+    `Argumentos demais para "${name}". Offending value: ${args.length} argumentos ${JSON.stringify(args)}`,
+    `no máximo ${parameters.length}: ${terminalUsage(command)}; um texto com espaços vai entre aspas`,
+  );
+}
+
 /**
- * The command a terminal asked for, checked: it exists, it is not desktop-only, and the file it reads
- * or writes was given as a path. Each refusal is a usage error naming the value.
+ * The command a terminal asked for, checked: it exists, it is not desktop-only, it was not given more
+ * arguments than it has, and the file it reads or writes was given as a path. Each refusal is a usage
+ * error naming the value.
  *
  * Usage:
  *   const command = requireTerminalCommand(commands, 'export:csv', [3, './a.csv']);
@@ -58,6 +72,7 @@ export function requireTerminalCommand(commands: CommandRegistry, name: string, 
     );
   }
   const command = commands.get(name);
+  requireNoExtraArguments(command, args);
   requireFileArgument(command, args);
   return command;
 }

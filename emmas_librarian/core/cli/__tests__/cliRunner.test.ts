@@ -18,7 +18,8 @@ class FakeCliLibrary implements OpenedCliHost {
   constructor() {
     this.commands.add(IpcChannel.PROJECTS_GET_ALL, () => [{ id: 1, name: 'Tese' }]);
     this.commands.add(IpcChannel.PROJECTS_UPDATE, (id: number, name: string) => ({ id, name }));
-    this.commands.add(IpcChannel.SETTINGS_SET, () => undefined);
+    // The real command takes (key, value); a fake with no parameters would be refused as "too many arguments".
+    this.commands.add(IpcChannel.SETTINGS_SET, (_key: string, _value: string) => undefined);
     this.commands.add(IpcChannel.PDF_GET, () => Buffer.from('pdf'));
     this.commands.add(IpcChannel.EXPORT_CSV, (_id: number, filePath: string) => filePath, { file: savedFile });
     this.commands.add(IpcChannel.BACKUP_RESTORE_AUTO, (name: string) => this.restored.push(name) > 0);
