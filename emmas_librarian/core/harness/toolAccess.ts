@@ -24,7 +24,7 @@ const READS = [
   'app:getVersion',
   'projects:getAll', 'projects:getOne', 'projects:getAbout', 'projects:getNavCounts', 'projects:markOpened',
   'projects:getScreeningSummaries', 'projects:getSearchHistory', 'projects:getWritingPad',
-  'articles:getByProject', 'articles:getOne', 'pdfLibrary:list', 'highlights:get',
+  'articles:getByProject', 'articles:getOne', 'pdfLibrary:list', 'highlights:get', 'annotations:get',
   'diary:getAll', 'diary:getOne', 'diary:getHistory',
   'categories:getProject', 'categories:getAllProjectArticle',
   'projectDocuments:get', 'projectDocuments:markOpened', 'trash:getItems',
