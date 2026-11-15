@@ -85,7 +85,6 @@ A checagem é estrita: `"3"` não é o número 3. É de propósito: o CLI antigo
   o comando devolve; decidir se isso vira erro depende de a interface do app usar esse `null`.
 - **Descrições.** Só os comandos com comentário no código têm descrição; os demais trazem só o nome do comando.
   É o primeiro lugar para melhorar a qualidade das ferramentas.
-- **Sem modelo ainda.** Os testes simulam um episódio com chamadas roteirizadas; nada aqui chama a API de um modelo.
 - **Aparência.** Tema, tom e cor ficam no `localStorage` da interface, não são comandos; expô-los pede um canal da
   interface (tarefa 212 no Arca).
 - **Sem modelo ainda.** Nenhuma chamada a modelo foi feita; a comparação entre modelos vem depois.
