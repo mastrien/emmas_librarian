@@ -81,8 +81,9 @@ export function requireTerminalCommand(commands: CommandRegistry, name: string, 
  * The usage line of one command, for `cli <command> --help`. Which trailing arguments are optional is
  * not known here: TypeScript's `?` does not exist at run time.
  *
- * The `--` is not decoration: on Windows Electron exits -1, before any of our code runs, when a word like
- * `diary:save` is followed by another loose word, so the arguments come after `--`.
+ * The `--` is not decoration: Electron's CheckCommandLineArguments (the CVE-2018-1000006 fix) exits -1, before
+ * any of our code runs, when a URL-looking word like `diary:save` is followed by another loose word; only
+ * `--` switches that check off, so the arguments come after it.
  *
  * Usage:
  *   terminalUsage(commands.get('diary:save')); // 'emmas-librarian cli diary:save -- <projectId> <date> <content> <expected>'

@@ -27,10 +27,12 @@ emmas-librarian cli diary:save --args-json='[3, "2026-11-14", "Li dois artigos."
 emmas-librarian cli export:csv -- 3 ./artigos.csv
 ```
 
-- **Os argumentos vão depois de `--`**, ou todos juntos em `--args-json=<array>`. No Windows, o Electron encerra o
-  processo sem mensagem (exit -1), antes de qualquer código nosso rodar, quando uma palavra como
-  `articles:getByProject` é seguida de outra palavra solta. Com `--` ou com a opção na forma `--opção=valor`
-  (um único argumento) isso não acontece. Vale também no Linux e no macOS, onde não é necessário.
+- **Os argumentos vão depois de `--`**, ou todos juntos em `--args-json=<array>`. O Electron tem uma proteção
+  contra a falha CVE-2018-1000006 (`CheckCommandLineArguments`, `shell/app/command_line_args.cc`): uma palavra com
+  cara de URL (`articles:getByProject`: letras, `:`, e mais de uma letra antes dele) seguida de **outra palavra
+  solta** faz o processo sair com -1, sem mensagem, antes de qualquer código nosso rodar. Só o `--` desliga a
+  checagem; as opções (`--pretty`, `--opção=valor`) não contam como palavra solta. O Electron não deixa
+  configurar isso, e a regra vale em qualquer sistema, não só no Windows.
 - Um argumento que começa com `--` (por exemplo o `---` do Markdown) só passa depois do `--`.
 - **As opções vêm antes do `--`**: `cli --data-dir=pasta projects:create -- "Minha tese"`. O que vem depois do `--` é
   argumento do comando, inclusive uma opção, e o CLI recusa o excesso com o código 2 em vez de ignorá-lo.
