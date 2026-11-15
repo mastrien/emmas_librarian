@@ -330,6 +330,9 @@ export interface CategoryOption {
   name: string;
 }
 
+/** What a category's options may be when saved: the relational list, or the legacy comma-separated text. */
+export type CategoryOptionsInput = CategoryOption[] | string | null;
+
 export interface ProjectCategory {
   id: number;
   project_id: number;

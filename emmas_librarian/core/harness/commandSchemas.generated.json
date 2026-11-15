@@ -11,7 +11,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:59"
+      "source": "core/commands/aiCommands.ts:77"
     },
     {
       "name": "ai:generateSummary",
@@ -24,7 +24,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:51"
+      "source": "core/commands/aiCommands.ts:69"
     },
     {
       "name": "ai:massiveExtraction",
@@ -47,17 +47,17 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:54"
+      "source": "core/commands/aiCommands.ts:72"
     },
     {
       "name": "aiModelConfig:getAll",
       "parameters": [],
-      "source": "core/commands/aiCommands.ts:65"
+      "source": "core/commands/aiCommands.ts:83"
     },
     {
       "name": "aiModelConfig:restore",
       "parameters": [],
-      "source": "core/commands/aiCommands.ts:69"
+      "source": "core/commands/aiCommands.ts:87"
     },
     {
       "name": "aiModelConfig:update",
@@ -98,7 +98,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:66"
+      "source": "core/commands/aiCommands.ts:84"
     },
     {
       "name": "annotations:create",
@@ -800,7 +800,33 @@
           "name": "entries",
           "required": true,
           "schema": {
-            "x-ts": "unknown"
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "enum": [
+                    "boolean",
+                    "text",
+                    "enum",
+                    "multiselect"
+                  ]
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "type"
+              ]
+            }
           }
         }
       ],
@@ -827,14 +853,40 @@
           "name": "type",
           "required": true,
           "schema": {
-            "type": "string"
+            "enum": [
+              "boolean",
+              "text",
+              "enum",
+              "multiselect"
+            ]
           }
         },
         {
           "name": "options",
-          "required": true,
+          "required": false,
           "schema": {
-            "x-ts": "any"
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                }
+              }
+            ]
           }
         }
       ],
@@ -960,14 +1012,40 @@
           "name": "type",
           "required": true,
           "schema": {
-            "type": "string"
+            "enum": [
+              "boolean",
+              "text",
+              "enum",
+              "multiselect"
+            ]
           }
         },
         {
           "name": "options",
-          "required": true,
+          "required": false,
           "schema": {
-            "x-ts": "any"
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                }
+              }
+            ]
           }
         }
       ],
@@ -1387,7 +1465,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:96"
+      "source": "core/commands/aiCommands.ts:116"
     },
     {
       "name": "investigationResults:getByArticle",
@@ -1407,7 +1485,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:99"
+      "source": "core/commands/aiCommands.ts:119"
     },
     {
       "name": "investigationResults:review",
@@ -1443,7 +1521,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:102"
+      "source": "core/commands/aiCommands.ts:122"
     },
     {
       "name": "investigationResults:save",
@@ -1522,7 +1600,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:90"
+      "source": "core/commands/aiCommands.ts:110"
     },
     {
       "name": "massiveInvestigations:get",
@@ -2271,7 +2349,17 @@
                 "type": "string"
               },
               "questions": {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ]
               }
             },
             "required": [
@@ -2282,7 +2370,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:77"
+      "source": "core/commands/aiCommands.ts:95"
     },
     {
       "name": "questionSets:delete",
@@ -2295,7 +2383,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:81"
+      "source": "core/commands/aiCommands.ts:101"
     },
     {
       "name": "questionSets:duplicate",
@@ -2322,7 +2410,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:84"
+      "source": "core/commands/aiCommands.ts:104"
     },
     {
       "name": "questionSets:get",
@@ -2335,7 +2423,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:76"
+      "source": "core/commands/aiCommands.ts:94"
     },
     {
       "name": "questionSets:list",
@@ -2355,7 +2443,7 @@
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:75"
+      "source": "core/commands/aiCommands.ts:93"
     },
     {
       "name": "questionSets:update",
@@ -2380,13 +2468,23 @@
                 "type": "string"
               },
               "questions": {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ]
               }
             }
           }
         }
       ],
-      "source": "core/commands/aiCommands.ts:78"
+      "source": "core/commands/aiCommands.ts:98"
     },
     {
       "name": "scientificMilestone:toggleStatus",

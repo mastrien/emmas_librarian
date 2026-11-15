@@ -21,7 +21,7 @@ import { ScreeningSuggestionRepository } from './ScreeningSuggestionRepository';
 import { ArticleVectorRepository } from './ArticleVectorRepository';
 import { PrismaStudyRepository } from './PrismaStudyRepository';
 import { initializeSchema } from './schemaMigrations';
-import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
+import type { CategoryKind, CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
 
 import {
   Project,
@@ -33,6 +33,7 @@ import {
   DiaryEntry,
   ProjectDocument,
   ProjectCategory,
+  CategoryOptionsInput,
   ArticleCategory,
   PrismaSourceInput,
 } from '../../src/types';
@@ -382,14 +383,24 @@ export class DatabaseAdapter {
   public getProjectCategories(projectId: number): ProjectCategory[] {
     return this.projectRepo.getProjectCategories(projectId);
   }
-  public createProjectCategory(projectId: number, name: string, type: string, options?: any): number {
-    return this.projectRepo.createProjectCategory(projectId, name, type as any, options);
+  public createProjectCategory(
+    projectId: number,
+    name: string,
+    type: CategoryKind,
+    options?: CategoryOptionsInput,
+  ): number {
+    return this.projectRepo.createProjectCategory(projectId, name, type, options);
   }
   public applyCategorySet(projectId: number, entries: CategorySetEntry[]): CategorySetResult {
     return this.projectRepo.applyCategorySet(projectId, entries);
   }
-  public updateProjectCategory(categoryId: number, name: string, type: string, options?: any): void {
-    return this.projectRepo.updateProjectCategory(categoryId, name, type as any, options);
+  public updateProjectCategory(
+    categoryId: number,
+    name: string,
+    type: CategoryKind,
+    options?: CategoryOptionsInput,
+  ): void {
+    return this.projectRepo.updateProjectCategory(categoryId, name, type, options);
   }
   public syncProjectCategoryOptions(categoryId: number, options: { id?: number; name: string }[]): void {
     return this.projectRepo.syncProjectCategoryOptions(categoryId, options);
