@@ -5,6 +5,8 @@ import { LibraryToolkit } from '../LibraryToolkit';
 import type { CommandSchema } from '../commandSchema';
 import { TrajectoryLog } from '../trajectory';
 import { MemorySink } from './support/MemorySink';
+import { FakeConfirmer } from './support/FakeConfirmer';
+import type { Access } from '../toolAccess';
 
 const schema = (name: string, parameters: CommandSchema['parameters'] = []): CommandSchema => ({
   name,
@@ -12,6 +14,14 @@ const schema = (name: string, parameters: CommandSchema['parameters'] = []): Com
   source: 'test',
 });
 const projectId = { name: 'projectId', required: true, schema: { type: 'number' as const } };
+
+const READ: Access = { confirm: false, localOnly: false };
+const ASKS: Access = { confirm: true, localOnly: false };
+const ACCESS = new Map<string, Access>([
+  ['projects:getOne', READ],
+  ['projects:delete', ASKS],
+  ['projects:explode', READ],
+]);
 
 let commands: CommandRegistry;
 let sink: MemorySink;
@@ -30,6 +40,8 @@ beforeEach(() => {
   sink = new MemorySink();
   toolkit = new LibraryToolkit({
     commands,
+    access: ACCESS,
+    confirmer: new FakeConfirmer(true),
     log: new TrajectoryLog(sink),
     clock: () => 100,
     schemas: [
@@ -66,6 +78,7 @@ describe('LibraryToolkit: what the model is offered', () => {
     commands.add(channel, (articleId: number) => articleId);
     const withPdf = new LibraryToolkit({
       commands,
+      access: new Map([[channel, READ]]),
       schemas: [schema(channel, [{ name: 'articleId', required: true, schema: { type: 'number' } }])],
     });
 
@@ -132,5 +145,80 @@ describe('LibraryToolkit: the trajectory', () => {
         output: { code: 'ERR_INVALID_ARGUMENTS' },
       },
     ]);
+  });
+});
+
+describe('LibraryToolkit: what needs the person to say yes', () => {
+  const build = (confirmer?: FakeConfirmer, modelIsLocal = false) =>
+    new LibraryToolkit({
+      commands,
+      access: ACCESS,
+      confirmer,
+      modelIsLocal,
+      schemas: [schema('projects:getOne', [projectId]), schema('projects:delete', [projectId])],
+    });
+
+  it('asks the person with the tool and the arguments, and runs the command after a yes', async () => {
+    const confirmer = new FakeConfirmer(true);
+    const answer = await build(confirmer).call('projects__delete', { projectId: 3 });
+
+    expect(answer.ok).toBe(true);
+    expect(confirmer.asked).toEqual([
+      { tool: 'projects__delete', command: 'projects:delete', input: { projectId: 3 } },
+    ]);
+    expect(ran).toHaveBeenCalledWith(3);
+  });
+
+  it('does not run the command after a no, and says so with the code the model can read', async () => {
+    const answer = await build(new FakeConfirmer(false)).call('projects__delete', { projectId: 3 });
+
+    expect(answer).toMatchObject({ ok: false, error: { code: 'ERR_NOT_CONFIRMED', type: 'USER_ERROR' } });
+    expect(ran).not.toHaveBeenCalled();
+  });
+
+  it('refuses when nobody can be asked', async () => {
+    const answer = await build().call('projects__delete', { projectId: 3 });
+
+    expect(answer).toMatchObject({ ok: false, error: { code: 'ERR_NOT_CONFIRMED' } });
+    expect(ran).not.toHaveBeenCalled();
+  });
+
+  it('does not bother the person for a read', async () => {
+    const confirmer = new FakeConfirmer(false);
+    await build(confirmer).call('projects__getOne', { projectId: 3 });
+
+    expect(confirmer.asked).toEqual([]);
+  });
+
+  it('does not ask about a call whose arguments are wrong', async () => {
+    const confirmer = new FakeConfirmer(true);
+    const answer = await build(confirmer).call('projects__delete', { projectId: 'x' });
+
+    expect(answer).toMatchObject({ ok: false, error: { code: 'ERR_INVALID_ARGUMENTS' } });
+    expect(confirmer.asked).toEqual([]);
+  });
+});
+
+describe('LibraryToolkit: what only a local model is offered', () => {
+  const local: Access = { confirm: false, localOnly: true };
+  const build = (modelIsLocal: boolean) =>
+    new LibraryToolkit({
+      commands,
+      access: new Map([['projects:getOne', local]]),
+      modelIsLocal,
+      schemas: [schema('projects:getOne', [projectId])],
+    });
+
+  it('keeps it from a model in the cloud, saying why', () => {
+    expect(build(false).tools()).toEqual([]);
+    expect(build(false).hidden()).toEqual([{ name: 'projects:getOne', reason: expect.stringContaining('locally') }]);
+  });
+
+  it('offers it to a model that runs locally', () => {
+    expect(
+      build(true)
+        .tools()
+        .map((tool) => tool.name),
+    ).toEqual(['projects__getOne']);
   });
 });

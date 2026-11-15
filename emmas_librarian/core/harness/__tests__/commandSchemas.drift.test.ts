@@ -67,7 +67,7 @@ describe('the tools offered for the real library', () => {
       .hidden()
       .map((each) => each.name);
 
-    expect(offered.length).toBeGreaterThan(80);
+    expect(offered.length).toBeGreaterThan(60);
     expect(offered).toContain('projects__getAll');
     expect(hidden).toEqual(
       expect.arrayContaining([
@@ -75,7 +75,11 @@ describe('the tools offered for the real library', () => {
         'settings:set',
         'backup:restoreOverride',
         'ai:generateSummary',
+        'search:preview',
         'export:csv',
+        'diary:save',
+        'annotations:create',
+        'trash:empty',
       ]),
     );
     expect(offered).not.toContain('settings__get');

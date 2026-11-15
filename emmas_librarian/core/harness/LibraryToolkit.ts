@@ -1,11 +1,14 @@
 import type { CommandRegistry } from '../commands/CommandRegistry';
 import { listTerminalCommands } from '../commands/terminalCommands';
+import { AppError } from '../errors/AppError';
 import { usageError } from '../errors/usageError';
 import { shellFailureFrom } from '../errors/shellFailureFrom';
 import { bindArguments } from './bindArguments';
 import type { CommandSchema } from './commandSchema';
 import { toToolDefinition, type ToolDefinition } from './toolDefinition';
 import { toToolName } from './toolNames';
+import { TOOL_ACCESS, type Access } from './toolAccess';
+import { DENY_ALL, type Confirmer } from './confirmer';
 import { whyHidden } from './toolPolicy';
 import type { TrajectoryLog } from './trajectory';
 
@@ -22,11 +25,18 @@ export interface ToolkitOptions {
   log?: TrajectoryLog;
   /** Replaced in tests. */
   clock?: () => number;
+  /** Asked before a call that changes the library runs. Without it, such a call is refused. */
+  confirmer?: Confirmer;
+  /** Whether the model runs on this machine: only then are the tools that send text to a third party offered. */
+  modelIsLocal?: boolean;
+  /** What a model may use; the library's own table unless a test brings another. */
+  access?: ReadonlyMap<string, Access>;
 }
 
 interface Exposed {
   schema: CommandSchema;
   tool: ToolDefinition;
+  access: Access;
 }
 
 /**
@@ -53,12 +63,20 @@ export class LibraryToolkit {
 
   private expose(schema: CommandSchema): void {
     if (!this.options.commands.has(schema.name)) return;
-    const reason = whyHidden(this.options.commands.get(schema.name), schema, this.terminal.has(schema.name));
+    const access = (this.options.access ?? TOOL_ACCESS).get(schema.name);
+    const command = this.options.commands.get(schema.name);
+    const reason = whyHidden({
+      command,
+      schema,
+      access,
+      inTerminal: this.terminal.has(schema.name),
+      modelIsLocal: this.options.modelIsLocal ?? false,
+    });
     if (reason) {
       this.hiddenCommands.push({ name: schema.name, reason });
       return;
     }
-    this.exposed.set(toToolName(schema.name), { schema, tool: toToolDefinition(schema) });
+    if (access) this.exposed.set(toToolName(schema.name), { schema, tool: toToolDefinition(schema), access });
   }
 
   tools(): ToolDefinition[] {
@@ -85,14 +103,26 @@ export class LibraryToolkit {
 
   private async run(toolName: string, input: unknown): Promise<ToolResult> {
     try {
-      const { schema } = this.requireTool(toolName);
+      const { schema, access } = this.requireTool(toolName);
       const args = bindArguments(schema, input);
+      if (access.confirm) await this.requireApproval(toolName, schema.name, input);
       const result = await this.options.commands.run(schema.name, ...args);
       return { ok: true, result: result ?? null };
     } catch (error) {
       const { code, type, message } = shellFailureFrom(error);
       return { ok: false, error: { code, type, message } };
     }
+  }
+
+  // Asked after the arguments passed their check, so the person is never shown a call that could not run anyway.
+  private async requireApproval(tool: string, command: string, input: unknown): Promise<void> {
+    const approved = await (this.options.confirmer ?? DENY_ALL).confirm({ tool, command, input });
+    if (approved) return;
+    throw new AppError(
+      'ERR_NOT_CONFIRMED',
+      'USER_ERROR',
+      `[ERR_NOT_CONFIRMED] The person did not approve ${tool}. Offending value: ${JSON.stringify(input)}. Expected: ask the person again, and only repeat the call after a yes.`,
+    );
   }
 
   private requireTool(toolName: string): Exposed {

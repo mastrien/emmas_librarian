@@ -1,5 +1,6 @@
 import type { RegisteredCommand } from '../commands/CommandRegistry';
 import type { CommandSchema } from './commandSchema';
+import type { Access } from './toolAccess';
 
 interface Exclusion {
   /** Matches the command name. */
@@ -25,23 +26,35 @@ export const DEFAULT_EXCLUSIONS: Exclusion[] = [
   },
 ];
 
+const NOT_ALLOWED = 'not offered to a model: nobody decided it should be (see docs/harness.md)';
+export const NEEDS_LOCAL_MODEL = 'sends text or queries to a third party: only offered with a model that runs locally';
+
 const FILE_PARAMETER = /filePath/i;
 
+export interface PolicyInput {
+  command: RegisteredCommand;
+  schema: CommandSchema;
+  /** Whether the CLI offers it: what a terminal cannot run is not offered to a model either. */
+  inTerminal: boolean;
+  /** Undefined when nobody decided that a model may use the command. */
+  access: Access | undefined;
+  modelIsLocal: boolean;
+}
+
 /**
- * The reason a command is not offered to a model, or undefined when it is. A command that reads or
- * writes a file the caller names is hidden too: a model should not choose where on the disk to write.
- * What a terminal cannot run (the PDF reader's bytes and marks) is not offered either: a model gets no
- * more of the library than the CLI gives a person at a shell.
+ * The reason a command is not offered to a model, or undefined when it is. It must be allowed in TOOL_ACCESS and
+ * be something the CLI gives a person; one that reads or writes a file the caller names stays hidden too (a model
+ * should not choose where on the disk to write), and one that sends text to a third party needs a local model.
  *
  * Usage:
- *   whyHidden(commands.get('settings:get'), schema, true); // 'returns and sets the API keys of the person'
+ *   whyHidden({ command, schema, inTerminal: true, access: undefined, modelIsLocal: false }); // 'returns and sets the API keys...'
  */
-export function whyHidden(command: RegisteredCommand, schema: CommandSchema, inTerminal: boolean): string | undefined {
+export function whyHidden({ command, schema, inTerminal, access, modelIsLocal }: PolicyInput): string | undefined {
   if (!inTerminal) return 'needs the desktop app on screen (the PDF reader: its bytes and the marks it positions)';
-  const exclusion = DEFAULT_EXCLUSIONS.find(({ pattern }) => pattern.test(command.name));
-  if (exclusion) return exclusion.reason;
+  if (!access) return DEFAULT_EXCLUSIONS.find(({ pattern }) => pattern.test(command.name))?.reason ?? NOT_ALLOWED;
   if (command.file || schema.parameters.some((parameter) => FILE_PARAMETER.test(parameter.name))) {
     return 'reads or writes a file at a path the caller chooses';
   }
+  if (access.localOnly && !modelIsLocal) return NEEDS_LOCAL_MODEL;
   return undefined;
 }

@@ -5,6 +5,7 @@ import { commandSchemas } from '../commandSchemas';
 import { LibraryToolkit, type ToolResult } from '../LibraryToolkit';
 import { TrajectoryLog } from '../trajectory';
 import { MemorySink } from './support/MemorySink';
+import { FakeConfirmer } from './support/FakeConfirmer';
 import { openTestLibrary, type TestLibrary } from './support/openTestLibrary';
 
 let library: TestLibrary;
@@ -18,6 +19,7 @@ beforeEach(() => {
     commands: library.commands,
     schemas: commandSchemas(),
     log: new TrajectoryLog(sink),
+    confirmer: new FakeConfirmer(true),
   });
 });
 
@@ -31,16 +33,22 @@ const resultOf = (answer: ToolResult): unknown => {
 };
 
 describe('an episode against a real library', () => {
-  it('creates a project, writes in its diary and reads it back', async () => {
+  it('creates a project, adds a record to its diary and reads it back', async () => {
     const created = resultOf(await toolkit.call('projects__create', { name: 'Revisão sobre tutoria' })) as {
       id: number;
     };
-    await toolkit.call('diary__save', { projectId: created.id, date: '2026-11-14', content: 'Li dois artigos.' });
+    await toolkit.call('diary__appendAgentRecord', {
+      projectId: created.id,
+      date: '2026-11-14',
+      message: 'Li dois artigos.',
+    });
     const entries = resultOf(await toolkit.call('diary__getAll', { projectId: created.id })) as Array<{
       content: string;
     }>;
 
-    expect(entries.map((entry) => entry.content)).toEqual(['Li dois artigos.']);
+    expect(entries.map((entry) => entry.content)).toEqual([
+      expect.stringMatching(/registro do agente de IA\*\*\nLi dois artigos\.$/),
+    ]);
   });
 
   it('lets a model correct a wrong call from the error it was given', async () => {
