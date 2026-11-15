@@ -21,29 +21,39 @@ atualização do app, "abrir documento externo" e o leitor de PDF (classificaç�
 
 ```bash
 emmas-librarian cli commands
-emmas-librarian cli projects:create "Minha tese"
-emmas-librarian cli articles:getByProject 3
-emmas-librarian cli diary:save --args-json '[3, "2026-11-14", "Li dois artigos."]'
-emmas-librarian cli export:csv 3 ./artigos.csv
+emmas-librarian cli projects:create -- "Minha tese"
+emmas-librarian cli articles:getByProject -- 3
+emmas-librarian cli diary:save --args-json='[3, "2026-11-14", "Li dois artigos."]'
+emmas-librarian cli export:csv -- 3 ./artigos.csv
 ```
+
+- **Os argumentos vão depois de `--`**, ou todos juntos em `--args-json=<array>`. No Windows, o Electron encerra o
+  processo sem mensagem (exit -1), antes de qualquer código nosso rodar, quando uma palavra como
+  `articles:getByProject` é seguida de outra palavra solta. Com `--` ou com a opção na forma `--opção=valor`
+  (um único argumento) isso não acontece. Vale também no Linux e no macOS, onde não é necessário.
+- Um argumento que começa com `--` (por exemplo o `---` do Markdown) só passa depois do `--`.
 
 - Cada argumento é lido como JSON quando possível (`3`, `true`, `null`, `[1,2]`, `{"a":1}`) e como texto no resto.
   Para passar como texto algo que parece JSON, use aspas de JSON: `'"123"'`.
-- `--args-json '<array>'` passa os argumentos exatamente como um array JSON; é a forma mais segura para scripts.
+- `--args-json=<array>` passa os argumentos exatamente como um array JSON; é a forma mais segura para scripts.
 - Onde o aplicativo abriria um diálogo de arquivo, o CLI recebe o caminho como argumento. `cli commands` mostra
   qual argumento é (`"file": { "argument": 2, "mode": "save" }`).
 - `cli commands` traz, em `args`, o nome de cada argumento do comando, na ordem. `cli <comando> --help` mostra
-  a linha de uso (`emmas-librarian cli diary:save <projectId> <date> <content> <expected>`). Os últimos
+  a linha de uso (`emmas-librarian cli diary:save -- <projectId> <date> <content> <expected>`). Os últimos
   argumentos podem ser opcionais: isso não é indicado.
 
 ## Opções
 
 | Opção | Efeito |
 |---|---|
-| `--data-dir <pasta>` | Abre a biblioteca dessa pasta em vez da do aplicativo. |
-| `--args-json <array>` | Argumentos do comando como array JSON. |
+| `--data-dir <pasta>` ou `--data-dir=<pasta>` | Abre a biblioteca dessa pasta em vez da do aplicativo. |
+| `--args-json <array>` ou `--args-json=<array>` | Argumentos do comando como array JSON. |
+| `--` | Termina as opções: tudo depois é argumento do comando. |
 | `--pretty` | JSON indentado. |
 | `--help` | Texto de ajuda. |
+
+Uma opção desconhecida (`--nao-existe`, `--pretty=true`) falha com o código 2 e cita o valor; ela nunca é lida como
+argumento. Antes, `--data-dir=pasta` era tratado como argumento e o comando rodava na biblioteca do aplicativo.
 
 O CLI nunca cria uma biblioteca: se a pasta não tem `emma.db`, ele falha com `ERR_LIBRARY_NOT_FOUND`.
 
