@@ -1,0 +1,3576 @@
+{
+  "commands": [
+    {
+      "name": "ai:extractMetadata",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:59"
+    },
+    {
+      "name": "ai:generateSummary",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:51"
+    },
+    {
+      "name": "ai:massiveExtraction",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "questions",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:54"
+    },
+    {
+      "name": "aiModelConfig:getAll",
+      "parameters": [],
+      "source": "core/commands/aiCommands.ts:65"
+    },
+    {
+      "name": "aiModelConfig:restore",
+      "parameters": [],
+      "source": "core/commands/aiCommands.ts:69"
+    },
+    {
+      "name": "aiModelConfig:update",
+      "parameters": [
+        {
+          "name": "skill",
+          "required": true,
+          "schema": {
+            "enum": [
+              "metadata",
+              "summary",
+              "extraction",
+              "embeddings",
+              "screening"
+            ]
+          }
+        },
+        {
+          "name": "provider",
+          "required": true,
+          "schema": {
+            "enum": [
+              "openai",
+              "gemini",
+              "anthropic",
+              "ollama",
+              "ollama_cloud",
+              "llama_cpp",
+              "local"
+            ]
+          }
+        },
+        {
+          "name": "modelName",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:66"
+    },
+    {
+      "name": "annotations:create",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "content",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/annotationCommands.ts:13"
+    },
+    {
+      "name": "annotations:delete",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/annotationCommands.ts:17"
+    },
+    {
+      "name": "annotations:get",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/annotationCommands.ts:12"
+    },
+    {
+      "name": "annotations:update",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "content",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/annotationCommands.ts:16"
+    },
+    {
+      "name": "app:getVersion",
+      "parameters": [],
+      "source": "core/commands/backupCommands.ts:40"
+    },
+    {
+      "name": "articles:createFromPdfs",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "filePaths",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "source": "core/commands/articleCommands.ts:46"
+    },
+    {
+      "name": "articles:createManual",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "data",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "number"
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "journal": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "new",
+                  "read",
+                  "archived"
+                ]
+              },
+              "doi": {
+                "type": "string"
+              },
+              "authors": {
+                "type": "string"
+              },
+              "abstract": {
+                "type": "string"
+              },
+              "author_keywords": {
+                "type": "string"
+              },
+              "index_keywords": {
+                "type": "string"
+              },
+              "volume": {
+                "type": "string"
+              },
+              "issue": {
+                "type": "string"
+              },
+              "pages": {
+                "type": "string"
+              },
+              "affiliations": {
+                "type": "string"
+              },
+              "references_list": {
+                "type": "string"
+              },
+              "document_type": {
+                "type": "string"
+              },
+              "issn": {
+                "type": "string"
+              },
+              "citation_count": {
+                "type": "number"
+              },
+              "source_query": {
+                "type": "string"
+              },
+              "source_databases": {
+                "type": "string"
+              },
+              "csl_json": {
+                "x-ts": "unknown"
+              },
+              "search_id": {
+                "type": "number"
+              },
+              "is_oa": {
+                "type": "number"
+              },
+              "publisher": {
+                "type": "string"
+              },
+              "accessed": {
+                "type": "string"
+              },
+              "project_id": {
+                "type": "number"
+              },
+              "local_file_path": {
+                "type": "string"
+              },
+              "archive_note": {
+                "type": "string"
+              },
+              "ai_summary": {
+                "type": "string"
+              },
+              "year": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "title"
+            ]
+          }
+        },
+        {
+          "name": "sourceFilePath",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/articleCommands.ts:41"
+    },
+    {
+      "name": "articles:getByProject",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/articleCommands.ts:27"
+    },
+    {
+      "name": "articles:getOne",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/articleCommands.ts:28"
+    },
+    {
+      "name": "articles:importFromProject",
+      "parameters": [
+        {
+          "name": "sourceId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "destId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "articleIds",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      ],
+      "source": "core/commands/articleCommands.ts:38"
+    },
+    {
+      "name": "articles:updateMetadata",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "data",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "doi": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "authors": {
+                "type": "string"
+              },
+              "year": {
+                "type": "number"
+              },
+              "abstract": {
+                "type": "string"
+              },
+              "author_keywords": {
+                "type": "string"
+              },
+              "index_keywords": {
+                "type": "string"
+              },
+              "journal": {
+                "type": "string"
+              },
+              "volume": {
+                "type": "string"
+              },
+              "issue": {
+                "type": "string"
+              },
+              "pages": {
+                "type": "string"
+              },
+              "affiliations": {
+                "type": "string"
+              },
+              "references_list": {
+                "type": "string"
+              },
+              "document_type": {
+                "type": "string"
+              },
+              "issn": {
+                "type": "string"
+              },
+              "citation_count": {
+                "type": "number"
+              },
+              "source_query": {
+                "type": "string"
+              },
+              "source_databases": {
+                "type": "string"
+              },
+              "csl_json": {
+                "type": "string"
+              },
+              "search_id": {
+                "type": "number"
+              },
+              "is_oa": {
+                "type": "number"
+              },
+              "publisher": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "accessed": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "source": "core/commands/articleCommands.ts:35"
+    },
+    {
+      "name": "articles:updateStatus",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "status",
+          "required": true,
+          "schema": {
+            "enum": [
+              "new",
+              "read",
+              "archived"
+            ]
+          }
+        },
+        {
+          "name": "note",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/articleCommands.ts:29"
+    },
+    {
+      "name": "articles:updateStatusMany",
+      "parameters": [
+        {
+          "name": "ids",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "name": "status",
+          "required": true,
+          "schema": {
+            "enum": [
+              "new",
+              "read",
+              "archived"
+            ]
+          }
+        },
+        {
+          "name": "note",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/articleCommands.ts:32"
+    },
+    {
+      "name": "ask:conversationDelete",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/projectQuestionCommands.ts:27"
+    },
+    {
+      "name": "ask:conversationGet",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/projectQuestionCommands.ts:25"
+    },
+    {
+      "name": "ask:conversationsList",
+      "parameters": [],
+      "source": "core/commands/projectQuestionCommands.ts:24"
+    },
+    {
+      "name": "ask:coverage",
+      "parameters": [
+        {
+          "name": "projectIds",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      ],
+      "source": "core/commands/projectQuestionCommands.ts:28"
+    },
+    {
+      "name": "ask:indexMissing",
+      "parameters": [
+        {
+          "name": "target",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "projectIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "required": [
+                  "projectIds"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "articleIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "required": [
+                  "articleIds"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "replaceIndex",
+          "required": false,
+          "schema": {
+            "type": "boolean"
+          }
+        }
+      ],
+      "source": "core/commands/projectQuestionCommands.ts:38"
+    },
+    {
+      "name": "ask:indexPlan",
+      "parameters": [
+        {
+          "name": "target",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "projectIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "required": [
+                  "projectIds"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "articleIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "required": [
+                  "articleIds"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/projectQuestionCommands.ts:32"
+    },
+    {
+      "name": "ask:indexProgress",
+      "parameters": [],
+      "source": "core/commands/projectQuestionCommands.ts:49"
+    },
+    {
+      "name": "ask:send",
+      "parameters": [
+        {
+          "name": "input",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "conversationId": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "projectIds": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "question": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "conversationId",
+              "projectIds",
+              "question"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/projectQuestionCommands.ts:26"
+    },
+    {
+      "name": "backup:export",
+      "parameters": [
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/backupCommands.ts:65"
+    },
+    {
+      "name": "backup:listAuto",
+      "parameters": [],
+      "source": "core/commands/backupCommands.ts:38"
+    },
+    {
+      "name": "backup:restoreAuto",
+      "parameters": [
+        {
+          "name": "filename",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/backupCommands.ts:39"
+    },
+    {
+      "name": "backup:restoreMerge",
+      "parameters": [
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "description": "null, not 0, when no file is given: the UI must not report \"no new project\" when nothing was tried.",
+      "source": "core/commands/backupCommands.ts:75"
+    },
+    {
+      "name": "backup:restoreOverride",
+      "parameters": [
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "description": "false, not null, when no file is given: the renderer reads the answer as \"was the library replaced?\".",
+      "source": "core/commands/backupCommands.ts:70"
+    },
+    {
+      "name": "categories:applySet",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "entries",
+          "required": true,
+          "schema": {
+            "x-ts": "unknown"
+          }
+        }
+      ],
+      "source": "core/commands/categoryCommands.ts:54"
+    },
+    {
+      "name": "categories:createProject",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "name",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "type",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "options",
+          "required": true,
+          "schema": {
+            "x-ts": "any"
+          }
+        }
+      ],
+      "source": "core/commands/categoryCommands.ts:17"
+    },
+    {
+      "name": "categories:deleteProject",
+      "parameters": [
+        {
+          "name": "categoryId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/categoryCommands.ts:29"
+    },
+    {
+      "name": "categories:getAllProjectArticle",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/categoryCommands.ts:38"
+    },
+    {
+      "name": "categories:getArticle",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/categoryCommands.ts:33"
+    },
+    {
+      "name": "categories:getProject",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/categoryCommands.ts:16"
+    },
+    {
+      "name": "categories:readSetFile",
+      "parameters": [
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/categoryCommands.ts:57"
+    },
+    {
+      "name": "categories:setArticle",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "categoryId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "value",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/categoryCommands.ts:34"
+    },
+    {
+      "name": "categories:updateProject",
+      "parameters": [
+        {
+          "name": "categoryId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "name",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "type",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "options",
+          "required": true,
+          "schema": {
+            "x-ts": "any"
+          }
+        }
+      ],
+      "source": "core/commands/categoryCommands.ts:22"
+    },
+    {
+      "name": "diary:delete",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "date",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/diaryCommands.ts:19"
+    },
+    {
+      "name": "diary:getAll",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/diaryCommands.ts:14"
+    },
+    {
+      "name": "diary:getHistory",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "date",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/diaryCommands.ts:20"
+    },
+    {
+      "name": "diary:getOne",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "date",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/diaryCommands.ts:15"
+    },
+    {
+      "name": "diary:restoreVersion",
+      "parameters": [
+        {
+          "name": "versionId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/diaryCommands.ts:23"
+    },
+    {
+      "name": "diary:save",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "date",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "content",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "expected",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/diaryCommands.ts:16"
+    },
+    {
+      "name": "export:biblioshiny",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/exportCommands.ts:92"
+    },
+    {
+      "name": "export:csv",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/exportCommands.ts:59"
+    },
+    {
+      "name": "export:prisma",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "rawFormat",
+          "required": true,
+          "schema": {
+            "x-ts": "unknown"
+          }
+        },
+        {
+          "name": "image",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "tables",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "string"
+              },
+              "excluded": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "data",
+              "excluded"
+            ]
+          }
+        },
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/prismaCommands.ts:89"
+    },
+    {
+      "name": "export:search-report",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "rawFormat",
+          "required": true,
+          "schema": {
+            "x-ts": "unknown"
+          }
+        },
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/exportCommands.ts:121"
+    },
+    {
+      "name": "export:xlsx",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/exportCommands.ts:65"
+    },
+    {
+      "name": "highlights:create",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "color",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "positionData",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "contentText",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "note",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/annotationCommands.ts:20"
+    },
+    {
+      "name": "highlights:delete",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/annotationCommands.ts:27"
+    },
+    {
+      "name": "highlights:get",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/annotationCommands.ts:19"
+    },
+    {
+      "name": "investigationAudits:byProject",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/auditCommands.ts:19"
+    },
+    {
+      "name": "investigationAudits:get",
+      "parameters": [
+        {
+          "name": "investigationId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/auditCommands.ts:15"
+    },
+    {
+      "name": "investigationAudits:save",
+      "parameters": [
+        {
+          "name": "investigationId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "params",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "seed": {
+                "type": "number"
+              },
+              "samplePercent": {
+                "type": "number"
+              },
+              "minPerQuestion": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "seed",
+              "samplePercent",
+              "minPerQuestion"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/auditCommands.ts:16"
+    },
+    {
+      "name": "investigationResults:get",
+      "parameters": [
+        {
+          "name": "investigationId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:96"
+    },
+    {
+      "name": "investigationResults:getByArticle",
+      "parameters": [
+        {
+          "name": "investigationId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:99"
+    },
+    {
+      "name": "investigationResults:review",
+      "parameters": [
+        {
+          "name": "resultId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "review",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "enum": [
+                  "pending",
+                  "accepted",
+                  "edited",
+                  "rejected"
+                ]
+              },
+              "answer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:102"
+    },
+    {
+      "name": "investigationResults:save",
+      "parameters": [
+        {
+          "name": "investigationId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "answers",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "question": {
+                  "type": "string"
+                },
+                "answer": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "quote": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "status": {
+                  "enum": [
+                    "success",
+                    "error",
+                    "skipped"
+                  ]
+                },
+                "error_message": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "question",
+                "answer",
+                "quote",
+                "status",
+                "error_message"
+              ]
+            }
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:90"
+    },
+    {
+      "name": "massiveInvestigations:get",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/categoryCommands.ts:44"
+    },
+    {
+      "name": "massiveInvestigations:save",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "questions",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "articleIds",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "name": "modelUsed",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "status",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/categoryCommands.ts:45"
+    },
+    {
+      "name": "pdf:fetchOpenAccess",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/pdfCommands.ts:28"
+    },
+    {
+      "name": "pdf:get",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/pdfCommands.ts:26"
+    },
+    {
+      "name": "pdf:unlink",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/pdfCommands.ts:27"
+    },
+    {
+      "name": "pdf:upload",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "sourceFilePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/pdfCommands.ts:21"
+    },
+    {
+      "name": "pdfLibrary:delete",
+      "parameters": [
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/pdfCommands.ts:31"
+    },
+    {
+      "name": "pdfLibrary:link",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/pdfCommands.ts:36"
+    },
+    {
+      "name": "pdfLibrary:list",
+      "parameters": [],
+      "source": "core/commands/pdfCommands.ts:30"
+    },
+    {
+      "name": "pdfLibrary:upload",
+      "parameters": [
+        {
+          "name": "sourceFilePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/pdfCommands.ts:39"
+    },
+    {
+      "name": "pendingHighlights:delete",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/annotationCommands.ts:30"
+    },
+    {
+      "name": "pendingHighlights:get",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/annotationCommands.ts:29"
+    },
+    {
+      "name": "prisma:originsSet",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "articleIds",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "name": "sourceId",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/prismaCommands.ts:62"
+    },
+    {
+      "name": "prisma:recordsGet",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/prismaCommands.ts:58"
+    },
+    {
+      "name": "prisma:sourceSave",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "input",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "number"
+              },
+              "name": {
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "other",
+                  "citations",
+                  "websites",
+                  "organisations",
+                  "app_projects"
+                ]
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "consulted_on": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "method"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/prismaCommands.ts:59"
+    },
+    {
+      "name": "prisma:studyLink",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "otherId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/prismaCommands.ts:65"
+    },
+    {
+      "name": "prisma:studyUnlink",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "studyArticleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/prismaCommands.ts:68"
+    },
+    {
+      "name": "projectDocuments:create",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "title",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "url",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sourceFilePath",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "category",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/documentCommands.ts:22"
+    },
+    {
+      "name": "projectDocuments:delete",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/documentCommands.ts:51"
+    },
+    {
+      "name": "projectDocuments:get",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/documentCommands.ts:21"
+    },
+    {
+      "name": "projectDocuments:markOpened",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/documentCommands.ts:52"
+    },
+    {
+      "name": "projectDocuments:reorder",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "orderedIds",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/documentCommands.ts:48"
+    },
+    {
+      "name": "projectDocuments:update",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "title",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "url",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sourceFilePath",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        {
+          "name": "category",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/documentCommands.ts:37"
+    },
+    {
+      "name": "projects:create",
+      "parameters": [
+        {
+          "name": "name",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:18"
+    },
+    {
+      "name": "projects:delete",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:33"
+    },
+    {
+      "name": "projects:getAbout",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:20"
+    },
+    {
+      "name": "projects:getAll",
+      "parameters": [],
+      "source": "core/commands/projectCommands.ts:17"
+    },
+    {
+      "name": "projects:getNavCounts",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:24"
+    },
+    {
+      "name": "projects:getOne",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:19"
+    },
+    {
+      "name": "projects:getScreeningSummaries",
+      "parameters": [],
+      "source": "core/commands/projectCommands.ts:26"
+    },
+    {
+      "name": "projects:getSearchHistory",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:31"
+    },
+    {
+      "name": "projects:getWritingPad",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:27"
+    },
+    {
+      "name": "projects:markOpened",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:25"
+    },
+    {
+      "name": "projects:update",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "name",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:32"
+    },
+    {
+      "name": "projects:updateAbout",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "markdown",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:21"
+    },
+    {
+      "name": "projects:updateWritingPad",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "content",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:28"
+    },
+    {
+      "name": "questionSets:create",
+      "parameters": [
+        {
+          "name": "input",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "project_id": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "questions": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "project_id",
+              "name",
+              "questions"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:77"
+    },
+    {
+      "name": "questionSets:delete",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:81"
+    },
+    {
+      "name": "questionSets:duplicate",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:84"
+    },
+    {
+      "name": "questionSets:get",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:76"
+    },
+    {
+      "name": "questionSets:list",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:75"
+    },
+    {
+      "name": "questionSets:update",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "changes",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "questions": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "source": "core/commands/aiCommands.ts:78"
+    },
+    {
+      "name": "scientificMilestone:toggleStatus",
+      "parameters": [
+        {
+          "name": "{ milestoneId, status }",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "milestoneId": {
+                "type": "number"
+              },
+              "status": {
+                "enum": [
+                  "pending",
+                  "completed"
+                ]
+              }
+            },
+            "required": [
+              "milestoneId",
+              "status"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/agendaCommands.ts:20"
+    },
+    {
+      "name": "scientificVenue:create",
+      "parameters": [
+        {
+          "name": "venueData",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "acronym": {
+                "type": "string"
+              },
+              "category": {
+                "enum": [
+                  "conference",
+                  "journal",
+                  "workshop",
+                  "symposium",
+                  "other"
+                ]
+              },
+              "url": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              },
+              "milestones": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number"
+                    },
+                    "venue_id": {
+                      "type": "number"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "field_type": {
+                      "enum": [
+                        "single",
+                        "range"
+                      ]
+                    },
+                    "target_date": {
+                      "type": "string"
+                    },
+                    "end_date": {
+                      "type": "string"
+                    },
+                    "has_time": {
+                      "type": "boolean"
+                    },
+                    "target_time": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": [
+                        "pending",
+                        "completed"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "field_type",
+                    "target_date",
+                    "has_time",
+                    "status"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "title",
+              "category",
+              "milestones"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/agendaCommands.ts:15"
+    },
+    {
+      "name": "scientificVenue:delete",
+      "parameters": [
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/agendaCommands.ts:19"
+    },
+    {
+      "name": "scientificVenue:update",
+      "parameters": [
+        {
+          "name": "{ id, venueData }",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "number"
+              },
+              "venueData": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "acronym": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "enum": [
+                      "conference",
+                      "journal",
+                      "workshop",
+                      "symposium",
+                      "other"
+                    ]
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "milestones": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "venue_id": {
+                          "type": "number"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "field_type": {
+                          "enum": [
+                            "single",
+                            "range"
+                          ]
+                        },
+                        "target_date": {
+                          "type": "string"
+                        },
+                        "end_date": {
+                          "type": "string"
+                        },
+                        "has_time": {
+                          "type": "boolean"
+                        },
+                        "target_time": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "enum": [
+                            "pending",
+                            "completed"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "label",
+                        "field_type",
+                        "target_date",
+                        "has_time",
+                        "status"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "title",
+                  "category",
+                  "milestones"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "venueData"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/agendaCommands.ts:16"
+    },
+    {
+      "name": "scientificVenues:getAll",
+      "parameters": [],
+      "source": "core/commands/agendaCommands.ts:14"
+    },
+    {
+      "name": "screening:criteriaGet",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/screeningSuggestionCommands.ts:40"
+    },
+    {
+      "name": "screening:criteriaSave",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "criteria",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "inclusion": {
+                "type": "string"
+              },
+              "exclusion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "inclusion",
+              "exclusion"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/screeningSuggestionCommands.ts:41"
+    },
+    {
+      "name": "screening:decide",
+      "parameters": [
+        {
+          "name": "articleIds",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "name": "labelId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "stage",
+          "required": true,
+          "schema": {
+            "enum": [
+              "title",
+              "full"
+            ]
+          }
+        },
+        {
+          "name": "note",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/screeningCommands.ts:15"
+    },
+    {
+      "name": "screening:decisions",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/screeningCommands.ts:14"
+    },
+    {
+      "name": "screening:engine",
+      "parameters": [],
+      "source": "core/commands/screeningSuggestionCommands.ts:45"
+    },
+    {
+      "name": "screening:evaluateClassifier",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/screeningOrderCommands.ts:53"
+    },
+    {
+      "name": "screening:labelCreate",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "input",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "include",
+                  "maybe",
+                  "exclude",
+                  "removed"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/screeningCommands.ts:28"
+    },
+    {
+      "name": "screening:labelDelete",
+      "parameters": [
+        {
+          "name": "labelId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "moveTo",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/screeningCommands.ts:33"
+    },
+    {
+      "name": "screening:labelMove",
+      "parameters": [
+        {
+          "name": "labelId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "step",
+          "required": true,
+          "schema": {
+            "enum": [
+              1,
+              -1
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/screeningCommands.ts:32"
+    },
+    {
+      "name": "screening:labelRename",
+      "parameters": [
+        {
+          "name": "labelId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "name",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/screeningCommands.ts:31"
+    },
+    {
+      "name": "screening:labels",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/screeningCommands.ts:27"
+    },
+    {
+      "name": "screening:orderGet",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/screeningOrderCommands.ts:45"
+    },
+    {
+      "name": "screening:orderSet",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "turnedOn",
+          "required": true,
+          "schema": {
+            "type": "boolean"
+          }
+        }
+      ],
+      "source": "core/commands/screeningOrderCommands.ts:46"
+    },
+    {
+      "name": "screening:presetApply",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "presetKey",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/screeningCommands.ts:36"
+    },
+    {
+      "name": "screening:rank",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/screeningOrderCommands.ts:51"
+    },
+    {
+      "name": "screening:simulate",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/screeningOrderCommands.ts:52"
+    },
+    {
+      "name": "screening:suggest",
+      "parameters": [
+        {
+          "name": "articleId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/screeningSuggestionCommands.ts:46"
+    },
+    {
+      "name": "screening:suggestionsList",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/screeningSuggestionCommands.ts:44"
+    },
+    {
+      "name": "screening:undecide",
+      "parameters": [
+        {
+          "name": "articleIds",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "name": "stage",
+          "required": true,
+          "schema": {
+            "enum": [
+              "title",
+              "full"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/screeningCommands.ts:20"
+    },
+    {
+      "name": "screening:vectorsGenerate",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/screeningOrderCommands.ts:50"
+    },
+    {
+      "name": "screening:vectorsPlan",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/screeningOrderCommands.ts:49"
+    },
+    {
+      "name": "search:discardPreview",
+      "parameters": [
+        {
+          "name": "previewId",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:64"
+    },
+    {
+      "name": "search:peekCitations",
+      "parameters": [
+        {
+          "name": "seeds",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "articleId": {
+                  "type": "number"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "openAlexId": {
+                  "type": "string"
+                },
+                "doi": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "articleId",
+                "title"
+              ]
+            }
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:60"
+    },
+    {
+      "name": "search:preview",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "queryMap",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "name": "limits",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "common": {
+                "type": "number"
+              },
+              "perBase": {
+                "type": "object",
+                "properties": {
+                  "openalex": {
+                    "type": "number"
+                  },
+                  "crossref": {
+                    "type": "number"
+                  },
+                  "scopus": {
+                    "type": "number"
+                  },
+                  "wos": {
+                    "type": "number"
+                  },
+                  "europepmc": {
+                    "type": "number"
+                  },
+                  "arxiv": {
+                    "type": "number"
+                  },
+                  "ieee": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "required": [
+              "common",
+              "perBase"
+            ]
+          }
+        },
+        {
+          "name": "sortBy",
+          "required": true,
+          "schema": {
+            "enum": [
+              "citations",
+              "relevance",
+              "date"
+            ]
+          }
+        },
+        {
+          "name": "unifiedQuery",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "queryState",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:48"
+    },
+    {
+      "name": "search:previewCitations",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "request",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "seeds": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "articleId": {
+                      "type": "number"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "openAlexId": {
+                      "type": "string"
+                    },
+                    "doi": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "articleId",
+                    "title"
+                  ]
+                }
+              },
+              "directions": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "references",
+                    "citedBy"
+                  ]
+                }
+              },
+              "limit": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "seeds",
+              "directions",
+              "limit"
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:61"
+    },
+    {
+      "name": "search:revert",
+      "parameters": [
+        {
+          "name": "searchId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:66"
+    },
+    {
+      "name": "search:savePreview",
+      "parameters": [
+        {
+          "name": "previewId",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:59"
+    },
+    {
+      "name": "search:translateQuery",
+      "parameters": [
+        {
+          "name": "ast",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "rule"
+                  },
+                  "field": {
+                    "enum": [
+                      "title",
+                      "authors",
+                      "abstract",
+                      "all"
+                    ]
+                  },
+                  "operator": {
+                    "enum": [
+                      "contains",
+                      "exact",
+                      "not_contains"
+                    ]
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "field",
+                  "operator",
+                  "value"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "const": "group"
+                  },
+                  "logicalOperator": {
+                    "enum": [
+                      "AND",
+                      "OR"
+                    ]
+                  },
+                  "children": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "rule"
+                            },
+                            "field": {
+                              "enum": [
+                                "title",
+                                "authors",
+                                "abstract",
+                                "all"
+                              ]
+                            },
+                            "operator": {
+                              "enum": [
+                                "contains",
+                                "exact",
+                                "not_contains"
+                              ]
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "field",
+                            "operator",
+                            "value"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "x-ts": "QueryGroupNode"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "logicalOperator",
+                  "children"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/projectCommands.ts:65"
+    },
+    {
+      "name": "searchMonitor:check",
+      "parameters": [],
+      "source": "core/commands/searchMonitorCommands.ts:25"
+    },
+    {
+      "name": "searchMonitor:dismiss",
+      "parameters": [
+        {
+          "name": "searchId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/searchMonitorCommands.ts:27"
+    },
+    {
+      "name": "searchMonitor:list",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/searchMonitorCommands.ts:19"
+    },
+    {
+      "name": "searchMonitor:overview",
+      "parameters": [],
+      "source": "core/commands/searchMonitorCommands.ts:24"
+    },
+    {
+      "name": "searchMonitor:review",
+      "parameters": [
+        {
+          "name": "searchId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/searchMonitorCommands.ts:26"
+    },
+    {
+      "name": "searchMonitor:set",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "searchId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "days",
+          "required": true,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "const": 1
+              },
+              {
+                "const": 7
+              },
+              {
+                "const": 14
+              }
+            ]
+          }
+        }
+      ],
+      "source": "core/commands/searchMonitorCommands.ts:20"
+    },
+    {
+      "name": "settings:get",
+      "parameters": [
+        {
+          "name": "key",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/settingsCommands.ts:12"
+    },
+    {
+      "name": "settings:set",
+      "parameters": [
+        {
+          "name": "key",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "value",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/settingsCommands.ts:13"
+    },
+    {
+      "name": "sync:exportProject",
+      "parameters": [
+        {
+          "name": "projectId",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/backupCommands.ts:49"
+    },
+    {
+      "name": "sync:importProject",
+      "parameters": [
+        {
+          "name": "filePath",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "source": "core/commands/backupCommands.ts:55"
+    },
+    {
+      "name": "trash:empty",
+      "parameters": [],
+      "source": "core/commands/diaryCommands.ts:30"
+    },
+    {
+      "name": "trash:getItems",
+      "parameters": [],
+      "source": "core/commands/diaryCommands.ts:25"
+    },
+    {
+      "name": "trash:permanentDelete",
+      "parameters": [
+        {
+          "name": "type",
+          "required": true,
+          "schema": {
+            "enum": [
+              "project",
+              "article",
+              "annotation"
+            ]
+          }
+        },
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/diaryCommands.ts:27"
+    },
+    {
+      "name": "trash:restoreItem",
+      "parameters": [
+        {
+          "name": "type",
+          "required": true,
+          "schema": {
+            "enum": [
+              "project",
+              "article",
+              "annotation"
+            ]
+          }
+        },
+        {
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "source": "core/commands/diaryCommands.ts:26"
+    }
+  ]
+}
