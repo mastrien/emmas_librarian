@@ -19,9 +19,16 @@ const INSTRUCTIONS = [
  * Usage:
  *   systemPromptFor({ today: new Date(2026, 10, 15), focusProject: { id: 1, name: 'Revisão sobre tutoria' } });
  */
-export function systemPromptFor(input: { today: Date; focusProject?: FocusProject }): string {
-  return `${INSTRUCTIONS}\n\n${systemContext(input)}`;
+export function systemPromptFor(input: { today: Date; focusProject?: FocusProject; routed?: boolean }): string {
+  const routing = input.routed ? `\n\n${ROUTING}` : '';
+  return `${INSTRUCTIONS}${routing}\n\n${systemContext(input)}`;
 }
+
+/** Added when the model starts with a single tool, select_areas, and receives the others by subject. */
+const ROUTING = [
+  'Você começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:',
+  'só então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.',
+].join('\n');
 
 /** 'YYYY-MM-DD' as a local date; a case names today as text. */
 export function dayFromText(text: string | undefined): Date {

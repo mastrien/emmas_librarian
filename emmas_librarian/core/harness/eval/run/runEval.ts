@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { execFileSync } from 'child_process';
 import { commandSchemas } from '../../commandSchemas';
 import { LibraryToolkit } from '../../LibraryToolkit';
+import { RoutedToolkit } from '../../RoutedToolkit';
 import { FakeConfirmer } from '../../__tests__/support/FakeConfirmer';
 import { seedLibraryF } from '../../__tests__/support/libraryF';
 import { openTestLibrary } from '../../__tests__/support/openTestLibrary';
@@ -36,7 +37,9 @@ function chooseCases(all: EvalCase[], ids: string | undefined): EvalCase[] {
   return all.filter((c) => wanted.includes(c.id));
 }
 
-async function runCase(testCase: EvalCase, model: ModelSpec, chat: LlamaServerChat) {
+type Mode = 'full' | 'routed';
+
+async function runCase(testCase: EvalCase, model: ModelSpec, chat: LlamaServerChat, mode: Mode) {
   const library = openTestLibrary();
   try {
     await seedLibraryF(library.commands);
@@ -51,12 +54,14 @@ async function runCase(testCase: EvalCase, model: ModelSpec, chat: LlamaServerCh
     const system = systemPromptFor({
       today: dayFromText(testCase.context.today),
       focusProject: testCase.context.focusProject,
+      routed: mode === 'routed',
     });
+    const surface = mode === 'routed' ? new RoutedToolkit(toolkit) : toolkit;
     const started = Date.now();
     const record = await runEpisode({
       system,
       prompt: testCase.prompt,
-      toolkit,
+      toolkit: surface,
       chat,
       sampling: samplingOf(model),
       maxSteps: MAX_STEPS,
@@ -76,8 +81,8 @@ async function runCase(testCase: EvalCase, model: ModelSpec, chat: LlamaServerCh
       prompt: testCase.prompt,
       context: testCase.context,
       system,
-      toolCount: toolkit.tools().length,
-      toolsBytes: JSON.stringify(toOpenAiTools(toolkit)).length,
+      toolCount: surface.tools().length,
+      toolsBytes: JSON.stringify(toOpenAiTools(surface)).length,
       wallMs,
       asked: confirmer.asked,
       checks,
@@ -126,9 +131,15 @@ function summarize(
   };
 }
 
-/** Usage: vite-node core/harness/eval/run/runEval.ts -- --model qwen3.5-4b --cases art-2,proj-1 [--label texto] */
+function parseMode(text: string | undefined): Mode {
+  if (text === undefined || text === 'full' || text === 'routed') return text ?? 'full';
+  throw new Error(`[ERR_UNKNOWN_MODE] Offending value: ${JSON.stringify(text)}. Expected full or routed.`);
+}
+
+/** Usage: vite-node core/harness/eval/run/runEval.ts -- --model qwen3.5-4b --cases art-2,proj-1 [--label texto] [--mode full|routed] */
 async function main(): Promise<void> {
   const args = flagsOf(process.argv.slice(2));
+  const mode = parseMode(args.mode);
   const model = MODELS.find((m) => m.id === args.model);
   if (!model)
     throw new Error(
@@ -162,6 +173,7 @@ async function main(): Promise<void> {
     casesSha: sha(casesText),
     caseIds: cases.map((c) => c.id),
     maxSteps: MAX_STEPS,
+    mode: args.mode ?? 'full',
     systemPromptVersion: SYSTEM_PROMPT_VERSION,
     scorerVersion: SCORER_VERSION,
     modelIsLocal: 'por caso (padrão: true)',
@@ -173,14 +185,16 @@ async function main(): Promise<void> {
     const chat = new LlamaServerChat(server.url);
     const results: Awaited<ReturnType<typeof runCase>>[] = [];
     for (const testCase of cases) {
-      const result = await runCase(testCase, model, chat);
+      const result = await runCase(testCase, model, chat, mode);
       recorder.writeEpisode(testCase.id, result);
       results.push(result);
       console.log(
         `${result.score.pass ? 'PASS' : 'FAIL'} ${testCase.id} ${result.wallMs}ms steps=${result.score.steps}`,
       );
     }
-    recorder.finish(summarize(results, { model: model.id, startupMs: server.startupMs, label: args.label ?? null }));
+    recorder.finish(
+      summarize(results, { model: model.id, startupMs: server.startupMs, label: args.label ?? null, mode }),
+    );
   } finally {
     recorder.writeServerLog(server.log());
     await server.stop();

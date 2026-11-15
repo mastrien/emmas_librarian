@@ -1,4 +1,6 @@
-import type { LibraryToolkit, ToolResult } from '../../LibraryToolkit';
+import type { ToolResult } from '../../LibraryToolkit';
+import type { ToolSurface } from '../../toolSurface';
+import type { ToolDefinition } from '../../toolDefinition';
 import type { ChatMessage, ChatModel, ChatReply, OpenAiTool } from './chatClient';
 
 export interface EpisodeStep {
@@ -20,7 +22,7 @@ export interface EpisodeRecord {
 export interface EpisodeInput {
   system: string;
   prompt: string;
-  toolkit: LibraryToolkit;
+  toolkit: ToolSurface;
   chat: ChatModel;
   sampling: Record<string, number>;
   maxSteps: number;
@@ -28,7 +30,7 @@ export interface EpisodeInput {
 }
 
 /** The toolkit's tools in the shape of the OpenAI chat API. */
-export function toOpenAiTools(toolkit: LibraryToolkit): OpenAiTool[] {
+export function toOpenAiTools(toolkit: ToolSurface | { tools(): ToolDefinition[] }): OpenAiTool[] {
   return toolkit.tools().map((tool) => ({
     type: 'function',
     function: { name: tool.name, description: tool.description, parameters: tool.input_schema },
@@ -73,12 +75,12 @@ export async function runEpisode(input: EpisodeInput): Promise<EpisodeRecord> {
     { role: 'system', content: input.system },
     { role: 'user', content: input.prompt },
   ];
-  const tools = toOpenAiTools(input.toolkit);
   const steps: EpisodeStep[] = [];
   for (let turn = 0; turn < input.maxSteps; turn++) {
     let reply: ChatReply;
     try {
-      reply = await input.chat.complete({ messages, tools, sampling: input.sampling });
+      // Asked again every turn: a routed toolkit offers more tools once the model has chosen its subjects.
+      reply = await input.chat.complete({ messages, tools: toOpenAiTools(input.toolkit), sampling: input.sampling });
     } catch (error) {
       return { steps, finalText: '', stopped: 'model-error', error: String(error), messages };
     }
