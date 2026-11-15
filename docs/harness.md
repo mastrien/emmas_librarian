@@ -39,6 +39,7 @@ Ficam de fora por padrão (`core/harness/toolPolicy.ts`, cada regra com o motivo
 | `ai:*`, `ask:send`, `screening:suggest`… | chama um modelo de IA: custo e texto enviado a terceiros |
 | `search:preview`, `searchMonitor:check`, `pdf:fetchOpenAccess`… | usa a rede |
 | qualquer comando com argumento `filePath` | o modelo não escolhe onde gravar ou ler no disco |
+| `pdf:get`, `highlights:create/delete`, `pendingHighlights:*` | são do leitor de PDF na tela (bytes e posições); o CLI também os deixa de fora |
 
 ## Como uma chamada errada responde
 

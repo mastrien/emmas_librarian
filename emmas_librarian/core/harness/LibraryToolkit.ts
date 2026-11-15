@@ -1,4 +1,5 @@
 import type { CommandRegistry } from '../commands/CommandRegistry';
+import { listTerminalCommands } from '../commands/terminalCommands';
 import { usageError } from '../errors/usageError';
 import { shellFailureFrom } from '../errors/shellFailureFrom';
 import { bindArguments } from './bindArguments';
@@ -42,15 +43,17 @@ export class LibraryToolkit {
   private readonly exposed = new Map<string, Exposed>();
   private readonly hiddenCommands: Array<{ name: string; reason: string }> = [];
   private readonly clock: () => number;
+  private readonly terminal: ReadonlySet<string>;
 
   constructor(private readonly options: ToolkitOptions) {
     this.clock = options.clock ?? Date.now;
+    this.terminal = new Set(listTerminalCommands(options.commands).map((command) => command.name));
     for (const schema of options.schemas) this.expose(schema);
   }
 
   private expose(schema: CommandSchema): void {
     if (!this.options.commands.has(schema.name)) return;
-    const reason = whyHidden(this.options.commands.get(schema.name), schema);
+    const reason = whyHidden(this.options.commands.get(schema.name), schema, this.terminal.has(schema.name));
     if (reason) {
       this.hiddenCommands.push({ name: schema.name, reason });
       return;

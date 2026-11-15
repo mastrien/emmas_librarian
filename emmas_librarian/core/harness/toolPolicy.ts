@@ -30,11 +30,14 @@ const FILE_PARAMETER = /filePath/i;
 /**
  * The reason a command is not offered to a model, or undefined when it is. A command that reads or
  * writes a file the caller names is hidden too: a model should not choose where on the disk to write.
+ * What a terminal cannot run (the PDF reader's bytes and marks) is not offered either: a model gets no
+ * more of the library than the CLI gives a person at a shell.
  *
  * Usage:
- *   whyHidden(commands.get('settings:get'), schema); // 'returns and sets the API keys of the person'
+ *   whyHidden(commands.get('settings:get'), schema, true); // 'returns and sets the API keys of the person'
  */
-export function whyHidden(command: RegisteredCommand, schema: CommandSchema): string | undefined {
+export function whyHidden(command: RegisteredCommand, schema: CommandSchema, inTerminal: boolean): string | undefined {
+  if (!inTerminal) return 'needs the desktop app on screen (the PDF reader: its bytes and the marks it positions)';
   const exclusion = DEFAULT_EXCLUSIONS.find(({ pattern }) => pattern.test(command.name));
   if (exclusion) return exclusion.reason;
   if (command.file || schema.parameters.some((parameter) => FILE_PARAMETER.test(parameter.name))) {

@@ -60,6 +60,19 @@ describe('LibraryToolkit: what the model is offered', () => {
     });
   });
 
+  // Regression: the harness offered pdf:get and the highlight commands, which the CLI keeps for the PDF reader.
+  it('keeps back what the CLI keeps for the desktop app, saying why', () => {
+    const channel = 'pdf:get';
+    commands.add(channel, (articleId: number) => articleId);
+    const withPdf = new LibraryToolkit({
+      commands,
+      schemas: [schema(channel, [{ name: 'articleId', required: true, schema: { type: 'number' } }])],
+    });
+
+    expect(withPdf.tools()).toEqual([]);
+    expect(withPdf.hidden()).toEqual([{ name: channel, reason: expect.stringContaining('desktop app on screen') }]);
+  });
+
   it('keeps back the commands that hand over the API keys, saying why', () => {
     expect(toolkit.hidden()).toEqual([{ name: 'settings:get', reason: 'returns and sets the API keys of the person' }]);
   });
