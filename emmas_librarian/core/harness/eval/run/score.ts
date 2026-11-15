@@ -1,8 +1,11 @@
 import type { EvalCase } from '../evalCase';
 import type { EpisodeRecord } from './episode';
 
+/** Bump when the rules below change: runs are only comparable with the same version. v1 failed any other route. */
+export const SCORER_VERSION = 'v2';
+
 export interface Score {
-  /** The ideal tools appear, in order, among the ones called (extra reads in between are fine). */
+  /** The ideal tools appear, in order, among the ones called (extra reads in between are fine). Informative for cases that change the library. */
   usedExpectedTools: boolean;
   /** Tools called that the case forbids or that must not be called here. */
   violations: string[];
@@ -42,7 +45,11 @@ export function scoreEpisode(testCase: EvalCase, record: EpisodeRecord, stateOk:
     names,
   );
   const unknownTools = [...new Set(calls.filter((c) => codeOf(c.result) === 'ERR_UNKNOWN_TOOL').map((c) => c.name))];
-  const pass = stateOk && violations.length === 0 && usedExpectedTools && record.stopped === 'answered';
+  // A case that changes the library is judged by the state it leaves: another route to it is as good. A case that only
+  // reads has no state to judge, so it needs the ideal tools (otherwise answering from nowhere would pass).
+  const changesState = testCase.checks.some((check) => check.check !== 'unchanged');
+  const pass =
+    stateOk && violations.length === 0 && (changesState || usedExpectedTools) && record.stopped === 'answered';
   return {
     usedExpectedTools,
     violations,

@@ -15,7 +15,7 @@ import { flagsOf } from './flags';
 import { runEpisode, toOpenAiTools } from './episode';
 import { MODELS, samplingOf, serverArgs, type ModelSpec } from './modelCatalog';
 import { RunRecorder } from './runRecorder';
-import { scoreEpisode } from './score';
+import { SCORER_VERSION, scoreEpisode } from './score';
 import { startServer } from './serverProcess';
 import { dayFromText, systemPromptFor, SYSTEM_PROMPT_VERSION } from './systemPrompt';
 
@@ -163,6 +163,7 @@ async function main(): Promise<void> {
     caseIds: cases.map((c) => c.id),
     maxSteps: MAX_STEPS,
     systemPromptVersion: SYSTEM_PROMPT_VERSION,
+    scorerVersion: SCORER_VERSION,
     modelIsLocal: 'por caso (padrão: true)',
     confirmation: 'FakeConfirmer: sim, exceto casos com confirm: no',
     library: 'Biblioteca de teste F, nova a cada caso',

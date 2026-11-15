@@ -141,6 +141,16 @@ describe('scoreEpisode', () => {
     expect(scoreEpisode(testCase(), record, true)).toMatchObject({ pass: true, usedExpectedTools: true, steps: 3 });
   });
 
+  it('accepts another route to the right state for a case that changes the library, but not for one that only reads', async () => {
+    const record = await episode([
+      reply({ toolCalls: [call('projects__delete', '{"id":1}')] }),
+      reply({ content: 'feito' }),
+    ]);
+    const changing = { ...testCase(), checks: [{ check: 'inTrash' }] };
+    expect(scoreEpisode(changing, record, true)).toMatchObject({ usedExpectedTools: false, pass: true });
+    expect(scoreEpisode(testCase(), record, true).pass).toBe(false);
+  });
+
   it('fails when the model skipped the listing, and when the state is wrong', async () => {
     const record = await episode([
       reply({ toolCalls: [call('projects__delete', '{"id":1}')] }),
