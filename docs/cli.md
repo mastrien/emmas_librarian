@@ -32,6 +32,10 @@ emmas-librarian cli export:csv -- 3 ./artigos.csv
   `articles:getByProject` é seguida de outra palavra solta. Com `--` ou com a opção na forma `--opção=valor`
   (um único argumento) isso não acontece. Vale também no Linux e no macOS, onde não é necessário.
 - Um argumento que começa com `--` (por exemplo o `---` do Markdown) só passa depois do `--`.
+- **As opções vêm antes do `--`**: `cli --data-dir=pasta projects:create -- "Minha tese"`. O que vem depois do `--` é
+  argumento do comando, inclusive uma opção, e o CLI recusa o excesso com o código 2 em vez de ignorá-lo.
+- Um comando recebe no máximo os argumentos que `cli commands` lista para ele; passar mais é erro de uso (código 2).
+  Um texto com espaços vai entre aspas, para o terminal não o quebrar em vários argumentos.
 
 - Cada argumento é lido como JSON quando possível (`3`, `true`, `null`, `[1,2]`, `{"a":1}`) e como texto no resto.
   Para passar como texto algo que parece JSON, use aspas de JSON: `'"123"'`.
