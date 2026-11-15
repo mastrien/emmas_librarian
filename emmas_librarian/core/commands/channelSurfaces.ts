@@ -95,6 +95,7 @@ export const CHANNEL_SURFACES: Record<IpcChannel, ChannelSurface> = {
   [IpcChannel.DIARY_GET_ALL]: C,
   [IpcChannel.DIARY_GET_ONE]: C,
   [IpcChannel.DIARY_SAVE]: C,
+  [IpcChannel.DIARY_APPEND_AGENT_RECORD]: C,
   [IpcChannel.DIARY_DELETE]: C,
   [IpcChannel.APP_GET_VERSION]: C,
   [IpcChannel.AI_GENERATE_SUMMARY]: C,

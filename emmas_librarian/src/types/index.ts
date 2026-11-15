@@ -213,6 +213,7 @@ export enum IpcChannel {
   DIARY_GET_ALL = 'diary:getAll',
   DIARY_GET_ONE = 'diary:getOne',
   DIARY_SAVE = 'diary:save',
+  DIARY_APPEND_AGENT_RECORD = 'diary:appendAgentRecord',
   DIARY_DELETE = 'diary:delete',
   APP_GET_VERSION = 'app:getVersion',
   AI_GENERATE_SUMMARY = 'ai:generateSummary',
