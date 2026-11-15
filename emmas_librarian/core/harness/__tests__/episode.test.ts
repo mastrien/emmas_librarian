@@ -84,7 +84,11 @@ describe('an episode against a real library', () => {
 
     expect(links.map((link) => link.title)).toEqual(['Guia']);
     expect(
-      await toolkit.call('projectDocuments__create', { projectId: created.id, title: 'x', sourceFilePath: '/tmp/a.pdf' }),
+      await toolkit.call('projectDocuments__create', {
+        projectId: created.id,
+        title: 'x',
+        sourceFilePath: '/tmp/a.pdf',
+      }),
     ).toMatchObject({
       ok: false,
       error: { code: 'ERR_INVALID_ARGUMENTS' },
