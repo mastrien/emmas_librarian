@@ -222,3 +222,31 @@ describe('LibraryToolkit: what only a local model is offered', () => {
     ).toEqual(['projects__getOne']);
   });
 });
+
+describe('LibraryToolkit: arguments the model never sees', () => {
+  it('does not describe the hidden argument and sends it empty', async () => {
+    const received = vi.fn();
+    commands.add('docs:create', (id: number, path?: string, category?: string) => received(id, path, category));
+    const text = { type: 'string' as const };
+    const toolkit = new LibraryToolkit({
+      commands,
+      confirmer: new FakeConfirmer(true),
+      access: new Map([['docs:create', { confirm: true, localOnly: false, hideParameters: ['path'] }]]),
+      schemas: [
+        schema('docs:create', [
+          projectId,
+          { name: 'path', required: false, schema: text },
+          { name: 'category', required: false, schema: text },
+        ]),
+      ],
+    });
+
+    expect(Object.keys(toolkit.tools()[0].input_schema.properties)).toEqual(['projectId', 'category']);
+    await toolkit.call('docs__create', { projectId: 3, category: 'guia' });
+    expect(received).toHaveBeenCalledWith(3, undefined, 'guia');
+    expect(await toolkit.call('docs__create', { projectId: 3, path: '/tmp/x.pdf' })).toMatchObject({
+      ok: false,
+      error: { code: 'ERR_INVALID_ARGUMENTS' },
+    });
+  });
+});

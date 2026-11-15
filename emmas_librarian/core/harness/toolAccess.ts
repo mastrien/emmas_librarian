@@ -7,8 +7,11 @@ export interface Access {
   confirm: boolean;
   /** Only offered when the model runs on the person's machine: the call sends text or queries to a third party. */
   localOnly: boolean;
+  /** Arguments the model never sees; the command gets them empty (a file path the model must not choose). */
+  hideParameters?: readonly string[];
 }
 
+const NO_PATH: Access = { confirm: true, localOnly: false, hideParameters: ['sourceFilePath'] };
 const READ: Access = { confirm: false, localOnly: false };
 const CONFIRMED: Access = { confirm: true, localOnly: false };
 const LOCAL: Access = { confirm: false, localOnly: true };
@@ -36,7 +39,7 @@ const WRITES = [
   'projects:create', 'projects:update', 'projects:delete', 'projects:updateAbout', 'projects:updateWritingPad',
   'articles:importFromProject', 'articles:updateMetadata', 'articles:updateStatus', 'articles:updateStatusMany',
   'pdf:unlink', 'diary:appendAgentRecord', 'categories:createProject', 'categories:applySet',
-  'projectDocuments:create', 'projectDocuments:update', 'projectDocuments:delete', 'projectDocuments:reorder',
+  'projectDocuments:delete', 'projectDocuments:reorder',
   'trash:restoreItem', 'screening:labelCreate', 'screening:labelRename',
   'questionSets:create', 'questionSets:update', 'questionSets:duplicate',
   'searchMonitor:set', 'searchMonitor:dismiss', 'searchMonitor:review',
@@ -75,4 +78,5 @@ export const TOOL_ACCESS: ReadonlyMap<string, Access> = buildAccess([
   ...grant(CONFIRMED, WRITES),
   ...grant(LOCAL_CONFIRMED, LOCAL_WRITES),
   ...grant(LOCAL, LOCAL_READS),
+  ...grant(NO_PATH, ['projectDocuments:create', 'projectDocuments:update']),
 ]);

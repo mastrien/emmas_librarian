@@ -6,6 +6,7 @@ import { shellFailureFrom } from '../errors/shellFailureFrom';
 import { bindArguments } from './bindArguments';
 import type { CommandSchema } from './commandSchema';
 import { toToolDefinition, type ToolDefinition } from './toolDefinition';
+import { restorePositions, withoutParameters } from './hiddenParameters';
 import { toToolName } from './toolNames';
 import { TOOL_ACCESS, type Access } from './toolAccess';
 import { DENY_ALL, type Confirmer } from './confirmer';
@@ -35,6 +36,8 @@ export interface ToolkitOptions {
 
 interface Exposed {
   schema: CommandSchema;
+  /** With the arguments the model never sees. */
+  original: CommandSchema;
   tool: ToolDefinition;
   access: Access;
 }
@@ -76,7 +79,14 @@ export class LibraryToolkit {
       this.hiddenCommands.push({ name: schema.name, reason });
       return;
     }
-    if (access) this.exposed.set(toToolName(schema.name), { schema, tool: toToolDefinition(schema), access });
+    if (!access) return;
+    const visible = withoutParameters(schema, access.hideParameters ?? []);
+    this.exposed.set(toToolName(schema.name), {
+      schema: visible,
+      original: schema,
+      tool: toToolDefinition(visible),
+      access,
+    });
   }
 
   tools(): ToolDefinition[] {
@@ -103,10 +113,10 @@ export class LibraryToolkit {
 
   private async run(toolName: string, input: unknown): Promise<ToolResult> {
     try {
-      const { schema, access } = this.requireTool(toolName);
-      const args = bindArguments(schema, input);
+      const { schema, original, access } = this.requireTool(toolName);
+      const args = restorePositions(original, access.hideParameters ?? [], bindArguments(schema, input));
       if (access.confirm) await this.requireApproval(toolName, schema.name, input);
-      const result = await this.options.commands.run(schema.name, ...args);
+      const result = await this.options.commands.run(original.name, ...args);
       return { ok: true, result: result ?? null };
     } catch (error) {
       const { code, type, message } = shellFailureFrom(error);

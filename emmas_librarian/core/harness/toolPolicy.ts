@@ -52,7 +52,9 @@ export interface PolicyInput {
 export function whyHidden({ command, schema, inTerminal, access, modelIsLocal }: PolicyInput): string | undefined {
   if (!inTerminal) return 'needs the desktop app on screen (the PDF reader: its bytes and the marks it positions)';
   if (!access) return DEFAULT_EXCLUSIONS.find(({ pattern }) => pattern.test(command.name))?.reason ?? NOT_ALLOWED;
-  if (command.file || schema.parameters.some((parameter) => FILE_PARAMETER.test(parameter.name))) {
+  const hidden = access.hideParameters ?? [];
+  const asksForPath = schema.parameters.some((p) => FILE_PARAMETER.test(p.name) && !hidden.includes(p.name));
+  if ((command.file && hidden.length === 0) || asksForPath) {
     return 'reads or writes a file at a path the caller chooses';
   }
   if (access.localOnly && !modelIsLocal) return NEEDS_LOCAL_MODEL;

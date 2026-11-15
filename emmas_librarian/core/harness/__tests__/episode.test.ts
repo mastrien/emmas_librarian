@@ -70,6 +70,27 @@ describe('an episode against a real library', () => {
     expect(duplicate).toMatchObject({ ok: false, error: { code: 'ERR_DUPLICATE_NAME', type: 'USER_ERROR' } });
   });
 
+  it('adds a quick-access link without ever naming a file', async () => {
+    const created = resultOf(await toolkit.call('projects__create', { name: 'Revisão' })) as { id: number };
+
+    await toolkit.call('projectDocuments__create', {
+      projectId: created.id,
+      title: 'Guia',
+      url: 'https://exemplo.org/guia',
+    });
+    const links = resultOf(await toolkit.call('projectDocuments__get', { projectId: created.id })) as Array<{
+      title: string;
+    }>;
+
+    expect(links.map((link) => link.title)).toEqual(['Guia']);
+    expect(
+      await toolkit.call('projectDocuments__create', { projectId: created.id, title: 'x', sourceFilePath: '/tmp/a.pdf' }),
+    ).toMatchObject({
+      ok: false,
+      error: { code: 'ERR_INVALID_ARGUMENTS' },
+    });
+  });
+
   it('never hands over the API keys', async () => {
     expect(await toolkit.call('settings__get', { key: 'gemini_api_key' })).toMatchObject({
       ok: false,
