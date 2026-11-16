@@ -227,3 +227,10 @@ modelo escreveu "Terminei de ler o artigo 3.". É defeito do caso, não do model
   o mesmo modelo não deliberava assim.
 - Conclusão provisória: para o LFM3 o passo de planejar sem ferramentas custa de 1,5 a 5 minutos por pedido e, com o
   limite atual, falha. A abordagem só é justa se o planejamento puder ser limitado sem cortar a resposta.
+
+- **Prompt v3** (o plano é entregue chamando a ferramenta `submit_plan`, com `tool_choice: required` e o assunto como
+  `enum` dos ids): a saída passou a ter forma, mas o raciocínio continuou. Fumaça nos mesmos 4 casos
+  (`fumaca-planned-v3`): 2 de 4. Planos de 1150 a 2048 tokens (47 a 85 s por plano). `proj-1` ("Quais projetos eu
+  tenho?") veio com plano **vazio** e o modelo respondeu sem consultar; `art-1` bateu no limite de 2048 sem entregar o
+  plano; `proj-5` e `ia-1` entregaram plano certo e passaram. A bateria de 72 não foi rodada: planejar custa mais de um
+  minuto por pedido no LFM3 e ainda erra o plano em parte dos casos.

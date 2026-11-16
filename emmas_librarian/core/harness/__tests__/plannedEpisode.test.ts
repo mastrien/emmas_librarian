@@ -33,7 +33,9 @@ function routed(): RoutedToolkit {
   return new RoutedToolkit(toolkit, AREAS);
 }
 
-const PLAN = '[{"assunto":"projetos","tarefa":"listar os projetos"}]';
+const planCall = (tarefas: Array<{ assunto: string; tarefa: string }>) =>
+  reply({ toolCalls: [{ id: 'p', name: 'submit_plan', arguments: JSON.stringify({ tarefas }) }] });
+const PLAN = planCall([{ assunto: 'projetos', tarefa: 'listar os projetos' }]);
 const input = (chat: ScriptedChat) => ({
   system: 'sistema com regras de ferramentas',
   planContext: 'contexto do dia',
@@ -47,7 +49,7 @@ const input = (chat: ScriptedChat) => ({
 describe('runPlannedEpisode', () => {
   it('plans without tools, does each task with the tools of its subject only, then answers', async () => {
     const chat = new ScriptedChat([
-      reply({ content: PLAN }),
+      PLAN,
       reply({ toolCalls: [{ id: 'c1', name: 'projects__getAll', arguments: '{}' }] }),
       reply({ content: 'Há 1 projeto: A.' }),
       reply({ content: 'Você tem o projeto A.' }),
@@ -56,7 +58,8 @@ describe('runPlannedEpisode', () => {
     expect(record).toMatchObject({ stopped: 'answered', finalText: 'Você tem o projeto A.' });
     expect(record.plan).toEqual([{ area: 'projetos', task: 'listar os projetos' }]);
     expect(record.steps.flatMap((s) => s.calls.map((c) => c.name))).toEqual(['projects__getAll']);
-    expect(chat.asked[0].tools).toEqual([]);
+    expect(chat.asked[0].tools.map((tool) => tool.function.name)).toEqual(['submit_plan']);
+    expect(chat.asked[0].toolChoice).toBe('required');
     expect(chat.asked[0].messages[0].content).toContain('- diario: diário');
     expect(chat.asked[0].messages[0].content).toContain('contexto do dia');
     expect(chat.asked[0].messages[0].content).not.toContain('regras de ferramentas');
@@ -68,9 +71,12 @@ describe('runPlannedEpisode', () => {
   });
 
   it('gives the next task what the earlier ones found', async () => {
-    const plan = '[{"assunto":"projetos","tarefa":"listar"},{"assunto":"diario","tarefa":"ver o diário"}]';
+    const plan = planCall([
+      { assunto: 'projetos', tarefa: 'listar' },
+      { assunto: 'diario', tarefa: 'ver o diário' },
+    ]);
     const chat = new ScriptedChat([
-      reply({ content: plan }),
+      plan,
       reply({ content: 'Há o projeto A.' }),
       reply({ content: 'Diário vazio.' }),
       reply({ content: 'Pronto.' }),
@@ -81,14 +87,14 @@ describe('runPlannedEpisode', () => {
   });
 
   it('answers straight away when the plan is empty', async () => {
-    const chat = new ScriptedChat([reply({ content: '[]' }), reply({ content: 'Não tenho acesso a isso.' })]);
+    const chat = new ScriptedChat([planCall([]), reply({ content: 'Não tenho acesso a isso.' })]);
     const record = await runPlannedEpisode(input(chat));
     expect(record).toMatchObject({ stopped: 'answered', finalText: 'Não tenho acesso a isso.' });
     expect(record.steps.flatMap((s) => s.calls)).toEqual([]);
     expect(JSON.stringify(chat.asked[1].messages[1])).toContain('Nenhuma tarefa foi feita');
   });
 
-  it('is a model failure, with the text it wrote, when the plan is not a valid list', async () => {
+  it('is a model failure, with the text it wrote, when it hands in no plan', async () => {
     const chat = new ScriptedChat([reply({ content: 'vou fazer tudo agora' })]);
     const record = await runPlannedEpisode(input(chat));
     expect(record.stopped).toBe('model-error');
@@ -99,7 +105,7 @@ describe('runPlannedEpisode', () => {
 
   it('stops when a task does not finish, keeping the steps so far', async () => {
     const loop = reply({ toolCalls: [{ id: 'c', name: 'projects__getAll', arguments: '{}' }] });
-    const chat = new ScriptedChat([reply({ content: PLAN }), loop, loop, loop, loop]);
+    const chat = new ScriptedChat([PLAN, loop, loop, loop, loop]);
     const record = await runPlannedEpisode(input(chat));
     expect(record.stopped).toBe('max-steps');
     expect(record.steps.length).toBe(5);

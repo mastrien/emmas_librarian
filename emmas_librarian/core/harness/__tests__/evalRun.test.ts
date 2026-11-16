@@ -4,7 +4,7 @@ import os from 'os';
 import path from 'path';
 import { describe, it, expect } from 'vitest';
 import type { ChatReply } from '../eval/run/chatClient';
-import { fromWireReply, toWireMessages } from '../eval/run/chatClient';
+import { fromWireReply, toWireMessages, wireBody } from '../eval/run/chatClient';
 import { runEpisode, toOpenAiTools } from '../eval/run/episode';
 import { flagsOf } from '../eval/run/flags';
 import { MODELS, samplingOf, serverArgs } from '../eval/run/modelCatalog';
@@ -166,6 +166,15 @@ describe('scoreEpisode', () => {
 });
 
 describe('the wire format', () => {
+  it('asks the server for a tool call only when told to, and sends the sampling with the request', () => {
+    const request = { messages: [{ role: 'user' as const, content: 'oi' }], tools: [], sampling: { temperature: 0.1 } };
+    expect(wireBody(request)).not.toHaveProperty('tool_choice');
+    expect(wireBody({ ...request, toolChoice: 'required' })).toMatchObject({
+      tool_choice: 'required',
+      temperature: 0.1,
+    });
+  });
+
   it('writes tool calls and results as the chat API wants them', () => {
     const wire = toWireMessages([
       { role: 'assistant', content: '', toolCalls: [call('a__b', '{}')] },

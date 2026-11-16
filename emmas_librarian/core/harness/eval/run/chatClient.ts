@@ -36,6 +36,8 @@ export interface ChatRequest {
   messages: ChatMessage[];
   tools: OpenAiTool[];
   sampling: Record<string, number>;
+  /** 'required' makes the server answer with a tool call, so a model cannot answer in text where a call is due. */
+  toolChoice?: 'required';
 }
 
 /** Where a model answers. The evaluation talks to llama-server; the tests to a scripted fake. */
@@ -95,6 +97,16 @@ export function fromWireReply(wire: WireReply, wallMs: number): ChatReply {
   };
 }
 
+/** The body of a chat request to llama-server. */
+export function wireBody(request: ChatRequest): Record<string, unknown> {
+  return {
+    messages: toWireMessages(request.messages),
+    tools: request.tools,
+    ...(request.toolChoice ? { tool_choice: request.toolChoice } : {}),
+    ...request.sampling,
+  };
+}
+
 /**
  * A model served by llama-server on this machine.
  *
@@ -107,11 +119,7 @@ export class LlamaServerChat implements ChatModel {
 
   async complete(request: ChatRequest): Promise<ChatReply> {
     const started = Date.now();
-    const body = JSON.stringify({
-      messages: toWireMessages(request.messages),
-      tools: request.tools,
-      ...request.sampling,
-    });
+    const body = JSON.stringify(wireBody(request));
     const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

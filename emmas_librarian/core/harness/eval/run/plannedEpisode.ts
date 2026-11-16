@@ -1,7 +1,7 @@
 import type { RoutedToolkit } from '../../RoutedToolkit';
 import type { ChatMessage, ChatModel, ChatReply } from './chatClient';
 import { runEpisode, type EpisodeRecord, type EpisodeStep } from './episode';
-import { parsePlan, planInstructions, type PlannedTask } from './taskPlan';
+import { planFromReply, planInstructions, planTool, type PlannedTask } from './taskPlan';
 
 export interface PlannedEpisodeInput {
   system: string;
@@ -33,6 +33,7 @@ const failed = (error: unknown, steps: EpisodeStep[], messages: ChatMessage[]): 
 const PLAN_MAX_TOKENS = 2048;
 
 async function planStep(input: PlannedEpisodeInput): Promise<Planned> {
+  const known = input.toolkit.areaSummaries().map((area) => area.id);
   const messages: ChatMessage[] = [
     { role: 'system', content: [input.planContext, planInstructions(input.toolkit.areaSummaries())].join('\n\n') },
     { role: 'user', content: input.prompt },
@@ -41,7 +42,8 @@ async function planStep(input: PlannedEpisodeInput): Promise<Planned> {
   try {
     reply = await input.chat.complete({
       messages,
-      tools: [],
+      tools: [planTool(known)],
+      toolChoice: 'required',
       sampling: { ...input.sampling, max_tokens: PLAN_MAX_TOKENS },
     });
   } catch (error) {
@@ -50,8 +52,7 @@ async function planStep(input: PlannedEpisodeInput): Promise<Planned> {
   messages.push({ role: 'assistant', content: reply.content, toolCalls: [] });
   const step = { reply, calls: [] };
   try {
-    const known = input.toolkit.areaSummaries().map((area) => area.id);
-    return { kind: 'plan', tasks: parsePlan(reply.content, known), step, messages };
+    return { kind: 'plan', tasks: planFromReply(reply, known), step, messages };
   } catch (error) {
     return { kind: 'failed', record: failed(error, [step], messages) };
   }
