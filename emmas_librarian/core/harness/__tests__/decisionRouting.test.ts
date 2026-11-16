@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { routingDecision, routingRequest, BEST_AREA } from '../eval/decision/areaRouting';
 import { DECISION_MODELS, decisionServerArgs } from '../eval/decision/decisionCatalog';
 import { areaOfTool, requiredAreas, scoreRouting } from '../eval/decision/routingMetrics';
-import { summarizeByKind, summarizeRouting, type RoutingRow } from '../eval/decision/routingSummary';
+import { summarizeByKind, summarizeRouting, withThreshold, type RoutingRow } from '../eval/decision/routingSummary';
 import { SystemOneClient, parseDecisionReply } from '../eval/decision/systemOne';
 import { BEST_TOOL, rankedTools, toolQuestion } from '../eval/decision/toolPicking';
 import { DEFAULT_SETUP } from '../eval/run/runSetup';
@@ -88,6 +88,11 @@ describe('routing questions and decision', () => {
       criteria: { projetos: 'projetos', diario: 'diário' },
     });
     expect(request.questions.tem_diario.type).toBe('noul');
+  });
+
+  it('asks only the choice when the per-subject questions are turned off', () => {
+    const request = routingRequest('p', AREAS, false);
+    expect(Object.keys(request.questions)).toEqual([BEST_AREA]);
   });
 
   it('ranks the subjects and selects those whose yes/no passes the threshold', () => {
@@ -177,6 +182,9 @@ describe('summarizeRouting', () => {
       kind: 'happy',
       required: ['x'],
       selected: ['x'],
+      best: 'x',
+      ranked: ['x', 'y'],
+      noul: { x: 0.9, y: 0.2 },
       score: score({}),
       toolRank: 1,
       wallMs: 10,
@@ -187,13 +195,38 @@ describe('summarizeRouting', () => {
       kind: 'happy',
       required: ['x'],
       selected: ['x', 'y'],
+      best: 'x',
+      ranked: ['x', 'y'],
+      noul: { x: 0.9, y: 0.6 },
       score: score({ exact: false, extras: 1 }),
       toolRank: 4,
       wallMs: 30,
       inputTokens: 100,
     },
-    { id: 'c', kind: 'refusal', required: [], selected: ['y'], toolRank: null, wallMs: 20, inputTokens: 100 },
-    { id: 'd', kind: 'refusal', required: [], selected: [], toolRank: null, wallMs: 20, inputTokens: 100 },
+    {
+      id: 'c',
+      kind: 'refusal',
+      required: [],
+      selected: ['y'],
+      best: 'y',
+      ranked: ['y'],
+      noul: { y: 0.7 },
+      toolRank: null,
+      wallMs: 20,
+      inputTokens: 100,
+    },
+    {
+      id: 'd',
+      kind: 'refusal',
+      required: [],
+      selected: [],
+      best: 'y',
+      ranked: ['y'],
+      noul: { y: 0.1 },
+      toolRank: null,
+      wallMs: 20,
+      inputTokens: 100,
+    },
   ];
 
   it('counts the cases that need a subject and the refusals apart', () => {
@@ -222,10 +255,40 @@ describe('summarizeRouting', () => {
   });
 });
 
+describe('withThreshold', () => {
+  const row: RoutingRow = {
+    id: 'a',
+    kind: 'happy',
+    required: ['x'],
+    selected: ['x', 'y'],
+    best: 'x',
+    ranked: ['x', 'y'],
+    noul: { x: 0.9, y: 0.6 },
+    score: { bestHit: true, top3Hit: true, allSelected: true, exact: false, extras: 1 },
+    toolRank: 1,
+    wallMs: 5,
+    inputTokens: 10,
+  };
+
+  it('selects again from the yes/no answers: a higher threshold drops the extra subject', () => {
+    const [strict] = withThreshold([row], 0.8);
+    expect(strict.selected).toEqual(['x']);
+    expect(strict.score).toMatchObject({ exact: true, extras: 0 });
+  });
+
+  it('can lose a needed subject, and a refusal has no score either way', () => {
+    expect(withThreshold([row], 0.95)[0].score).toMatchObject({ allSelected: false });
+    const refusal = { ...row, required: [], score: undefined };
+    expect(withThreshold([refusal], 0.5)[0].score).toBeUndefined();
+  });
+});
+
 describe('decisionServerArgs', () => {
   it('serves the model on the GPU with no chat template', () => {
     const args = decisionServerArgs(DECISION_MODELS[0], 8090, DEFAULT_SETUP);
-    expect(args).toEqual(expect.arrayContaining(['-ngl', '99', '--device', 'Vulkan0', '--port', '8090']));
+    expect(args).toEqual(
+      expect.arrayContaining(['-ngl', '99', '-ub', '4096', '--device', 'Vulkan0', '--port', '8090']),
+    );
     expect(args).not.toContain('--jinja');
     expect(args[1]).toMatch(/d1-2B-Q4_K_M\.gguf$/);
   });

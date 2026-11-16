@@ -9,15 +9,17 @@ const hasKey = (areaId: string): string => `tem_${areaId}`;
  * The questions that route a request to subjects: one `choice` for the best subject, and one yes/no per subject, so a
  * request that crosses two subjects (read an article, write the diary) can get both.
  *
+ * With `perArea` false only the `choice` is asked: fewer tokens, and the ranking alone says which subjects to open.
+ *
  * Usage:
  *   routingRequest('Quais projetos eu tenho?', TOOL_AREAS).questions.assunto.type; // 'choice'
  */
-export function routingRequest(prompt: string, areas: readonly ToolArea[]): DecisionRequest {
+export function routingRequest(prompt: string, areas: readonly ToolArea[], perArea = true): DecisionRequest {
   const criteria = Object.fromEntries(areas.map((area) => [area.id, area.about]));
   const questions: DecisionRequest['questions'] = {
     [BEST_AREA]: { type: 'choice', instructions: 'Sobre qual assunto da biblioteca é este pedido?', criteria },
   };
-  for (const area of areas)
+  for (const area of perArea ? areas : [])
     questions[hasKey(area.id)] = { type: 'noul', instructions: `O pedido precisa disto: ${area.about}?` };
   return { state: prompt, questions };
 }
@@ -27,6 +29,8 @@ export interface RoutingDecision {
   ranked: Array<{ area: string; probability: number }>;
   /** The subjects whose yes/no passed the threshold. */
   selected: string[];
+  /** The yes/no probability of every subject. */
+  noul: Record<string, number>;
   best: string;
 }
 
@@ -45,11 +49,12 @@ export function routingDecision(reply: DecisionReply, areas: readonly ToolArea[]
   const ranked = Object.entries(best.probabilities)
     .map(([area, probability]) => ({ area, probability }))
     .sort((a, b) => b.probability - a.probability);
-  const selected = areas
-    .filter((area) => {
+  const noul = Object.fromEntries(
+    areas.flatMap((area) => {
       const answer = reply.answers[hasKey(area.id)];
-      return answer?.type === 'noul' && answer.noul >= threshold;
-    })
-    .map((area) => area.id);
-  return { ranked, selected, best: best.choice };
+      return answer?.type === 'noul' ? [[area.id, answer.noul] as const] : [];
+    }),
+  );
+  const selected = areas.filter((area) => (noul[area.id] ?? 0) >= threshold).map((area) => area.id);
+  return { ranked, selected, noul, best: best.choice };
 }

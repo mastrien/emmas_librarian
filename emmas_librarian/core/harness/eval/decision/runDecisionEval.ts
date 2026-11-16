@@ -14,12 +14,14 @@ import { startServer, type RunningServer } from '../run/serverProcess';
 import { routingDecision, routingRequest } from './areaRouting';
 import { DECISION_MODELS, decisionServerArgs, type DecisionModelSpec } from './decisionCatalog';
 import { areaOfTool, requiredAreas, scoreRouting } from './routingMetrics';
-import { summarizeByKind, summarizeRouting, type RoutingRow } from './routingSummary';
+import { summarizeByKind, summarizeRouting, withThreshold, type RoutingRow } from './routingSummary';
 import { SystemOneClient, type DecisionModel } from './systemOne';
 import { BEST_TOOL, rankedTools, toolQuestion } from './toolPicking';
 
 const EVAL_DIR = path.join(__dirname, '..');
 const PORT = 8090;
+/** The yes/no thresholds the result is also computed at, to choose one without asking the model again. */
+const THRESHOLDS = [0.3, 0.5, 0.7, 0.8, 0.9, 0.95];
 
 /** The tools a local model is offered, as in the other modes of the evaluation. */
 function offeredTools() {
@@ -42,9 +44,10 @@ async function rowFor(
   model: DecisionModel,
   tools: ReturnType<typeof offeredTools>,
   threshold: number,
+  perArea: boolean,
 ): Promise<RoutingRow> {
-  const request = routingRequest(testCase.prompt, TOOL_AREAS);
-  request.questions[BEST_TOOL] = toolQuestion(tools);
+  const request = routingRequest(testCase.prompt, TOOL_AREAS, perArea);
+  if (tools.length > 0) request.questions[BEST_TOOL] = toolQuestion(tools);
   const reply = await model.decide(request);
   const decision = routingDecision(reply, TOOL_AREAS, threshold);
   const required = requiredAreas(testCase, areaOfTool(TOOL_AREAS));
@@ -55,6 +58,9 @@ async function rowFor(
     kind: testCase.kind,
     required,
     selected: decision.selected,
+    best: decision.best,
+    ranked: decision.ranked.map((entry) => entry.area),
+    noul: decision.noul,
     score: required.length > 0 ? scoreRouting(required, decision) : undefined,
     toolRank: place >= 0 ? place + 1 : null,
     wallMs: reply.wallMs,
@@ -84,13 +90,14 @@ function writeResult(
     startupMs: server.startupMs,
     host: { os: `${os.type()} ${os.release()}`, cpu: os.cpus()[0]?.model },
   };
-  const result = { config, summary: summarizeRouting(rows), byKind: summarizeByKind(rows), rows };
+  const sweep = Object.fromEntries(THRESHOLDS.map((t) => [t, summarizeRouting(withThreshold(rows, t))]));
+  const result = { config, summary: summarizeRouting(rows), sweep, byKind: summarizeByKind(rows), rows };
   fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify(result, null, 2));
   fs.writeFileSync(path.join(out, 'server.log'), server.log());
 }
 
 /**
- * Usage: vite-node core/harness/eval/decision/runDecisionEval.ts -- --model d1-2b [--threshold 0.5] [--label texto]
+ * Usage: vite-node core/harness/eval/decision/runDecisionEval.ts -- --model d1-2b [--threshold 0.5] [--tools no] [--noul no] [--label texto]
  * No language model is involved: only how well a decision model routes each request of cases.jsonl to its subjects and
  * its first tool.
  */
@@ -102,15 +109,16 @@ async function main(): Promise<void> {
       `[ERR_UNKNOWN_MODEL] Offending value: ${JSON.stringify(args.model)}. Expected one of: ${DECISION_MODELS.map((m) => m.id).join(', ')}.`,
     );
   const threshold = Number(args.threshold ?? 0.5);
+  const perArea = args.noul !== 'no';
   const cases = parseEvalCases(fs.readFileSync(path.join(EVAL_DIR, 'cases.jsonl'), 'utf-8'));
-  const tools = offeredTools();
+  const tools = args.tools === 'no' ? [] : offeredTools();
   const setup = setupFromEnv(process.env);
   const server = await startServer(setup.server, decisionServerArgs(spec, PORT, setup), PORT);
   try {
     const client = new SystemOneClient(server.url);
     const rows: RoutingRow[] = [];
-    for (const testCase of cases) rows.push(await rowFor(testCase, client, tools, threshold));
-    writeResult(spec, rows, server, { threshold, label: args.label ?? null, tools: tools.length });
+    for (const testCase of cases) rows.push(await rowFor(testCase, client, tools, threshold, perArea));
+    writeResult(spec, rows, server, { threshold, perArea, label: args.label ?? null, tools: tools.length });
     console.log(JSON.stringify(summarizeRouting(rows), null, 2));
   } finally {
     await server.stop();

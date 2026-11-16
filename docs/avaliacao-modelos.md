@@ -234,3 +234,34 @@ modelo escreveu "Terminei de ler o artigo 3.". É defeito do caso, não do model
   tenho?") veio com plano **vazio** e o modelo respondeu sem consultar; `art-1` bateu no limite de 2048 sem entregar o
   plano; `proj-5` e `ia-1` entregaram plano certo e passaram. A bateria de 72 não foi rodada: planejar custa mais de um
   minuto por pedido no LFM3 e ainda erra o plano em parte dos casos.
+
+## Modelos de decisão para escolher o assunto (2026-11-16)
+
+Pesquisa: "modelos de decisão" respondem perguntas fechadas (escolha, sim/não, nota) com probabilidades, sem gerar texto.
+O Jev (TypeSafe) é só API hospedada, sem pesos, então não roda local
+([post do Akita](https://akitaonrails.com/2026/10/03/entendendo-o-hype-do-jev-pra-que-serve/)). Os que rodam local no
+llama.cpp (endpoint `/v1/systemone`, já presente no b12425): **LiquidAI d1-2B** (1,9B, português suportado) e **Kev-4B**
+(Apache-2.0), os dois baixados em 2026-11-16 (`setup.jsonl`, com hash). O benchmark do Akita deu 87,5% ao Kev-4B em
+tarefas que não são as nossas; os modelos de 0,6B e menores ficam perto do acaso e não foram testados.
+
+Teste (sem modelo de linguagem, `core/harness/eval/decision/`, resultados em `runs/decision/`): para cada um dos 72
+pedidos, o modelo de decisão escolhe entre os 15 assuntos, e se compara com o assunto das ferramentas que o caso espera.
+44 casos precisam de pelo menos um assunto (3 precisam de dois); os 28 restantes são recusas.
+
+| Configuração | Melhor assunto | Todos os necessários entre os 2 mais prováveis | Tempo por decisão | Tokens de entrada |
+|---|---|---|---|---|
+| d1-2B, só a escolha do assunto | 95,5% (42/44) | **100% (44/44)** | **0,79 s** | 366 |
+| d1-2B, + 15 perguntas sim/não | 95,5% | 100% | 4,3 s | 1266 |
+| d1-2B, + escolha entre as 81 ferramentas | 95,5% | 100% | 7,6 s | 2874 |
+| Kev-4B, + 15 perguntas sim/não | 95,5% | 100% | 7,6 s | 1057 |
+
+- **O melhor assunto erra em 2 de 44 casos** (d1-2B: `age-3`, `ctx-2`; Kev: `bus-3`, `ctx-1`), todos cobertos pelo
+  segundo mais provável. Os 3 casos de dois assuntos (`art-1`, `art-3`, `rot-1`) só são cobertos com os 2 primeiros.
+- **As perguntas sim/não por assunto não calibram**: nenhum limiar dá bom resultado. No d1-2B, com 0,5 acerta todos os
+  assuntos em 75% dos casos mas sobram 2,2 assuntos por caso e 79% das recusas ganham algum; com 0,7 só 36%. Sem uso.
+- **Escolher a ferramenta entre as 81 é fraco**: a primeira ferramenta esperada fica em 1º lugar em 59%, entre as 3
+  primeiras em 70,5% e entre as 5 primeiras em 75%. Serve para o assunto, não para a ferramenta.
+- O Kev-4B não ganha do d1-2B e é 2 a 7 vezes mais lento; o d1-2B ocupa 1,1 GB.
+- Amostra pequena (44 casos, 3 de dois assuntos): o resultado indica a direção, não fixa o número.
+- A execução do Kev-4B com as 81 ferramentas foi interrompida pelo sistema por falta de memória (o servidor do Kev
+  chega a 5,7 GB residentes) e não foi repetida.

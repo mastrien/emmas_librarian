@@ -1,5 +1,5 @@
 import type { EvalKind } from '../evalCase';
-import type { RoutingScore } from './routingMetrics';
+import { scoreRouting, type RoutingScore } from './routingMetrics';
 
 export interface RoutingRow {
   id: string;
@@ -7,6 +7,10 @@ export interface RoutingRow {
   /** The subjects the ideal trajectory needs (empty for a refusal). */
   required: string[];
   selected: string[];
+  /** What the decision model said, so the threshold can be changed later without asking it again. */
+  best: string;
+  ranked: string[];
+  noul: Record<string, number>;
   /** Present only when the case needs a subject. */
   score?: RoutingScore;
   /** 1-based place of the first ideal tool in the model's ranking; null if it is not in it. */
@@ -61,4 +65,26 @@ export function summarizeRouting(rows: RoutingRow[]): Record<string, number> {
 export function summarizeByKind(rows: RoutingRow[]): Record<string, Record<string, number>> {
   const kinds = [...new Set(rows.map((row) => row.kind))];
   return Object.fromEntries(kinds.map((kind) => [kind, summarizeRouting(rows.filter((row) => row.kind === kind))]));
+}
+
+/**
+ * The same rows with another yes/no threshold: the subjects selected and the score are computed again from the answers
+ * the decision model gave.
+ *
+ * Usage:
+ *   summarizeRouting(withThreshold(rows, 0.9)); // fewer extras, maybe fewer needed subjects
+ */
+export function withThreshold(rows: RoutingRow[], threshold: number): RoutingRow[] {
+  return rows.map((row) => {
+    const selected = Object.entries(row.noul)
+      .filter(([, probability]) => probability >= threshold)
+      .map(([area]) => area);
+    const decision = {
+      best: row.best,
+      selected,
+      noul: row.noul,
+      ranked: row.ranked.map((area) => ({ area, probability: 0 })),
+    };
+    return { ...row, selected, score: row.required.length > 0 ? scoreRouting(row.required, decision) : undefined };
+  });
 }
