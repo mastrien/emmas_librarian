@@ -55,7 +55,9 @@ export async function startServer(
 
 async function stopProcess(child: ChildProcess): Promise<void> {
   if (child.exitCode !== null || child.pid === undefined) return;
-  // taskkill /T also ends what the server started; a plain kill leaves the Vulkan memory held on Windows.
-  execFileSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+  // On Windows taskkill /T also ends what the server started; a plain kill leaves the Vulkan memory held.
+  if (process.platform === 'win32')
+    execFileSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+  else child.kill('SIGKILL');
   await sleep(500);
 }

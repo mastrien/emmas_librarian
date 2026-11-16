@@ -116,3 +116,44 @@ npx vite-node core/harness/eval/run/runEval.ts -- --model lfm3-1.7b --cases all 
 ```
 
 Modelos disponíveis: `core/harness/eval/run/modelCatalog.ts`. Cada execução grava uma pasta nova em `runs/`.
+
+## Bateria de 72 casos: LFM3-1.7B, modo roteado (15/11/2026, 22h21 UTC)
+
+Primeira bateria completa, com roteamento por assunto (`--mode routed`: o modelo começa só com `select_areas` e recebe
+as ferramentas dos assuntos que escolher).
+
+| | |
+|---|---|
+| Resultado | **59 de 72 (82%)** |
+| Por tipo | caminho feliz 23/26, armadilha 10/14, erro esperado 2/4, recusa 24/28 |
+| Tempo | 5 608 s (93 min); mediana de 70 s por caso |
+| Chamadas ao modelo | 263; 197 399 tokens de prompt (397 tok/s) e 126 221 gerados (24,7 tok/s) |
+| Falharam | mon-3, age-3, cat-3, doc-2, lix-2, lix-3, tri-1, tri-4, tri-5, tri-6, bus-2, rot-1, ctx-2 |
+
+Observação: neste modo a **geração** domina o tempo (126 mil tokens a 24,7 tok/s são 85 dos 93 minutos), não o prompt.
+No modo completo o prompt de ferramentas era o gargalo. Cada modo tem seu gargalo.
+
+Registro: `runs/2026-11-15T22-21-37_lfm3-1.7b/`. O teste de fumaça do roteamento (`proj-1` 24 s e `art-2` 50 s, contra
+35 s e 56 s no modo completo) está em `runs/2026-11-15T22-20-00_lfm3-1.7b/`.
+
+## Mudança de plano (a pedido do autor)
+
+A bateria seguiu para o LFM2.5-8B-A1B por segundos, e eu a abortei (`runs/2026-11-15T23-55-18_lfm2.5-8b-a1b/ABORTED.txt`).
+Estimativa de continuar na RX 580: mais de 30 horas, com Qwen3.5-4B e Gemma 4 levando 5 a 6 horas por bloco.
+
+Novo plano, em duas etapas, porque o critério do projeto é **viabilidade local**, não eficácia isolada (um modelo
+perfeito que não roda na máquina da pessoa não serve):
+
+1. **Eficácia no Google Colab** (GPU T4, bem mais rápida): os 72 casos em todos os modelos, nos dois modos. Os tempos de
+   lá não valem. Notebook: `emmas_librarian/core/harness/eval/colab/avaliacao_colab.ipynb`.
+2. **Tempo e memória na RX 580**: só nos modelos que passarem de um limiar de acerto no Colab (70% por padrão, mudável
+   na célula de configuração). Modelos ineficazes não gastam hora de GPU local.
+
+Para o notebook, o executor ficou portátil: caminho do servidor, pasta dos modelos, dispositivo, rótulo do backend e
+pasta de saída vêm de variáveis de ambiente (`LLAMA_SERVER`, `LLAMA_MODELS_DIR`, `LLAMA_DEVICE`, `LLAMA_BACKEND`,
+`LLAMA_BUILD`, `EVAL_RUNS_DIR`), com a máquina do autor como padrão. O encerramento do servidor funciona em Windows e em
+Linux, e a configuração de cada execução passa a registrar o backend e o tamanho do arquivo do modelo.
+
+**O notebook não foi executado**: não há Linux nem GPU CUDA nesta máquina. Foram verificados só a sintaxe de cada célula
+Python e o executor localmente com os mesmos padrões. A célula 5 (a biblioteca F em SQLite real) e a célula 6 (o
+`llama-server` CUDA listando a T4) são as que mais provavelmente precisarão de ajuste na primeira execução.

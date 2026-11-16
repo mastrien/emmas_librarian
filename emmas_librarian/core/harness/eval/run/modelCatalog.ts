@@ -1,3 +1,6 @@
+import path from 'path';
+import { DEFAULT_SETUP, type RunSetup } from './runSetup';
+
 /** One model of the comparison, with everything that decides how it is run. All of it is written into the run record. */
 export interface ModelSpec {
   id: string;
@@ -13,13 +16,12 @@ export interface ModelSpec {
   contextSize: number;
 }
 
-const DIR = 'F:\\llm-lab\\models';
 const CONTEXT = 16384;
 
 const spec = (id: string, source: string, file: string, extra: Partial<ModelSpec> = {}): ModelSpec => ({
   id,
   source,
-  file: `${DIR}\\${file}`,
+  file,
   temperature: 0.1,
   contextSize: CONTEXT,
   ...extra,
@@ -47,8 +49,9 @@ export const MODELS: ModelSpec[] = [
  * Usage:
  *   serverArgs(MODELS[0], 8089); // ['-m', 'F:\\...gguf', '--jinja', ...]
  */
-export function serverArgs(model: ModelSpec, port: number): string[] {
-  const args = ['-m', model.file, '--jinja', '-ngl', '99', '--device', 'Vulkan0', '-c', String(model.contextSize)];
+export function serverArgs(model: ModelSpec, port: number, setup: RunSetup = DEFAULT_SETUP): string[] {
+  const args = ['-m', path.join(setup.modelsDir, model.file), '--jinja', '-ngl', '99', '-c', String(model.contextSize)];
+  if (setup.device) args.push('--device', setup.device);
   args.push('--port', String(port), '--host', '127.0.0.1', '--seed', '42', '--no-webui');
   if (model.templateKwargs) args.push('--chat-template-kwargs', JSON.stringify(model.templateKwargs));
   return args;

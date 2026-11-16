@@ -9,6 +9,7 @@ import { runEpisode, toOpenAiTools } from '../eval/run/episode';
 import { flagsOf } from '../eval/run/flags';
 import { MODELS, samplingOf, serverArgs } from '../eval/run/modelCatalog';
 import { RunRecorder } from '../eval/run/runRecorder';
+import { setupFromEnv } from '../eval/run/runSetup';
 import { scoreEpisode } from '../eval/run/score';
 import { dayFromText, systemPromptFor } from '../eval/run/systemPrompt';
 import { LibraryToolkit } from '../LibraryToolkit';
@@ -264,5 +265,30 @@ describe('the run setup', () => {
     expect(fs.existsSync(path.join(dir, 'r1', 'episodes', 'art-2.json'))).toBe(true);
     expect(JSON.parse(fs.readFileSync(path.join(dir, 'index.jsonl'), 'utf-8'))).toEqual({ runId: 'r1', passed: 1 });
     fs.rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe('the setup of a machine', () => {
+  it('is the author machine unless the environment says otherwise', () => {
+    expect(setupFromEnv({})).toMatchObject({ device: 'Vulkan0', backend: 'vulkan', build: 'b12425', runsDir: '' });
+  });
+
+  it('takes the server, the models folder and the backend from the environment, and respects an empty device', () => {
+    const setup = setupFromEnv({
+      LLAMA_SERVER: '/content/llama/llama-server',
+      LLAMA_MODELS_DIR: '/content/models',
+      LLAMA_DEVICE: '',
+      LLAMA_BACKEND: 'cuda',
+      EVAL_RUNS_DIR: '/content/drive/runs',
+    });
+    expect(setup).toMatchObject({
+      server: '/content/llama/llama-server',
+      device: '',
+      backend: 'cuda',
+      runsDir: '/content/drive/runs',
+    });
+    const args = serverArgs(MODELS[0], 8089, setup);
+    expect(args[args.indexOf('-m') + 1]).toBe(path.join('/content/models', MODELS[0].file));
+    expect(args).not.toContain('--device');
   });
 });

@@ -16,17 +16,25 @@ import { flagsOf } from './flags';
 import { runEpisode, toOpenAiTools } from './episode';
 import { MODELS, samplingOf, serverArgs, type ModelSpec } from './modelCatalog';
 import { RunRecorder } from './runRecorder';
+import { setupFromEnv } from './runSetup';
 import { SCORER_VERSION, scoreEpisode } from './score';
 import { startServer } from './serverProcess';
 import { dayFromText, systemPromptFor, SYSTEM_PROMPT_VERSION } from './systemPrompt';
 
-const LLAMA_DIR = 'F:\\llm-lab\\bin\\b12425';
-const EXE = path.join(LLAMA_DIR, 'llama-server.exe');
 const EVAL_DIR = path.join(__dirname, '..');
 const MAX_STEPS = 8;
 
 const sha = (text: string): string => crypto.createHash('sha256').update(text).digest('hex').slice(0, 16);
-const git = (...args: string[]): string => execFileSync('git', args, { cwd: EVAL_DIR }).toString().trim();
+// The code may be a zip with no repository (the Colab notebook): the record then says so instead of failing.
+const git = (...args: string[]): string => {
+  try {
+    return execFileSync('git', args, { cwd: EVAL_DIR, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
+  } catch {
+    return 'unknown';
+  }
+};
 
 function chooseCases(all: EvalCase[], ids: string | undefined): EvalCase[] {
   if (!ids || ids === 'all') return all;
@@ -148,18 +156,21 @@ async function main(): Promise<void> {
   const casesText = fs.readFileSync(path.join(EVAL_DIR, 'cases.jsonl'), 'utf-8');
   const cases = chooseCases(parseEvalCases(casesText), args.cases);
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const recorder = new RunRecorder(path.join(EVAL_DIR, 'runs'), `${stamp}_${model.id}`);
+  const setup = setupFromEnv(process.env);
+  const recorder = new RunRecorder(setup.runsDir || path.join(EVAL_DIR, 'runs'), `${stamp}_${model.id}`);
   const port = 8089;
-  const serverCommand = serverArgs(model, port);
-  const devices = execFileSync(EXE, ['--list-devices']).toString() + '';
+  const serverCommand = serverArgs(model, port, setup);
+  const devices = execFileSync(setup.server, ['--list-devices'], { stdio: ['ignore', 'pipe', 'pipe'] }).toString();
   recorder.writeConfig({
     runId: recorder.runId,
     label: args.label ?? null,
     startedAt: new Date().toISOString(),
     model,
-    serverCommand: [EXE, ...serverCommand],
+    serverCommand: [setup.server, ...serverCommand],
     sampling: samplingOf(model),
-    llamaCpp: 'b12425',
+    llamaCpp: setup.build,
+    backend: setup.backend,
+    modelFileBytes: fs.statSync(path.join(setup.modelsDir, model.file)).size,
     devices: devices.trim(),
     host: {
       os: `${os.type()} ${os.release()}`,
@@ -169,7 +180,7 @@ async function main(): Promise<void> {
     },
     node: process.version,
     repoCommit: git('rev-parse', 'HEAD'),
-    repoDirty: git('status', '--porcelain', '--', '.').length > 0,
+    repoDirty: git('status', '--porcelain', '--', '.') !== '',
     casesSha: sha(casesText),
     caseIds: cases.map((c) => c.id),
     maxSteps: MAX_STEPS,
@@ -180,7 +191,7 @@ async function main(): Promise<void> {
     confirmation: 'FakeConfirmer: sim, exceto casos com confirm: no',
     library: 'Biblioteca de teste F, nova a cada caso',
   });
-  const server = await startServer(EXE, serverCommand, port);
+  const server = await startServer(setup.server, serverCommand, port);
   try {
     const chat = new LlamaServerChat(server.url);
     const results: Awaited<ReturnType<typeof runCase>>[] = [];
