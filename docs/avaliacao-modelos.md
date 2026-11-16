@@ -213,3 +213,17 @@ dois casos a mais em cada modo. A diferença de versão do llama.cpp não parece
 `inv-2` em 6/8, `proj-5`, `proj-6`, `age-3`, `cat-3` e `doc-1` em 5/8. Em `rot-1` o Qwen3.5-9B fez o certo (marcou o
 artigo como lido e escreveu no diário), mas a verificação exige que o diário termine com exatamente "Terminei.", e o
 modelo escreveu "Terminei de ler o artigo 3.". É defeito do caso, não do modelo. Os demais precisam do mesmo exame.
+
+### Primeiras tentativas do modo `planned` com o LFM3 (2026-11-16): o plano não sai
+
+- **Prompt v1** (`runs/2026-11-16T17-02-49_lfm3-1.7b`, interrompida em 57/72, 24 acertos): o planejador recebia as regras do
+  sistema ("se nenhuma ferramenta permite, diga que não tem acesso") sem ter ferramentas, e respondia em texto ("Não tenho
+  acesso...") ou inventava o assunto (`"listar"`). Defeito do prompt; a execução ficou marcada com `ABORTED.txt`.
+- **Prompt v2** (o planejador recebe só o contexto do dia e a lista de assuntos, e é proibido de responder em texto):
+  o LFM3 **raciocina sem parar** antes de escrever a lista. O template dele não tem chave para desligar o raciocínio
+  (não há `enable_thinking` no GGUF). Com limite de 512 tokens a resposta veio vazia; com 2048 estourou o limite nos 4
+  casos da fumaça (`proj-1`, `art-1`, `proj-5`, `ia-1`), em 85 s cada. No fim do raciocínio ele já tinha o plano certo
+  (`[{"assunto": "projetos", ...}]`), mas ainda conferindo a grafia dos ids. Nos modos completo e roteado, com ferramentas,
+  o mesmo modelo não deliberava assim.
+- Conclusão provisória: para o LFM3 o passo de planejar sem ferramentas custa de 1,5 a 5 minutos por pedido e, com o
+  limite atual, falha. A abordagem só é justa se o planejamento puder ser limitado sem cortar a resposta.

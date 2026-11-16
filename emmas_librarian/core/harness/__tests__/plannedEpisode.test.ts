@@ -60,7 +60,7 @@ describe('runPlannedEpisode', () => {
     expect(chat.asked[0].messages[0].content).toContain('- diario: diário');
     expect(chat.asked[0].messages[0].content).toContain('contexto do dia');
     expect(chat.asked[0].messages[0].content).not.toContain('regras de ferramentas');
-    expect(chat.asked[0].sampling).toMatchObject({ max_tokens: 512 });
+    expect(chat.asked[0].sampling).toMatchObject({ max_tokens: 2048 });
     const taskTools = chat.asked[1].tools.map((tool) => tool.function.name);
     expect(taskTools).toContain('projects__getAll');
     expect(taskTools).not.toContain('diary__getAll');

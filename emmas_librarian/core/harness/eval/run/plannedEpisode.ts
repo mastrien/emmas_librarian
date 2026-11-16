@@ -29,8 +29,8 @@ const failed = (error: unknown, steps: EpisodeStep[], messages: ChatMessage[]): 
   messages,
 });
 
-/** The plan is a short list: a model that rambles past this is not planning. */
-const PLAN_MAX_TOKENS = 512;
+/** The plan is a short list: some models reason first (LFM3 used over 500 tokens), so it is a cap against a runaway, not a budget. */
+const PLAN_MAX_TOKENS = 2048;
 
 async function planStep(input: PlannedEpisodeInput): Promise<Planned> {
   const messages: ChatMessage[] = [
