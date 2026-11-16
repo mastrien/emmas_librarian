@@ -175,3 +175,41 @@ execução guarda `planPromptVersion` (`v1`) e, em cada episódio, o plano escri
 
 Código: `core/harness/eval/run/taskPlan.ts` e `plannedEpisode.ts`. Uso:
 `npx vite-node core/harness/eval/run/runEval.ts -- --model lfm3-1.7b --cases all --mode planned --label bateria-72-planned`.
+
+## Eficácia no Colab (2026-11-16)
+
+18 execuções completas (9 modelos x 2 modos x 72 casos), numa NVIDIA L4 (CUDA 13), registradas em
+`emmas_librarian/core/harness/eval/runs/colab-2026-11-16/` (`index.jsonl`, `candidatos.json`, um diretório por execução,
+`logs/` com a saída de cada uma). Mesmo código, prompt (v1), seed 42, casos e nota (v2) da máquina local.
+
+| Modelo | Roteado | Completo |
+|---|---|---|
+| qwen3.5-9b | 61 (85%) | **64 (89%)** |
+| lfm3-1.7b | 61 (85%) | 63 (88%) |
+| qwen3.5-4b | 56 (78%) | 63 (88%) |
+| gemma-4-e4b | 59 (82%) | 49 (68%) |
+| qwen3.5-2b | 44 (61%) | 41 (57%) |
+| lfm2.5-8b-a1b | 42 (58%) | 36 (50%) |
+| lfm2.5-350m | 30 (42%) | 30 (42%) |
+| lfm2-1.2b-tool | 28 (39%) | 29 (40%) |
+| lfm2.5-1.2b-instruct | 28 (39%) | 29 (40%) |
+
+Com o limiar de 70% em algum modo, passam ao teste de tempo local: **qwen3.5-9b, lfm3-1.7b, qwen3.5-4b e gemma-4-e4b**.
+
+**Ressalvas do ambiente (o registro das execuções está errado nestes pontos):**
+- O llama.cpp foi **compilado do `master`** no Colab (o agente do Colab trocou o binário `b12425` por `git clone`, por
+  causa da CUDA 13), mas o `config.json` de cada execução diz `llamaCpp: b12425`. O commit real não foi gravado.
+  `repoCommit` também ficou `unknown` (o código veio de um zip).
+- Dispositivo `cuda0` e backend `cuda`. O `server.log` não traz a linha de offload da GPU neste formato de log; a prova
+  de que rodou na GPU é a vazão: 8 a 9 mil tokens/s de prompt no LFM3, contra 360 na CPU local.
+- Instalação com `npm install --legacy-peer-deps` em vez de `npm ci`, e modelos baixados depois sem hash (`sha256`
+  `verificacao-rapida`). Nenhuma dessas mudanças altera o que o modelo recebe ou como a nota é calculada.
+- Os tempos daqui (por exemplo, LFM3 completo em 17 min contra 86 min local) **não valem** para viabilidade.
+
+**Calibração contra a máquina local (build b12425):** o LFM3 fez 61/63 no Colab (roteado/completo) contra 59/61 local,
+dois casos a mais em cada modo. A diferença de versão do llama.cpp não parece pesar.
+
+**Casos que quase todos os candidatos erram**, nas 8 configurações (4 modelos x 2 modos): `rot-1` em 8/8, `lix-2` e
+`inv-2` em 6/8, `proj-5`, `proj-6`, `age-3`, `cat-3` e `doc-1` em 5/8. Em `rot-1` o Qwen3.5-9B fez o certo (marcou o
+artigo como lido e escreveu no diário), mas a verificação exige que o diário termine com exatamente "Terminei.", e o
+modelo escreveu "Terminei de ler o artigo 3.". É defeito do caso, não do modelo. Os demais precisam do mesmo exame.

@@ -1,0 +1,251 @@
+{
+  "id": "doc-2",
+  "kind": "happy",
+  "prompt": "Adiciona o link https://exemplo.org/guia com o título Guia.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 81,
+  "toolsBytes": 29105,
+  "wallMs": 1730,
+  "asked": [
+    {
+      "tool": "projects__update",
+      "command": "projects:update",
+      "input": {
+        "id": 1,
+        "name": "Revisão sobre tutoria"
+      }
+    },
+    {
+      "tool": "projectDocuments__create",
+      "command": "projectDocuments:create",
+      "input": {
+        "projectId": 1,
+        "title": "Guia",
+        "url": "https://exemplo.org/guia"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "docExists",
+      "args": {
+        "projectId": 1,
+        "title": "Guia",
+        "url": "https://exemplo.org/guia"
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 4,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Vou verificar se há um projeto chamado \"Revisão sobre tutoria\" (id 1) e depois adicionar o link no projeto.",
+          "toolCalls": [
+            {
+              "id": "ArFgV40H0QAyXjPtoN4xR50X1hvbb1c8",
+              "name": "projects__getOne",
+              "arguments": "{\"projectId\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 29,
+            "promptMs": 42.308,
+            "generatedTokens": 59,
+            "generatedMs": 449.859
+          },
+          "wallMs": 535
+        },
+        "calls": [
+          {
+            "id": "ArFgV40H0QAyXjPtoN4xR50X1hvbb1c8",
+            "name": "projects__getOne",
+            "arguments": "{\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": {
+                "id": 1,
+                "name": "Revisão sobre tutoria",
+                "created_at": "2026-11-16T16:36:35.581Z",
+                "last_executed_at": null,
+                "deleted_at": null,
+                "writing_pad": null,
+                "about_markdown": null,
+                "last_opened_at": null,
+                "screening_inclusion": null,
+                "screening_exclusion": null,
+                "screening_predicted_order": null
+              }
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O projeto existe. Agora vou adicionar o link no projeto.",
+          "toolCalls": [
+            {
+              "id": "PkvyLnbMcXc5c63j4lqgs0LTUfFt7rIu",
+              "name": "projects__update",
+              "arguments": "{\"id\":1,\"name\":\"Revisão sobre tutoria\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 117,
+            "promptMs": 47.425,
+            "generatedTokens": 56,
+            "generatedMs": 427.776
+          },
+          "wallMs": 518
+        },
+        "calls": [
+          {
+            "id": "PkvyLnbMcXc5c63j4lqgs0LTUfFt7rIu",
+            "name": "projects__update",
+            "arguments": "{\"id\":1,\"name\":\"Revisão sobre tutoria\"}",
+            "result": {
+              "ok": true,
+              "result": null
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "OF9elNoiMbS5bUCoSY7ZKDUxDN9x43Vc",
+              "name": "projectDocuments__create",
+              "arguments": "{\"projectId\":1,\"title\":\"Guia\",\"url\":\"https://exemplo.org/guia\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 39.305,
+            "generatedTokens": 58,
+            "generatedMs": 443.193
+          },
+          "wallMs": 527
+        },
+        "calls": [
+          {
+            "id": "OF9elNoiMbS5bUCoSY7ZKDUxDN9x43Vc",
+            "name": "projectDocuments__create",
+            "arguments": "{\"projectId\":1,\"title\":\"Guia\",\"url\":\"https://exemplo.org/guia\"}",
+            "result": {
+              "ok": true,
+              "result": 1
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O link foi adicionado com sucesso.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 39.643,
+            "generatedTokens": 9,
+            "generatedMs": 63.903
+          },
+          "wallMs": 148
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O link foi adicionado com sucesso.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Adiciona o link https://exemplo.org/guia com o título Guia."
+      },
+      {
+        "role": "assistant",
+        "content": "Vou verificar se há um projeto chamado \"Revisão sobre tutoria\" (id 1) e depois adicionar o link no projeto.",
+        "toolCalls": [
+          {
+            "id": "ArFgV40H0QAyXjPtoN4xR50X1hvbb1c8",
+            "name": "projects__getOne",
+            "arguments": "{\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "ArFgV40H0QAyXjPtoN4xR50X1hvbb1c8",
+        "content": "{\"ok\":true,\"result\":{\"id\":1,\"name\":\"Revisão sobre tutoria\",\"created_at\":\"2026-11-16T16:36:35.581Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null}}"
+      },
+      {
+        "role": "assistant",
+        "content": "O projeto existe. Agora vou adicionar o link no projeto.",
+        "toolCalls": [
+          {
+            "id": "PkvyLnbMcXc5c63j4lqgs0LTUfFt7rIu",
+            "name": "projects__update",
+            "arguments": "{\"id\":1,\"name\":\"Revisão sobre tutoria\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "PkvyLnbMcXc5c63j4lqgs0LTUfFt7rIu",
+        "content": "{\"ok\":true,\"result\":null}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "OF9elNoiMbS5bUCoSY7ZKDUxDN9x43Vc",
+            "name": "projectDocuments__create",
+            "arguments": "{\"projectId\":1,\"title\":\"Guia\",\"url\":\"https://exemplo.org/guia\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "OF9elNoiMbS5bUCoSY7ZKDUxDN9x43Vc",
+        "content": "{\"ok\":true,\"result\":1}"
+      },
+      {
+        "role": "assistant",
+        "content": "O link foi adicionado com sucesso.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

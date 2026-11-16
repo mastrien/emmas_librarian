@@ -1,0 +1,231 @@
+{
+  "id": "age-2",
+  "kind": "trap",
+  "prompt": "Cadastra o congresso SBBD com submissão em 2026-12-15.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 81,
+  "toolsBytes": 29105,
+  "wallMs": 3885,
+  "asked": [
+    {
+      "tool": "scientificVenue__create",
+      "command": "scientificVenue:create",
+      "input": {
+        "venueData": {
+          "title": "SBBD",
+          "category": "conference",
+          "milestones": [
+            {
+              "label": "Submissão",
+              "field_type": "single",
+              "target_date": "2026-12-15",
+              "has_time": false,
+              "status": "pending"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "venueCount",
+      "args": {
+        "count": 2
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Vou cadastrar o congresso SBBD com submissão em 2026-12-15. Primeiro, preciso verificar se já existe um projeto ativo para este congresso.",
+          "toolCalls": [
+            {
+              "id": "HWHcm0kDx1lgPF9B14U0Fq69tExcOW1J",
+              "name": "projects__getAll",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 36,
+            "promptMs": 108.405,
+            "generatedTokens": 57,
+            "generatedMs": 867.978
+          },
+          "wallMs": 1020
+        },
+        "calls": [
+          {
+            "id": "HWHcm0kDx1lgPF9B14U0Fq69tExcOW1J",
+            "name": "projects__getAll",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "name": "Revisão sobre tutoria",
+                  "created_at": "2026-11-16T16:38:32.170Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                },
+                {
+                  "id": 2,
+                  "name": "Vazio",
+                  "created_at": "2026-11-16T16:38:32.170Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Vou usar o projeto com ID 1 (\"Revisão sobre tutoria\") para cadastrar o congresso SBBD.",
+          "toolCalls": [
+            {
+              "id": "v0u98yhd2QfdCsOcDaZaGNYtrUuXgEYc",
+              "name": "scientificVenue__create",
+              "arguments": "{\"venueData\":{\"title\": \"SBBD\", \"category\": \"conference\", \"milestones\": [{\"label\": \"Submissão\", \"field_type\": \"single\", \"target_date\": \"2026-12-15\", \"has_time\": false, \"status\": \"pending\"}]}}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 206,
+            "promptMs": 117.915,
+            "generatedTokens": 116,
+            "generatedMs": 1871.996
+          },
+          "wallMs": 2034
+        },
+        "calls": [
+          {
+            "id": "v0u98yhd2QfdCsOcDaZaGNYtrUuXgEYc",
+            "name": "scientificVenue__create",
+            "arguments": "{\"venueData\":{\"title\": \"SBBD\", \"category\": \"conference\", \"milestones\": [{\"label\": \"Submissão\", \"field_type\": \"single\", \"target_date\": \"2026-12-15\", \"has_time\": false, \"status\": \"pending\"}]}}",
+            "result": {
+              "ok": true,
+              "result": {
+                "id": 2,
+                "title": "SBBD",
+                "acronym": null,
+                "category": "conference",
+                "url": null,
+                "color": "#3b82f6",
+                "created_at": "2026-11-16 16:38:35",
+                "milestones": [
+                  {
+                    "id": 2,
+                    "venue_id": 2,
+                    "label": "Submissão",
+                    "field_type": "single",
+                    "target_date": "2026-12-15",
+                    "has_time": false,
+                    "status": "pending"
+                  }
+                ]
+              }
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Congresso SBBD cadastrado com sucesso!\n- ID: 2\n- Categoria: conference\n- Milestone: Submissão em 2026-12-15 (status: pending)",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 127,
+            "promptMs": 102.363,
+            "generatedTokens": 45,
+            "generatedMs": 683.611
+          },
+          "wallMs": 830
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Congresso SBBD cadastrado com sucesso!\n- ID: 2\n- Categoria: conference\n- Milestone: Submissão em 2026-12-15 (status: pending)",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Cadastra o congresso SBBD com submissão em 2026-12-15."
+      },
+      {
+        "role": "assistant",
+        "content": "Vou cadastrar o congresso SBBD com submissão em 2026-12-15. Primeiro, preciso verificar se já existe um projeto ativo para este congresso.",
+        "toolCalls": [
+          {
+            "id": "HWHcm0kDx1lgPF9B14U0Fq69tExcOW1J",
+            "name": "projects__getAll",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "HWHcm0kDx1lgPF9B14U0Fq69tExcOW1J",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"name\":\"Revisão sobre tutoria\",\"created_at\":\"2026-11-16T16:38:32.170Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null},{\"id\":2,\"name\":\"Vazio\",\"created_at\":\"2026-11-16T16:38:32.170Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Vou usar o projeto com ID 1 (\"Revisão sobre tutoria\") para cadastrar o congresso SBBD.",
+        "toolCalls": [
+          {
+            "id": "v0u98yhd2QfdCsOcDaZaGNYtrUuXgEYc",
+            "name": "scientificVenue__create",
+            "arguments": "{\"venueData\":{\"title\": \"SBBD\", \"category\": \"conference\", \"milestones\": [{\"label\": \"Submissão\", \"field_type\": \"single\", \"target_date\": \"2026-12-15\", \"has_time\": false, \"status\": \"pending\"}]}}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "v0u98yhd2QfdCsOcDaZaGNYtrUuXgEYc",
+        "content": "{\"ok\":true,\"result\":{\"id\":2,\"title\":\"SBBD\",\"acronym\":null,\"category\":\"conference\",\"url\":null,\"color\":\"#3b82f6\",\"created_at\":\"2026-11-16 16:38:35\",\"milestones\":[{\"id\":2,\"venue_id\":2,\"label\":\"Submissão\",\"field_type\":\"single\",\"target_date\":\"2026-12-15\",\"has_time\":false,\"status\":\"pending\"}]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Congresso SBBD cadastrado com sucesso!\n- ID: 2\n- Categoria: conference\n- Milestone: Submissão em 2026-12-15 (status: pending)",
+        "toolCalls": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "id": "cfg-1",
+  "kind": "happy",
+  "prompt": "Qual é a versão do aplicativo?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 3,
+  "toolsBytes": 2204,
+  "wallMs": 1378,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "zDSAAx16z4WPs6ojyxhfPPaKStIxIPWO",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"sistema\"]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 19,
+            "promptMs": 98.232,
+            "generatedTokens": 30,
+            "generatedMs": 420.866
+          },
+          "wallMs": 601
+        },
+        "calls": [
+          {
+            "id": "zDSAAx16z4WPs6ojyxhfPPaKStIxIPWO",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"sistema\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "sistema"
+                ],
+                "tools": [
+                  "app__getVersion",
+                  "backup__listAuto"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "lRNnORwCas4pNfBq72QJDbipiGcVxJ8n",
+              "name": "app__getVersion",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 693,
+            "promptMs": 265.105,
+            "generatedTokens": 17,
+            "generatedMs": 234.544
+          },
+          "wallMs": 508
+        },
+        "calls": [
+          {
+            "id": "lRNnORwCas4pNfBq72QJDbipiGcVxJ8n",
+            "name": "app__getVersion",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": "1.0.0"
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "A versão do aplicativo é 1.0.0.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 31,
+            "promptMs": 84.976,
+            "generatedTokens": 13,
+            "generatedMs": 175.467
+          },
+          "wallMs": 269
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "A versão do aplicativo é 1.0.0.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Qual é a versão do aplicativo?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "zDSAAx16z4WPs6ojyxhfPPaKStIxIPWO",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"sistema\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "zDSAAx16z4WPs6ojyxhfPPaKStIxIPWO",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"sistema\"],\"tools\":[\"app__getVersion\",\"backup__listAuto\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "lRNnORwCas4pNfBq72QJDbipiGcVxJ8n",
+            "name": "app__getVersion",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "lRNnORwCas4pNfBq72QJDbipiGcVxJ8n",
+        "content": "{\"ok\":true,\"result\":\"1.0.0\"}"
+      },
+      {
+        "role": "assistant",
+        "content": "A versão do aplicativo é 1.0.0.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

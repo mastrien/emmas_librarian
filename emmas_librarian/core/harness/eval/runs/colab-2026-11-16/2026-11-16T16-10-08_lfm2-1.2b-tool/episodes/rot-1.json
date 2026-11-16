@@ -1,0 +1,86 @@
+{
+  "id": "rot-1",
+  "kind": "trap",
+  "prompt": "Marca como lido o artigo 3 e depois escreve no diário que terminei.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    },
+    "today": "2026-11-15"
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 1,
+  "toolsBytes": 1750,
+  "wallMs": 758,
+  "asked": [],
+  "checks": [
+    {
+      "check": "articleStatus",
+      "args": {
+        "ids": [
+          3
+        ],
+        "status": "read"
+      },
+      "ok": false
+    },
+    {
+      "check": "diaryEndsWith",
+      "args": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "text": "Terminei.",
+        "keeps": ""
+      },
+      "ok": false
+    }
+  ],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": false,
+    "steps": 1,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Para marcar o artigo 3 como lido, basta chamar a ferramenta `artigos` com o ID do artigo e o comando `marcar_como_lido`. Depois, basta chamar `diário` para registrar que o artigo terminou.\n\nAqui está o que você faria:\n\n1. **Marca o artigo 3 como lido:**\n   ```\n   select_areas(areas=[\"artigos\", \"marcar_como_lido\"])\n   ```\n\n2. **Registra que o artigo terminou no diário:**\n   ```\n   diário(artigo=3, status=\"terminado\")\n   ```\n\nApós essas ações, o artigo 3 será marcado como lido e o status no diário será atualizado para \"terminado\".",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 503,
+            "promptMs": 31.749,
+            "generatedTokens": 188,
+            "generatedMs": 713.345
+          },
+          "wallMs": 758
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Para marcar o artigo 3 como lido, basta chamar a ferramenta `artigos` com o ID do artigo e o comando `marcar_como_lido`. Depois, basta chamar `diário` para registrar que o artigo terminou.\n\nAqui está o que você faria:\n\n1. **Marca o artigo 3 como lido:**\n   ```\n   select_areas(areas=[\"artigos\", \"marcar_como_lido\"])\n   ```\n\n2. **Registra que o artigo terminou no diário:**\n   ```\n   diário(artigo=3, status=\"terminado\")\n   ```\n\nApós essas ações, o artigo 3 será marcado como lido e o status no diário será atualizado para \"terminado\".",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Marca como lido o artigo 3 e depois escreve no diário que terminei."
+      },
+      {
+        "role": "assistant",
+        "content": "Para marcar o artigo 3 como lido, basta chamar a ferramenta `artigos` com o ID do artigo e o comando `marcar_como_lido`. Depois, basta chamar `diário` para registrar que o artigo terminou.\n\nAqui está o que você faria:\n\n1. **Marca o artigo 3 como lido:**\n   ```\n   select_areas(areas=[\"artigos\", \"marcar_como_lido\"])\n   ```\n\n2. **Registra que o artigo terminou no diário:**\n   ```\n   diário(artigo=3, status=\"terminado\")\n   ```\n\nApós essas ações, o artigo 3 será marcado como lido e o status no diário será atualizado para \"terminado\".",
+        "toolCalls": []
+      }
+    ]
+  }
+}

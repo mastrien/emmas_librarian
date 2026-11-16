@@ -1,0 +1,451 @@
+{
+  "id": "loc-1",
+  "kind": "happy",
+  "prompt": "Resume o artigo 1.",
+  "context": {
+    "modelIsLocal": true
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 7,
+  "toolsBytes": 4428,
+  "wallMs": 12627,
+  "asked": [],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 4,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "ouEIqXsesELQKi4Uqlpra4i3szZ96MEG",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"artigos\"]}"
+            }
+          ],
+          "reasoning": "We need to understand the user's request: \"Resume o artigo 1.\" which means \"Summarize article 1.\" The user is asking for a summary of article 1. We have tools available, including `select_areas` and others. According to the rules:\n\n- I must start with calling `select_areas` with the subjects from the order before acting.\n- The user's request: \"Resume o artigo 1.\" This likely refers to an article titled or numbered \"1\". We need to know which project/artigos? There is no prior context. We need to use tools to find articles. The tool `select_areas` can be called with areas like \"artigos\" etc. But we don't have a specific ID for article 1. Possibly the user expects me to know about an article from previous conversation, but there is none. So I need to ask for clarification? Or maybe there's a default project? The instructions: \"Use as ferramentas para consultar e alterar a biblioteca.\" We have `select_areas` first. It says: \"Você começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido: só então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\"\n\nThus I need to call `select_areas` with areas parameter. The user's request is about \"artigo 1\". So the area is likely \"artigos\" (articles). Possibly also \"pdfs\"? But \"resume o artigo 1\" suggests we need to get article 1 from some project. I should select \"artigos\" as the area.\n\nLet me do that: call `select_areas` with areas: [\"artigos\"].\n\nAfter receiving tools, I can then use other tools like maybe `ia` (AI) for summarization? There is a tool `ia` for using AI: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores. That might be relevant to summarize an article. But first I need the tools from select_areas.\n\nLet's proceed.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 510,
+            "promptMs": 62.474,
+            "generatedTokens": 498,
+            "generatedMs": 4324.298
+          },
+          "wallMs": 4415
+        },
+        "calls": [
+          {
+            "id": "ouEIqXsesELQKi4Uqlpra4i3szZ96MEG",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"artigos\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "artigos"
+                ],
+                "tools": [
+                  "articles__getByProject",
+                  "articles__getOne",
+                  "articles__importFromProject",
+                  "articles__updateMetadata",
+                  "articles__updateStatus",
+                  "articles__updateStatusMany"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "C6nu8sPbwLOLdZyYiF8atJTrmDARr5NB",
+              "name": "articles__getOne",
+              "arguments": "{\"id\":1}"
+            }
+          ],
+          "reasoning": "We need to get article 1. The user says \"Resume o artigo 1.\" Means summarize article ID 1? We have tools: articles__getOne with id parameter. Need the id for article 1. Possibly project context? Not sure. There's no mention of projectId. Might be a global article id 1. Let's try articles__getOne with id=1.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1334,
+            "promptMs": 143.674,
+            "generatedTokens": 105,
+            "generatedMs": 915.294
+          },
+          "wallMs": 1070
+        },
+        "calls": [
+          {
+            "id": "C6nu8sPbwLOLdZyYiF8atJTrmDARr5NB",
+            "name": "articles__getOne",
+            "arguments": "{\"id\":1}",
+            "result": {
+              "ok": true,
+              "result": {
+                "id": 1,
+                "project_id": 1,
+                "doi": null,
+                "title": "Adaptive feedback in intelligent tutoring systems",
+                "authors": null,
+                "year": 2020,
+                "source_query": "Manual Import",
+                "source_databases": "[\"Manual\"]",
+                "csl_json": "{}",
+                "local_file_path": null,
+                "status": "read",
+                "archive_note": null,
+                "is_oa": null,
+                "publisher": null,
+                "url": null,
+                "accessed": null,
+                "deleted_at": null,
+                "abstract": null,
+                "author_keywords": null,
+                "index_keywords": null,
+                "journal": null,
+                "volume": null,
+                "issue": null,
+                "pages": null,
+                "affiliations": null,
+                "references_list": null,
+                "document_type": null,
+                "issn": null,
+                "citation_count": null,
+                "search_id": 1,
+                "ai_summary": null
+              }
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "oscJuY5tuZDzAvYhNtvbsZdnSbOE7sNT",
+              "name": "articles__getByProject",
+              "arguments": "{\"projectId\":1}"
+            }
+          ],
+          "reasoning": "We need to summarize the article. The result includes id, title \"Adaptive feedback in intelligent tutoring systems\", year 2020, etc. But abstract is null, authors null, etc. We might need more details? There's no direct summary field; maybe use articles__updateStatusMany? No. Could be that we need to get metadata via updateMetadata? Not needed. The user asked \"Resume o artigo 1.\" So we should provide a short summary based on available info. Title suggests it's about adaptive feedback in intelligent tutoring systems, published 2020. We don't have abstract or authors. Might be enough: summarize title and year. But better to check if there is an AI summary? There's \"ai_summary\": null.\n\nWe could try articles__getByProject with projectId=1? The article has project_id 1. Maybe we need more details from that. Let's call articles__getByProject(projectId:1) to see list of articles in project 1, maybe includes abstract.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 724,
+            "promptMs": 88.449,
+            "generatedTokens": 237,
+            "generatedMs": 2044.262
+          },
+          "wallMs": 2144
+        },
+        "calls": [
+          {
+            "id": "oscJuY5tuZDzAvYhNtvbsZdnSbOE7sNT",
+            "name": "articles__getByProject",
+            "arguments": "{\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Adaptive feedback in intelligent tutoring systems",
+                  "authors": null,
+                  "year": 2020,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "read",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 1,
+                  "ai_summary": null
+                },
+                {
+                  "id": 2,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Hints and student modelling in tutoring dialogues",
+                  "authors": null,
+                  "year": 2021,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "read",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 2,
+                  "ai_summary": null
+                },
+                {
+                  "id": 3,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Tutores baseados em regras para ensino de álgebra",
+                  "authors": null,
+                  "year": 2018,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "new",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 3,
+                  "ai_summary": null
+                },
+                {
+                  "id": 4,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Retrieval practice with an adaptive tutor",
+                  "authors": null,
+                  "year": 2022,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "new",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 4,
+                  "ai_summary": null
+                },
+                {
+                  "id": 5,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Effect sizes of tutoring systems: a meta-analysis",
+                  "authors": null,
+                  "year": 2019,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "new",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 5,
+                  "ai_summary": null
+                },
+                {
+                  "id": 6,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Early tutoring prototypes",
+                  "authors": null,
+                  "year": 2005,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "archived",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 6,
+                  "ai_summary": null
+                }
+              ]
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "**Resumo do artigo #1**\n\n- **Título:** *Adaptive feedback in intelligent tutoring systems*  \n- **Ano de publicação:** 2020  \n- **Projeto associado:** 1 (pode ser consultado no projeto “projetos”)  \n- **Status atual:** lido (read)  \n\nOs campos disponíveis na biblioteca para este artigo são limitados: não há informações sobre autores, DOI, abstract, afiliations, etc. O registro indica que ele foi importado manualmente e está marcado como já lido. Portanto, um resumo detalhado não pode ser fornecido com os dados atuais.",
+          "toolCalls": [],
+          "reasoning": "We need to \"Resume o artigo 1.\" Means summarize article id 1. We have data from articles__getOne for id=1: title \"Adaptive feedback in intelligent tutoring systems\", year 2020, etc. But many fields missing (authors null, abstract null). There's also ai_summary maybe? It shows null. Possibly need to get more details via other tools like articles__updateMetadata? Not needed. The summary might be from AI? Could use \"ia\" tool? But we have article id 1 and project info. We can try to get abstract or something else. There's no direct field for abstract. Maybe the article is in a project; we could search within project but not necessary.\n\nWe need to produce a short summary. Since data lacks abstract, maybe we can infer from title: \"Adaptive feedback in intelligent tutoring systems\". Could summarize based on typical content? But rule says never invent info. We must only use available data. The fields present: id, project_id 1, doi null, title, authors null, year 2020, source_query \"Manual Import\", etc. No abstract.\n\nThus we can say: Article ID 1 is titled \"Adaptive feedback in intelligent tutoring systems\" from 2020, part of project 1, status read, but details like authors and abstract not available in the system. So summary limited to title and year.\n\nBut maybe there's a tool \"articles__updateMetadata\" that could fill metadata? Not needed unless we need to update.\n\nThus answer: Resumo: O artigo de 2020 explora feedback adaptativo em sistemas de tutoria inteligente, etc. But avoid inventing specifics.\n\nLet's craft short response in Portuguese: \"O artigo 1, intitulado 'Adaptive feedback in intelligent tutoring systems', foi publicado em 2020 e faz parte do projeto 1. Atualmente está marcado como lido (status: read). Não há informações disponíveis sobre autores, DOI, abstract ou outros campos.\"\n\nThat's honest.\n\nProceed.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 1363,
+            "promptMs": 135.137,
+            "generatedTokens": 569,
+            "generatedMs": 4847.405
+          },
+          "wallMs": 4996
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "**Resumo do artigo #1**\n\n- **Título:** *Adaptive feedback in intelligent tutoring systems*  \n- **Ano de publicação:** 2020  \n- **Projeto associado:** 1 (pode ser consultado no projeto “projetos”)  \n- **Status atual:** lido (read)  \n\nOs campos disponíveis na biblioteca para este artigo são limitados: não há informações sobre autores, DOI, abstract, afiliations, etc. O registro indica que ele foi importado manualmente e está marcado como já lido. Portanto, um resumo detalhado não pode ser fornecido com os dados atuais.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Resume o artigo 1."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "ouEIqXsesELQKi4Uqlpra4i3szZ96MEG",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"artigos\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "ouEIqXsesELQKi4Uqlpra4i3szZ96MEG",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"artigos\"],\"tools\":[\"articles__getByProject\",\"articles__getOne\",\"articles__importFromProject\",\"articles__updateMetadata\",\"articles__updateStatus\",\"articles__updateStatusMany\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "C6nu8sPbwLOLdZyYiF8atJTrmDARr5NB",
+            "name": "articles__getOne",
+            "arguments": "{\"id\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "C6nu8sPbwLOLdZyYiF8atJTrmDARr5NB",
+        "content": "{\"ok\":true,\"result\":{\"id\":1,\"project_id\":1,\"doi\":null,\"title\":\"Adaptive feedback in intelligent tutoring systems\",\"authors\":null,\"year\":2020,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"read\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":1,\"ai_summary\":null}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "oscJuY5tuZDzAvYhNtvbsZdnSbOE7sNT",
+            "name": "articles__getByProject",
+            "arguments": "{\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "oscJuY5tuZDzAvYhNtvbsZdnSbOE7sNT",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"project_id\":1,\"doi\":null,\"title\":\"Adaptive feedback in intelligent tutoring systems\",\"authors\":null,\"year\":2020,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"read\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":1,\"ai_summary\":null},{\"id\":2,\"project_id\":1,\"doi\":null,\"title\":\"Hints and student modelling in tutoring dialogues\",\"authors\":null,\"year\":2021,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"read\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":2,\"ai_summary\":null},{\"id\":3,\"project_id\":1,\"doi\":null,\"title\":\"Tutores baseados em regras para ensino de álgebra\",\"authors\":null,\"year\":2018,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"new\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":3,\"ai_summary\":null},{\"id\":4,\"project_id\":1,\"doi\":null,\"title\":\"Retrieval practice with an adaptive tutor\",\"authors\":null,\"year\":2022,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"new\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":4,\"ai_summary\":null},{\"id\":5,\"project_id\":1,\"doi\":null,\"title\":\"Effect sizes of tutoring systems: a meta-analysis\",\"authors\":null,\"year\":2019,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"new\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":5,\"ai_summary\":null},{\"id\":6,\"project_id\":1,\"doi\":null,\"title\":\"Early tutoring prototypes\",\"authors\":null,\"year\":2005,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"archived\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":6,\"ai_summary\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "**Resumo do artigo #1**\n\n- **Título:** *Adaptive feedback in intelligent tutoring systems*  \n- **Ano de publicação:** 2020  \n- **Projeto associado:** 1 (pode ser consultado no projeto “projetos”)  \n- **Status atual:** lido (read)  \n\nOs campos disponíveis na biblioteca para este artigo são limitados: não há informações sobre autores, DOI, abstract, afiliations, etc. O registro indica que ele foi importado manualmente e está marcado como já lido. Portanto, um resumo detalhado não pode ser fornecido com os dados atuais.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,263 @@
+{
+  "id": "loc-1",
+  "kind": "happy",
+  "prompt": "Resume o artigo 1.",
+  "context": {
+    "modelIsLocal": true
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 81,
+  "toolsBytes": 29105,
+  "wallMs": 2138,
+  "asked": [
+    {
+      "tool": "ai__generateSummary",
+      "command": "ai:generateSummary",
+      "input": {
+        "articleId": 1
+      }
+    },
+    {
+      "tool": "ai__extractMetadata",
+      "command": "ai:extractMetadata",
+      "input": {
+        "articleId": 1
+      }
+    }
+  ],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 4,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Para resumir o artigo 1, preciso primeiro obter os detalhes do artigo. Vou consultar a biblioteca para encontrar o artigo.",
+          "toolCalls": [
+            {
+              "id": "ndZXbF4sk4T5XNtYUCEgBZ3LXrZph7Dk",
+              "name": "articles__getOne",
+              "arguments": "{\"id\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 18,
+            "promptMs": 38.879,
+            "generatedTokens": 54,
+            "generatedMs": 417.99
+          },
+          "wallMs": 513
+        },
+        "calls": [
+          {
+            "id": "ndZXbF4sk4T5XNtYUCEgBZ3LXrZph7Dk",
+            "name": "articles__getOne",
+            "arguments": "{\"id\":1}",
+            "result": {
+              "ok": true,
+              "result": {
+                "id": 1,
+                "project_id": 1,
+                "doi": null,
+                "title": "Adaptive feedback in intelligent tutoring systems",
+                "authors": null,
+                "year": 2020,
+                "source_query": "Manual Import",
+                "source_databases": "[\"Manual\"]",
+                "csl_json": "{}",
+                "local_file_path": null,
+                "status": "read",
+                "archive_note": null,
+                "is_oa": null,
+                "publisher": null,
+                "url": null,
+                "accessed": null,
+                "deleted_at": null,
+                "abstract": null,
+                "author_keywords": null,
+                "index_keywords": null,
+                "journal": null,
+                "volume": null,
+                "issue": null,
+                "pages": null,
+                "affiliations": null,
+                "references_list": null,
+                "document_type": null,
+                "issn": null,
+                "citation_count": null,
+                "search_id": 1,
+                "ai_summary": null
+              }
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O artigo 1 tem o título \"Adaptive feedback in intelligent tutoring systems\" e foi importado manualmente. Como não há resumo automático disponível, vou gerar um resumo para o artigo.",
+          "toolCalls": [
+            {
+              "id": "OfwjOCrNq73sZHNiKjXKzXX5VaR2riYO",
+              "name": "ai__generateSummary",
+              "arguments": "{\"articleId\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 185,
+            "promptMs": 40.428,
+            "generatedTokens": 70,
+            "generatedMs": 547.651
+          },
+          "wallMs": 636
+        },
+        "calls": [
+          {
+            "id": "OfwjOCrNq73sZHNiKjXKzXX5VaR2riYO",
+            "name": "ai__generateSummary",
+            "arguments": "{\"articleId\":1}",
+            "result": {
+              "ok": false,
+              "error": {
+                "code": "ERR_NOT_FOUND",
+                "type": "USER_ERROR",
+                "message": "[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco."
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O sistema não encontrou um PDF para o artigo 1. Vou tentar extrair metadados para obter mais informações sobre o artigo.",
+          "toolCalls": [
+            {
+              "id": "tzliXJdRoyi0AUJubTcbcLwIOBJotfwK",
+              "name": "ai__extractMetadata",
+              "arguments": "{\"articleId\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 76,
+            "promptMs": 31.88,
+            "generatedTokens": 58,
+            "generatedMs": 447.977
+          },
+          "wallMs": 526
+        },
+        "calls": [
+          {
+            "id": "tzliXJdRoyi0AUJubTcbcLwIOBJotfwK",
+            "name": "ai__extractMetadata",
+            "arguments": "{\"articleId\":1}",
+            "result": {
+              "ok": false,
+              "error": {
+                "code": "ERR_NOT_FOUND",
+                "type": "USER_ERROR",
+                "message": "[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco."
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O sistema não tem acesso a um PDF para o artigo 1. Não é possível gerar um resumo ou extrair metadados.\n\nNão tenho acesso a um PDF para o artigo 1, então não posso gerar um resumo.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 76,
+            "promptMs": 31.586,
+            "generatedTokens": 50,
+            "generatedMs": 384.331
+          },
+          "wallMs": 462
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O sistema não tem acesso a um PDF para o artigo 1. Não é possível gerar um resumo ou extrair metadados.\n\nNão tenho acesso a um PDF para o artigo 1, então não posso gerar um resumo.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Resume o artigo 1."
+      },
+      {
+        "role": "assistant",
+        "content": "Para resumir o artigo 1, preciso primeiro obter os detalhes do artigo. Vou consultar a biblioteca para encontrar o artigo.",
+        "toolCalls": [
+          {
+            "id": "ndZXbF4sk4T5XNtYUCEgBZ3LXrZph7Dk",
+            "name": "articles__getOne",
+            "arguments": "{\"id\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "ndZXbF4sk4T5XNtYUCEgBZ3LXrZph7Dk",
+        "content": "{\"ok\":true,\"result\":{\"id\":1,\"project_id\":1,\"doi\":null,\"title\":\"Adaptive feedback in intelligent tutoring systems\",\"authors\":null,\"year\":2020,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"read\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":1,\"ai_summary\":null}}"
+      },
+      {
+        "role": "assistant",
+        "content": "O artigo 1 tem o título \"Adaptive feedback in intelligent tutoring systems\" e foi importado manualmente. Como não há resumo automático disponível, vou gerar um resumo para o artigo.",
+        "toolCalls": [
+          {
+            "id": "OfwjOCrNq73sZHNiKjXKzXX5VaR2riYO",
+            "name": "ai__generateSummary",
+            "arguments": "{\"articleId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "OfwjOCrNq73sZHNiKjXKzXX5VaR2riYO",
+        "content": "{\"ok\":false,\"error\":{\"code\":\"ERR_NOT_FOUND\",\"type\":\"USER_ERROR\",\"message\":\"[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "O sistema não encontrou um PDF para o artigo 1. Vou tentar extrair metadados para obter mais informações sobre o artigo.",
+        "toolCalls": [
+          {
+            "id": "tzliXJdRoyi0AUJubTcbcLwIOBJotfwK",
+            "name": "ai__extractMetadata",
+            "arguments": "{\"articleId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "tzliXJdRoyi0AUJubTcbcLwIOBJotfwK",
+        "content": "{\"ok\":false,\"error\":{\"code\":\"ERR_NOT_FOUND\",\"type\":\"USER_ERROR\",\"message\":\"[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "O sistema não tem acesso a um PDF para o artigo 1. Não é possível gerar um resumo ou extrair metadados.\n\nNão tenho acesso a um PDF para o artigo 1, então não posso gerar um resumo.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

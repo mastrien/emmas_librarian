@@ -1,0 +1,194 @@
+{
+  "id": "age-1",
+  "kind": "happy",
+  "prompt": "Quais congressos e periódicos eu acompanho?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 6,
+  "toolsBytes": 4661,
+  "wallMs": 3846,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "8hQbLC6PoU5T6bJ7wG0hi2gUt99iVx7r",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"agenda\"]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 516,
+            "promptMs": 311.359,
+            "generatedTokens": 29,
+            "generatedMs": 670.409
+          },
+          "wallMs": 1029
+        },
+        "calls": [
+          {
+            "id": "8hQbLC6PoU5T6bJ7wG0hi2gUt99iVx7r",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"agenda\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "agenda"
+                ],
+                "tools": [
+                  "scientificMilestone__toggleStatus",
+                  "scientificVenue__create",
+                  "scientificVenue__delete",
+                  "scientificVenue__update",
+                  "scientificVenues__getAll"
+                ]
+              }
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "Ux6LEmRzKmDP88TVVh7Xz0orPRKFthPG",
+              "name": "scientificVenues__getAll",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1469,
+            "promptMs": 659.529,
+            "generatedTokens": 18,
+            "generatedMs": 409.849
+          },
+          "wallMs": 1082
+        },
+        "calls": [
+          {
+            "id": "Ux6LEmRzKmDP88TVVh7Xz0orPRKFthPG",
+            "name": "scientificVenues__getAll",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "title": "Simpósio Brasileiro de Informática na Educação",
+                  "acronym": "SBIE",
+                  "category": "conference",
+                  "url": null,
+                  "color": "#3b82f6",
+                  "created_at": "2026-11-16 16:05:59",
+                  "milestones": [
+                    {
+                      "id": 1,
+                      "venue_id": 1,
+                      "label": "Submissão",
+                      "field_type": "single",
+                      "target_date": "2026-12-15",
+                      "has_time": false,
+                      "status": "pending"
+                    }
+                  ]
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Você acompanha o seguinte congresso:\n\n- **Simpósio Brasileiro de Informática na Educação (SBIE)**\n  - Categoria: Conferência\n  - Prazo de submissão: 15/12/2026 (pendente)\n\nNão há periódicos cadastrados no momento.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 135,
+            "promptMs": 134.698,
+            "generatedTokens": 67,
+            "generatedMs": 1586.502
+          },
+          "wallMs": 1733
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Você acompanha o seguinte congresso:\n\n- **Simpósio Brasileiro de Informática na Educação (SBIE)**\n  - Categoria: Conferência\n  - Prazo de submissão: 15/12/2026 (pendente)\n\nNão há periódicos cadastrados no momento.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Quais congressos e periódicos eu acompanho?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "8hQbLC6PoU5T6bJ7wG0hi2gUt99iVx7r",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"agenda\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "8hQbLC6PoU5T6bJ7wG0hi2gUt99iVx7r",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"agenda\"],\"tools\":[\"scientificMilestone__toggleStatus\",\"scientificVenue__create\",\"scientificVenue__delete\",\"scientificVenue__update\",\"scientificVenues__getAll\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "Ux6LEmRzKmDP88TVVh7Xz0orPRKFthPG",
+            "name": "scientificVenues__getAll",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "Ux6LEmRzKmDP88TVVh7Xz0orPRKFthPG",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"title\":\"Simpósio Brasileiro de Informática na Educação\",\"acronym\":\"SBIE\",\"category\":\"conference\",\"url\":null,\"color\":\"#3b82f6\",\"created_at\":\"2026-11-16 16:05:59\",\"milestones\":[{\"id\":1,\"venue_id\":1,\"label\":\"Submissão\",\"field_type\":\"single\",\"target_date\":\"2026-12-15\",\"has_time\":false,\"status\":\"pending\"}]}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Você acompanha o seguinte congresso:\n\n- **Simpósio Brasileiro de Informática na Educação (SBIE)**\n  - Categoria: Conferência\n  - Prazo de submissão: 15/12/2026 (pendente)\n\nNão há periódicos cadastrados no momento.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

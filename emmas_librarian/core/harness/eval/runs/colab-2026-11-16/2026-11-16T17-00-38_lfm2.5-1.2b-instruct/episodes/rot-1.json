@@ -1,0 +1,147 @@
+{
+  "id": "rot-1",
+  "kind": "trap",
+  "prompt": "Marca como lido o artigo 3 e depois escreve no diário que terminei.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    },
+    "today": "2026-11-15"
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 81,
+  "toolsBytes": 29105,
+  "wallMs": 1549,
+  "asked": [
+    {
+      "tool": "ai__extractMetadata",
+      "command": "ai:extractMetadata",
+      "input": {
+        "articleId": 3
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "articleStatus",
+      "args": {
+        "ids": [
+          3
+        ],
+        "status": "read"
+      },
+      "ok": false
+    },
+    {
+      "check": "diaryEndsWith",
+      "args": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "text": "Terminei.",
+        "keeps": ""
+      },
+      "ok": false
+    }
+  ],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": false,
+    "steps": 2,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "O comando `ai__extractMetadata` requer o parâmetro `articleId`, que você forneceu como 3. Vamos verificar se o artigo com ID 3 está no sistema. Se estiver, posso buscar mais informações sobre ele e, em seguida, registrar no seu diário que você leu o artigo.\n\nVamos executar a chamada:",
+          "toolCalls": [
+            {
+              "id": "VhL23lg68sKciKwMB314ijcnTi2E6f4g",
+              "name": "ai__extractMetadata",
+              "arguments": "{\"articleId\":3}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 9184,
+            "promptMs": 543.418,
+            "generatedTokens": 101,
+            "generatedMs": 433.753
+          },
+          "wallMs": 1067
+        },
+        "calls": [
+          {
+            "id": "VhL23lg68sKciKwMB314ijcnTi2E6f4g",
+            "name": "ai__extractMetadata",
+            "arguments": "{\"articleId\":3}",
+            "result": {
+              "ok": false,
+              "error": {
+                "code": "ERR_NOT_FOUND",
+                "type": "USER_ERROR",
+                "message": "[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=3. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco."
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O sistema não conseguiu encontrar o artigo com o ID 3, pois não há um arquivo PDF associado a esse identificador. Isso significa que não há informação disponível sobre esse artigo específico.\n\nComo resultado, não posso registrar no seu diário que você leu o artigo. Você pode tentar fornecer um ID de artigo válido ou me informar se deseja que busque outro conteúdo.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 170,
+            "promptMs": 20.647,
+            "generatedTokens": 100,
+            "generatedMs": 424.155
+          },
+          "wallMs": 482
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O sistema não conseguiu encontrar o artigo com o ID 3, pois não há um arquivo PDF associado a esse identificador. Isso significa que não há informação disponível sobre esse artigo específico.\n\nComo resultado, não posso registrar no seu diário que você leu o artigo. Você pode tentar fornecer um ID de artigo válido ou me informar se deseja que busque outro conteúdo.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Marca como lido o artigo 3 e depois escreve no diário que terminei."
+      },
+      {
+        "role": "assistant",
+        "content": "O comando `ai__extractMetadata` requer o parâmetro `articleId`, que você forneceu como 3. Vamos verificar se o artigo com ID 3 está no sistema. Se estiver, posso buscar mais informações sobre ele e, em seguida, registrar no seu diário que você leu o artigo.\n\nVamos executar a chamada:",
+        "toolCalls": [
+          {
+            "id": "VhL23lg68sKciKwMB314ijcnTi2E6f4g",
+            "name": "ai__extractMetadata",
+            "arguments": "{\"articleId\":3}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "VhL23lg68sKciKwMB314ijcnTi2E6f4g",
+        "content": "{\"ok\":false,\"error\":{\"code\":\"ERR_NOT_FOUND\",\"type\":\"USER_ERROR\",\"message\":\"[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=3. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "O sistema não conseguiu encontrar o artigo com o ID 3, pois não há um arquivo PDF associado a esse identificador. Isso significa que não há informação disponível sobre esse artigo específico.\n\nComo resultado, não posso registrar no seu diário que você leu o artigo. Você pode tentar fornecer um ID de artigo válido ou me informar se deseja que busque outro conteúdo.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

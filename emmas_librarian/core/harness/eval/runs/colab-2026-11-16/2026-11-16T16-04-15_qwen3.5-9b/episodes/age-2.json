@@ -1,0 +1,215 @@
+{
+  "id": "age-2",
+  "kind": "trap",
+  "prompt": "Cadastra o congresso SBBD com submissão em 2026-12-15.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 6,
+  "toolsBytes": 4661,
+  "wallMs": 5656,
+  "asked": [
+    {
+      "tool": "scientificVenue__create",
+      "command": "scientificVenue:create",
+      "input": {
+        "venueData": {
+          "title": "SBBD",
+          "category": "conference",
+          "milestones": [
+            {
+              "label": "Submissão",
+              "field_type": "single",
+              "target_date": "2026-12-15",
+              "has_time": false,
+              "status": "pending"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "venueCount",
+      "args": {
+        "count": 2
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "DtH1FD2hU6gBLOodg8nqSqCmB533jhbC",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"agenda\"]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 529,
+            "promptMs": 341.501,
+            "generatedTokens": 29,
+            "generatedMs": 671.025
+          },
+          "wallMs": 1072
+        },
+        "calls": [
+          {
+            "id": "DtH1FD2hU6gBLOodg8nqSqCmB533jhbC",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"agenda\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "agenda"
+                ],
+                "tools": [
+                  "scientificMilestone__toggleStatus",
+                  "scientificVenue__create",
+                  "scientificVenue__delete",
+                  "scientificVenue__update",
+                  "scientificVenues__getAll"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Vou cadastrar o congresso SBBD com a data de submissão em 2026-12-15. Preciso criar um evento científico com essa informação.",
+          "toolCalls": [
+            {
+              "id": "0iC0qXbJ1lyvae8GegO0vcYqlGZwdTbE",
+              "name": "scientificVenue__create",
+              "arguments": "{\"venueData\":{\"title\": \"SBBD\", \"category\": \"conference\", \"milestones\": [{\"label\": \"Submissão\", \"field_type\": \"single\", \"target_date\": \"2026-12-15\", \"has_time\": false, \"status\": \"pending\"}]}}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 124,
+            "promptMs": 144.804,
+            "generatedTokens": 128,
+            "generatedMs": 3087.198
+          },
+          "wallMs": 3315
+        },
+        "calls": [
+          {
+            "id": "0iC0qXbJ1lyvae8GegO0vcYqlGZwdTbE",
+            "name": "scientificVenue__create",
+            "arguments": "{\"venueData\":{\"title\": \"SBBD\", \"category\": \"conference\", \"milestones\": [{\"label\": \"Submissão\", \"field_type\": \"single\", \"target_date\": \"2026-12-15\", \"has_time\": false, \"status\": \"pending\"}]}}",
+            "result": {
+              "ok": true,
+              "result": {
+                "id": 2,
+                "title": "SBBD",
+                "acronym": null,
+                "category": "conference",
+                "url": null,
+                "color": "#3b82f6",
+                "created_at": "2026-11-16 16:06:08",
+                "milestones": [
+                  {
+                    "id": 2,
+                    "venue_id": 2,
+                    "label": "Submissão",
+                    "field_type": "single",
+                    "target_date": "2026-12-15",
+                    "has_time": false,
+                    "status": "pending"
+                  }
+                ]
+              }
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O congresso SBBD foi cadastrado com sucesso! Ele está registrado como um evento de conferência com a data de submissão em 2026-12-15. O ID do evento é 2.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 127,
+            "promptMs": 125.807,
+            "generatedTokens": 48,
+            "generatedMs": 1129.324
+          },
+          "wallMs": 1268
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O congresso SBBD foi cadastrado com sucesso! Ele está registrado como um evento de conferência com a data de submissão em 2026-12-15. O ID do evento é 2.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Cadastra o congresso SBBD com submissão em 2026-12-15."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "DtH1FD2hU6gBLOodg8nqSqCmB533jhbC",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"agenda\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "DtH1FD2hU6gBLOodg8nqSqCmB533jhbC",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"agenda\"],\"tools\":[\"scientificMilestone__toggleStatus\",\"scientificVenue__create\",\"scientificVenue__delete\",\"scientificVenue__update\",\"scientificVenues__getAll\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Vou cadastrar o congresso SBBD com a data de submissão em 2026-12-15. Preciso criar um evento científico com essa informação.",
+        "toolCalls": [
+          {
+            "id": "0iC0qXbJ1lyvae8GegO0vcYqlGZwdTbE",
+            "name": "scientificVenue__create",
+            "arguments": "{\"venueData\":{\"title\": \"SBBD\", \"category\": \"conference\", \"milestones\": [{\"label\": \"Submissão\", \"field_type\": \"single\", \"target_date\": \"2026-12-15\", \"has_time\": false, \"status\": \"pending\"}]}}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "0iC0qXbJ1lyvae8GegO0vcYqlGZwdTbE",
+        "content": "{\"ok\":true,\"result\":{\"id\":2,\"title\":\"SBBD\",\"acronym\":null,\"category\":\"conference\",\"url\":null,\"color\":\"#3b82f6\",\"created_at\":\"2026-11-16 16:06:08\",\"milestones\":[{\"id\":2,\"venue_id\":2,\"label\":\"Submissão\",\"field_type\":\"single\",\"target_date\":\"2026-12-15\",\"has_time\":false,\"status\":\"pending\"}]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "O congresso SBBD foi cadastrado com sucesso! Ele está registrado como um evento de conferência com a data de submissão em 2026-12-15. O ID do evento é 2.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

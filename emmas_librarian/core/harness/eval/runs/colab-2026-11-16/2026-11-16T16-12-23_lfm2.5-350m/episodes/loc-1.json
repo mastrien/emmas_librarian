@@ -1,0 +1,122 @@
+{
+  "id": "loc-1",
+  "kind": "happy",
+  "prompt": "Resume o artigo 1.",
+  "context": {
+    "modelIsLocal": true
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 7,
+  "toolsBytes": 4428,
+  "wallMs": 292,
+  "asked": [],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "cbl1D2tWBCuE3WEJXwHvlm22F6UWs6v0",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"artigos\"]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 496,
+            "promptMs": 15.519,
+            "generatedTokens": 15,
+            "generatedMs": 28.117
+          },
+          "wallMs": 49
+        },
+        "calls": [
+          {
+            "id": "cbl1D2tWBCuE3WEJXwHvlm22F6UWs6v0",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"artigos\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "artigos"
+                ],
+                "tools": [
+                  "articles__getByProject",
+                  "articles__getOne",
+                  "articles__importFromProject",
+                  "articles__updateMetadata",
+                  "articles__updateStatus",
+                  "articles__updateStatusMany"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O artigo solicitado está no tópico \"artigos\". Aqui estão as ferramentas disponíveis para este pedido:\n\n- `articles__getByProject`  \n- `articles__getOne`  \n- `articles__importFromProject`  \n- `articles__updateMetadata`  \n- `articles__updateStatus`  \n- `articles__updateStatusMany`  \n\nSe precisar de ajuda para qualquer uma dessas ferramentas, avise!",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 1407,
+            "promptMs": 34.548,
+            "generatedTokens": 104,
+            "generatedMs": 198.371
+          },
+          "wallMs": 242
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O artigo solicitado está no tópico \"artigos\". Aqui estão as ferramentas disponíveis para este pedido:\n\n- `articles__getByProject`  \n- `articles__getOne`  \n- `articles__importFromProject`  \n- `articles__updateMetadata`  \n- `articles__updateStatus`  \n- `articles__updateStatusMany`  \n\nSe precisar de ajuda para qualquer uma dessas ferramentas, avise!",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Resume o artigo 1."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "cbl1D2tWBCuE3WEJXwHvlm22F6UWs6v0",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"artigos\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "cbl1D2tWBCuE3WEJXwHvlm22F6UWs6v0",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"artigos\"],\"tools\":[\"articles__getByProject\",\"articles__getOne\",\"articles__importFromProject\",\"articles__updateMetadata\",\"articles__updateStatus\",\"articles__updateStatusMany\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "O artigo solicitado está no tópico \"artigos\". Aqui estão as ferramentas disponíveis para este pedido:\n\n- `articles__getByProject`  \n- `articles__getOne`  \n- `articles__importFromProject`  \n- `articles__updateMetadata`  \n- `articles__updateStatus`  \n- `articles__updateStatusMany`  \n\nSe precisar de ajuda para qualquer uma dessas ferramentas, avise!",
+        "toolCalls": []
+      }
+    ]
+  }
+}
