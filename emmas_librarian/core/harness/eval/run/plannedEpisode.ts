@@ -5,6 +5,8 @@ import { parsePlan, planInstructions, type PlannedTask } from './taskPlan';
 
 export interface PlannedEpisodeInput {
   system: string;
+  /** What the planning step knows besides the subjects (today, the project in focus). Not the rules of `system`: it has no tools. */
+  planContext: string;
   prompt: string;
   /** The routed library: the plan names the subject of each task, so the subject is opened for the model. */
   toolkit: RoutedToolkit;
@@ -27,19 +29,31 @@ const failed = (error: unknown, steps: EpisodeStep[], messages: ChatMessage[]): 
   messages,
 });
 
+/** The plan is a short list: a model that rambles past this is not planning. */
+const PLAN_MAX_TOKENS = 512;
+
 async function planStep(input: PlannedEpisodeInput): Promise<Planned> {
   const messages: ChatMessage[] = [
-    { role: 'system', content: `${input.system}\n\n${planInstructions(input.toolkit.areaSummaries())}` },
+    { role: 'system', content: [input.planContext, planInstructions(input.toolkit.areaSummaries())].join('\n\n') },
     { role: 'user', content: input.prompt },
   ];
+  let reply: ChatReply;
   try {
-    const reply = await input.chat.complete({ messages, tools: [], sampling: input.sampling });
-    messages.push({ role: 'assistant', content: reply.content, toolCalls: [] });
-    const known = input.toolkit.areaSummaries().map((area) => area.id);
-    const tasks = parsePlan(reply.content, known);
-    return { kind: 'plan', tasks, step: { reply, calls: [] }, messages };
+    reply = await input.chat.complete({
+      messages,
+      tools: [],
+      sampling: { ...input.sampling, max_tokens: PLAN_MAX_TOKENS },
+    });
   } catch (error) {
     return { kind: 'failed', record: failed(error, [], messages) };
+  }
+  messages.push({ role: 'assistant', content: reply.content, toolCalls: [] });
+  const step = { reply, calls: [] };
+  try {
+    const known = input.toolkit.areaSummaries().map((area) => area.id);
+    return { kind: 'plan', tasks: parsePlan(reply.content, known), step, messages };
+  } catch (error) {
+    return { kind: 'failed', record: failed(error, [step], messages) };
   }
 }
 

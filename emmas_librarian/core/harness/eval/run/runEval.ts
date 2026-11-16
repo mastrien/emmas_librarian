@@ -21,6 +21,7 @@ import { setupFromEnv } from './runSetup';
 import { SCORER_VERSION, scoreEpisode } from './score';
 import { startServer } from './serverProcess';
 import { PLAN_PROMPT_VERSION } from './taskPlan';
+import { systemContext } from '../../systemContext';
 import { dayFromText, systemPromptFor, SYSTEM_PROMPT_VERSION } from './systemPrompt';
 
 const EVAL_DIR = path.join(__dirname, '..');
@@ -61,17 +62,14 @@ async function runCase(testCase: EvalCase, model: ModelSpec, chat: LlamaServerCh
       confirmer,
       modelIsLocal: testCase.context.modelIsLocal ?? true,
     });
-    const system = systemPromptFor({
-      today: dayFromText(testCase.context.today),
-      focusProject: testCase.context.focusProject,
-      routed: mode === 'routed',
-    });
+    const day = { today: dayFromText(testCase.context.today), focusProject: testCase.context.focusProject };
+    const system = systemPromptFor({ ...day, routed: mode === 'routed' });
     const surface = mode === 'full' ? toolkit : new RoutedToolkit(toolkit);
     const started = Date.now();
     const episode = { system, prompt: testCase.prompt, chat, sampling: samplingOf(model), maxSteps: MAX_STEPS };
     const record =
       surface instanceof RoutedToolkit && mode === 'planned'
-        ? await runPlannedEpisode({ ...episode, toolkit: surface })
+        ? await runPlannedEpisode({ ...episode, planContext: systemContext(day), toolkit: surface })
         : await runEpisode({ ...episode, toolkit: surface });
     const wallMs = Date.now() - started;
     const checks = await Promise.all(

@@ -35,7 +35,8 @@ function routed(): RoutedToolkit {
 
 const PLAN = '[{"assunto":"projetos","tarefa":"listar os projetos"}]';
 const input = (chat: ScriptedChat) => ({
-  system: 'sistema',
+  system: 'sistema com regras de ferramentas',
+  planContext: 'contexto do dia',
   prompt: 'Quais projetos eu tenho?',
   toolkit: routed(),
   chat,
@@ -57,6 +58,9 @@ describe('runPlannedEpisode', () => {
     expect(record.steps.flatMap((s) => s.calls.map((c) => c.name))).toEqual(['projects__getAll']);
     expect(chat.asked[0].tools).toEqual([]);
     expect(chat.asked[0].messages[0].content).toContain('- diario: diário');
+    expect(chat.asked[0].messages[0].content).toContain('contexto do dia');
+    expect(chat.asked[0].messages[0].content).not.toContain('regras de ferramentas');
+    expect(chat.asked[0].sampling).toMatchObject({ max_tokens: 512 });
     const taskTools = chat.asked[1].tools.map((tool) => tool.function.name);
     expect(taskTools).toContain('projects__getAll');
     expect(taskTools).not.toContain('diary__getAll');
@@ -90,6 +94,7 @@ describe('runPlannedEpisode', () => {
     expect(record.stopped).toBe('model-error');
     expect(record.error).toContain('ERR_INVALID_PLAN');
     expect(record.error).toContain('vou fazer tudo agora');
+    expect(record.steps).toHaveLength(1);
   });
 
   it('stops when a task does not finish, keeping the steps so far', async () => {

@@ -1,5 +1,5 @@
 /** Version of the planning instructions: it goes into the run record, so runs are only compared if it matches. */
-export const PLAN_PROMPT_VERSION = 'v1';
+export const PLAN_PROMPT_VERSION = 'v2';
 
 /** A request that needs more tasks than this is not a request a small model can plan. */
 export const MAX_TASKS = 6;
@@ -24,10 +24,12 @@ export interface AreaSummary {
 export function planInstructions(areas: AreaSummary[]): string {
   const list = areas.map((area) => `- ${area.id}: ${area.about}`).join('\n');
   return [
-    'Antes de agir, monte o plano do pedido. Responda SÓ com uma lista JSON, sem texto em volta, em que cada item é uma tarefa:',
+    'Você planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só escreve o plano.',
+    'Responda SÓ com uma lista JSON, sem texto em volta, em que cada item é uma tarefa:',
     '[{"assunto": "<id do assunto>", "tarefa": "<o que fazer, em uma frase>"}]',
-    'Cada tarefa usa um só assunto. Divida o pedido em tarefas pequenas, na ordem em que devem acontecer.',
-    'Se o pedido não precisa de nenhuma tarefa, responda [].',
+    'Use como "assunto" só um dos ids abaixo, escrito exatamente igual. Cada tarefa usa um só assunto.',
+    'Divida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, responda [].',
+    'Nunca responda em texto: se não houver tarefa, a resposta é [].',
     'Assuntos:',
     list,
   ].join('\n');
