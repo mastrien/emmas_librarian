@@ -33,6 +33,21 @@ export class RoutedToolkit implements ToolSurface {
       .filter((area) => area.commands.length > 0);
   }
 
+  /** The subjects a model can choose (the ones with tools), for a step that plans before any tool is offered. */
+  areaSummaries(): Array<{ id: string; about: string }> {
+    return this.areas.map(({ id, about }) => ({ id, about }));
+  }
+
+  /**
+   * Opens subjects without the model choosing them: a plan already named the subject of each task.
+   *
+   * Usage:
+   *   routed.openAreas(['artigos']); // same answer as the model calling select_areas
+   */
+  openAreas(ids: string[]): ToolResult {
+    return this.select({ areas: ids });
+  }
+
   tools(): ToolDefinition[] {
     const open = new Set(this.areas.filter((a) => this.chosen.has(a.id)).flatMap((a) => a.commands.map(toToolName)));
     return [this.selector(), ...this.inner.tools().filter((tool) => open.has(tool.name))];

@@ -157,3 +157,21 @@ Linux, e a configuração de cada execução passa a registrar o backend e o tam
 **O notebook não foi executado**: não há Linux nem GPU CUDA nesta máquina. Foram verificados só a sintaxe de cada célula
 Python e o executor localmente com os mesmos padrões. A célula 5 (a biblioteca F em SQLite real) e a célula 6 (o
 `llama-server` CUDA listando a T4) são as que mais provavelmente precisarão de ajuste na primeira execução.
+
+## Terceira abordagem: plano em tarefas (`--mode planned`)
+
+Implementada em 2026-11-16, ainda sem nenhuma bateria rodada. O modelo trabalha em três etapas:
+
+1. **Planejar**, sem ferramentas: recebe o pedido e a lista de assuntos e responde só com uma lista JSON
+   `[{"assunto": "<id>", "tarefa": "<texto>"}]` (até 6 tarefas; `[]` se nada a fazer). Uma resposta que não é um plano
+   válido é falha do modelo (`[ERR_INVALID_PLAN]`, com o texto que ele escreveu), sem tentativa de adivinhar.
+2. **Executar uma tarefa por vez**: o assunto da tarefa é aberto para o modelo (ele não escolhe assuntos) e a tarefa roda
+   como um episódio comum, com o resumo do que as anteriores encontraram. O limite de 8 passos vale para cada tarefa.
+3. **Responder à pessoa** a partir dos resultados das tarefas, sem ferramentas.
+
+A nota é a mesma (v2), calculada sobre as chamadas de todas as tarefas e o estado final da biblioteca. Diferenças em
+relação ao roteado: o plano e a resposta final são chamadas a mais, e quem escolhe o assunto é o plano. O registro da
+execução guarda `planPromptVersion` (`v1`) e, em cada episódio, o plano escrito pelo modelo.
+
+Código: `core/harness/eval/run/taskPlan.ts` e `plannedEpisode.ts`. Uso:
+`npx vite-node core/harness/eval/run/runEval.ts -- --model lfm3-1.7b --cases all --mode planned --label bateria-72-planned`.

@@ -14,11 +14,13 @@ import { runCheck, snapshot } from '../evalChecks';
 import { LlamaServerChat } from './chatClient';
 import { flagsOf } from './flags';
 import { runEpisode, toOpenAiTools } from './episode';
+import { runPlannedEpisode } from './plannedEpisode';
 import { MODELS, samplingOf, serverArgs, type ModelSpec } from './modelCatalog';
 import { RunRecorder } from './runRecorder';
 import { setupFromEnv } from './runSetup';
 import { SCORER_VERSION, scoreEpisode } from './score';
 import { startServer } from './serverProcess';
+import { PLAN_PROMPT_VERSION } from './taskPlan';
 import { dayFromText, systemPromptFor, SYSTEM_PROMPT_VERSION } from './systemPrompt';
 
 const EVAL_DIR = path.join(__dirname, '..');
@@ -45,7 +47,7 @@ function chooseCases(all: EvalCase[], ids: string | undefined): EvalCase[] {
   return all.filter((c) => wanted.includes(c.id));
 }
 
-type Mode = 'full' | 'routed';
+type Mode = 'full' | 'routed' | 'planned';
 
 async function runCase(testCase: EvalCase, model: ModelSpec, chat: LlamaServerChat, mode: Mode) {
   const library = openTestLibrary();
@@ -64,16 +66,13 @@ async function runCase(testCase: EvalCase, model: ModelSpec, chat: LlamaServerCh
       focusProject: testCase.context.focusProject,
       routed: mode === 'routed',
     });
-    const surface = mode === 'routed' ? new RoutedToolkit(toolkit) : toolkit;
+    const surface = mode === 'full' ? toolkit : new RoutedToolkit(toolkit);
     const started = Date.now();
-    const record = await runEpisode({
-      system,
-      prompt: testCase.prompt,
-      toolkit: surface,
-      chat,
-      sampling: samplingOf(model),
-      maxSteps: MAX_STEPS,
-    });
+    const episode = { system, prompt: testCase.prompt, chat, sampling: samplingOf(model), maxSteps: MAX_STEPS };
+    const record =
+      surface instanceof RoutedToolkit && mode === 'planned'
+        ? await runPlannedEpisode({ ...episode, toolkit: surface })
+        : await runEpisode({ ...episode, toolkit: surface });
     const wallMs = Date.now() - started;
     const checks = await Promise.all(
       testCase.checks.map(async (check) => ({ ...check, ok: await runCheck(check, library.commands, before) })),
@@ -140,11 +139,11 @@ function summarize(
 }
 
 function parseMode(text: string | undefined): Mode {
-  if (text === undefined || text === 'full' || text === 'routed') return text ?? 'full';
-  throw new Error(`[ERR_UNKNOWN_MODE] Offending value: ${JSON.stringify(text)}. Expected full or routed.`);
+  if (text === undefined || text === 'full' || text === 'routed' || text === 'planned') return text ?? 'full';
+  throw new Error(`[ERR_UNKNOWN_MODE] Offending value: ${JSON.stringify(text)}. Expected full, routed or planned.`);
 }
 
-/** Usage: vite-node core/harness/eval/run/runEval.ts -- --model qwen3.5-4b --cases art-2,proj-1 [--label texto] [--mode full|routed] */
+/** Usage: vite-node core/harness/eval/run/runEval.ts -- --model qwen3.5-4b --cases art-2,proj-1 [--label texto] [--mode full|routed|planned] */
 async function main(): Promise<void> {
   const args = flagsOf(process.argv.slice(2));
   const mode = parseMode(args.mode);
@@ -186,6 +185,7 @@ async function main(): Promise<void> {
     maxSteps: MAX_STEPS,
     mode: args.mode ?? 'full',
     systemPromptVersion: SYSTEM_PROMPT_VERSION,
+    planPromptVersion: mode === 'planned' ? PLAN_PROMPT_VERSION : null,
     scorerVersion: SCORER_VERSION,
     modelIsLocal: 'por caso (padrão: true)',
     confirmation: 'FakeConfirmer: sim, exceto casos com confirm: no',

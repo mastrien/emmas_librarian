@@ -77,6 +77,17 @@ describe('RoutedToolkit', () => {
     expect(deleted).not.toHaveBeenCalled();
   });
 
+  it('lists the subjects that have tools, and opens them for a plan without the model choosing', () => {
+    const { routed } = build();
+    expect(routed.areaSummaries()).toEqual([
+      { id: 'projetos', about: 'projetos' },
+      { id: 'diario', about: 'diário' },
+    ]);
+    expect(routed.openAreas(['diario'])).toMatchObject({ ok: true, result: { areas: ['diario'] } });
+    expect(names(routed)).toContain('diary__getOne');
+    expect(routed.openAreas(['nao-existe']).ok).toBe(false);
+  });
+
   it('answers a tool that exists nowhere as unknown', async () => {
     const { routed } = build();
     expect(await routed.call('made__up', {})).toMatchObject({ ok: false, error: { code: 'ERR_UNKNOWN_TOOL' } });

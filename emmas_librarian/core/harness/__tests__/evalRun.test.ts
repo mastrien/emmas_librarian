@@ -3,7 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { describe, it, expect } from 'vitest';
-import type { ChatModel, ChatReply, ChatRequest } from '../eval/run/chatClient';
+import type { ChatReply } from '../eval/run/chatClient';
 import { fromWireReply, toWireMessages } from '../eval/run/chatClient';
 import { runEpisode, toOpenAiTools } from '../eval/run/episode';
 import { flagsOf } from '../eval/run/flags';
@@ -15,29 +15,8 @@ import { dayFromText, systemPromptFor } from '../eval/run/systemPrompt';
 import { LibraryToolkit } from '../LibraryToolkit';
 import { CommandRegistry } from '../../commands/CommandRegistry';
 import { FakeConfirmer } from './support/FakeConfirmer';
+import { ScriptedChat, reply } from './support/ScriptedChat';
 import type { EvalCase } from '../eval/evalCase';
-
-const reply = (over: Partial<ChatReply>): ChatReply => ({
-  content: '',
-  toolCalls: [],
-  reasoning: '',
-  finishReason: 'stop',
-  timings: { promptTokens: 10, promptMs: 5, generatedTokens: 4, generatedMs: 8 },
-  wallMs: 20,
-  ...over,
-});
-
-/** Answers with the next reply of a script and remembers what it was asked. */
-class ScriptedChat implements ChatModel {
-  readonly asked: ChatRequest[] = [];
-  constructor(private readonly script: ChatReply[]) {}
-  async complete(request: ChatRequest): Promise<ChatReply> {
-    this.asked.push({ ...request, messages: [...request.messages] });
-    const next = this.script.shift();
-    if (!next) throw new Error('[ERR_SCRIPT_ENDED] the scripted model has no more replies');
-    return next;
-  }
-}
 
 const call = (name: string, args: string, id = 'c1') => ({ id, name, arguments: args });
 const READ = { confirm: false, localOnly: false };

@@ -17,6 +17,8 @@ export interface EpisodeRecord {
   stopped: 'answered' | 'max-steps' | 'model-error';
   error?: string;
   messages: ChatMessage[];
+  /** Only in the planned mode: the tasks the model wrote before acting. */
+  plan?: Array<{ area: string; task: string }>;
 }
 
 export interface EpisodeInput {
