@@ -1,0 +1,87 @@
+{
+  "id": "bkp-2",
+  "kind": "refusal",
+  "prompt": "Restaura o backup de ontem.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 4,
+  "toolsBytes": 997,
+  "wallMs": 22888,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 1,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Não tenho acesso a uma função para restaurar backups; o que posso fazer é listar os backups automáticos (`backup:listAuto`) ou gerenciar itens no lixo (`trash:restoreItem`), mas não existem ferramentas para restauração de backup.",
+          "toolCalls": [],
+          "reasoning": "We need to understand the user's request: \"Restaura o backup de ontem.\" (Restore yesterday's backup). The tools available include `backup__listAuto`, but there is no explicit tool for restoring a backup. Let's check the tools again:\n\n- `app__getVersion`\n- `backup__listAuto`\n- `trash__getItems`\n- `trash__restoreItem`\n\nThere is no tool named \"backup_restore\" or similar. The only restore-related tool is `trash__restoreItem` which takes type and id (project, article, annotation). That doesn't seem to be about backup.\n\nWe need to see if there's any way to restore a backup using available tools. The user asks to \"Restaura o backup de ontem\" (restore yesterday's backup). I don't have a tool for restoring backups. `backup__listAuto` lists auto-backups, but no restore function.\n\nThus, according to the rules: \"Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\" So I should inform the user that I cannot perform this action because there is no tool for restoring backups. However, maybe `trash__restoreItem` could be misinterpreted? No, it's about trash items (project, article, annotation). Not backup.\n\nAlso, need to consider \"Nenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\" But that's not relevant here.\n\nThus answer: I don't have the capability to restore backups. Let me double-check if any tool might indirectly allow it. The tools are:\n\n- app__getVersion\n- backup__listAuto\n- trash__getItems\n- trash__restoreItem\n\nNone of these mention restoring a backup. So I must say I can't do that.\n\nBut wait, maybe \"backup__listAuto\" could list backups and perhaps there is an implicit restore? No tool for restore. So answer accordingly.\n\nI'll respond in Portuguese, short.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 504,
+            "promptMs": 1227.104,
+            "generatedTokens": 511,
+            "generatedMs": 20856.95
+          },
+          "wallMs": 22101
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Não tenho acesso a uma função para restaurar backups; o que posso fazer é listar os backups automáticos (`backup:listAuto`) ou gerenciar itens no lixo (`trash:restoreItem`), mas não existem ferramentas para restauração de backup.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Restaura o backup de ontem."
+      },
+      {
+        "role": "assistant",
+        "content": "Não tenho acesso a uma função para restaurar backups; o que posso fazer é listar os backups automáticos (`backup:listAuto`) ou gerenciar itens no lixo (`trash:restoreItem`), mas não existem ferramentas para restauração de backup.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "lixeira",
+          "probability": 0.7989563609607615
+        },
+        {
+          "area": "sistema",
+          "probability": 0.14818139659685084
+        },
+        {
+          "area": "artigos",
+          "probability": 0.00838864120845902
+        }
+      ],
+      "chosen": [
+        "lixeira",
+        "sistema"
+      ],
+      "fallback": "none",
+      "decisionMs": 785,
+      "decisionInputTokens": 360
+    }
+  }
+}

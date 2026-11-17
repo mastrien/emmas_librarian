@@ -265,3 +265,29 @@ pedidos, o modelo de decisão escolhe entre os 15 assuntos, e se compara com o a
 - Amostra pequena (44 casos, 3 de dois assuntos): o resultado indica a direção, não fixa o número.
 - A execução do Kev-4B com as 81 ferramentas foi interrompida pelo sistema por falta de memória (o servidor do Kev
   chega a 5,7 GB residentes) e não foi repetida.
+
+### Modo `decided`, LFM3 + d1-2B (2026-11-17): bateria parcial
+
+Implementado (`--mode decided`): o d1-2B (porta 8090) escolhe os 2 assuntos mais prováveis do pedido, o LFM3 recebe só as
+ferramentas deles (sem `select_areas`), e o completo assume se o roteador falha, ou se a tentativa restrita não responde
+ou chama ferramenta fora dos assuntos **e nada alterou a biblioteca** (senão o pedido seria feito duas vezes). A reserva
+por confiança ficou desligada (`--min-confidence 0`): a probabilidade do melhor assunto não separa acerto de erro (os 2
+erros têm 0,57 e 0,77; há acertos em 0,61), e o segundo assunto já cobre os erros.
+
+**A bateria foi interrompida pelo sistema por falta de memória** (`runs/2026-11-17T00-08-24_lfm3-1.7b`, com
+`ABORTED.txt`), com os dois servidores abertos (LFM3 e d1-2B). **Só os primeiros 37 casos, até `ano-2`, são válidos**: nos
+35 seguintes os dois servidores já não respondiam (`decision-error`, `model-error`), e esses episódios não contam.
+
+Nos 37 casos válidos, mesmos casos nos três modos (LFM3-1.7B, RX 580):
+
+| | Decided | Completo | Roteado |
+|---|---|---|---|
+| Acertos | **35/37** | 34/37 | 35/37 |
+| Tempo médio por caso | **35,1 s** | 54,7 s | 72,4 s |
+| Mediana | **26,8 s** | 52,8 s | 62,7 s |
+| Ferramentas oferecidas (média) | 12,9 | 81 | 1 + as do assunto |
+
+- Falhas do decided: `mon-3` (falha em todos os modos) e `ano-2`. Nenhuma reserva foi necessária nos 37.
+- Decisão do d1-2B: 0,79 s por pedido.
+- Amostra de 37 casos e diferença de 1 acerto: não dá para dizer que o decided acerta mais; dá para dizer que não acerta
+  menos e que leva cerca de 36% menos tempo que o completo (e a metade da mediana). A bateria completa ainda não existe.
