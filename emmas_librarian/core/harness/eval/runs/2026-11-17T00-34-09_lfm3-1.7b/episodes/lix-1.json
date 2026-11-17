@@ -1,0 +1,149 @@
+{
+  "id": "lix-1",
+  "kind": "happy",
+  "prompt": "O que tem na lixeira?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 15,
+  "toolsBytes": 4137,
+  "wallMs": 24339,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "kfpa1auStBAzKxaiF9I4suVSR6zksSik",
+              "name": "trash__getItems",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "The user asks: \"O que tem na lixeira?\" which translates to \"What is in the trash?\" In the context of the library tools, there's a function `trash__getItems` that retrieves items from the trash. So I should call that tool. No parameters needed. Let's do it.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1262,
+            "promptMs": 2850.949,
+            "generatedTokens": 79,
+            "generatedMs": 3147.183
+          },
+          "wallMs": 6017
+        },
+        "calls": [
+          {
+            "id": "kfpa1auStBAzKxaiF9I4suVSR6zksSik",
+            "name": "trash__getItems",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 3,
+                  "type": "project",
+                  "title": "Projeto antigo",
+                  "deleted_at": "2026-11-17 00:51:09"
+                },
+                {
+                  "id": 3,
+                  "type": "annotation",
+                  "title": "comentário",
+                  "deleted_at": "2026-11-17 00:51:09"
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Na lixeira estão os seguintes itens:\n\n- **Projeto antigo** (id 3) – tipo *project*  \n- **Comentário** (id 3) – tipo *annotation*\n\nAmbos foram marcados como deletados em 2026‑11‑17 00:51:09.",
+          "toolCalls": [],
+          "reasoning": "We need to answer the user's question \"O que tem na lixeira?\" which means \"What is in the trash bin?\" The tool `trash__getItems` returned a result with items. It shows two entries: id 3, type project \"Projeto antigo\" deleted_at ... and id 3, type annotation \"comentário\" deleted_at... Possibly there are multiple items? Let's parse the JSON:\n\n{\n \"ok\": true,\n \"result\": [\n   {\"id\":3,\"type\":\"project\",\"title\":\"Projeto antigo\",\"deleted_at\":\"2026-11-17 00:51:09\"},\n   {\"id\":3,\"type\":\"annotation\",\"title\":\"comentário\",\"deleted_at\":\"2026-11-17 00:51:09\"}\n ]\n}\n\nIt seems both entries have id=3? That's odd but maybe it's a list of items. We need to convey what is in the trash. So there are two items: a project titled \"Projeto antigo\" and an annotation titled \"comentário\". Both deleted at same timestamp.\n\nWe should respond in Portuguese, short. Mention that the trash contains those items. Possibly ask if they want more details? But we can just state.\n\nThus answer: Na lixeira há um projeto chamado \"Projeto antigo\" e uma anotação chamada \"comentário\", ambos marcados como deletados em 2026-11-17 00:51:09.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 615,
+            "promptMs": 1667.879,
+            "generatedTokens": 387,
+            "generatedMs": 15856.776
+          },
+          "wallMs": 17536
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Na lixeira estão os seguintes itens:\n\n- **Projeto antigo** (id 3) – tipo *project*  \n- **Comentário** (id 3) – tipo *annotation*\n\nAmbos foram marcados como deletados em 2026‑11‑17 00:51:09.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "O que tem na lixeira?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "kfpa1auStBAzKxaiF9I4suVSR6zksSik",
+            "name": "trash__getItems",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "kfpa1auStBAzKxaiF9I4suVSR6zksSik",
+        "content": "{\"ok\":true,\"result\":[{\"id\":3,\"type\":\"project\",\"title\":\"Projeto antigo\",\"deleted_at\":\"2026-11-17 00:51:09\"},{\"id\":3,\"type\":\"annotation\",\"title\":\"comentário\",\"deleted_at\":\"2026-11-17 00:51:09\"}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Na lixeira estão os seguintes itens:\n\n- **Projeto antigo** (id 3) – tipo *project*  \n- **Comentário** (id 3) – tipo *annotation*\n\nAmbos foram marcados como deletados em 2026‑11‑17 00:51:09.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "lixeira",
+          "probability": 0.9415592278366629
+        },
+        {
+          "area": "projetos",
+          "probability": 0.014108225529736503
+        },
+        {
+          "area": "triagem",
+          "probability": 0.008656021410630209
+        }
+      ],
+      "chosen": [
+        "lixeira",
+        "projetos"
+      ],
+      "fallback": "none",
+      "decisionMs": 786,
+      "decisionInputTokens": 360
+    }
+  }
+}

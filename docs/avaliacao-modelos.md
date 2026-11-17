@@ -291,3 +291,30 @@ Nos 37 casos válidos, mesmos casos nos três modos (LFM3-1.7B, RX 580):
 - Decisão do d1-2B: 0,79 s por pedido.
 - Amostra de 37 casos e diferença de 1 acerto: não dá para dizer que o decided acerta mais; dá para dizer que não acerta
   menos e que leva cerca de 36% menos tempo que o completo (e a metade da mediana). A bateria completa ainda não existe.
+
+### Modo `decided`, LFM3 + d1-2B: os 72 casos (2026-11-17)
+
+Os 35 casos que faltavam rodaram à parte (`runs/2026-11-17T00-34-09_lfm3-1.7b`, com o Chrome fechado e 9,8 GB livres, sem
+interrupção). Junto com os 37 válidos da primeira execução, são os 72 casos, em duas execuções do mesmo código e da mesma
+configuração (seed 42). A reserva no completo **não foi acionada em nenhum dos 72 casos**.
+
+| LFM3-1.7B, RX 580 | Decided | Completo | Roteado |
+|---|---|---|---|
+| Acertos | **63/72 (87,5%)** | 61/72 (84,7%) | 59/72 (81,9%) |
+| Caminho feliz | 24/26 | 23/26 | 23/26 |
+| Armadilha | 10/14 | 10/14 | 10/14 |
+| Erro esperado | 3/4 | 2/4 | 2/4 |
+| Recusa | 26/28 | 26/28 | 24/28 |
+| Tempo médio por caso | **51,6 s** | 71,6 s | 77,9 s |
+| Mediana | **35,0 s** | 56,7 s | 69,8 s |
+
+- **Falhas do decided (9):** `mon-3`, `cat-3`, `bus-2`, `rot-1`, `ctx-2` (falham também no completo e no roteado),
+  `ano-2`, `tri-1`, `tri-6`, `pri-1`.
+- **Só o decided falha (2):** `ano-2` e `pri-1`. **O decided acerta e o completo erra (6):** `age-2`, `age-3`, `doc-1`,
+  `lix-2`, `tri-2`, `inv-1`.
+- **Tempo:** 28% a menos de média que o completo e 38% a menos de mediana. A decisão do d1-2B leva 0,79 s; o resto é o
+  LFM3 com 13 ferramentas em média no prompt em vez de 81.
+- **Ressalva de ruído:** a diferença para o completo (2 casos de 72) está dentro do que a amostragem pode mudar, e cada
+  modo foi rodado uma vez. Não afirmo que o decided acerta mais; afirmo que não acerta menos e que é mais rápido.
+- **Cobertura da reserva:** como nunca disparou, a regra de reserva só foi exercitada nos testes unitários, não numa
+  falha real do roteador.
