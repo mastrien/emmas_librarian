@@ -1,0 +1,236 @@
+{
+  "id": "doc-1",
+  "kind": "happy",
+  "prompt": "Quais são os acessos rápidos do projeto da tutoria?",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 7,
+  "toolsBytes": 3786,
+  "wallMs": 3469,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 5,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "hItFOMZqkpvo5dGbBMGFhNVYPFyKyxrc",
+              "name": "submit_plan",
+              "arguments": "{\"tarefas\":[{\"assunto\": \"acesso-rapido\", \"tarefa\": \"ver links e documentos de acesso rápido do projeto 'Revisão sobre tutoria'\"}]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 25,
+            "promptMs": 99.105,
+            "generatedTokens": 63,
+            "generatedMs": 911.156
+          },
+          "wallMs": 1069
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "CsLlP9OrDndpADtpNGie7eqlAYqKmDnX",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"acesso-rapido\"]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1516,
+            "promptMs": 433.177,
+            "generatedTokens": 33,
+            "generatedMs": 478.447
+          },
+          "wallMs": 988
+        },
+        "calls": [
+          {
+            "id": "CsLlP9OrDndpADtpNGie7eqlAYqKmDnX",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"acesso-rapido\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "acesso-rapido"
+                ],
+                "tools": [
+                  "projectDocuments__create",
+                  "projectDocuments__delete",
+                  "projectDocuments__get",
+                  "projectDocuments__markOpened",
+                  "projectDocuments__reorder",
+                  "projectDocuments__update"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "7W7qNbceFG85p9tCHGFcWZTiGygPUCbl",
+              "name": "projectDocuments__get",
+              "arguments": "{\"projectId\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 68,
+            "promptMs": 89.763,
+            "generatedTokens": 29,
+            "generatedMs": 416.464
+          },
+          "wallMs": 518
+        },
+        "calls": [
+          {
+            "id": "7W7qNbceFG85p9tCHGFcWZTiGygPUCbl",
+            "name": "projectDocuments__get",
+            "arguments": "{\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": []
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O projeto \"Revisão sobre tutoria\" não possui links ou documentos de acesso rápido cadastrados.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 26,
+            "promptMs": 83.374,
+            "generatedTokens": 22,
+            "generatedMs": 312.215
+          },
+          "wallMs": 407
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "O projeto \"Revisão sobre tutoria\" não possui links ou documentos de acesso rápido cadastrados.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 87,
+            "promptMs": 109.398,
+            "generatedTokens": 22,
+            "generatedMs": 307.405
+          },
+          "wallMs": 486
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O projeto \"Revisão sobre tutoria\" não possui links ou documentos de acesso rápido cadastrados.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Quais são os acessos rápidos do projeto da tutoria?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      },
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Pedido da pessoa: Quais são os acessos rápidos do projeto da tutoria?\nTarefa de agora (só esta): ver links e documentos de acesso rápido do projeto 'Revisão sobre tutoria'\nFaça só esta tarefa com as ferramentas e diga em uma frase o que fez ou encontrou."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "CsLlP9OrDndpADtpNGie7eqlAYqKmDnX",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"acesso-rapido\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "CsLlP9OrDndpADtpNGie7eqlAYqKmDnX",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"acesso-rapido\"],\"tools\":[\"projectDocuments__create\",\"projectDocuments__delete\",\"projectDocuments__get\",\"projectDocuments__markOpened\",\"projectDocuments__reorder\",\"projectDocuments__update\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "7W7qNbceFG85p9tCHGFcWZTiGygPUCbl",
+            "name": "projectDocuments__get",
+            "arguments": "{\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "7W7qNbceFG85p9tCHGFcWZTiGygPUCbl",
+        "content": "{\"ok\":true,\"result\":[]}"
+      },
+      {
+        "role": "assistant",
+        "content": "O projeto \"Revisão sobre tutoria\" não possui links ou documentos de acesso rápido cadastrados.",
+        "toolCalls": []
+      }
+    ],
+    "plan": [
+      {
+        "area": "acesso-rapido",
+        "task": "ver links e documentos de acesso rápido do projeto 'Revisão sobre tutoria'"
+      }
+    ]
+  }
+}

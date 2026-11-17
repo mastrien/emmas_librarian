@@ -1,0 +1,191 @@
+{
+  "id": "age-1",
+  "kind": "happy",
+  "prompt": "Quais congressos e periódicos eu acompanho?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 6,
+  "toolsBytes": 4661,
+  "wallMs": 1238,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 4,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "RTCo742mwQBp81nfDwklReqUlnf7iASM",
+              "name": "submit_plan",
+              "arguments": "{\"tarefas\":[{\"assunto\": \"agenda\", \"tarefa\": \"ver congressos e periódicos\"}]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 23,
+            "promptMs": 31.089,
+            "generatedTokens": 48,
+            "generatedMs": 349.346
+          },
+          "wallMs": 401
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "xgJZf5CWqN3TDHK3lmhGb6vVVYfKlxqA",
+              "name": "scientificVenues__getAll",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1799,
+            "promptMs": 217.074,
+            "generatedTokens": 18,
+            "generatedMs": 130.356
+          },
+          "wallMs": 376
+        },
+        "calls": [
+          {
+            "id": "xgJZf5CWqN3TDHK3lmhGb6vVVYfKlxqA",
+            "name": "scientificVenues__getAll",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "title": "Simpósio Brasileiro de Informática na Educação",
+                  "acronym": "SBIE",
+                  "category": "conference",
+                  "url": null,
+                  "color": "#3b82f6",
+                  "created_at": "2026-11-17 04:23:51",
+                  "milestones": [
+                    {
+                      "id": 1,
+                      "venue_id": 1,
+                      "label": "Submissão",
+                      "field_type": "single",
+                      "target_date": "2026-12-15",
+                      "has_time": false,
+                      "status": "pending"
+                    }
+                  ]
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Encontrei um evento: \"Simpósio Brasileiro de Informática na Educação\" (SBIE), um congresso.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 135,
+            "promptMs": 48.365,
+            "generatedTokens": 26,
+            "generatedMs": 190.003
+          },
+          "wallMs": 251
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "Você acompanha o \"Simpósio Brasileiro de Informática na Educação\" (SBIE).",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 79,
+            "promptMs": 36.11,
+            "generatedTokens": 20,
+            "generatedMs": 141.419
+          },
+          "wallMs": 208
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Você acompanha o \"Simpósio Brasileiro de Informática na Educação\" (SBIE).",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Quais congressos e periódicos eu acompanho?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      },
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Pedido da pessoa: Quais congressos e periódicos eu acompanho?\nTarefa de agora (só esta): ver congressos e periódicos\nFaça só esta tarefa com as ferramentas e diga em uma frase o que fez ou encontrou."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "xgJZf5CWqN3TDHK3lmhGb6vVVYfKlxqA",
+            "name": "scientificVenues__getAll",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "xgJZf5CWqN3TDHK3lmhGb6vVVYfKlxqA",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"title\":\"Simpósio Brasileiro de Informática na Educação\",\"acronym\":\"SBIE\",\"category\":\"conference\",\"url\":null,\"color\":\"#3b82f6\",\"created_at\":\"2026-11-17 04:23:51\",\"milestones\":[{\"id\":1,\"venue_id\":1,\"label\":\"Submissão\",\"field_type\":\"single\",\"target_date\":\"2026-12-15\",\"has_time\":false,\"status\":\"pending\"}]}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Encontrei um evento: \"Simpósio Brasileiro de Informática na Educação\" (SBIE), um congresso.",
+        "toolCalls": []
+      }
+    ],
+    "plan": [
+      {
+        "area": "agenda",
+        "task": "ver congressos e periódicos"
+      }
+    ]
+  }
+}

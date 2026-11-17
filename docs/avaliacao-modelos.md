@@ -339,3 +339,33 @@ menos um caso. Verificação de ponta a ponta no LFM3 decided: `rot-1` passa; `m
 
 **Os números das tabelas anteriores não foram refeitos e usam os casos antigos** (`casesSha` diferente nas execuções
 novas). Execuções novas com este conjunto não são comparáveis caso a caso nesses dois pontos com as anteriores.
+
+## `decided` e `planned` no Colab, seis modelos (2026-11-17)
+
+Notebook `avaliacao_abordagens_colab.ipynb`, L4 (CUDA0), llama.cpp `b12425@18b74fa`, d1-2B como modelo de decisão
+(`--top-areas 2`), 72 casos por modo, uma execução e uma semente. Execuções em `runs/colab-2026-11-17/`. A fumaça (4 casos
+por modo, LFM3) passou antes da bateria.
+
+Acertos em 72 casos (tempo médio por caso). `full` e `routed` vêm do Colab de 2026-11-16, com os casos antigos.
+
+| Modelo | decided | planned | full | routed |
+|---|---|---|---|---|
+| lfm3-1.7b | 62 (10,6 s) | 30 (21,8 s) | 63 (14,1 s) | 61 (15,4 s) |
+| qwen3.5-9b | 59 (3,0 s) | 56 (4,9 s) | 64 (4,1 s) | 61 (4,4 s) |
+| qwen3.5-4b | 59 (1,6 s) | 60 (3,4 s) | 63 (2,2 s) | 56 (2,2 s) |
+| gemma-4-e4b | 58 (8,0 s) | 63 (17,3 s) | 49 (12,6 s) | 59 (8,4 s) |
+| qwen3.5-2b | 54 (2,2 s) | 31 (2,5 s) | 41 (2,1 s) | 44 (1,7 s) |
+| lfm2.5-8b-a1b | 41 (3,4 s) | 17 (10,4 s) | 36 (4,1 s) | 42 (3,7 s) |
+
+Comparação limpa (70 casos, sem `rot-1` e `mon-3`, que mudaram), `decided` contra `full`: LFM3 61 contra 63; Qwen 9B 58
+contra 63; Qwen 4B 58 contra 62; Gemma 56 contra 48; Qwen 2B 54 contra 40; LFM2.5-8B 41 contra 36.
+
+- **decided** ficou mais rápido que o `full` em 5 dos 6 modelos (de 25% a 36% nos que melhoram; LFM3 14,1 s para
+  10,6 s). A decisão custa 36 ms por caso. Empata no LFM3, perde 4 a 5 casos nos Qwen 4B/9B e ganha muito no Qwen 2B e no
+  Gemma.
+- **planned** é pior ou mais lento na maioria (LFM3 29, LFM2.5-8B 17), como no local. Exceção: Gemma 4 E4B, 62 contra 48
+  do `full`, a 17 s por caso. Qwen 4B chega perto do `full` (59 contra 62).
+- **Fallback para o `full`:** raro. Qwen 2B 6 vezes e Qwen 9B 1 vez, sempre "unanswered"; nos outros nunca. A regra de
+  segurança quase não foi exercitada.
+- Os números do LFM3 batem com o local (62 no Colab contra 63 no Vulkan).
+- Ressalva: uma execução por modo; diferenças de 2 a 3 casos estão no ruído.

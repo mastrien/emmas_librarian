@@ -1,0 +1,190 @@
+{
+  "id": "doc-2",
+  "kind": "happy",
+  "prompt": "Adiciona o link https://exemplo.org/guia com o título Guia.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 7,
+  "toolsBytes": 3786,
+  "wallMs": 4880,
+  "asked": [
+    {
+      "tool": "projectDocuments__create",
+      "command": "projectDocuments:create",
+      "input": {
+        "projectId": 1,
+        "title": "Guia",
+        "url": "https://exemplo.org/guia"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "docExists",
+      "args": {
+        "projectId": 1,
+        "title": "Guia",
+        "url": "https://exemplo.org/guia"
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 4,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "90fYEt5oTLMjy5LjfA2l3aPwzJmU2ZM4",
+              "name": "submit_plan",
+              "arguments": "{\"tarefas\":[{\"assunto\": \"acesso-rapido\", \"tarefa\": \"Adicionar o link https://exemplo.org/guia com o título Guia.\"}]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 29,
+            "promptMs": 121.049,
+            "generatedTokens": 61,
+            "generatedMs": 1447.827
+          },
+          "wallMs": 1628
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "dK44gdFWBLxeRLG6QhuYjvnDc5xqQErn",
+              "name": "projectDocuments__create",
+              "arguments": "{\"projectId\":1,\"title\":\"Guia\",\"url\":\"https://exemplo.org/guia\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 78,
+            "promptMs": 139.711,
+            "generatedTokens": 58,
+            "generatedMs": 1385.793
+          },
+          "wallMs": 1606
+        },
+        "calls": [
+          {
+            "id": "dK44gdFWBLxeRLG6QhuYjvnDc5xqQErn",
+            "name": "projectDocuments__create",
+            "arguments": "{\"projectId\":1,\"title\":\"Guia\",\"url\":\"https://exemplo.org/guia\"}",
+            "result": {
+              "ok": true,
+              "result": 1
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Adicionei o link https://exemplo.org/guia com o título Guia ao projeto \"Revisão sobre tutoria\".",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 102.109,
+            "generatedTokens": 27,
+            "generatedMs": 631.494
+          },
+          "wallMs": 745
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "O link https://exemplo.org/guia com o título \"Guia\" foi adicionado ao projeto \"Revisão sobre tutoria\".",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 96,
+            "promptMs": 133.835,
+            "generatedTokens": 30,
+            "generatedMs": 696.699
+          },
+          "wallMs": 900
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O link https://exemplo.org/guia com o título \"Guia\" foi adicionado ao projeto \"Revisão sobre tutoria\".",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Adiciona o link https://exemplo.org/guia com o título Guia."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      },
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Pedido da pessoa: Adiciona o link https://exemplo.org/guia com o título Guia.\nTarefa de agora (só esta): Adicionar o link https://exemplo.org/guia com o título Guia.\nFaça só esta tarefa com as ferramentas e diga em uma frase o que fez ou encontrou."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "dK44gdFWBLxeRLG6QhuYjvnDc5xqQErn",
+            "name": "projectDocuments__create",
+            "arguments": "{\"projectId\":1,\"title\":\"Guia\",\"url\":\"https://exemplo.org/guia\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "dK44gdFWBLxeRLG6QhuYjvnDc5xqQErn",
+        "content": "{\"ok\":true,\"result\":1}"
+      },
+      {
+        "role": "assistant",
+        "content": "Adicionei o link https://exemplo.org/guia com o título Guia ao projeto \"Revisão sobre tutoria\".",
+        "toolCalls": []
+      }
+    ],
+    "plan": [
+      {
+        "area": "acesso-rapido",
+        "task": "Adicionar o link https://exemplo.org/guia com o título Guia."
+      }
+    ]
+  }
+}

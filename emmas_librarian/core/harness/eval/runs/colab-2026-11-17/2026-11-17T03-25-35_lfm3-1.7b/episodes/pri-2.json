@@ -1,0 +1,65 @@
+{
+  "id": "pri-2",
+  "kind": "refusal",
+  "prompt": "Registra uma fonte \"Busca em sites\" do tipo sites.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 1,
+  "toolsBytes": 1750,
+  "wallMs": 17880,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 1,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [],
+          "reasoning": "We need to parse the user's request. The user says: \"Registra uma fonte 'Busca em sites' do tipo sites.\" This is about registering a source? We have tools listed: submit_plan, but also many other functions implied by the description of tasks and categories. However, we only see one tool defined: `submit_plan`. There's no explicit function for \"registrar fonte\" (register source). The prompt mentions various topics like projetos, artigos, pdfs, anotacoes, diario, categorias, acesso-rapido, lixeira, triagem, prisma, perguntas, busca, ia, agenda, sistema. But we don't have explicit tool calls for those except maybe `submit_plan` which takes tasks with assuntos (subjects). The user's request: \"Registra uma fonte 'Busca em sites' do tipo sites.\" This seems like a task about registering a source in the \"busca\" category? Or perhaps it's about adding a source to something. We need to interpret based on available tool definitions.\n\nWe only have one tool: `submit_plan`. The description: \"Entrega o plano do pedido: as tarefas, na ordem. Lista vazia se não há tarefa.\" So we can call submit_plan with tasks array. But the user's request is not about a plan; it's about registering a source. However, maybe there is an implicit tool for \"registrar fonte\" but not listed? The prompt says: \"Você planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\" So we are supposed to just call `submit_plan` with the tasks list, but there is no task list provided? The user says \"Registra uma fonte 'Busca em sites' do tipo sites.\" That could be interpreted as a task: under \"busca\" (search) maybe? Let's examine categories:\n\n- \"busca\": buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas.\n- \"ia\": usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores.\n- etc.\n\nBut we need to map the request. The phrase \"Busca em sites\" is a search query? It might be a source type: \"Busca em sites\" meaning searching on websites. So maybe it's about adding a source of type \"sites\". Could correspond to \"acesso-rapido\"? Not sure.\n\nGiven the instruction: \"Você planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\" So we just need to output the plan via `submit_plan`. The input is a single sentence: \"Registra uma fonte 'Busca em sites' do tipo sites.\"\n\nWe need to break this into tasks. Possibly there's only one task: register source, subject maybe \"busca\" or \"artigos\"? Let's think about the categories and their definitions:\n\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas.\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto.\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto.\n- anotacoes: ler as anotações e os destaques de um artigo.\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro.\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto.\n- acesso-rapido: links e documentos de acesso rápido do projeto.\n- lixeira: ver o que foi apagado e restaurar.\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos.\n- prisma: fontes e registros do fluxo PRISMA (só leitura).\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração.\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas.\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores.\n- agenda: agenda científica: congressos e periódicos com prazos.\n- sistema: versão do aplicativo e backups automáticos existentes.\n\nThe request \"Registra uma fonte 'Busca em sites' do tipo sites.\" This seems like a source registration. Possibly under \"busca\" or \"acesso-rapido\"? Or maybe it's about adding a source to the search (busca). The phrase \"do tipo sites\" indicates type: sites. So we need to register a source named \"Busca em sites\" of type \"sites\". This might be an entry in the \"busca\" category? Let's see \"busca\" tasks: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas. Not sure.\n\nAlternatively, maybe it's about \"categorias\": categories personalizadas do projeto: ver, criar, aplicar um conjunto. But no.\n\nGiven the lack of explicit mapping, we need to infer a reasonable task list for `submit_plan`. The tool expects an array of tasks with fields: each item has \"assunto\" (enum) and \"tarefa\". So we must pick one from the enum per task. For this request, likely the subject is \"busca\" or maybe \"artigos\"? Let's parse: \"Registra uma fonte 'Busca em sites' do tipo sites.\" This could be a source registration in the library of research. In many bibliographic tools, you register sources like articles, books, PDFs, etc., with type and category. Here we have categories for \"categorias\" (personalized categories). But not sure.\n\nGiven the instruction: \"Nenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\" So if no project focus, just list tasks? The user says \"Você planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\"\n\nThus we need to produce the plan (list of tasks) and call `submit_plan`. The content of tasks should reflect what needs to be done for this request.\n\nThe user's request is \"Registra uma fonte 'Busca em sites' do tipo sites.\" So maybe it's a single task: register source. Which subject? Possibly \"busca\" (search) or \"artigos\"? Let's think about typical tasks in a research library:\n\n- \"Ver artigos de um projeto\": check articles.\n- \"Mudar status (novo, lido, arquivado)\": update article status.\n- \"Editar metadados\": edit metadata.\n- \"Importar de outro projeto\": import from another project.\n\nBut \"registrar fonte\" is more like adding a source. Could be under \"categorias\"? Or maybe it's about \"acesso-rapido\" linking to links and documents of quick access.\n\nGiven the limited info, we need to decide on an appropriate subject for this task. The phrase \"Busca em sites\" suggests searching within websites. So perhaps it's a search query: converting a query into a search. That aligns with \"busca\" category: \"buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\". The task \"converter consulta\" might be to convert the query from text to something else. So maybe we need to do that.\n\nThus subject = \"busca\", tarefa = \"convertir consulta\"? But the tool's `tarefa` field is a string; not necessarily limited to specific values? It says each task uses one of those assuntos (enum). For \"busca\" tasks, possible tarefas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas. So we need to pick appropriate.\n\nThe request: \"Registra uma fonte 'Busca em sites' do tipo sites.\" This is about registering a source named \"Busca em sites\" of type \"sites\". That might be under \"acesso-rapido\"? Or maybe it's just adding a source, which could be \"artigos\" or \"pdfs\"? Not sure.\n\nGiven the ambiguity, we need to produce something plausible. The simplest: create one task with assunto \"busca\", tarefa \"registrar fonte\". But \"registrar fonte\" is not listed as a specific task under any subject. However, maybe \"categorias\" includes \"ver, criar, aplicar um conjunto\". Not relevant.\n\nAlternatively, we could interpret the request as: We need to add a source (fonte) in the system. The tool `submit_plan` just takes tasks; perhaps each task is an action like \"listar\", \"criar\", etc. So maybe there's no direct mapping for \"registrar fonte\". But we can still map it as a generic task under \"artigos\"",
+          "finishReason": "length",
+          "timings": {
+            "promptTokens": 504,
+            "promptMs": 65.018,
+            "generatedTokens": 2048,
+            "generatedMs": 17788.47
+          },
+          "wallMs": 17880
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "",
+    "stopped": "model-error",
+    "error": "Error: [ERR_INVALID_PLAN] Offending value: \"[]\". No submit_plan call. Expected a submit_plan call with { \"tarefas\": [{ \"assunto\": \"<id>\", \"tarefa\": \"<texto>\" }] }, at most 6 tasks.",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Registra uma fonte \"Busca em sites\" do tipo sites."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      }
+    ]
+  }
+}

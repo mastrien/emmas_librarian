@@ -1,0 +1,170 @@
+{
+  "id": "cfg-1",
+  "kind": "happy",
+  "prompt": "Qual é a versão do aplicativo?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 3,
+  "toolsBytes": 2204,
+  "wallMs": 5845,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 4,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "hATtPUNTNs6q5xxpfpo0n4VXuska1ZH5",
+              "name": "submit_plan",
+              "arguments": "{\"tarefas\":[{\"assunto\":\"sistema\",\"tarefa\":\"Ver a versão do aplicativo\"}]}"
+            }
+          ],
+          "reasoning": "The user is asking for the application version.\nI need to find the appropriate subject for this request.\nThe available subjects are:\n- projetos\n- artigos\n- pdfs\n- anotacoes\n- diario\n- categorias\n- acesso-rapido\n- lixeira\n- triagem\n- prisma\n- perguntas\n- busca\n- ia\n- agenda\n- sistema\n\nThe 'sistema' subject seems to be the correct one for application version and backups.\n\nI will create a plan with one task using the 'sistema' subject.\n\nTask: Get the application version.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 16,
+            "promptMs": 72.892,
+            "generatedTokens": 156,
+            "generatedMs": 2507.75
+          },
+          "wallMs": 2620
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "ZyzLyGZvDHnFKsyIBORsWHpTpV3lgyNx",
+              "name": "app__getVersion",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "The user wants to know the application version.\nI need to use the `app__getVersion` tool.\nAfter calling the tool, I must respond in a single sentence with the result.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 172,
+            "promptMs": 99.65,
+            "generatedTokens": 52,
+            "generatedMs": 821.158
+          },
+          "wallMs": 964
+        },
+        "calls": [
+          {
+            "id": "ZyzLyGZvDHnFKsyIBORsWHpTpV3lgyNx",
+            "name": "app__getVersion",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": "1.0.0"
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "A versão do aplicativo é 1.0.0.",
+          "toolCalls": [],
+          "reasoning": "The user wants to know the application version. I have called `app__getVersion` and received the result \"1.0.0\". I need to state this in a single sentence in Portuguese.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 37,
+            "promptMs": 52.755,
+            "generatedTokens": 54,
+            "generatedMs": 860.719
+          },
+          "wallMs": 925
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "A versão do aplicativo é 1.0.0.",
+          "toolCalls": [],
+          "reasoning": "The user wants me to respond to the person with the result of a task: \"What is the application version?\".\nThe result is: \"The application version is 1.0.0.\"\nI need to respond in Portuguese and briefly.\nNo tools are needed as the result is already provided.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 59,
+            "promptMs": 69.611,
+            "generatedTokens": 79,
+            "generatedMs": 1248.071
+          },
+          "wallMs": 1336
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "A versão do aplicativo é 1.0.0.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Qual é a versão do aplicativo?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      },
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Pedido da pessoa: Qual é a versão do aplicativo?\nTarefa de agora (só esta): Ver a versão do aplicativo\nFaça só esta tarefa com as ferramentas e diga em uma frase o que fez ou encontrou."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "ZyzLyGZvDHnFKsyIBORsWHpTpV3lgyNx",
+            "name": "app__getVersion",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "ZyzLyGZvDHnFKsyIBORsWHpTpV3lgyNx",
+        "content": "{\"ok\":true,\"result\":\"1.0.0\"}"
+      },
+      {
+        "role": "assistant",
+        "content": "A versão do aplicativo é 1.0.0.",
+        "toolCalls": []
+      }
+    ],
+    "plan": [
+      {
+        "area": "sistema",
+        "task": "Ver a versão do aplicativo"
+      }
+    ]
+  }
+}

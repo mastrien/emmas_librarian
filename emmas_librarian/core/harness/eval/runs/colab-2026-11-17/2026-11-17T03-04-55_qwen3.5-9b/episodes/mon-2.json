@@ -1,0 +1,157 @@
+{
+  "id": "mon-2",
+  "kind": "happy",
+  "prompt": "Monitora a busca 1 do projeto da tutoria a cada 7 dias.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 15,
+  "toolsBytes": 6230,
+  "wallMs": 3094,
+  "asked": [
+    {
+      "tool": "searchMonitor__set",
+      "command": "searchMonitor:set",
+      "input": {
+        "projectId": 1,
+        "searchId": 1,
+        "days": 7
+      }
+    }
+  ],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "0tXeQeFU4gKxBL17nCQyuqBIh4vjMB1X",
+              "name": "searchMonitor__set",
+              "arguments": "{\"projectId\":1,\"searchId\":1,\"days\":7}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 2267,
+            "promptMs": 936.06,
+            "generatedTokens": 52,
+            "generatedMs": 1246.141
+          },
+          "wallMs": 2265
+        },
+        "calls": [
+          {
+            "id": "0tXeQeFU4gKxBL17nCQyuqBIh4vjMB1X",
+            "name": "searchMonitor__set",
+            "arguments": "{\"projectId\":1,\"searchId\":1,\"days\":7}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "search_id": 1,
+                  "interval_days": 7,
+                  "last_checked_at": null,
+                  "pending_count": 0,
+                  "failed_bases": [],
+                  "project_id": 1,
+                  "project_name": "Revisão sobre tutoria",
+                  "unified_query": "Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems"
+                }
+              ]
+            },
+            "wallMs": 2
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "A busca 1 do projeto \"Revisão sobre tutoria\" foi configurada para ser monitorada a cada 7 dias.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 86,
+            "promptMs": 116.67,
+            "generatedTokens": 28,
+            "generatedMs": 657.472
+          },
+          "wallMs": 790
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "A busca 1 do projeto \"Revisão sobre tutoria\" foi configurada para ser monitorada a cada 7 dias.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Monitora a busca 1 do projeto da tutoria a cada 7 dias."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "0tXeQeFU4gKxBL17nCQyuqBIh4vjMB1X",
+            "name": "searchMonitor__set",
+            "arguments": "{\"projectId\":1,\"searchId\":1,\"days\":7}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "0tXeQeFU4gKxBL17nCQyuqBIh4vjMB1X",
+        "content": "{\"ok\":true,\"result\":[{\"search_id\":1,\"interval_days\":7,\"last_checked_at\":null,\"pending_count\":0,\"failed_bases\":[],\"project_id\":1,\"project_name\":\"Revisão sobre tutoria\",\"unified_query\":\"Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems\"}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "A busca 1 do projeto \"Revisão sobre tutoria\" foi configurada para ser monitorada a cada 7 dias.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "busca",
+          "probability": 0.9354223452153653
+        },
+        {
+          "area": "diario",
+          "probability": 0.021635827323459207
+        },
+        {
+          "area": "projetos",
+          "probability": 0.018720180672686708
+        }
+      ],
+      "chosen": [
+        "busca",
+        "diario"
+      ],
+      "fallback": "none",
+      "decisionMs": 37,
+      "decisionInputTokens": 368
+    }
+  }
+}

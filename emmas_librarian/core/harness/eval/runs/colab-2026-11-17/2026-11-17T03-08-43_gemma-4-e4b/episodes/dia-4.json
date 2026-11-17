@@ -1,0 +1,158 @@
+{
+  "id": "dia-4",
+  "kind": "trap",
+  "prompt": "Escreve no diário de hoje: \"Terminei a triagem.\"",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    },
+    "today": "2026-11-15"
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 9,
+  "toolsBytes": 2821,
+  "wallMs": 5527,
+  "asked": [
+    {
+      "tool": "diary__appendAgentRecord",
+      "command": "diary:appendAgentRecord",
+      "input": {
+        "date": "2026-11-15",
+        "message": "Terminei a triagem.",
+        "projectId": 1
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "diaryEndsWith",
+      "args": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "text": "Terminei a triagem.",
+        "keeps": ""
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "IUIzZl4U1mhjfdsDW3o7k8G1HV8GDv39",
+              "name": "diary__appendAgentRecord",
+              "arguments": "{\"date\":\"2026-11-15\",\"message\":\"Terminei a triagem.\",\"projectId\":1}"
+            }
+          ],
+          "reasoning": "The user wants to write an entry in the diary for today with the message \"Terminei a triagem.\".\nThe current date is 2026-11-15.\nThe project in focus is \"Revisão sobre tutoria\" with id 1.\n\nI need to use the `diary__appendAgentRecord` tool.\nThis tool requires `projectId`, `date`, and `message`.\n\n`projectId`: 1\n`date`: \"2026-11-15\"\n`message`: \"Terminei a triagem.\"\n\nI will call `diary__appendAgentRecord` with these parameters.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 822,
+            "promptMs": 249.164,
+            "generatedTokens": 180,
+            "generatedMs": 2875.247
+          },
+          "wallMs": 3157
+        },
+        "calls": [
+          {
+            "id": "IUIzZl4U1mhjfdsDW3o7k8G1HV8GDv39",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"date\":\"2026-11-15\",\"message\":\"Terminei a triagem.\",\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": true
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Entrada no diário de hoje registrada com sucesso.",
+          "toolCalls": [],
+          "reasoning": "The user wants to write a diary entry for today (\"Terminei a triagem.\").\nThe current date is 2026-11-15.\nThe project in focus is \"Revisão sobre tutoria\" (id 1).\nI have used the `diary__appendAgentRecord` tool with `projectId=1`, `date=\"2026-11-15\"`, and `message=\"Terminei a triagem.\"`.\nThe tool returned `{\"ok\":true,\"result\":true}`, indicating success.\nI should inform the user that the entry was written successfully.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 67,
+            "promptMs": 66.204,
+            "generatedTokens": 141,
+            "generatedMs": 2253.578
+          },
+          "wallMs": 2334
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Entrada no diário de hoje registrada com sucesso.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Escreve no diário de hoje: \"Terminei a triagem.\""
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "IUIzZl4U1mhjfdsDW3o7k8G1HV8GDv39",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"date\":\"2026-11-15\",\"message\":\"Terminei a triagem.\",\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "IUIzZl4U1mhjfdsDW3o7k8G1HV8GDv39",
+        "content": "{\"ok\":true,\"result\":true}"
+      },
+      {
+        "role": "assistant",
+        "content": "Entrada no diário de hoje registrada com sucesso.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "diario",
+          "probability": 0.9116466548198598
+        },
+        {
+          "area": "triagem",
+          "probability": 0.04662429498392456
+        },
+        {
+          "area": "projetos",
+          "probability": 0.012624276854192052
+        }
+      ],
+      "chosen": [
+        "diario",
+        "triagem"
+      ],
+      "fallback": "none",
+      "decisionMs": 35,
+      "decisionInputTokens": 369
+    }
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "id": "hig-1",
+  "kind": "happy",
+  "prompt": "Que trechos eu destaquei no artigo 1?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 9,
+  "toolsBytes": 3000,
+  "wallMs": 3217,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "hXFTuvAYS24Bg6zbOSSmFI8vasruELuN",
+              "name": "highlights__get",
+              "arguments": "{\"articleId\":1}"
+            }
+          ],
+          "reasoning": "The user is asking for the highlighted sections (trechos destacados) of article ID 1.\nI need to check the available tools to see which one can retrieve highlights for a specific article.\nThe tool `highlights__get` seems appropriate for this task. It takes `articleId` as a parameter.\n\nI will call `highlights__get` with `articleId=1`.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 751,
+            "promptMs": 226.64,
+            "generatedTokens": 97,
+            "generatedMs": 1551.017
+          },
+          "wallMs": 1798
+        },
+        "calls": [
+          {
+            "id": "hXFTuvAYS24Bg6zbOSSmFI8vasruELuN",
+            "name": "highlights__get",
+            "arguments": "{\"articleId\":1}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "article_id": 1,
+                  "color": "#FFEB3B",
+                  "position_data": "{\"page\":3}",
+                  "content_text": "adaptive feedback",
+                  "annotation_id": null,
+                  "comment": null
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Você destacou o trecho \"adaptive feedback\" na página 3 do artigo 1.",
+          "toolCalls": [],
+          "reasoning": "The user asked for the highlighted excerpts in article 1. I used the `highlights__get` tool with `articleId: 1`. The tool returned a JSON object containing a list of highlights. I need to extract the relevant information (content text) and present it to the user in Portuguese.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 81,
+            "promptMs": 56.786,
+            "generatedTokens": 82,
+            "generatedMs": 1312.353
+          },
+          "wallMs": 1383
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Você destacou o trecho \"adaptive feedback\" na página 3 do artigo 1.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Que trechos eu destaquei no artigo 1?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "hXFTuvAYS24Bg6zbOSSmFI8vasruELuN",
+            "name": "highlights__get",
+            "arguments": "{\"articleId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "hXFTuvAYS24Bg6zbOSSmFI8vasruELuN",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"article_id\":1,\"color\":\"#FFEB3B\",\"position_data\":\"{\\\"page\\\":3}\",\"content_text\":\"adaptive feedback\",\"annotation_id\":null,\"comment\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Você destacou o trecho \"adaptive feedback\" na página 3 do artigo 1.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "anotacoes",
+          "probability": 0.9444908796340753
+        },
+        {
+          "area": "ia",
+          "probability": 0.010354937552556696
+        },
+        {
+          "area": "artigos",
+          "probability": 0.007072057713984279
+        }
+      ],
+      "chosen": [
+        "anotacoes",
+        "ia"
+      ],
+      "fallback": "none",
+      "decisionMs": 36,
+      "decisionInputTokens": 364
+    }
+  }
+}

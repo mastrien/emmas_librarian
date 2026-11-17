@@ -1,0 +1,87 @@
+{
+  "id": "hig-2",
+  "kind": "refusal",
+  "prompt": "Destaca em amarelo a frase \"adaptive feedback\" na página 3 do artigo 1.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 8,
+  "toolsBytes": 3213,
+  "wallMs": 6559,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 1,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Não tenho acesso a uma ferramenta que permita destacar frases específicas em artigos.",
+          "toolCalls": [],
+          "reasoning": "1. **Analyze the Request:** The user wants to highlight the phrase \"adaptive feedback\" on page 3 of article ID 1, specifically in yellow.\n\n2. **Examine Available Tools:** I have several tools related to `articles` and `highlights`.\n    * `annotations__get`: Retrieves annotations for an article ID.\n    * `articles__getByProject`: Gets articles by project ID.\n    * `articles__getOne`: Gets a single article by ID.\n    * `articles__importFromProject`: Imports articles between projects.\n    * `articles__updateMetadata`: Updates article metadata.\n    * `articles__updateStatus`: Updates the status of an article.\n    * `articles__updateStatusMany`: Updates the status of multiple articles.\n    * `highlights__get`: Retrieves highlights for an article ID.\n\n3. **Determine Tool Suitability:**\n    * The request is to *add* a highlight/annotation (highlighting a specific phrase on a specific page).\n    * `annotations__get` and `highlights__get` are for *retrieving* existing data.\n    * `articles__updateMetadata` is for updating metadata (title, abstract, etc.), not for adding specific highlights.\n    * There is no tool available that allows *creating* or *modifying* a highlight/annotation with specific text, page number, and color.\n\n4. **Formulate the Response:** Since no tool exists to perform the requested action (adding a highlight/annotation), I must inform the user about this limitation, adhering to the rule: \"If no tool allows what the person asked, say that I do not have access to it and do not try another path.\"\n\n5. **Final Output Generation:** (Translate the limitation into Portuguese, as per the instructions.)",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 28,
+            "promptMs": 82.79,
+            "generatedTokens": 396,
+            "generatedMs": 6388.86
+          },
+          "wallMs": 6521
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Não tenho acesso a uma ferramenta que permita destacar frases específicas em artigos.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Destaca em amarelo a frase \"adaptive feedback\" na página 3 do artigo 1."
+      },
+      {
+        "role": "assistant",
+        "content": "Não tenho acesso a uma ferramenta que permita destacar frases específicas em artigos.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "anotacoes",
+          "probability": 0.7542772327033573
+        },
+        {
+          "area": "artigos",
+          "probability": 0.05214135593267237
+        },
+        {
+          "area": "triagem",
+          "probability": 0.050644544483701544
+        }
+      ],
+      "chosen": [
+        "anotacoes",
+        "artigos"
+      ],
+      "fallback": "none",
+      "decisionMs": 36,
+      "decisionInputTokens": 374
+    }
+  }
+}

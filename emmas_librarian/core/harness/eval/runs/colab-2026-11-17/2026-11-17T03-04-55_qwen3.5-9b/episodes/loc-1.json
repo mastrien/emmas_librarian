@@ -1,0 +1,145 @@
+{
+  "id": "loc-1",
+  "kind": "happy",
+  "prompt": "Resume o artigo 1.",
+  "context": {
+    "modelIsLocal": true
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 9,
+  "toolsBytes": 3000,
+  "wallMs": 1994,
+  "asked": [
+    {
+      "tool": "ai__generateSummary",
+      "command": "ai:generateSummary",
+      "input": {
+        "articleId": 1
+      }
+    }
+  ],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "6SVy2e3JKLPt5FOuhpb8teeknxjyG864",
+              "name": "ai__generateSummary",
+              "arguments": "{\"articleId\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 18,
+            "promptMs": 122.543,
+            "generatedTokens": 30,
+            "generatedMs": 706.075
+          },
+          "wallMs": 908
+        },
+        "calls": [
+          {
+            "id": "6SVy2e3JKLPt5FOuhpb8teeknxjyG864",
+            "name": "ai__generateSummary",
+            "arguments": "{\"articleId\":1}",
+            "result": {
+              "ok": false,
+              "error": {
+                "code": "ERR_NOT_FOUND",
+                "type": "USER_ERROR",
+                "message": "[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco."
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Não foi possível gerar o resumo do artigo 1, pois o PDF não foi encontrado. Verifique se o ID do artigo está correto ou se o arquivo está disponível na biblioteca.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 76,
+            "promptMs": 114.35,
+            "generatedTokens": 39,
+            "generatedMs": 922.013
+          },
+          "wallMs": 1050
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Não foi possível gerar o resumo do artigo 1, pois o PDF não foi encontrado. Verifique se o ID do artigo está correto ou se o arquivo está disponível na biblioteca.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Resume o artigo 1."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "6SVy2e3JKLPt5FOuhpb8teeknxjyG864",
+            "name": "ai__generateSummary",
+            "arguments": "{\"articleId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "6SVy2e3JKLPt5FOuhpb8teeknxjyG864",
+        "content": "{\"ok\":false,\"error\":{\"code\":\"ERR_NOT_FOUND\",\"type\":\"USER_ERROR\",\"message\":\"[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Não foi possível gerar o resumo do artigo 1, pois o PDF não foi encontrado. Verifique se o ID do artigo está correto ou se o arquivo está disponível na biblioteca.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "ia",
+          "probability": 0.9611004569023879
+        },
+        {
+          "area": "anotacoes",
+          "probability": 0.015198155730156853
+        },
+        {
+          "area": "artigos",
+          "probability": 0.007767192358387969
+        }
+      ],
+      "chosen": [
+        "ia",
+        "anotacoes"
+      ],
+      "fallback": "none",
+      "decisionMs": 35,
+      "decisionInputTokens": 358
+    }
+  }
+}
