@@ -369,3 +369,8 @@ contra 63; Qwen 4B 58 contra 62; Gemma 56 contra 48; Qwen 2B 54 contra 40; LFM2.
   segurança quase não foi exercitada.
 - Os números do LFM3 batem com o local (62 no Colab contra 63 no Vulkan).
 - Ressalva: uma execução por modo; diferenças de 2 a 3 casos estão no ruído.
+- **Alteração no notebook durante a rodada:** o clone do llama.cpp falhou por SSL no Colab e a célula 6 passou a rodar
+  `git config --global http.sslVerify false` e, se o clone falhar, tenta de novo por `http://`. A tag é a mesma
+  (`b12425`) e as 14 execuções gravaram `b12425@18b74fa`, o commit do binário local (`build 12425, commit 18b74fa41`),
+  então os resultados não são afetados. O notebook do repositório agora tem essa alteração e um `assert` que confere o
+  commit `18b74fa` depois do clone, para que a replicação não dependa da confiança na rede.
