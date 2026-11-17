@@ -59,6 +59,7 @@ async function rowFor(
     required,
     selected: decision.selected,
     best: decision.best,
+    bestProbability: decision.ranked[0]?.probability ?? 0,
     ranked: decision.ranked.map((entry) => entry.area),
     noul: decision.noul,
     score: required.length > 0 ? scoreRouting(required, decision) : undefined,

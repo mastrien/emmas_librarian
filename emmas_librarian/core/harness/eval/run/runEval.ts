@@ -5,7 +5,6 @@ import crypto from 'crypto';
 import { execFileSync } from 'child_process';
 import { commandSchemas } from '../../commandSchemas';
 import { LibraryToolkit } from '../../LibraryToolkit';
-import { RoutedToolkit } from '../../RoutedToolkit';
 import { FakeConfirmer } from '../../__tests__/support/FakeConfirmer';
 import { seedLibraryF } from '../../__tests__/support/libraryF';
 import { openTestLibrary } from '../../__tests__/support/openTestLibrary';
@@ -13,8 +12,9 @@ import { parseEvalCases, type EvalCase } from '../evalCase';
 import { runCheck, snapshot } from '../evalChecks';
 import { LlamaServerChat } from './chatClient';
 import { flagsOf } from './flags';
-import { runEpisode, toOpenAiTools } from './episode';
-import { runPlannedEpisode } from './plannedEpisode';
+import { toOpenAiTools, type DecisionTrace } from './episode';
+import { decidedConfig, decisionFile, startDecider, type RunningDecider } from '../decision/decidedSetup';
+import { runMode, MODES, type DecidedOptions, type Mode } from './runMode';
 import { MODELS, samplingOf, serverArgs, type ModelSpec } from './modelCatalog';
 import { RunRecorder } from './runRecorder';
 import { setupFromEnv } from './runSetup';
@@ -48,9 +48,13 @@ function chooseCases(all: EvalCase[], ids: string | undefined): EvalCase[] {
   return all.filter((c) => wanted.includes(c.id));
 }
 
-type Mode = 'full' | 'routed' | 'planned';
-
-async function runCase(testCase: EvalCase, model: ModelSpec, chat: LlamaServerChat, mode: Mode) {
+async function runCase(
+  testCase: EvalCase,
+  model: ModelSpec,
+  chat: LlamaServerChat,
+  mode: Mode,
+  decided?: DecidedOptions,
+) {
   const library = openTestLibrary();
   try {
     await seedLibraryF(library.commands);
@@ -64,13 +68,17 @@ async function runCase(testCase: EvalCase, model: ModelSpec, chat: LlamaServerCh
     });
     const day = { today: dayFromText(testCase.context.today), focusProject: testCase.context.focusProject };
     const system = systemPromptFor({ ...day, routed: mode === 'routed' });
-    const surface = mode === 'full' ? toolkit : new RoutedToolkit(toolkit);
     const started = Date.now();
-    const episode = { system, prompt: testCase.prompt, chat, sampling: samplingOf(model), maxSteps: MAX_STEPS };
-    const record =
-      surface instanceof RoutedToolkit && mode === 'planned'
-        ? await runPlannedEpisode({ ...episode, planContext: systemContext(day), toolkit: surface })
-        : await runEpisode({ ...episode, toolkit: surface });
+    const input = {
+      system,
+      planContext: systemContext(day),
+      prompt: testCase.prompt,
+      chat,
+      sampling: samplingOf(model),
+      maxSteps: MAX_STEPS,
+      decided,
+    };
+    const { record, offered } = await runMode(mode, input, toolkit);
     const wallMs = Date.now() - started;
     const checks = await Promise.all(
       testCase.checks.map(async (check) => ({ ...check, ok: await runCheck(check, library.commands, before) })),
@@ -86,8 +94,8 @@ async function runCase(testCase: EvalCase, model: ModelSpec, chat: LlamaServerCh
       prompt: testCase.prompt,
       context: testCase.context,
       system,
-      toolCount: surface.tools().length,
-      toolsBytes: JSON.stringify(toOpenAiTools(surface)).length,
+      toolCount: offered.tools().length,
+      toolsBytes: JSON.stringify(toOpenAiTools(offered)).length,
       wallMs,
       asked: confirmer.asked,
       checks,
@@ -97,6 +105,17 @@ async function runCase(testCase: EvalCase, model: ModelSpec, chat: LlamaServerCh
   } finally {
     library.close();
   }
+}
+
+/** For the decided mode: how often the decision model was trusted, and what it cost. Empty for the other modes. */
+function decisionSummary(traces: DecisionTrace[]): Record<string, unknown> {
+  if (traces.length === 0) return {};
+  const fallbacks: Record<string, number> = {};
+  for (const trace of traces) fallbacks[trace.fallback] = (fallbacks[trace.fallback] ?? 0) + 1;
+  const decisionMs = traces.reduce((total, trace) => total + trace.decisionMs, 0);
+  return {
+    decision: { fallbacks, decisionMsTotal: decisionMs, decisionMsMean: Math.round(decisionMs / traces.length) },
+  };
 }
 
 const tokensPerSecond = (tokens: number, ms: number): number => (ms > 0 ? Math.round((tokens / ms) * 10000) / 10 : 0);
@@ -124,6 +143,7 @@ function summarize(
       sum((t) => t.generatedTokens),
       sum((t) => t.generatedMs),
     ),
+    ...decisionSummary(results.flatMap((r) => (r.record.decision ? [r.record.decision] : []))),
     results: results.map((r) => ({
       id: r.id,
       kind: r.kind,
@@ -137,11 +157,12 @@ function summarize(
 }
 
 function parseMode(text: string | undefined): Mode {
-  if (text === undefined || text === 'full' || text === 'routed' || text === 'planned') return text ?? 'full';
-  throw new Error(`[ERR_UNKNOWN_MODE] Offending value: ${JSON.stringify(text)}. Expected full, routed or planned.`);
+  const found = MODES.find((mode) => mode === (text ?? 'full'));
+  if (found) return found;
+  throw new Error(`[ERR_UNKNOWN_MODE] Offending value: ${JSON.stringify(text)}. Expected one of: ${MODES.join(', ')}.`);
 }
 
-/** Usage: vite-node core/harness/eval/run/runEval.ts -- --model qwen3.5-4b --cases art-2,proj-1 [--label texto] [--mode full|routed|planned] */
+/** Usage: vite-node core/harness/eval/run/runEval.ts -- --model qwen3.5-4b --cases art-2,proj-1 [--label texto] [--mode full|routed|planned|decided] */
 async function main(): Promise<void> {
   const args = flagsOf(process.argv.slice(2));
   const mode = parseMode(args.mode);
@@ -156,6 +177,7 @@ async function main(): Promise<void> {
   const setup = setupFromEnv(process.env);
   const recorder = new RunRecorder(setup.runsDir || path.join(EVAL_DIR, 'runs'), `${stamp}_${model.id}`);
   const port = 8089;
+  const decision = mode === 'decided' ? decidedConfig(args) : undefined;
   const serverCommand = serverArgs(model, port, setup);
   const devices = execFileSync(setup.server, ['--list-devices'], { stdio: ['ignore', 'pipe', 'pipe'] }).toString();
   recorder.writeConfig({
@@ -184,17 +206,24 @@ async function main(): Promise<void> {
     mode: args.mode ?? 'full',
     systemPromptVersion: SYSTEM_PROMPT_VERSION,
     planPromptVersion: mode === 'planned' ? PLAN_PROMPT_VERSION : null,
+    decision: decision && {
+      ...decision,
+      file: decisionFile(decision, setup),
+      fileBytes: fs.statSync(decisionFile(decision, setup)).size,
+    },
     scorerVersion: SCORER_VERSION,
     modelIsLocal: 'por caso (padrão: true)',
     confirmation: 'FakeConfirmer: sim, exceto casos com confirm: no',
     library: 'Biblioteca de teste F, nova a cada caso',
   });
   const server = await startServer(setup.server, serverCommand, port);
+  let decider: RunningDecider | undefined;
   try {
+    decider = decision && (await startDecider(decision, setup));
     const chat = new LlamaServerChat(server.url);
     const results: Awaited<ReturnType<typeof runCase>>[] = [];
     for (const testCase of cases) {
-      const result = await runCase(testCase, model, chat, mode);
+      const result = await runCase(testCase, model, chat, mode, decider?.options);
       recorder.writeEpisode(testCase.id, result);
       results.push(result);
       console.log(
@@ -206,6 +235,8 @@ async function main(): Promise<void> {
     );
   } finally {
     recorder.writeServerLog(server.log());
+    if (decider) recorder.writeServerLog(decider.server.log(), 'decision-server.log');
+    await decider?.server.stop();
     await server.stop();
   }
 }

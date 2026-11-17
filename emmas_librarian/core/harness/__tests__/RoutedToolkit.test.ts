@@ -36,7 +36,7 @@ function build() {
       { name: 'diary:getOne', parameters: [{ name: 'id', required: true, schema: number }], source: 't' },
     ],
   });
-  return { routed: new RoutedToolkit(toolkit, AREAS), deleted };
+  return { routed: new RoutedToolkit(toolkit, AREAS), deleted, toolkit };
 }
 
 const names = (routed: RoutedToolkit): string[] => routed.tools().map((tool) => tool.name);
@@ -86,6 +86,21 @@ describe('RoutedToolkit', () => {
     expect(routed.openAreas(['diario'])).toMatchObject({ ok: true, result: { areas: ['diario'] } });
     expect(names(routed)).toContain('diary__getOne');
     expect(routed.openAreas(['nao-existe']).ok).toBe(false);
+  });
+
+  it('without the selector the opened subjects are all it offers, and another subject says it is not available', async () => {
+    const { toolkit } = build();
+    const fixed = new RoutedToolkit(toolkit, AREAS, { selector: false });
+    fixed.openAreas(['diario']);
+    expect(names(fixed)).toEqual(['diary__getOne']);
+    const refused = await fixed.call('projects__getAll', {});
+    expect(refused).toMatchObject({ ok: false, error: { code: 'ERR_AREA_NOT_SELECTED' } });
+    expect(JSON.stringify(refused)).toContain('não está disponível neste pedido');
+    expect(JSON.stringify(refused)).not.toContain(SELECT_AREAS);
+    expect(await fixed.call(SELECT_AREAS, { areas: ['projetos'] })).toMatchObject({
+      ok: false,
+      error: { code: 'ERR_UNKNOWN_TOOL' },
+    });
   });
 
   it('answers a tool that exists nowhere as unknown', async () => {

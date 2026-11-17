@@ -19,6 +19,19 @@ export interface EpisodeRecord {
   messages: ChatMessage[];
   /** Only in the planned mode: the tasks the model wrote before acting. */
   plan?: Array<{ area: string; task: string }>;
+  /** Only in the decided mode: what the decision model chose and whether the full toolkit had to take over. */
+  decision?: DecisionTrace;
+}
+
+export interface DecisionTrace {
+  /** The subjects in the order of the decision model's probabilities, best first (top 3). */
+  ranked: Array<{ area: string; probability: number }>;
+  /** The subjects the model was given tools of. */
+  chosen: string[];
+  /** Why the full toolkit ran after (or instead of) the restricted attempt; 'none' if it did not. */
+  fallback: 'none' | 'low-confidence' | 'decision-error' | 'unanswered' | 'out-of-scope';
+  decisionMs: number;
+  decisionInputTokens: number;
 }
 
 export interface EpisodeInput {

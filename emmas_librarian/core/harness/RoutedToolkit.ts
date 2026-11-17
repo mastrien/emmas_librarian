@@ -23,9 +23,14 @@ export class RoutedToolkit implements ToolSurface {
   private readonly chosen = new Set<string>();
   private readonly areas: ToolArea[];
 
+  /**
+   * `options.selector` false hides select_areas: the subjects were chosen by something else (a decision model, a plan)
+   * through `openAreas`, and the model works with what it was given.
+   */
   constructor(
     private readonly inner: LibraryToolkit,
     areas: readonly ToolArea[] = TOOL_AREAS,
+    private readonly options: { selector?: boolean } = {},
   ) {
     const offered = new Set(inner.tools().map((tool) => tool.name));
     this.areas = areas
@@ -50,7 +55,8 @@ export class RoutedToolkit implements ToolSurface {
 
   tools(): ToolDefinition[] {
     const open = new Set(this.areas.filter((a) => this.chosen.has(a.id)).flatMap((a) => a.commands.map(toToolName)));
-    return [this.selector(), ...this.inner.tools().filter((tool) => open.has(tool.name))];
+    const offered = this.inner.tools().filter((tool) => open.has(tool.name));
+    return this.options.selector === false ? offered : [this.selector(), ...offered];
   }
 
   private selector(): ToolDefinition {
@@ -68,7 +74,7 @@ export class RoutedToolkit implements ToolSurface {
   }
 
   async call(toolName: string, input: unknown): Promise<ToolResult> {
-    if (toolName === SELECT_AREAS) return this.select(input);
+    if (toolName === SELECT_AREAS && this.options.selector !== false) return this.select(input);
     if (this.tools().some((tool) => tool.name === toolName)) return this.inner.call(toolName, input);
     const area = this.areas.find((a) => a.commands.some((command) => toToolName(command) === toolName));
     // Not run: a tool of an area not chosen yet reads as "unknown tool" to the toolkit, which would send the model
@@ -77,13 +83,14 @@ export class RoutedToolkit implements ToolSurface {
   }
 
   private notSelected(toolName: string, area: ToolArea): ToolResult {
-    const problem = `A ferramenta "${toolName}" é do assunto "${area.id}", que ainda não foi escolhido. Offending value: ${JSON.stringify(toolName)}`;
-    const error = usageError(
-      'ERR_AREA_NOT_SELECTED',
-      problem,
-      `chamar ${SELECT_AREAS} com { "areas": ["${area.id}"] } antes`,
-    );
-    const { code, type, message } = shellFailureFrom(error);
+    const hidden = this.options.selector === false;
+    const problem = hidden
+      ? `A ferramenta "${toolName}" não está disponível neste pedido. Offending value: ${JSON.stringify(toolName)}`
+      : `A ferramenta "${toolName}" é do assunto "${area.id}", que ainda não foi escolhido. Offending value: ${JSON.stringify(toolName)}`;
+    const expected = hidden
+      ? 'usar só as ferramentas oferecidas neste pedido'
+      : `chamar ${SELECT_AREAS} com { "areas": ["${area.id}"] } antes`;
+    const { code, type, message } = shellFailureFrom(usageError('ERR_AREA_NOT_SELECTED', problem, expected));
     return { ok: false, error: { code, type, message } };
   }
 

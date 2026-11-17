@@ -9,6 +9,8 @@ export interface RoutingRow {
   selected: string[];
   /** What the decision model said, so the threshold can be changed later without asking it again. */
   best: string;
+  /** How sure the model was of its best subject. */
+  bestProbability: number;
   ranked: string[];
   noul: Record<string, number>;
   /** Present only when the case needs a subject. */

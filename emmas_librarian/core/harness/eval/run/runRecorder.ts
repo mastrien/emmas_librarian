@@ -33,8 +33,8 @@ export class RunRecorder {
   }
 
   /** The server's own output, as it came. */
-  writeServerLog(text: string): void {
-    fs.writeFileSync(path.join(this.dir, 'server.log'), text, 'utf-8');
+  writeServerLog(text: string, name = 'server.log'): void {
+    fs.writeFileSync(path.join(this.dir, name), text, 'utf-8');
   }
 
   finish(summary: Record<string, unknown>): void {
