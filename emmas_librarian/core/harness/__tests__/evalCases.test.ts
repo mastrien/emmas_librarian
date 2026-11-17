@@ -73,3 +73,48 @@ describe('the ideal trajectories, run offline on Biblioteca de teste F', () => {
     }
   });
 });
+
+describe('the checks that judge the diary and the monitor', () => {
+  const entry = { projectId: 1, date: '2026-11-15', contains: 'terminei', keeps: '' };
+
+  async function withLibrary<T>(run: (library: ReturnType<typeof openTestLibrary>) => Promise<T>): Promise<T> {
+    const library = openTestLibrary();
+    try {
+      await seedLibraryF(library.commands);
+      return await run(library);
+    } finally {
+      library.close();
+    }
+  }
+
+  it('diaryAppended accepts any wording that says it, in any case, and refuses an entry that does not', async () => {
+    await withLibrary(async ({ commands }) => {
+      const check = { check: 'diaryAppended', args: entry };
+      expect(await runCheck(check, commands, '')).toBe(false);
+      await commands.run('diary:appendAgentRecord', 1, '2026-11-15', 'Hoje eu li outra coisa.');
+      expect(await runCheck(check, commands, '')).toBe(false);
+      await commands.run('diary:appendAgentRecord', 1, '2026-11-15', 'Terminei de ler o artigo 3.');
+      expect(await runCheck(check, commands, '')).toBe(true);
+    });
+  });
+
+  it('diaryAppended does not count what was in the page before, and wants it kept', async () => {
+    await withLibrary(async ({ commands }) => {
+      await commands.run('diary:appendAgentRecord', 1, '2026-11-15', 'terminei antes');
+      const page = (await commands.run('diary:getOne', 1, '2026-11-15')) as { content: string };
+      const keeps = page.content;
+      expect(await runCheck({ check: 'diaryAppended', args: { ...entry, keeps } }, commands, '')).toBe(false);
+      await commands.run('diary:appendAgentRecord', 1, '2026-11-15', 'terminei agora');
+      expect(await runCheck({ check: 'diaryAppended', args: { ...entry, keeps } }, commands, '')).toBe(true);
+    });
+  });
+
+  it('the snapshot sees a search monitor being set, so a case that wants nothing changed catches it', async () => {
+    await withLibrary(async ({ commands }) => {
+      const before = await snapshot(commands);
+      expect(await runCheck({ check: 'unchanged' }, commands, before)).toBe(true);
+      await commands.run('searchMonitor:set', 1, 1, 14);
+      expect(await runCheck({ check: 'unchanged' }, commands, before)).toBe(false);
+    });
+  });
+});

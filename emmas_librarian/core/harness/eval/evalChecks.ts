@@ -21,6 +21,7 @@ export async function snapshot(commands: CommandRegistry): Promise<string> {
     rows(commands, 'categories:getProject', 1),
     rows(commands, 'screening:labels', 1),
     rows(commands, 'questionSets:list', null),
+    rows(commands, 'searchMonitor:list', 1),
   ]);
   return JSON.stringify(parts);
 }
@@ -39,6 +40,13 @@ const CHECKS: Record<string, Check> = {
   diaryEndsWith: async (c, a) => {
     const page = (await c.run('diary:getOne', a.projectId, a.date)) as { content: string } | undefined;
     return !!page?.content.endsWith(String(a.text)) && page.content.startsWith(String(a.keeps));
+  },
+  // The wording of the entry is the model's: what the case asks is that the entry was added after what was there, saying it.
+  diaryAppended: async (c, a) => {
+    const page = (await c.run('diary:getOne', a.projectId, a.date)) as { content: string } | undefined;
+    const content = page?.content ?? '';
+    const added = content.slice(String(a.keeps).length).toLowerCase();
+    return content.startsWith(String(a.keeps)) && added.includes(String(a.contains).toLowerCase());
   },
   venueCount: async (c, a) => (await rows(c, 'scientificVenues:getAll')).length === a.count,
   categoryExists: async (c, a) => {

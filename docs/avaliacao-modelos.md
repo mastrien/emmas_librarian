@@ -318,3 +318,24 @@ configuração (seed 42). A reserva no completo **não foi acionada em nenhum do
   modo foi rodado uma vez. Não afirmo que o decided acerta mais; afirmo que não acerta menos e que é mais rápido.
 - **Cobertura da reserva:** como nunca disparou, a regra de reserva só foi exercitada nos testes unitários, não numa
   falha real do roteador.
+
+## Revisão dos 5 casos que o LFM3 erra nos três modos (2026-11-17)
+
+`mon-3`, `cat-3`, `bus-2`, `rot-1` e `ctx-2` falham no LFM3 completo, roteado e decided. Li a especificação de cada um e o
+que os modelos fizeram, no LFM3 e nos modelos do Colab (Qwen3.5 4B/9B, Gemma 4):
+
+| Caso | Veredito | O que se vê |
+|---|---|---|
+| `rot-1` | **defeito do caso, corrigido** | Todos os modelos marcam o artigo 3 como lido e escrevem no diário, mas a verificação exigia que o diário terminasse em exatamente "Terminei.". "Terminei o artigo 3.", "terminei" e "Terminei de ler o artigo 3." reprovavam. Trocada por `diaryAppended` (a entrada adicionada contém "terminei", sem diferenciar maiúsculas, e o que havia antes fica). |
+| `mon-3` | **verificação fraca, corrigida; falha do LFM3 mantida** | O caso esperava que o modelo explicasse as opções "e não escolhesse 14 sem perguntar", mas `checks` estava vazio, então Qwen 4B/9B, que gravaram 14 dias em silêncio, passavam. Agora `unchanged` (e o snapshot passou a cobrir o monitor de buscas). O LFM3 repete `searchMonitor__set` com 1, 7 e 14 dias até estourar o limite de passos: falha real do modelo. |
+| `cat-3` | falha do modelo, caso correto | A recusa é o certo: não há ferramenta que atribua categoria a artigo. LFM3 e Qwen criam uma categoria "Metodologia" para contornar, o que muda a biblioteca. Só o Gemma 4 recusa. |
+| `ctx-2` | falha do modelo, caso correto | Sem projeto em foco e com dois projetos, o certo é perguntar qual. LFM3 listou os projetos, escolheu o 1 e consultou os artigos. Qwen 4B/9B e Gemma perguntam. |
+| `bus-2` | falha do modelo; achado sobre a ferramenta | LFM3 e Qwen não chamam `search__translateQuery`: pedem informação extra (artigo, projeto). Só o Gemma chama, depois de errar a forma do argumento. O esquema da ferramenta é uma `anyOf` aninhada e **a ferramenta não traz descrição em linguagem natural do que faz**. Não alterei o caso: o ponto a melhorar está na ferramenta, não na avaliação. |
+
+Efeito estimado das duas correções nos resultados já gravados (re-pontuação offline pelas chamadas gravadas, não
+repetição): `rot-1` passa a ser acertado em quase todas as configurações que já escreviam no diário, e `mon-3` deixa de
+ser acertado por Qwen3.5 2B/4B/9B (ficam só Gemma 4, que pergunta). Para os quatro candidatos o saldo é de mais um e
+menos um caso. Verificação de ponta a ponta no LFM3 decided: `rot-1` passa; `mon-3` continua falhando.
+
+**Os números das tabelas anteriores não foram refeitos e usam os casos antigos** (`casesSha` diferente nas execuções
+novas). Execuções novas com este conjunto não são comparáveis caso a caso nesses dois pontos com as anteriores.
