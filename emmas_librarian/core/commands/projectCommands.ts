@@ -62,6 +62,7 @@ export function registerSearchCommands(
     orchestrator.previewCitations(projectId, request),
   );
   commands.add(IpcChannel.SEARCH_DISCARD_PREVIEW, (previewId: string) => orchestrator.discardPreview(previewId));
+  // Converte uma busca estruturada para o formato de cada base (Scopus, Web of Science, PubMed...); só traduz, não busca. O ast é uma regra { type: 'rule', field: 'all' | 'title' | 'abstract' | 'authors', operator: 'contains' | 'exact' | 'not_contains', value } ou um grupo { type: 'group', logicalOperator: 'AND' | 'OR', children: [regras ou grupos] }.
   commands.add(IpcChannel.SEARCH_TRANSLATE_QUERY, (ast: QueryASTNode) => queryTranslator.translate(ast));
   commands.add(IpcChannel.SEARCH_REVERT, (searchId: number) => db.revertSearch(searchId));
 }
