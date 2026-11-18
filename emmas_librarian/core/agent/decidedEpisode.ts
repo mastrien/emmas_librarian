@@ -1,10 +1,10 @@
-import { fromToolName } from '../../toolNames';
-import { TOOL_ACCESS } from '../../toolAccess';
-import type { LibraryToolkit } from '../../LibraryToolkit';
-import { RoutedToolkit } from '../../RoutedToolkit';
-import type { ToolArea } from '../../toolAreas';
-import type { ChatModel } from '../run/chatClient';
-import { runEpisode, type DecisionTrace, type EpisodeRecord } from '../run/episode';
+import { fromToolName } from '../harness/toolNames';
+import { TOOL_ACCESS } from '../harness/toolAccess';
+import type { LibraryToolkit } from '../harness/LibraryToolkit';
+import { RoutedToolkit } from '../harness/RoutedToolkit';
+import type { ToolArea } from '../harness/toolAreas';
+import type { ChatModel } from './chatClient';
+import { runEpisode, type DecisionTrace, type EpisodeRecord } from './episode';
 import { routingDecision, routingRequest, type RoutingDecision } from './areaRouting';
 import type { DecisionModel, DecisionReply } from './systemOne';
 

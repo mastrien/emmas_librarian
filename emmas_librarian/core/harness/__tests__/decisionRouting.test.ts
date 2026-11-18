@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { routingDecision, routingRequest, BEST_AREA } from '../eval/decision/areaRouting';
+import { routingDecision, routingRequest, BEST_AREA } from '../../agent/areaRouting';
 import { DECISION_MODELS, decisionServerArgs } from '../eval/decision/decisionCatalog';
 import { areaOfTool, requiredAreas, scoreRouting } from '../eval/decision/routingMetrics';
 import { summarizeByKind, summarizeRouting, withThreshold, type RoutingRow } from '../eval/decision/routingSummary';
-import { SystemOneClient, parseDecisionReply } from '../eval/decision/systemOne';
+import { SystemOneClient, parseDecisionReply } from '../../agent/systemOne';
 import { BEST_TOOL, rankedTools, toolQuestion } from '../eval/decision/toolPicking';
 import { DEFAULT_SETUP } from '../eval/run/runSetup';
 import type { EvalCase } from '../eval/evalCase';

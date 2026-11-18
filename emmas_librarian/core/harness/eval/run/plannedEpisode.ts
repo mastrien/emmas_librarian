@@ -1,6 +1,6 @@
 import type { RoutedToolkit } from '../../RoutedToolkit';
-import type { ChatMessage, ChatModel, ChatReply } from './chatClient';
-import { runEpisode, type EpisodeRecord, type EpisodeStep } from './episode';
+import type { ChatMessage, ChatModel, ChatReply } from '../../../agent/chatClient';
+import { runEpisode, type EpisodeRecord, type EpisodeStep } from '../../../agent/episode';
 import { planFromReply, planInstructions, planTool, type PlannedTask } from './taskPlan';
 
 export interface PlannedEpisodeInput {

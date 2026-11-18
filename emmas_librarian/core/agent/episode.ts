@@ -1,6 +1,6 @@
-import type { ToolResult } from '../../LibraryToolkit';
-import type { ToolSurface } from '../../toolSurface';
-import type { ToolDefinition } from '../../toolDefinition';
+import type { ToolResult } from '../harness/LibraryToolkit';
+import type { ToolSurface } from '../harness/toolSurface';
+import type { ToolDefinition } from '../harness/toolDefinition';
 import type { ChatMessage, ChatModel, ChatReply, OpenAiTool } from './chatClient';
 
 export interface EpisodeStep {

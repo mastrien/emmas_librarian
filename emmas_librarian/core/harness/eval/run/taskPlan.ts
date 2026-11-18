@@ -1,4 +1,4 @@
-import type { OpenAiTool } from './chatClient';
+import type { OpenAiTool } from '../../../agent/chatClient';
 
 /** Version of the planning instructions: it goes into the run record, so runs are only compared if it matches. */
 export const PLAN_PROMPT_VERSION = 'v3';
