@@ -19,7 +19,7 @@ import { MODELS, samplingOf, serverArgs, type ModelSpec } from './modelCatalog';
 import { RunRecorder } from './runRecorder';
 import { setupFromEnv } from './runSetup';
 import { SCORER_VERSION, scoreEpisode } from './score';
-import { startServer } from './serverProcess';
+import { startServer } from '../../../agent/runtime/serverProcess';
 import { PLAN_PROMPT_VERSION } from './taskPlan';
 import { systemContext } from '../../systemContext';
 import { dayFromText, systemPromptFor, SYSTEM_PROMPT_VERSION } from './systemPrompt';

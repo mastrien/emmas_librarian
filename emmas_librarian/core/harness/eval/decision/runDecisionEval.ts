@@ -10,7 +10,7 @@ import { openTestLibrary } from '../../__tests__/support/openTestLibrary';
 import { parseEvalCases, type EvalCase } from '../evalCase';
 import { flagsOf } from '../run/flags';
 import { setupFromEnv } from '../run/runSetup';
-import { startServer, type RunningServer } from '../run/serverProcess';
+import { startServer, type RunningServer } from '../../../agent/runtime/serverProcess';
 import { routingDecision, routingRequest } from '../../../agent/areaRouting';
 import { DECISION_MODELS, decisionServerArgs, type DecisionModelSpec } from './decisionCatalog';
 import { areaOfTool, requiredAreas, scoreRouting } from './routingMetrics';

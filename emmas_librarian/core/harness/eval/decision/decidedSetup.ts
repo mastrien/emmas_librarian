@@ -1,6 +1,6 @@
 import path from 'path';
 import type { RunSetup } from '../run/runSetup';
-import { startServer, type RunningServer } from '../run/serverProcess';
+import { startServer, type RunningServer } from '../../../agent/runtime/serverProcess';
 import type { DecidedOptions } from '../run/runMode';
 import { DECISION_MODELS, decisionServerArgs, type DecisionModelSpec } from './decisionCatalog';
 import { SystemOneClient } from '../../../agent/systemOne';

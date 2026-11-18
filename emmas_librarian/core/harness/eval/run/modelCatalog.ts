@@ -1,4 +1,5 @@
 import path from 'path';
+import { chatServerArgs } from '../../../agent/runtime/serverArgs';
 import { DEFAULT_SETUP, type RunSetup } from './runSetup';
 
 /** One model of the comparison, with everything that decides how it is run. All of it is written into the run record. */
@@ -50,11 +51,11 @@ export const MODELS: ModelSpec[] = [
  *   serverArgs(MODELS[0], 8089); // ['-m', 'F:\\...gguf', '--jinja', ...]
  */
 export function serverArgs(model: ModelSpec, port: number, setup: RunSetup = DEFAULT_SETUP): string[] {
-  const args = ['-m', path.join(setup.modelsDir, model.file), '--jinja', '-ngl', '99', '-c', String(model.contextSize)];
-  if (setup.device) args.push('--device', setup.device);
-  args.push('--port', String(port), '--host', '127.0.0.1', '--seed', '42', '--no-webui');
-  if (model.templateKwargs) args.push('--chat-template-kwargs', JSON.stringify(model.templateKwargs));
-  return args;
+  const modelPath = path.join(setup.modelsDir, model.file);
+  return chatServerArgs(
+    { modelPath, contextSize: model.contextSize, device: setup.device, port },
+    model.templateKwargs,
+  );
 }
 
 /** Sampling sent with every request, from the model's card. */
