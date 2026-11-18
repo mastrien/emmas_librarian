@@ -11,7 +11,10 @@ test.describe('Command line interface', () => {
   let root;
   let userDataDir;
 
-  const cli = async (...cliArgs) => {
+  // Electron exits with -1, saying nothing, when the command line has a loose word after the command; only `--` turns
+  // that check off (docs/cli.md). The arguments of the command therefore go after it.
+  const cli = async (command, ...rest) => {
+    const cliArgs = rest.length > 0 && !rest[0].startsWith('--') ? [command, '--', ...rest] : [command, ...rest];
     const { code, stdout, stderr } = await runAppUntilExit({}, { userDataDir, cliArgs });
     // Chromium writes its own warnings to stderr; the CLI's document is the line that is JSON.
     const errorLine = stderr.split('\n').find((line) => line.startsWith('{"ok"'));
@@ -19,7 +22,8 @@ test.describe('Command line interface', () => {
       code,
       stdout,
       // Help is plain text; everything else is one JSON document.
-      output: stdout.startsWith('{') ? JSON.parse(stdout) : null,
+      // On Windows a blank line comes before the document when the app is already open; JSON.parse ignores it.
+      output: stdout.trim().startsWith('{') ? JSON.parse(stdout) : null,
       error: errorLine ? JSON.parse(errorLine).error : null,
     };
   };
@@ -60,7 +64,7 @@ test.describe('Command line interface', () => {
     const duplicate = await cli('projects:create', 'Feito no CLI');
     expect(duplicate.code).toBe(3);
     expect(duplicate.error.code).toBe('ERR_DUPLICATE_NAME');
-    expect(duplicate.stdout).toBe('');
+    expect(duplicate.stdout.trim()).toBe('');
     expect((await cli('pdf:get', '1')).code).toBe(2);
     expect((await cli('projects:getAl')).error.code).toBe('ERR_UNKNOWN_COMMAND');
 
@@ -73,7 +77,7 @@ test.describe('Command line interface', () => {
       'content',
       'expected',
     ]);
-    expect((await cli('export:csv', '--help')).stdout).toContain('export:csv <projectId> <filePath>');
+    expect((await cli('export:csv', '--help')).stdout).toContain('export:csv -- <projectId> <filePath>');
 
     // What the CLI wrote is there when the app opens again.
     app = await launchApp({}, { userDataDir });

@@ -1,10 +1,10 @@
 import fs from 'fs';
 import { IpcChannel } from '../../src/types';
+import type { CategoryOption } from '../../src/types';
 import type { DatabaseAdapter } from '../database/DatabaseAdapter';
 import { parseCategorySet, validateCategorySetEntries } from '../../src/utils/categoryTemplates';
+import type { CategoryKind, CategorySetEntry } from '../../src/utils/categoryTemplates';
 import type { CommandRegistry, FileSuggestion } from './CommandRegistry';
-
-type CategoryOptions = Parameters<DatabaseAdapter['createProjectCategory']>[3];
 
 /**
  * Custom article categories and saved massive-investigation runs.
@@ -16,12 +16,12 @@ export function registerCategoryAndInvestigationCommands(commands: CommandRegist
   commands.add(IpcChannel.CATEGORIES_GET_PROJECT, (projectId: number) => db.getProjectCategories(projectId));
   commands.add(
     IpcChannel.CATEGORIES_CREATE_PROJECT,
-    (projectId: number, name: string, type: string, options: CategoryOptions) =>
+    (projectId: number, name: string, type: CategoryKind, options?: CategoryOption[] | null) =>
       db.createProjectCategory(projectId, name, type, options),
   );
   commands.add(
     IpcChannel.CATEGORIES_UPDATE_PROJECT,
-    (categoryId: number, name: string, type: string, options: CategoryOptions) => {
+    (categoryId: number, name: string, type: CategoryKind, options?: CategoryOption[] | null) => {
       db.updateProjectCategory(categoryId, name, type, options);
       return true;
     },
@@ -51,7 +51,7 @@ export function registerCategoryAndInvestigationCommands(commands: CommandRegist
 
 // #46: templates and the user's own sets (JSON) add categories in one transaction; existing names are skipped.
 function registerCategorySetCommands(commands: CommandRegistry, db: DatabaseAdapter): void {
-  commands.add(IpcChannel.CATEGORIES_APPLY_SET, (projectId: number, entries: unknown) =>
+  commands.add(IpcChannel.CATEGORIES_APPLY_SET, (projectId: number, entries: CategorySetEntry[]) =>
     db.applyCategorySet(projectId, validateCategorySetEntries(entries)),
   );
   commands.add(

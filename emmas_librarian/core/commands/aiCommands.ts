@@ -4,13 +4,31 @@ import { AIService } from '../services/AIService';
 import { QuestionSetRepository } from '../database/QuestionSetRepository';
 import { InvestigationResultRepository } from '../database/InvestigationResultRepository';
 import { AIModelConfigRepository } from '../database/AIModelConfigRepository';
+import { questionsToJson } from '../utils/questionList';
 import { IpcChannel } from '../../src/types';
 import type { AISkill, AIProvider, ResultReview } from '../../src/types';
 import type { InvestigationResultInput } from '../database/InvestigationResultRepository';
 import type { CommandRegistry } from './CommandRegistry';
 
-type QuestionSetInput = Parameters<QuestionSetRepository['createQuestionSet']>[0];
-type QuestionSetChanges = Parameters<QuestionSetRepository['updateQuestionSet']>[1];
+// `questions` is the list itself; the JSON text the interface sends is still accepted (see questionsToJson).
+interface QuestionSetInput {
+  project_id: number | null;
+  name: string;
+  description?: string;
+  questions: string[] | string;
+}
+interface QuestionSetChanges {
+  name?: string;
+  description?: string;
+  questions?: string[] | string;
+}
+
+const withQuestionsAsJson = <T extends { questions?: string[] | string }>(
+  input: T,
+): Omit<T, 'questions'> & { questions?: string } =>
+  input.questions === undefined
+    ? { ...input, questions: undefined }
+    : { ...input, questions: questionsToJson(input.questions) };
 
 /**
  * AI over an article's PDF (summary, extraction, metadata), the model chosen for each skill, question
@@ -74,9 +92,11 @@ function registerModelConfigCommands(commands: CommandRegistry, configs: AIModel
 function registerQuestionSetCommands(commands: CommandRegistry, sets: QuestionSetRepository): void {
   commands.add(IpcChannel.QUESTION_SETS_LIST, (projectId: number | null) => sets.listQuestionSets(projectId));
   commands.add(IpcChannel.QUESTION_SETS_GET, (id: number) => sets.getQuestionSet(id));
-  commands.add(IpcChannel.QUESTION_SETS_CREATE, (input: QuestionSetInput) => sets.createQuestionSet(input));
+  commands.add(IpcChannel.QUESTION_SETS_CREATE, (input: QuestionSetInput) =>
+    sets.createQuestionSet({ ...input, questions: questionsToJson(input.questions) }),
+  );
   commands.add(IpcChannel.QUESTION_SETS_UPDATE, (id: number, changes: QuestionSetChanges) => {
-    sets.updateQuestionSet(id, changes);
+    sets.updateQuestionSet(id, withQuestionsAsJson(changes));
   });
   commands.add(IpcChannel.QUESTION_SETS_DELETE, (id: number) => {
     sets.deleteQuestionSet(id);

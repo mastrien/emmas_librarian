@@ -1,0 +1,94 @@
+{
+  "id": "inv-2",
+  "kind": "trap",
+  "prompt": "Cria um conjunto \"Metodologia\" com as perguntas \"Qual o método?\" e \"Qual a amostra?\".",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 14,
+  "toolsBytes": 5057,
+  "wallMs": 2820,
+  "asked": [],
+  "checks": [
+    {
+      "check": "questionSetExists",
+      "args": {
+        "name": "Metodologia",
+        "questions": [
+          "Qual o método?",
+          "Qual a amostra?"
+        ]
+      },
+      "ok": false
+    }
+  ],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": false,
+    "steps": 1,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "\nPor favor, forneça o ID do projeto para criar o conjunto “Metodologia” com as perguntas solicitadas.",
+          "toolCalls": [],
+          "reasoning": "\nThe user wants to create a question set named \"Metodologia\" with two questions: \"Qual o método?\" and \"Qual a amostra?\". According to the tools, we have a command \"questionSets__create\" which creates a question set. It requires input object with project_id (optional? Actually required: \"input\" includes project_id, name, questions). The input object has required fields: project_id, name, questions. The project_id is required. However, the user didn't specify a project ID. According to the rules, we cannot invent IDs. We need to ask for the project ID. But the instruction says: \"Nenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\" There's a rule: \"No project focus: if the request depends on a project, list them and ask which.\" The user didn't mention any project. We need to check if there's a current project context? Not provided. Since we don't have a project ID, we cannot create the set without it. According to rule, we should list projects? But we don't have a tool to list projects. The only tool that deals with projects is categories and investigation ones. There's no tool to list projects. So we cannot list them. Therefore we must ask the user to specify a project ID. However, the instruction says \"se o pedido depender de um projeto, liste-os e pergunte qual.\" Since we don't have a way to list projects, we cannot fulfill that. So we should respond that we need the project ID. But we need to respond in Portuguese, short. So we can say: \"Por favor, forneça o ID do projeto para criar o conjunto.\" That would be appropriate.\n\nThus final answer: \"Por favor, forneça o ID do projeto para criar o conjunto 'Metodologia' com as perguntas solicitadas.\" That's short and in Portuguese.\n\nWe should not attempt to call any tool because we lack project_id. So we respond with that message.\n",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 1026,
+            "promptMs": 138.002,
+            "generatedTokens": 450,
+            "generatedMs": 2617.416
+          },
+          "wallMs": 2785
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "\nPor favor, forneça o ID do projeto para criar o conjunto “Metodologia” com as perguntas solicitadas.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Cria um conjunto \"Metodologia\" com as perguntas \"Qual o método?\" e \"Qual a amostra?\"."
+      },
+      {
+        "role": "assistant",
+        "content": "\nPor favor, forneça o ID do projeto para criar o conjunto “Metodologia” com as perguntas solicitadas.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "perguntas",
+          "probability": 0.6653950508456312
+        },
+        {
+          "area": "categorias",
+          "probability": 0.2528590483662757
+        },
+        {
+          "area": "projetos",
+          "probability": 0.038905221793432504
+        }
+      ],
+      "chosen": [
+        "perguntas",
+        "categorias"
+      ],
+      "fallback": "none",
+      "decisionMs": 35,
+      "decisionInputTokens": 378
+    }
+  }
+}

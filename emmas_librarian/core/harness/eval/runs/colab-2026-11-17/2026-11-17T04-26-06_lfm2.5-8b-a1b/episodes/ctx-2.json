@@ -1,0 +1,87 @@
+{
+  "id": "ctx-2",
+  "kind": "trap",
+  "prompt": "Quantos artigos novos tenho neste projeto?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 1,
+  "toolsBytes": 1750,
+  "wallMs": 6881,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "\n",
+          "toolCalls": [
+            {
+              "id": "6IkG5dcu3GwB4ImxTrri2nYGcDCYUCoV",
+              "name": "submit_plan",
+              "arguments": "{\"tarefas\":[]}"
+            }
+          ],
+          "reasoning": "\nThe user asks: \"Quantos artigos novos tenho neste projeto?\" (How many new articles do I have in this project?). We have no project context. There's no tool to query article counts. The system says we cannot execute anything, only deliver plan calling submit_plan. There's no tool to retrieve article count. According to instruction, we cannot answer directly; we must use submit_plan with tasks. Since we don't have enough info, we should list tasks? The question is about counting new articles. We could ask clarifying question? But we cannot respond with a question; we must either call submit_plan with tasks to gather info. However we have no tool to get article count. The best we can do is to create a task to query the system? But there is no such tool. The only tool is submit_plan. According to instruction: \"Nenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\" The request depends on a project, but we don't know which project. We could ask for clarification, but we cannot ask; we must use submit_plan. Possibly we can create a task to ask the system? But we cannot. The instruction says: \"Cada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\" So we need to create tasks with subjects from the list. The relevant subject for article-related tasks is \"artigos\". The question is about counting new articles. There's no direct tool, but we could create a task to \"ver artigos de um projeto\" (which is a task under \"artigos\"). However that would list articles, not count new ones. There's also \"busca\" for bibliographic searches. But we cannot compute count. The instruction says: \"Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\" Since none of the subjects directly answer the question, we should call submit_plan with empty tasks. That would be appropriate: no applicable subject. So we output submit_plan with empty tasks array.\n\nThus:\n\n{\n  \"tarefas\": []\n}\n\nWe must ensure no extra text. Let's produce that.\n",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 504,
+            "promptMs": 70.829,
+            "generatedTokens": 492,
+            "generatedMs": 2801.071
+          },
+          "wallMs": 2906
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "\nNão tenho acesso a essa informação.",
+          "toolCalls": [],
+          "reasoning": "\nWe need to understand the request. The user says: \"Pedido da pessoa: Quantos artigos novos tenho neste projeto? Nenhuma tarefa foi feita. Responda à pessoa, em português e de forma curta.\"\n\nWe are the assistant of Emma's Librarian. We have to use tools to consult and alter the library. However, the request is about \"How many new articles do I have in this project?\" There's no mention of a project ID or any tasks. The user says \"Nenhuma tarefa foi feita.\" So no tasks have been done. We need to respond in Portuguese, short.\n\nBut we need to consult the library to answer. However, we don't have a tool that directly provides number of new articles in a project. The available tools are not listed in the prompt. The system says: \"Use the tools to consult and alter the library.\" But we don't have any tool definitions. Possibly there are hidden tools? The instruction says: \"Never invent ids, dates or names: consult the library before acting on something the person only cited by name.\" So we need to consult the library. But we don't have a tool for that. However, we can assume there is a tool like \"consultar_projeto\" or something. But we cannot invent IDs. The user didn't provide any project name or ID. According to rule, we must not invent IDs. So we cannot answer without more info. The instruction: \"If no tool allows the request, say that you don't have access to that and don't try another path.\" So we must say we cannot retrieve that info because we lack the necessary tool or data. However, we could ask for clarification: \"Could you provide the project name or ID?\" But the instruction says: \"Se o pedido depender de um projeto, liste-os e pergunte qual.\" Actually, the last line: \"Nenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\" Wait, the user says \"Nenhuma tarefa foi feita.\" It doesn't mention a project. But the request is about \"este projeto\" (this project). We don't know which project. According to rule: \"Se o pedido depender de um projeto, liste-os e pergunte qual.\" So we need to list projects? But we have no tool to list projects. So we cannot answer. So we must say we don't have access to that information. However, we could ask for clarification: \"Could you specify the project name or ID?\" That would be a question, but the instruction says we can ask for clarification if needed. The user didn't provide a project name. So we should ask: \"Qual é o nome ou ID do projeto?\" But the instruction says \"Responda à pessoa, em português e de forma curta.\" So we need a short answer. Possibly we can say: \"Não tenho acesso a essa informação.\" That is short and in Portuguese. That would satisfy the rule: \"Não tem acesso a isso e não tente outro caminho.\" So we should respond: \"Não tenho acesso a essa informação.\" That is short, in Portuguese. That seems appropriate.\n\nThus final answer: \"Não tenho acesso a essa informação.\"\n",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 279,
+            "promptMs": 52.96,
+            "generatedTokens": 694,
+            "generatedMs": 3912.735
+          },
+          "wallMs": 3975
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "\nNão tenho acesso a essa informação.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Quantos artigos novos tenho neste projeto?"
+      },
+      {
+        "role": "assistant",
+        "content": "\n",
+        "toolCalls": []
+      }
+    ],
+    "plan": []
+  }
+}

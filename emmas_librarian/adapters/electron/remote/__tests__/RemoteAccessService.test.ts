@@ -50,7 +50,7 @@ function call(port: number, method: string, route: string, body?: object, token?
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers.Authorization = `Bearer ${token}`;
     // The certificate is self-signed: the test checks it by fingerprint, as the person pairing a phone does.
-    const options = { host: '127.0.0.1', port, method, path: route, headers, rejectUnauthorized: false };
+    const options = { host: '127.0.0.1', port, method, path: route, headers, rejectUnauthorized: false, agent: false };
     const request = https.request(options, (response) => {
       const certificate = (response.socket as import('tls').TLSSocket).getPeerCertificate();
       let text = '';
@@ -71,10 +71,22 @@ function call(port: number, method: string, route: string, body?: object, token?
 
 const codeOf = (url: string) => url.split('#pair=')[1];
 
-beforeEach(() => {
+// The service reads a saved port of 0 as "none saved" and falls back to the default one (47810), so a free
+// port has to be asked from the system. With the default, the tests collide with the real app when it is open.
+function freePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const probe = net.createServer();
+    probe.once('error', reject);
+    probe.listen(0, '127.0.0.1', () => {
+      const { port } = probe.address() as net.AddressInfo;
+      probe.close(() => resolve(port));
+    });
+  });
+}
+
+beforeEach(async () => {
   userData = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'emma-lan-')), 'userData');
-  // Port 0: each test gets a free port instead of fighting over the default one.
-  settings = new FakeSettings({ remote_access_port: '0' });
+  settings = new FakeSettings({ remote_access_port: String(await freePort()) });
   addresses = ['192.168.0.10'];
   commands = new CommandRegistry();
   commands.add(IpcChannel.PROJECTS_GET_ALL, () => [{ id: 1, name: 'Tese' }]);

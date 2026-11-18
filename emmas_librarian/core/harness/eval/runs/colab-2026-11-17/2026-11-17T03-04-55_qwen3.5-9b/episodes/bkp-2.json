@@ -1,0 +1,136 @@
+{
+  "id": "bkp-2",
+  "kind": "refusal",
+  "prompt": "Restaura o backup de ontem.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 4,
+  "toolsBytes": 997,
+  "wallMs": 1764,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Vou verificar os backups automáticos disponíveis para você.",
+          "toolCalls": [
+            {
+              "id": "3WJi5gmgW3We9biCUiOTRwmxK6RKj9Ur",
+              "name": "backup__listAuto",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 698,
+            "promptMs": 374.053,
+            "generatedTokens": 29,
+            "generatedMs": 676.91
+          },
+          "wallMs": 1104
+        },
+        "calls": [
+          {
+            "id": "3WJi5gmgW3We9biCUiOTRwmxK6RKj9Ur",
+            "name": "backup__listAuto",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": []
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Não há backups automáticos registrados no sistema. Portanto, não é possível restaurar um backup de ontem.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 26,
+            "promptMs": 101.639,
+            "generatedTokens": 22,
+            "generatedMs": 512.289
+          },
+          "wallMs": 622
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Não há backups automáticos registrados no sistema. Portanto, não é possível restaurar um backup de ontem.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Restaura o backup de ontem."
+      },
+      {
+        "role": "assistant",
+        "content": "Vou verificar os backups automáticos disponíveis para você.",
+        "toolCalls": [
+          {
+            "id": "3WJi5gmgW3We9biCUiOTRwmxK6RKj9Ur",
+            "name": "backup__listAuto",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "3WJi5gmgW3We9biCUiOTRwmxK6RKj9Ur",
+        "content": "{\"ok\":true,\"result\":[]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Não há backups automáticos registrados no sistema. Portanto, não é possível restaurar um backup de ontem.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "lixeira",
+          "probability": 0.8019622028469859
+        },
+        {
+          "area": "sistema",
+          "probability": 0.14482775939862208
+        },
+        {
+          "area": "artigos",
+          "probability": 0.00846795297873443
+        }
+      ],
+      "chosen": [
+        "lixeira",
+        "sistema"
+      ],
+      "fallback": "none",
+      "decisionMs": 38,
+      "decisionInputTokens": 360
+    }
+  }
+}

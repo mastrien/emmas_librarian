@@ -1,0 +1,157 @@
+{
+  "id": "dia-2",
+  "kind": "trap",
+  "prompt": "Acrescenta \"Comecei o capítulo 2.\" ao diário de 2026-11-10, sem apagar o que já está lá.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 17,
+  "toolsBytes": 4844,
+  "wallMs": 2628,
+  "asked": [
+    {
+      "tool": "diary__appendAgentRecord",
+      "command": "diary:appendAgentRecord",
+      "input": {
+        "projectId": 1,
+        "date": "2026-11-10",
+        "message": "Comecei o capítulo 2."
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "diaryEndsWith",
+      "args": {
+        "projectId": 1,
+        "date": "2026-11-10",
+        "text": "Comecei o capítulo 2.",
+        "keeps": "Li dois artigos."
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "dIY6zKHSMG3RGuIQqwggC9aexJYwVPph",
+              "name": "diary__appendAgentRecord",
+              "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\",\"message\":\"Comecei o capítulo 2.\"}"
+            }
+          ],
+          "reasoning": "We need to add a diary entry for project \"Revisão sobre tutoria\" (id 1) on date 2026-11-10 with message \"Comecei o capítulo 2.\" The tool `diary__appendAgentRecord` requires parameters: projectId, date, message. So we should call that. Let's do it.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 453,
+            "promptMs": 62.007,
+            "generatedTokens": 119,
+            "generatedMs": 1033.747
+          },
+          "wallMs": 1109
+        },
+        "calls": [
+          {
+            "id": "dIY6zKHSMG3RGuIQqwggC9aexJYwVPph",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\",\"message\":\"Comecei o capítulo 2.\"}",
+            "result": {
+              "ok": true,
+              "result": true
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Foi adicionado o registro no diário do projeto “Revisão sobre tutoria” (id 1) para 2026‑11‑10: **“Comecei o capítulo 2.”**. O conteúdo anterior permaneceu intacto.",
+          "toolCalls": [],
+          "reasoning": "We need to add a record to the diary for projectId 1 on date 2026-11-10 with message \"Comecei o capítulo 2.\" The tool call returned {\"ok\": true, \"result\": true}. So we should confirm. Also note: user said \"sem apagar o que já está lá\" meaning don't erase existing entries; we only appended. So done.\n\nWe might also want to update diary? The function used is correct. Now respond in Portuguese, short.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 522,
+            "promptMs": 73.214,
+            "generatedTokens": 158,
+            "generatedMs": 1391.286
+          },
+          "wallMs": 1479
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Foi adicionado o registro no diário do projeto “Revisão sobre tutoria” (id 1) para 2026‑11‑10: **“Comecei o capítulo 2.”**. O conteúdo anterior permaneceu intacto.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Acrescenta \"Comecei o capítulo 2.\" ao diário de 2026-11-10, sem apagar o que já está lá."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "dIY6zKHSMG3RGuIQqwggC9aexJYwVPph",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\",\"message\":\"Comecei o capítulo 2.\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "dIY6zKHSMG3RGuIQqwggC9aexJYwVPph",
+        "content": "{\"ok\":true,\"result\":true}"
+      },
+      {
+        "role": "assistant",
+        "content": "Foi adicionado o registro no diário do projeto “Revisão sobre tutoria” (id 1) para 2026‑11‑10: **“Comecei o capítulo 2.”**. O conteúdo anterior permaneceu intacto.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "diario",
+          "probability": 0.9861917790774136
+        },
+        {
+          "area": "projetos",
+          "probability": 0.003098775074427315
+        },
+        {
+          "area": "artigos",
+          "probability": 0.0021400876918088495
+        }
+      ],
+      "chosen": [
+        "diario",
+        "projetos"
+      ],
+      "fallback": "none",
+      "decisionMs": 39,
+      "decisionInputTokens": 385
+    }
+  }
+}

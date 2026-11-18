@@ -1,0 +1,210 @@
+{
+  "id": "lix-2",
+  "kind": "happy",
+  "prompt": "Restaura o projeto que apaguei.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 15,
+  "toolsBytes": 4137,
+  "wallMs": 676,
+  "asked": [
+    {
+      "tool": "trash__restoreItem",
+      "command": "trash:restoreItem",
+      "input": {
+        "type": "project",
+        "id": 3
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "projectExists",
+      "args": {
+        "name": "Projeto antigo"
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "mmVp6I9gFX0H3bwPhNn7v0jUiAVP3Mrg",
+              "name": "trash__getItems",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 21,
+            "promptMs": 31.968,
+            "generatedTokens": 17,
+            "generatedMs": 122.161
+          },
+          "wallMs": 165
+        },
+        "calls": [
+          {
+            "id": "mmVp6I9gFX0H3bwPhNn7v0jUiAVP3Mrg",
+            "name": "trash__getItems",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 3,
+                  "type": "project",
+                  "title": "Projeto antigo",
+                  "deleted_at": "2026-11-17 03:19:27"
+                },
+                {
+                  "id": 3,
+                  "type": "annotation",
+                  "title": "comentário",
+                  "deleted_at": "2026-11-17 03:19:27"
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "maLHLefgamrUHTe6BI5KOMpzA5pf8aQv",
+              "name": "trash__restoreItem",
+              "arguments": "{\"type\":\"project\",\"id\":3}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 100,
+            "promptMs": 33.297,
+            "generatedTokens": 40,
+            "generatedMs": 290.707
+          },
+          "wallMs": 336
+        },
+        "calls": [
+          {
+            "id": "maLHLefgamrUHTe6BI5KOMpzA5pf8aQv",
+            "name": "trash__restoreItem",
+            "arguments": "{\"type\":\"project\",\"id\":3}",
+            "result": {
+              "ok": true,
+              "result": null
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O projeto \"Projeto antigo\" foi restaurado.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 38.908,
+            "generatedTokens": 12,
+            "generatedMs": 84.961
+          },
+          "wallMs": 136
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O projeto \"Projeto antigo\" foi restaurado.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Restaura o projeto que apaguei."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "mmVp6I9gFX0H3bwPhNn7v0jUiAVP3Mrg",
+            "name": "trash__getItems",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "mmVp6I9gFX0H3bwPhNn7v0jUiAVP3Mrg",
+        "content": "{\"ok\":true,\"result\":[{\"id\":3,\"type\":\"project\",\"title\":\"Projeto antigo\",\"deleted_at\":\"2026-11-17 03:19:27\"},{\"id\":3,\"type\":\"annotation\",\"title\":\"comentário\",\"deleted_at\":\"2026-11-17 03:19:27\"}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "maLHLefgamrUHTe6BI5KOMpzA5pf8aQv",
+            "name": "trash__restoreItem",
+            "arguments": "{\"type\":\"project\",\"id\":3}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "maLHLefgamrUHTe6BI5KOMpzA5pf8aQv",
+        "content": "{\"ok\":true,\"result\":null}"
+      },
+      {
+        "role": "assistant",
+        "content": "O projeto \"Projeto antigo\" foi restaurado.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "lixeira",
+          "probability": 0.9608691895079908
+        },
+        {
+          "area": "projetos",
+          "probability": 0.02434759683403318
+        },
+        {
+          "area": "artigos",
+          "probability": 0.00461355416707687
+        }
+      ],
+      "chosen": [
+        "lixeira",
+        "projetos"
+      ],
+      "fallback": "none",
+      "decisionMs": 38,
+      "decisionInputTokens": 361
+    }
+  }
+}

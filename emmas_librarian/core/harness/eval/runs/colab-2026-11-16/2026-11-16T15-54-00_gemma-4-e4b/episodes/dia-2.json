@@ -1,0 +1,193 @@
+{
+  "id": "dia-2",
+  "kind": "trap",
+  "prompt": "Acrescenta \"Comecei o capítulo 2.\" ao diário de 2026-11-10, sem apagar o que já está lá.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 5,
+  "toolsBytes": 2999,
+  "wallMs": 6381,
+  "asked": [
+    {
+      "tool": "diary__appendAgentRecord",
+      "command": "diary:appendAgentRecord",
+      "input": {
+        "date": "2026-11-10",
+        "message": "Comecei o capítulo 2.",
+        "projectId": 1
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "diaryEndsWith",
+      "args": {
+        "projectId": 1,
+        "date": "2026-11-10",
+        "text": "Comecei o capítulo 2.",
+        "keeps": "Li dois artigos."
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "DjibarYW7U7zimkuZmIJb1vDGONxpSOH",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"diario\"]}"
+            }
+          ],
+          "reasoning": "The user wants to add a note \"Comecei o capítulo 2.\" to the diary for the date 2026-11-10.\nI need to use the `select_areas` tool first to get the necessary functions.\nThe relevant area is `diario`.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 46,
+            "promptMs": 83.987,
+            "generatedTokens": 81,
+            "generatedMs": 1266.407
+          },
+          "wallMs": 1358
+        },
+        "calls": [
+          {
+            "id": "DjibarYW7U7zimkuZmIJb1vDGONxpSOH",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"diario\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "diario"
+                ],
+                "tools": [
+                  "diary__appendAgentRecord",
+                  "diary__getAll",
+                  "diary__getHistory",
+                  "diary__getOne"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "SRO2igNvYtzb6WDQ8KmpRISsgKTYnuaj",
+              "name": "diary__appendAgentRecord",
+              "arguments": "{\"date\":\"2026-11-10\",\"message\":\"Comecei o capítulo 2.\",\"projectId\":1}"
+            }
+          ],
+          "reasoning": "The user wants to append a message (\"Comecei o capítulo 2.\") to the diary for a specific date (2026-11-10).\nThe project in focus is \"Revisão sobre tutoria\" (id 1).\nI have the `diary__appendAgentRecord` tool, which is suitable for this task.\n\nI need to call `diary__appendAgentRecord` with:\n- `projectId`: 1 (from the context)\n- `date`: \"2026-11-10\"\n- `message`: \"Comecei o capítulo 2.\"",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 383,
+            "promptMs": 146.645,
+            "generatedTokens": 172,
+            "generatedMs": 2706.264
+          },
+          "wallMs": 2865
+        },
+        "calls": [
+          {
+            "id": "SRO2igNvYtzb6WDQ8KmpRISsgKTYnuaj",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"date\":\"2026-11-10\",\"message\":\"Comecei o capítulo 2.\",\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": true
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O registro foi adicionado ao diário de 2026-11-10.",
+          "toolCalls": [],
+          "reasoning": "A user wants to append a message to the diary for a specific date (2026-11-10) and project (Project \"Revisão sobre tutoria\", id 1).\nI have already called `select_areas` to get the `diary` tools.\nI then used `diary__appendAgentRecord` with the provided date, message, and project ID.\nThe response indicates success (`\"ok\":true,\"result\":true`).\nI should inform the user that the action was completed.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 68,
+            "promptMs": 66.449,
+            "generatedTokens": 132,
+            "generatedMs": 2078.66
+          },
+          "wallMs": 2157
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O registro foi adicionado ao diário de 2026-11-10.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Acrescenta \"Comecei o capítulo 2.\" ao diário de 2026-11-10, sem apagar o que já está lá."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "DjibarYW7U7zimkuZmIJb1vDGONxpSOH",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"diario\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "DjibarYW7U7zimkuZmIJb1vDGONxpSOH",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"diario\"],\"tools\":[\"diary__appendAgentRecord\",\"diary__getAll\",\"diary__getHistory\",\"diary__getOne\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "SRO2igNvYtzb6WDQ8KmpRISsgKTYnuaj",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"date\":\"2026-11-10\",\"message\":\"Comecei o capítulo 2.\",\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "SRO2igNvYtzb6WDQ8KmpRISsgKTYnuaj",
+        "content": "{\"ok\":true,\"result\":true}"
+      },
+      {
+        "role": "assistant",
+        "content": "O registro foi adicionado ao diário de 2026-11-10.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

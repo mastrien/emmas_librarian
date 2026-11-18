@@ -42,6 +42,10 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # The tool schemas for models are read from the command handlers; a handler changed without regenerating fails here.
+      - name: Command schemas up to date
+        run: npm run schemas:check
+
       # Errors fail the build; the warning cap is a ratchet (lower it as `any`/effect warnings are fixed).
       - name: Lint
         run: npm run lint:ci

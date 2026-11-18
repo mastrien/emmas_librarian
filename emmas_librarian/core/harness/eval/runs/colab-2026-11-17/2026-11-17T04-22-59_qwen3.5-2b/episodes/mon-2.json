@@ -1,0 +1,240 @@
+{
+  "id": "mon-2",
+  "kind": "happy",
+  "prompt": "Monitora a busca 1 do projeto da tutoria a cada 7 dias.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 12,
+  "toolsBytes": 6730,
+  "wallMs": 2209,
+  "asked": [
+    {
+      "tool": "searchMonitor__set",
+      "command": "searchMonitor:set",
+      "input": {
+        "projectId": 1,
+        "searchId": 1,
+        "days": 7
+      }
+    }
+  ],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 5,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "PGdmW49ZQJNI6POGv1EmFRfCy7Pt4uta",
+              "name": "submit_plan",
+              "arguments": "{\"tarefas\":[{\"assunto\": \"busca\", \"tarefa\": \"Criar um monitor de busca para a busca 1 do projeto da tutoria, que execute a cada 7 dias\"}]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 514,
+            "promptMs": 81.456,
+            "generatedTokens": 67,
+            "generatedMs": 492.14
+          },
+          "wallMs": 595
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "gCiwJuZ618vjtj3PEHOe0lwxobrBCOMA",
+              "name": "searchMonitor__list",
+              "arguments": "{\"projectId\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 2441,
+            "promptMs": 275.915,
+            "generatedTokens": 28,
+            "generatedMs": 208.724
+          },
+          "wallMs": 505
+        },
+        "calls": [
+          {
+            "id": "gCiwJuZ618vjtj3PEHOe0lwxobrBCOMA",
+            "name": "searchMonitor__list",
+            "arguments": "{\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": []
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "MwRIcxSULsQWfrlqmET9v7iiBfMrCOdR",
+              "name": "searchMonitor__set",
+              "arguments": "{\"projectId\":1,\"searchId\":1,\"days\":7}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 26,
+            "promptMs": 39.683,
+            "generatedTokens": 52,
+            "generatedMs": 385.985
+          },
+          "wallMs": 441
+        },
+        "calls": [
+          {
+            "id": "MwRIcxSULsQWfrlqmET9v7iiBfMrCOdR",
+            "name": "searchMonitor__set",
+            "arguments": "{\"projectId\":1,\"searchId\":1,\"days\":7}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "search_id": 1,
+                  "interval_days": 7,
+                  "last_checked_at": null,
+                  "pending_count": 0,
+                  "failed_bases": [],
+                  "project_id": 1,
+                  "project_name": "Revisão sobre tutoria",
+                  "unified_query": "Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems"
+                }
+              ]
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Criei um monitor de busca para a busca 1 do projeto \"Revisão sobre tutoria\", que executa a cada 7 dias.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 86,
+            "promptMs": 45.382,
+            "generatedTokens": 32,
+            "generatedMs": 234.299
+          },
+          "wallMs": 297
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "A tarefa foi criada com sucesso. O monitor de busca para a busca 1 do projeto \"Revisão sobre tutoria\" está ativo e executará a cada 7 dias.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 313,
+            "promptMs": 58.379,
+            "generatedTokens": 38,
+            "generatedMs": 275.159
+          },
+          "wallMs": 368
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "A tarefa foi criada com sucesso. O monitor de busca para a busca 1 do projeto \"Revisão sobre tutoria\" está ativo e executará a cada 7 dias.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Monitora a busca 1 do projeto da tutoria a cada 7 dias."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      },
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Pedido da pessoa: Monitora a busca 1 do projeto da tutoria a cada 7 dias.\nTarefa de agora (só esta): Criar um monitor de busca para a busca 1 do projeto da tutoria, que execute a cada 7 dias\nFaça só esta tarefa com as ferramentas e diga em uma frase o que fez ou encontrou."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "gCiwJuZ618vjtj3PEHOe0lwxobrBCOMA",
+            "name": "searchMonitor__list",
+            "arguments": "{\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "gCiwJuZ618vjtj3PEHOe0lwxobrBCOMA",
+        "content": "{\"ok\":true,\"result\":[]}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "MwRIcxSULsQWfrlqmET9v7iiBfMrCOdR",
+            "name": "searchMonitor__set",
+            "arguments": "{\"projectId\":1,\"searchId\":1,\"days\":7}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "MwRIcxSULsQWfrlqmET9v7iiBfMrCOdR",
+        "content": "{\"ok\":true,\"result\":[{\"search_id\":1,\"interval_days\":7,\"last_checked_at\":null,\"pending_count\":0,\"failed_bases\":[],\"project_id\":1,\"project_name\":\"Revisão sobre tutoria\",\"unified_query\":\"Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems\"}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Criei um monitor de busca para a busca 1 do projeto \"Revisão sobre tutoria\", que executa a cada 7 dias.",
+        "toolCalls": []
+      }
+    ],
+    "plan": [
+      {
+        "area": "busca",
+        "task": "Criar um monitor de busca para a busca 1 do projeto da tutoria, que execute a cada 7 dias"
+      }
+    ]
+  }
+}

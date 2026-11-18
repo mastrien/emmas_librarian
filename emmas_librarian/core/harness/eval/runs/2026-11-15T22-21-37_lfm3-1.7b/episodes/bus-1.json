@@ -1,0 +1,345 @@
+{
+  "id": "bus-1",
+  "kind": "happy",
+  "prompt": "Quais buscas já fiz no projeto da tutoria?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 25,
+  "toolsBytes": 10324,
+  "wallMs": 96933,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 4,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "zz0l496EqcuEQHn7OH7s3fhUNvj8alWG",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"busca\", \"projetos\"]}"
+            }
+          ],
+          "reasoning": "We need to find out what searches the user has done in the project \"tutoria\". The user asks: \"Quais buscas já fiz no projeto da tutoria?\" This is about searching (busca) in a project named \"tutoria\". We need to use the tool `select_areas` first? According to the system prompt: \"Você começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido: só então recebe as ferramentas deles.\" So we need to call `select_areas` with areas parameter. The user's request is about \"buscas\" (searches) in the project \"tutoria\". That likely falls under the \"busca\" area or maybe \"artigos\"? But first, we must select the relevant areas. The tool `select_areas` takes an array of areas to receive tools for. We need to specify which areas: probably \"busca\" and \"projetos\"? Let's parse.\n\nThe user asks about searches already done in the project \"tutoria\". So we need to get the history or list of searches (buscas) within that project. The tool `select_areas` is used to choose topics/areas for which tools are available. But we also have other tools like maybe there's a specific function to retrieve search history? Not listed explicitly, but likely under \"projetos\" or \"artigos\". However, the prompt says: \"Use as ferramentas para consultar e alterar a biblioteca.\" We need to use the provided tool functions. The only tool defined is `select_areas`. But we might need more specific tools like maybe there are hidden ones? Let's re-read the description of `select_areas`:\n\n- select_areas: Escolhe os assuntos do pedido para receber as ferramentas deles. Pode chamar de novo para somar assuntos.\n  - Parameters: {areas: array}. It returns tools for those areas.\n\nSo we need to call `select_areas` with appropriate area(s) to get the relevant tool(s). The user's request is about \"buscas\" (searches) in project \"tutoria\". So likely the area \"busca\" or maybe \"artigos\"? There is also \"triagem\", \"prisma\", etc. But we need to know which area corresponds to searches. In the list of tool names, there is a \"busca\" entry: \"busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\". So \"busca\" is an area.\n\nThus we should call `select_areas` with areas: [\"busca\", \"projetos\"]? But the user specifically asks about project \"tutoria\". The tool might require specifying the project name as well? Not sure. Let's see if there are other tools like \"projetos\" that can list projects, etc. There is no direct function to get search history of a project. However, maybe `select_areas` with area \"projetos\" will give us tools for managing projects, including searching within them? Or perhaps we need to first call `select_areas` with \"projetos\" and then something else.\n\nBut the instruction: \"Você começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido: só então recebe as ferramentas deles.\" So we must start by calling `select_areas`. The user's request is about \"buscas já fiz no projeto da tutoria\". That implies we need to know the searches in that project. Possibly there is a tool like \"artigos\" or \"pdfs\" etc, but not listed here. However, maybe the system expects us to use `select_areas` with area \"busca\" and also specify the project name? The parameter only has \"areas\". No mention of project id. So perhaps we need to first get the list of projects via another tool? But there is no tool for listing projects directly; but maybe \"projetos\" area includes that.\n\nLet's think: In typical library assistant tasks, you might have functions like `select_areas` to choose which categories/projects to retrieve tools for. Then after that, we can call other functions specific to those areas. But here only one tool is defined in the prompt? The system message lists many possible tool names but not all are implemented as separate calls? Actually, the \"Tools\" section shows a single function `select_areas`. It might be that there are more tools available but not listed in this snippet; however we must use what's provided. So we only have `select_areas` currently.\n\nThus our first step: call `select_areas` with areas = [\"busca\"]? But the user mentions \"projeto da tutoria\". That suggests \"tutoria\" is a project name. We might need to include that as an area? The list of allowed values for \"areas\" includes many categories like \"projetos\", \"artigos\", etc., but not specific project names. So maybe we just select the area \"projetos\" and then within that tool we can get info about a project named \"tutoria\". But we don't have a function to query a project's details or search history.\n\nGiven the limited tools, perhaps the intended flow is: first call `select_areas` with all relevant areas (like \"busca\", \"projetos\") to obtain tool functions. Then based on those tools, we can proceed. But we only have one tool now; maybe after calling select_areas we get more specific tools like \"get_searches\" etc? The prompt doesn't show them but they might be implied.\n\nLet's just follow the instruction: start with `select_areas`. We need to decide which areas to pass. The user asks about searches in project \"tutoria\". So relevant area is \"busca\" (searches) and maybe \"projetos\" (project). I'll include both: [\"busca\", \"projetos\"].\n\nThus call:\n\n{\n  \"areas\": [\"busca\", \"projetos\"]\n}\n\nLet's do that.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 506,
+            "promptMs": 1234.741,
+            "generatedTokens": 1341,
+            "generatedMs": 54840.597
+          },
+          "wallMs": 56089
+        },
+        "calls": [
+          {
+            "id": "zz0l496EqcuEQHn7OH7s3fhUNvj8alWG",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"busca\", \"projetos\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": ["busca", "projetos"],
+                "tools": [
+                  "projects__create",
+                  "projects__delete",
+                  "projects__getAbout",
+                  "projects__getAll",
+                  "projects__getNavCounts",
+                  "projects__getOne",
+                  "projects__getScreeningSummaries",
+                  "projects__getSearchHistory",
+                  "projects__getWritingPad",
+                  "projects__markOpened",
+                  "projects__update",
+                  "projects__updateAbout",
+                  "projects__updateWritingPad",
+                  "search__discardPreview",
+                  "search__peekCitations",
+                  "search__preview",
+                  "search__previewCitations",
+                  "search__savePreview",
+                  "search__translateQuery",
+                  "searchMonitor__dismiss",
+                  "searchMonitor__list",
+                  "searchMonitor__overview",
+                  "searchMonitor__review",
+                  "searchMonitor__set"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "oKS8d3m61vtplq62ObM4yit8jkME7Bsi",
+              "name": "projects__getAll",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "We need to get search history for the project \"tutoria\". We need projectId. The user asks: \"Quais buscas já fiz no projeto da tutoria?\" So we need to find project id for \"tutoria\". Use projects__getAll maybe to list projects and find id? Or projects__getOne with name? There's a tool projects__getAll which returns all projects perhaps includes names. Let's call projects__getAll.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1985,
+            "promptMs": 4623.575,
+            "generatedTokens": 104,
+            "generatedMs": 4307.062
+          },
+          "wallMs": 8975
+        },
+        "calls": [
+          {
+            "id": "oKS8d3m61vtplq62ObM4yit8jkME7Bsi",
+            "name": "projects__getAll",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "name": "Revisão sobre tutoria",
+                  "created_at": "2026-11-15T23:42:01.822Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                },
+                {
+                  "id": 2,
+                  "name": "Vazio",
+                  "created_at": "2026-11-15T23:42:01.822Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                }
+              ]
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "U2BpPQtTkJF3iy2MuIaNtmc6oQuH2S3V",
+              "name": "projects__getSearchHistory",
+              "arguments": "{\"projectId\":1}"
+            }
+          ],
+          "reasoning": "We need to find \"buscas já fiz no projeto da tutoria\". Likely project id corresponds to \"tutoria\" maybe name includes \"Revisão sobre tutoria\" or something. We have projects list with ids 1 and 2. Need search history for a project? There's tool projects__getSearchHistory(projectId). Also maybe need to know which is the tutoria project. The first one name: \"Revisão sobre tutoria\". That seems like the tutoria project. So get its search history.\n\nLet's call projects__getSearchHistory with projectId=1 (assuming id 1).",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 724,
+            "promptMs": 2092.527,
+            "generatedTokens": 150,
+            "generatedMs": 6170.555
+          },
+          "wallMs": 8282
+        },
+        "calls": [
+          {
+            "id": "U2BpPQtTkJF3iy2MuIaNtmc6oQuH2S3V",
+            "name": "projects__getSearchHistory",
+            "arguments": "{\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 6,
+                  "project_id": 1,
+                  "unified_query": "Adição manual de artigo avulso: Early tutoring prototypes",
+                  "translated_queries": "{}",
+                  "total_results": 1,
+                  "results_breakdown": "{\"Manual\":{\"count\":1}}",
+                  "sort_by": null,
+                  "limit_val": null,
+                  "query_state": null,
+                  "unique_results": null,
+                  "created_at": "2026-11-15T23:42:01.825Z"
+                },
+                {
+                  "id": 3,
+                  "project_id": 1,
+                  "unified_query": "Adição manual de artigo avulso: Tutores baseados em regras para ensino de álgebra",
+                  "translated_queries": "{}",
+                  "total_results": 1,
+                  "results_breakdown": "{\"Manual\":{\"count\":1}}",
+                  "sort_by": null,
+                  "limit_val": null,
+                  "query_state": null,
+                  "unique_results": null,
+                  "created_at": "2026-11-15T23:42:01.824Z"
+                },
+                {
+                  "id": 4,
+                  "project_id": 1,
+                  "unified_query": "Adição manual de artigo avulso: Retrieval practice with an adaptive tutor",
+                  "translated_queries": "{}",
+                  "total_results": 1,
+                  "results_breakdown": "{\"Manual\":{\"count\":1}}",
+                  "sort_by": null,
+                  "limit_val": null,
+                  "query_state": null,
+                  "unique_results": null,
+                  "created_at": "2026-11-15T23:42:01.824Z"
+                },
+                {
+                  "id": 5,
+                  "project_id": 1,
+                  "unified_query": "Adição manual de artigo avulso: Effect sizes of tutoring systems: a meta-analysis",
+                  "translated_queries": "{}",
+                  "total_results": 1,
+                  "results_breakdown": "{\"Manual\":{\"count\":1}}",
+                  "sort_by": null,
+                  "limit_val": null,
+                  "query_state": null,
+                  "unique_results": null,
+                  "created_at": "2026-11-15T23:42:01.824Z"
+                },
+                {
+                  "id": 1,
+                  "project_id": 1,
+                  "unified_query": "Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems",
+                  "translated_queries": "{}",
+                  "total_results": 1,
+                  "results_breakdown": "{\"Manual\":{\"count\":1}}",
+                  "sort_by": null,
+                  "limit_val": null,
+                  "query_state": null,
+                  "unique_results": null,
+                  "created_at": "2026-11-15T23:42:01.823Z"
+                },
+                {
+                  "id": 2,
+                  "project_id": 1,
+                  "unified_query": "Adição manual de artigo avulso: Hints and student modelling in tutoring dialogues",
+                  "translated_queries": "{}",
+                  "total_results": 1,
+                  "results_breakdown": "{\"Manual\":{\"count\":1}}",
+                  "sort_by": null,
+                  "limit_val": null,
+                  "query_state": null,
+                  "unique_results": null,
+                  "created_at": "2026-11-15T23:42:01.823Z"
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "No projeto **“Revisão sobre tutoria” (ID 1)**, as buscas que você já executou são:\n\n1. **Adição manual de artigo avulso: Early tutoring prototypes**  \n2. **Adição manual de artigo avulso: Tutores baseados em regras para ensino de álgebra**  \n3. **Adição manual de artigo avulso: Retrieval practice with an adaptive tutor**  \n4. **Adição manual de artigo avulso: Effect sizes of tutoring systems: a meta-analysis**  \n5. **Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems**  \n6. **Adição manual de artigo avulso: Hints and student modelling in tutoring dialogues**\n\n(Estas são as entradas mais recentes da história de busca do projeto.)",
+          "toolCalls": [],
+          "reasoning": "We need to answer the user's question: \"Quais buscas já fiz no projeto da tutoria?\" (What searches have I done in the tutoring project?). We have retrieved search history for project_id 1, which includes entries with unified_query etc. The result list shows several entries (ids 6,3,4,5,1,2). Need to interpret: likely these are past searches. Should we filter for \"tutoria\" maybe name? There's a project named \"Revisão sobre tutoria\". So project id 1 is that. We need to provide the list of searches (unified_query) performed.\n\nFrom search history result:\n\n- id 6: unified_query \"Adição manual de artigo avulso: Early tutoring prototypes\"\n- id 3: \"Adição manual de artigo avulso: Tutores baseados em regras para ensino de álgebra\"\n- id 4: \"Adição manual de artigo avulso: Retrieval practice with an adaptive tutor\"\n- id 5: \"Adição manual de artigo avulso: Effect sizes of tutoring systems: a meta-analysis\"\n- id 1: \"Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems\"\n- id 2: \"Adição manual de artigo avulso: Hints and student modelling in tutoring dialogues\"\n\nWe can present them. Also maybe need to mention total count? The user asked \"Quais buscas já fiz no projeto da tutoria?\" So list the queries.\n\nThus answer in Portuguese, short.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 1052,
+            "promptMs": 2614.269,
+            "generatedTokens": 504,
+            "generatedMs": 20950.218
+          },
+          "wallMs": 23584
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "No projeto **“Revisão sobre tutoria” (ID 1)**, as buscas que você já executou são:\n\n1. **Adição manual de artigo avulso: Early tutoring prototypes**  \n2. **Adição manual de artigo avulso: Tutores baseados em regras para ensino de álgebra**  \n3. **Adição manual de artigo avulso: Retrieval practice with an adaptive tutor**  \n4. **Adição manual de artigo avulso: Effect sizes of tutoring systems: a meta-analysis**  \n5. **Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems**  \n6. **Adição manual de artigo avulso: Hints and student modelling in tutoring dialogues**\n\n(Estas são as entradas mais recentes da história de busca do projeto.)",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Quais buscas já fiz no projeto da tutoria?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "zz0l496EqcuEQHn7OH7s3fhUNvj8alWG",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"busca\", \"projetos\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "zz0l496EqcuEQHn7OH7s3fhUNvj8alWG",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"busca\",\"projetos\"],\"tools\":[\"projects__create\",\"projects__delete\",\"projects__getAbout\",\"projects__getAll\",\"projects__getNavCounts\",\"projects__getOne\",\"projects__getScreeningSummaries\",\"projects__getSearchHistory\",\"projects__getWritingPad\",\"projects__markOpened\",\"projects__update\",\"projects__updateAbout\",\"projects__updateWritingPad\",\"search__discardPreview\",\"search__peekCitations\",\"search__preview\",\"search__previewCitations\",\"search__savePreview\",\"search__translateQuery\",\"searchMonitor__dismiss\",\"searchMonitor__list\",\"searchMonitor__overview\",\"searchMonitor__review\",\"searchMonitor__set\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "oKS8d3m61vtplq62ObM4yit8jkME7Bsi",
+            "name": "projects__getAll",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "oKS8d3m61vtplq62ObM4yit8jkME7Bsi",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"name\":\"Revisão sobre tutoria\",\"created_at\":\"2026-11-15T23:42:01.822Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null},{\"id\":2,\"name\":\"Vazio\",\"created_at\":\"2026-11-15T23:42:01.822Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "U2BpPQtTkJF3iy2MuIaNtmc6oQuH2S3V",
+            "name": "projects__getSearchHistory",
+            "arguments": "{\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "U2BpPQtTkJF3iy2MuIaNtmc6oQuH2S3V",
+        "content": "{\"ok\":true,\"result\":[{\"id\":6,\"project_id\":1,\"unified_query\":\"Adição manual de artigo avulso: Early tutoring prototypes\",\"translated_queries\":\"{}\",\"total_results\":1,\"results_breakdown\":\"{\\\"Manual\\\":{\\\"count\\\":1}}\",\"sort_by\":null,\"limit_val\":null,\"query_state\":null,\"unique_results\":null,\"created_at\":\"2026-11-15T23:42:01.825Z\"},{\"id\":3,\"project_id\":1,\"unified_query\":\"Adição manual de artigo avulso: Tutores baseados em regras para ensino de álgebra\",\"translated_queries\":\"{}\",\"total_results\":1,\"results_breakdown\":\"{\\\"Manual\\\":{\\\"count\\\":1}}\",\"sort_by\":null,\"limit_val\":null,\"query_state\":null,\"unique_results\":null,\"created_at\":\"2026-11-15T23:42:01.824Z\"},{\"id\":4,\"project_id\":1,\"unified_query\":\"Adição manual de artigo avulso: Retrieval practice with an adaptive tutor\",\"translated_queries\":\"{}\",\"total_results\":1,\"results_breakdown\":\"{\\\"Manual\\\":{\\\"count\\\":1}}\",\"sort_by\":null,\"limit_val\":null,\"query_state\":null,\"unique_results\":null,\"created_at\":\"2026-11-15T23:42:01.824Z\"},{\"id\":5,\"project_id\":1,\"unified_query\":\"Adição manual de artigo avulso: Effect sizes of tutoring systems: a meta-analysis\",\"translated_queries\":\"{}\",\"total_results\":1,\"results_breakdown\":\"{\\\"Manual\\\":{\\\"count\\\":1}}\",\"sort_by\":null,\"limit_val\":null,\"query_state\":null,\"unique_results\":null,\"created_at\":\"2026-11-15T23:42:01.824Z\"},{\"id\":1,\"project_id\":1,\"unified_query\":\"Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems\",\"translated_queries\":\"{}\",\"total_results\":1,\"results_breakdown\":\"{\\\"Manual\\\":{\\\"count\\\":1}}\",\"sort_by\":null,\"limit_val\":null,\"query_state\":null,\"unique_results\":null,\"created_at\":\"2026-11-15T23:42:01.823Z\"},{\"id\":2,\"project_id\":1,\"unified_query\":\"Adição manual de artigo avulso: Hints and student modelling in tutoring dialogues\",\"translated_queries\":\"{}\",\"total_results\":1,\"results_breakdown\":\"{\\\"Manual\\\":{\\\"count\\\":1}}\",\"sort_by\":null,\"limit_val\":null,\"query_state\":null,\"unique_results\":null,\"created_at\":\"2026-11-15T23:42:01.823Z\"}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "No projeto **“Revisão sobre tutoria” (ID 1)**, as buscas que você já executou são:\n\n1. **Adição manual de artigo avulso: Early tutoring prototypes**  \n2. **Adição manual de artigo avulso: Tutores baseados em regras para ensino de álgebra**  \n3. **Adição manual de artigo avulso: Retrieval practice with an adaptive tutor**  \n4. **Adição manual de artigo avulso: Effect sizes of tutoring systems: a meta-analysis**  \n5. **Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems**  \n6. **Adição manual de artigo avulso: Hints and student modelling in tutoring dialogues**\n\n(Estas são as entradas mais recentes da história de busca do projeto.)",
+        "toolCalls": []
+      }
+    ]
+  }
+}

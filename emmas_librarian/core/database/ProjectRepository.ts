@@ -1,8 +1,15 @@
 import type { Database } from 'better-sqlite3';
-import { Project, ProjectCategory, CategoryOption, ProjectNavCounts, ScreeningSummary } from '../../src/types';
+import {
+  Project,
+  ProjectCategory,
+  CategoryOption,
+  CategoryOptionsInput,
+  ProjectNavCounts,
+  ScreeningSummary,
+} from '../../src/types';
 import fs from 'fs';
 import { deletePdfIfUnused } from './sharedPdfFiles';
-import type { CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
+import type { CategoryKind, CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
 
 const normalizeCategoryName = (name: string): string => name.trim().toLocaleLowerCase('pt-BR');
 
@@ -172,7 +179,7 @@ export class ProjectRepository {
     return cats;
   }
 
-  createProjectCategory(projectId: number, name: string, type: 'text' | 'enum' | 'multiselect', options?: any): number {
+  createProjectCategory(projectId: number, name: string, type: CategoryKind, options?: CategoryOptionsInput): number {
     const stmt = this.db.prepare('INSERT INTO project_categories (project_id, name, type) VALUES (?, ?, ?)');
     const info = stmt.run(projectId, name, type);
     const categoryId = info.lastInsertRowid as number;
@@ -232,7 +239,12 @@ export class ProjectRepository {
     stmt.run(optionId);
   }
 
-  public updateProjectCategory(categoryId: number, name: string, type: string, options?: string | null): void {
+  public updateProjectCategory(
+    categoryId: number,
+    name: string,
+    type: CategoryKind,
+    options?: CategoryOptionsInput,
+  ): void {
     this.db.prepare('UPDATE project_categories SET name = ?, type = ? WHERE id = ?').run(name, type, categoryId);
     if ((type === 'enum' || type === 'multiselect') && Array.isArray(options)) {
       this.syncProjectCategoryOptions(categoryId, options);

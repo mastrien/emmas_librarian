@@ -1,0 +1,134 @@
+{
+  "id": "dia-2",
+  "kind": "trap",
+  "prompt": "Acrescenta \"Comecei o capítulo 2.\" ao diário de 2026-11-10, sem apagar o que já está lá.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 81,
+  "toolsBytes": 29105,
+  "wallMs": 30689,
+  "asked": [
+    {
+      "tool": "diary__appendAgentRecord",
+      "command": "diary:appendAgentRecord",
+      "input": {
+        "projectId": 1,
+        "date": "2026-11-10",
+        "message": "Comecei o capítulo 2."
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "diaryEndsWith",
+      "args": {
+        "projectId": 1,
+        "date": "2026-11-10",
+        "text": "Comecei o capítulo 2.",
+        "keeps": "Li dois artigos."
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "0PPWO1yzqTyWeU99n3KGEzLrOOQeIa5s",
+              "name": "diary__appendAgentRecord",
+              "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\",\"message\":\"Comecei o capítulo 2.\"}"
+            }
+          ],
+          "reasoning": "We need to add a diary entry for project? The user says: \"Acrescenta 'Comecei o capítulo 2.' ao diário de 2026-11-10, sem apagar o que já está lá.\" This is Portuguese: \"Add 'I started chapter 2.' to the diary of 2026-11-10, without deleting what's already there.\"\n\nWe need to use the `diary__appendAgentRecord` tool. The parameters required: projectId (projectId), date, message.\n\nBut we don't have a projectId. The user mentions \"diário de 2026-11-10\". Possibly it's a diary entry for a specific project? We need to find out which project ID corresponds to that date or maybe the tool `diary__appendAgentRecord` requires projectId, date, message.\n\nWe need to know the projectId. The user didn't specify a project. Could be from context: \"Projeto em foco: 'Revisão sobre tutoria' (id 1).\" Earlier in the conversation? There's mention of \"Projeto em foco: 'Revisão sobre tutoria' (id 1).\" That might be relevant. The user earlier said \"Projeto em foco: 'Revisão sobre tutoria' (id 1).\" But that was from previous context not shown here? In the current prompt, we only see this line. However, as an assistant with access to tools, maybe we can infer projectId = 1 for \"Revisão sobre tutoria\". The user says \"Acrescenta ... ao diário de 2026-11-10\". So likely they want to add a record to the diary for that project on that date.\n\nThus I should use `diary__appendAgentRecord` with parameters: projectId = 1 (assuming), date = \"2026-11-10\", message = \"Comecei o capítulo 2.\"\n\nLet's double-check tool signature:\n\n`diary__appendAgentRecord`:\n{\n  \"projectId\": number,\n  \"date\": string,\n  \"message\": string\n}\n\nAll required: projectId, date, message.\n\nThus I will call with those.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 453,
+            "promptMs": 1561.108,
+            "generatedTokens": 510,
+            "generatedMs": 21639.894
+          },
+          "wallMs": 23262
+        },
+        "calls": [
+          {
+            "id": "0PPWO1yzqTyWeU99n3KGEzLrOOQeIa5s",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\",\"message\":\"Comecei o capítulo 2.\"}",
+            "result": {
+              "ok": true,
+              "result": true
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Sim, adicionado a entrada no diário para 2026‑11‑10: **“Comecei o capítulo 2.”** As entradas existentes foram mantidas.",
+          "toolCalls": [],
+          "reasoning": "We need to add a diary entry for projectId? The user said \"Acrescenta 'Comecei o capítulo 2.' ao diário de 2026-11-10, sem apagar o que já está lá.\" That's append agent record. We used diary__appendAgentRecord with projectId=1 (maybe default). It returned ok true. So we should confirm.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 522,
+            "promptMs": 2294.774,
+            "generatedTokens": 120,
+            "generatedMs": 5077.002
+          },
+          "wallMs": 7426
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Sim, adicionado a entrada no diário para 2026‑11‑10: **“Comecei o capítulo 2.”** As entradas existentes foram mantidas.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Acrescenta \"Comecei o capítulo 2.\" ao diário de 2026-11-10, sem apagar o que já está lá."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "0PPWO1yzqTyWeU99n3KGEzLrOOQeIa5s",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\",\"message\":\"Comecei o capítulo 2.\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "0PPWO1yzqTyWeU99n3KGEzLrOOQeIa5s",
+        "content": "{\"ok\":true,\"result\":true}"
+      },
+      {
+        "role": "assistant",
+        "content": "Sim, adicionado a entrada no diário para 2026‑11‑10: **“Comecei o capítulo 2.”** As entradas existentes foram mantidas.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

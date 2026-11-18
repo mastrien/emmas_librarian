@@ -1,0 +1,136 @@
+{
+  "id": "pdf-1",
+  "kind": "happy",
+  "prompt": "Quais PDFs estão na biblioteca?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 9,
+  "toolsBytes": 2799,
+  "wallMs": 2324,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "sK7G5EXdzjWHAsOkeYai1RmhWOa2wbZa",
+              "name": "pdfLibrary__list",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "The user is asking for a list of PDFs in the library. I should use the `pdfLibrary__list` tool to fulfill this request.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 765,
+            "promptMs": 236.322,
+            "generatedTokens": 43,
+            "generatedMs": 679.261
+          },
+          "wallMs": 944
+        },
+        "calls": [
+          {
+            "id": "sK7G5EXdzjWHAsOkeYai1RmhWOa2wbZa",
+            "name": "pdfLibrary__list",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": []
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "A biblioteca de PDFs está vazia.",
+          "toolCalls": [],
+          "reasoning": "The user asked \"Quais PDFs estão na biblioteca?\" (What PDFs are in the library?).\nI used the `pdfLibrary__list` tool to retrieve the list of PDFs.\nThe tool returned an empty list: `{\"ok\":true,\"result\":[]}`.\nI need to inform the user that the library is currently empty.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 34,
+            "promptMs": 63.378,
+            "generatedTokens": 80,
+            "generatedMs": 1268.243
+          },
+          "wallMs": 1344
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "A biblioteca de PDFs está vazia.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Quais PDFs estão na biblioteca?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "sK7G5EXdzjWHAsOkeYai1RmhWOa2wbZa",
+            "name": "pdfLibrary__list",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "sK7G5EXdzjWHAsOkeYai1RmhWOa2wbZa",
+        "content": "{\"ok\":true,\"result\":[]}"
+      },
+      {
+        "role": "assistant",
+        "content": "A biblioteca de PDFs está vazia.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "pdfs",
+          "probability": 0.9740472984565557
+        },
+        {
+          "area": "acesso-rapido",
+          "probability": 0.0062738233777793525
+        },
+        {
+          "area": "projetos",
+          "probability": 0.005935369142158176
+        }
+      ],
+      "chosen": [
+        "pdfs",
+        "acesso-rapido"
+      ],
+      "fallback": "none",
+      "decisionMs": 35,
+      "decisionInputTokens": 360
+    }
+  }
+}

@@ -1,0 +1,194 @@
+{
+  "id": "dia-4",
+  "kind": "trap",
+  "prompt": "Escreve no diário de hoje: \"Terminei a triagem.\"",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    },
+    "today": "2026-11-15"
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 5,
+  "toolsBytes": 2999,
+  "wallMs": 3291,
+  "asked": [
+    {
+      "tool": "diary__appendAgentRecord",
+      "command": "diary:appendAgentRecord",
+      "input": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "message": "Terminei a triagem."
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "diaryEndsWith",
+      "args": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "text": "Terminei a triagem.",
+        "keeps": ""
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "OLSKa3KWAAQJ84g2Duj7FIyKlZtsjhTX",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"diario\"]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 28,
+            "promptMs": 117.826,
+            "generatedTokens": 30,
+            "generatedMs": 693.953
+          },
+          "wallMs": 885
+        },
+        "calls": [
+          {
+            "id": "OLSKa3KWAAQJ84g2Duj7FIyKlZtsjhTX",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"diario\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "diario"
+                ],
+                "tools": [
+                  "diary__appendAgentRecord",
+                  "diary__getAll",
+                  "diary__getHistory",
+                  "diary__getOne"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "1UFmUd2FjB5VyySEOhNaxMrXQkLiioQM",
+              "name": "diary__appendAgentRecord",
+              "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Terminei a triagem.\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 114,
+            "promptMs": 135.889,
+            "generatedTokens": 67,
+            "generatedMs": 1581.033
+          },
+          "wallMs": 1790
+        },
+        "calls": [
+          {
+            "id": "1UFmUd2FjB5VyySEOhNaxMrXQkLiioQM",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Terminei a triagem.\"}",
+            "result": {
+              "ok": true,
+              "result": true
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O registro foi adicionado ao diário do projeto \"Revisão sobre tutoria\" para hoje.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 101.425,
+            "generatedTokens": 22,
+            "generatedMs": 503.773
+          },
+          "wallMs": 615
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O registro foi adicionado ao diário do projeto \"Revisão sobre tutoria\" para hoje.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Escreve no diário de hoje: \"Terminei a triagem.\""
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "OLSKa3KWAAQJ84g2Duj7FIyKlZtsjhTX",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"diario\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "OLSKa3KWAAQJ84g2Duj7FIyKlZtsjhTX",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"diario\"],\"tools\":[\"diary__appendAgentRecord\",\"diary__getAll\",\"diary__getHistory\",\"diary__getOne\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "1UFmUd2FjB5VyySEOhNaxMrXQkLiioQM",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Terminei a triagem.\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "1UFmUd2FjB5VyySEOhNaxMrXQkLiioQM",
+        "content": "{\"ok\":true,\"result\":true}"
+      },
+      {
+        "role": "assistant",
+        "content": "O registro foi adicionado ao diário do projeto \"Revisão sobre tutoria\" para hoje.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

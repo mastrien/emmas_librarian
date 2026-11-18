@@ -1,0 +1,226 @@
+{
+  "id": "mon-2",
+  "kind": "happy",
+  "prompt": "Monitora a busca 1 do projeto da tutoria a cada 7 dias.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 81,
+  "toolsBytes": 29105,
+  "wallMs": 2058,
+  "asked": [
+    {
+      "tool": "searchMonitor__review",
+      "command": "searchMonitor:review",
+      "input": {
+        "searchId": 1
+      }
+    }
+  ],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 4,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Vou verificar o monitor de busca para o projeto da tutoria (id 1).",
+          "toolCalls": [
+            {
+              "id": "SXtvy5dj0FtyGjFKcj2hoMb8jfaYAyWt",
+              "name": "searchMonitor__list",
+              "arguments": "{\"projectId\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 514,
+            "promptMs": 87.298,
+            "generatedTokens": 47,
+            "generatedMs": 358.913
+          },
+          "wallMs": 490
+        },
+        "calls": [
+          {
+            "id": "SXtvy5dj0FtyGjFKcj2hoMb8jfaYAyWt",
+            "name": "searchMonitor__list",
+            "arguments": "{\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": []
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O monitor de busca está vazio. Vou verificar se há uma busca ativa no projeto.",
+          "toolCalls": [
+            {
+              "id": "mINfaY6oHyPi1nKD16ASqM4H4CHAV4g3",
+              "name": "searchMonitor__review",
+              "arguments": "{\"searchId\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 26,
+            "promptMs": 27.453,
+            "generatedTokens": 47,
+            "generatedMs": 357.194
+          },
+          "wallMs": 428
+        },
+        "calls": [
+          {
+            "id": "mINfaY6oHyPi1nKD16ASqM4H4CHAV4g3",
+            "name": "searchMonitor__review",
+            "arguments": "{\"searchId\":1}",
+            "result": {
+              "ok": false,
+              "error": {
+                "code": "ERR_INTERNAL",
+                "type": "SYSTEM_ERROR",
+                "message": "Busca monitorada não encontrada. Offending value: searchId=1. Expected shape: id de uma busca monitorada com consulta salva."
+              }
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "A busca não foi encontrada. Vou verificar se há uma busca ativa no projeto.",
+          "toolCalls": [
+            {
+              "id": "G2Mvh4ZH8tr9t5WV7zQlRDa3qNJc9igM",
+              "name": "searchMonitor__overview",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 68,
+            "promptMs": 31.005,
+            "generatedTokens": 34,
+            "generatedMs": 257.451
+          },
+          "wallMs": 333
+        },
+        "calls": [
+          {
+            "id": "G2Mvh4ZH8tr9t5WV7zQlRDa3qNJc9igM",
+            "name": "searchMonitor__overview",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": {
+                "dueCount": 0,
+                "notices": []
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O monitor de busca está vazio. Não há buscas monitoradas no projeto da tutoria (id 1).\n\nPara monitorar uma busca, você precisa:\n1. Criar uma busca usando `search__preview`\n2. Salvar a busca usando `search__savePreview`\n3. Ativar o monitor usando `searchMonitor__set`\n\nSe você já tem uma busca salva, me diga o ID da busca para monitorá-la.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 35,
+            "promptMs": 28.944,
+            "generatedTokens": 95,
+            "generatedMs": 730.858
+          },
+          "wallMs": 806
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O monitor de busca está vazio. Não há buscas monitoradas no projeto da tutoria (id 1).\n\nPara monitorar uma busca, você precisa:\n1. Criar uma busca usando `search__preview`\n2. Salvar a busca usando `search__savePreview`\n3. Ativar o monitor usando `searchMonitor__set`\n\nSe você já tem uma busca salva, me diga o ID da busca para monitorá-la.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Monitora a busca 1 do projeto da tutoria a cada 7 dias."
+      },
+      {
+        "role": "assistant",
+        "content": "Vou verificar o monitor de busca para o projeto da tutoria (id 1).",
+        "toolCalls": [
+          {
+            "id": "SXtvy5dj0FtyGjFKcj2hoMb8jfaYAyWt",
+            "name": "searchMonitor__list",
+            "arguments": "{\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "SXtvy5dj0FtyGjFKcj2hoMb8jfaYAyWt",
+        "content": "{\"ok\":true,\"result\":[]}"
+      },
+      {
+        "role": "assistant",
+        "content": "O monitor de busca está vazio. Vou verificar se há uma busca ativa no projeto.",
+        "toolCalls": [
+          {
+            "id": "mINfaY6oHyPi1nKD16ASqM4H4CHAV4g3",
+            "name": "searchMonitor__review",
+            "arguments": "{\"searchId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "mINfaY6oHyPi1nKD16ASqM4H4CHAV4g3",
+        "content": "{\"ok\":false,\"error\":{\"code\":\"ERR_INTERNAL\",\"type\":\"SYSTEM_ERROR\",\"message\":\"Busca monitorada não encontrada. Offending value: searchId=1. Expected shape: id de uma busca monitorada com consulta salva.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "A busca não foi encontrada. Vou verificar se há uma busca ativa no projeto.",
+        "toolCalls": [
+          {
+            "id": "G2Mvh4ZH8tr9t5WV7zQlRDa3qNJc9igM",
+            "name": "searchMonitor__overview",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "G2Mvh4ZH8tr9t5WV7zQlRDa3qNJc9igM",
+        "content": "{\"ok\":true,\"result\":{\"dueCount\":0,\"notices\":[]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "O monitor de busca está vazio. Não há buscas monitoradas no projeto da tutoria (id 1).\n\nPara monitorar uma busca, você precisa:\n1. Criar uma busca usando `search__preview`\n2. Salvar a busca usando `search__savePreview`\n3. Ativar o monitor usando `searchMonitor__set`\n\nSe você já tem uma busca salva, me diga o ID da busca para monitorá-la.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

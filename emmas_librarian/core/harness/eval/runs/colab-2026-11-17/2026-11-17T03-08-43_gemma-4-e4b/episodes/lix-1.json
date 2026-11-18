@@ -1,0 +1,149 @@
+{
+  "id": "lix-1",
+  "kind": "happy",
+  "prompt": "O que tem na lixeira?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 15,
+  "toolsBytes": 4137,
+  "wallMs": 6068,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "mHMMgeBZz1NHzXrEXejbuqrq4QJgKiVJ",
+              "name": "trash__getItems",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "The user is asking \"O que tem na lixeira?\" (What is in the trash?).\nI need to check the available tools to see how to retrieve items from the trash.\nThe `trash__getItems` tool seems appropriate for this request. It takes no arguments.\n\nI will call `trash__getItems`.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1040,
+            "promptMs": 299.348,
+            "generatedTokens": 78,
+            "generatedMs": 1240.22
+          },
+          "wallMs": 1592
+        },
+        "calls": [
+          {
+            "id": "mHMMgeBZz1NHzXrEXejbuqrq4QJgKiVJ",
+            "name": "trash__getItems",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 3,
+                  "type": "project",
+                  "title": "Projeto antigo",
+                  "deleted_at": "2026-11-17 03:15:09"
+                },
+                {
+                  "id": 3,
+                  "type": "annotation",
+                  "title": "comentário",
+                  "deleted_at": "2026-11-17 03:15:09"
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Na lixeira, há os seguintes itens:\n\n*   **Projeto antigo** (ID: 3, Tipo: projeto, Deletado em: 2026-11-17 03:15:09)\n*   **comentário** (ID: 3, Tipo: annotation, Deletado em: 2026-11-17 03:15:09)",
+          "toolCalls": [],
+          "reasoning": "The user asked \"O que tem na lixeira?\" (What is in the trash?).\nI used the `trash__getItems` tool to retrieve the contents of the trash.\nThe tool returned a list of items:\n1. An item with `id: 3`, `type: \"project\"`, `title: \"Projeto antigo\"`, `deleted_at: \"2026-11-17 03:15:09\"`.\n2. An item with `id: 3`, `type: \"annotation\"`, `title: \"comentário\"`, `deleted_at: \"2026-11-17 03:15:09\"`.\n\nI need to present this information to the user in Portuguese, as requested by the prompt.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 107,
+            "promptMs": 66.895,
+            "generatedTokens": 271,
+            "generatedMs": 4357.214
+          },
+          "wallMs": 4440
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Na lixeira, há os seguintes itens:\n\n*   **Projeto antigo** (ID: 3, Tipo: projeto, Deletado em: 2026-11-17 03:15:09)\n*   **comentário** (ID: 3, Tipo: annotation, Deletado em: 2026-11-17 03:15:09)",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "O que tem na lixeira?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "mHMMgeBZz1NHzXrEXejbuqrq4QJgKiVJ",
+            "name": "trash__getItems",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "mHMMgeBZz1NHzXrEXejbuqrq4QJgKiVJ",
+        "content": "{\"ok\":true,\"result\":[{\"id\":3,\"type\":\"project\",\"title\":\"Projeto antigo\",\"deleted_at\":\"2026-11-17 03:15:09\"},{\"id\":3,\"type\":\"annotation\",\"title\":\"comentário\",\"deleted_at\":\"2026-11-17 03:15:09\"}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Na lixeira, há os seguintes itens:\n\n*   **Projeto antigo** (ID: 3, Tipo: projeto, Deletado em: 2026-11-17 03:15:09)\n*   **comentário** (ID: 3, Tipo: annotation, Deletado em: 2026-11-17 03:15:09)",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "lixeira",
+          "probability": 0.9406757439618889
+        },
+        {
+          "area": "projetos",
+          "probability": 0.014472407606446693
+        },
+        {
+          "area": "triagem",
+          "probability": 0.008948560370157718
+        }
+      ],
+      "chosen": [
+        "lixeira",
+        "projetos"
+      ],
+      "fallback": "none",
+      "decisionMs": 36,
+      "decisionInputTokens": 360
+    }
+  }
+}

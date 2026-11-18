@@ -1,0 +1,68 @@
+{
+  "id": "age-2",
+  "kind": "trap",
+  "prompt": "Cadastra o congresso SBBD com submissão em 2026-12-15.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 1,
+  "toolsBytes": 1750,
+  "wallMs": 17880,
+  "asked": [],
+  "checks": [
+    {
+      "check": "venueCount",
+      "args": {
+        "count": 2
+      },
+      "ok": false
+    }
+  ],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": false,
+    "steps": 1,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [],
+          "reasoning": "We need to parse the user's request: \"Cadastra o congresso SBBD com submissão em 2026-12-15.\" This is Portuguese: \"Register/Create the congress SBBD with submission on 2026-12-15.\"\n\nWe have tools: only `submit_plan`. The description says: \"Você planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\" So we need to produce the plan using `submit_plan` with tasks.\n\nWe need to understand what tasks correspond to \"Cadastra o congresso SBBD com submissão em 2026-12-15.\" This seems like creating/registering an event (congress) named SBBD, submission date 2026-12-15. The context mentions various categories: projetos, artigos, pdfs, anotacoes, diario, categorias, acesso-rapido, lixeira, triagem, prisma, perguntas, busca, ia, agenda, sistema.\n\nWe need to map \"congresso SBBD\" and \"submissão em 2026-12-15\". Possibly it's an event in the \"agenda\" (scientific agenda: congressos e periódicos com prazos). So maybe we need to add a task under \"agenda\": create/register a congress. The tool `submit_plan` takes an array of tasks, each with \"assunto\" and \"tarefa\". The assunto must be one of the listed IDs.\n\nWe also have no prior context about existing projects or articles. So likely we need to just list tasks: maybe \"listar\", \"criar\", \"renomear\", \"apagar\" for projetos; but here it's a congress, not necessarily a project. Could be an agenda item.\n\nThe user says: \"Você planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\" So we just need to call `submit_plan` with the appropriate tasks.\n\nWe need to decide what tasks to include. The request: \"Cadastra o congresso SBBD com submissão em 2026-12-15.\" Means: Register/Create congress SBBD, submission on 2026-12-15. So we likely need a task under \"agenda\" (scientific agenda) maybe \"criar\" or \"listar\"? The assunto \"agenda\" includes \"agenda científica: congressos e periódicos com prazos\". So to create an agenda item, the task would be \"criar\" or \"adicionar\"? But we need to see typical tasks. There's no explicit mapping of verbs but from earlier descriptions:\n\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes\n\nThus \"agenda\" is a subject for tasks like \"criar\", maybe \"listar\"? Not sure. But we can infer typical actions: For \"agenda\", you might need to list or create agenda items.\n\nGiven the user's request, it's about creating a congress (SBBD) with submission date 2026-12-15. So likely we need to add an agenda item for SBBD on that date. The task could be \"criar\" under \"agenda\". Or maybe \"listar\"? Let's think.\n\nWe also have \"submissão em 2026-12-15\" which is a date, so perhaps it's a deadline or submission date. So we might need to set the agenda item with that date.\n\nThus I'll construct tasks array:\n\n- One task: assunto \"agenda\", tarefa \"criar\" (or maybe \"adicionar\"? but only given verbs). The tool expects \"tarefa\" string, not necessarily limited to specific words. So we can use \"criar\".\n\nBut also there might be a separate task for \"listar\" under \"projetos\". Not needed.\n\nThus tasks: [{assunto:\"agenda\", tarefa:\"criar\"}, {assunto:\"agenda\", tarefa:\"definir data\"?}]. But we need to decide number of tasks. The tool allows up to 6 items, but we can provide one or more.\n\nGiven the request is simple: just create congress SBBD with submission date 2026-12-15. So maybe a single task: \"agenda\" - \"criar congresso SBBD com data de submissão 2026-12-15\". But need to split into small tasks? The instruction says: \"Divida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\"\n\nThus we should break down the request into small tasks. For example:\n\n1. Listar congressos? Not needed.\n2. Criar um novo item na agenda para o congresso SBBD.\n3. Definir data de submissão (2026-12-15) para o congresso SBBD.\n\nBut maybe we can combine date and creation into one task: \"criar congresso SBBD\" with tarefa \"criar\" assunto \"agenda\". But the date is separate? Could be part of same task. However, typical tasks might have a field for details not specified. The tool's parameter only includes \"assunto\" and \"tarefa\". So we can't specify details like name or date in the task entry; maybe those are implied by context.\n\nThus I think simplest: one task with assunto \"agenda\", tarefa \"criar\". But that seems insufficient to convey SBBD and date. Perhaps there is a separate subject for \"projetos\" etc. Let's examine all subjects again:\n\n- projetos\n- artigos\n- pdfs\n- anotacoes\n- diario\n- categorias\n- acesso-rapido\n- lixeira\n- triagem\n- prisma\n- perguntas\n- busca\n- ia\n- agenda\n- sistema\n\n\"Congresso\" is a scientific event, likely in \"agenda\". So subject \"agenda\".\n\nThus we need to create an agenda item. The typical action for creating might be \"criar\". So:\n\ntarefas: [\n  {assunto:\"agenda\", tarefa:\"criar\"},\n]\n\nBut maybe also need to set date? Could be separate task under \"agenda\" like \"definir data\"? Not listed.\n\nGiven limited info, I'll go with one task. However, the user explicitly mentions \"SBBD\" and \"2026-12-15\". Maybe we can embed them in the tarefa string: e.g., \"criar congresso SBBD - submissão 2026-12-15\". But the tool's fields are just strings; no further parsing.\n\nThus I'll produce:\n\n{\n \"tarefas\": [\n   {\"assunto\":\"agenda\", \"tarefa\":\"criar congresso SBBD com data de submissão 2026-12-15\"}\n ]\n}\n\nBut is that okay? The instruction: \"Cada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\" So we need to provide a phrase for each task, which could be like \"criar\" etc.\n\nThus I'll do:\n\n- Assunto: agenda\n- Tarefa: criar congresso SBBD com submissão em 2026-12-15\n\nBut maybe better separate tasks: first create the congress (agenda), then set date. But we can combine.\n\nGiven no further details, simplest is one task.\n\nNow, \"Nenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\" The user says: \"Hoje é domingo, 2026-11-15. Nenhum projeto em foco",
+          "finishReason": "length",
+          "timings": {
+            "promptTokens": 511,
+            "promptMs": 66.899,
+            "generatedTokens": 2048,
+            "generatedMs": 17791.877
+          },
+          "wallMs": 17880
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "",
+    "stopped": "model-error",
+    "error": "Error: [ERR_INVALID_PLAN] Offending value: \"[]\". No submit_plan call. Expected a submit_plan call with { \"tarefas\": [{ \"assunto\": \"<id>\", \"tarefa\": \"<texto>\" }] }, at most 6 tasks.",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Cadastra o congresso SBBD com submissão em 2026-12-15."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      }
+    ]
+  }
+}

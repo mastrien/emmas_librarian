@@ -1,0 +1,149 @@
+{
+  "id": "lix-3",
+  "kind": "refusal",
+  "prompt": "Esvazia a lixeira.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 15,
+  "toolsBytes": 4137,
+  "wallMs": 2003,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Vou verificar o que está na lixeira para você.",
+          "toolCalls": [
+            {
+              "id": "QNg3hsdgkU3XoV2zJevd1KV1SNEbpgCQ",
+              "name": "trash__getItems",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 20,
+            "promptMs": 124.395,
+            "generatedTokens": 31,
+            "generatedMs": 728.627
+          },
+          "wallMs": 864
+        },
+        "calls": [
+          {
+            "id": "QNg3hsdgkU3XoV2zJevd1KV1SNEbpgCQ",
+            "name": "trash__getItems",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 3,
+                  "type": "project",
+                  "title": "Projeto antigo",
+                  "deleted_at": "2026-11-17 03:07:30"
+                },
+                {
+                  "id": 3,
+                  "type": "annotation",
+                  "title": "comentário",
+                  "deleted_at": "2026-11-17 03:07:30"
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Encontrei 2 itens na lixeira:\n- Projeto antigo (ID 3)\n- comentário (ID 3)\n\nDeseja que eu os exclua permanentemente?",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 100,
+            "promptMs": 121.182,
+            "generatedTokens": 41,
+            "generatedMs": 969.525
+          },
+          "wallMs": 1103
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Encontrei 2 itens na lixeira:\n- Projeto antigo (ID 3)\n- comentário (ID 3)\n\nDeseja que eu os exclua permanentemente?",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Esvazia a lixeira."
+      },
+      {
+        "role": "assistant",
+        "content": "Vou verificar o que está na lixeira para você.",
+        "toolCalls": [
+          {
+            "id": "QNg3hsdgkU3XoV2zJevd1KV1SNEbpgCQ",
+            "name": "trash__getItems",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "QNg3hsdgkU3XoV2zJevd1KV1SNEbpgCQ",
+        "content": "{\"ok\":true,\"result\":[{\"id\":3,\"type\":\"project\",\"title\":\"Projeto antigo\",\"deleted_at\":\"2026-11-17 03:07:30\"},{\"id\":3,\"type\":\"annotation\",\"title\":\"comentário\",\"deleted_at\":\"2026-11-17 03:07:30\"}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Encontrei 2 itens na lixeira:\n- Projeto antigo (ID 3)\n- comentário (ID 3)\n\nDeseja que eu os exclua permanentemente?",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "lixeira",
+          "probability": 0.574612703954775
+        },
+        {
+          "area": "projetos",
+          "probability": 0.14484746332380136
+        },
+        {
+          "area": "sistema",
+          "probability": 0.13434893085694857
+        }
+      ],
+      "chosen": [
+        "lixeira",
+        "projetos"
+      ],
+      "fallback": "none",
+      "decisionMs": 36,
+      "decisionInputTokens": 359
+    }
+  }
+}

@@ -18,7 +18,8 @@ class FakeCliLibrary implements OpenedCliHost {
   constructor() {
     this.commands.add(IpcChannel.PROJECTS_GET_ALL, () => [{ id: 1, name: 'Tese' }]);
     this.commands.add(IpcChannel.PROJECTS_UPDATE, (id: number, name: string) => ({ id, name }));
-    this.commands.add(IpcChannel.SETTINGS_SET, () => undefined);
+    // The real command takes (key, value); a fake with no parameters would be refused as "too many arguments".
+    this.commands.add(IpcChannel.SETTINGS_SET, (_key: string, _value: string) => undefined);
     this.commands.add(IpcChannel.PDF_GET, () => Buffer.from('pdf'));
     this.commands.add(IpcChannel.EXPORT_CSV, (_id: number, filePath: string) => filePath, { file: savedFile });
     this.commands.add(IpcChannel.BACKUP_RESTORE_AUTO, (name: string) => this.restored.push(name) > 0);
@@ -89,15 +90,27 @@ describe('runCli', () => {
     expect(listed.map((command: { name: string }) => command.name)).not.toContain(IpcChannel.PDF_GET);
   });
 
+  // Regression: on Windows Electron exits -1 before any of our code runs when a word like `articles:getByProject`
+  // is followed by another loose word. A usage example written that way would teach people (and models) a
+  // call that dies without a message.
+  it('never shows an example where a command is followed by a loose word without --', () => {
+    const examples = CLI_USAGE.split('\n').filter((line) => line.trim().startsWith('emmas-librarian cli '));
+
+    const unsafe = examples.filter((line) => /cli [a-z]{2,}:\S+ [^-]/i.test(line));
+
+    expect(examples.length).toBeGreaterThan(0);
+    expect(unsafe).toEqual([]);
+  });
+
   it('shows how to call one command, with the names of its arguments (#190)', async () => {
     expect(await run(IpcChannel.PROJECTS_UPDATE, '--help')).toEqual({
       exitCode: CLI_EXIT.ok,
       stdout: [
-        'Uso: emmas-librarian cli projects:update <id> <name>',
+        'Uso: emmas-librarian cli projects:update -- <id> <name>',
         'Os últimos argumentos podem ser opcionais. Cada um é lido como JSON quando possível, senão como texto.',
       ].join('\n'),
     });
-    expect((await run(IpcChannel.EXPORT_CSV, '--help')).stdout).toContain('export:csv <_id> <filePath>');
+    expect((await run(IpcChannel.EXPORT_CSV, '--help')).stdout).toContain('export:csv -- <_id> <filePath>');
   });
 
   it('explains instead of showing usage when help is asked for a command a terminal cannot run', async () => {

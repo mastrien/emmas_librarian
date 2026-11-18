@@ -1,0 +1,65 @@
+{
+  "id": "pri-1",
+  "kind": "happy",
+  "prompt": "Quais fontes e registros PRISMA o projeto da tutoria tem?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 1,
+  "toolsBytes": 1750,
+  "wallMs": 17850,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 1,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [],
+          "reasoning": "We need to parse the user's question. The user asks: \"Quais fontes e registros PRISMA o projeto da tutoria tem?\" (What sources and PRISMA records does the tutoria project have?)\n\nThis is about a project named \"tutoria\". We need to find out what PRISMA sources/records it has. This likely relates to the \"prisma\" subject: \"fontes e registros do fluxo PRISMA (só leitura)\". The tool list includes \"prisma: fontes e registros do fluxo PRISMA (só leitura)\". So we need to retrieve that info.\n\nBut we don't have direct data. We need to use the available tools? There's no explicit tool for querying project details, but there is a function `submit_plan` which takes tasks. However, the user asks about PRISMA sources and records for \"o projeto da tutoria\". This seems like a specific query that might be answered by a tool we don't have directly. But maybe within the context of these tools, there's an implicit ability to call functions? The only function listed is `submit_plan`. That seems unrelated.\n\nWe need to interpret: The user says \"Você planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\" This is an instruction from the system? It says: \"You are planning orders about research library. Now you do NOT execute anything and do not respond to the person: just deliver the plan by calling the tool submit_plan.\"\n\nWait, let's read carefully: The prompt includes a bunch of instructions. At the top: \"Hoje é domingo, 2026-11-15. Nenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\" Then there is a paragraph about planning orders and not executing anything, just deliver plan via submit_plan.\n\nThen it lists tasks with assuntos (subjects) and \"tarefa\" (task). It says each task uses one subject. We need to divide the request into small tasks in order. If no subject fits, call submit_plan with empty list of tasks.\n\nWe also have a list of subjects: projetos, artigos, pdfs, anotacoes, diario, categorias, acesso-rapido, lixeira, triagem, prisma, perguntas, busca, ia, agenda, sistema.\n\nThe user asks about \"fontes e registros PRISMA o projeto da tutoria tem?\" That's about PRISMA sources and records. So the subject is \"prisma\". The task for \"prisma\" is: \"fontes e registros do fluxo PRISMA (só leitura)\". So we need to get that info? But there is no tool to retrieve PRISMA data. However, maybe the `submit_plan` function expects tasks and will output something? Or perhaps this is a meta-instruction: The user wants us to just call submit_plan with an empty list because \"Nenhum projeto em foco\" (no project in focus). But they mention \"projeto da tutoria\". So there is a project named \"tutoria\"? We need to see if we have any info about it. There's no tool for searching projects.\n\nGiven the limited tools, maybe the expected behavior: Since we cannot actually retrieve data from external sources, but we are supposed to simulate using the provided functions? The only function is `submit_plan`. So perhaps we just call `submit_plan` with tasks list containing one task of subject \"prisma\" and task \"ler\" or something. But the format: For each task, we need an object with fields \"assunto\" (enum) and \"tarefa\". The \"tarefa\" field is a string describing what to do.\n\nWe need to decide what tasks correspond to \"prisma\". The description says: \"prisma: fontes e registros do fluxo PRISMA (só leitura)\". So the task likely is \"ler\" or \"read\" the sources and records of PRISMA flow. Since it's \"só leitura\", we just need to read them, no action like creating/renaming.\n\nThus a task: subject \"prisma\", tarefa maybe \"ver fontes e registros do fluxo PRISMA\". But we don't know exact phrasing. The instruction says: \"Cada tarefa usa um só assunto.\" So each task has one subject and a task description. For \"prisma\" the task is to view sources and records of PRISMA flow (only reading). So maybe the task string is \"ler fontes e registros do fluxo PRISMA\". But we need to match typical phrasing? The earlier examples: For \"projetos\", tasks include list, create, rename, delete. For \"artigos\": ver artigos de um projeto, mudar status, etc. So for \"prisma\" it's just reading.\n\nThus we can construct a single task: {assunto: \"prisma\", tarefa: \"ler fontes e registros do fluxo PRISMA (só leitura)\"}.\n\nBut the user asks specifically about \"projeto da tutoria\". So maybe there is a project named \"tutoria\" and we need to find its PRISMA sources. But we don't have that info.\n\nGiven the instruction: \"Você planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\" This seems like a directive to just call `submit_plan` with tasks list (maybe empty). But we need to decide based on the request.\n\nLet's parse the whole prompt again:\n\n```\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes\n\n...\n```\n\nSo we need to produce a plan via `submit_plan`. The user asks about PRISMA sources and records for the \"tutoria\" project. So subject is \"prisma\". Task: \"fontes e registros do fluxo PRISMA (só leitura)\". But also mention \"projeto da tutoria\". Possibly we need to include that as context? The task might be just reading, no action needed.\n\nThus the tasks list could contain one item:\n\n- assunto: \"prisma\"\n- tarefa: \"ler fontes e registros do fluxo PRISMA (só leitura) para o projeto da tutoria\" or something like that. But we need to match typical phrasing? The instruction says each task uses a single subject and the phrase tells what to do. So for \"prisma\", the phrase is \"fontes e registros do fluxo PRISMA (só leitura)\". That's all.\n\nThus I think we should create one task: {assunto: \"prisma\", tarefa: \"ver fontes e registros do fluxo PRISMA (só leitura)\"}.\n\nBut the user specifically asks about \"fontes e registros PRISMA o projeto da tutoria tem?\". So maybe they want to know if there are any. Since we cannot actually retrieve, but we can just call `submit_plan` with that task.\n\nAlso earlier: \"",
+          "finishReason": "length",
+          "timings": {
+            "promptTokens": 505,
+            "promptMs": 64.324,
+            "generatedTokens": 2048,
+            "generatedMs": 17764.105
+          },
+          "wallMs": 17849
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "",
+    "stopped": "model-error",
+    "error": "Error: [ERR_INVALID_PLAN] Offending value: \"[]\". No submit_plan call. Expected a submit_plan call with { \"tarefas\": [{ \"assunto\": \"<id>\", \"tarefa\": \"<texto>\" }] }, at most 6 tasks.",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Quais fontes e registros PRISMA o projeto da tutoria tem?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "id": "loc-1",
+  "kind": "happy",
+  "prompt": "Resume o artigo 1.",
+  "context": {
+    "modelIsLocal": true
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 81,
+  "toolsBytes": 29105,
+  "wallMs": 5686,
+  "asked": [
+    {
+      "tool": "ai__generateSummary",
+      "command": "ai:generateSummary",
+      "input": {
+        "articleId": 1
+      }
+    }
+  ],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "pmCSwkZYTkDgsx4Gpe3tkPCoEeZBf6bN",
+              "name": "ai__generateSummary",
+              "arguments": "{\"articleId\":1}"
+            }
+          ],
+          "reasoning": "1. **Identify User Intent:** The user wants a summary of \"artigo 1\" (article 1).\n2. **Analyze Available Tools:** Review the provided tool definitions to find a function capable of generating a summary for an article.\n3. **Select Tool:** The `ai__generateSummary` tool is designed for this purpose. Its description is \"Comando 'ai:generateSummary' da biblioteca do Emma's Librarian.\" and it takes an `articleId` (NUMBER) as a required parameter.\n4. **Extract Parameters:** The user specified \"artigo 1\". This translates to `articleId = 1`.\n5. **Construct Tool Call:** Create the function call: `ai__generateSummary(articleId=1)`.\n6. **Final Response Generation:** Output the constructed tool call.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 11,
+            "promptMs": 49.782,
+            "generatedTokens": 191,
+            "generatedMs": 3152.092
+          },
+          "wallMs": 3274
+        },
+        "calls": [
+          {
+            "id": "pmCSwkZYTkDgsx4Gpe3tkPCoEeZBf6bN",
+            "name": "ai__generateSummary",
+            "arguments": "{\"articleId\":1}",
+            "result": {
+              "ok": false,
+              "error": {
+                "code": "ERR_NOT_FOUND",
+                "type": "USER_ERROR",
+                "message": "[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco."
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Não foi possível resumir o artigo 1 porque não foi encontrado um arquivo PDF válido para ele na biblioteca.",
+          "toolCalls": [],
+          "reasoning": "The user asked to summarize article 1.\nI used the `ai__generateSummary` tool with `articleId: 1`.\nThe tool returned an error: `[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.`\nThis means that article 1 does not have a valid PDF file associated with it in the library.\nI need to inform the user about this error in Portuguese, as per the instructions.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 94,
+            "promptMs": 73.062,
+            "generatedTokens": 138,
+            "generatedMs": 2267.038
+          },
+          "wallMs": 2412
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Não foi possível resumir o artigo 1 porque não foi encontrado um arquivo PDF válido para ele na biblioteca.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Resume o artigo 1."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "pmCSwkZYTkDgsx4Gpe3tkPCoEeZBf6bN",
+            "name": "ai__generateSummary",
+            "arguments": "{\"articleId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "pmCSwkZYTkDgsx4Gpe3tkPCoEeZBf6bN",
+        "content": "{\"ok\":false,\"error\":{\"code\":\"ERR_NOT_FOUND\",\"type\":\"USER_ERROR\",\"message\":\"[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Não foi possível resumir o artigo 1 porque não foi encontrado um arquivo PDF válido para ele na biblioteca.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "id": "bkp-2",
+  "kind": "refusal",
+  "prompt": "Restaura o backup de ontem.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 4,
+  "toolsBytes": 997,
+  "wallMs": 4768,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "CE3kKYDYGbc1LfCJicymzwCuWFXw7gzQ",
+              "name": "backup__listAuto",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "The user wants to restore yesterday's backup.\nI need to check the available tools.\nThe available tools are `app__getVersion`, `backup__listAuto`, `trash__getItems`, and `trash__restoreItem`.\n\nThe user is asking to \"Restaura o backup de ontem\" (Restore yesterday's backup).\n\n1.  **Identify the relevant tool:** `backup__listAuto` seems relevant to listing backups. `trash__restoreItem` is for restoring items, but it requires an `id` and `type`.\n2.  **Check for necessary information:** To restore a specific backup, I need its ID and type. The user only specified \"yesterday's backup\".\n3.  **Determine the first step:** I need to list the available backups to find the one from yesterday. I will use `backup__listAuto`.\n\nI will call `backup__listAuto` first.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 403,
+            "promptMs": 150.371,
+            "generatedTokens": 206,
+            "generatedMs": 3292.194
+          },
+          "wallMs": 3467
+        },
+        "calls": [
+          {
+            "id": "CE3kKYDYGbc1LfCJicymzwCuWFXw7gzQ",
+            "name": "backup__listAuto",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": []
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Não encontrei nenhum backup disponível para restaurar.",
+          "toolCalls": [],
+          "reasoning": "The user wants to restore yesterday's backup.\nI have called `backup__listAuto` to see available backups.\nThe response is `{\"ok\":true,\"result\":[]}`, which means there are no backups listed.\nI need to inform the user that I cannot find any backups to restore.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 39,
+            "promptMs": 64.274,
+            "generatedTokens": 75,
+            "generatedMs": 1188.19
+          },
+          "wallMs": 1262
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Não encontrei nenhum backup disponível para restaurar.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Restaura o backup de ontem."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "CE3kKYDYGbc1LfCJicymzwCuWFXw7gzQ",
+            "name": "backup__listAuto",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "CE3kKYDYGbc1LfCJicymzwCuWFXw7gzQ",
+        "content": "{\"ok\":true,\"result\":[]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Não encontrei nenhum backup disponível para restaurar.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "lixeira",
+          "probability": 0.8019622028469859
+        },
+        {
+          "area": "sistema",
+          "probability": 0.14482775939862208
+        },
+        {
+          "area": "artigos",
+          "probability": 0.00846795297873443
+        }
+      ],
+      "chosen": [
+        "lixeira",
+        "sistema"
+      ],
+      "fallback": "none",
+      "decisionMs": 37,
+      "decisionInputTokens": 360
+    }
+  }
+}

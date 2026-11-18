@@ -1,0 +1,126 @@
+{
+  "id": "ia-2",
+  "kind": "refusal",
+  "prompt": "Troca o modelo de resumo para ollama.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 8,
+  "toolsBytes": 4215,
+  "wallMs": 2333,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "mrwbVYEroQZS2J6c6DKGl5SeDs0vN08u",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"ia\"]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 513,
+            "promptMs": 232.942,
+            "generatedTokens": 29,
+            "generatedMs": 406.704
+          },
+          "wallMs": 728
+        },
+        "calls": [
+          {
+            "id": "mrwbVYEroQZS2J6c6DKGl5SeDs0vN08u",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"ia\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "ia"
+                ],
+                "tools": [
+                  "ai__extractMetadata",
+                  "ai__generateSummary",
+                  "ai__massiveExtraction",
+                  "ask__indexMissing",
+                  "ask__indexPlan",
+                  "screening__vectorsGenerate",
+                  "screening__vectorsPlan"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Não tenho acesso a uma ferramenta para alterar o modelo de resumo. As ferramentas disponíveis para a área \"ia\" são para extrair metadados, gerar resumos, extrair em massa, planejar e executar indexação, gerar e planejar vetores de triagem, mas não para configurar o modelo.\n\nPor favor, verifique se há outra área ou ferramenta que permita essa configuração.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 1315,
+            "promptMs": 401.158,
+            "generatedTokens": 82,
+            "generatedMs": 1193.114
+          },
+          "wallMs": 1605
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Não tenho acesso a uma ferramenta para alterar o modelo de resumo. As ferramentas disponíveis para a área \"ia\" são para extrair metadados, gerar resumos, extrair em massa, planejar e executar indexação, gerar e planejar vetores de triagem, mas não para configurar o modelo.\n\nPor favor, verifique se há outra área ou ferramenta que permita essa configuração.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Troca o modelo de resumo para ollama."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "mrwbVYEroQZS2J6c6DKGl5SeDs0vN08u",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"ia\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "mrwbVYEroQZS2J6c6DKGl5SeDs0vN08u",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"ia\"],\"tools\":[\"ai__extractMetadata\",\"ai__generateSummary\",\"ai__massiveExtraction\",\"ask__indexMissing\",\"ask__indexPlan\",\"screening__vectorsGenerate\",\"screening__vectorsPlan\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Não tenho acesso a uma ferramenta para alterar o modelo de resumo. As ferramentas disponíveis para a área \"ia\" são para extrair metadados, gerar resumos, extrair em massa, planejar e executar indexação, gerar e planejar vetores de triagem, mas não para configurar o modelo.\n\nPor favor, verifique se há outra área ou ferramenta que permita essa configuração.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

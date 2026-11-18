@@ -1,0 +1,190 @@
+{
+  "id": "dia-2",
+  "kind": "trap",
+  "prompt": "Acrescenta \"Comecei o capítulo 2.\" ao diário de 2026-11-10, sem apagar o que já está lá.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 81,
+  "toolsBytes": 29105,
+  "wallMs": 1962,
+  "asked": [
+    {
+      "tool": "diary__appendAgentRecord",
+      "command": "diary:appendAgentRecord",
+      "input": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "message": "Comecei o capítulo 2."
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "diaryEndsWith",
+      "args": {
+        "projectId": 1,
+        "date": "2026-11-10",
+        "text": "Comecei o capítulo 2.",
+        "keeps": "Li dois artigos."
+      },
+      "ok": false
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": false,
+    "steps": 3,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Preciso primeiro verificar o projeto \"Revisão sobre tutoria\" (id 1) para obter o ID do diário atual.",
+          "toolCalls": [
+            {
+              "id": "yRrmjpaM2KjX9CevG3L7pgdalbDqwQep",
+              "name": "diary__getAll",
+              "arguments": "{\"projectId\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 50,
+            "promptMs": 43.303,
+            "generatedTokens": 58,
+            "generatedMs": 442.957
+          },
+          "wallMs": 529
+        },
+        "calls": [
+          {
+            "id": "yRrmjpaM2KjX9CevG3L7pgdalbDqwQep",
+            "name": "diary__getAll",
+            "arguments": "{\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "project_id": 1,
+                  "entry_date": "2026-11-10",
+                  "content": "Li dois artigos."
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Encontrei o diário atual (id 1). Agora vou usar a função `diary__appendAgentRecord` para adicionar a nova entrada, mantendo a anterior.",
+          "toolCalls": [
+            {
+              "id": "wbiky6MdbOs6vqTK5ZzxypDijmQmWTZC",
+              "name": "diary__appendAgentRecord",
+              "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Comecei o capítulo 2.\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 56,
+            "promptMs": 42.517,
+            "generatedTokens": 106,
+            "generatedMs": 817.888
+          },
+          "wallMs": 906
+        },
+        "calls": [
+          {
+            "id": "wbiky6MdbOs6vqTK5ZzxypDijmQmWTZC",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Comecei o capítulo 2.\"}",
+            "result": {
+              "ok": true,
+              "result": true
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "A entrada foi adicionada com sucesso. O diário atual agora contém:\n- 2026-11-10: \"Li dois artigos.\"\n- 2026-11-15: \"Comecei o capítulo 2.\"",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 39.178,
+            "generatedTokens": 58,
+            "generatedMs": 442.012
+          },
+          "wallMs": 526
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "A entrada foi adicionada com sucesso. O diário atual agora contém:\n- 2026-11-10: \"Li dois artigos.\"\n- 2026-11-15: \"Comecei o capítulo 2.\"",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Acrescenta \"Comecei o capítulo 2.\" ao diário de 2026-11-10, sem apagar o que já está lá."
+      },
+      {
+        "role": "assistant",
+        "content": "Preciso primeiro verificar o projeto \"Revisão sobre tutoria\" (id 1) para obter o ID do diário atual.",
+        "toolCalls": [
+          {
+            "id": "yRrmjpaM2KjX9CevG3L7pgdalbDqwQep",
+            "name": "diary__getAll",
+            "arguments": "{\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "yRrmjpaM2KjX9CevG3L7pgdalbDqwQep",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"project_id\":1,\"entry_date\":\"2026-11-10\",\"content\":\"Li dois artigos.\"}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Encontrei o diário atual (id 1). Agora vou usar a função `diary__appendAgentRecord` para adicionar a nova entrada, mantendo a anterior.",
+        "toolCalls": [
+          {
+            "id": "wbiky6MdbOs6vqTK5ZzxypDijmQmWTZC",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Comecei o capítulo 2.\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "wbiky6MdbOs6vqTK5ZzxypDijmQmWTZC",
+        "content": "{\"ok\":true,\"result\":true}"
+      },
+      {
+        "role": "assistant",
+        "content": "A entrada foi adicionada com sucesso. O diário atual agora contém:\n- 2026-11-10: \"Li dois artigos.\"\n- 2026-11-15: \"Comecei o capítulo 2.\"",
+        "toolCalls": []
+      }
+    ]
+  }
+}

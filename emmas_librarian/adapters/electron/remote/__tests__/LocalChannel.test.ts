@@ -42,10 +42,10 @@ beforeEach(async () => {
   commands.add(IpcChannel.EXPORT_CSV, (id: number, filePath: string) => void ran.push(`export(${id}, ${filePath})`), {
     file: { at: 1, mode: 'save', describe: () => ({ title: 'Exportar', filters: [] }) },
   });
-  commands.add(IpcChannel.PROJECTS_CREATE, () => {
+  commands.add(IpcChannel.PROJECTS_CREATE, (_name: string) => {
     throw new Error('UNIQUE constraint failed: projects.name');
   });
-  commands.add(IpcChannel.BACKUP_RESTORE_AUTO, () => void ran.push('restore'));
+  commands.add(IpcChannel.BACKUP_RESTORE_AUTO, (_file: string) => void ran.push('restore'));
   channel = new LocalChannel(commands);
   address = await channel.start();
 });

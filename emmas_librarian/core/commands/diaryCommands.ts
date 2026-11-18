@@ -1,6 +1,7 @@
 import { IpcChannel } from '../../src/types';
 import type { DatabaseAdapter } from '../database/DatabaseAdapter';
 import type { CommandRegistry } from './CommandRegistry';
+import { appendAgentRecord } from './agentDiaryRecord';
 
 type TrashItemType = 'project' | 'article' | 'annotation';
 
@@ -10,12 +11,22 @@ type TrashItemType = 'project' | 'article' | 'annotation';
  * Usage:
  *   registerDiaryAndTrashCommands(commands, db);
  */
-export function registerDiaryAndTrashCommands(commands: CommandRegistry, db: DatabaseAdapter): void {
+export function registerDiaryAndTrashCommands(
+  commands: CommandRegistry,
+  db: DatabaseAdapter,
+  now: () => Date = () => new Date(),
+): void {
   commands.add(IpcChannel.DIARY_GET_ALL, (projectId: number) => db.getDiaryEntries(projectId));
   commands.add(IpcChannel.DIARY_GET_ONE, (projectId: number, date: string) => db.getDiaryEntry(projectId, date));
   commands.add(IpcChannel.DIARY_SAVE, (projectId: number, date: string, content: string, expected?: string | null) =>
     db.saveDiaryEntry(projectId, date, content, expected),
   );
+  // The only way an agent writes the diary: it adds a stamped record at the end and cannot touch what is there.
+  commands.add(IpcChannel.DIARY_APPEND_AGENT_RECORD, (projectId: number, date: string, message: string) => {
+    const before = db.getDiaryEntry(projectId, date)?.content ?? '';
+    db.saveDiaryEntry(projectId, date, appendAgentRecord(before, now(), message), before);
+    return true;
+  });
   commands.add(IpcChannel.DIARY_DELETE, (projectId: number, date: string) => db.deleteDiaryEntry(projectId, date));
   commands.add(IpcChannel.DIARY_GET_HISTORY, (projectId: number, date: string) =>
     db.getDiaryEntryHistory(projectId, date),
