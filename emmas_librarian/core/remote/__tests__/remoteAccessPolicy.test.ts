@@ -65,7 +65,7 @@ describe('authorizeRemoteCommand', () => {
 
   beforeEach(() => {
     commands = new CommandRegistry();
-    for (const channel of Object.values(IpcChannel)) commands.add(channel, () => channel);
+    for (const channel of Object.values(IpcChannel)) commands.add(channel, () => channel, { parameters: ['...args'] });
   });
 
   it('lets a device run a listed command with its arguments untouched', () => {
