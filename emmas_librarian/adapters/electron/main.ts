@@ -205,8 +205,7 @@ function startCli(args: string[]): void {
       askDepsFor(options, {
         userData: options.dataDir ?? app.getPath('userData'),
         env: process.env,
-        stdin: process.stdin,
-        stderr: process.stderr,
+        showMessageBox: (options) => dialog.showMessageBox(options),
       }),
     stdout: streamSink(process.stdout),
     stderr: streamSink(process.stderr),

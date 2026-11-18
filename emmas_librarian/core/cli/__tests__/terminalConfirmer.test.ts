@@ -114,4 +114,25 @@ describe('ReadlinePrompter', () => {
     expect(await answer).toBeNull();
     expect(await prompter.ask('?')).toBeNull();
   });
+
+  // A pipe delivers its line before the first question is asked; the first version dropped it and answered null.
+  it('answers with a line that arrived before the question, and then with the next ones in order', async () => {
+    const input = new PassThrough();
+    const output = new PassThrough();
+    const prompter = new ReadlinePrompter(input, output);
+    input.write('s\nn\n');
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(await prompter.ask('1? ')).toBe('s');
+    expect(await prompter.ask('2? ')).toBe('n');
+    expect(output.read().toString()).toBe('1? 2? ');
+  });
+
+  it('still answers a line it kept after the input ended, and null only after that', async () => {
+    const input = new PassThrough();
+    const prompter = new ReadlinePrompter(input, new PassThrough());
+    input.end('sim\n');
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(await prompter.ask('?')).toBe('sim');
+    expect(await prompter.ask('?')).toBeNull();
+  });
 });

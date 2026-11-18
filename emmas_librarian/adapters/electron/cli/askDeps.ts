@@ -5,17 +5,16 @@ import { startAgentRuntime } from '../../../core/agent/runtime/agentRuntime';
 import { consentOnTerminal } from '../../../core/agent/runtime/downloadConsent';
 import { listLlamaDevices, type RunProgram } from '../../../core/agent/runtime/listDevices';
 import type { CliOptions } from '../../../core/cli/cliArguments';
-import { ReadlinePrompter } from '../../../core/cli/readlinePrompter';
 import { TerminalConfirmer } from '../../../core/cli/terminalConfirmer';
 import { usageError } from '../../../core/errors/usageError';
+import { DialogPrompter, type ShowMessageBox } from './dialogPrompter';
 
 export interface AskEnvironment {
   /** The app's data folder: the models go in a `models` folder inside it unless --models-dir says otherwise. */
   userData: string;
   env: Record<string, string | undefined>;
-  stdin: NodeJS.ReadableStream;
-  /** Questions go to stderr, so stdout keeps only the answer. */
-  stderr: NodeJS.WritableStream;
+  /** Electron's `dialog.showMessageBox`: every question to the person is a native window (see DialogPrompter). */
+  showMessageBox: ShowMessageBox;
 }
 
 const runProgram: RunProgram = (file, args) =>
@@ -37,13 +36,13 @@ function requireServer(options: CliOptions, env: AskEnvironment['env']): string 
 
 /**
  * What `cli ask` needs in the app's process: the models in the data folder (downloaded after a yes), llama-server from
- * the option or the environment, and the terminal for every question to the person.
+ * the option or the environment, and a native window for every question to the person.
  *
  * Usage:
- *   const deps = askDepsFor(options, { userData, env: process.env, stdin: process.stdin, stderr: process.stderr });
+ *   const deps = askDepsFor(options, { userData, env: process.env, showMessageBox: (o) => dialog.showMessageBox(o) });
  */
 export function askDepsFor(options: CliOptions, environment: AskEnvironment): AskDeps {
-  const prompter = new ReadlinePrompter(environment.stdin, environment.stderr);
+  const prompter = new DialogPrompter(environment.showMessageBox);
   return {
     confirmer: new TerminalConfirmer(prompter),
     now: () => new Date(),
