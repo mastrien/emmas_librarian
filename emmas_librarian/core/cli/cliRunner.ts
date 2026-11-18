@@ -3,6 +3,9 @@ import { listTerminalCommands, requireTerminalCommand, terminalUsage } from '../
 import { AppError, type ErrorType } from '../errors/AppError';
 import { shellFailureFrom } from '../errors/shellFailureFrom';
 import { libraryInUse, replacesLibrary } from '../commands/libraryReplacement';
+import { usageError } from '../errors/usageError';
+import { askLibrary, type AskDeps } from '../agent/ask';
+import { askAsText } from '../agent/askText';
 import { parseCliArguments, type CliOptions, type CliRequest } from './cliArguments';
 
 /** Exit codes of the CLI; scripts and tool-calling agents branch on these. */
@@ -70,12 +73,16 @@ export const CLI_USAGE = [
   '  commands                 lista os comandos disponíveis, com os nomes dos argumentos de cada um',
   '  <comando> --help         mostra como chamar aquele comando',
   '  <comando> -- [args...]   roda um comando; cada argumento é lido como JSON quando possível, senão como texto',
+  '  ask -- "<pergunta>"      pergunta em linguagem natural; o agente local usa as ferramentas da biblioteca (docs/cli.md)',
   '',
   'Opções:',
   '  --args-json <array>      os argumentos do comando como um array JSON (em vez dos posicionais)',
   '  --data-dir <pasta>       abre a biblioteca desta pasta em vez da do aplicativo',
   '  (--args-json=<array> e --data-dir=<pasta> também valem; -- encerra as opções)',
   '  --pretty                 JSON indentado',
+  '  --text                   (ask) responde em texto, para uma pessoa, com as chamadas feitas',
+  '  --models-dir <pasta>     (ask) pasta dos modelos; baixa para ela, depois de perguntar',
+  '  --llama-server <caminho> (ask) o llama-server (b12425); ou a variável LLAMA_SERVER',
   '  --help                   esta ajuda',
   '',
   'Saída: um documento JSON. Sucesso em stdout: {"ok":true,"result":...}. Falha em stderr: {"ok":false,"error":{...}}.',
@@ -112,17 +119,34 @@ const fileArgumentPlaceholders = (command: RegisteredCommand): unknown[] =>
  *   const outcome = await runCliRequest(parseCliArguments(argv), { commands, isAppRunning });
  *   process.exitCode = outcome.exitCode;
  */
-export async function runCliRequest(request: CliRequest, host: CliHost): Promise<CliOutcome> {
+export async function runCliRequest(request: CliRequest, host: CliHost, ask?: AskDeps): Promise<CliOutcome> {
   const { pretty } = request.options;
   if (request.kind === 'list') return success(listTerminalCommands(host.commands), pretty);
   try {
     if (request.kind === 'help') return commandHelp(request.command, host);
+    if (request.kind === 'ask') return await answer(request, host, ask);
     const command = requireTerminalCommand(host.commands, request.command, request.args);
     refuseWhileAppRuns(command.name, host);
     return success(await host.commands.run(command.name, ...request.args), pretty);
   } catch (error) {
     return failure(error, pretty);
   }
+}
+
+async function answer(
+  request: Extract<CliRequest, { kind: 'ask' }>,
+  host: CliHost,
+  ask?: AskDeps,
+): Promise<CliOutcome> {
+  if (!ask)
+    throw usageError(
+      'ERR_CLI_USAGE',
+      'ask não está disponível neste canal. Offending value: "ask"',
+      'rodar pelo executável do aplicativo: emmas-librarian cli ask -- "pergunta"',
+    );
+  const result = await askLibrary(request.question, host.commands, ask);
+  if (request.options.text) return { exitCode: CLI_EXIT.ok, stdout: askAsText(result) };
+  return success(result, request.options.pretty);
 }
 
 /** A library opened for one CLI run; `close` releases the database file. */
@@ -140,6 +164,7 @@ export interface OpenedCliHost extends CliHost {
 export async function runCli(
   argv: string[],
   open: (options: CliOptions) => OpenedCliHost | Promise<OpenedCliHost>,
+  askFor?: (options: CliOptions) => AskDeps,
 ): Promise<CliOutcome> {
   try {
     const request = parseCliArguments(argv);
@@ -147,7 +172,7 @@ export async function runCli(
     if (request.kind === 'help' && !request.command) return { exitCode: CLI_EXIT.ok, stdout: CLI_USAGE };
     const host = await open(request.options);
     try {
-      return await runCliRequest(request, host);
+      return await runCliRequest(request, host, askFor?.(request.options));
     } finally {
       host.close();
     }

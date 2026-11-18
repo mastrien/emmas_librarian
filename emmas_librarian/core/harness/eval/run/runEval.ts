@@ -22,7 +22,8 @@ import { SCORER_VERSION, scoreEpisode } from './score';
 import { startServer } from '../../../agent/runtime/serverProcess';
 import { PLAN_PROMPT_VERSION } from './taskPlan';
 import { systemContext } from '../../systemContext';
-import { dayFromText, systemPromptFor, SYSTEM_PROMPT_VERSION } from './systemPrompt';
+import { systemPromptFor, SYSTEM_PROMPT_VERSION } from '../../../agent/systemPrompt';
+import { dayFromText } from './systemPrompt';
 
 const EVAL_DIR = path.join(__dirname, '..');
 const MAX_STEPS = 8;

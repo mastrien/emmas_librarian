@@ -10,7 +10,12 @@ export interface AgentModelFile {
   contextSize: number;
   license: string;
   licenseUrl: string;
+  /** Sent with every request, from the model's card; the same values the evaluation measured. */
+  sampling?: Record<string, number>;
 }
+
+/** The turns an episode may take; the evaluation used the same limit. */
+export const AGENT_MAX_STEPS = 8;
 
 const LFM_LICENSE = { license: 'LFM Open License v1.0', licenseUrl: 'https://www.liquid.ai/lfm-license' };
 
@@ -24,6 +29,7 @@ export const AGENT_MODELS: readonly AgentModelFile[] = [
     sizeBytes: 1099627808,
     sha256: '3793e1e6e2266919d6e015287221b41100175a98eddaba92e111aed3b05c93c4',
     contextSize: 16384,
+    sampling: { temperature: 0.1, seed: 42, top_k: 50, repeat_penalty: 1.1 },
     ...LFM_LICENSE,
   },
   {

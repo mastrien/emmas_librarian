@@ -103,4 +103,42 @@ describe('parseCliArguments', () => {
     expect(failure).toMatchObject({ code: 'ERR_CLI_USAGE', type: 'VALIDATION_ERROR' });
     expect((failure as Error).message).toContain(problem);
   });
+
+  describe('ask', () => {
+    it('reads the question, and joins the words a shell split', () => {
+      expect(parseCliArguments(['ask', '--', 'Quais projetos eu tenho?'])).toEqual({
+        kind: 'ask',
+        question: 'Quais projetos eu tenho?',
+        options: { pretty: false },
+      });
+      expect(parseCliArguments(['ask', 'Quais', 'projetos'])).toMatchObject({ question: 'Quais projetos' });
+    });
+
+    it('reads --text, --models-dir and --llama-server, with = or a space', () => {
+      const request = parseCliArguments([
+        'ask',
+        '--text',
+        '--models-dir=/m',
+        '--llama-server',
+        '/bin/llama-server',
+        '--',
+        'oi',
+      ]);
+      expect(request).toMatchObject({
+        kind: 'ask',
+        question: 'oi',
+        options: { text: true, modelsDir: '/m', llamaServer: '/bin/llama-server' },
+      });
+    });
+
+    it('refuses --args-json, which is for the other commands, naming it', () => {
+      expect(() => parseCliArguments(['ask', '--args-json=["oi"]'])).toThrow(
+        /--args-json não vale para ask.*\["oi"\]/s,
+      );
+    });
+
+    it('refuses --models-dir with no value', () => {
+      expect(() => parseCliArguments(['ask', '--models-dir'])).toThrow(/--models-dir sem valor/);
+    });
+  });
 });
