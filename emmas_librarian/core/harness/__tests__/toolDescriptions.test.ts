@@ -15,7 +15,8 @@ describe('what a model is told about the tools', () => {
 
     expect(tool?.description).toContain('Converte uma busca estruturada para o formato de cada base');
     expect(tool?.description).toContain('Scopus');
-    expect(tool?.description).toContain('só traduz, não busca');
+    expect(tool?.description).toContain('não busca artigos');
+    expect(tool?.description).toContain('use search__preview');
     expect(tool?.description).toContain("'title' | 'abstract'");
   });
 });
