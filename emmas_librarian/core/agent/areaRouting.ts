@@ -1,4 +1,4 @@
-import type { ToolArea } from '../../toolAreas';
+import type { ToolArea } from '../harness/toolAreas';
 import type { DecisionReply, DecisionRequest } from './systemOne';
 
 /** Name of the question that picks the one best subject. */

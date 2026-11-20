@@ -374,3 +374,16 @@ contra 63; Qwen 4B 58 contra 62; Gemma 56 contra 48; Qwen 2B 54 contra 40; LFM2.
   (`b12425`) e as 14 execuções gravaram `b12425@18b74fa`, o commit do binário local (`build 12425, commit 18b74fa41`),
   então os resultados não são afetados. O notebook do repositório agora tem essa alteração e um `assert` que confere o
   commit `18b74fa` depois do clone, para que a replicação não dependa da confiança na rede.
+
+## Descrição de `search:translateQuery` (2026-11-19, #201)
+
+O caso `bus-2` falhava em todos os modos porque a ferramenta só tinha o esquema do argumento. Agora ela diz em linguagem
+natural que converte uma busca para o formato de cada base e que não busca artigos.
+
+- Primeira redação ("só traduz, não busca"): `bus-2` passou, mas `bus-3` (buscar de verdade no OpenAlex e no Scopus)
+  virou uma tradução e falhou.
+- Redação atual, com "para buscar artigos use search__preview": `bus-2` e `bus-3` passam juntos (LFM3-1.7B, `decided`).
+- Uma execução por caso, uma semente: não prova que não haja efeito colateral em outros casos.
+- A bateria completa (LFM3 `decided`, Qwen3.5-4B `decided` e `full`) foi iniciada e **interrompida pelo sistema por falta
+  de memória** (`2026-11-19T00-02-16_lfm3-1.7b`, com `ABORTED.txt`). Falta refazer.
+

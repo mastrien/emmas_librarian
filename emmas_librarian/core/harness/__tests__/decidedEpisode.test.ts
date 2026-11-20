@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { CommandRegistry } from '../../commands/CommandRegistry';
 import { decidedConfig } from '../eval/decision/decidedSetup';
-import { changedLibrary, runDecidedEpisode, type DecidedEpisodeInput } from '../eval/decision/decidedEpisode';
+import { changedLibrary, runDecidedEpisode, type DecidedEpisodeInput } from '../../agent/decidedEpisode';
 import { LibraryToolkit } from '../LibraryToolkit';
 import type { ToolArea } from '../toolAreas';
 import { FakeConfirmer } from './support/FakeConfirmer';

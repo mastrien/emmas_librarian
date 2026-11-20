@@ -1,0 +1,145 @@
+{
+  "id": "loc-1",
+  "kind": "happy",
+  "prompt": "Resume o artigo 1.",
+  "context": {
+    "modelIsLocal": true
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 9,
+  "toolsBytes": 3000,
+  "wallMs": 14538,
+  "asked": [
+    {
+      "tool": "ai__generateSummary",
+      "command": "ai:generateSummary",
+      "input": {
+        "articleId": 1
+      }
+    }
+  ],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "SPkOCBjPZpfh13zwx82LB9UqRKBbQPe8",
+              "name": "ai__generateSummary",
+              "arguments": "{\"articleId\":1}"
+            }
+          ],
+          "reasoning": "We need to generate a summary for article ID 1 using the tool `ai__generateSummary`. The user asks: \"Resume o artigo 1.\" which means \"Summarize article 1.\" So we should call `ai__generateSummary` with `articleId`: 1. Let's do that.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1021,
+            "promptMs": 2292.442,
+            "generatedTokens": 86,
+            "generatedMs": 3473.69
+          },
+          "wallMs": 5792
+        },
+        "calls": [
+          {
+            "id": "SPkOCBjPZpfh13zwx82LB9UqRKBbQPe8",
+            "name": "ai__generateSummary",
+            "arguments": "{\"articleId\":1}",
+            "result": {
+              "ok": false,
+              "error": {
+                "code": "ERR_NOT_FOUND",
+                "type": "USER_ERROR",
+                "message": "[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco."
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Desculpe! Não encontrei um artigo com o ID 1 (não há PDF disponível). Por favor, me informe o número correto do artigo ou forneça mais detalhes para que eu possa resumir.",
+          "toolCalls": [],
+          "reasoning": "We need to get summary for article 1, but error says PDF not found for articleId=1. So we cannot generate summary because article not found. We should inform user that we couldn't find the article with ID 1 and ask for correct ID or check if exists. According to rules: \"Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\" Also need to mention error details. So respond in Portuguese, short.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 613,
+            "promptMs": 1650.023,
+            "generatedTokens": 155,
+            "generatedMs": 6289.482
+          },
+          "wallMs": 7953
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Desculpe! Não encontrei um artigo com o ID 1 (não há PDF disponível). Por favor, me informe o número correto do artigo ou forneça mais detalhes para que eu possa resumir.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Resume o artigo 1."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "SPkOCBjPZpfh13zwx82LB9UqRKBbQPe8",
+            "name": "ai__generateSummary",
+            "arguments": "{\"articleId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "SPkOCBjPZpfh13zwx82LB9UqRKBbQPe8",
+        "content": "{\"ok\":false,\"error\":{\"code\":\"ERR_NOT_FOUND\",\"type\":\"USER_ERROR\",\"message\":\"[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Desculpe! Não encontrei um artigo com o ID 1 (não há PDF disponível). Por favor, me informe o número correto do artigo ou forneça mais detalhes para que eu possa resumir.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "ia",
+          "probability": 0.9629644137283069
+        },
+        {
+          "area": "anotacoes",
+          "probability": 0.014272030808818356
+        },
+        {
+          "area": "artigos",
+          "probability": 0.007418543867730735
+        }
+      ],
+      "chosen": [
+        "ia",
+        "anotacoes"
+      ],
+      "fallback": "none",
+      "decisionMs": 793,
+      "decisionInputTokens": 358
+    }
+  }
+}

@@ -2,10 +2,10 @@ import type { LibraryToolkit } from '../../LibraryToolkit';
 import { RoutedToolkit } from '../../RoutedToolkit';
 import { TOOL_AREAS } from '../../toolAreas';
 import type { ToolDefinition } from '../../toolDefinition';
-import { runDecidedEpisode } from '../decision/decidedEpisode';
-import type { DecisionModel } from '../decision/systemOne';
-import type { ChatModel } from './chatClient';
-import { runEpisode, type EpisodeRecord } from './episode';
+import { runDecidedEpisode } from '../../../agent/decidedEpisode';
+import type { DecisionModel } from '../../../agent/systemOne';
+import type { ChatModel } from '../../../agent/chatClient';
+import { runEpisode, type EpisodeRecord } from '../../../agent/episode';
 import { runPlannedEpisode } from './plannedEpisode';
 
 export type Mode = 'full' | 'routed' | 'planned' | 'decided';

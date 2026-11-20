@@ -4,6 +4,10 @@ import { CommandRegistry } from '../../commands/CommandRegistry';
 import { AppError } from '../../errors/AppError';
 import { listTerminalCommands } from '../../commands/terminalCommands';
 import { CLI_EXIT, CLI_USAGE, runCli, type OpenedCliHost } from '../cliRunner';
+import type { AskDeps } from '../../agent/ask';
+import { FakeConfirmer } from '../../harness/__tests__/support/FakeConfirmer';
+import { FakeDecisionModel } from '../../harness/__tests__/support/FakeDecisionModel';
+import { ScriptedChat, reply } from '../../harness/__tests__/support/ScriptedChat';
 
 const savedFile = { at: 1, mode: 'save' as const, describe: () => ({ title: 'Exportar', filters: [] }) };
 
@@ -193,5 +197,52 @@ describe('exit codes by kind of failure', () => {
     [new Error('database is locked'), CLI_EXIT.failed],
   ])('%s exits %i', async (failure, exitCode) => {
     expect(await exitFor(failure)).toBe(exitCode);
+  });
+});
+
+describe('runCli: ask', () => {
+  const answering = (content: string): AskDeps => ({
+    startRuntime: async () => ({
+      chat: new ScriptedChat([reply({ content })]),
+      decider: new FakeDecisionModel({ projetos: 1 }),
+      device: 'CUDA0',
+      stop: async () => undefined,
+    }),
+    confirmer: new FakeConfirmer(false),
+    now: () => new Date(2026, 10, 18),
+  });
+  const open = () => new FakeCliLibrary();
+
+  it('answers the question as one JSON document, like the other commands', async () => {
+    const outcome = await runCli(['ask', '--', 'Quais projetos eu tenho?'], open, () =>
+      answering('Você tem 1 projeto.'),
+    );
+    expect(outcome.exitCode).toBe(CLI_EXIT.ok);
+    expect(JSON.parse(outcome.stdout as string)).toMatchObject({
+      ok: true,
+      result: { answer: 'Você tem 1 projeto.', calls: [], device: 'CUDA0' },
+    });
+  });
+
+  it('answers in plain text with --text', async () => {
+    const outcome = await runCli(['ask', '--text', '--', 'oi'], open, () => answering('Olá!'));
+    expect(outcome.stdout).toBe('Olá!');
+  });
+
+  it('is a usage error, naming ask, when this channel has no agent', async () => {
+    const outcome = await runCli(['ask', '--', 'oi'], open);
+    expect(outcome.exitCode).toBe(CLI_EXIT.usage);
+    expect(JSON.parse(outcome.stderr as string).error.message).toContain('ask não está disponível');
+  });
+
+  it('is a usage error for an empty question, and starts no model', async () => {
+    const outcome = await runCli(['ask'], open, () => answering('x'));
+    expect(outcome.exitCode).toBe(CLI_EXIT.usage);
+    expect(JSON.parse(outcome.stderr as string).error.message).toContain('Pergunta vazia');
+  });
+
+  it('explains ask in the usage text', () => {
+    expect(CLI_USAGE).toContain('ask -- "<pergunta>"');
+    expect(CLI_USAGE).toContain('--llama-server');
   });
 });

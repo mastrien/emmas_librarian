@@ -1,4 +1,5 @@
 import path from 'path';
+import { decisionServerArgs as runtimeDecisionArgs } from '../../../agent/runtime/serverArgs';
 import type { RunSetup } from '../run/runSetup';
 
 /** A decision model: llama.cpp serves it at /v1/systemone, and it writes no text. */
@@ -23,11 +24,6 @@ export const DECISION_MODELS: DecisionModelSpec[] = [
  *   decisionServerArgs(DECISION_MODELS[0], 8090, setup); // ['-m', '.../d1-2B-Q4_K_M.gguf', '-ngl', '99', ...]
  */
 export function decisionServerArgs(model: DecisionModelSpec, port: number, setup: RunSetup): string[] {
-  // The whole request (every tool as an option) is read in one pass, so the physical batch must hold it: at the default
-  // 512 llama-server answers 500 "input (1599 tokens) is too large".
-  const args = ['-m', path.join(setup.modelsDir, model.file), '-ngl', '99', '-c', String(model.contextSize)];
-  args.push('-b', String(model.contextSize), '-ub', String(model.contextSize));
-  if (setup.device) args.push('--device', setup.device);
-  args.push('--port', String(port), '--host', '127.0.0.1', '--no-webui');
-  return args;
+  const modelPath = path.join(setup.modelsDir, model.file);
+  return runtimeDecisionArgs({ modelPath, contextSize: model.contextSize, device: setup.device, port });
 }

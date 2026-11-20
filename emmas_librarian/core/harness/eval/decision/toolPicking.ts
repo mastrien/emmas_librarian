@@ -1,5 +1,5 @@
 import type { ToolDefinition } from '../../toolDefinition';
-import type { DecisionAnswer, DecisionQuestion } from './systemOne';
+import type { DecisionAnswer, DecisionQuestion } from '../../../agent/systemOne';
 
 /** Name of the question that picks the tool. */
 export const BEST_TOOL = 'ferramenta';

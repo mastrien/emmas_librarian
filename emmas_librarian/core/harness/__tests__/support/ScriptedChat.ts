@@ -1,4 +1,4 @@
-import type { ChatModel, ChatReply, ChatRequest } from '../../eval/run/chatClient';
+import type { ChatModel, ChatReply, ChatRequest } from '../../../agent/chatClient';
 
 /** A model reply with the fields a test does not care about filled in. */
 export const reply = (over: Partial<ChatReply>): ChatReply => ({

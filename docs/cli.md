@@ -92,6 +92,32 @@ resultado, os erros e os códigos de saída são os mesmos.
 - A tela do aplicativo não é avisada do que o CLI gravou: ela mostra a mudança quando recarregar os dados.
 - Se o aplicativo não responder (marcador deixado por um travamento), o CLI abre o banco diretamente, em modo WAL.
 
+## Perguntar ao agente local (`ask`)
+
+```
+emmas-librarian cli ask --text --llama-server <caminho> -- "Quais projetos eu tenho?"
+```
+
+Uma pergunta em linguagem natural, respondida por um modelo pequeno que roda na sua máquina (LFM3-1.7B, com o d1-2B
+escolhendo os assuntos; os números estão em `docs/avaliacao-modelos.md` e as licenças em `docs/agente.md`). O agente
+usa as mesmas ferramentas da biblioteca que o CLI expõe, e **nada sai do computador**.
+
+- **Precisa do `llama-server` da versão `b12425`**, em `--llama-server <caminho>` ou na variável `LLAMA_SERVER`. O
+  aplicativo não o instala.
+- **Os modelos** (cerca de 1,1 GB cada) ficam em `models/` dentro da pasta de dados, ou em `--models-dir <pasta>`. Se
+  faltarem, uma janela pergunta antes de baixar, com o tamanho, o endereço e a licença; sem um "Sim" nada é baixado.
+  O arquivo é conferido por SHA-256 e um download interrompido recomeça de onde parou.
+- **Toda chamada que muda a biblioteca abre uma janela** perguntando se pode executar, com o comando e os argumentos.
+  O botão padrão e o fechar da janela são "Não". Não existe `--yes`; para automatizar, use os comandos do CLI.
+  A pergunta é uma janela, e não o terminal, porque o executável do aplicativo no Windows é um programa de janela: o
+  stdin chega vazio e o stderr não aparece.
+- **A resposta traz as chamadas feitas**: em `--text`, abaixo do texto; em JSON, no campo `calls`. Um modelo pequeno
+  erra um pedido em cada oito, e a lista é como você confere o que ele fez.
+- **Tempo:** na RX 580 (Vulkan), cerca de 70 s por pergunta, contando subir os dois servidores. A maior parte é a
+  inicialização.
+- O resultado em JSON é `{ "answer", "calls", "stopped", "fallback", "subjects", "device" }`. Códigos de saída: os
+  da tabela acima; `ask` sem pergunta ou sem `llama-server` sai com 2, e uma falha do modelo local com 1.
+
 ## Limitações conhecidas
 
 - **Linux sem display** (servidor, SSH): passe `--ozone-platform=headless` antes de `cli`. O Chromium escolhe a

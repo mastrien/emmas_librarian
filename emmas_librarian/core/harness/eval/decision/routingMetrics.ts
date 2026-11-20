@@ -1,7 +1,7 @@
 import type { EvalCase } from '../evalCase';
 import { toToolName } from '../../toolNames';
 import type { ToolArea } from '../../toolAreas';
-import type { RoutingDecision } from './areaRouting';
+import type { RoutingDecision } from '../../../agent/areaRouting';
 
 /** The subject of each tool name a model calls (articles__updateStatus -> artigos). */
 export function areaOfTool(areas: readonly ToolArea[]): Map<string, string> {

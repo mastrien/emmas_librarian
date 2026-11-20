@@ -15,6 +15,7 @@ import { askWhileInstalling } from './updateInstallDialog';
 import { runStartupUpdateGuard } from './updateInstallGuard';
 import { attachExternalLinkGuard } from './externalLinks';
 import { cliArgumentsFrom, keepStdoutForResults, runElectronCli, streamSink } from './cli/electronCli';
+import { askDepsFor } from './cli/askDeps';
 import { cliHostFor } from '../../core/cli/openCliLibrary';
 import { LocalChannel } from './remote/LocalChannel';
 import type { IpcRegistriesResult } from './ipc/ipcRegistries';
@@ -200,6 +201,12 @@ function startCli(args: string[]): void {
       const secrets = new SafeStorageSecretStore();
       return cliHostFor({ paths, secrets, appVersion: app.getVersion(), env: process.env }, process.cwd());
     },
+    ask: (options) =>
+      askDepsFor(options, {
+        userData: options.dataDir ?? app.getPath('userData'),
+        env: process.env,
+        showMessageBox: (options) => dialog.showMessageBox(options),
+      }),
     stdout: streamSink(process.stdout),
     stderr: streamSink(process.stderr),
     exit: (code) => app.exit(code),
