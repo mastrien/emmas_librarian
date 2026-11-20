@@ -77,7 +77,12 @@ describe('chooseDownload', () => {
   });
 
   it('keeps no file when the release has none for that system', () => {
-    expect(chooseDownload(LINUX, ASSETS.filter((a) => !a.name.endsWith('.AppImage'))).asset).toBeNull();
+    expect(
+      chooseDownload(
+        LINUX,
+        ASSETS.filter((a) => !a.name.endsWith('.AppImage')),
+      ).asset,
+    ).toBeNull();
     expect(chooseDownload(LINUX, []).asset).toBeNull();
   });
 });
