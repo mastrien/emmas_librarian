@@ -1,0 +1,136 @@
+{
+  "id": "cfg-1",
+  "kind": "happy",
+  "prompt": "Qual é a versão do aplicativo?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 15,
+  "toolsBytes": 4049,
+  "wallMs": 9768,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "pG8P512XiMkhH1AN0maYbfO5J51pmv3n",
+              "name": "app__getVersion",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "The user asks: \"Qual é a versão do aplicativo?\" which translates to \"What is the version of the app?\" In the context, we have tools from Emma's Librarian. There's a tool `app__getVersion` that returns the app version. So I should call that function. No parameters needed. Let's do it.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 482,
+            "promptMs": 1246.822,
+            "generatedTokens": 84,
+            "generatedMs": 3323.518
+          },
+          "wallMs": 4598
+        },
+        "calls": [
+          {
+            "id": "pG8P512XiMkhH1AN0maYbfO5J51pmv3n",
+            "name": "app__getVersion",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": "1.0.0"
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "A versão atual do aplicativo é **1.0.0**.",
+          "toolCalls": [],
+          "reasoning": "We need to answer the user's question: \"Qual é a versão do aplicativo?\" The tool app__getVersion returned {\"ok\": true, \"result\": \"1.0.0\"}. So version is 1.0.0. Provide short response in Portuguese.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 521,
+            "promptMs": 1418.68,
+            "generatedTokens": 75,
+            "generatedMs": 2952.902
+          },
+          "wallMs": 4383
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "A versão atual do aplicativo é **1.0.0**.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Qual é a versão do aplicativo?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "pG8P512XiMkhH1AN0maYbfO5J51pmv3n",
+            "name": "app__getVersion",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "pG8P512XiMkhH1AN0maYbfO5J51pmv3n",
+        "content": "{\"ok\":true,\"result\":\"1.0.0\"}"
+      },
+      {
+        "role": "assistant",
+        "content": "A versão atual do aplicativo é **1.0.0**.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "sistema",
+          "probability": 0.96657174920251
+        },
+        {
+          "area": "projetos",
+          "probability": 0.0064278251846585635
+        },
+        {
+          "area": "artigos",
+          "probability": 0.0032074420919896117
+        }
+      ],
+      "chosen": [
+        "sistema",
+        "projetos"
+      ],
+      "fallback": "none",
+      "decisionMs": 786,
+      "decisionInputTokens": 361
+    }
+  }
+}
