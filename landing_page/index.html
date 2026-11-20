@@ -43,7 +43,7 @@
           "@type": "SoftwareApplication",
           "name": "Emma's Librarian",
           "applicationCategory": "EducationalApplication",
-          "operatingSystem": "Windows",
+          "operatingSystem": "Windows, Linux",
           "offers": {
             "@type": "Offer",
             "price": "0",
@@ -206,18 +206,21 @@
         </div>
     </footer>
 
+    <script src="download.js"></script>
     <script>
+        // The button points to the releases page until the latest release is known; the installer is then picked per system.
+        const label = document.getElementById('version-label');
+        const button = document.getElementById('download-btn');
         fetch('https://api.github.com/repos/mastrien/emmas_librarian/releases/latest')
             .then(res => res.json())
             .then(data => {
-                const winAsset = data.assets?.find(a => a.name.endsWith('.exe'));
-                if (winAsset) {
-                    document.getElementById('download-btn').href = winAsset.browser_download_url;
-                }
-                document.getElementById('version-label').textContent = `Baixar ${data.tag_name} (Windows)`;
+                const choice = EmmaDownload.chooseDownload(navigator.userAgent, data.assets);
+                if (choice.asset) button.href = choice.asset.browser_download_url;
+                const version = choice.label ? `Baixar ${data.tag_name} (${choice.label})` : `Versão ${data.tag_name}`;
+                label.textContent = choice.note ? `${version}. ${choice.note}` : version;
             })
             .catch(() => {
-                document.getElementById('version-label').textContent = "Disponível no GitHub.";
+                label.textContent = "Disponível no GitHub.";
             });
     </script>
 </body>
