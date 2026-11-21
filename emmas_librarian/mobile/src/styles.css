@@ -569,3 +569,70 @@ p {
   border: 2px solid var(--color-primary);
   background: var(--color-primary-subtle);
 }
+
+/* PDF pages: text layer for selecting, marks drawn over the canvas */
+.m-pdf-page {
+  position: relative;
+  margin: 0 auto 0.5rem;
+}
+
+.m-pdf-mark {
+  position: absolute;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.m-pdf-text {
+  position: absolute;
+  inset: 0;
+  line-height: 1;
+}
+
+.m-highlightbar {
+  position: fixed;
+  right: 0.5rem;
+  bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  left: 0.5rem;
+  z-index: 5;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  background: var(--bg-raised);
+  box-shadow: var(--shadow-lg);
+}
+
+.m-highlightbar__text {
+  margin: 0 0 0.5rem;
+  color: var(--text-muted);
+  font-family: var(--font-read);
+  font-size: 0.85rem;
+}
+
+.m-highlightbar__colors {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.m-highlightbar__colors button {
+  display: grid;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  flex: 1;
+  place-items: center;
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--text-main);
+  font: inherit;
+}
+
+.m-highlightbar__colors button[aria-pressed='true'] {
+  border-color: var(--color-primary);
+}
+
+.m-highlightbar__colors button span {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+}
