@@ -88,10 +88,14 @@ Marcadas com * as que mudam o desenho de forma que custa caro refazer.
 - Cripto: sem revisão externa, manter a superfície mínima e usar primitivas padrão.
 - PDF grande em celular modesto (memória do pdf.js).
 
-### Ainda em aberto depois das respostas
+### Respostas de 2026-11-21 (segunda rodada)
 
-- Um projeto próprio do celular pode virar sincronizado (enviado ao desktop)? Se sim, é uma importação com dry run, e depois o desktop passa a mandar.
-- Ao rejeitar o dry run no desktop, o celular desfaz a alteração local ou mantém e avisa a divergência?
-- O celular sem o desktop por perto edita projeto sincronizado offline e acumula alterações pendentes até reencontrar o desktop?
-- Como o celular só pareia com um desktop: trocar de desktop apaga a cópia local?
+- **Projeto próprio não vira sincronizado.** A única forma é exportar `.emmapcarc` e importar no desktop como se o projeto fosse dele.
+- **Dry run rejeitado:** o celular **desfaz** a alteração local. Caminho mais simples, sem ressincronização de divergência.
+- **Offline:** o celular pode editar projeto sincronizado sem o desktop; as alterações ficam pendentes e entram no dry run na próxima sincronização.
+- **Aparência:** mesmos tokens, tipografia (Lexend, Source Serif 4, JetBrains Mono, embutidas no app) e personalização do desktop: modo claro ou escuro, tom (branco ou branco quente; grafite neutro ou quente) e seis cores de destaque. Há splash com o nome e o logo.
+
+### Ainda em aberto
+
+- Trocar de desktop (ou despareamento) apaga a cópia local do celular? Proposta: sim, com aviso, porque as alterações pendentes perdem o destino.
 - Compatibilidade de versão (`protocolVersion`): recusar sincronizar com mensagem clara (padrão).
