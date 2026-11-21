@@ -70,8 +70,10 @@ module.exports = {
       // Playwright specs and build scripts are plain CommonJS Node scripts.
       files: [
         'e2e-tests/**/*.js',
+        'mobile/e2e/**/*.js',
         'build-db.js',
         'playwright.config.js',
+        'playwright.mobile.config.js',
         'playwright.release.config.js',
         'playwright.visual.config.js',
         'visual-tests/**/*.js',

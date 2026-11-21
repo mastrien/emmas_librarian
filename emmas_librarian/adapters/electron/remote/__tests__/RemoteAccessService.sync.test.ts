@@ -87,6 +87,23 @@ describe('phone sync over the plain listener', () => {
     expect(library.rows('projects')).toMatchObject([{ name: 'From the computer' }]);
   });
 
+  it('sends the PDF of an article, byte for byte, when the phone asks for it', async () => {
+    const project = db.createProject('P');
+    const article = db.saveArticle(project.id, { title: 'A', source_query: '', source_databases: '', csl_json: '{}' });
+    const file = path.join(dir, 'a.pdf');
+    fs.writeFileSync(file, Buffer.from('%PDF-1.4 conteúdo'));
+    db.updateArticleFilePath(article, file);
+    const offer = parseScannedOffer((await service.startSyncPairing()).url);
+    const desktop = await pairPhone(crypto, offer, 'Pixel', new MemoryIdentity());
+    const library = LocalLibrary.empty(desktop.deviceId, { now: () => 't', newUuid: () => String(Math.random()) });
+    const client = new PhoneSyncClient(crypto, identityOf(desktop), library, new HttpSyncTransport(desktop.baseUrl));
+    await client.sync();
+
+    const bytes = await client.fetchPdf(library.rows('articles')[0].uuid);
+
+    expect(Buffer.from(bytes ?? []).toString()).toBe('%PDF-1.4 conteúdo');
+  });
+
   it('serves nothing but sync on that port: no commands, no pages', async () => {
     const { syncPort } = parseScannedOffer((await service.startSyncPairing()).url);
     const commands = await fetch(`http://127.0.0.1:${syncPort}/api/commands`);

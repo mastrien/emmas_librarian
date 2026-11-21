@@ -89,13 +89,14 @@ export class PhoneSyncAccess {
 
   private ensureHub(): DesktopSyncHub {
     if (this.hub) return this.hub;
-    const { log, builder, store } = this.parts();
+    const { log, builder, store, readPdf } = this.parts();
     this.hub = new DesktopSyncHub({
       crypto: new WebCryptoProvider(globalThis.crypto),
       registry: this.registry,
       log,
       builder,
       store,
+      readPdf,
       now: this.host.now ?? Date.now,
       onPaired: (device) => {
         this.verificationCode = device.verificationCode;

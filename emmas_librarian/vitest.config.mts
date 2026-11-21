@@ -24,6 +24,8 @@ export default defineConfig({
       '**/.stryker-tmp/**',
       // Playwright specs; e2e-tests/__tests__ holds unit tests of the E2E helpers and runs here.
       '**/e2e-tests/*.{spec,test}.js',
+      // The phone client's browser specs (npm run test:mobile-e2e).
+      '**/mobile/e2e/**',
       '**/performance-tests/**',
       '**/.{idea,git,cache,output,temp}/**',
     ],
