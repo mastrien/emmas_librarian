@@ -100,6 +100,12 @@ export class PendingChangeStore {
     return rows.map((row) => ({ opId: row.op_id, status: row.status, reason: row.skip_reason }));
   }
 
+  /** Forgets decided changes the phone confirmed it processed, so the next sync does not repeat them. */
+  public acknowledge(opIds: string[]): number {
+    const drop = this.db.prepare("DELETE FROM sync_pending_ops WHERE op_id = ? AND status != 'pending'");
+    return this.db.transaction(() => opIds.reduce((removed, opId) => removed + drop.run(opId).changes, 0))();
+  }
+
   private applyOne(row: PendingRow): DecidedChange {
     const outcome: ApplyOutcome = this.applier.apply(toOperation(row));
     const status = outcome.status;

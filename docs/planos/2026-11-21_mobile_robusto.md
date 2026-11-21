@@ -55,6 +55,8 @@ Consequências para o desenho (ainda a refinar):
 
 ## 3. Fases sugeridas
 
+**Andamento (2026-11-21):** as fases 1 e 2 estão feitas no núcleo (`core/sync/`, 71 testes, descrição em `docs/sincronizacao-celular.md`), ainda sem ligação com o aplicativo e sem rede. Falta guardar `deviceKey` no `SecretStore`, ligar o endpoint ao `RemoteGateway` (HTTP) e a tela de revisão no desktop. As fases 3 a 5 (celular) não foram começadas.
+
 1. **Esquema de sync no núcleo:** uuid, updated_at, tombstones, log de operações, migração e testes contra SQLite real. Sem tela.
 2. **Protocolo e cifra:** pareamento autenticado, pacote cifrado, anti-replay, revogação; testes com fakes nomeados de rede e de relógio.
 3. **Armazenamento local no celular** e `LocalProjectReader`/writer ao lado de `HttpProjectReader`/`ArchiveProjectReader`.
