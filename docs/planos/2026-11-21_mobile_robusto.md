@@ -95,7 +95,14 @@ Marcadas com * as que mudam o desenho de forma que custa caro refazer.
 - **Offline:** o celular pode editar projeto sincronizado sem o desktop; as alterações ficam pendentes e entram no dry run na próxima sincronização.
 - **Aparência:** mesmos tokens, tipografia (Lexend, Source Serif 4, JetBrains Mono, embutidas no app) e personalização do desktop: modo claro ou escuro, tom (branco ou branco quente; grafite neutro ou quente) e seis cores de destaque. Há splash com o nome e o logo.
 
+### Terceira rodada (2026-11-21)
+
+- **Despareamento ou troca de desktop apaga a cópia local do celular**, com aviso que lista as alterações pendentes que seriam perdidas.
+- **Diário no celular:** uma página por vez, com setas anterior/próxima e a data tocável (abre calendário e lista para saltar).
+- **Leitor:** a página do PDF fica branca nos dois temas.
+- **Links de acesso rápido:** seção dentro de cada projeto, não na barra inferior.
+- **Autonomia:** o autor liberou seguir o máximo possível do plano sem interação, a partir da fase 1.
+
 ### Ainda em aberto
 
-- Trocar de desktop (ou despareamento) apaga a cópia local do celular? Proposta: sim, com aviso, porque as alterações pendentes perdem o destino.
-- Compatibilidade de versão (`protocolVersion`): recusar sincronizar com mensagem clara (padrão).
+- Compatibilidade de versão (`protocolVersion`): recusar sincronizar com mensagem clara (padrão adotado).
