@@ -1,21 +1,18 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Article } from '../../../src/types';
+import { errorText } from '../errorText';
+import type { LocalWorkspace } from '../local/LocalWorkspace';
 import { useReader, useWorkspace } from '../session/SessionContext';
 import { useLoaded } from '../useLoaded';
 
 const megabytes = (bytes: number) => `${(bytes / 1_048_576).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} MB`;
 
-interface LocalPdfProps {
-  article: Article;
-  size: number | null;
-  reload: () => void;
-}
-
-// On the phone's own library a PDF is there only if it was downloaded (or picked); the person chooses which ones.
-const LocalPdfAction: React.FC<LocalPdfProps> = ({ article, size, reload }) => {
-  const { workspace, status } = useWorkspace();
-  const picker = useRef<HTMLInputElement>(null);
+/** Runs an action and keeps its failure in words, for the card to show; `reload` runs after a success. */
+function useAction(reload: () => void): {
+  problem: string | null;
+  run: (action: () => Promise<unknown>) => Promise<void>;
+} {
   const [problem, setProblem] = useState<string | null>(null);
   const run = (action: () => Promise<unknown>) =>
     action().then(
@@ -23,52 +20,70 @@ const LocalPdfAction: React.FC<LocalPdfProps> = ({ article, size, reload }) => {
         setProblem(null);
         reload();
       },
-      (error: unknown) => setProblem(error instanceof Error ? error.message : String(error)),
+      (error: unknown) => setProblem(errorText(error)),
     );
-  if (size !== null) {
-    return (
-      <>
-        <Link className="m-button m-button--primary" to={`/articles/${article.id}/pdf`}>
-          Abrir PDF
-        </Link>
-        <p className="m-row__detail">PDF no celular · {megabytes(size)}</p>
-      </>
-    );
-  }
-  const canDownload = workspace !== null && status?.pairedTo;
+  return { problem, run };
+}
+
+const OpenPdf: React.FC<{ article: Article; size: number }> = ({ article, size }) => (
+  <>
+    <Link className="m-button m-button--primary" to={`/articles/${article.id}/pdf`}>
+      Abrir PDF
+    </Link>
+    <p className="m-row__detail">PDF no celular · {megabytes(size)}</p>
+  </>
+);
+
+interface WorkspaceActionProps {
+  workspace: LocalWorkspace;
+  article: Article;
+  run: (action: () => Promise<unknown>) => Promise<void>;
+}
+
+const DownloadPdf: React.FC<WorkspaceActionProps> = ({ workspace, article, run }) => (
+  <button
+    className="m-button"
+    onClick={() =>
+      void run(async () => {
+        if (!(await workspace.downloadPdf(article.id))) throw new Error('O computador não tem PDF para este artigo.');
+      })
+    }
+  >
+    Baixar PDF para ler offline
+  </button>
+);
+
+const PickPdf: React.FC<WorkspaceActionProps> = ({ workspace, article, run }) => {
+  const picker = useRef<HTMLInputElement>(null);
+  const attach = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const [file] = Array.from(event.target.files ?? []);
+    if (file) void run(async () => workspace.attachPdf(article.id, new Uint8Array(await file.arrayBuffer())));
+    event.target.value = '';
+  };
   return (
     <>
-      {canDownload && (
-        <button
-          className="m-button"
-          onClick={() =>
-            void run(async () => {
-              if (!(await workspace.downloadPdf(article.id)))
-                throw new Error('O computador não tem PDF para este artigo.');
-            })
-          }
-        >
-          Baixar PDF para ler offline
-        </button>
-      )}
-      {workspace && (
-        <>
-          <button className="m-button" onClick={() => picker.current?.click()}>
-            Adicionar PDF deste aparelho
-          </button>
-          <input
-            ref={picker}
-            type="file"
-            hidden
-            aria-label="PDF do aparelho"
-            onChange={(event) => {
-              const [file] = Array.from(event.target.files ?? []);
-              if (file) void run(async () => workspace.attachPdf(article.id, new Uint8Array(await file.arrayBuffer())));
-              event.target.value = '';
-            }}
-          />
-        </>
-      )}
+      <button className="m-button" onClick={() => picker.current?.click()}>
+        Adicionar PDF deste aparelho
+      </button>
+      <input ref={picker} type="file" hidden aria-label="PDF do aparelho" onChange={attach} />
+    </>
+  );
+};
+
+// On the phone's own library a PDF is there only if it was downloaded (or picked); the person chooses which ones.
+const LocalPdfAction: React.FC<{ article: Article; size: number | null; reload: () => void }> = ({
+  article,
+  size,
+  reload,
+}) => {
+  const { workspace, status } = useWorkspace();
+  const { problem, run } = useAction(reload);
+  if (size !== null) return <OpenPdf article={article} size={size} />;
+  const canDownload = workspace !== null && Boolean(status?.pairedTo);
+  return (
+    <>
+      {workspace && canDownload && <DownloadPdf workspace={workspace} article={article} run={run} />}
+      {workspace && <PickPdf workspace={workspace} article={article} run={run} />}
       <p className="m-row__detail">
         {canDownload ? 'Este PDF não está no celular.' : 'Este artigo não tem PDF no celular.'}
       </p>

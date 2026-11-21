@@ -12,6 +12,7 @@ import type { PdfStorage } from './storage';
 import type { ProjectReader, ProjectStanding, ProjectWriter } from '../reader/ProjectReader';
 import { LocalLibrary } from './LocalLibrary';
 import { LocalWriter } from './LocalWriter';
+import type { SyncedEntity } from '../../../core/sync/syncedTables';
 import { projectUuidOf } from './rowTree';
 import { childrenOf, isLive, rowById, typed } from './localRows';
 
@@ -59,11 +60,14 @@ export class LocalProjectReader implements ProjectReader {
     return { origin: this.library.state.origins[project.uuid] ?? 'synced', pendingChanges: pending.length };
   }
 
+  /** The live rows of `entity` that belong to a parent row, as the screens know them. */
+  private childrenTyped<T>(entity: SyncedEntity, column: string, parentEntity: SyncedEntity, parentId: number): T[] {
+    const parent = rowById(this.library, parentEntity, parentId);
+    return childrenOf(this.library, entity, column, parent.uuid).map((row) => typed<T>(this.library, entity, row));
+  }
+
   async listArticles(projectId: number): Promise<Article[]> {
-    const project = rowById(this.library, 'projects', projectId);
-    return childrenOf(this.library, 'articles', 'project_id', project.uuid).map((row) =>
-      typed<Article>(this.library, 'articles', row),
-    );
+    return this.childrenTyped<Article>('articles', 'project_id', 'projects', projectId);
   }
 
   async getArticle(articleId: number): Promise<Article | null> {
@@ -89,10 +93,7 @@ export class LocalProjectReader implements ProjectReader {
   }
 
   async listAnnotations(articleId: number): Promise<Annotation[]> {
-    const article = rowById(this.library, 'articles', articleId);
-    return childrenOf(this.library, 'annotations', 'article_id', article.uuid).map((row) =>
-      typed<Annotation>(this.library, 'annotations', row),
-    );
+    return this.childrenTyped<Annotation>('annotations', 'article_id', 'articles', articleId);
   }
 
   async readPdf(articleId: number): Promise<Uint8Array | null> {
@@ -112,10 +113,7 @@ export class LocalProjectReader implements ProjectReader {
   }
 
   async listDocuments(projectId: number): Promise<ProjectDocument[]> {
-    const project = rowById(this.library, 'projects', projectId);
-    return childrenOf(this.library, 'project_documents', 'project_id', project.uuid).map((row) =>
-      typed<ProjectDocument>(this.library, 'project_documents', row),
-    );
+    return this.childrenTyped<ProjectDocument>('project_documents', 'project_id', 'projects', projectId);
   }
 
   // Categories are not part of the sync yet (docs/planos/2026-11-21_mobile_robusto.md), so there are none here.

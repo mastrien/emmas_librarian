@@ -46,3 +46,11 @@ export function monthGrid(isoDate: string): MonthGrid {
     days: Array.from({ length: count }, (_unused, index) => `${year}-${pad(month)}-${pad(index + 1)}`),
   };
 }
+
+/** A date in words for the screen ("21 de novembro de 2026"). */
+export const formatDiaryDay = (isoDate: string): string =>
+  new Date(`${isoDate}T12:00:00`).toLocaleDateString('pt-BR', { dateStyle: 'long' });
+
+/** The label of a page in the pager: today is called so. */
+export const diaryLabel = (isoDate: string, today: string): string =>
+  isoDate === today ? `Hoje · ${formatDiaryDay(isoDate)}` : formatDiaryDay(isoDate);

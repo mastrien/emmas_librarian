@@ -38,6 +38,22 @@ const NewProject: React.FC<{ onCreate: (name: string) => Promise<unknown> }> = (
   );
 };
 
+const ProjectList: React.FC<{ projects: ProjectRow[] }> = ({ projects }) =>
+  projects.length === 0 ? (
+    <Empty>Nenhum projeto nesta biblioteca.</Empty>
+  ) : (
+    <ul className="m-list">
+      {projects.map((project) => (
+        <li key={project.id}>
+          <Link to={`/projects/${project.id}`} className="m-row">
+            <span className="m-row__title">{project.name}</span>
+            <ProjectChips project={project} />
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+
 const SourceNote: React.FC = () => {
   const reader = useReader();
   const { status } = useWorkspace();
@@ -73,24 +89,7 @@ export const ProjectsScreen: React.FC = () => {
         }
       />
       <SourceNote />
-      <Await loaded={projects}>
-        {(list: ProjectRow[]) =>
-          list.length === 0 ? (
-            <Empty>Nenhum projeto nesta biblioteca.</Empty>
-          ) : (
-            <ul className="m-list">
-              {list.map((project) => (
-                <li key={project.id}>
-                  <Link to={`/projects/${project.id}`} className="m-row">
-                    <span className="m-row__title">{project.name}</span>
-                    <ProjectChips project={project} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )
-        }
-      </Await>
+      <Await loaded={projects}>{(list: ProjectRow[]) => <ProjectList projects={list} />}</Await>
       {reader.writer?.createProject && (
         <NewProject onCreate={(name) => reader.writer!.createProject!(name).then(reload)} />
       )}

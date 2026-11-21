@@ -39,6 +39,51 @@ const Segmented = <T extends string>(props: {
   </div>
 );
 
+const ToneChoice: React.FC<{ look: Appearance; onChange: (patch: Partial<Appearance>) => void }> = ({
+  look,
+  onChange,
+}) =>
+  look.mode === 'dark' ? (
+    <Segmented
+      label="Tom do modo escuro"
+      value={look.darkTone}
+      options={[
+        { id: 'neutral', name: 'Grafite neutro' },
+        { id: 'warm', name: 'Grafite quente' },
+      ]}
+      onChange={(darkTone) => onChange({ darkTone })}
+    />
+  ) : (
+    <Segmented
+      label="Tom do modo claro"
+      value={look.lightTone}
+      options={[
+        { id: 'white', name: 'Branco' },
+        { id: 'warm', name: 'Branco quente' },
+      ]}
+      onChange={(lightTone) => onChange({ lightTone })}
+    />
+  );
+
+const AccentChoice: React.FC<{ current: string; onChange: (accent: string) => void }> = ({ current, onChange }) => (
+  <div className="m-field">
+    <h3 className="m-field__label">Cor de destaque</h3>
+    <div className="m-swatches" role="group" aria-label="Cor de destaque">
+      {ACCENTS.map((accent) => (
+        <button
+          key={accent.id}
+          className="m-swatch"
+          aria-label={accent.name}
+          aria-pressed={current === accent.id}
+          onClick={() => onChange(accent.id)}
+        >
+          <span style={{ background: accent.color }} />
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
 /**
  * The same choices as the desktop's Appearance settings: mode, the tone of the mode in use, and the accent.
  *
@@ -47,7 +92,6 @@ const Segmented = <T extends string>(props: {
 export const AppearanceCard: React.FC = () => {
   const { look, setLook } = useLook();
   const change = (patch: Partial<Appearance>) => setLook({ ...look, ...patch });
-  const dark = look.mode === 'dark';
   return (
     <section className="m-card">
       <h2>Aparência</h2>
@@ -60,43 +104,8 @@ export const AppearanceCard: React.FC = () => {
         ]}
         onChange={(mode) => change({ mode })}
       />
-      {dark ? (
-        <Segmented
-          label="Tom do modo escuro"
-          value={look.darkTone}
-          options={[
-            { id: 'neutral', name: 'Grafite neutro' },
-            { id: 'warm', name: 'Grafite quente' },
-          ]}
-          onChange={(darkTone) => change({ darkTone })}
-        />
-      ) : (
-        <Segmented
-          label="Tom do modo claro"
-          value={look.lightTone}
-          options={[
-            { id: 'white', name: 'Branco' },
-            { id: 'warm', name: 'Branco quente' },
-          ]}
-          onChange={(lightTone) => change({ lightTone })}
-        />
-      )}
-      <div className="m-field">
-        <h3 className="m-field__label">Cor de destaque</h3>
-        <div className="m-swatches" role="group" aria-label="Cor de destaque">
-          {ACCENTS.map((accent) => (
-            <button
-              key={accent.id}
-              className="m-swatch"
-              aria-label={accent.name}
-              aria-pressed={look.accent === accent.id}
-              onClick={() => change({ accent: accent.id })}
-            >
-              <span style={{ background: accent.color }} />
-            </button>
-          ))}
-        </div>
-      </div>
+      <ToneChoice look={look} onChange={change} />
+      <AccentChoice current={look.accent} onChange={(accent) => change({ accent })} />
     </section>
   );
 };

@@ -12,6 +12,7 @@ import { LocalLibrary, type LibraryClock } from './LocalLibrary';
 import { LocalProjectReader } from './LocalProjectReader';
 import { emptyState, type LibraryState } from './libraryState';
 import type { PdfStorage, StateStorage } from './storage';
+import { errorText } from '../errorText';
 
 /** What the workspace needs from the phone; tests pass fakes for each. */
 export interface WorkspaceEnvironment {
@@ -121,7 +122,7 @@ export class LocalWorkspace {
       this.lastError = null;
       return report;
     } catch (error) {
-      this.lastError = error instanceof Error ? error.message : String(error);
+      this.lastError = errorText(error);
       throw error;
     } finally {
       this.syncing = false;

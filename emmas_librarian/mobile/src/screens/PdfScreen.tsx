@@ -19,20 +19,17 @@ interface PageProps {
   highlights: Highlight[];
 }
 
-// A page is drawn when it comes near the screen: a long PDF drawn at once would not fit a phone's memory.
-const PdfPage: React.FC<PageProps> = ({ pdf, pageNumber, width, focused, highlights }) => {
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const textLayer = useRef<HTMLDivElement>(null);
-  const [failed, setFailed] = useState(false);
-
+/** Draws a page only when it comes near the screen: a long PDF drawn at once would not fit a phone's memory. */
+function useDrawWhenNear(
+  canvas: React.RefObject<HTMLCanvasElement | null>,
+  draw: () => void,
+  focused: boolean,
+  deps: unknown[],
+): void {
   useEffect(() => {
     const element = canvas.current;
     if (!element) return;
     if (focused) element.scrollIntoView?.();
-    const draw = () => {
-      void pdf.renderPage(pageNumber, element, width).catch(() => setFailed(true));
-      if (textLayer.current) void pdf.renderTextLayer?.(pageNumber, textLayer.current, width).catch(() => undefined);
-    };
     if (typeof IntersectionObserver === 'undefined') return draw();
     const observer = new IntersectionObserver(
       (entries) => {
@@ -44,26 +41,49 @@ const PdfPage: React.FC<PageProps> = ({ pdf, pageNumber, width, focused, highlig
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, [pdf, pageNumber, width, focused]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+}
 
+/** The marks already made on a page, drawn over it. */
+const PageMarks: React.FC<{ highlights: Highlight[]; pageNumber: number; width: number }> = ({
+  highlights,
+  pageNumber,
+  width,
+}) => (
+  <>
+    {highlights.flatMap((highlight) =>
+      rectsOnPage(highlight.position_data, pageNumber, width).map((rect, index) => (
+        <span
+          key={`${highlight.id}-${index}`}
+          className="m-pdf-mark"
+          data-testid="pdf-mark"
+          style={{ ...rect, background: overlayFill(highlight.color) }}
+        />
+      )),
+    )}
+  </>
+);
+
+const PdfPage: React.FC<PageProps> = ({ pdf, pageNumber, width, focused, highlights }) => {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const textLayer = useRef<HTMLDivElement>(null);
+  const [failed, setFailed] = useState(false);
+  const draw = () => {
+    if (canvas.current) void pdf.renderPage(pageNumber, canvas.current, width).catch(() => setFailed(true));
+    if (textLayer.current) void pdf.renderTextLayer?.(pageNumber, textLayer.current, width).catch(() => undefined);
+  };
+  useDrawWhenNear(canvas, draw, focused, [pdf, pageNumber, width, focused]);
+  const height = width * pdf.pageRatio;
   return (
     <figure
       className="m-pdf-page"
       aria-label={`Página ${pageNumber}`}
       data-page-number={pageNumber}
-      style={{ width, height: width * pdf.pageRatio }}
+      style={{ width, height }}
     >
-      <canvas ref={canvas} style={{ width, height: width * pdf.pageRatio }} />
-      {highlights.flatMap((highlight) =>
-        rectsOnPage(highlight.position_data, pageNumber, width).map((rect, index) => (
-          <span
-            key={`${highlight.id}-${index}`}
-            className="m-pdf-mark"
-            data-testid="pdf-mark"
-            style={{ ...rect, background: overlayFill(highlight.color) }}
-          />
-        )),
-      )}
+      <canvas ref={canvas} style={{ width, height }} />
+      <PageMarks highlights={highlights} pageNumber={pageNumber} width={width} />
       {pdf.renderTextLayer && <div ref={textLayer} className="textLayer m-pdf-text" />}
       {failed && <figcaption role="alert">Não foi possível desenhar a página {pageNumber}.</figcaption>}
     </figure>
