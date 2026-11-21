@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useSyncExternalStore } from 'react';
 import type { LocalWorkspace, WorkspaceStatus } from '../local/LocalWorkspace';
 import type { ProjectReader } from '../reader/ProjectReader';
 
@@ -46,11 +46,11 @@ export const SessionProvider: React.FC<Session & { children: React.ReactNode }> 
  */
 export function useWorkspace(): { workspace: LocalWorkspace | null; status: WorkspaceStatus | null } {
   const { workspace } = useContext(SessionContext);
-  const [status, setStatus] = useState<WorkspaceStatus | null>(workspace?.status() ?? null);
-  useEffect(() => {
-    if (!workspace) return setStatus(null);
-    setStatus(workspace.status());
-    return workspace.subscribe(() => setStatus(workspace.status()));
-  }, [workspace]);
-  return { workspace: workspace ?? null, status };
+  const subscribe = useCallback(
+    (listener: () => void) => workspace?.subscribe(listener) ?? (() => undefined),
+    [workspace],
+  );
+  // The count is the snapshot: it changes exactly when the status may have, and is a plain number React can compare.
+  useSyncExternalStore(subscribe, () => workspace?.changeCount() ?? 0);
+  return { workspace: workspace ?? null, status: workspace?.status() ?? null };
 }

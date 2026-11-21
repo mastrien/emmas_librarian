@@ -52,6 +52,7 @@ export class LocalWorkspace {
   private lastError: string | null = null;
   private syncing = false;
   private readonly listeners = new Set<() => void>();
+  private changes = 0;
 
   private constructor(
     public readonly library: LocalLibrary,
@@ -169,7 +170,13 @@ export class LocalWorkspace {
     return new PhoneSyncClient(this.env.crypto, identityOf(this.desktop), this.library, transport);
   }
 
+  /** Counts what the screens were told about; changes whenever `subscribe` listeners are called. */
+  public changeCount(): number {
+    return this.changes;
+  }
+
   private changed(): void {
+    this.changes += 1;
     for (const listener of this.listeners) listener();
   }
 }

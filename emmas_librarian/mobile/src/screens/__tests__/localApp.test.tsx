@@ -1,5 +1,4 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import React from 'react';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { App, type AppEnvironment } from '../../App';
 import { LocalWorkspace } from '../../local/LocalWorkspace';
