@@ -260,28 +260,70 @@ body {
     flex-wrap: wrap;
 }
 
+/* Anterior / Próximo: sem borda nem fundo (o fundo só aparece no hover), seta em ícone e o título do capítulo embaixo. */
 .chapter-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.55rem 1rem;
-    font-size: 0.95rem;
-    font-weight: 600;
+    gap: 0.75rem;
+    padding: 0.6rem 0.9rem;
     text-decoration: none;
     color: #1e293b;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
     border-radius: 8px;
-    transition: border-color 0.15s ease, color 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
 .chapter-btn:hover {
+    background: #f1f5f9;
     color: #be185d;
-    border-color: #f9a8d4;
+}
+
+/* O ícone é uma máscara (chevron), pintada com a cor do texto. */
+.chapter-btn::before,
+.chapter-btn::after {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: currentColor;
+    -webkit-mask: var(--chevron) center / contain no-repeat;
+    mask: var(--chevron) center / contain no-repeat;
+}
+
+.chapter-btn.prev {
+    --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 18-6-6 6-6'/%3E%3C/svg%3E");
+}
+
+.chapter-btn.prev::before {
+    content: '';
 }
 
 .chapter-btn.next {
+    --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
     margin-left: auto;
+}
+
+.chapter-btn.next::after {
+    content: '';
+}
+
+.chapter-btn-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.chapter-btn.next .chapter-btn-text {
+    text-align: right;
+}
+
+.chapter-btn-label {
+    font-size: 0.72rem;
+    font-weight: 400;
+    opacity: 0.65;
+}
+
+.chapter-btn-title {
+    font-size: 0.95rem;
+    font-weight: 600;
 }
 
 .wiki-section h2 {
