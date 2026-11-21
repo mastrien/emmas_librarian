@@ -14,6 +14,16 @@ import './styles.css';
 const isNativeApp = (): boolean =>
   Boolean((window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.());
 
+/** Reads the pairing QR code with the camera (Android app only; the plugin is loaded when first used). */
+async function scanPairingCode(): Promise<string> {
+  const { BarcodeScanner, BarcodeFormat } = await import('@capacitor-mlkit/barcode-scanning');
+  await BarcodeScanner.requestPermissions();
+  const { barcodes } = await BarcodeScanner.scan({ formats: [BarcodeFormat.QrCode] });
+  const text = barcodes[0]?.rawValue;
+  if (!text) throw new Error('Nenhum QR code foi lido. Aponte a câmera para o código do computador e tente de novo.');
+  return text;
+}
+
 const environment: AppEnvironment = {
   tokens: browserTokenStore(window.localStorage),
   initialHash: window.location.hash,
@@ -28,6 +38,7 @@ const environment: AppEnvironment = {
         userAgent: navigator.userAgent,
         protocol: window.location.protocol,
         newUuid: () => window.crypto.randomUUID(),
+        scan: isNativeApp() ? scanPairingCode : undefined,
       })
     : undefined,
 };
