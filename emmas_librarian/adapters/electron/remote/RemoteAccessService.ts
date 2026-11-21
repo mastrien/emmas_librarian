@@ -1,6 +1,11 @@
 import https from 'https';
 import type { AddressInfo } from 'net';
-import type { RemoteAccessStatus, RemotePairingInvite } from '../../../src/types/remoteAccess';
+import type {
+  PendingPhoneChange,
+  PhoneChangeDecision,
+  RemoteAccessStatus,
+  RemotePairingInvite,
+} from '../../../src/types/remoteAccess';
 import type { CommandRegistry } from '../../../core/commands/CommandRegistry';
 import type { SecretStore } from '../../../core/ports/SecretStore';
 import { PairedDevices } from '../../../core/remote/PairedDevices';
@@ -10,6 +15,8 @@ import { gatewayListener } from './gatewayListener';
 import { staticSiteIn, type StaticSite } from './staticSite';
 import { loadTlsIdentity, type CertificateIssuer, type TlsIdentity } from './tlsIdentity';
 import type { QrEncoder } from './qrEncoder';
+import type { LibrarySyncParts } from '../../../core/sync/LibrarySync';
+import { PhoneSyncAccess } from './PhoneSyncAccess';
 
 /** Where the choice and the port are remembered: the library's settings. */
 export interface RemoteAccessSettings {
@@ -30,6 +37,8 @@ export interface RemoteAccessHost {
   bindHost?: string;
   /** Folder of the built mobile client; without one, the address answers a page saying what it is. */
   siteDir?: string | null;
+  /** The sync side of the open library; without it, no phone sync. */
+  syncParts?: () => LibrarySyncParts;
 }
 
 const ENABLED_KEY = 'remote_access_enabled';
@@ -69,9 +78,11 @@ export class RemoteAccessService {
   private identity: TlsIdentity | null = null;
   private port: number | null = null;
   private error: string | null = null;
+  private readonly phoneSync: PhoneSyncAccess;
 
   constructor(private readonly host: RemoteAccessHost) {
     this.devices = new PairedDevices(host.userData);
+    this.phoneSync = new PhoneSyncAccess(host);
   }
 
   private isEnabled(): boolean {
@@ -86,6 +97,7 @@ export class RemoteAccessService {
       addresses: this.host.addresses(),
       fingerprint: this.identity?.fingerprint ?? null,
       devices: this.devices.list(),
+      syncDevice: this.phoneSync.device(),
       error: this.error,
     };
   }
@@ -129,6 +141,7 @@ export class RemoteAccessService {
         return device ? { kind: 'device', deviceId: device.id } : null;
       },
       pairing: { desk: this.desk, devices: this.devices },
+      sync: this.phoneSync.routes(),
       hideInternalErrors: true,
     });
   }
@@ -155,16 +168,45 @@ export class RemoteAccessService {
 
   /** Opens a one-time pairing code and answers what the desktop shows for the phone to read. */
   async startPairing(): Promise<RemotePairingInvite> {
+    const { address, port, fingerprint } = this.requireRunning();
+    const { code, expiresAt } = this.desk.open();
+    // The code travels in the fragment, which browsers never send to the server or write in its logs.
+    const url = `https://${address}:${port}/#pair=${code}`;
+    return { url, expiresAt, fingerprint, qrSvg: await this.host.encodeQr(url) };
+  }
+
+  private requireRunning(): { address: string; port: number; fingerprint: string } {
     const address = this.host.addresses()[0];
     if (!this.server || !this.identity || !this.port || !address) {
       throw new Error(
         `[ERR_REMOTE_NOT_RUNNING] O acesso pelo celular não está ativo ou este computador não está em uma rede. Offending value: running=${this.server !== null}, address=${address ?? 'nenhum'}. Expected shape: servidor ligado e um endereço IPv4 na rede local.`,
       );
     }
-    const { code, expiresAt } = this.desk.open();
-    // The code travels in the fragment, which browsers never send to the server or write in its logs.
-    const url = `https://${address}:${this.port}/#pair=${code}`;
-    return { url, expiresAt, fingerprint: this.identity.fingerprint, qrSvg: await this.host.encodeQr(url) };
+    return { address, port: this.port, fingerprint: this.identity.fingerprint };
+  }
+
+  /** Opens a one-time offer for encrypted sync and answers what the desktop shows for the phone to read. */
+  async startSyncPairing(): Promise<RemotePairingInvite> {
+    const { address, port, fingerprint } = this.requireRunning();
+    const { url, expiresAt } = await this.phoneSync.offerUrl(address, port);
+    return { url, expiresAt, fingerprint, qrSvg: await this.host.encodeQr(url) };
+  }
+
+  revokeSyncDevice(): RemoteAccessStatus {
+    this.phoneSync.revoke();
+    return this.status();
+  }
+
+  listPhoneChanges(): PendingPhoneChange[] {
+    return this.phoneSync.listPending();
+  }
+
+  applyPhoneChanges(opIds: string[]): PhoneChangeDecision[] {
+    return this.phoneSync.apply(opIds);
+  }
+
+  rejectPhoneChanges(opIds: string[]): PhoneChangeDecision[] {
+    return this.phoneSync.reject(opIds);
   }
 
   cancelPairing(): void {

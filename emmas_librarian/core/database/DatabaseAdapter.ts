@@ -21,6 +21,7 @@ import { ScreeningSuggestionRepository } from './ScreeningSuggestionRepository';
 import { ArticleVectorRepository } from './ArticleVectorRepository';
 import { PrismaStudyRepository } from './PrismaStudyRepository';
 import { initializeSchema } from './schemaMigrations';
+import { LibrarySync } from '../sync/LibrarySync';
 import type { CategoryKind, CategorySetEntry, CategorySetResult } from '../../src/utils/categoryTemplates';
 
 import {
@@ -89,6 +90,8 @@ export class DatabaseAdapter {
   public screeningSuggestionRepo: ScreeningSuggestionRepository;
   public articleVectorRepo: ArticleVectorRepository;
   public prismaStudyRepo: PrismaStudyRepository;
+  /** The phone sync of this library; installs nothing until it is first used (docs/sincronizacao-celular.md). */
+  public librarySync: LibrarySync;
 
   // A constructor that throws leaves no adapter to close, so the file would stay locked (Windows) for
   // anything that replaces it before the process exits: the post-update restore failed with EPERM on a
@@ -118,6 +121,7 @@ export class DatabaseAdapter {
       this.screeningSuggestionRepo = new ScreeningSuggestionRepository(this.db);
       this.articleVectorRepo = new ArticleVectorRepository(this.db);
       this.prismaStudyRepo = new PrismaStudyRepository(this.db);
+      this.librarySync = new LibrarySync(this.db);
       this.initSchema();
     } catch (err) {
       this.db.close();

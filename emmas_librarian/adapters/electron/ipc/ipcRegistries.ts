@@ -94,6 +94,7 @@ function lanAccessFor(db: DatabaseAdapter, paths: AppPaths, commands: CommandReg
     issueCertificate: issueSelfSigned,
     encodeQr: encodeQrSvg,
     addresses: lanAddresses,
+    syncParts: () => db.librarySync.parts(),
     // Packaged, the mobile client sits beside dist/; in development it is where `npm run build:mobile` leaves it.
     siteDir: firstSiteDir([path.join(app.getAppPath(), 'dist-mobile'), path.join(process.cwd(), 'dist-mobile')]),
   });

@@ -36,6 +36,11 @@ export const CHANNEL_SURFACES: Record<IpcChannel, ChannelSurface> = {
   [IpcChannel.REMOTE_ACCESS_START_PAIRING]: G,
   [IpcChannel.REMOTE_ACCESS_CANCEL_PAIRING]: G,
   [IpcChannel.REMOTE_ACCESS_REVOKE_DEVICE]: G,
+  [IpcChannel.REMOTE_ACCESS_START_SYNC_PAIRING]: G,
+  [IpcChannel.REMOTE_ACCESS_REVOKE_SYNC_DEVICE]: G,
+  [IpcChannel.REMOTE_ACCESS_LIST_PHONE_CHANGES]: G,
+  [IpcChannel.REMOTE_ACCESS_APPLY_PHONE_CHANGES]: G,
+  [IpcChannel.REMOTE_ACCESS_REJECT_PHONE_CHANGES]: G,
 
   // The PDF reader: the bytes it renders and the marks made on the page (positions only the reader can produce).
   [IpcChannel.PDF_GET]: G,

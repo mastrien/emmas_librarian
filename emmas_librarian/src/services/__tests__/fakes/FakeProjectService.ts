@@ -96,6 +96,7 @@ export const REMOTE_ACCESS_OFF: RemoteAccessStatus = {
   addresses: ['192.168.0.10'],
   fingerprint: null,
   devices: [],
+  syncDevice: null,
   error: null,
 };
 

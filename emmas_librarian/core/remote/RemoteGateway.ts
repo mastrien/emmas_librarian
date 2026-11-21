@@ -1,6 +1,8 @@
 import type { CommandRegistry } from '../commands/CommandRegistry';
 import { AppError } from '../errors/AppError';
 import { shellFailureFrom } from '../errors/shellFailureFrom';
+import type { PairingAnswer } from '../sync/crypto/pairing';
+import type { SealedMessage } from '../sync/crypto/SecureChannel';
 import type { PairedDevices } from './PairedDevices';
 import type { PairingDesk } from './PairingDesk';
 import { authorizeRemoteCommand, listRemoteCommands, type RemotePrincipal } from './remoteAccessPolicy';
@@ -27,12 +29,21 @@ export interface GatewayPairing {
   devices: PairedDevices;
 }
 
+/** The three calls of the encrypted sync (core/sync/DesktopSyncHub). The cipher, not the HTTP layer, authenticates them. */
+export interface SyncRoutes {
+  completePairing(answer: PairingAnswer): Promise<{ deviceId: string; deviceName: string }>;
+  hello(deviceId: string, phoneNonce: string): Promise<{ sessionId: string; desktopNonce: string }>;
+  round(sessionId: string, message: SealedMessage): Promise<SealedMessage>;
+}
+
 export interface GatewayOptions {
   commands: CommandRegistry;
   /** Who a bearer token belongs to, or null. */
   authenticate: (token: string) => RemotePrincipal | null;
   /** Present on the LAN server; the local channel pairs nobody. */
   pairing?: GatewayPairing;
+  /** Present on the LAN server once sync is set up; the local channel never syncs. */
+  sync?: SyncRoutes;
   /**
    * Hide the message of internal failures, which may name files of this computer. On for the LAN;
    * off for the local channel, whose caller is the same person on the same machine.
@@ -42,6 +53,7 @@ export interface GatewayOptions {
 }
 
 const COMMAND_PREFIX = '/api/commands/';
+const SYNC_PREFIX = '/api/sync/';
 const WINDOW_MS = 60_000;
 const MAX_FAILURES = 10;
 const STATUS_BY_CODE: Record<string, number> = {
@@ -52,11 +64,15 @@ const STATUS_BY_CODE: Record<string, number> = {
   ERR_PAIRING_REFUSED: 403,
   ERR_REMOTE_THROTTLED: 429,
   ERR_REMOTE_NOT_FOUND: 404,
+  ERR_SYNC_REFUSED: 403,
 };
 const STATUS_BY_TYPE: Record<string, number> = { USER_ERROR: 400, VALIDATION_ERROR: 400, NETWORK_ERROR: 502 };
 
 const remoteError = (code: string, problem: string, expected: string) =>
   new AppError(code, 'VALIDATION_ERROR', `[${code}] ${problem}. Expected shape: ${expected}.`);
+
+const syncRefused = (problem: string) =>
+  remoteError('ERR_SYNC_REFUSED', problem, 'um aparelho pareado com uma sessão aberta');
 
 const json = (status: number, document: object): GatewayResponse => ({
   status,
@@ -73,6 +89,9 @@ const json = (status: number, document: object): GatewayResponse => ({
  *   POST /api/pair              -> { ok, result: { token, deviceId } }  one-time code, LAN only
  *   GET  /api/commands          -> { ok, result: [{ name, file? }] }    Authorization: Bearer <token>
  *   POST /api/commands/<name>   -> { ok, result } | bytes               Authorization: Bearer <token>
+ *   POST /api/sync/pair         -> { ok, result: { deviceId, deviceName } }   body { answer }
+ *   POST /api/sync/hello        -> { ok, result: { sessionId, desktopNonce } } body { deviceId, phoneNonce }
+ *   POST /api/sync/round        -> { ok, result: SealedMessage }              body { sessionId, message }
  *
  * Usage:
  *   const gateway = new RemoteGateway({ commands, authenticate, pairing: { desk, devices } });
@@ -99,6 +118,7 @@ export class RemoteGateway {
     const { method, path } = request;
     if (method === 'GET' && path === '/api/ping') return json(200, { ok: true, result: { app: 'emmas-librarian' } });
     if (method === 'POST' && path === '/api/pair') return this.pair(request);
+    if (method === 'POST' && path.startsWith(SYNC_PREFIX)) return this.runSync(request);
     if (method === 'GET' && path === '/api/commands') return this.listCommands(request);
     if (method === 'POST' && path.startsWith(COMMAND_PREFIX)) return this.runCommand(request);
     throw remoteError(
@@ -122,6 +142,30 @@ export class RemoteGateway {
     }
     const { device, token } = pairing.devices.add(deviceName);
     return json(200, { ok: true, result: { token, deviceId: device.id, deviceName: device.name } });
+  }
+
+  private async runSync(request: GatewayRequest): Promise<GatewayResponse> {
+    const { sync } = this.options;
+    this.refuseThrottled(request.remoteAddress);
+    if (!sync) throw syncRefused('A sincronização com o celular não está configurada neste computador');
+    const body = readJsonBody(request) as { [key: string]: unknown };
+    try {
+      return json(200, { ok: true, result: await this.callSync(sync, request.path.slice(SYNC_PREFIX.length), body) });
+    } catch (error) {
+      this.noteFailure(request.remoteAddress);
+      throw error instanceof AppError ? error : syncRefused(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  private callSync(sync: SyncRoutes, step: string, body: { [key: string]: unknown }): Promise<object> {
+    if (step === 'pair') return sync.completePairing(body.answer as PairingAnswer);
+    if (step === 'hello') return sync.hello(String(body.deviceId), String(body.phoneNonce));
+    if (step === 'round') return sync.round(String(body.sessionId), body.message as SealedMessage);
+    throw remoteError(
+      'ERR_REMOTE_NOT_FOUND',
+      `Passo de sincronização desconhecido. Offending value: "${step}"`,
+      'pair, hello ou round',
+    );
   }
 
   private listCommands(request: GatewayRequest): GatewayResponse {
