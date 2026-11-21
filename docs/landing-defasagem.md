@@ -76,3 +76,19 @@ Ordem de prioridade. Cada item vira um commit `docs(landing):` ou `feat(landing)
 - [x] **Capturas só com bases totalmente abertas** (OpenAlex, Crossref, Europe PMC, arXiv): gerar um `.emmapcarc` novo, de preferência pelo CLI, em uma pasta de dados vazia. Nunca a biblioteca real.
 - [x] **Revisão sistemática e PRISMA ganham seção própria.**
 - Ideias para testar depois (o anel animado no hero e o corredor de estantes) estão em `docs/ideias.md`.
+
+## 4. Estado da implementação (2026-11-20)
+
+Feito em `landing_page/`:
+
+- Capturas novas (1440x900) de busca, triagem, PRISMA, investigação, Perguntar aos projetos, biblioteca e agenda, todas do projeto de exemplo com bases abertas. A investigação e a conversa são ilustrativas: respostas escritas por um modelo a partir de PDFs reais, com cada trecho conferido na página citada, e o modelo aparece como "Modelo de exemplo".
+- `index.html` reescrito: 7 seções (busca, triagem, PRISMA, investigação, perguntar, biblioteca, agenda), faixa "O aplicativo do seu jeito", FAQ com bases sem chave, plataformas e modo escuro, metadados e JSON-LD alinhados.
+- Fonte trocada para Lexend na landing e nos tutoriais; o rosa continua como cor de marca.
+- Fundo do hero e do rodapé com três variantes: `?hero=antigo` (padrão), `?hero=neutro` e `?hero=quente`. Não há medição de conversão na página: a escolha é por comparação visual.
+
+Pendente:
+
+- `og-image.png` (cartão de compartilhamento) continua o antigo.
+- Capturas dos tutoriais (58 imagens) seguem para outra rodada; reaproveitar o projeto de exemplo.
+- Bloco do celular só depois de #194 ir para `main`; agente local e CLI só depois do release.
+- Anel animado e corredor de estantes no hero: `docs/ideias.md`.
