@@ -38,7 +38,12 @@ import type { IProjectService } from './ProjectServiceInterface';
 import type { SearchLimits } from '../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
 import type { AuditParams } from '../utils/auditSampling';
-import type { RemoteAccessStatus, RemotePairingInvite } from '../types/remoteAccess';
+import type {
+  PendingPhoneChange,
+  PhoneChangeDecision,
+  RemoteAccessStatus,
+  RemotePairingInvite,
+} from '../types/remoteAccess';
 import type {
   CategoryOption,
   CitationRequest,
@@ -341,6 +346,19 @@ export const projectService: IProjectService = {
 
   revokeRemoteDevice: (deviceId: string): Promise<RemoteAccessStatus> =>
     safeInvoke(IpcChannel.REMOTE_ACCESS_REVOKE_DEVICE, deviceId),
+
+  // Sync with a paired phone: pairing, and the review of what the phone changed (the dry run)
+  startPhoneSyncPairing: (): Promise<RemotePairingInvite> => safeInvoke(IpcChannel.REMOTE_ACCESS_START_SYNC_PAIRING),
+
+  revokePhoneSync: (): Promise<RemoteAccessStatus> => safeInvoke(IpcChannel.REMOTE_ACCESS_REVOKE_SYNC_DEVICE),
+
+  listPhoneChanges: (): Promise<PendingPhoneChange[]> => safeInvoke(IpcChannel.REMOTE_ACCESS_LIST_PHONE_CHANGES),
+
+  applyPhoneChanges: (opIds: string[]): Promise<PhoneChangeDecision[]> =>
+    safeInvoke(IpcChannel.REMOTE_ACCESS_APPLY_PHONE_CHANGES, opIds),
+
+  rejectPhoneChanges: (opIds: string[]): Promise<PhoneChangeDecision[]> =>
+    safeInvoke(IpcChannel.REMOTE_ACCESS_REJECT_PHONE_CHANGES, opIds),
 
   // AI
   async generateSummary(articleId: number): Promise<{ generalSummary: string; sectionSummary: string }> {

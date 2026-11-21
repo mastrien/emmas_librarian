@@ -43,7 +43,12 @@ import type {
   DownloadProgressPayload,
 } from '../../../types';
 import { vi, type Mock } from 'vitest';
-import type { RemoteAccessStatus, RemotePairingInvite } from '../../../types/remoteAccess';
+import type {
+  PendingPhoneChange,
+  PhoneChangeDecision,
+  RemoteAccessStatus,
+  RemotePairingInvite,
+} from '../../../types/remoteAccess';
 import type {
   IProjectService,
   QuestionSetInput,
@@ -409,6 +414,29 @@ export class FakeProjectService implements IProjectService {
   cancelRemotePairing = vi.fn(async (): Promise<void> => undefined);
 
   revokeRemoteDevice = vi.fn(async (_deviceId: string): Promise<RemoteAccessStatus> => REMOTE_ACCESS_OFF);
+
+  startPhoneSyncPairing = vi.fn(
+    async (): Promise<RemotePairingInvite> => ({
+      url: 'https://192.168.0.10:47810/#sync=fake',
+      expiresAt: '2026-11-14T10:05:00.000Z',
+      fingerprint: 'AB:CD',
+      qrSvg: '<svg xmlns="http://www.w3.org/2000/svg"/>',
+    }),
+  );
+
+  revokePhoneSync = vi.fn(async (): Promise<RemoteAccessStatus> => REMOTE_ACCESS_OFF);
+
+  listPhoneChanges = vi.fn(async (): Promise<PendingPhoneChange[]> => []);
+
+  applyPhoneChanges = vi.fn(
+    async (opIds: string[]): Promise<PhoneChangeDecision[]> =>
+      opIds.map((opId) => ({ opId, status: 'applied' as const, reason: null })),
+  );
+
+  rejectPhoneChanges = vi.fn(
+    async (opIds: string[]): Promise<PhoneChangeDecision[]> =>
+      opIds.map((opId) => ({ opId, status: 'rejected' as const, reason: null })),
+  );
 
   // ── AI ──────────────────────────────────────────────────────────────
   generateSummary = vi.fn(

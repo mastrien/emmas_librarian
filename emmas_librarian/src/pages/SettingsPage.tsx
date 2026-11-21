@@ -11,6 +11,7 @@ import { BackupSettings } from './Settings/components/BackupSettings';
 import { UpdateSettings, describeSnapshotDate } from './Settings/components/UpdateSettings';
 import { TrashSettings } from './Settings/components/TrashSettings';
 import { RemoteAccessSettings } from './Settings/components/RemoteAccessSettings';
+import { PhoneSyncSettings } from './Settings/components/PhoneSyncSettings';
 import { modelSuggestions, suggestedModelFor } from './Settings/aiModelSuggestions';
 import { TYPING_DELAY_MS, useSettingsAutosave } from './Settings/useSettingsAutosave';
 import { useDialogs } from '../components/common/dialogs/DialogProvider';
@@ -400,7 +401,12 @@ export const SettingsPage: React.FC<{ section?: SettingsSection }> = ({ section:
             />
           )}
 
-          {section === 'mobile' && <RemoteAccessSettings />}
+          {section === 'mobile' && (
+            <>
+              <RemoteAccessSettings />
+              <PhoneSyncSettings />
+            </>
+          )}
 
           {section === 'updates' && (
             <UpdateSettings
