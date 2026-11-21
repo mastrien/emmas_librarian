@@ -181,6 +181,28 @@ describe('apply', () => {
   });
 });
 
+describe('apply: other outcomes', () => {
+  it('marks an insert skipped, with the database message, when it breaks a constraint', () => {
+    const project = projectWithUuid();
+    store.stage([
+      op({ opId: 'bad', entity: 'articles', kind: 'insert', uuid: 'a-bad', fields: { project_id: project.uuid } }),
+    ]);
+    const [decided] = store.apply(['bad']);
+    expect(decided.status).toBe('skipped');
+    expect(decided.reason).toContain('NOT NULL');
+  });
+
+  it('really deletes a row of a table that has no trash column', () => {
+    const project = projectWithUuid();
+    const doc = run("INSERT INTO project_documents (project_id, title) VALUES (?, 'Link')", project.id);
+    store.stage([
+      op({ opId: 'del', entity: 'project_documents', kind: 'delete', uuid: log.uuidOf('project_documents', doc) }),
+    ]);
+    store.apply(['del']);
+    expect(count('project_documents')).toBe(0);
+  });
+});
+
 describe('reject and decidedFor', () => {
   it('leaves the library untouched and tells the phone to undo', () => {
     const project = projectWithUuid('Original');
