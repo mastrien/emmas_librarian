@@ -126,7 +126,9 @@ describe('phone sync over the plain listener', () => {
 
   it('serves nothing but sync on that port: no commands, no pages', async () => {
     const { syncPort } = parseScannedOffer((await service.startSyncPairing()).url);
-    const commands = await fetch(`http://127.0.0.1:${syncPort}/api/commands`);
+    const commands = await fetch(`http://127.0.0.1:${syncPort}/api/commands`, {
+      headers: { Authorization: 'Bearer anything' },
+    });
     const page = await fetch(`http://127.0.0.1:${syncPort}/`);
     expect([commands.status, page.status]).toEqual([401, 404]);
   });
