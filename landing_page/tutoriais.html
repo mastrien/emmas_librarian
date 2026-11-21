@@ -991,6 +991,14 @@
 
         </main>
 
+        <!-- Right column: the open chapter's own headings (chapter-toc.js) -->
+        <aside class="chapter-toc" id="chapter-toc" aria-label="Neste capítulo" hidden>
+            <div class="toc-sticky">
+                <h3>Neste capítulo</h3>
+                <ul id="toc-list"></ul>
+            </div>
+        </aside>
+
     </div>
 
     <footer class="site-footer">
@@ -1005,6 +1013,7 @@
         <img alt="">
     </dialog>
     <script src="lightbox.js"></script>
+    <script src="chapter-toc.js"></script>
     <script>
         // O alvo pode ser um capítulo (#intro) ou um ponto dentro dele (#como-instalar);
         // nos dois casos o capítulo que o contém é o que fica visível.
@@ -1020,6 +1029,7 @@
                 link.classList.toggle('active', href === section.id);
             });
             updateNavToggle();
+            ChapterToc.show(section);
 
             // Capítulo inteiro: rola até o topo do conteúdo; ponto interno: rola até ele
             const scrollTarget = target === section ? document.querySelector('.wiki-content') : target;
