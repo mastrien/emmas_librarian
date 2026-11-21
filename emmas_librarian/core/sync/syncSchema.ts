@@ -9,6 +9,8 @@ import { SYNCED_TABLES, type SyncedTable } from './syncedTables';
  * - sync_ids: the uuid of each row. A uuid outlives its row: that is what turns a delete into a tombstone.
  * - sync_changes: what changed on this computer, appended by triggers, read in order by `seq`.
  * - sync_state.applying: 1 while the sync layer itself writes, so its writes are not logged as local changes.
+ * - sync_pending_ops: what a phone sent for a synced project, waiting for the user to confirm it on the desktop
+ *   (the dry run). Nothing here touches the library until it is applied.
  */
 const SYNC_TABLES_SQL = `
   CREATE TABLE IF NOT EXISTS sync_ids (
@@ -29,6 +31,18 @@ const SYNC_TABLES_SQL = `
     applying INTEGER NOT NULL DEFAULT 0
   );
   INSERT OR IGNORE INTO sync_state (id, applying) VALUES (1, 0);
+  CREATE TABLE IF NOT EXISTS sync_pending_ops (
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    op_id TEXT NOT NULL UNIQUE,
+    device_id TEXT NOT NULL,
+    entity TEXT NOT NULL,
+    uuid TEXT NOT NULL,
+    kind TEXT NOT NULL CHECK (kind IN ('insert', 'update', 'delete')),
+    fields_json TEXT,
+    changed_at TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'applied', 'rejected', 'skipped')),
+    skip_reason TEXT
+  );
 `;
 
 const NOT_APPLYING = '(SELECT applying FROM sync_state WHERE id = 1) = 0';
