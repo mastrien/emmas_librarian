@@ -61,7 +61,7 @@ let registry: SyncDeviceRegistry;
 let library: LocalLibrary;
 let client: PhoneSyncClient;
 let identity: PhoneIdentity;
-let clockNow = 1_000_000;
+const clockNow = 1_000_000;
 
 beforeEach(async () => {
   db = new Database(':memory:');

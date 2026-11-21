@@ -6,7 +6,7 @@ const CURVE = 'P-256';
 /** The part of the standard `Crypto` object this class uses; tests pass the real one or a fake. */
 export interface WebCryptoLike {
   subtle: SubtleCrypto;
-  getRandomValues<T extends ArrayBufferView>(array: T): T;
+  getRandomValues(array: Bytes): unknown;
 }
 
 /**
@@ -20,7 +20,9 @@ export class WebCryptoProvider implements CryptoProvider {
   constructor(private readonly webCrypto: WebCryptoLike) {}
 
   public randomBytes(length: number): Bytes {
-    return this.webCrypto.getRandomValues(new Uint8Array(length));
+    const bytes = new Uint8Array(length);
+    this.webCrypto.getRandomValues(bytes);
+    return bytes;
   }
 
   public async generateKeyPair(): Promise<EcKeyPair> {
