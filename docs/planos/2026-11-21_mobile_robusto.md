@@ -15,6 +15,28 @@ O plano antigo (seções 7.2, 7.3, 7.5, 7.7 e 8) decidiu: mobile como controle r
 
 Isso reabre o obstáculo 4 do plano antigo: o schema não suporta sync (ids `INTEGER AUTOINCREMENT`, `updated_at` em poucas tabelas, `deleted_at` em algumas; 34 tabelas em `core/database/schema.sql`). É a parte mais cara e deve virar uma fase própria, antes das telas.
 
+## 1.1 Decisões do autor (2026-11-21)
+
+- **Rede:** só LAN. O protocolo cifrado fica pronto para um relay futuro, que não entra agora.
+- **Plataforma:** app nativo com **Capacitor**, Android primeiro. iOS depois (não há iPhone nem Mac para teste e build); o código não deve depender de plataforma. Só há Android para teste real.
+- **Aparelhos:** **um celular por desktop.** Simplifica pareamento, revogação e conflito.
+- **Dois tipos de projeto, visíveis só no celular:**
+  - **Projeto próprio:** nasce no celular e é criado e editado livremente nele.
+  - **Projeto sincronizado:** vem do desktop. **O desktop manda.** O celular não faz ações destrutivas; tudo que o celular altera entra no desktop como **dry run**: uma lista de alterações propostas, que o usuário confere e **confirma no desktop** antes de aplicar.
+- **O celular cria tudo** (artigos, projetos, categorias, marcações, anotações, diário), sujeito à regra acima nos projetos sincronizados.
+- **Conflitos:** o mais recente vence; o diário guarda as duas versões. Sem tela de resolução manual. Nos projetos sincronizados a confirmação no desktop já é o ponto de decisão.
+- **Cifra local no celular:** opcional, por projeto.
+- **PDFs offline:** escolha por artigo e por projeto, com aviso de tamanho.
+- **Marcação:** primeiro só PDF com texto selecionável; escaneado depois, por retângulo.
+- **Texto longo:** log de operações próprio, sem CRDT nem dependência nova.
+- **Ordem:** schema e sync, depois cifra, depois telas.
+
+Consequências para o desenho (ainda a refinar):
+- O desktop precisa de uma **fila de alterações pendentes** por celular, com tela de revisão (diff por entidade, aceitar tudo ou item a item) e aplicação atômica. É uma tela e um serviço novos no desktop, fora do mobile.
+- "Ação destrutiva" precisa de definição: proposta de trabalho é apagar, sobrescrever campo existente e mover. Criar e acrescentar (marcação nova, página de diário nova) seriam não destrutivos, mas **ainda assim entram como dry run** nos projetos sincronizados, como você pediu.
+- Projeto próprio e projeto sincronizado têm regras de escrita diferentes no mesmo cliente: o tipo precisa ser um campo explícito no celular, nunca inferido.
+- O diagrama de decisão do conflito muda: em projeto sincronizado não há conflito silencioso, porque o desktop só aplica o que o usuário aprovar.
+
 ## 2. Proposta de arquitetura (a validar)
 
 **Dados.** Cada entidade sincronizável ganha `uuid`, `updated_at` e `deleted_at` (tombstone). Alterações viram um log de operações por dispositivo (relógio lógico por dispositivo), não uma comparação de linhas. O celular guarda uma cópia local em IndexedDB (SQLite WASM só se o IndexedDB não bastar).
@@ -39,7 +61,7 @@ Isso reabre o obstáculo 4 do plano antigo: o schema não suporta sync (ids `INT
 4. **Telas:** projetos, artigo, leitor de PDF (pdf.js), marcação, diário, sincronização, conforme o artifact.
 5. **E2E** do fluxo parear → sincronizar → editar offline → reconciliar.
 
-## 4. Perguntas em aberto (com a minha escolha padrão)
+## 4. Perguntas (as respondidas estão em 1.1; as que restam estão no fim desta seção)
 
 Marcadas com * as que mudam o desenho de forma que custa caro refazer.
 
@@ -65,3 +87,11 @@ Marcadas com * as que mudam o desenho de forma que custa caro refazer.
 - Cota e remoção de armazenamento no Safari do iOS.
 - Cripto: sem revisão externa, manter a superfície mínima e usar primitivas padrão.
 - PDF grande em celular modesto (memória do pdf.js).
+
+### Ainda em aberto depois das respostas
+
+- Um projeto próprio do celular pode virar sincronizado (enviado ao desktop)? Se sim, é uma importação com dry run, e depois o desktop passa a mandar.
+- Ao rejeitar o dry run no desktop, o celular desfaz a alteração local ou mantém e avisa a divergência?
+- O celular sem o desktop por perto edita projeto sincronizado offline e acumula alterações pendentes até reencontrar o desktop?
+- Como o celular só pareia com um desktop: trocar de desktop apaga a cópia local?
+- Compatibilidade de versão (`protocolVersion`): recusar sincronizar com mensagem clara (padrão).
