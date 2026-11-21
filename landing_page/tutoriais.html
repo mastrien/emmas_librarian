@@ -10,7 +10,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="tutoriais.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script>
+        (function () {
+            var wanted = new URLSearchParams(location.search).get('hero');
+            if (['antigo', 'neutro', 'quente'].indexOf(wanted) !== -1) document.documentElement.dataset.hero = wanted;
+        })();
+    </script>
 </head>
 <body>
     <header class="tutorials-header">
@@ -38,17 +44,22 @@
                     <span class="nav-toggle-current">Introdução - Visão Geral & Instalação</span>
                 </button>
                 <ul id="chapter-list">
+                    <li class="nav-group">Começar</li>
                     <li><a href="#intro" class="active">Introdução - Visão Geral & Instalação</a></li>
                     <li><a href="#dashboard">Capítulo 1 - Dashboard & Projetos</a></li>
+                    <li class="nav-group">Pesquisar e organizar</li>
                     <li><a href="#busca-federada">Capítulo 2 - Busca Federada (APIs)</a></li>
                     <li><a href="#gestao-artigos">Capítulo 3 - Triagem & Categorias</a></li>
                     <li><a href="#leitor-pdf">Capítulo 4 - Leitor de PDF & Fichamento</a></li>
                     <li><a href="#ia-rag">Capítulo 5 - Inteligência Artificial & RAG</a></li>
+                    <li class="nav-group">Biblioteca e rotina</li>
                     <li><a href="#biblioteca-pdfs">Capítulo 6 - Biblioteca Local de PDFs</a></li>
                     <li><a href="#agenda">Capítulo 7 - Agenda & Cronogramas</a></li>
                     <li><a href="#configuracoes-backup">Capítulo 8 - Configurações & Backups</a></li>
+                    <li class="nav-group">Revisão e perguntas</li>
                     <li><a href="#revisao-sistematica">Capítulo 9 - Revisão Sistemática & PRISMA</a></li>
                     <li><a href="#perguntar-projetos">Capítulo 10 - Perguntar aos Projetos</a></li>
+                    <li class="nav-group">Extra</li>
                     <li><a href="#extras">Extra - Curiosidades & Bastidores</a></li>
                 </ul>
             </div>
@@ -989,6 +1000,11 @@
         </div>
     </footer>
 
+    <dialog id="lightbox" class="lightbox" aria-label="Imagem ampliada">
+        <button type="button" class="lightbox-close" aria-label="Fechar">&times;</button>
+        <img alt="">
+    </dialog>
+    <script src="lightbox.js"></script>
     <script>
         // O alvo pode ser um capítulo (#intro) ou um ponto dentro dele (#como-instalar);
         // nos dois casos o capítulo que o contém é o que fica visível.

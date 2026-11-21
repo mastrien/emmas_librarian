@@ -85,11 +85,13 @@ Feito em `landing_page/`:
 - `index.html` reescrito: 6 seções (busca, triagem guiada, PRISMA, investigação, perguntar, agenda; a da biblioteca de PDFs saiu a pedido do autor), faixa "O aplicativo do seu jeito", FAQ com bases sem chave, plataformas e modo escuro, metadados e JSON-LD alinhados.
 - Fonte trocada para Lexend na landing e nos tutoriais; o rosa continua como cor de marca.
 - Ampliar ao clicar nas capturas (`lightbox.js`): clique ou Enter abre, Esc, X e clique fora fecham.
+- Tutoriais no padrão do app: Source Serif 4 no texto longo (linhas de até 70 caracteres), JetBrains Mono no código, grupos em caixa-alta na lista de capítulos, quadros e botões com borda, títulos escuros com traço rosa, cabeçalho com o mesmo fundo do hero e ampliar ao clicar nas capturas.
 - Fundo do hero e do rodapé com três variantes: `?hero=antigo` (padrão), `?hero=neutro` e `?hero=quente`. Não há medição de conversão na página: a escolha é por comparação visual.
 
 Pendente:
 
 - `og-image.png` (cartão de compartilhamento) continua o antigo.
+- O texto dos tutoriais ainda diz que só existe versão para Windows (a landing já informa o AppImage para Linux)
 - Capturas dos tutoriais (58 imagens) seguem para outra rodada; reaproveitar o projeto de exemplo.
 - Bloco do celular só depois de #194 ir para `main`; agente local e CLI só depois do release.
 - Anel animado e corredor de estantes no hero: `docs/ideias.md`.

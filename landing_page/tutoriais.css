@@ -11,7 +11,7 @@ body {
 }
 
 .tutorials-header {
-    background: #0f172a;
+    background: var(--dark-band);
     color: white;
     padding: 1.5rem 0;
     border-bottom: 4px solid #db2777;
@@ -109,13 +109,28 @@ body {
     margin-bottom: 0.2rem;
 }
 
+/* Rótulo de grupo em caixa-alta, como as seções da barra lateral do app. */
+.nav-sticky li.nav-group {
+    margin: 1rem 0 0.3rem;
+    padding: 0 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.nav-sticky li.nav-group:first-child {
+    margin-top: 0.25rem;
+}
+
 .nav-sticky a {
     display: block;
     color: #475569;
     text-decoration: none;
     padding: 0.4rem 0.5rem;
-    border-radius: 6px;
-    transition: background 0.2s, color 0.2s;
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
     font-size: 0.88rem;
     line-height: 1.35;
 }
@@ -126,17 +141,18 @@ body {
 }
 
 .nav-sticky a.active {
-    color: #db2777;
+    color: #be185d;
     font-weight: 600;
     background: #fdf2f8;
+    box-shadow: inset 3px 0 0 #db2777;
 }
 
 /* Main Content */
 .wiki-content {
     background: white;
-    padding: 1.75rem 2rem;
+    padding: 2rem 2.5rem;
     border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     border: 1px solid #e2e8f0;
 }
 
@@ -177,18 +193,20 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 0;
+    padding: 0.55rem 1rem;
     font-size: 0.95rem;
     font-weight: 600;
     text-decoration: none;
-    color: #db2777;
-    transition: color 0.2s ease;
+    color: #1e293b;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: border-color 0.15s ease, color 0.15s ease;
 }
 
 .chapter-btn:hover {
-    color: #9d174d;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    color: #be185d;
+    border-color: #f9a8d4;
 }
 
 .chapter-btn.next {
@@ -196,10 +214,21 @@ body {
 }
 
 .wiki-section h2 {
-    color: #db2777;
-    font-size: 1.5rem;
+    color: #0f172a;
+    font-size: 1.9rem;
+    font-weight: 800;
     margin-top: 0;
-    margin-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.wiki-section h2::after {
+    content: '';
+    display: block;
+    width: 3rem;
+    height: 3px;
+    margin-top: 0.6rem;
+    background: #db2777;
+    border-radius: 2px;
 }
 
 .wiki-section h3 {
@@ -216,12 +245,27 @@ body {
     margin-bottom: 0.4rem;
 }
 
+.wiki-section p,
+.wiki-section ul,
+.wiki-section ol,
+.wiki-section blockquote {
+    font-family: 'Source Serif 4', Georgia, serif;
+}
+
 .wiki-section p {
     color: #334155;
-    line-height: 1.6;
-    font-size: 1rem;
+    line-height: 1.75;
+    font-size: 1.08rem;
     margin-top: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 1.1rem;
+}
+
+/* Linhas longas cansam: o texto para em ~70 caracteres, as imagens e tabelas usam a largura toda. */
+.wiki-section p,
+.wiki-section ul,
+.wiki-section ol,
+.wiki-section blockquote {
+    max-width: 70ch;
 }
 
 .wiki-section a:not(.chapter-btn) {
@@ -240,7 +284,8 @@ body {
 .wiki-section ul,
 .wiki-section ol {
     color: #334155;
-    line-height: 1.6;
+    font-size: 1.08rem;
+    line-height: 1.7;
     margin: 0 0 1rem;
     padding-left: 1.5rem;
 }
@@ -251,10 +296,10 @@ body {
 
 .wiki-section blockquote {
     margin: 1.25rem 0;
-    padding: 0.75rem 1rem;
-    border-left: 4px solid #f472b6;
+    padding: 1rem 1.25rem;
+    border: 1px solid #fbcfe8;
     background: #fdf2f8;
-    border-radius: 0 8px 8px 0;
+    border-radius: 12px;
 }
 
 .wiki-section blockquote p:last-child {
@@ -262,10 +307,12 @@ body {
 }
 
 .wiki-section code {
+    font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
     background: #f1f5f9;
-    padding: 0.1rem 0.35rem;
+    border: 1px solid #e2e8f0;
+    padding: 0.05rem 0.35rem;
     border-radius: 4px;
-    font-size: 0.9em;
+    font-size: 0.85em;
     overflow-wrap: anywhere;
 }
 
@@ -275,7 +322,8 @@ body {
     height: auto;
     margin: 1.25rem 0;
     border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    cursor: zoom-in; /* lightbox.js */
+    border-radius: 12px;
     box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.12);
 }
 
@@ -332,8 +380,11 @@ body {
 }
 
 .tutorial-table th {
-    color: #475569;
+    color: #64748b;
+    font-size: 0.72rem;
     font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     background: #f8fafc;
     white-space: nowrap;
 }

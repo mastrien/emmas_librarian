@@ -1,6 +1,6 @@
 /**
  * Ampliar ao clicar: as capturas de tela ficam pequenas na coluna da página, com o texto da interface ilegível.
- * Um clique (ou Enter) numa imagem de `.feature-visual` abre a mesma imagem em tamanho grande; Esc, o X e um clique
+ * Um clique (ou Enter) numa imagem de `.feature-visual` ou `.tutorial-img` abre a mesma imagem em tamanho grande; Esc, o X e um clique
  * fora da imagem fecham.
  */
 (function () {
@@ -14,7 +14,7 @@
         dialog.showModal();
     }
 
-    document.querySelectorAll('.feature-visual img').forEach(function (image) {
+    document.querySelectorAll('.feature-visual img, .tutorial-img').forEach(function (image) {
         image.tabIndex = 0;
         image.setAttribute('role', 'button');
         image.setAttribute('aria-label', 'Ampliar: ' + image.alt);
