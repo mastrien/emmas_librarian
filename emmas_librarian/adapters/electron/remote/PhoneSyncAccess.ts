@@ -44,9 +44,9 @@ export class PhoneSyncAccess {
   }
 
   /** A new one-time pairing offer as the address a QR code carries; the offer travels in the fragment. */
-  public async offerUrl(address: string, port: number): Promise<{ url: string; expiresAt: string }> {
+  public async offerUrl(address: string, port: number, syncPort?: number): Promise<{ url: string; expiresAt: string }> {
     const offer = await this.ensureHub().createOffer();
-    const encoded = toBase64Url(utf8(JSON.stringify({ ...offer, address, port })));
+    const encoded = toBase64Url(utf8(JSON.stringify({ ...offer, address, port, syncPort })));
     return { url: `https://${address}:${port}/#sync=${encoded}`, expiresAt: new Date(offer.expiresAt).toISOString() };
   }
 

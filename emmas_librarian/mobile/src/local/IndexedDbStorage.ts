@@ -1,10 +1,12 @@
 import type { LibraryState } from './libraryState';
+import type { IdentityStorage, PairedDesktop } from '../sync/phonePairing';
 import type { PdfStorage, StateStorage } from './storage';
 
 const DB_NAME = 'emma-mobile';
 const STATE_STORE = 'state';
 const PDF_STORE = 'pdfs';
 const STATE_KEY = 'library';
+const IDENTITY_KEY = 'identity';
 
 function request<T>(operation: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -33,7 +35,7 @@ export function openMobileDatabase(factory: IDBFactory): Promise<IDBDatabase> {
  * Usage:
  *   const storage = new IndexedDbStorage(await openMobileDatabase(indexedDB));
  */
-export class IndexedDbStorage implements StateStorage, PdfStorage {
+export class IndexedDbStorage implements StateStorage, PdfStorage, IdentityStorage {
   constructor(private readonly db: IDBDatabase) {}
 
   public async load(): Promise<LibraryState | null> {
@@ -43,6 +45,15 @@ export class IndexedDbStorage implements StateStorage, PdfStorage {
 
   public async save(state: LibraryState): Promise<void> {
     await request(this.store(STATE_STORE, 'readwrite').put(state, STATE_KEY));
+  }
+
+  public async loadIdentity(): Promise<PairedDesktop | null> {
+    const found = await request(this.store(STATE_STORE, 'readonly').get(IDENTITY_KEY));
+    return (found as PairedDesktop | undefined) ?? null;
+  }
+
+  public async saveIdentity(desktop: PairedDesktop): Promise<void> {
+    await request(this.store(STATE_STORE, 'readwrite').put(desktop, IDENTITY_KEY));
   }
 
   public async get(articleUuid: string): Promise<Uint8Array | null> {

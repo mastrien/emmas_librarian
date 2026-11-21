@@ -1,12 +1,13 @@
+import http from 'http';
 import https from 'https';
-import type { AddressInfo } from 'net';
+import type { AddressInfo, Server } from 'net';
 import type {
   PendingPhoneChange,
   PhoneChangeDecision,
   RemoteAccessStatus,
   RemotePairingInvite,
 } from '../../../src/types/remoteAccess';
-import type { CommandRegistry } from '../../../core/commands/CommandRegistry';
+import { CommandRegistry } from '../../../core/commands/CommandRegistry';
 import type { SecretStore } from '../../../core/ports/SecretStore';
 import { PairedDevices } from '../../../core/remote/PairedDevices';
 import { PairingDesk } from '../../../core/remote/PairingDesk';
@@ -44,6 +45,8 @@ export interface RemoteAccessHost {
 const ENABLED_KEY = 'remote_access_enabled';
 const PORT_KEY = 'remote_access_port';
 export const DEFAULT_REMOTE_PORT = 47810;
+const SYNC_PORT_KEY = 'remote_access_sync_port';
+export const DEFAULT_SYNC_PORT = 47811;
 
 const LANDING_PAGE = `<!doctype html><html lang="pt-BR"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Emma's Librarian</title>
@@ -54,7 +57,7 @@ tela para celular.</p></body></html>`;
 const landingOnly: StaticSite = (pathname) =>
   pathname === '/' ? { status: 200, contentType: 'text/html; charset=utf-8', body: LANDING_PAGE } : null;
 
-function listen(server: https.Server, port: number, host: string): Promise<number> {
+function listen(server: Server, port: number, host: string): Promise<number> {
   return new Promise((resolve, reject) => {
     server.once('error', reject);
     server.listen(port, host, () => resolve((server.address() as AddressInfo).port));
@@ -75,6 +78,8 @@ export class RemoteAccessService {
   private readonly devices: PairedDevices;
   private readonly desk = new PairingDesk();
   private server: https.Server | null = null;
+  private syncServer: http.Server | null = null;
+  private syncPort: number | null = null;
   private identity: TlsIdentity | null = null;
   private port: number | null = null;
   private error: string | null = null;
@@ -131,6 +136,35 @@ export class RemoteAccessService {
     this.identity = await loadTlsIdentity({ userData, secrets, issue, hosts });
     this.port = await this.listenOnSavedPort(this.identity);
     this.host.settings.setSetting(PORT_KEY, String(this.port));
+    await this.startSyncListener();
+  }
+
+  /**
+   * A second, plain-HTTP listener that answers only the sync calls. Everything on it is sealed by the secure channel
+   * (or is a pairing proof that reveals nothing), so it needs no certificate; that is what lets the phone app reach it,
+   * since a WebView does not accept a self-signed one. It serves no page and no command.
+   */
+  private async startSyncListener(): Promise<void> {
+    const sync = this.phoneSync.routes();
+    if (!sync) return;
+    const gateway = new RemoteGateway({
+      commands: new CommandRegistry(),
+      authenticate: () => null,
+      sync,
+      hideInternalErrors: true,
+    });
+    const server = http.createServer(gatewayListener(gateway, {}));
+    const saved = Number(this.host.settings.getSetting(SYNC_PORT_KEY)) || DEFAULT_SYNC_PORT;
+    for (const port of [saved, 0]) {
+      try {
+        this.syncPort = await listen(server, port, this.host.bindHost ?? '0.0.0.0');
+        this.syncServer = server;
+        this.host.settings.setSetting(SYNC_PORT_KEY, String(this.syncPort));
+        return;
+      } catch (failure) {
+        if ((failure as NodeJS.ErrnoException).code !== 'EADDRINUSE' || port === 0) throw failure;
+      }
+    }
   }
 
   private gateway(): RemoteGateway {
@@ -188,7 +222,7 @@ export class RemoteAccessService {
   /** Opens a one-time offer for encrypted sync and answers what the desktop shows for the phone to read. */
   async startSyncPairing(): Promise<RemotePairingInvite> {
     const { address, port, fingerprint } = this.requireRunning();
-    const { url, expiresAt } = await this.phoneSync.offerUrl(address, port);
+    const { url, expiresAt } = await this.phoneSync.offerUrl(address, port, this.syncPort ?? undefined);
     return { url, expiresAt, fingerprint, qrSvg: await this.host.encodeQr(url) };
   }
 
@@ -224,5 +258,9 @@ export class RemoteAccessService {
     this.server?.closeAllConnections();
     this.server = null;
     this.port = null;
+    this.syncServer?.close();
+    this.syncServer?.closeAllConnections();
+    this.syncServer = null;
+    this.syncPort = null;
   }
 }
