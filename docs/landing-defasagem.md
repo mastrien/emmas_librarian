@@ -82,8 +82,9 @@ Ordem de prioridade. Cada item vira um commit `docs(landing):` ou `feat(landing)
 Feito em `landing_page/`:
 
 - Capturas novas (1440x900) de busca, triagem, PRISMA, investigação, Perguntar aos projetos, biblioteca e agenda, todas do projeto de exemplo com bases abertas. A investigação e a conversa são ilustrativas: respostas escritas por um modelo a partir de PDFs reais, com cada trecho conferido na página citada, e o modelo aparece como "Modelo de exemplo".
-- `index.html` reescrito: 7 seções (busca, triagem, PRISMA, investigação, perguntar, biblioteca, agenda), faixa "O aplicativo do seu jeito", FAQ com bases sem chave, plataformas e modo escuro, metadados e JSON-LD alinhados.
+- `index.html` reescrito: 6 seções (busca, triagem guiada, PRISMA, investigação, perguntar, agenda; a da biblioteca de PDFs saiu a pedido do autor), faixa "O aplicativo do seu jeito", FAQ com bases sem chave, plataformas e modo escuro, metadados e JSON-LD alinhados.
 - Fonte trocada para Lexend na landing e nos tutoriais; o rosa continua como cor de marca.
+- Ampliar ao clicar nas capturas (`lightbox.js`): clique ou Enter abre, Esc, X e clique fora fecham.
 - Fundo do hero e do rodapé com três variantes: `?hero=antigo` (padrão), `?hero=neutro` e `?hero=quente`. Não há medição de conversão na página: a escolha é por comparação visual.
 
 Pendente:
