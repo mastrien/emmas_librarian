@@ -16,15 +16,16 @@ body {
     padding: 1.5rem 0;
 }
 
+/* Voltar à esquerda e o grupo logo + título no centro, na mesma linha (as colunas laterais têm a mesma largura). */
 .header-container {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
 }
 
 .back-link {
-    align-self: flex-start;
+    justify-self: start;
     color: rgba(148, 163, 184, 0.7); /* slate-400 with transparency */
-    margin-bottom: 1rem;
     font-weight: 500;
     text-decoration: none;
     transition: color 0.2s;
@@ -693,6 +694,19 @@ body {
 
     .wiki-content {
         padding: 1.5rem;
+    }
+}
+
+/* Sem espaço para o voltar e o grupo do título na mesma linha: um sobre o outro. */
+@media (max-width: 680px) {
+    .header-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .back-link {
+        align-self: flex-start;
+        margin-bottom: 1rem;
     }
 }
 

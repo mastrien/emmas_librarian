@@ -86,6 +86,7 @@ Feito em `landing_page/`:
 - Fonte trocada para Lexend na landing e nos tutoriais; o rosa continua como cor de marca.
 - Ampliar ao clicar nas capturas (`lightbox.js`): clique ou Enter abre, Esc, X e clique fora fecham.
 - Tutoriais no padrão do app: Source Serif 4 no texto longo (linhas de até 70 caracteres), JetBrains Mono no código, grupos em caixa-alta na lista de capítulos, quadros e botões com borda, títulos escuros com traço rosa, cabeçalho com o mesmo fundo do hero sumário do capítulo na coluna da direita (`chapter-toc.js`, só em telas de 1200 px ou mais), conteúdo centralizado com texto e imagens na mesma largura, e ampliar ao clicar nas capturas.
+- A página deixou de se apresentar só como suíte de revisão sistemática: título, descrições, JSON-LD e o subtítulo do hero falam em "a sua pesquisa"; a triagem e o PRISMA seguem como recursos, com seções próprias.
 - Fundo do hero e do rodapé com três variantes: `?hero=neutro` (padrão desde 2026-11-20, a pedido do autor), `?hero=antigo` e `?hero=quente`. Não há medição de conversão na página: a escolha é por comparação visual.
 
 Pendente:
