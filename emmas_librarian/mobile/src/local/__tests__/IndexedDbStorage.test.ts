@@ -54,3 +54,26 @@ describe('PDFs', () => {
     expect(await storage.sizes()).toEqual({});
   });
 });
+
+describe('identity', () => {
+  const desktop = {
+    deviceId: 'd1',
+    deviceName: 'Pixel',
+    deviceKey: 'a2V5',
+    baseUrl: 'http://192.168.0.10:47811',
+    verificationCode: '4F2A',
+    pairedAt: 1,
+  };
+
+  it('is empty before pairing, and kept after it', async () => {
+    expect(await storage.loadIdentity()).toBeNull();
+    await storage.saveIdentity(desktop);
+    expect(await storage.loadIdentity()).toEqual(desktop);
+  });
+
+  it('is forgotten with everything else on clear', async () => {
+    await storage.saveIdentity(desktop);
+    await storage.clear();
+    expect(await storage.loadIdentity()).toBeNull();
+  });
+});

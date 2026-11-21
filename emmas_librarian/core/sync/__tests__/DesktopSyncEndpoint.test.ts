@@ -113,4 +113,18 @@ describe('DesktopSyncEndpoint', () => {
     const forged = await stranger.seal(utf8(JSON.stringify({ cursor: 0, operations: [], processed: [] })));
     await expect(endpoint.handleSealed(forged)).rejects.toThrow('failed authentication');
   });
+
+  it('answers "no PDF" when it was not given a way to read one', async () => {
+    const request = await phoneChannel.seal(utf8(JSON.stringify({ articleUuid: 'any' })));
+    const reply = await endpoint.handlePdfSealed(request);
+    expect(JSON.parse(new TextDecoder().decode(await phoneChannel.unseal(reply)))).toEqual({
+      found: false,
+      data: null,
+    });
+  });
+
+  it('refuses a PDF request without an article uuid, naming the field', async () => {
+    const request = await phoneChannel.seal(utf8(JSON.stringify({ articleUuid: '' })));
+    await expect(endpoint.handlePdfSealed(request)).rejects.toThrow('"articleUuid" must be a non-empty string');
+  });
 });

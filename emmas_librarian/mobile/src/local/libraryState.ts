@@ -1,4 +1,4 @@
-import type { FieldValue, RowFields, SyncOperation } from '../../../core/sync/operations';
+import type { RowFields, SyncOperation } from '../../../core/sync/operations';
 import { SYNCED_TABLES, type SyncedEntity } from '../../../core/sync/syncedTables';
 
 /** Where a project came from. Only the computer's projects ("synced") are mirrored; "own" ones live on the phone. */
@@ -58,8 +58,4 @@ export function emptyState(deviceId: string): LibraryState {
     outbox: [],
     processed: [],
   };
-}
-
-export function isFieldValue(value: unknown): value is FieldValue {
-  return value === null || typeof value === 'string' || typeof value === 'number';
 }

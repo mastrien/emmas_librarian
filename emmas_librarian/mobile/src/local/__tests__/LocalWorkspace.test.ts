@@ -142,4 +142,15 @@ describe('LocalWorkspace', () => {
     await workspace.syncNow();
     expect(seen).toEqual([true, false]);
   });
+
+  it('keeps a PDF the person picked on the phone for an article of a project made here', async () => {
+    const workspace = await LocalWorkspace.open(environment());
+    const project = (await workspace.reader.writer?.createProject?.('Mine')) as number;
+    const article = (await workspace.reader.writer?.addArticle?.(project, { title: 'Local' })) as number;
+
+    await workspace.attachPdf(article, new Uint8Array([37, 80]));
+
+    expect(await workspace.reader.pdfSize(article)).toBe(2);
+    await expect(workspace.attachPdf(999, new Uint8Array(1))).rejects.toThrow('No article with id 999');
+  });
 });

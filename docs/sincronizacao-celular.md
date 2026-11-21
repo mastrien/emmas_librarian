@@ -1,7 +1,9 @@
-# Sincronização com o celular (núcleo, sem rede ainda)
+# Sincronização com o celular
 
-Código em `emmas_librarian/core/sync/`. Plano e decisões: `docs/planos/2026-11-21_mobile_robusto.md`.
-Nada disso está ligado ao aplicativo ainda: `installSyncSchema` só roda quando o pareamento for integrado.
+Código em `emmas_librarian/core/sync/` (protocolo, dados, cifra), `adapters/electron/remote/` (servidor e pareamento) e
+`emmas_librarian/mobile/src/{local,sync}/` (o lado do celular). Plano e decisões: `docs/planos/2026-11-21_mobile_robusto.md`.
+O desktop só instala as tabelas e os gatilhos de sincronização na primeira vez que alguém abre um pareamento
+(`LibrarySync.parts()`); uma biblioteca que nunca sincroniza não paga nada.
 
 ## Dados
 
@@ -36,6 +38,34 @@ Curva P-256 (X25519 não existe nos WebViews antigos). As primitivas são testad
    outro aparelho e a própria mensagem devolvida (reflexão) são recusados. A versão do protocolo vem em cada mensagem.
 3. **Rodada** (`DesktopSyncEndpoint.ts`). O celular manda `{cursor, operations, processed}`; o computador responde
    `{decided, operations, cursor, staged}`. Operações têm `opId`, então reenviar depois de uma queda é inofensivo.
+
+## Como liga ao aplicativo
+
+- **Servidor:** com o acesso pela rede local ligado, o aplicativo abre também uma porta HTTP simples (47811, ou outra livre)
+  que atende só `/api/sync/{pair,hello,round,pdf}`. Sem certificado: o WebView do Android não aceita um autoassinado, e tudo
+  que passa por ali já está cifrado (ou é uma prova de pareamento que não revela nada). Não serve páginas nem comandos.
+  A cópia web, servida em HTTPS, usa as mesmas rotas na porta HTTPS.
+- **Pareamento:** Configurações › Acesso pelo celular › "Parear um celular para sincronizar" mostra o QR. O celular lê (ou
+  recebe o texto colado), responde, e os dois mostram o mesmo código de verificação. A chave do celular fica em
+  `sync-device.json` (cifrada pelo cofre do sistema onde houver). Um celular por computador; parear outro substitui o primeiro.
+- **Revisão (dry run):** a mesma tela lista o que o celular mudou, com o que a linha diz agora no computador; exclusões
+  aparecem em vermelho. Você aplica ou rejeita as escolhidas.
+- **PDFs:** o celular pede um por artigo (`/api/sync/pdf`), selado como as outras mensagens, até 64 MB.
+
+## No celular
+
+Biblioteca própria em IndexedDB (`LocalLibrary`: linhas por uuid, fila de envio, desfazer), PDFs à parte. Projetos vindos do
+computador entram na fila de envio; projetos feitos no celular nunca. Rejeitado ou pulado pelo computador, o item é desfeito
+no celular. Parear de novo ou desparear apaga a cópia local. Categorias ainda não sincronizam.
+
+## Testes
+
+- Unitários e de integração (SQLite real, cripto real): `npm run test`.
+- Navegador de verdade contra um computador de verdade (SQLite, rotas cifradas, build do celular, PDF de teste):
+  `npm run test:mobile-e2e` (`PW_CHROMIUM_PATH=<chrome>` onde o Chromium não é o do Playwright). Cobre abertura, aparência,
+  pareamento, cópia da biblioteca, escrita sem o computador, aplicar e rejeitar, baixar PDF e marcar um trecho.
+- Não coberto: Android de verdade (câmera do QR, WebView, `usesCleartextTraffic`), o fluxo de pareamento pela tela de
+  configurações do Electron (E2E do Electron não rodado aqui) e iOS.
 
 ## O que este código não garante
 

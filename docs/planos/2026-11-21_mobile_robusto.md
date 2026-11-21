@@ -55,7 +55,7 @@ Consequências para o desenho (ainda a refinar):
 
 ## 3. Fases sugeridas
 
-**Andamento (2026-11-21):** as fases 1 e 2 estão feitas no núcleo (`core/sync/`, 71 testes, descrição em `docs/sincronizacao-celular.md`), ainda sem ligação com o aplicativo e sem rede. Falta guardar `deviceKey` no `SecretStore`, ligar o endpoint ao `RemoteGateway` (HTTP) e a tela de revisão no desktop. As fases 3 a 5 (celular) não foram começadas.
+**Andamento (2026-11-21):** fases 1 a 5 feitas no código (`core/sync/`, `mobile/src/`, `adapters/electron/remote/`, telas do desktop em Configurações › Acesso pelo celular). Verificadas por testes unitários, de integração e por `npm run test:mobile-e2e` (navegador real contra um computador real). **Não verificado:** Android de verdade (câmera, WebView, tráfego sem TLS), o E2E do Electron com o pareamento pelas configurações, iOS. Ver `docs/sincronizacao-celular.md`.
 
 1. **Esquema de sync no núcleo:** uuid, updated_at, tombstones, log de operações, migração e testes contra SQLite real. Sem tela.
 2. **Protocolo e cifra:** pareamento autenticado, pacote cifrado, anti-replay, revogação; testes com fakes nomeados de rede e de relógio.

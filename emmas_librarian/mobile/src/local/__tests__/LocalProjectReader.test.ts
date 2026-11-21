@@ -125,4 +125,23 @@ describe('writing', () => {
   it('says plainly that categories cannot be changed on the phone yet', async () => {
     await expect(reader.writer.setArticleCategory(1, 1, 'x')).rejects.toThrow('Categories do not sync');
   });
+
+  it('lists the notes of an article, hiding the ones in the trash', async () => {
+    library.applyRemote([
+      remote('annotations', 'n1', { article_id: 'a1', content_markdown: 'kept', created_at: 't', deleted_at: null }),
+      remote('annotations', 'n2', {
+        article_id: 'a1',
+        content_markdown: 'trashed',
+        created_at: 't',
+        deleted_at: '2026-11-21',
+      }),
+    ]);
+    expect(await reader.listAnnotations(1)).toMatchObject([{ content_markdown: 'kept', article_id: 1 }]);
+  });
+
+  it('tells the size of a downloaded PDF, or null when there is none', async () => {
+    expect(await reader.pdfSize(1)).toBeNull();
+    await pdfs.put('a1', new Uint8Array(2048));
+    expect(await reader.pdfSize(1)).toBe(2048);
+  });
 });

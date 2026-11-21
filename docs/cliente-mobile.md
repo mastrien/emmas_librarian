@@ -3,6 +3,13 @@
 Telas para celular sobre o mesmo núcleo do aplicativo (issue #33, épica #27). O código fica em
 `emmas_librarian/mobile/` e o build (`npm run build:mobile`) gera `dist-mobile/`.
 
+## Três modos, as mesmas telas
+
+O aplicativo do celular (Capacitor, Android) e a cópia web com `?local=1` usam uma **biblioteca própria no aparelho**,
+sincronizada com o computador (`docs/sincronizacao-celular.md`): lê e escreve sem o computador por perto, marca trechos em
+PDFs baixados, cria projetos só do celular, e segue a aparência do desktop (modo, tom, cor de destaque, Lexend, Source
+Serif 4, JetBrains Mono). Os dois modos abaixo continuam como estavam.
+
 ## Dois lugares, o mesmo app
 
 | Onde | Para quê | Como chega |

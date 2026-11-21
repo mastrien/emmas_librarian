@@ -104,6 +104,26 @@ describe('phone sync over the plain listener', () => {
     expect(Buffer.from(bytes ?? []).toString()).toBe('%PDF-1.4 conteúdo');
   });
 
+  it('lists, applies and rejects what the phone changed, through the service the settings screen calls', async () => {
+    const project = db.createProject('Review');
+    const uuid = db.librarySync.parts().log.uuidOf('projects', project.id);
+    const op = (opId: string, name: string) => ({
+      opId,
+      deviceId: 'd',
+      entity: 'projects',
+      uuid,
+      kind: 'update',
+      fields: { name },
+      changedAt: 't',
+    });
+    db.librarySync.parts().store.stage([op('a', 'Renamed'), op('b', 'Other')]);
+
+    expect(service.listPhoneChanges().map((change) => change.opId)).toEqual(['a', 'b']);
+    expect(service.applyPhoneChanges(['a'])).toEqual([{ opId: 'a', status: 'applied', reason: null }]);
+    expect(service.rejectPhoneChanges(['b'])).toEqual([{ opId: 'b', status: 'rejected', reason: null }]);
+    expect(db.getAllProjects()[0].name).toBe('Renamed');
+  });
+
   it('serves nothing but sync on that port: no commands, no pages', async () => {
     const { syncPort } = parseScannedOffer((await service.startSyncPairing()).url);
     const commands = await fetch(`http://127.0.0.1:${syncPort}/api/commands`);
