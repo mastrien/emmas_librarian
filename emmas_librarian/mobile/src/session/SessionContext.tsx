@@ -1,4 +1,5 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import type { LocalWorkspace, WorkspaceStatus } from '../local/LocalWorkspace';
 import type { ProjectReader } from '../reader/ProjectReader';
 
 export interface Session {
@@ -6,6 +7,8 @@ export interface Session {
   reader: ProjectReader | null;
   /** Leaves the library: forgets the open file, or this device's token. */
   leave: () => void;
+  /** The phone's own library and its sync, when the app runs on it; null for a file or the live desktop. */
+  workspace?: LocalWorkspace | null;
 }
 
 export const SessionContext = createContext<Session>({ reader: null, leave: () => undefined });
@@ -29,6 +32,25 @@ export const useSession = (): Session => useContext(SessionContext);
  *
  * @example <SessionProvider reader={reader} leave={leave}><ProjectsScreen /></SessionProvider>
  */
-export const SessionProvider: React.FC<Session & { children: React.ReactNode }> = ({ reader, leave, children }) => (
-  <SessionContext.Provider value={{ reader, leave }}>{children}</SessionContext.Provider>
-);
+export const SessionProvider: React.FC<Session & { children: React.ReactNode }> = ({
+  reader,
+  leave,
+  workspace = null,
+  children,
+}) => <SessionContext.Provider value={{ reader, leave, workspace }}>{children}</SessionContext.Provider>;
+
+/**
+ * The phone's workspace and its status, redrawn when a sync starts, ends or a pairing is made.
+ *
+ * @example const { workspace, status } = useWorkspace(); status?.pendingChanges
+ */
+export function useWorkspace(): { workspace: LocalWorkspace | null; status: WorkspaceStatus | null } {
+  const { workspace } = useContext(SessionContext);
+  const [status, setStatus] = useState<WorkspaceStatus | null>(workspace?.status() ?? null);
+  useEffect(() => {
+    if (!workspace) return setStatus(null);
+    setStatus(workspace.status());
+    return workspace.subscribe(() => setStatus(workspace.status()));
+  }, [workspace]);
+  return { workspace: workspace ?? null, status };
+}

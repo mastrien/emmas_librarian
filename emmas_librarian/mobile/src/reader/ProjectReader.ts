@@ -68,6 +68,8 @@ export interface ProjectReader {
   listHighlights(articleId: number): Promise<Highlight[]>;
   listAnnotations(articleId: number): Promise<Annotation[]>;
   readPdf(articleId: number): Promise<Uint8Array | null>;
+  /** Bytes of the PDF kept on the phone, or null when there is none; only the phone's own library knows. */
+  pdfSize?(articleId: number): Promise<number | null>;
   listDiary(projectId: number): Promise<DiaryEntry[]>;
   listDocuments(projectId: number): Promise<ProjectDocument[]>;
   listCategories(projectId: number): Promise<ProjectCategory[]>;

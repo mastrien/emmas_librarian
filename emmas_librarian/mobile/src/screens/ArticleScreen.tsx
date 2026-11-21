@@ -8,6 +8,7 @@ import type { ProjectReader } from '../reader/ProjectReader';
 import { useReader } from '../session/SessionContext';
 import { useLoaded } from '../useLoaded';
 import { CategoryField, valueFor } from './CategoryFields';
+import { PdfAction } from './PdfAction';
 
 interface ArticleView {
   article: Article;
@@ -39,13 +40,7 @@ const Metadata: React.FC<{ article: Article }> = ({ article }) => (
       </a>
     )}
     {article.abstract && <p className="m-prose">{article.abstract}</p>}
-    {article.local_file_path ? (
-      <Link className="m-button m-button--primary" to={`/articles/${article.id}/pdf`}>
-        Abrir PDF
-      </Link>
-    ) : (
-      <p className="m-row__detail">Este artigo não tem PDF.</p>
-    )}
+    <PdfAction article={article} />
   </section>
 );
 

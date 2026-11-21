@@ -1,28 +1,4 @@
-/* Mobile client (#33). The colours are the desktop's light and dark tokens; the layout is one column. */
-:root {
-  --color-primary: #4f46e5;
-  --color-danger: #ef4444;
-  --bg-main: #f8fafc;
-  --bg-surface: #ffffff;
-  --text-main: #334155;
-  --text-heading: #0f172a;
-  --text-muted: #5b6b80;
-  --border-color: #e2e8f0;
-  --radius-md: 0.5rem;
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-primary: #818cf8;
-    --bg-main: #0f172a;
-    --bg-surface: #1e293b;
-    --text-main: #cbd5e1;
-    --text-heading: #f8fafc;
-    --text-muted: #94a3b8;
-    --border-color: #334155;
-  }
-}
+/* Mobile client (#33). Tokens come from tokens.css (the desktop's); this file is the layout: one column. */
 
 * {
   box-sizing: border-box;
@@ -32,11 +8,7 @@ body {
   margin: 0;
   background: var(--bg-main);
   color: var(--text-main);
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.5;
   -webkit-text-size-adjust: 100%;
@@ -85,7 +57,7 @@ p {
   place-items: center;
   min-width: 2.75rem;
   min-height: 2.75rem;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-size: 1.75rem;
   text-decoration: none;
 }
@@ -193,7 +165,7 @@ p {
 
 .m-tab.is-active {
   border-bottom-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .m-input {
@@ -240,7 +212,7 @@ p {
   padding: 0.5rem 0;
   border: 0;
   background: none;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font: inherit;
   text-decoration: underline;
 }
@@ -336,7 +308,7 @@ p {
 }
 
 .m-markdown a {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .m-markdown blockquote {
@@ -356,4 +328,244 @@ p {
   display: block;
   max-width: 100%;
   overflow-x: auto;
+}
+
+/* Opening screen */
+.m-splash {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--bg-main);
+}
+
+.m-splash__logo {
+  display: grid;
+  width: 10.5rem;
+  height: 10.5rem;
+  place-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: 2.75rem;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.m-splash__name {
+  margin-top: 1.5rem;
+  font-family: var(--font-heading);
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.m-splash__tagline,
+.m-splash__status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.m-splash__status {
+  margin-top: 3rem;
+}
+
+/* Bottom bar of the top-level screens */
+.m-screen--nav {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+.m-bottomnav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.m-bottomnav__item {
+  display: grid;
+  min-height: 3.5rem;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.m-bottomnav__item.is-active {
+  color: var(--color-primary-text);
+  font-weight: 600;
+}
+
+/* Settings controls */
+.m-field {
+  margin: 0.75rem 0;
+}
+
+.m-field__label {
+  margin: 0 0 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.m-segmented {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.m-segmented__option,
+.m-swatch {
+  min-height: 2.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  color: var(--text-heading);
+  font: inherit;
+}
+
+.m-segmented__option[aria-pressed='true'],
+.m-swatch[aria-pressed='true'] {
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary-subtle);
+}
+
+.m-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.m-swatch span {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0 auto;
+  border-radius: 50%;
+}
+
+.m-button--danger {
+  border-color: var(--color-danger);
+  color: var(--color-danger-text);
+}
+
+.m-code {
+  font-family: var(--font-mono);
+}
+
+/* Project and sync labels */
+.m-chip {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-sunken);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.m-chip--synced {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary-text);
+}
+
+.m-chip--waiting {
+  background: var(--color-warning-subtle);
+  color: var(--color-warning-text);
+}
+
+/* Diary: one page at a time */
+.m-pager {
+  display: grid;
+  grid-template-columns: 2.75rem 1fr 2.75rem;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.m-pager button {
+  min-height: 2.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  color: var(--text-heading);
+  font: inherit;
+}
+
+.m-pager button:disabled {
+  opacity: 0.4;
+}
+
+.m-page-text {
+  width: 100%;
+  min-height: 55dvh;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface);
+  color: var(--text-heading);
+  font-family: var(--font-read);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  resize: none;
+}
+
+.m-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: var(--overlay-backdrop, rgba(0, 0, 0, 0.5));
+}
+
+.m-sheet__body {
+  padding: 1rem 1rem calc(1.5rem + env(safe-area-inset-bottom));
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: var(--bg-surface);
+}
+
+.m-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.m-calendar button {
+  position: relative;
+  min-height: 2.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+}
+
+.m-calendar button.has-page {
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.m-calendar button.has-page::after {
+  position: absolute;
+  bottom: 0.25rem;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  content: '';
+}
+
+.m-calendar button.is-current {
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary-subtle);
 }

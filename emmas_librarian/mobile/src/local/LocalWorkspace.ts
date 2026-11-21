@@ -24,6 +24,8 @@ export interface WorkspaceEnvironment {
   send: typeof fetch;
   clock: LibraryClock;
   deviceName: string;
+  /** True where the page is served over HTTPS (the web copy): it may not call the plain-HTTP sync port. */
+  secureOnly?: boolean;
 }
 
 export interface WorkspaceStatus {
@@ -93,7 +95,15 @@ export class LocalWorkspace {
   /** @throws Error with the reason in words for the screen, when the code is wrong, expired or already used */
   public async pair(scannedText: string): Promise<PairedDesktop> {
     const offer = parseScannedOffer(scannedText);
-    this.desktop = await pairPhone(this.env.crypto, offer, this.env.deviceName, this.env.identity, this.env.send);
+    this.desktop = await pairPhone(
+      this.env.crypto,
+      offer,
+      this.env.deviceName,
+      this.env.identity,
+      this.env.send,
+      Date.now,
+      this.env.secureOnly,
+    );
     this.library.state.deviceId = this.desktop.deviceId;
     this.changed();
     return this.desktop;
@@ -127,6 +137,14 @@ export class LocalWorkspace {
     await this.env.pdfs.put(article.uuid, bytes);
     this.changed();
     return true;
+  }
+
+  /** Keeps a PDF the person picked on the phone (for an article of a project made here). */
+  public async attachPdf(articleId: number, bytes: Uint8Array): Promise<void> {
+    const article = this.library.rows('articles').find((row) => row.id === articleId);
+    if (!article) throw new Error(`No article with id ${articleId} on this phone`);
+    await this.env.pdfs.put(article.uuid, bytes);
+    this.changed();
   }
 
   /** What unpairing would throw away, to show before asking. */

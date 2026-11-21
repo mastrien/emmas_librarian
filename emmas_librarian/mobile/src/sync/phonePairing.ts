@@ -57,9 +57,13 @@ export function parseScannedOffer(text: string): ScannedOffer {
   );
 }
 
-/** Where to reach the computer: the plain port when it offers one, else the HTTPS port. */
-export function baseUrlOf(offer: ScannedOffer): string {
-  return offer.syncPort ? `http://${offer.address}:${offer.syncPort}` : `https://${offer.address}:${offer.port}`;
+/**
+ * Where to reach the computer: the plain port when it offers one, else the HTTPS port. A page served over HTTPS
+ * (the web copy) may not call plain HTTP, so it asks for `secureOnly`.
+ */
+export function baseUrlOf(offer: ScannedOffer, secureOnly = false): string {
+  if (offer.syncPort && !secureOnly) return `http://${offer.address}:${offer.syncPort}`;
+  return `https://${offer.address}:${offer.port}`;
 }
 
 /**
@@ -75,9 +79,10 @@ export async function pairPhone(
   storage: IdentityStorage,
   send: typeof fetch = (...args) => fetch(...args),
   now: () => number = Date.now,
+  secureOnly = false,
 ): Promise<PairedDesktop> {
   const { answer, device } = await answerPairingOffer(crypto, offer, deviceName, now());
-  const baseUrl = baseUrlOf(offer);
+  const baseUrl = baseUrlOf(offer, secureOnly);
   await new HttpSyncTransport(baseUrl, send).pair(answer);
   const desktop: PairedDesktop = {
     deviceId: device.deviceId,

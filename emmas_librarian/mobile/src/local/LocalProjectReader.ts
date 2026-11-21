@@ -99,6 +99,11 @@ export class LocalProjectReader implements ProjectReader {
     return this.pdfs.get(rowById(this.library, 'articles', articleId).uuid);
   }
 
+  async pdfSize(articleId: number): Promise<number | null> {
+    const uuid = rowById(this.library, 'articles', articleId).uuid;
+    return (await this.pdfs.sizes())[uuid] ?? null;
+  }
+
   async listDiary(projectId: number): Promise<DiaryEntry[]> {
     const project = rowById(this.library, 'projects', projectId);
     return childrenOf(this.library, 'project_diary', 'project_id', project.uuid)

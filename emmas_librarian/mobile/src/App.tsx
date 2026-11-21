@@ -17,6 +17,9 @@ import { PdfScreen } from './screens/PdfScreen';
 import { ProjectScreen } from './screens/ProjectScreen';
 import { ProjectsScreen } from './screens/ProjectsScreen';
 import { StartScreen } from './screens/StartScreen';
+import { LocalApp } from './LocalApp';
+import type { LocalWorkspace } from './local/LocalWorkspace';
+import { SplashScreen } from './screens/SplashScreen';
 
 /** What the app needs from the browser, so tests can stand in for it. */
 export interface AppEnvironment {
@@ -27,6 +30,17 @@ export interface AppEnvironment {
   send: typeof fetch;
   /** Removes the pairing code from the address bar, so a reload does not try to use it again. */
   clearHash: () => void;
+  /** Present when the phone keeps its own library (the app, or the web copy opted in); then nothing else is used. */
+  local?: LocalAppEnvironment;
+}
+
+export interface LocalAppEnvironment {
+  /** Opens the phone's workspace from its storage. */
+  open: () => Promise<LocalWorkspace>;
+  /** Reads the pairing QR code with the camera, where the app can. */
+  scan?: () => Promise<string>;
+  /** The least time the opening screen stays, so it does not flash. */
+  minimumSplashMs?: number;
 }
 
 interface Boot {
@@ -66,6 +80,32 @@ const RequireLibrary: React.FC<{ open: boolean; children: React.ReactElement }> 
  * @example <App environment={browserEnvironment()} />
  */
 export const App: React.FC<{ environment: AppEnvironment }> = ({ environment }) => {
+  if (environment.local) return <LocalBoot local={environment.local} />;
+  return <ClassicApp environment={environment} />;
+};
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** The opening screen while the phone's library is read from storage, then the app on it. */
+const LocalBoot: React.FC<{ local: LocalAppEnvironment }> = ({ local }) => {
+  const [workspace, setWorkspace] = useState<LocalWorkspace | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
+  useEffect(() => {
+    Promise.all([local.open(), wait(local.minimumSplashMs ?? 800)]).then(
+      ([opened]) => setWorkspace(opened),
+      (error: unknown) => setFailure(error instanceof Error ? error.message : String(error)),
+    );
+  }, [local]);
+  if (failure)
+    return (
+      <p className="m-note m-note--error" role="alert">
+        Não foi possível abrir a biblioteca deste celular: {failure}
+      </p>
+    );
+  return workspace ? <LocalApp workspace={workspace} onScan={local.scan} /> : <SplashScreen />;
+};
+
+const ClassicApp: React.FC<{ environment: AppEnvironment }> = ({ environment }) => {
   const [state, setState] = useState<Boot | null>(null);
   useEffect(() => {
     // The desktop refused the token: forget it and say why, instead of an error on every screen.

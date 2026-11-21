@@ -1,0 +1,218 @@
+/* Copy of the tokens at the top of src/style.css (colours, tones, accents, type, radii), so the phone looks like the desktop.
+   Keep the two in step: a change to a token there belongs here too. */
+:root,
+/* Also on [data-theme='light'], so a nested preview (the tone swatches in Settings) gets the light tokens back. */
+[data-theme='light'] {
+  /* Browser-drawn parts (selects, date fields, checkboxes, scrollbars) follow the theme instead of staying white in dark mode. */
+  color-scheme: light;
+  --font-sans: 'Lexend Variable', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Lexend Variable', system-ui, -apple-system, sans-serif;
+  --font-read: 'Source Serif 4 Variable', Georgia, serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, Consolas, monospace;
+
+  --color-primary: #4f46e5; /* Indigo 600 */
+  --color-primary-hover: #4338ca; /* Indigo 700 */
+  --color-secondary: #0ea5e9; /* Sky 500 */
+  --color-danger: #ef4444; /* Red 500 */
+  --color-success: #10b981; /* Emerald 500 */
+  --color-warning: #d97706; /* Amber 600: a base that stopped early, results kept */
+  /* The accent used as text (links); dark mode lightens it, the filled accent stays for buttons. */
+  --color-primary-text: var(--color-primary);
+  --color-primary-text-hover: var(--color-primary-hover);
+
+  --bg-main: #f8fafc; /* Slate 50 */
+  --bg-surface: #ffffff;
+  --bg-surface-glass: rgba(255, 255, 255, 0.85);
+
+  --text-main: #334155; /* Slate 700 */
+  --text-heading: #0f172a; /* Slate 900 */
+  /* Between Slate 500 and 600: Slate 500 read 4.2:1 on the sunken surface of inputs. */
+  --text-muted: #5b6b80;
+
+  --border-color: #e2e8f0; /* Slate 200 */
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-hover: 0 20px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 999px;
+
+  /* Spacing scale (Arca 134): components take their gaps and paddings from here instead of loose rem values. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* Hover fill of a surface row or menu item; mixed from the text colour, so it follows every tone. */
+  --bg-surface-hover: color-mix(in srgb, var(--text-main) 6%, var(--bg-surface));
+  /* Backdrop behind modals and drawers. */
+  --overlay-backdrop: rgba(0, 0, 0, 0.5);
+
+  /* Status fills behind a notice: the status colour at low opacity, readable in light and dark. */
+  --color-info: #3b82f6; /* Blue 500 */
+  --color-primary-subtle: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --color-danger-subtle: rgba(239, 68, 68, 0.1);
+  --color-warning-subtle: rgba(245, 158, 11, 0.12);
+  --color-success-subtle: rgba(16, 185, 129, 0.1);
+  --color-info-subtle: rgba(59, 130, 246, 0.1);
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Redesign surfaces (Arca 134): depth by lightness, not by shadow. Sunken = rail, inputs, code;
+     raised = buttons, chips, the selected item; subtle border = lines between rows. */
+  --bg-sunken: #eef0f3;
+  --bg-raised: #ffffff;
+  --border-subtle: #eef1f5;
+
+  /* Status as text: the -500 fills above fail 4.5:1 as text on white, so text uses the -700 shade
+     (dark mode the -400). Status never relies on colour alone: icon and label go with it. */
+  --color-success-text: #047857;
+  --color-warning-text: #92400e; /* Amber 800: Amber 700 read 4.2:1 on the sunken surface */
+  --color-danger-text: #b91c1c;
+  --color-info-text: #1d4ed8;
+  /* AI-made content (suggestions, answers) gets its own hue so it is never mistaken for the user's own. */
+  --color-ai: #8b5cf6;
+  --color-ai-text: #6d28d9;
+  --color-ai-subtle: rgba(139, 92, 246, 0.1);
+
+  /* Motion: hover 120 ms, menus and dialogs 180 ms, side panels 220 ms; all off with reduced motion. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-hover: 120ms;
+  --duration-menu: 180ms;
+  --duration-panel: 220ms;
+}
+
+/* Tones (Arca 134, chosen by the author): light mode is white or warm white, dark mode neutral or warm graphite.
+   data-tone holds the tone of the mode in use (src/theme/appearance.ts). */
+[data-tone='warm']:not([data-theme='dark']) {
+  --bg-main: #f7f5f1;
+  --bg-surface: #fffdf9;
+  --bg-surface-glass: rgba(255, 253, 249, 0.85);
+  --text-main: #44403c; /* Stone 700 */
+  --text-heading: #1c1917; /* Stone 900 */
+  --text-muted: #6f6964;
+  --border-color: #e7e2da;
+  --bg-sunken: #efebe5;
+  --bg-raised: #fffdf9;
+  --border-subtle: #f0ebe4;
+}
+
+/* Neutral graphite: the earlier Slate dark was navy, and the accent as text read at 2.3:1 on it. */
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg-main: #141416;
+  --bg-surface: #1d1d21;
+  --bg-surface-glass: rgba(20, 20, 22, 0.85);
+  --text-main: #e4e4e7; /* Zinc 200 */
+  --text-heading: #fafafa;
+  --text-muted: #a1a1aa; /* Zinc 400 */
+  --border-color: #2f2f35;
+  --color-warning: #fbbf24; /* Amber 400, readable on graphite */
+  --color-primary-text: #a5b4fc;
+  --color-primary-text-hover: #c7d2fe;
+  --bg-sunken: #0f0f11;
+  --bg-raised: #25252b;
+  --border-subtle: #232329;
+  --color-success-text: #34d399;
+  --color-warning-text: #fbbf24;
+  --color-danger-text: #f87171;
+  --color-info-text: #60a5fa;
+  --color-ai-text: #c4b5fd;
+  --color-ai-subtle: rgba(167, 139, 250, 0.14);
+}
+
+[data-theme='dark'][data-tone='warm'] {
+  --bg-main: #161413;
+  --bg-surface: #211e1c;
+  --bg-surface-glass: rgba(22, 20, 19, 0.85);
+  --text-main: #e7e5e4; /* Stone 200 */
+  --text-heading: #fafaf9;
+  --text-muted: #a8a29e; /* Stone 400 */
+  --border-color: #37322e;
+  --bg-sunken: #110f0e;
+  --bg-raised: #2a2623;
+  --border-subtle: #2a2622;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-hover: 0ms;
+    --duration-menu: 0ms;
+    --duration-panel: 0ms;
+  }
+}
+
+/* Accent Colors */
+[data-accent='blue'] {
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-secondary: #0ea5e9;
+}
+
+[data-accent='pink'] {
+  --color-primary: #db2777;
+  --color-primary-hover: #be185d;
+  --color-secondary: #f472b6;
+}
+
+[data-accent='green'] {
+  --color-primary: #059669;
+  --color-primary-hover: #047857;
+  --color-secondary: #34d399;
+}
+
+[data-accent='purple'] {
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+  --color-secondary: #a78bfa;
+}
+
+[data-accent='orange'] {
+  --color-primary: #ea580c;
+  --color-primary-hover: #c2410c;
+  --color-secondary: #fb923c;
+}
+
+[data-accent='red'] {
+  --color-primary: #dc2626;
+  --color-primary-hover: #b91c1c;
+  --color-secondary: #f87171;
+}
+
+/* The accent as text on dark backgrounds: the 300 shade of each accent, 200 on hover. */
+[data-theme='dark'][data-accent='pink'] {
+  --color-primary-text: #f9a8d4;
+  --color-primary-text-hover: #fbcfe8;
+}
+
+[data-theme='dark'][data-accent='green'] {
+  --color-primary-text: #6ee7b7;
+  --color-primary-text-hover: #a7f3d0;
+}
+
+[data-theme='dark'][data-accent='purple'] {
+  --color-primary-text: #c4b5fd;
+  --color-primary-text-hover: #ddd6fe;
+}
+
+[data-theme='dark'][data-accent='orange'] {
+  --color-primary-text: #fdba74;
+  --color-primary-text-hover: #fed7aa;
+}
+
+[data-theme='dark'][data-accent='red'] {
+  --color-primary-text: #fca5a5;
+  --color-primary-text-hover: #fecaca;
+}
