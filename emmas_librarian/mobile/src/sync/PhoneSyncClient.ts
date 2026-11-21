@@ -3,13 +3,14 @@ import { fromBase64Url, toBase64Url, utf8 } from '../../../core/sync/crypto/byte
 import { SecureChannel, deriveSessionKey, type SealedMessage } from '../../../core/sync/crypto/SecureChannel';
 import type { DecidedChange } from '../../../core/sync/PendingChangeStore';
 import type { SyncOperation } from '../../../core/sync/operations';
-import type { SyncRequest, SyncResponse } from '../../../core/sync/syncProtocol';
+import type { PdfRequest, PdfResponse, SyncRequest, SyncResponse } from '../../../core/sync/syncProtocol';
 import type { LocalLibrary } from '../local/LocalLibrary';
 
 /** The two calls the computer answers, with whatever carries them (HTTPS on the local network). */
 export interface SyncTransport {
   hello(deviceId: string, phoneNonce: string): Promise<{ sessionId: string; desktopNonce: string }>;
   round(sessionId: string, message: SealedMessage): Promise<SealedMessage>;
+  pdf(sessionId: string, message: SealedMessage): Promise<SealedMessage>;
 }
 
 /** The phone's half of pairing: who it is to the computer, and the long-lived secret they share. */
@@ -64,6 +65,16 @@ export class PhoneSyncClient {
     };
     const response = await this.exchange(channel, request);
     return this.absorb(request, response);
+  }
+
+  /** The PDF of an article from the computer, or null when the article has none there. */
+  public async fetchPdf(articleUuid: string): Promise<Uint8Array | null> {
+    const opened = await this.openChannel();
+    const request: PdfRequest = { articleUuid };
+    const sealed = await opened.channel.seal(utf8(JSON.stringify(request)));
+    const reply = await this.transport.pdf(opened.sessionId, sealed);
+    const response = JSON.parse(new TextDecoder().decode(await opened.channel.unseal(reply))) as PdfResponse;
+    return response.found && response.data ? fromBase64Url(response.data) : null;
   }
 
   private async openChannel(): Promise<{ channel: SecureChannel; sessionId: string }> {

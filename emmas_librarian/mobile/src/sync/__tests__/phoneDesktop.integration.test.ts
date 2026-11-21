@@ -51,6 +51,9 @@ class DirectTransport implements SyncTransport {
   public round(sessionId: string, message: Parameters<DesktopSyncHub['round']>[1]) {
     return this.hub.round(sessionId, message);
   }
+  public pdf(sessionId: string, message: Parameters<DesktopSyncHub['round']>[1]) {
+    return this.hub.pdf(sessionId, message);
+  }
 }
 
 let db: Database.Database;
@@ -62,8 +65,10 @@ let library: LocalLibrary;
 let client: PhoneSyncClient;
 let identity: PhoneIdentity;
 const clockNow = 1_000_000;
+const pdfFiles = new Map<string, Uint8Array>();
 
 beforeEach(async () => {
+  pdfFiles.clear();
   db = new Database(':memory:');
   db.exec(SCHEMA);
   installSyncSchema(db);
@@ -78,6 +83,7 @@ beforeEach(async () => {
     store,
     builder: new OperationBuilder(log, exporter, 'desktop'),
     now: () => clockNow,
+    readPdf: (uuid) => pdfFiles.get(uuid) ?? null,
   });
   const offer = await hub.createOffer();
   const { answer, device } = await answerPairingOffer(crypto, offer, 'Pixel of Ana', clockNow);
@@ -262,5 +268,26 @@ describe('projects made on the phone', () => {
     expect(report.sent).toBe(0);
     expect(count('projects')).toBe(0);
     expect(library.rows('articles')).toHaveLength(1);
+  });
+});
+
+describe('PDFs on request', () => {
+  it('brings the PDF of an article, byte for byte, when the phone asks for it', async () => {
+    const project = desktopProject('Review');
+    const article = run(
+      'INSERT INTO articles (project_id, title) VALUES (?, ?)',
+      log.localIdOf('projects', project) as number,
+      'A',
+    );
+    const bytes = Uint8Array.from({ length: 200_000 }, (_, i) => i % 251);
+    pdfFiles.set(log.uuidOf('articles', article), bytes);
+
+    const received = await client.fetchPdf(log.uuidOf('articles', article));
+
+    expect(received).toEqual(bytes);
+  });
+
+  it('says none when the article has no PDF on the computer', async () => {
+    expect(await client.fetchPdf('unknown-article')).toBeNull();
   });
 });

@@ -47,3 +47,21 @@ export function parseSyncRequest(raw: unknown): SyncRequest {
   }
   return { cursor, operations, processed: processed as string[] };
 }
+
+/** The phone asks for one article's PDF. Sent only when the person chose to keep that PDF on the phone. */
+export interface PdfRequest {
+  articleUuid: string;
+}
+
+/** The answer: the PDF as base64, or `found: false` when the article has no PDF on the computer. */
+export interface PdfResponse {
+  found: boolean;
+  data: string | null;
+}
+
+/** @throws Error naming the offending value */
+export function parsePdfRequest(raw: unknown): PdfRequest {
+  const uuid = (raw as { articleUuid?: unknown } | null)?.articleUuid;
+  if (typeof uuid === 'string' && uuid.length > 0) return { articleUuid: uuid };
+  throw new Error(`PDF request "articleUuid" must be a non-empty string, got ${JSON.stringify(uuid)}`);
+}

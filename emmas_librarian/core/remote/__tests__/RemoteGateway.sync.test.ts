@@ -18,6 +18,9 @@ class FakeSyncRoutes implements SyncRoutes {
   public async round(sessionId: string, message: SealedMessage) {
     return this.record(`round:${sessionId}:${message.counter}`, message);
   }
+  public async pdf(sessionId: string, message: SealedMessage) {
+    return this.record(`pdf:${sessionId}:${message.counter}`, message);
+  }
   private record<T>(call: string, result: T): T {
     this.calls.push(call);
     if (this.failWith) throw this.failWith;

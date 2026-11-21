@@ -1,5 +1,5 @@
 import { ChangeLog } from './ChangeLog';
-import { DesktopSyncEndpoint } from './DesktopSyncEndpoint';
+import { DesktopSyncEndpoint, type PdfSource } from './DesktopSyncEndpoint';
 import { OperationBuilder } from './OperationBuilder';
 import { PendingChangeStore } from './PendingChangeStore';
 import type { Bytes, CryptoProvider } from './crypto/CryptoProvider';
@@ -27,6 +27,8 @@ export interface HubParts {
   builder: OperationBuilder;
   store: PendingChangeStore;
   now: () => number;
+  /** Reads the PDF of an article by uuid; without it every PDF answers "not found". */
+  readPdf?: PdfSource;
   /** Called when a phone finishes pairing, so the settings screen can show its verification code. */
   onPaired?: (device: PairedDevice) => void;
 }
@@ -86,19 +88,34 @@ export class DesktopSyncHub {
       desktopNonce,
     );
     const channel = new SecureChannel(this.parts.crypto, key, 'desktop', deviceId);
-    const endpoint = new DesktopSyncEndpoint(channel, this.parts.log, this.parts.builder, this.parts.store, deviceId);
+    const endpoint = new DesktopSyncEndpoint(
+      channel,
+      this.parts.log,
+      this.parts.builder,
+      this.parts.store,
+      deviceId,
+      this.parts.readPdf,
+    );
     const sessionId = toBase64Url(this.parts.crypto.randomBytes(NONCE_LENGTH));
     this.remember(sessionId, { endpoint, expiresAt: this.parts.now() + SESSION_TTL_MS });
     return { sessionId, desktopNonce: toBase64Url(desktopNonce) };
   }
 
   public async round(sessionId: string, message: SealedMessage): Promise<SealedMessage> {
+    return this.sessionFor(sessionId).handleSealed(message);
+  }
+
+  public async pdf(sessionId: string, message: SealedMessage): Promise<SealedMessage> {
+    return this.sessionFor(sessionId).handlePdfSealed(message);
+  }
+
+  private sessionFor(sessionId: string): DesktopSyncEndpoint {
     const session = this.sessions.get(sessionId);
     if (!session || session.expiresAt < this.parts.now()) {
       this.sessions.delete(sessionId);
       throw new Error(`Sync session "${sessionId}" is unknown or expired; open a new one with hello.`);
     }
-    return session.endpoint.handleSealed(message);
+    return session.endpoint;
   }
 
   private remember(sessionId: string, session: Session): void {

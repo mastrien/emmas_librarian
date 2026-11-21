@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import fs from 'fs';
 import { ChangeLog } from './ChangeLog';
 import { OperationBuilder } from './OperationBuilder';
 import { PendingChangeStore } from './PendingChangeStore';
@@ -12,6 +13,8 @@ export interface LibrarySyncParts {
   log: ChangeLog;
   builder: OperationBuilder;
   store: PendingChangeStore;
+  /** The PDF of an article by uuid, read from the file this computer keeps; null when there is none. */
+  readPdf: (articleUuid: string) => Uint8Array | null;
 }
 
 /**
@@ -36,7 +39,18 @@ export class LibrarySync {
       log,
       builder: new OperationBuilder(log, exporter, DESKTOP_ID),
       store: new PendingChangeStore(this.db, log, exporter),
+      readPdf: (articleUuid) => this.readPdf(log, articleUuid),
     };
     return this.built;
+  }
+
+  private readPdf(log: ChangeLog, articleUuid: string): Uint8Array | null {
+    const localId = log.localIdOf('articles', articleUuid);
+    if (localId === undefined) return null;
+    const row = this.db.prepare('SELECT local_file_path FROM articles WHERE id = ?').get(localId) as
+      | { local_file_path: string | null }
+      | undefined;
+    const file = row?.local_file_path;
+    return file && fs.existsSync(file) ? fs.readFileSync(file) : null;
   }
 }

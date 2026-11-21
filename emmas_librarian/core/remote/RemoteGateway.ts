@@ -34,6 +34,7 @@ export interface SyncRoutes {
   completePairing(answer: PairingAnswer): Promise<{ deviceId: string; deviceName: string }>;
   hello(deviceId: string, phoneNonce: string): Promise<{ sessionId: string; desktopNonce: string }>;
   round(sessionId: string, message: SealedMessage): Promise<SealedMessage>;
+  pdf(sessionId: string, message: SealedMessage): Promise<SealedMessage>;
 }
 
 export interface GatewayOptions {
@@ -92,6 +93,7 @@ const json = (status: number, document: object): GatewayResponse => ({
  *   POST /api/sync/pair         -> { ok, result: { deviceId, deviceName } }   body { answer }
  *   POST /api/sync/hello        -> { ok, result: { sessionId, desktopNonce } } body { deviceId, phoneNonce }
  *   POST /api/sync/round        -> { ok, result: SealedMessage }              body { sessionId, message }
+ *   POST /api/sync/pdf          -> { ok, result: SealedMessage }              body { sessionId, message }
  *
  * Usage:
  *   const gateway = new RemoteGateway({ commands, authenticate, pairing: { desk, devices } });
@@ -161,10 +163,11 @@ export class RemoteGateway {
     if (step === 'pair') return sync.completePairing(body.answer as PairingAnswer);
     if (step === 'hello') return sync.hello(String(body.deviceId), String(body.phoneNonce));
     if (step === 'round') return sync.round(String(body.sessionId), body.message as SealedMessage);
+    if (step === 'pdf') return sync.pdf(String(body.sessionId), body.message as SealedMessage);
     throw remoteError(
       'ERR_REMOTE_NOT_FOUND',
       `Passo de sincronização desconhecido. Offending value: "${step}"`,
-      'pair, hello ou round',
+      'pair, hello, round ou pdf',
     );
   }
 
