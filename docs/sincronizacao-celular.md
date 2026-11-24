@@ -13,6 +13,11 @@ O desktop só instala as tabelas e os gatilhos de sincronização na primeira ve
   Caminhos de arquivo do computador (`local_file_path`) nunca saem.
 - **Captura de mudanças:** gatilhos de SQLite gravam em `sync_changes` toda inserção, alteração e exclusão. Escritas feitas pela
   própria sincronização ficam de fora (`sync_state.applying`), para não voltarem ao celular como se fossem do usuário.
+- **Cópia inicial:** as linhas que já existiam quando o esquema é instalado (no primeiro pareamento) ganham uuid e entram em
+  `sync_changes` como `insert`, na ordem de `SYNCED_TABLES` (o pai antes do filho); o celular as recebe em rodadas de até 500
+  mudanças. Linhas que estão na lixeira ganham uuid mas não entram: o celular só as conhece depois que forem restauradas, quando
+  chegam como `update` (o celular trata um `update` de uuid desconhecido como inserção). Depois de desparear e reiniciar o
+  aplicativo, as pendências do aparelho removido não aparecem mais na tela de revisão.
 - **Exclusão:** o uuid sobrevive à linha, o que vira um tombstone. Artigos, projetos e anotações vão para a lixeira
   (`deleted_at`) em vez de serem apagados.
 

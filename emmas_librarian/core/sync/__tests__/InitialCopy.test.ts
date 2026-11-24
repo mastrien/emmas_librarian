@@ -95,6 +95,18 @@ describe('the first copy of the library to a phone', () => {
     expect(new Set(rounds.flat().map((op) => op.uuid)).size).toBe(1200);
   });
 
+  // A row made after the triggers exist is already in the log, though its uuid is only made when someone asks for it
+  // (#207 review): a second install must not log it again.
+  it('does not log twice a row made after the triggers and before its uuid', () => {
+    installSyncSchema(db);
+    const project = run("INSERT INTO projects (name) VALUES ('Later')");
+    installSyncSchema(db);
+    const entries = db
+      .prepare("SELECT COUNT(*) AS n FROM sync_changes WHERE entity = 'projects' AND local_id = ?")
+      .get(project) as { n: number };
+    expect(entries.n).toBe(1);
+  });
+
   it('does not bring rows that were already in the trash', () => {
     const { article } = seedExistingLibrary();
     db.prepare('UPDATE articles SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?').run(article);
