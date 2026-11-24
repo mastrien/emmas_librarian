@@ -384,6 +384,43 @@ natural que converte uma busca para o formato de cada base e que não busca arti
   virou uma tradução e falhou.
 - Redação atual, com "para buscar artigos use search__preview": `bus-2` e `bus-3` passam juntos (LFM3-1.7B, `decided`).
 - Uma execução por caso, uma semente: não prova que não haja efeito colateral em outros casos.
-- A bateria completa (LFM3 `decided`, Qwen3.5-4B `decided` e `full`) foi iniciada e **interrompida pelo sistema por falta
-  de memória** (`2026-11-19T00-02-16_lfm3-1.7b`, com `ABORTED.txt`). Falta refazer.
+- A bateria completa foi iniciada duas vezes e **não valeu** (`2026-11-19T00-02-16_lfm3-1.7b`, interrompida pelo sistema
+  por falta de memória; `2026-11-20T20-14-18_lfm3-1.7b`, com o servidor de decisão parado em 25 casos). Refeita fora do
+  Claude Code em 2026-11-24, abaixo.
+
+### Baterias de 72 casos com a ferramenta nova (2026-11-24, RX 580, Vulkan, `seed 42`)
+
+Três execuções, uma por vez, fora do Claude Code. Nas duas em modo `decided` o d1-2B respondeu nos 72 casos, sem nenhuma
+reserva acionada (`fallbacks: none 72`), então elas medem a combinação de fato.
+
+| | LFM3-1.7B `decided` | Qwen3.5-4B `decided` | Qwen3.5-4B `full` |
+|---|---|---|---|
+| Acertos | **64/72 (88,9%)** | 59/72 (81,9%) | 61/72 (84,7%) |
+| Caminho feliz | 24/26 | 21/26 | 22/26 |
+| Armadilha | 12/14 | 7/14 | 9/14 |
+| Erro esperado | 3/4 | 3/4 | 3/4 |
+| Recusa | 25/28 | 28/28 | 27/28 |
+| Mediana por caso | 33,7 s | **13,3 s** | **10,8 s** |
+| Tempo total | 60,7 min | **18,6 min** | 31,7 min |
+| Execução | `2026-11-24T09-13-45_lfm3-1.7b` | `2026-11-24T10-14-57_qwen3.5-4b` | `2026-11-24T10-33-59_qwen3.5-4b` |
+
+- **Falhas do LFM3 `decided` (8):** `mon-3`, `ano-2`, `cat-3`, `tri-1`, `tri-3`, `tri-6`, `pri-1`, `ctx-2`. `bus-2` e
+  `bus-3` passam, e `rot-1` também (as correções de `rot-1` e da descrição de `translateQuery` valeram nesta bateria).
+  `ctx-2` quebrou uma regra (chamou `articles__getByProject`) e `mon-3` parou por `max-steps`.
+- **Falhas do Qwen `decided` (13):** `proj-3`, `proj-5`, `proj-6`, `art-2`, `mon-3`, `lix-2`, `tri-1`, `tri-6`, `pri-1`,
+  `inv-2`, `bus-3`, `ctx-1`, `ctx-2`. **Do Qwen `full` (11):** `proj-3`, `proj-5`, `proj-6`, `art-2`, `mon-3`, `cat-3`,
+  `doc-1`, `lix-2`, `inv-2`, `bus-3`, `rot-1`.
+- **Só o `decided` do Qwen falha (5):** `ctx-1`, `ctx-2`, `pri-1`, `tri-1`, `tri-6`. **Só o `full` falha (3):** `cat-3`,
+  `doc-1`, `rot-1`. `mon-3` falha nas três.
+- **Qwen e as armadilhas:** os dois modos do Qwen erram `proj-3`, `proj-5` e `proj-6` (armadilhas), onde o LFM3 acerta.
+  Ele recusa melhor (28/28 no `decided`), mas cai em armadilhas (7/14 no `decided`, contra 12/14 do LFM3). Não li os
+  episódios para dizer por quê.
+- **Tempo:** o Qwen é de 2,5 a 3 vezes mais rápido que o LFM3 por caso na mediana, porque gera muito menos texto (6,5 a
+  7,7 mil tokens contra 80 mil do LFM3). O `decided` do Qwen não foi mais rápido que o `full` na mediana (13,3 s contra
+  10,8 s), mas foi no total (18,6 min contra 31,7 min).
+- **`bus-3` do Qwen** terminou por `max-steps` no `decided` e por `model-error` no `full`. É o caso que a primeira
+  redação da descrição de `translateQuery` quebrava; com a redação atual o LFM3 passa, o Qwen não.
+- **Ressalva:** uma execução por caso e por modo, com uma semente. A diferença entre o `decided` e o `full` do Qwen (2
+  casos de 72) está dentro do ruído, e comparar o Qwen com o LFM3 em armadilhas (7/14 contra 12/14) é o que mais se
+  sustenta. A pergunta de ter o Qwen3.5-4B como alternativa ao LFM3 fica: ele é bem mais rápido, mas acerta menos.
 

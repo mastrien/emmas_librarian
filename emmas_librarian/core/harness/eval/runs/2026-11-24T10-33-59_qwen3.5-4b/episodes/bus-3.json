@@ -1,0 +1,530 @@
+{
+  "id": "bus-3",
+  "kind": "happy",
+  "prompt": "Busca \"adaptive tutoring\" no OpenAlex e no Scopus no projeto da tutoria.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    },
+    "modelIsLocal": true
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 81,
+  "toolsBytes": 29470,
+  "wallMs": 43901,
+  "asked": [
+    {
+      "tool": "search__preview",
+      "command": "search:preview",
+      "input": {
+        "projectId": 1,
+        "queryMap": {},
+        "limits": {
+          "common": 10,
+          "perBase": {
+            "openalex": 10,
+            "scopus": 10
+          }
+        },
+        "sortBy": "relevance",
+        "unifiedQuery": "adaptive tutoring"
+      }
+    },
+    {
+      "tool": "search__preview",
+      "command": "search:preview",
+      "input": {
+        "projectId": 1,
+        "queryMap": {
+          "openalex": "default.search:adaptive tutoring",
+          "scopus": "ALL(\"adaptive tutoring\")"
+        },
+        "limits": {
+          "common": 10,
+          "perBase": {
+            "openalex": 10,
+            "scopus": 10
+          }
+        },
+        "sortBy": "relevance",
+        "unifiedQuery": "adaptive tutoring"
+      }
+    }
+  ],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "a3PfexBiY8tSy2wF3Npkev8fpvidSM6f",
+              "name": "search__preview",
+              "arguments": "{\"projectId\":1,\"queryMap\":{},\"limits\":{\"common\": 10, \"perBase\": {\"openalex\": 10, \"scopus\": 10}},\"sortBy\":\"relevance\",\"unifiedQuery\":\"adaptive tutoring\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 509,
+            "promptMs": 12848.951,
+            "generatedTokens": 105,
+            "generatedMs": 7194.372
+          },
+          "wallMs": 20084
+        },
+        "calls": [
+          {
+            "id": "a3PfexBiY8tSy2wF3Npkev8fpvidSM6f",
+            "name": "search__preview",
+            "arguments": "{\"projectId\":1,\"queryMap\":{},\"limits\":{\"common\": 10, \"perBase\": {\"openalex\": 10, \"scopus\": 10}},\"sortBy\":\"relevance\",\"unifiedQuery\":\"adaptive tutoring\"}",
+            "result": {
+              "ok": true,
+              "result": {
+                "previewId": "402bc4c9-cfba-4fd8-9ff9-1ea6dfcee06f",
+                "breakdown": {},
+                "results": []
+              }
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "A busca não retornou resultados. Vou tentar com uma consulta mais específica, usando o formato de AST para cada base.",
+          "toolCalls": [
+            {
+              "id": "9LYfgpioe2ksBzbAtjDjZIgAW8HyCdj7",
+              "name": "search__translateQuery",
+              "arguments": "{\"ast\":{\"type\": \"rule\", \"field\": \"all\", \"operator\": \"contains\", \"value\": \"adaptive tutoring\"}}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 65,
+            "promptMs": 2034.055,
+            "generatedTokens": 77,
+            "generatedMs": 5272.31
+          },
+          "wallMs": 7346
+        },
+        "calls": [
+          {
+            "id": "9LYfgpioe2ksBzbAtjDjZIgAW8HyCdj7",
+            "name": "search__translateQuery",
+            "arguments": "{\"ast\":{\"type\": \"rule\", \"field\": \"all\", \"operator\": \"contains\", \"value\": \"adaptive tutoring\"}}",
+            "result": {
+              "ok": true,
+              "result": {
+                "scopus": {
+                  "query": "ALL(\"adaptive tutoring\")",
+                  "isValid": true
+                },
+                "wos": {
+                  "query": "TS=\"adaptive tutoring\"",
+                  "isValid": true
+                },
+                "openalex": {
+                  "query": "default.search:adaptive tutoring",
+                  "isValid": true
+                },
+                "crossref": {
+                  "query": "query=adaptive%20tutoring",
+                  "isValid": true
+                },
+                "europepmc": {
+                  "query": "(adaptive tutoring)",
+                  "isValid": true
+                },
+                "arxiv": {
+                  "query": "(all:adaptive AND all:tutoring)",
+                  "isValid": true
+                },
+                "ieee": {
+                  "query": "((\"All Metadata\":adaptive) AND (\"All Metadata\":tutoring))",
+                  "isValid": true
+                }
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Agora vou fazer a busca usando o AST traduzido para cada base, com o projeto 1.",
+          "toolCalls": [
+            {
+              "id": "rX6FqH2BLfMOPMc3SoO63yHBjg8Iad3s",
+              "name": "search__preview",
+              "arguments": "{\"projectId\":1,\"queryMap\":{\"openalex\": \"default.search:adaptive tutoring\", \"scopus\": \"ALL(\\\"adaptive tutoring\\\")\"},\"limits\":{\"common\": 10, \"perBase\": {\"openalex\": 10, \"scopus\": 10}},\"sortBy\":\"relevance\",\"unifiedQuery\":\"adaptive tutoring\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 149,
+            "promptMs": 4711.652,
+            "generatedTokens": 149,
+            "generatedMs": 10397.282
+          },
+          "wallMs": 15161
+        },
+        "calls": [
+          {
+            "id": "rX6FqH2BLfMOPMc3SoO63yHBjg8Iad3s",
+            "name": "search__preview",
+            "arguments": "{\"projectId\":1,\"queryMap\":{\"openalex\": \"default.search:adaptive tutoring\", \"scopus\": \"ALL(\\\"adaptive tutoring\\\")\"},\"limits\":{\"common\": 10, \"perBase\": {\"openalex\": 10, \"scopus\": 10}},\"sortBy\":\"relevance\",\"unifiedQuery\":\"adaptive tutoring\"}",
+            "result": {
+              "ok": true,
+              "result": {
+                "previewId": "a5f8a9d8-61d8-4ac0-b895-b28ec7ae7a21",
+                "breakdown": {
+                  "scopus": {
+                    "count": 0,
+                    "requested": 10,
+                    "requests": 0
+                  },
+                  "openalex": {
+                    "count": 10,
+                    "requested": 10,
+                    "requests": 1,
+                    "available": 311520
+                  }
+                },
+                "results": [
+                  {
+                    "title": "A Multimedia Adaptive Tutoring System for Mathematics that Addresses Cognition, Metacognition and Affect",
+                    "authors": "Ivon Arroyo, Beverly Park Woolf, Winslow Burelson, Kasia Müldner, Dovan Rai, Minghui Tai",
+                    "year": 2014,
+                    "doi": "10.1007/s40593-014-0023-y",
+                    "sourceDatabases": [
+                      "OpenAlex"
+                    ],
+                    "alreadyInProject": false,
+                    "details": {
+                      "abstract": "This article describes research results based on multiple years of experimentation and real-world experience with an adaptive tutoring system named Wayang Outpost. The system represents a novel adaptive learning technology that has shown successful outcomes with thousands of students, and provided teachers with valuable information about students’ mathematics performance. We define progress in three areas: improved student cognition , engagement, and affect , and we attribute this improvement to specific components and interventions that are inherently affective , cognitive , and metacognitive in nature. For instance, improved student cognitive outcomes have been measured with pre-post tests and state standardized tests, and achieved due to personalization of content and math fluency training. Improved student engagement was achieved by supporting students’ metacognition and motivation via affective learning companions and progress reports, measured via records of student gaming of the system. Student affect within the tutor was measured through sensors and student self-reports, and supported through affective learning companions and progress reports. Collectively, these studies elucidate a suite of effective strategies to support advanced personalized learning via an intelligent adaptive tutor that can be tailored to the individual needs, emotions, cognitive states, and metacognitive skills of learners.",
+                      "author_keywords": "adaptive tutoring systems; mathematics education; metacognition; student engagement; student motivation; personalized learning; emotion sensing",
+                      "index_keywords": "Metacognition; Affect (linguistics); Personalization; Cognition; Intelligent tutoring system; TUTOR; Mathematics education; Multimedia; Psychology; Fluency; Computer science; Cognitive psychology; World Wide Web; Communication; Neuroscience",
+                      "journal": "International Journal of Artificial Intelligence in Education",
+                      "volume": "24",
+                      "issue": "4",
+                      "pages": "387-426",
+                      "affiliations": "Worcester Polytechnic Institute; University of Massachusetts Amherst; New York University; Carleton University",
+                      "references_list": "https://openalex.org/W38375411; https://openalex.org/W50081497; https://openalex.org/W56480429; https://openalex.org/W59378016; https://openalex.org/W76158747; https://openalex.org/W100369288; https://openalex.org/W104688952; https://openalex.org/W129447122; https://openalex.org/W173162415; https://openalex.org/W320875191; https://openalex.org/W320876341; https://openalex.org/W370177488; https://openalex.org/W973843712; https://openalex.org/W1493252108; https://openalex.org/W1503666641; https://openalex.org/W1527409907; https://openalex.org/W1528614120; https://openalex.org/W1533193374; https://openalex.org/W1564464604; https://openalex.org/W1564496736; https://openalex.org/W1565016070; https://openalex.org/W1569653074; https://openalex.org/W1578636093; https://openalex.org/W1585493314; https://openalex.org/W1599205789; https://openalex.org/W1715113288; https://openalex.org/W1752512628; https://openalex.org/W1775582841; https://openalex.org/W1793541250; https://openalex.org/W1828171833; https://openalex.org/W1929610448; https://openalex.org/W1931788259; https://openalex.org/W1950299194; https://openalex.org/W1971746982; https://openalex.org/W1972987799; https://openalex.org/W1977727819; https://openalex.org/W1985945240; https://openalex.org/W2015040676; https://openalex.org/W2036334421; https://openalex.org/W2053092511; https://openalex.org/W2061319836; https://openalex.org/W2064809032; https://openalex.org/W2067644672; https://openalex.org/W2075620773; https://openalex.org/W2082490605; https://openalex.org/W2086228408; https://openalex.org/W2090787084; https://openalex.org/W2095907159; https://openalex.org/W2096363625; https://openalex.org/W2100730338; https://openalex.org/W2104490015; https://openalex.org/W2109901510; https://openalex.org/W2112564774; https://openalex.org/W2112657826; https://openalex.org/W2114523733; https://openalex.org/W2117645142; https://openalex.org/W2119927950; https://openalex.org/W2121106316; https://openalex.org/W2124689820; https://openalex.org/W2125829696; https://openalex.org/W2127374659; https://openalex.org/W2129696842; https://openalex.org/W2135943618; https://openalex.org/W2135969753; https://openalex.org/W2141445112; https://openalex.org/W2142887785; https://openalex.org/W2144889727; https://openalex.org/W2146505185; https://openalex.org/W2150506154; https://openalex.org/W2153777761; https://openalex.org/W2154323213; https://openalex.org/W2158703238; https://openalex.org/W2162004605; https://openalex.org/W2165263639; https://openalex.org/W2169365000; https://openalex.org/W2171797548; https://openalex.org/W2172071592; https://openalex.org/W2183606369; https://openalex.org/W2185502505; https://openalex.org/W2211027385; https://openalex.org/W2222760842; https://openalex.org/W2234716128; https://openalex.org/W2287900763; https://openalex.org/W2329674122; https://openalex.org/W2337068785; https://openalex.org/W2398107648; https://openalex.org/W2489865376; https://openalex.org/W2495014486; https://openalex.org/W2626941248; https://openalex.org/W2897333760; https://openalex.org/W2913958523; https://openalex.org/W2998097044; https://openalex.org/W3034765065; https://openalex.org/W3149277062; https://openalex.org/W3214780499; https://openalex.org/W4211014873; https://openalex.org/W4231699953; https://openalex.org/W4236570991; https://openalex.org/W4237356565; https://openalex.org/W4237815450; https://openalex.org/W4240553276; https://openalex.org/W4251140691; https://openalex.org/W4251555736; https://openalex.org/W4416623736; https://openalex.org/W4416624043; https://openalex.org/W6638104423; https://openalex.org/W6779989607; https://openalex.org/W7039549675; https://openalex.org/W7099512899; https://openalex.org/W7160147338",
+                      "document_type": "article",
+                      "publisher": "Springer Science+Business Media",
+                      "is_oa": 1,
+                      "issn": "1560-4292",
+                      "citation_count": 358
+                    }
+                  },
+                  {
+                    "title": "AdapTutAR: An Adaptive Tutoring System for Machine Tasks in Augmented Reality",
+                    "authors": "Gaoping Huang, Xun Qian, Tianyi Wang, Fagun Patel, Maitreya Sreeram, Yuanzhi Cao, Karthik Ramani, Alexander J. Quinn",
+                    "year": 2021,
+                    "doi": "10.1145/3411764.3445283",
+                    "sourceDatabases": [
+                      "OpenAlex"
+                    ],
+                    "alreadyInProject": false,
+                    "details": {
+                      "abstract": "Modern manufacturing processes are in a state of flux, as they adapt to increasing demand for flexible and self-configuring production. This poses challenges for training workers to rapidly master new machine operations and processes, i.e. machine tasks. Conventional in-person training is effective but requires time and effort of experts for each worker trained and not scalable. Recorded tutorials, such as video-based or augmented reality (AR), permit more efficient scaling. However, unlike in-person tutoring, existing recorded tutorials lack the ability to adapt to workers’ diverse experiences and learning behaviors. We present AdapTutAR, an adaptive task tutoring system that enables experts to record machine task tutorials via embodied demonstration and train learners with different AR tutoring contents adapting to each user’s characteristics. The adaptation is achieved by continually monitoring learners’ tutorial-following status and adjusting the tutoring content on-the-fly and in-situ. The results of our user study evaluation have demonstrated that our adaptive system is more effective and preferable than the non-adaptive one.",
+                      "author_keywords": "adaptive tutoring; augmented reality; machine operation training; personalized learning; learner monitoring; in situ adaptation; scalable training",
+                      "index_keywords": "Computer science; Augmented reality; Human–computer interaction; Multimedia; Artificial intelligence",
+                      "journal": "CHI Conference on Human Factors in Computing Systems",
+                      "volume": null,
+                      "issue": null,
+                      "pages": "1-15",
+                      "affiliations": "Purdue University West Lafayette",
+                      "references_list": "https://openalex.org/W39291727; https://openalex.org/W639708223; https://openalex.org/W1485088019; https://openalex.org/W1965818182; https://openalex.org/W1971939765; https://openalex.org/W1991520109; https://openalex.org/W1999250720; https://openalex.org/W2001863204; https://openalex.org/W2008968438; https://openalex.org/W2010297533; https://openalex.org/W2011643846; https://openalex.org/W2029044878; https://openalex.org/W2035922091; https://openalex.org/W2037968567; https://openalex.org/W2051339053; https://openalex.org/W2055677957; https://openalex.org/W2059104185; https://openalex.org/W2059527995; https://openalex.org/W2070551480; https://openalex.org/W2077963674; https://openalex.org/W2097778699; https://openalex.org/W2100808978; https://openalex.org/W2102346870; https://openalex.org/W2106459977; https://openalex.org/W2121110499; https://openalex.org/W2127577568; https://openalex.org/W2139426762; https://openalex.org/W2142469217; https://openalex.org/W2149216032; https://openalex.org/W2165357579; https://openalex.org/W2166500004; https://openalex.org/W2169124019; https://openalex.org/W2187394679; https://openalex.org/W2346112500; https://openalex.org/W2460620059; https://openalex.org/W2533263101; https://openalex.org/W2582690410; https://openalex.org/W2594127559; https://openalex.org/W2605284410; https://openalex.org/W2747147894; https://openalex.org/W2750334743; https://openalex.org/W2761498695; https://openalex.org/W2765839567; https://openalex.org/W2789444712; https://openalex.org/W2795807647; https://openalex.org/W2796301186; https://openalex.org/W2885642091; https://openalex.org/W2895027791; https://openalex.org/W2908441800; https://openalex.org/W2918063914; https://openalex.org/W2941151758; https://openalex.org/W2941408004; https://openalex.org/W2941521681; https://openalex.org/W2961009746; https://openalex.org/W2961309025; https://openalex.org/W2963163009; https://openalex.org/W2980692729; https://openalex.org/W2980895755; https://openalex.org/W2980956911; https://openalex.org/W3021942713; https://openalex.org/W3029159807; https://openalex.org/W3029989803; https://openalex.org/W3031409315; https://openalex.org/W4211061957; https://openalex.org/W4230787006; https://openalex.org/W4238460370; https://openalex.org/W4242596251; https://openalex.org/W4251196815; https://openalex.org/W4300781940",
+                      "document_type": "conference-paper",
+                      "publisher": "Association for Computing Machinery",
+                      "is_oa": 0,
+                      "issn": null,
+                      "citation_count": 132
+                    }
+                  },
+                  {
+                    "title": "How Tutors Model Students: A Study of Personal Constructs in Adaptive Tutoring",
+                    "authors": "Sharon J. Deny, Michael K. Potts",
+                    "year": 1998,
+                    "doi": "10.3102/00028312035001065",
+                    "sourceDatabases": [
+                      "OpenAlex"
+                    ],
+                    "alreadyInProject": false,
+                    "details": {
+                      "abstract": "Studies of tutoring are producing rich descriptions of tutorial dialogue but have not identified constructs that tutors use to classify and discriminate among students for the purpose of adapting tutoring to student differences. This study investigated five experienced tutors’ personal constructs about students tutored over a significant period of time. Several tutoring settings and domains were represented. Constructs used by tutors to discriminate among tutees were identified with repertory grid interviews and interpreted with the aid of cluster analysis. All tutors judged and classified students in terms of two underlying dimensions that were similarly defined, though not exactly alike, across tutors: motivation and intellectual ability. Tutors’ personal constructs and tutorial decisions informed by those constructs are reported, and implications for programming computer-based tutors are discussed.",
+                      "author_keywords": "adaptive tutoring; personal constructs; student classification; motivation; intellectual ability; repertory grid technique",
+                      "index_keywords": "Repertory grid; Mathematics education; Psychology; Computer-Assisted Instruction; Computer science; Social psychology",
+                      "journal": "American Educational Research Journal",
+                      "volume": "35",
+                      "issue": "1",
+                      "pages": "65-99",
+                      "affiliations": "University of Wisconsin–Madison",
+                      "references_list": "https://openalex.org/W126441863; https://openalex.org/W199743680; https://openalex.org/W230233429; https://openalex.org/W598861914; https://openalex.org/W629576486; https://openalex.org/W1525489180; https://openalex.org/W1550180926; https://openalex.org/W1550902376; https://openalex.org/W1694248630; https://openalex.org/W1965023397; https://openalex.org/W1973950634; https://openalex.org/W1984529325; https://openalex.org/W2016122903; https://openalex.org/W2018415007; https://openalex.org/W2051545216; https://openalex.org/W2083236651; https://openalex.org/W2098555131; https://openalex.org/W2117076205; https://openalex.org/W2131853752; https://openalex.org/W2136208491; https://openalex.org/W2158276510; https://openalex.org/W2172010324; https://openalex.org/W2333057202; https://openalex.org/W3101844577; https://openalex.org/W3203837765; https://openalex.org/W4206793138; https://openalex.org/W4230898300",
+                      "document_type": "article",
+                      "publisher": "SAGE Publishing",
+                      "is_oa": 0,
+                      "issn": "0002-8312",
+                      "citation_count": 45
+                    }
+                  },
+                  {
+                    "title": "The Effect of a Robot's Gestures and Adaptive Tutoring on Children's Acquisition of Second Language Vocabularies",
+                    "authors": "Jan de Wit, Thorsten Schodde, Bram Willemsen, Kirsten Bergmann, Mirjam de Haas, Stefan Kopp, Emiel Krahmer, Paul Vogt",
+                    "year": 2018,
+                    "doi": "10.1145/3171221.3171277",
+                    "sourceDatabases": [
+                      "OpenAlex"
+                    ],
+                    "alreadyInProject": false,
+                    "details": {
+                      "abstract": "This paper presents a study in which children, four to six years old, were taught words in a second language by a robot tutor. The goal is to evaluate two ways for a robot to provide scaffolding for students: the use of iconic gestures, combined with adaptively choosing the next learning task based on the child»s past performance. The results show a positive effect on long-term memorization of novel words, and an overall higher level of engagement during the learning activities when gestures are used. The adaptive tutoring strategy reduces the extent to which the level of engagement is diminishing during the later part of the interaction.",
+                      "author_keywords": "robot tutors; iconic gestures; adaptive tutoring; second language vocabulary acquisition; scaffolding; children; vocabulary memorization; student engagement; educational robotics",
+                      "index_keywords": "Gesture; Memorization; Task (project management); Computer science; TUTOR; Robot; Language acquisition; Human–computer interaction; Artificial intelligence; Multimedia; Psychology; Cognitive psychology; Mathematics education; Programming language; Engineering; Systems engineering",
+                      "journal": "ACM/IEEE International Conference on Human-Robot Interaction (HRI)",
+                      "volume": null,
+                      "issue": null,
+                      "pages": "50-58",
+                      "affiliations": "Tilburg University; Bielefeld University",
+                      "references_list": "https://openalex.org/W54308434; https://openalex.org/W1547861087; https://openalex.org/W1969962548; https://openalex.org/W1975745930; https://openalex.org/W1989291467; https://openalex.org/W2004964449; https://openalex.org/W2015040676; https://openalex.org/W2021298762; https://openalex.org/W2060880492; https://openalex.org/W2072490655; https://openalex.org/W2108865692; https://openalex.org/W2117342357; https://openalex.org/W2120040514; https://openalex.org/W2129326970; https://openalex.org/W2133242844; https://openalex.org/W2134774969; https://openalex.org/W2135943618; https://openalex.org/W2144001787; https://openalex.org/W2154027403; https://openalex.org/W2156300785; https://openalex.org/W2181501125; https://openalex.org/W2192319054; https://openalex.org/W2304729092; https://openalex.org/W2398156266; https://openalex.org/W2592042377; https://openalex.org/W2593216051; https://openalex.org/W2599226013; https://openalex.org/W2620753332; https://openalex.org/W3083336837; https://openalex.org/W4242118964; https://openalex.org/W4254126685; https://openalex.org/W4299490254; https://openalex.org/W7124164693",
+                      "document_type": "conference-paper",
+                      "is_oa": 1,
+                      "issn": null,
+                      "citation_count": 129
+                    }
+                  },
+                  {
+                    "title": "Modeling of Adaptive Tutoring Processes",
+                    "authors": "Alke Martens",
+                    "year": 2006,
+                    "doi": "10.4018/978-1-59140-729-4.ch010",
+                    "sourceDatabases": [
+                      "OpenAlex"
+                    ],
+                    "alreadyInProject": false,
+                    "details": {
+                      "abstract": "In this chapter, a formal, adaptive tutoring process model for case-based Intelligent Tutoring Systems (ITSs) is described. Combining methods of Artificial Intelligence and Cognitive Science led to the development of ITSs more than 30 years ago. In contrast to the common agreement about the ITSs’ architecture, components of ITSs are rarely reusable. Reusability in ITSs is intimately connected with the application domain, that is, with the contents that should be learned and with the teaching and learning strategy. An example of a learning strategy is case-based learning, where the adaptation of the learning material to the learner plays a major role. Adaptation should take place automatically at runtime, and thus should be part of the ITS’s functionality. To support the development of ITSs with reusable components and the communication about and the evaluation of similar ITSs, a formal approach has been chosen. This approach is called the tutoring process model.",
+                      "author_keywords": "intelligent tutoring systems; case-based learning; adaptive learning; component reusability; formal modeling; learning strategies; ITS architecture",
+                      "index_keywords": "Computer science",
+                      "journal": "IGI Global eBooks",
+                      "volume": null,
+                      "issue": null,
+                      "pages": "193-215",
+                      "affiliations": "University of Rostock",
+                      "document_type": "book-chapter",
+                      "publisher": "IGI Global",
+                      "is_oa": 0,
+                      "issn": null,
+                      "citation_count": 17
+                    }
+                  },
+                  {
+                    "title": "Adaptive Tutoring on a Virtual Reality Driving Simulator",
+                    "authors": "Sandro Ropelato, Fabio Zünd, Stéphane Magnenat, Marino Menozzi, Robert Walker Sumner",
+                    "year": 2018,
+                    "doi": "10.3929/ethz-b-000195951",
+                    "sourceDatabases": [
+                      "OpenAlex"
+                    ],
+                    "alreadyInProject": false,
+                    "details": {
+                      "abstract": "We propose a system for a Virtual Reality (VR) driving simulator including an Intelligent Tutoring System (ITS) to train the user's driving skills. The VR driving simulator comprises a detailed model of a city, Artificial Intelligence (AI) traffic, and a physical driving engine, interacting with the driver. In a physical mockup of a car cockpit, the driver operates the vehicle through the virtual environment by controlling a steering wheel, pedals, and a gear lever. Using a Head-Mounted Display (HMD), the driver observes the scene from within the car. The realism of the simulation is enhanced by a 6 Degrees of Freedom (DOF) motion platform, capable of simulating forces experienced when accelerating, braking, or turning the car. Based on a pre-defined list of driving-related activities, the ITS permanently assesses the quality of driving during the simulation and suggests an optimal path through the city to the driver in order to improve the driving skills. A user study revealed that most drivers experience presence in the virtual world and are proficient in operating the car.",
+                      "author_keywords": "adaptive tutoring; intelligent tutoring systems; virtual reality driving simulator; head-mounted displays; driving assessment; virtual city models; presence",
+                      "index_keywords": "Driving simulator; Virtual reality; Simulation; Cockpit; Lever; Computer science; Steering wheel; Driving simulation; Simulator sickness; Flight simulator; Haptic technology; Human–computer interaction; Automotive engineering; Engineering; Aeronautics; Mechanical engineering",
+                      "journal": "Repository for Publications and Research Data (ETH Zurich)",
+                      "volume": "2017",
+                      "issue": "2",
+                      "pages": "12-17",
+                      "affiliations": "ETH Zurich; École Polytechnique Fédérale de Lausanne",
+                      "references_list": "https://openalex.org/W1754268392; https://openalex.org/W1973688910; https://openalex.org/W1994877858; https://openalex.org/W2094844890; https://openalex.org/W2136757566; https://openalex.org/W2169528473; https://openalex.org/W3003337443; https://openalex.org/W4293590011",
+                      "document_type": "conference-paper",
+                      "publisher": "ETH Zurich",
+                      "is_oa": 1,
+                      "issn": null,
+                      "citation_count": 54
+                    }
+                  },
+                  {
+                    "title": "Adaptive Tutoring in an Intelligent Conversational Agent System",
+                    "authors": "Annabel Latham, Keeley A. Crockett, David McLean, Bruce Edmonds",
+                    "year": 2012,
+                    "doi": "10.1007/978-3-642-34645-3_7",
+                    "sourceDatabases": [
+                      "OpenAlex"
+                    ],
+                    "alreadyInProject": false,
+                    "details": {
+                      "author_keywords": "intelligent tutoring systems; chatbots; adaptive tutoring; learning styles; personalized learning; student performance",
+                      "index_keywords": "Computer science; TUTOR; Adaptation (eye); Conversation; Style (visual arts); Learning styles; Human–computer interaction; Intelligent tutoring system; Adaptive learning; Dialog system; Natural (archaeology); Multimedia; Test (biology); Artificial intelligence; Natural language processing; Mathematics education; World Wide Web; Programming language; Psychology; Dialog box; Communication; Paleontology; History; Biology; Archaeology; Neuroscience",
+                      "journal": "Transactions on computational science",
+                      "volume": null,
+                      "issue": null,
+                      "pages": "148-167",
+                      "affiliations": "Manchester Metropolitan University",
+                      "references_list": "https://openalex.org/W19828709; https://openalex.org/W20814994; https://openalex.org/W24360213; https://openalex.org/W59448379; https://openalex.org/W152157562; https://openalex.org/W850356065; https://openalex.org/W1502348572; https://openalex.org/W1533193374; https://openalex.org/W1552262506; https://openalex.org/W1556225522; https://openalex.org/W1578308552; https://openalex.org/W1594781181; https://openalex.org/W1609359768; https://openalex.org/W1786617247; https://openalex.org/W1925975739; https://openalex.org/W1934686989; https://openalex.org/W1976496764; https://openalex.org/W1994510396; https://openalex.org/W1999218614; https://openalex.org/W2041282815; https://openalex.org/W2047828095; https://openalex.org/W2053019566; https://openalex.org/W2075028344; https://openalex.org/W2077409459; https://openalex.org/W2102241854; https://openalex.org/W2110362134; https://openalex.org/W2113378217; https://openalex.org/W2121477371; https://openalex.org/W2123169053; https://openalex.org/W2125054539; https://openalex.org/W2136208491; https://openalex.org/W2136209728; https://openalex.org/W2476666713; https://openalex.org/W2500679793; https://openalex.org/W3170775390; https://openalex.org/W4299999595; https://openalex.org/W7100227633",
+                      "document_type": "conference-paper",
+                      "publisher": "Springer Nature",
+                      "is_oa": 1,
+                      "issn": "1866-4733",
+                      "citation_count": 25
+                    }
+                  },
+                  {
+                    "title": "An Adaptive Signal-Processing Approach to Online Adaptive Tutoring",
+                    "authors": "Bryan P. Bergeron, Andrew Cline",
+                    "year": 2011,
+                    "doi": "10.3233/978-1-60750-706-2-60",
+                    "sourceDatabases": [
+                      "OpenAlex"
+                    ],
+                    "alreadyInProject": false,
+                    "details": {
+                      "abstract": "Conventional intelligent or adaptive tutoring online systems rely on domain-specific models of learner behavior based on rules, deep domain knowledge, and other resource-intensive methods. We have developed and studied a domain-independent methodology of adaptive tutoring based on domain-independent signal-processing approaches that obviate the need for the construction of explicit expert and student models. A key advantage of our method over conventional approaches is a lower barrier to entry for educators who want to develop adaptive online learning materials.",
+                      "author_keywords": "adaptive tutoring; online adaptive learning; signal processing; expert models; student model; intelligent tutoring systems; adaptive learning materials",
+                      "index_keywords": "Computer science; Signal processing; SIGNAL (programming language); Multimedia; Speech recognition; Digital signal processing; Computer hardware; Programming language",
+                      "journal": "Studies in health technology and informatics",
+                      "volume": "163",
+                      "issue": null,
+                      "pages": "60-64",
+                      "document_type": "book-chapter",
+                      "publisher": "IOS Press",
+                      "is_oa": 0,
+                      "issn": "0926-9630",
+                      "citation_count": 5
+                    }
+                  },
+                  {
+                    "title": "Characterizing an Adaptive Tutoring Learning Effect Chain for Individual and Team Tutoring",
+                    "authors": "Robert A. Sottilare, Charles Ragusa, Michael Hoffman, Benjamin Goldberg",
+                    "year": 2013,
+                    "doi": "10.13140/2.1.2725.1208",
+                    "sourceDatabases": [
+                      "OpenAlex"
+                    ],
+                    "alreadyInProject": false,
+                    "details": {
+                      "abstract": "Military organizations worldwide are aiming to mature artificially-intelligent agents (e.g., computer-based intelligent tutoring systems (ITS) and virtual humans) to lead, support, and tailor training to the needs of individuals and small units. Goals for ITS are: to match or exceed the learning effect of expert human tutors; reduce the cost of authoring, delivering, and managing training; lower entry skills needed to author ITS; and develop quality standards, accessibility, and flexibility for the learner. This paper focuses on improving learning effect and explores how learning gains (e.g., knowledge and skill acquisition, and enhanced performance) might be realized in ITS for tutoring both individual and small unit tactical tasks. To this end, an adaptive tutoring learning effect chain (ATLEC) for both individual and team learning is put forth. Originally developed by Sottilare (2012), ATLEC for individual tutoring models the relationships of concepts for learner data (behavioral, physiological, historical, and trait), learner states (cognitive and affective), instructional strategy selection, and learning gains. This model is a key methodology incorporated within the Generalized Intelligent Framework for Tutoring (GIFT). This paper expands the ATLEC model to include small unit tutoring and an expanded array of learning gains (e.g., accelerated learning and enhanced retention). A key to learning gains in human tutoring is the ability of the tutor to detect and interpret behavioral cues from the learner to aid them in assessing the learner’s cognitive (e.g., engagement) and affective (anxiety, frustration, boredom and confusion) states in order to optimally select their next instructional strategy. ITS must use other means (e.g., behavioral and physiological sensors) to detect and interpret learner states which is an advantage over human tutors. The product of this paper will be a model of learning effect that can be used to drive standards and the development of ITS for training and education.",
+                      "author_keywords": "adaptive tutoring; intelligent tutoring systems; learning effects; team learning; individual learning; learning gains; military education; virtual humans; physiological sensors; knowledge and skills acquisition; retention",
+                      "index_keywords": "Computer science; Boredom; Flexibility (engineering); Active learning (machine learning); Dreyfus model of skill acquisition; Intelligent tutoring system; Human–computer interaction; Knowledge management; Psychology; Artificial intelligence; Social psychology; Statistics; Economic growth; Economics; Mathematics",
+                      "volume": null,
+                      "issue": null,
+                      "references_list": "https://openalex.org/W38828942; https://openalex.org/W68573355; https://openalex.org/W261620263; https://openalex.org/W1557498215; https://openalex.org/W1622896514; https://openalex.org/W1983352506; https://openalex.org/W1985311287; https://openalex.org/W2051339053; https://openalex.org/W2053915626; https://openalex.org/W2067115680; https://openalex.org/W2099283244; https://openalex.org/W2117645142; https://openalex.org/W2120725765; https://openalex.org/W2131169155; https://openalex.org/W2519351666; https://openalex.org/W2762466966; https://openalex.org/W3004220889; https://openalex.org/W3086342064; https://openalex.org/W3101687261",
+                      "document_type": "article",
+                      "is_oa": 0,
+                      "citation_count": 29
+                    }
+                  },
+                  {
+                    "title": "Adaptive Tutoring in Virtual Learning Worlds",
+                    "authors": "Kawa Nazemi, Nadeem Bhatti, Eicke Godehardt, Christoph Hornung",
+                    "year": 2007,
+                    "doi": "",
+                    "sourceDatabases": [
+                      "OpenAlex"
+                    ],
+                    "alreadyInProject": false,
+                    "details": {
+                      "abstract": "To enhance the learning success of the learners in the Virtual Learning Worlds (VLW) and effective of VLW, the aspects like precognition and learning aptitude of the learners play a key role. The constructivistic approach based VLW not only offers learning, but also great experience by exploring through reality based virtual worlds. VLWs can be extended with such a Learning Environment. They are Novices or Beginner and need more explanations and instructions to understand a topic and resolve a given problem. An Adaptive Tutoring System tries to find out the differences in precognitions and learning aptitudes and offers the learning task depending on these parameters. In the following paper a new system is designed for adapting a VLE to learners' need and presenting the learning tasks based on the recommended pedagogical approach.",
+                      "author_keywords": "adaptive tutoring; virtual learning environments; precognition; learning ability; constructivist learning; student modeling; task recommendation; teaching methods; novice learners",
+                      "index_keywords": "Metaverse; Computer science; Task (project management); Human–computer interaction; Instructional simulation; Virtual learning environment; Educational technology; Active learning (machine learning); Adaptive learning; Key (lock); Virtual reality; Multimedia; Artificial intelligence; Mathematics education; Psychology; Engineering; Systems engineering; Computer security",
+                      "journal": "Publikationsdatenbank der Fraunhofer-Gesellschaft (Fraunhofer-Gesellschaft)",
+                      "volume": "2007",
+                      "issue": "1",
+                      "pages": "2951-2959",
+                      "affiliations": "Fraunhofer Institute for Computer Graphics Research",
+                      "references_list": "https://openalex.org/W328950954; https://openalex.org/W1495973381; https://openalex.org/W1516405434; https://openalex.org/W1527935828; https://openalex.org/W1559967598; https://openalex.org/W1977544871; https://openalex.org/W2251410821",
+                      "document_type": "conference-paper",
+                      "publisher": "Fraunhofer-Gesellschaft",
+                      "is_oa": 0,
+                      "issn": null,
+                      "citation_count": 4
+                    }
+                  }
+                ]
+              }
+            },
+            "wallMs": 1254
+          }
+        ]
+      }
+    ],
+    "finalText": "",
+    "stopped": "model-error",
+    "error": "Error: [ERR_MODEL_HTTP] llama-server answered 400: {\"error\":{\"code\":400,\"message\":\"request (18796 tokens) exceeds the available context size (16384 tokens), try increasing it\",\"type\":\"exceed_context_size_error\",\"n_prompt_tokens\":18796,\"n_ctx\":16384}}. Expected 200.",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Busca \"adaptive tutoring\" no OpenAlex e no Scopus no projeto da tutoria."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "a3PfexBiY8tSy2wF3Npkev8fpvidSM6f",
+            "name": "search__preview",
+            "arguments": "{\"projectId\":1,\"queryMap\":{},\"limits\":{\"common\": 10, \"perBase\": {\"openalex\": 10, \"scopus\": 10}},\"sortBy\":\"relevance\",\"unifiedQuery\":\"adaptive tutoring\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "a3PfexBiY8tSy2wF3Npkev8fpvidSM6f",
+        "content": "{\"ok\":true,\"result\":{\"previewId\":\"402bc4c9-cfba-4fd8-9ff9-1ea6dfcee06f\",\"breakdown\":{},\"results\":[]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "A busca não retornou resultados. Vou tentar com uma consulta mais específica, usando o formato de AST para cada base.",
+        "toolCalls": [
+          {
+            "id": "9LYfgpioe2ksBzbAtjDjZIgAW8HyCdj7",
+            "name": "search__translateQuery",
+            "arguments": "{\"ast\":{\"type\": \"rule\", \"field\": \"all\", \"operator\": \"contains\", \"value\": \"adaptive tutoring\"}}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "9LYfgpioe2ksBzbAtjDjZIgAW8HyCdj7",
+        "content": "{\"ok\":true,\"result\":{\"scopus\":{\"query\":\"ALL(\\\"adaptive tutoring\\\")\",\"isValid\":true},\"wos\":{\"query\":\"TS=\\\"adaptive tutoring\\\"\",\"isValid\":true},\"openalex\":{\"query\":\"default.search:adaptive tutoring\",\"isValid\":true},\"crossref\":{\"query\":\"query=adaptive%20tutoring\",\"isValid\":true},\"europepmc\":{\"query\":\"(adaptive tutoring)\",\"isValid\":true},\"arxiv\":{\"query\":\"(all:adaptive AND all:tutoring)\",\"isValid\":true},\"ieee\":{\"query\":\"((\\\"All Metadata\\\":adaptive) AND (\\\"All Metadata\\\":tutoring))\",\"isValid\":true}}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Agora vou fazer a busca usando o AST traduzido para cada base, com o projeto 1.",
+        "toolCalls": [
+          {
+            "id": "rX6FqH2BLfMOPMc3SoO63yHBjg8Iad3s",
+            "name": "search__preview",
+            "arguments": "{\"projectId\":1,\"queryMap\":{\"openalex\": \"default.search:adaptive tutoring\", \"scopus\": \"ALL(\\\"adaptive tutoring\\\")\"},\"limits\":{\"common\": 10, \"perBase\": {\"openalex\": 10, \"scopus\": 10}},\"sortBy\":\"relevance\",\"unifiedQuery\":\"adaptive tutoring\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "rX6FqH2BLfMOPMc3SoO63yHBjg8Iad3s",
+        "content": "{\"ok\":true,\"result\":{\"previewId\":\"a5f8a9d8-61d8-4ac0-b895-b28ec7ae7a21\",\"breakdown\":{\"scopus\":{\"count\":0,\"requested\":10,\"requests\":0},\"openalex\":{\"count\":10,\"requested\":10,\"requests\":1,\"available\":311520}},\"results\":[{\"title\":\"A Multimedia Adaptive Tutoring System for Mathematics that Addresses Cognition, Metacognition and Affect\",\"authors\":\"Ivon Arroyo, Beverly Park Woolf, Winslow Burelson, Kasia Müldner, Dovan Rai, Minghui Tai\",\"year\":2014,\"doi\":\"10.1007/s40593-014-0023-y\",\"sourceDatabases\":[\"OpenAlex\"],\"alreadyInProject\":false,\"details\":{\"abstract\":\"This article describes research results based on multiple years of experimentation and real-world experience with an adaptive tutoring system named Wayang Outpost. The system represents a novel adaptive learning technology that has shown successful outcomes with thousands of students, and provided teachers with valuable information about students’ mathematics performance. We define progress in three areas: improved student cognition , engagement, and affect , and we attribute this improvement to specific components and interventions that are inherently affective , cognitive , and metacognitive in nature. For instance, improved student cognitive outcomes have been measured with pre-post tests and state standardized tests, and achieved due to personalization of content and math fluency training. Improved student engagement was achieved by supporting students’ metacognition and motivation via affective learning companions and progress reports, measured via records of student gaming of the system. Student affect within the tutor was measured through sensors and student self-reports, and supported through affective learning companions and progress reports. Collectively, these studies elucidate a suite of effective strategies to support advanced personalized learning via an intelligent adaptive tutor that can be tailored to the individual needs, emotions, cognitive states, and metacognitive skills of learners.\",\"author_keywords\":\"adaptive tutoring systems; mathematics education; metacognition; student engagement; student motivation; personalized learning; emotion sensing\",\"index_keywords\":\"Metacognition; Affect (linguistics); Personalization; Cognition; Intelligent tutoring system; TUTOR; Mathematics education; Multimedia; Psychology; Fluency; Computer science; Cognitive psychology; World Wide Web; Communication; Neuroscience\",\"journal\":\"International Journal of Artificial Intelligence in Education\",\"volume\":\"24\",\"issue\":\"4\",\"pages\":\"387-426\",\"affiliations\":\"Worcester Polytechnic Institute; University of Massachusetts Amherst; New York University; Carleton University\",\"references_list\":\"https://openalex.org/W38375411; https://openalex.org/W50081497; https://openalex.org/W56480429; https://openalex.org/W59378016; https://openalex.org/W76158747; https://openalex.org/W100369288; https://openalex.org/W104688952; https://openalex.org/W129447122; https://openalex.org/W173162415; https://openalex.org/W320875191; https://openalex.org/W320876341; https://openalex.org/W370177488; https://openalex.org/W973843712; https://openalex.org/W1493252108; https://openalex.org/W1503666641; https://openalex.org/W1527409907; https://openalex.org/W1528614120; https://openalex.org/W1533193374; https://openalex.org/W1564464604; https://openalex.org/W1564496736; https://openalex.org/W1565016070; https://openalex.org/W1569653074; https://openalex.org/W1578636093; https://openalex.org/W1585493314; https://openalex.org/W1599205789; https://openalex.org/W1715113288; https://openalex.org/W1752512628; https://openalex.org/W1775582841; https://openalex.org/W1793541250; https://openalex.org/W1828171833; https://openalex.org/W1929610448; https://openalex.org/W1931788259; https://openalex.org/W1950299194; https://openalex.org/W1971746982; https://openalex.org/W1972987799; https://openalex.org/W1977727819; https://openalex.org/W1985945240; https://openalex.org/W2015040676; https://openalex.org/W2036334421; https://openalex.org/W2053092511; https://openalex.org/W2061319836; https://openalex.org/W2064809032; https://openalex.org/W2067644672; https://openalex.org/W2075620773; https://openalex.org/W2082490605; https://openalex.org/W2086228408; https://openalex.org/W2090787084; https://openalex.org/W2095907159; https://openalex.org/W2096363625; https://openalex.org/W2100730338; https://openalex.org/W2104490015; https://openalex.org/W2109901510; https://openalex.org/W2112564774; https://openalex.org/W2112657826; https://openalex.org/W2114523733; https://openalex.org/W2117645142; https://openalex.org/W2119927950; https://openalex.org/W2121106316; https://openalex.org/W2124689820; https://openalex.org/W2125829696; https://openalex.org/W2127374659; https://openalex.org/W2129696842; https://openalex.org/W2135943618; https://openalex.org/W2135969753; https://openalex.org/W2141445112; https://openalex.org/W2142887785; https://openalex.org/W2144889727; https://openalex.org/W2146505185; https://openalex.org/W2150506154; https://openalex.org/W2153777761; https://openalex.org/W2154323213; https://openalex.org/W2158703238; https://openalex.org/W2162004605; https://openalex.org/W2165263639; https://openalex.org/W2169365000; https://openalex.org/W2171797548; https://openalex.org/W2172071592; https://openalex.org/W2183606369; https://openalex.org/W2185502505; https://openalex.org/W2211027385; https://openalex.org/W2222760842; https://openalex.org/W2234716128; https://openalex.org/W2287900763; https://openalex.org/W2329674122; https://openalex.org/W2337068785; https://openalex.org/W2398107648; https://openalex.org/W2489865376; https://openalex.org/W2495014486; https://openalex.org/W2626941248; https://openalex.org/W2897333760; https://openalex.org/W2913958523; https://openalex.org/W2998097044; https://openalex.org/W3034765065; https://openalex.org/W3149277062; https://openalex.org/W3214780499; https://openalex.org/W4211014873; https://openalex.org/W4231699953; https://openalex.org/W4236570991; https://openalex.org/W4237356565; https://openalex.org/W4237815450; https://openalex.org/W4240553276; https://openalex.org/W4251140691; https://openalex.org/W4251555736; https://openalex.org/W4416623736; https://openalex.org/W4416624043; https://openalex.org/W6638104423; https://openalex.org/W6779989607; https://openalex.org/W7039549675; https://openalex.org/W7099512899; https://openalex.org/W7160147338\",\"document_type\":\"article\",\"publisher\":\"Springer Science+Business Media\",\"is_oa\":1,\"issn\":\"1560-4292\",\"citation_count\":358}},{\"title\":\"AdapTutAR: An Adaptive Tutoring System for Machine Tasks in Augmented Reality\",\"authors\":\"Gaoping Huang, Xun Qian, Tianyi Wang, Fagun Patel, Maitreya Sreeram, Yuanzhi Cao, Karthik Ramani, Alexander J. Quinn\",\"year\":2021,\"doi\":\"10.1145/3411764.3445283\",\"sourceDatabases\":[\"OpenAlex\"],\"alreadyInProject\":false,\"details\":{\"abstract\":\"Modern manufacturing processes are in a state of flux, as they adapt to increasing demand for flexible and self-configuring production. This poses challenges for training workers to rapidly master new machine operations and processes, i.e. machine tasks. Conventional in-person training is effective but requires time and effort of experts for each worker trained and not scalable. Recorded tutorials, such as video-based or augmented reality (AR), permit more efficient scaling. However, unlike in-person tutoring, existing recorded tutorials lack the ability to adapt to workers’ diverse experiences and learning behaviors. We present AdapTutAR, an adaptive task tutoring system that enables experts to record machine task tutorials via embodied demonstration and train learners with different AR tutoring contents adapting to each user’s characteristics. The adaptation is achieved by continually monitoring learners’ tutorial-following status and adjusting the tutoring content on-the-fly and in-situ. The results of our user study evaluation have demonstrated that our adaptive system is more effective and preferable than the non-adaptive one.\",\"author_keywords\":\"adaptive tutoring; augmented reality; machine operation training; personalized learning; learner monitoring; in situ adaptation; scalable training\",\"index_keywords\":\"Computer science; Augmented reality; Human–computer interaction; Multimedia; Artificial intelligence\",\"journal\":\"CHI Conference on Human Factors in Computing Systems\",\"volume\":null,\"issue\":null,\"pages\":\"1-15\",\"affiliations\":\"Purdue University West Lafayette\",\"references_list\":\"https://openalex.org/W39291727; https://openalex.org/W639708223; https://openalex.org/W1485088019; https://openalex.org/W1965818182; https://openalex.org/W1971939765; https://openalex.org/W1991520109; https://openalex.org/W1999250720; https://openalex.org/W2001863204; https://openalex.org/W2008968438; https://openalex.org/W2010297533; https://openalex.org/W2011643846; https://openalex.org/W2029044878; https://openalex.org/W2035922091; https://openalex.org/W2037968567; https://openalex.org/W2051339053; https://openalex.org/W2055677957; https://openalex.org/W2059104185; https://openalex.org/W2059527995; https://openalex.org/W2070551480; https://openalex.org/W2077963674; https://openalex.org/W2097778699; https://openalex.org/W2100808978; https://openalex.org/W2102346870; https://openalex.org/W2106459977; https://openalex.org/W2121110499; https://openalex.org/W2127577568; https://openalex.org/W2139426762; https://openalex.org/W2142469217; https://openalex.org/W2149216032; https://openalex.org/W2165357579; https://openalex.org/W2166500004; https://openalex.org/W2169124019; https://openalex.org/W2187394679; https://openalex.org/W2346112500; https://openalex.org/W2460620059; https://openalex.org/W2533263101; https://openalex.org/W2582690410; https://openalex.org/W2594127559; https://openalex.org/W2605284410; https://openalex.org/W2747147894; https://openalex.org/W2750334743; https://openalex.org/W2761498695; https://openalex.org/W2765839567; https://openalex.org/W2789444712; https://openalex.org/W2795807647; https://openalex.org/W2796301186; https://openalex.org/W2885642091; https://openalex.org/W2895027791; https://openalex.org/W2908441800; https://openalex.org/W2918063914; https://openalex.org/W2941151758; https://openalex.org/W2941408004; https://openalex.org/W2941521681; https://openalex.org/W2961009746; https://openalex.org/W2961309025; https://openalex.org/W2963163009; https://openalex.org/W2980692729; https://openalex.org/W2980895755; https://openalex.org/W2980956911; https://openalex.org/W3021942713; https://openalex.org/W3029159807; https://openalex.org/W3029989803; https://openalex.org/W3031409315; https://openalex.org/W4211061957; https://openalex.org/W4230787006; https://openalex.org/W4238460370; https://openalex.org/W4242596251; https://openalex.org/W4251196815; https://openalex.org/W4300781940\",\"document_type\":\"conference-paper\",\"publisher\":\"Association for Computing Machinery\",\"is_oa\":0,\"issn\":null,\"citation_count\":132}},{\"title\":\"How Tutors Model Students: A Study of Personal Constructs in Adaptive Tutoring\",\"authors\":\"Sharon J. Deny, Michael K. Potts\",\"year\":1998,\"doi\":\"10.3102/00028312035001065\",\"sourceDatabases\":[\"OpenAlex\"],\"alreadyInProject\":false,\"details\":{\"abstract\":\"Studies of tutoring are producing rich descriptions of tutorial dialogue but have not identified constructs that tutors use to classify and discriminate among students for the purpose of adapting tutoring to student differences. This study investigated five experienced tutors’ personal constructs about students tutored over a significant period of time. Several tutoring settings and domains were represented. Constructs used by tutors to discriminate among tutees were identified with repertory grid interviews and interpreted with the aid of cluster analysis. All tutors judged and classified students in terms of two underlying dimensions that were similarly defined, though not exactly alike, across tutors: motivation and intellectual ability. Tutors’ personal constructs and tutorial decisions informed by those constructs are reported, and implications for programming computer-based tutors are discussed.\",\"author_keywords\":\"adaptive tutoring; personal constructs; student classification; motivation; intellectual ability; repertory grid technique\",\"index_keywords\":\"Repertory grid; Mathematics education; Psychology; Computer-Assisted Instruction; Computer science; Social psychology\",\"journal\":\"American Educational Research Journal\",\"volume\":\"35\",\"issue\":\"1\",\"pages\":\"65-99\",\"affiliations\":\"University of Wisconsin–Madison\",\"references_list\":\"https://openalex.org/W126441863; https://openalex.org/W199743680; https://openalex.org/W230233429; https://openalex.org/W598861914; https://openalex.org/W629576486; https://openalex.org/W1525489180; https://openalex.org/W1550180926; https://openalex.org/W1550902376; https://openalex.org/W1694248630; https://openalex.org/W1965023397; https://openalex.org/W1973950634; https://openalex.org/W1984529325; https://openalex.org/W2016122903; https://openalex.org/W2018415007; https://openalex.org/W2051545216; https://openalex.org/W2083236651; https://openalex.org/W2098555131; https://openalex.org/W2117076205; https://openalex.org/W2131853752; https://openalex.org/W2136208491; https://openalex.org/W2158276510; https://openalex.org/W2172010324; https://openalex.org/W2333057202; https://openalex.org/W3101844577; https://openalex.org/W3203837765; https://openalex.org/W4206793138; https://openalex.org/W4230898300\",\"document_type\":\"article\",\"publisher\":\"SAGE Publishing\",\"is_oa\":0,\"issn\":\"0002-8312\",\"citation_count\":45}},{\"title\":\"The Effect of a Robot's Gestures and Adaptive Tutoring on Children's Acquisition of Second Language Vocabularies\",\"authors\":\"Jan de Wit, Thorsten Schodde, Bram Willemsen, Kirsten Bergmann, Mirjam de Haas, Stefan Kopp, Emiel Krahmer, Paul Vogt\",\"year\":2018,\"doi\":\"10.1145/3171221.3171277\",\"sourceDatabases\":[\"OpenAlex\"],\"alreadyInProject\":false,\"details\":{\"abstract\":\"This paper presents a study in which children, four to six years old, were taught words in a second language by a robot tutor. The goal is to evaluate two ways for a robot to provide scaffolding for students: the use of iconic gestures, combined with adaptively choosing the next learning task based on the child»s past performance. The results show a positive effect on long-term memorization of novel words, and an overall higher level of engagement during the learning activities when gestures are used. The adaptive tutoring strategy reduces the extent to which the level of engagement is diminishing during the later part of the interaction.\",\"author_keywords\":\"robot tutors; iconic gestures; adaptive tutoring; second language vocabulary acquisition; scaffolding; children; vocabulary memorization; student engagement; educational robotics\",\"index_keywords\":\"Gesture; Memorization; Task (project management); Computer science; TUTOR; Robot; Language acquisition; Human–computer interaction; Artificial intelligence; Multimedia; Psychology; Cognitive psychology; Mathematics education; Programming language; Engineering; Systems engineering\",\"journal\":\"ACM/IEEE International Conference on Human-Robot Interaction (HRI)\",\"volume\":null,\"issue\":null,\"pages\":\"50-58\",\"affiliations\":\"Tilburg University; Bielefeld University\",\"references_list\":\"https://openalex.org/W54308434; https://openalex.org/W1547861087; https://openalex.org/W1969962548; https://openalex.org/W1975745930; https://openalex.org/W1989291467; https://openalex.org/W2004964449; https://openalex.org/W2015040676; https://openalex.org/W2021298762; https://openalex.org/W2060880492; https://openalex.org/W2072490655; https://openalex.org/W2108865692; https://openalex.org/W2117342357; https://openalex.org/W2120040514; https://openalex.org/W2129326970; https://openalex.org/W2133242844; https://openalex.org/W2134774969; https://openalex.org/W2135943618; https://openalex.org/W2144001787; https://openalex.org/W2154027403; https://openalex.org/W2156300785; https://openalex.org/W2181501125; https://openalex.org/W2192319054; https://openalex.org/W2304729092; https://openalex.org/W2398156266; https://openalex.org/W2592042377; https://openalex.org/W2593216051; https://openalex.org/W2599226013; https://openalex.org/W2620753332; https://openalex.org/W3083336837; https://openalex.org/W4242118964; https://openalex.org/W4254126685; https://openalex.org/W4299490254; https://openalex.org/W7124164693\",\"document_type\":\"conference-paper\",\"is_oa\":1,\"issn\":null,\"citation_count\":129}},{\"title\":\"Modeling of Adaptive Tutoring Processes\",\"authors\":\"Alke Martens\",\"year\":2006,\"doi\":\"10.4018/978-1-59140-729-4.ch010\",\"sourceDatabases\":[\"OpenAlex\"],\"alreadyInProject\":false,\"details\":{\"abstract\":\"In this chapter, a formal, adaptive tutoring process model for case-based Intelligent Tutoring Systems (ITSs) is described. Combining methods of Artificial Intelligence and Cognitive Science led to the development of ITSs more than 30 years ago. In contrast to the common agreement about the ITSs’ architecture, components of ITSs are rarely reusable. Reusability in ITSs is intimately connected with the application domain, that is, with the contents that should be learned and with the teaching and learning strategy. An example of a learning strategy is case-based learning, where the adaptation of the learning material to the learner plays a major role. Adaptation should take place automatically at runtime, and thus should be part of the ITS’s functionality. To support the development of ITSs with reusable components and the communication about and the evaluation of similar ITSs, a formal approach has been chosen. This approach is called the tutoring process model.\",\"author_keywords\":\"intelligent tutoring systems; case-based learning; adaptive learning; component reusability; formal modeling; learning strategies; ITS architecture\",\"index_keywords\":\"Computer science\",\"journal\":\"IGI Global eBooks\",\"volume\":null,\"issue\":null,\"pages\":\"193-215\",\"affiliations\":\"University of Rostock\",\"document_type\":\"book-chapter\",\"publisher\":\"IGI Global\",\"is_oa\":0,\"issn\":null,\"citation_count\":17}},{\"title\":\"Adaptive Tutoring on a Virtual Reality Driving Simulator\",\"authors\":\"Sandro Ropelato, Fabio Zünd, Stéphane Magnenat, Marino Menozzi, Robert Walker Sumner\",\"year\":2018,\"doi\":\"10.3929/ethz-b-000195951\",\"sourceDatabases\":[\"OpenAlex\"],\"alreadyInProject\":false,\"details\":{\"abstract\":\"We propose a system for a Virtual Reality (VR) driving simulator including an Intelligent Tutoring System (ITS) to train the user's driving skills. The VR driving simulator comprises a detailed model of a city, Artificial Intelligence (AI) traffic, and a physical driving engine, interacting with the driver. In a physical mockup of a car cockpit, the driver operates the vehicle through the virtual environment by controlling a steering wheel, pedals, and a gear lever. Using a Head-Mounted Display (HMD), the driver observes the scene from within the car. The realism of the simulation is enhanced by a 6 Degrees of Freedom (DOF) motion platform, capable of simulating forces experienced when accelerating, braking, or turning the car. Based on a pre-defined list of driving-related activities, the ITS permanently assesses the quality of driving during the simulation and suggests an optimal path through the city to the driver in order to improve the driving skills. A user study revealed that most drivers experience presence in the virtual world and are proficient in operating the car.\",\"author_keywords\":\"adaptive tutoring; intelligent tutoring systems; virtual reality driving simulator; head-mounted displays; driving assessment; virtual city models; presence\",\"index_keywords\":\"Driving simulator; Virtual reality; Simulation; Cockpit; Lever; Computer science; Steering wheel; Driving simulation; Simulator sickness; Flight simulator; Haptic technology; Human–computer interaction; Automotive engineering; Engineering; Aeronautics; Mechanical engineering\",\"journal\":\"Repository for Publications and Research Data (ETH Zurich)\",\"volume\":\"2017\",\"issue\":\"2\",\"pages\":\"12-17\",\"affiliations\":\"ETH Zurich; École Polytechnique Fédérale de Lausanne\",\"references_list\":\"https://openalex.org/W1754268392; https://openalex.org/W1973688910; https://openalex.org/W1994877858; https://openalex.org/W2094844890; https://openalex.org/W2136757566; https://openalex.org/W2169528473; https://openalex.org/W3003337443; https://openalex.org/W4293590011\",\"document_type\":\"conference-paper\",\"publisher\":\"ETH Zurich\",\"is_oa\":1,\"issn\":null,\"citation_count\":54}},{\"title\":\"Adaptive Tutoring in an Intelligent Conversational Agent System\",\"authors\":\"Annabel Latham, Keeley A. Crockett, David McLean, Bruce Edmonds\",\"year\":2012,\"doi\":\"10.1007/978-3-642-34645-3_7\",\"sourceDatabases\":[\"OpenAlex\"],\"alreadyInProject\":false,\"details\":{\"author_keywords\":\"intelligent tutoring systems; chatbots; adaptive tutoring; learning styles; personalized learning; student performance\",\"index_keywords\":\"Computer science; TUTOR; Adaptation (eye); Conversation; Style (visual arts); Learning styles; Human–computer interaction; Intelligent tutoring system; Adaptive learning; Dialog system; Natural (archaeology); Multimedia; Test (biology); Artificial intelligence; Natural language processing; Mathematics education; World Wide Web; Programming language; Psychology; Dialog box; Communication; Paleontology; History; Biology; Archaeology; Neuroscience\",\"journal\":\"Transactions on computational science\",\"volume\":null,\"issue\":null,\"pages\":\"148-167\",\"affiliations\":\"Manchester Metropolitan University\",\"references_list\":\"https://openalex.org/W19828709; https://openalex.org/W20814994; https://openalex.org/W24360213; https://openalex.org/W59448379; https://openalex.org/W152157562; https://openalex.org/W850356065; https://openalex.org/W1502348572; https://openalex.org/W1533193374; https://openalex.org/W1552262506; https://openalex.org/W1556225522; https://openalex.org/W1578308552; https://openalex.org/W1594781181; https://openalex.org/W1609359768; https://openalex.org/W1786617247; https://openalex.org/W1925975739; https://openalex.org/W1934686989; https://openalex.org/W1976496764; https://openalex.org/W1994510396; https://openalex.org/W1999218614; https://openalex.org/W2041282815; https://openalex.org/W2047828095; https://openalex.org/W2053019566; https://openalex.org/W2075028344; https://openalex.org/W2077409459; https://openalex.org/W2102241854; https://openalex.org/W2110362134; https://openalex.org/W2113378217; https://openalex.org/W2121477371; https://openalex.org/W2123169053; https://openalex.org/W2125054539; https://openalex.org/W2136208491; https://openalex.org/W2136209728; https://openalex.org/W2476666713; https://openalex.org/W2500679793; https://openalex.org/W3170775390; https://openalex.org/W4299999595; https://openalex.org/W7100227633\",\"document_type\":\"conference-paper\",\"publisher\":\"Springer Nature\",\"is_oa\":1,\"issn\":\"1866-4733\",\"citation_count\":25}},{\"title\":\"An Adaptive Signal-Processing Approach to Online Adaptive Tutoring\",\"authors\":\"Bryan P. Bergeron, Andrew Cline\",\"year\":2011,\"doi\":\"10.3233/978-1-60750-706-2-60\",\"sourceDatabases\":[\"OpenAlex\"],\"alreadyInProject\":false,\"details\":{\"abstract\":\"Conventional intelligent or adaptive tutoring online systems rely on domain-specific models of learner behavior based on rules, deep domain knowledge, and other resource-intensive methods. We have developed and studied a domain-independent methodology of adaptive tutoring based on domain-independent signal-processing approaches that obviate the need for the construction of explicit expert and student models. A key advantage of our method over conventional approaches is a lower barrier to entry for educators who want to develop adaptive online learning materials.\",\"author_keywords\":\"adaptive tutoring; online adaptive learning; signal processing; expert models; student model; intelligent tutoring systems; adaptive learning materials\",\"index_keywords\":\"Computer science; Signal processing; SIGNAL (programming language); Multimedia; Speech recognition; Digital signal processing; Computer hardware; Programming language\",\"journal\":\"Studies in health technology and informatics\",\"volume\":\"163\",\"issue\":null,\"pages\":\"60-64\",\"document_type\":\"book-chapter\",\"publisher\":\"IOS Press\",\"is_oa\":0,\"issn\":\"0926-9630\",\"citation_count\":5}},{\"title\":\"Characterizing an Adaptive Tutoring Learning Effect Chain for Individual and Team Tutoring\",\"authors\":\"Robert A. Sottilare, Charles Ragusa, Michael Hoffman, Benjamin Goldberg\",\"year\":2013,\"doi\":\"10.13140/2.1.2725.1208\",\"sourceDatabases\":[\"OpenAlex\"],\"alreadyInProject\":false,\"details\":{\"abstract\":\"Military organizations worldwide are aiming to mature artificially-intelligent agents (e.g., computer-based intelligent tutoring systems (ITS) and virtual humans) to lead, support, and tailor training to the needs of individuals and small units. Goals for ITS are: to match or exceed the learning effect of expert human tutors; reduce the cost of authoring, delivering, and managing training; lower entry skills needed to author ITS; and develop quality standards, accessibility, and flexibility for the learner. This paper focuses on improving learning effect and explores how learning gains (e.g., knowledge and skill acquisition, and enhanced performance) might be realized in ITS for tutoring both individual and small unit tactical tasks. To this end, an adaptive tutoring learning effect chain (ATLEC) for both individual and team learning is put forth. Originally developed by Sottilare (2012), ATLEC for individual tutoring models the relationships of concepts for learner data (behavioral, physiological, historical, and trait), learner states (cognitive and affective), instructional strategy selection, and learning gains. This model is a key methodology incorporated within the Generalized Intelligent Framework for Tutoring (GIFT). This paper expands the ATLEC model to include small unit tutoring and an expanded array of learning gains (e.g., accelerated learning and enhanced retention). A key to learning gains in human tutoring is the ability of the tutor to detect and interpret behavioral cues from the learner to aid them in assessing the learner’s cognitive (e.g., engagement) and affective (anxiety, frustration, boredom and confusion) states in order to optimally select their next instructional strategy. ITS must use other means (e.g., behavioral and physiological sensors) to detect and interpret learner states which is an advantage over human tutors. The product of this paper will be a model of learning effect that can be used to drive standards and the development of ITS for training and education.\",\"author_keywords\":\"adaptive tutoring; intelligent tutoring systems; learning effects; team learning; individual learning; learning gains; military education; virtual humans; physiological sensors; knowledge and skills acquisition; retention\",\"index_keywords\":\"Computer science; Boredom; Flexibility (engineering); Active learning (machine learning); Dreyfus model of skill acquisition; Intelligent tutoring system; Human–computer interaction; Knowledge management; Psychology; Artificial intelligence; Social psychology; Statistics; Economic growth; Economics; Mathematics\",\"volume\":null,\"issue\":null,\"references_list\":\"https://openalex.org/W38828942; https://openalex.org/W68573355; https://openalex.org/W261620263; https://openalex.org/W1557498215; https://openalex.org/W1622896514; https://openalex.org/W1983352506; https://openalex.org/W1985311287; https://openalex.org/W2051339053; https://openalex.org/W2053915626; https://openalex.org/W2067115680; https://openalex.org/W2099283244; https://openalex.org/W2117645142; https://openalex.org/W2120725765; https://openalex.org/W2131169155; https://openalex.org/W2519351666; https://openalex.org/W2762466966; https://openalex.org/W3004220889; https://openalex.org/W3086342064; https://openalex.org/W3101687261\",\"document_type\":\"article\",\"is_oa\":0,\"citation_count\":29}},{\"title\":\"Adaptive Tutoring in Virtual Learning Worlds\",\"authors\":\"Kawa Nazemi, Nadeem Bhatti, Eicke Godehardt, Christoph Hornung\",\"year\":2007,\"doi\":\"\",\"sourceDatabases\":[\"OpenAlex\"],\"alreadyInProject\":false,\"details\":{\"abstract\":\"To enhance the learning success of the learners in the Virtual Learning Worlds (VLW) and effective of VLW, the aspects like precognition and learning aptitude of the learners play a key role. The constructivistic approach based VLW not only offers learning, but also great experience by exploring through reality based virtual worlds. VLWs can be extended with such a Learning Environment. They are Novices or Beginner and need more explanations and instructions to understand a topic and resolve a given problem. An Adaptive Tutoring System tries to find out the differences in precognitions and learning aptitudes and offers the learning task depending on these parameters. In the following paper a new system is designed for adapting a VLE to learners' need and presenting the learning tasks based on the recommended pedagogical approach.\",\"author_keywords\":\"adaptive tutoring; virtual learning environments; precognition; learning ability; constructivist learning; student modeling; task recommendation; teaching methods; novice learners\",\"index_keywords\":\"Metaverse; Computer science; Task (project management); Human–computer interaction; Instructional simulation; Virtual learning environment; Educational technology; Active learning (machine learning); Adaptive learning; Key (lock); Virtual reality; Multimedia; Artificial intelligence; Mathematics education; Psychology; Engineering; Systems engineering; Computer security\",\"journal\":\"Publikationsdatenbank der Fraunhofer-Gesellschaft (Fraunhofer-Gesellschaft)\",\"volume\":\"2007\",\"issue\":\"1\",\"pages\":\"2951-2959\",\"affiliations\":\"Fraunhofer Institute for Computer Graphics Research\",\"references_list\":\"https://openalex.org/W328950954; https://openalex.org/W1495973381; https://openalex.org/W1516405434; https://openalex.org/W1527935828; https://openalex.org/W1559967598; https://openalex.org/W1977544871; https://openalex.org/W2251410821\",\"document_type\":\"conference-paper\",\"publisher\":\"Fraunhofer-Gesellschaft\",\"is_oa\":0,\"issn\":null,\"citation_count\":4}}]}}"
+      }
+    ]
+  }
+}

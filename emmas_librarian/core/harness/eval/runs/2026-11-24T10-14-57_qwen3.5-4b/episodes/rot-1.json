@@ -1,0 +1,201 @@
+{
+  "id": "rot-1",
+  "kind": "trap",
+  "prompt": "Marca como lido o artigo 3 e depois escreve no diário que terminei.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    },
+    "today": "2026-11-15"
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 10,
+  "toolsBytes": 3928,
+  "wallMs": 16247,
+  "asked": [
+    {
+      "tool": "articles__updateStatus",
+      "command": "articles:updateStatus",
+      "input": {
+        "id": 3,
+        "status": "read"
+      }
+    },
+    {
+      "tool": "diary__appendAgentRecord",
+      "command": "diary:appendAgentRecord",
+      "input": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "message": "Terminei a leitura do artigo 3."
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "articleStatus",
+      "args": {
+        "ids": [
+          3
+        ],
+        "status": "read"
+      },
+      "ok": true
+    },
+    {
+      "check": "diaryAppended",
+      "args": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "contains": "terminei",
+        "keeps": ""
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Vou marcar o artigo 3 como lido e registrar no diário.",
+          "toolCalls": [
+            {
+              "id": "b8zVTckQgMuDmTrq6557CAUeW93s2nOR",
+              "name": "articles__updateStatus",
+              "arguments": "{\"id\":3,\"status\":\"read\"}"
+            },
+            {
+              "id": "juEfSrCHEvJNypLcItur5UwlX2ID8ReQ",
+              "name": "diary__appendAgentRecord",
+              "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Terminei a leitura do artigo 3.\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 515,
+            "promptMs": 4665.691,
+            "generatedTokens": 126,
+            "generatedMs": 8120.185
+          },
+          "wallMs": 13240
+        },
+        "calls": [
+          {
+            "id": "b8zVTckQgMuDmTrq6557CAUeW93s2nOR",
+            "name": "articles__updateStatus",
+            "arguments": "{\"id\":3,\"status\":\"read\"}",
+            "result": {
+              "ok": true,
+              "result": null
+            },
+            "wallMs": 0
+          },
+          {
+            "id": "juEfSrCHEvJNypLcItur5UwlX2ID8ReQ",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Terminei a leitura do artigo 3.\"}",
+            "result": {
+              "ok": true,
+              "result": true
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Já marquei o artigo 3 como lido e escrevi no diário que terminei.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 41,
+            "promptMs": 853.432,
+            "generatedTokens": 22,
+            "generatedMs": 1352.45
+          },
+          "wallMs": 2217
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Já marquei o artigo 3 como lido e escrevi no diário que terminei.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Marca como lido o artigo 3 e depois escreve no diário que terminei."
+      },
+      {
+        "role": "assistant",
+        "content": "Vou marcar o artigo 3 como lido e registrar no diário.",
+        "toolCalls": [
+          {
+            "id": "b8zVTckQgMuDmTrq6557CAUeW93s2nOR",
+            "name": "articles__updateStatus",
+            "arguments": "{\"id\":3,\"status\":\"read\"}"
+          },
+          {
+            "id": "juEfSrCHEvJNypLcItur5UwlX2ID8ReQ",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Terminei a leitura do artigo 3.\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "b8zVTckQgMuDmTrq6557CAUeW93s2nOR",
+        "content": "{\"ok\":true,\"result\":null}"
+      },
+      {
+        "role": "tool",
+        "toolCallId": "juEfSrCHEvJNypLcItur5UwlX2ID8ReQ",
+        "content": "{\"ok\":true,\"result\":true}"
+      },
+      {
+        "role": "assistant",
+        "content": "Já marquei o artigo 3 como lido e escrevi no diário que terminei.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "artigos",
+          "probability": 0.8065021664787408
+        },
+        {
+          "area": "diario",
+          "probability": 0.14603513141782154
+        },
+        {
+          "area": "anotacoes",
+          "probability": 0.01636488602652831
+        }
+      ],
+      "chosen": [
+        "artigos",
+        "diario"
+      ],
+      "fallback": "none",
+      "decisionMs": 789,
+      "decisionInputTokens": 372
+    }
+  }
+}
