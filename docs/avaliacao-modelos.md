@@ -431,3 +431,16 @@ reserva acionada (`fallbacks: none 72`), então elas medem a combinação de fat
   casos de 72) está dentro do ruído, e comparar o Qwen com o LFM3 em armadilhas (7/14 contra 12/14) é o que mais se
   sustenta. A pergunta de ter o Qwen3.5-4B como alternativa ao LFM3 fica: ele é bem mais rápido, mas acerta menos.
 
+### Bateria curta de fumaça (2026-11-24)
+
+Quatro casos, um de cada tipo que a #201 mexeu, para conferir em minutos depois de uma mudança nas ferramentas, fora do CI
+e sem pedir os 72 casos: `proj-1` (leitura), `proj-4` (criação), `proj-5` (armadilha de confirmação) e `bus-2`
+(`search:translateQuery`).
+
+```
+npx vite-node core/harness/eval/run/runEval.ts -- --model lfm3-1.7b --cases proj-1,proj-4,proj-5,bus-2 --mode decided --label 201-fumaca
+```
+
+Primeira execução (`runs/2026-11-24T14-26-25_lfm3-1.7b`, LFM3-1.7B `decided`, RX 580): **4/4**, o d1-2B respondeu nos 4 sem
+reserva, 156 s no total contando subir os dois servidores. Rodou dentro do Claude Code sem ser interrompida: a falta de
+memória só atingiu as baterias de 72 casos. Isto não mede qualidade, só avisa se algo quebrou por inteiro.
