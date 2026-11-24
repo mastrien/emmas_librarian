@@ -1,0 +1,251 @@
+{
+  "id": "age-1",
+  "kind": "happy",
+  "prompt": "Quais congressos e periódicos eu acompanho?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 6,
+  "toolsBytes": 4661,
+  "wallMs": 3749,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 5,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "gmIpCMzxjFXhtGSFVK35vQJoZLkD5bO4",
+              "name": "submit_plan",
+              "arguments": "{\"tarefas\":[{\"assunto\": \"agenda\", \"tarefa\": \"Ver a agenda científica do projeto para listar congressos e periódicos acompanhados.\"}]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 23,
+            "promptMs": 99.301,
+            "generatedTokens": 57,
+            "generatedMs": 824.122
+          },
+          "wallMs": 983
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "tcWqQ7g8goYFcd9nzGYUFFCT1In6l1Ik",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"agenda\"]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1809,
+            "promptMs": 496.22,
+            "generatedTokens": 29,
+            "generatedMs": 417.424
+          },
+          "wallMs": 987
+        },
+        "calls": [
+          {
+            "id": "tcWqQ7g8goYFcd9nzGYUFFCT1In6l1Ik",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"agenda\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "agenda"
+                ],
+                "tools": [
+                  "scientificMilestone__toggleStatus",
+                  "scientificVenue__create",
+                  "scientificVenue__delete",
+                  "scientificVenue__update",
+                  "scientificVenues__getAll"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "WN7krnYN0kVWXMvZJ3xoQaiSiwDLluqy",
+              "name": "scientificVenues__getAll",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 60,
+            "promptMs": 89.321,
+            "generatedTokens": 18,
+            "generatedMs": 254.524
+          },
+          "wallMs": 356
+        },
+        "calls": [
+          {
+            "id": "WN7krnYN0kVWXMvZJ3xoQaiSiwDLluqy",
+            "name": "scientificVenues__getAll",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "title": "Simpósio Brasileiro de Informática na Educação",
+                  "acronym": "SBIE",
+                  "category": "conference",
+                  "url": null,
+                  "color": "#3b82f6",
+                  "created_at": "2026-11-17 03:53:09",
+                  "milestones": [
+                    {
+                      "id": 1,
+                      "venue_id": 1,
+                      "label": "Submissão",
+                      "field_type": "single",
+                      "target_date": "2026-12-15",
+                      "has_time": false,
+                      "status": "pending"
+                    }
+                  ]
+                }
+              ]
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Você acompanha apenas um congresso: o Simpósio Brasileiro de Informática na Educação (SBIE), com uma meta de submissão para 15 de dezembro de 2026.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 135,
+            "promptMs": 101.851,
+            "generatedTokens": 41,
+            "generatedMs": 599.765
+          },
+          "wallMs": 717
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "Você acompanha apenas o Simpósio Brasileiro de Informática na Educação (SBIE), com meta de submissão para 15 de dezembro de 2026.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 103,
+            "promptMs": 112.563,
+            "generatedTokens": 36,
+            "generatedMs": 512.743
+          },
+          "wallMs": 704
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Você acompanha apenas o Simpósio Brasileiro de Informática na Educação (SBIE), com meta de submissão para 15 de dezembro de 2026.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Quais congressos e periódicos eu acompanho?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      },
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Pedido da pessoa: Quais congressos e periódicos eu acompanho?\nTarefa de agora (só esta): Ver a agenda científica do projeto para listar congressos e periódicos acompanhados.\nFaça só esta tarefa com as ferramentas e diga em uma frase o que fez ou encontrou."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "tcWqQ7g8goYFcd9nzGYUFFCT1In6l1Ik",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"agenda\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "tcWqQ7g8goYFcd9nzGYUFFCT1In6l1Ik",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"agenda\"],\"tools\":[\"scientificMilestone__toggleStatus\",\"scientificVenue__create\",\"scientificVenue__delete\",\"scientificVenue__update\",\"scientificVenues__getAll\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "WN7krnYN0kVWXMvZJ3xoQaiSiwDLluqy",
+            "name": "scientificVenues__getAll",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "WN7krnYN0kVWXMvZJ3xoQaiSiwDLluqy",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"title\":\"Simpósio Brasileiro de Informática na Educação\",\"acronym\":\"SBIE\",\"category\":\"conference\",\"url\":null,\"color\":\"#3b82f6\",\"created_at\":\"2026-11-17 03:53:09\",\"milestones\":[{\"id\":1,\"venue_id\":1,\"label\":\"Submissão\",\"field_type\":\"single\",\"target_date\":\"2026-12-15\",\"has_time\":false,\"status\":\"pending\"}]}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Você acompanha apenas um congresso: o Simpósio Brasileiro de Informática na Educação (SBIE), com uma meta de submissão para 15 de dezembro de 2026.",
+        "toolCalls": []
+      }
+    ],
+    "plan": [
+      {
+        "area": "agenda",
+        "task": "Ver a agenda científica do projeto para listar congressos e periódicos acompanhados."
+      }
+    ]
+  }
+}

@@ -1,0 +1,180 @@
+{
+  "id": "dia-1",
+  "kind": "happy",
+  "prompt": "O que escrevi no diário em 2026-11-10?",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 5,
+  "toolsBytes": 2999,
+  "wallMs": 5403,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 4,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "OA2HsjNyseFwI2jnvjcyoYHTuF9jrq80",
+              "name": "submit_plan",
+              "arguments": "{\"tarefas\":[{\"assunto\": \"diario\", \"tarefa\": \"Ler o registro do diário de 2026-11-10\"}]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 517,
+            "promptMs": 345.128,
+            "generatedTokens": 62,
+            "generatedMs": 1475.345
+          },
+          "wallMs": 1881
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "rrJLYlDFOI4wZdg029skI4K2whrmMxE5",
+              "name": "diary__getOne",
+              "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1304,
+            "promptMs": 586.365,
+            "generatedTokens": 50,
+            "generatedMs": 1187.995
+          },
+          "wallMs": 1851
+        },
+        "calls": [
+          {
+            "id": "rrJLYlDFOI4wZdg029skI4K2whrmMxE5",
+            "name": "diary__getOne",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}",
+            "result": {
+              "ok": true,
+              "result": {
+                "id": 1,
+                "project_id": 1,
+                "entry_date": "2026-11-10",
+                "content": "Li dois artigos."
+              }
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Encontrei o registro do diário de 2026-11-10, que diz: \"Li dois artigos.\"",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 55,
+            "promptMs": 109.339,
+            "generatedTokens": 30,
+            "generatedMs": 702.048
+          },
+          "wallMs": 822
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "Em 2026-11-10, você escreveu no diário: \"Li dois artigos.\"",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 308,
+            "promptMs": 205.963,
+            "generatedTokens": 25,
+            "generatedMs": 576.192
+          },
+          "wallMs": 847
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Em 2026-11-10, você escreveu no diário: \"Li dois artigos.\"",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "O que escrevi no diário em 2026-11-10?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      },
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Pedido da pessoa: O que escrevi no diário em 2026-11-10?\nTarefa de agora (só esta): Ler o registro do diário de 2026-11-10\nFaça só esta tarefa com as ferramentas e diga em uma frase o que fez ou encontrou."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "rrJLYlDFOI4wZdg029skI4K2whrmMxE5",
+            "name": "diary__getOne",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "rrJLYlDFOI4wZdg029skI4K2whrmMxE5",
+        "content": "{\"ok\":true,\"result\":{\"id\":1,\"project_id\":1,\"entry_date\":\"2026-11-10\",\"content\":\"Li dois artigos.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Encontrei o registro do diário de 2026-11-10, que diz: \"Li dois artigos.\"",
+        "toolCalls": []
+      }
+    ],
+    "plan": [
+      {
+        "area": "diario",
+        "task": "Ler o registro do diário de 2026-11-10"
+      }
+    ]
+  }
+}

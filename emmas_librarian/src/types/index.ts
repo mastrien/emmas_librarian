@@ -213,6 +213,7 @@ export enum IpcChannel {
   DIARY_GET_ALL = 'diary:getAll',
   DIARY_GET_ONE = 'diary:getOne',
   DIARY_SAVE = 'diary:save',
+  DIARY_APPEND_AGENT_RECORD = 'diary:appendAgentRecord',
   DIARY_DELETE = 'diary:delete',
   APP_GET_VERSION = 'app:getVersion',
   AI_GENERATE_SUMMARY = 'ai:generateSummary',
@@ -329,6 +330,9 @@ export interface CategoryOption {
   id?: number;
   name: string;
 }
+
+/** What a category's options may be when saved: the relational list, or the legacy comma-separated text. */
+export type CategoryOptionsInput = CategoryOption[] | string | null;
 
 export interface ProjectCategory {
   id: number;

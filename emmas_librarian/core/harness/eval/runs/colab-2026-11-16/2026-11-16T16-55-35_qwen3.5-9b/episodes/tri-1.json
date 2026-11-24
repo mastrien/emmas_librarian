@@ -1,0 +1,226 @@
+{
+  "id": "tri-1",
+  "kind": "happy",
+  "prompt": "Quais rótulos de triagem o projeto da tutoria tem?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 81,
+  "toolsBytes": 29105,
+  "wallMs": 5735,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Vou verificar os rótulos de triagem do projeto da tutoria. Primeiro, preciso identificar qual é o ID desse projeto.",
+          "toolCalls": [
+            {
+              "id": "vQbTbhsAguPSgDpj249JWX6c8dPFRIml",
+              "name": "projects__getAll",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 26,
+            "promptMs": 118.805,
+            "generatedTokens": 43,
+            "generatedMs": 1050.118
+          },
+          "wallMs": 1213
+        },
+        "calls": [
+          {
+            "id": "vQbTbhsAguPSgDpj249JWX6c8dPFRIml",
+            "name": "projects__getAll",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 2,
+                  "name": "Vazio",
+                  "created_at": "2026-11-16T16:59:09.036Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                },
+                {
+                  "id": 1,
+                  "name": "Revisão sobre tutoria",
+                  "created_at": "2026-11-16T16:59:09.035Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Encontrei dois projetos: \"Vazio\" (ID 2) e \"Revisão sobre tutoria\" (ID 1). Acredito que o projeto da tutoria seja o \"Revisão sobre tutoria\" (ID 1). Vou verificar os rótulos de triagem desse projeto.",
+          "toolCalls": [
+            {
+              "id": "GxEUquN7UTsRUwR8OotnZlZ03dFPDIJf",
+              "name": "screening__labels",
+              "arguments": "{\"projectId\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 206,
+            "promptMs": 160.19,
+            "generatedTokens": 94,
+            "generatedMs": 2326.645
+          },
+          "wallMs": 2530
+        },
+        "calls": [
+          {
+            "id": "GxEUquN7UTsRUwR8OotnZlZ03dFPDIJf",
+            "name": "screening__labels",
+            "arguments": "{\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "project_id": 1,
+                  "name": "Incluso",
+                  "kind": "include",
+                  "position": 0,
+                  "preset_key": "included",
+                  "created_at": "2026-11-16 16:59:09"
+                },
+                {
+                  "id": 2,
+                  "project_id": 1,
+                  "name": "Em dúvida",
+                  "kind": "maybe",
+                  "position": 1,
+                  "preset_key": "maybe",
+                  "created_at": "2026-11-16 16:59:09"
+                },
+                {
+                  "id": 3,
+                  "project_id": 1,
+                  "name": "Excluído",
+                  "kind": "exclude",
+                  "position": 2,
+                  "preset_key": "excluded",
+                  "created_at": "2026-11-16 16:59:09"
+                },
+                {
+                  "id": 4,
+                  "project_id": 1,
+                  "name": "Duplicado",
+                  "kind": "removed",
+                  "position": 3,
+                  "preset_key": "duplicate",
+                  "created_at": "2026-11-16 16:59:09"
+                }
+              ]
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O projeto \"Revisão sobre tutoria\" tem os seguintes rótulos de triagem:\n\n1. **Incluso** (tipo: include)\n2. **Em dúvida** (tipo: maybe)\n3. **Excluído** (tipo: exclude)\n4. **Duplicado** (tipo: removed)",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 231,
+            "promptMs": 172.229,
+            "generatedTokens": 72,
+            "generatedMs": 1775.17
+          },
+          "wallMs": 1991
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O projeto \"Revisão sobre tutoria\" tem os seguintes rótulos de triagem:\n\n1. **Incluso** (tipo: include)\n2. **Em dúvida** (tipo: maybe)\n3. **Excluído** (tipo: exclude)\n4. **Duplicado** (tipo: removed)",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Quais rótulos de triagem o projeto da tutoria tem?"
+      },
+      {
+        "role": "assistant",
+        "content": "Vou verificar os rótulos de triagem do projeto da tutoria. Primeiro, preciso identificar qual é o ID desse projeto.",
+        "toolCalls": [
+          {
+            "id": "vQbTbhsAguPSgDpj249JWX6c8dPFRIml",
+            "name": "projects__getAll",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "vQbTbhsAguPSgDpj249JWX6c8dPFRIml",
+        "content": "{\"ok\":true,\"result\":[{\"id\":2,\"name\":\"Vazio\",\"created_at\":\"2026-11-16T16:59:09.036Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null},{\"id\":1,\"name\":\"Revisão sobre tutoria\",\"created_at\":\"2026-11-16T16:59:09.035Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Encontrei dois projetos: \"Vazio\" (ID 2) e \"Revisão sobre tutoria\" (ID 1). Acredito que o projeto da tutoria seja o \"Revisão sobre tutoria\" (ID 1). Vou verificar os rótulos de triagem desse projeto.",
+        "toolCalls": [
+          {
+            "id": "GxEUquN7UTsRUwR8OotnZlZ03dFPDIJf",
+            "name": "screening__labels",
+            "arguments": "{\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "GxEUquN7UTsRUwR8OotnZlZ03dFPDIJf",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"project_id\":1,\"name\":\"Incluso\",\"kind\":\"include\",\"position\":0,\"preset_key\":\"included\",\"created_at\":\"2026-11-16 16:59:09\"},{\"id\":2,\"project_id\":1,\"name\":\"Em dúvida\",\"kind\":\"maybe\",\"position\":1,\"preset_key\":\"maybe\",\"created_at\":\"2026-11-16 16:59:09\"},{\"id\":3,\"project_id\":1,\"name\":\"Excluído\",\"kind\":\"exclude\",\"position\":2,\"preset_key\":\"excluded\",\"created_at\":\"2026-11-16 16:59:09\"},{\"id\":4,\"project_id\":1,\"name\":\"Duplicado\",\"kind\":\"removed\",\"position\":3,\"preset_key\":\"duplicate\",\"created_at\":\"2026-11-16 16:59:09\"}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "O projeto \"Revisão sobre tutoria\" tem os seguintes rótulos de triagem:\n\n1. **Incluso** (tipo: include)\n2. **Em dúvida** (tipo: maybe)\n3. **Excluído** (tipo: exclude)\n4. **Duplicado** (tipo: removed)",
+        "toolCalls": []
+      }
+    ]
+  }
+}

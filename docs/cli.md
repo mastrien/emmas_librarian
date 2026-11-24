@@ -21,29 +21,45 @@ atualização do app, "abrir documento externo" e o leitor de PDF (classificaç�
 
 ```bash
 emmas-librarian cli commands
-emmas-librarian cli projects:create "Minha tese"
-emmas-librarian cli articles:getByProject 3
-emmas-librarian cli diary:save --args-json '[3, "2026-11-14", "Li dois artigos."]'
-emmas-librarian cli export:csv 3 ./artigos.csv
+emmas-librarian cli projects:create -- "Minha tese"
+emmas-librarian cli articles:getByProject -- 3
+emmas-librarian cli diary:save --args-json='[3, "2026-11-14", "Li dois artigos."]'
+emmas-librarian cli export:csv -- 3 ./artigos.csv
 ```
+
+- **Os argumentos vão depois de `--`**, ou todos juntos em `--args-json=<array>`. O Electron tem uma proteção
+  contra a falha CVE-2018-1000006 (`CheckCommandLineArguments`, `shell/app/command_line_args.cc`): uma palavra com
+  cara de URL (`articles:getByProject`: letras, `:`, e mais de uma letra antes dele) seguida de **outra palavra
+  solta** faz o processo sair com -1, sem mensagem, antes de qualquer código nosso rodar. Só o `--` desliga a
+  checagem; as opções (`--pretty`, `--opção=valor`) não contam como palavra solta. O Electron não deixa
+  configurar isso, e a regra vale em qualquer sistema, não só no Windows.
+- Um argumento que começa com `--` (por exemplo o `---` do Markdown) só passa depois do `--`.
+- **As opções vêm antes do `--`**: `cli --data-dir=pasta projects:create -- "Minha tese"`. O que vem depois do `--` é
+  argumento do comando, inclusive uma opção, e o CLI recusa o excesso com o código 2 em vez de ignorá-lo.
+- Um comando recebe no máximo os argumentos que `cli commands` lista para ele; passar mais é erro de uso (código 2).
+  Um texto com espaços vai entre aspas, para o terminal não o quebrar em vários argumentos.
 
 - Cada argumento é lido como JSON quando possível (`3`, `true`, `null`, `[1,2]`, `{"a":1}`) e como texto no resto.
   Para passar como texto algo que parece JSON, use aspas de JSON: `'"123"'`.
-- `--args-json '<array>'` passa os argumentos exatamente como um array JSON; é a forma mais segura para scripts.
+- `--args-json=<array>` passa os argumentos exatamente como um array JSON; é a forma mais segura para scripts.
 - Onde o aplicativo abriria um diálogo de arquivo, o CLI recebe o caminho como argumento. `cli commands` mostra
   qual argumento é (`"file": { "argument": 2, "mode": "save" }`).
 - `cli commands` traz, em `args`, o nome de cada argumento do comando, na ordem. `cli <comando> --help` mostra
-  a linha de uso (`emmas-librarian cli diary:save <projectId> <date> <content> <expected>`). Os últimos
+  a linha de uso (`emmas-librarian cli diary:save -- <projectId> <date> <content> <expected>`). Os últimos
   argumentos podem ser opcionais: isso não é indicado.
 
 ## Opções
 
 | Opção | Efeito |
 |---|---|
-| `--data-dir <pasta>` | Abre a biblioteca dessa pasta em vez da do aplicativo. |
-| `--args-json <array>` | Argumentos do comando como array JSON. |
+| `--data-dir <pasta>` ou `--data-dir=<pasta>` | Abre a biblioteca dessa pasta em vez da do aplicativo. |
+| `--args-json <array>` ou `--args-json=<array>` | Argumentos do comando como array JSON. |
+| `--` | Termina as opções: tudo depois é argumento do comando. |
 | `--pretty` | JSON indentado. |
 | `--help` | Texto de ajuda. |
+
+Uma opção desconhecida (`--nao-existe`, `--pretty=true`) falha com o código 2 e cita o valor; ela nunca é lida como
+argumento. Antes, `--data-dir=pasta` era tratado como argumento e o comando rodava na biblioteca do aplicativo.
 
 O CLI nunca cria uma biblioteca: se a pasta não tem `emma.db`, ele falha com `ERR_LIBRARY_NOT_FOUND`.
 

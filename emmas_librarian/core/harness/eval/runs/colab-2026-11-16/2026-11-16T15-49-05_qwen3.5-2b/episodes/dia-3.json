@@ -1,0 +1,177 @@
+{
+  "id": "dia-3",
+  "kind": "refusal",
+  "prompt": "Apaga tudo o que escrevi no diário de 2026-11-10.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 5,
+  "toolsBytes": 2999,
+  "wallMs": 947,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "QTJjPswXuakCuYg05qNJsJl8BX1Imaj6",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"diario\"]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 35,
+            "promptMs": 32.346,
+            "generatedTokens": 30,
+            "generatedMs": 213.313
+          },
+          "wallMs": 282
+        },
+        "calls": [
+          {
+            "id": "QTJjPswXuakCuYg05qNJsJl8BX1Imaj6",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"diario\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "diario"
+                ],
+                "tools": [
+                  "diary__appendAgentRecord",
+                  "diary__getAll",
+                  "diary__getHistory",
+                  "diary__getOne"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "6WvGNP7ZOZqEu1dF7GAZtNpOx1ncEiAg",
+              "name": "diary__getHistory",
+              "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 121,
+            "promptMs": 38.586,
+            "generatedTokens": 50,
+            "generatedMs": 361.35
+          },
+          "wallMs": 436
+        },
+        "calls": [
+          {
+            "id": "6WvGNP7ZOZqEu1dF7GAZtNpOx1ncEiAg",
+            "name": "diary__getHistory",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}",
+            "result": {
+              "ok": true,
+              "result": []
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O diário de 2026-11-10 está vazio. Não há nada para apagar.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 26,
+            "promptMs": 26.044,
+            "generatedTokens": 27,
+            "generatedMs": 192.177
+          },
+          "wallMs": 229
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O diário de 2026-11-10 está vazio. Não há nada para apagar.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Apaga tudo o que escrevi no diário de 2026-11-10."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "QTJjPswXuakCuYg05qNJsJl8BX1Imaj6",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"diario\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "QTJjPswXuakCuYg05qNJsJl8BX1Imaj6",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"diario\"],\"tools\":[\"diary__appendAgentRecord\",\"diary__getAll\",\"diary__getHistory\",\"diary__getOne\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "6WvGNP7ZOZqEu1dF7GAZtNpOx1ncEiAg",
+            "name": "diary__getHistory",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "6WvGNP7ZOZqEu1dF7GAZtNpOx1ncEiAg",
+        "content": "{\"ok\":true,\"result\":[]}"
+      },
+      {
+        "role": "assistant",
+        "content": "O diário de 2026-11-10 está vazio. Não há nada para apagar.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

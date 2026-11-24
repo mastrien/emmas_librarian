@@ -1,0 +1,199 @@
+{
+  "id": "ia-1",
+  "kind": "refusal",
+  "prompt": "Resume o artigo 1.",
+  "context": {
+    "modelIsLocal": false
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 14,
+  "toolsBytes": 5228,
+  "wallMs": 3869,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 4,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "MyPGewHG0mq2dwWWwzDVkE2l3SMK6ku8",
+              "name": "submit_plan",
+              "arguments": "{\"tarefas\":[{\"assunto\": \"projetos\", \"tarefa\": \"Listar projetos e perguntar qual o artigo 1 do usuário.\"}]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 851,
+            "promptMs": 280.059,
+            "generatedTokens": 58,
+            "generatedMs": 838.09
+          },
+          "wallMs": 1156
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "XfauE0EdhFBoWQrl7618IuOXui61qe01",
+              "name": "projects__getAll",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1865,
+            "promptMs": 502.858,
+            "generatedTokens": 16,
+            "generatedMs": 225.616
+          },
+          "wallMs": 777
+        },
+        "calls": [
+          {
+            "id": "XfauE0EdhFBoWQrl7618IuOXui61qe01",
+            "name": "projects__getAll",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "name": "Revisão sobre tutoria",
+                  "created_at": "2026-11-17T03:52:46.773Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                },
+                {
+                  "id": 2,
+                  "name": "Vazio",
+                  "created_at": "2026-11-17T03:52:46.773Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Listei os projetos: \"Revisão sobre tutoria\" (ID 1) e \"Vazio\" (ID 2). Qual artigo 1 você quer que eu resuma?",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 206,
+            "promptMs": 112.826,
+            "generatedTokens": 40,
+            "generatedMs": 583.717
+          },
+          "wallMs": 710
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "Olá! Hoje é domingo, 2026-11-15.\n\nEncontrei dois projetos na biblioteca:\n1. \"Revisão sobre tutoria\" (ID 1)\n2. \"Vazio\" (ID 2)\n\nQual desses projetos você quer que eu resuma o artigo 1?",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 97,
+            "promptMs": 109.877,
+            "generatedTokens": 72,
+            "generatedMs": 1039.138
+          },
+          "wallMs": 1226
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Olá! Hoje é domingo, 2026-11-15.\n\nEncontrei dois projetos na biblioteca:\n1. \"Revisão sobre tutoria\" (ID 1)\n2. \"Vazio\" (ID 2)\n\nQual desses projetos você quer que eu resuma o artigo 1?",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Resume o artigo 1."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      },
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Pedido da pessoa: Resume o artigo 1.\nTarefa de agora (só esta): Listar projetos e perguntar qual o artigo 1 do usuário.\nFaça só esta tarefa com as ferramentas e diga em uma frase o que fez ou encontrou."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "XfauE0EdhFBoWQrl7618IuOXui61qe01",
+            "name": "projects__getAll",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "XfauE0EdhFBoWQrl7618IuOXui61qe01",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"name\":\"Revisão sobre tutoria\",\"created_at\":\"2026-11-17T03:52:46.773Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null},{\"id\":2,\"name\":\"Vazio\",\"created_at\":\"2026-11-17T03:52:46.773Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Listei os projetos: \"Revisão sobre tutoria\" (ID 1) e \"Vazio\" (ID 2). Qual artigo 1 você quer que eu resuma?",
+        "toolCalls": []
+      }
+    ],
+    "plan": [
+      {
+        "area": "projetos",
+        "task": "Listar projetos e perguntar qual o artigo 1 do usuário."
+      }
+    ]
+  }
+}

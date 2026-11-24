@@ -35,7 +35,9 @@
     "test:release-upgrade": "playwright test --config=playwright.release.config.js",
     "lint:ci": "eslint . --max-warnings 246",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.electron.json --noEmit && tsc -p release-tests/tsconfig.json"
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.electron.json --noEmit && tsc -p release-tests/tsconfig.json && tsc -p tools/tsconfig.json --noEmit",
+    "schemas:generate": "tsc -p tools/tsconfig.json && node tools/dist/tools/generateCommandSchemas.js",
+    "schemas:check": "tsc -p tools/tsconfig.json && node tools/dist/tools/generateCommandSchemas.js --check"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

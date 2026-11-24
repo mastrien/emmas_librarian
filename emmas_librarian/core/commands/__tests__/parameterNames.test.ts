@@ -55,7 +55,7 @@ describe('command parameters in the registry', () => {
     commands.add('diary:getOne', (projectId: number, date: string) => [projectId, date]);
     commands.add('trash:empty', () => undefined);
 
-    expect(terminalUsage(commands.get('diary:getOne'))).toBe('emmas-librarian cli diary:getOne <projectId> <date>');
+    expect(terminalUsage(commands.get('diary:getOne'))).toBe('emmas-librarian cli diary:getOne -- <projectId> <date>');
     expect(terminalUsage(commands.get('trash:empty'))).toBe('emmas-librarian cli trash:empty');
   });
 });

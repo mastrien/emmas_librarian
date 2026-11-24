@@ -44,14 +44,46 @@ interface ParsedTokens {
   argsJson?: unknown[];
 }
 
+const VALUE_OPTIONS = new Set(['--data-dir', '--args-json']);
+
+// `--data-dir=/lib` is read as `--data-dir /lib`. Only the options that take a value are split, so an
+// argument such as `a=b` stays whole.
+function splitInlineValue(token: string): string[] {
+  const equals = token.indexOf('=');
+  if (equals < 0 || !VALUE_OPTIONS.has(token.slice(0, equals))) return [token];
+  return [token.slice(0, equals), token.slice(equals + 1)];
+}
+
+function withInlineValuesSplit(argv: string[]): string[] {
+  const end = argv.indexOf('--');
+  const options = end < 0 ? argv : argv.slice(0, end);
+  return [...options.flatMap(splitInlineValue), ...(end < 0 ? [] : argv.slice(end))];
+}
+
+// A typo such as `--data-dir=` or `--prety` used to become an argument and run the command anyway,
+// possibly on the wrong library; now it stops the run.
+function unknownOption(token: string): never {
+  throw usageError(
+    'ERR_CLI_USAGE',
+    `Opção desconhecida. Offending value: ${JSON.stringify(token)}`,
+    'uma de --pretty, --help, --data-dir <pasta>, --args-json <array>; para passar como argumento um valor que começa com --, ponha -- antes dos argumentos',
+  );
+}
+
 function readTokens(argv: string[]): ParsedTokens {
+  const tokens = withInlineValuesSplit(argv);
   const parsed: ParsedTokens = { options: { pretty: false }, positional: [], help: false };
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
+  for (let i = 0; i < tokens.length; i += 1) {
+    const token = tokens[i];
+    if (token === '--') {
+      parsed.positional.push(...tokens.slice(i + 1));
+      break;
+    }
     if (token === '--pretty') parsed.options.pretty = true;
     else if (token === '--help' || token === '-h') parsed.help = true;
-    else if (token === '--data-dir') parsed.options.dataDir = requireValue(token, argv[(i += 1)]);
-    else if (token === '--args-json') parsed.argsJson = argsFromJson(argv[(i += 1)]);
+    else if (token === '--data-dir') parsed.options.dataDir = requireValue(token, tokens[(i += 1)]);
+    else if (token === '--args-json') parsed.argsJson = argsFromJson(tokens[(i += 1)]);
+    else if (token.startsWith('--')) unknownOption(token);
     else parsed.positional.push(token);
   }
   return parsed;

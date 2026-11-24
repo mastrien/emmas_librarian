@@ -1,0 +1,156 @@
+{
+  "id": "doc-2",
+  "kind": "happy",
+  "prompt": "Adiciona o link https://exemplo.org/guia com o título Guia.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 12,
+  "toolsBytes": 4715,
+  "wallMs": 1664,
+  "asked": [
+    {
+      "tool": "projectDocuments__create",
+      "command": "projectDocuments:create",
+      "input": {
+        "projectId": 1,
+        "title": "Guia",
+        "url": "https://exemplo.org/guia"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "docExists",
+      "args": {
+        "projectId": 1,
+        "title": "Guia",
+        "url": "https://exemplo.org/guia"
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "bMu3QLWo0Ots2slWgf7rvrmZHvIIXJ9V",
+              "name": "projectDocuments__create",
+              "arguments": "{\"projectId\":1,\"title\":\"Guia\",\"url\":\"https://exemplo.org/guia\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1796,
+            "promptMs": 492.469,
+            "generatedTokens": 58,
+            "generatedMs": 846.295
+          },
+          "wallMs": 1438
+        },
+        "calls": [
+          {
+            "id": "bMu3QLWo0Ots2slWgf7rvrmZHvIIXJ9V",
+            "name": "projectDocuments__create",
+            "arguments": "{\"projectId\":1,\"title\":\"Guia\",\"url\":\"https://exemplo.org/guia\"}",
+            "result": {
+              "ok": true,
+              "result": 1
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Link adicionado com sucesso.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 85.424,
+            "generatedTokens": 7,
+            "generatedMs": 91.321
+          },
+          "wallMs": 190
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Link adicionado com sucesso.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Adiciona o link https://exemplo.org/guia com o título Guia."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "bMu3QLWo0Ots2slWgf7rvrmZHvIIXJ9V",
+            "name": "projectDocuments__create",
+            "arguments": "{\"projectId\":1,\"title\":\"Guia\",\"url\":\"https://exemplo.org/guia\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "bMu3QLWo0Ots2slWgf7rvrmZHvIIXJ9V",
+        "content": "{\"ok\":true,\"result\":1}"
+      },
+      {
+        "role": "assistant",
+        "content": "Link adicionado com sucesso.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "acesso-rapido",
+          "probability": 0.7808835158569906
+        },
+        {
+          "area": "artigos",
+          "probability": 0.0846903738603421
+        },
+        {
+          "area": "projetos",
+          "probability": 0.04520012425481485
+        }
+      ],
+      "chosen": [
+        "acesso-rapido",
+        "artigos"
+      ],
+      "fallback": "none",
+      "decisionMs": 35,
+      "decisionInputTokens": 370
+    }
+  }
+}

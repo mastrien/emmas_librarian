@@ -1,0 +1,92 @@
+{
+  "id": "dia-5",
+  "kind": "refusal",
+  "prompt": "Volta o diário de 2026-11-10 para a versão anterior.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 6,
+  "toolsBytes": 1792,
+  "wallMs": 6120,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 1,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Não tenho acesso a uma função que permita reverter uma entrada do diário para uma versão anterior.",
+          "toolCalls": [],
+          "reasoning": "The user wants to revert the diary entry from 2026-11-10 to a previous version.\nI need to check the available tools.\nThe available tools are related to `diary` and `trash`.\nThe `diary` tools are: `diary__appendAgentRecord`, `diary__getAll`, `diary__getHistory`, `diary__getOne`.\nThe `trash` tools are: `trash__getItems`, `trash__restoreItem`.\n\nNone of the `diary` tools explicitly allow reverting or changing a past entry.\n`diary__getHistory` allows getting history for a specific date and project.\n`diary__getOne` allows getting a specific entry for a date and project.\n`diary__appendAgentRecord` only adds a new record.\n\nThe `trash__restoreItem` allows restoring an item from the trash. If the \"previous version\" is in the trash, this might be possible, but I don't know the ID or type of the item.\n\nSince the user is asking to \"revert\" a specific entry, and I don't have a direct \"revert\" or \"edit\" function for diary entries, I must inform the user about my limitations.\n\nI will check if there is any way to interpret \"previous version\" as something in the trash. However, without knowing the ID or type, I cannot use `trash__restoreItem`.\n\nGiven the strict rule: \"Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\"\n\nI cannot fulfill the request to revert a diary entry to a previous version with the current tools.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 303,
+            "promptMs": 140.123,
+            "generatedTokens": 370,
+            "generatedMs": 5917.167
+          },
+          "wallMs": 6084
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Não tenho acesso a uma função que permita reverter uma entrada do diário para uma versão anterior.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Volta o diário de 2026-11-10 para a versão anterior."
+      },
+      {
+        "role": "assistant",
+        "content": "Não tenho acesso a uma função que permita reverter uma entrada do diário para uma versão anterior.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "diario",
+          "probability": 0.9315514112858562
+        },
+        {
+          "area": "lixeira",
+          "probability": 0.02943369486562582
+        },
+        {
+          "area": "artigos",
+          "probability": 0.009902585989161586
+        }
+      ],
+      "chosen": [
+        "diario",
+        "lixeira"
+      ],
+      "fallback": "none",
+      "decisionMs": 35,
+      "decisionInputTokens": 370
+    }
+  }
+}

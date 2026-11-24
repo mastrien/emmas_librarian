@@ -1,0 +1,182 @@
+{
+  "id": "dia-1",
+  "kind": "happy",
+  "prompt": "O que escrevi no diário em 2026-11-10?",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 5,
+  "toolsBytes": 2999,
+  "wallMs": 2247,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "hftho1ZLCMmaQjtKJEaFu2Ya4YP36ygU",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"diario\"]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 508,
+            "promptMs": 225.233,
+            "generatedTokens": 30,
+            "generatedMs": 420.859
+          },
+          "wallMs": 716
+        },
+        "calls": [
+          {
+            "id": "hftho1ZLCMmaQjtKJEaFu2Ya4YP36ygU",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"diario\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "diario"
+                ],
+                "tools": [
+                  "diary__appendAgentRecord",
+                  "diary__getAll",
+                  "diary__getHistory",
+                  "diary__getOne"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "m50wAtRAwOnB76NBUwSNe2hi1Q0HaaNP",
+              "name": "diary__getOne",
+              "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 946,
+            "promptMs": 309.308,
+            "generatedTokens": 50,
+            "generatedMs": 711.677
+          },
+          "wallMs": 1068
+        },
+        "calls": [
+          {
+            "id": "m50wAtRAwOnB76NBUwSNe2hi1Q0HaaNP",
+            "name": "diary__getOne",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}",
+            "result": {
+              "ok": true,
+              "result": {
+                "id": 1,
+                "project_id": 1,
+                "entry_date": "2026-11-10",
+                "content": "Li dois artigos."
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "No dia 2026-11-10, você escreveu no diário: \"Li dois artigos.\"",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 55,
+            "promptMs": 87.491,
+            "generatedTokens": 26,
+            "generatedMs": 364.317
+          },
+          "wallMs": 463
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "No dia 2026-11-10, você escreveu no diário: \"Li dois artigos.\"",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "O que escrevi no diário em 2026-11-10?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "hftho1ZLCMmaQjtKJEaFu2Ya4YP36ygU",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"diario\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "hftho1ZLCMmaQjtKJEaFu2Ya4YP36ygU",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"diario\"],\"tools\":[\"diary__appendAgentRecord\",\"diary__getAll\",\"diary__getHistory\",\"diary__getOne\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "m50wAtRAwOnB76NBUwSNe2hi1Q0HaaNP",
+            "name": "diary__getOne",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "m50wAtRAwOnB76NBUwSNe2hi1Q0HaaNP",
+        "content": "{\"ok\":true,\"result\":{\"id\":1,\"project_id\":1,\"entry_date\":\"2026-11-10\",\"content\":\"Li dois artigos.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "No dia 2026-11-10, você escreveu no diário: \"Li dois artigos.\"",
+        "toolCalls": []
+      }
+    ]
+  }
+}

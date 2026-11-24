@@ -1,0 +1,163 @@
+{
+  "id": "proj-1",
+  "kind": "happy",
+  "prompt": "Quais projetos eu tenho?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 17,
+  "toolsBytes": 5235,
+  "wallMs": 17159,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "AVaut04t3uC6Y175X2y2ObT0g2r9raw4",
+              "name": "projects__getAll",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "We need to find out what projects the user has. The tool `projects__getAll` seems appropriate for listing all projects. Let's use that.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1555,
+            "promptMs": 3454.375,
+            "generatedTokens": 44,
+            "generatedMs": 1819.976
+          },
+          "wallMs": 5288
+        },
+        "calls": [
+          {
+            "id": "AVaut04t3uC6Y175X2y2ObT0g2r9raw4",
+            "name": "projects__getAll",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "name": "Revisão sobre tutoria",
+                  "created_at": "2026-11-17T00:08:29.091Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                },
+                {
+                  "id": 2,
+                  "name": "Vazio",
+                  "created_at": "2026-11-17T00:08:29.091Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                }
+              ]
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Você tem os seguintes projetos:\n\n- **ID 1:** Revisão sobre tutoria  \n- **ID 2:** Vazio  \n\n(Se quiser mais detalhes de algum projeto, é só pedir!)",
+          "toolCalls": [],
+          "reasoning": "We need to answer the user: \"Quais projetos eu tenho?\" (What projects do I have?). The tool projects__getAll returned a list of projects. It includes two entries with id 1 and id 2, names \"Revisão sobre tutoria\" and \"Vazio\". Possibly \"Vazio\" means empty? We should present the projects. Also note that there is no projectId mapping needed; just list them.\n\nWe can respond in Portuguese: you have projects: ID 1 - Revisão sobre tutoria, ID 2 - Vazio (maybe placeholder). Could ask if they want details about a specific one. But answer short.\n\nThus: \"Você tem dois projetos: id 1 'Revisão sobre tutoria' e id 2 'Vazio'.\" Possibly mention created_at dates? Not necessary.\n\nProceed.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 724,
+            "promptMs": 1981.233,
+            "generatedTokens": 219,
+            "generatedMs": 9030.881
+          },
+          "wallMs": 11027
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Você tem os seguintes projetos:\n\n- **ID 1:** Revisão sobre tutoria  \n- **ID 2:** Vazio  \n\n(Se quiser mais detalhes de algum projeto, é só pedir!)",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Quais projetos eu tenho?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "AVaut04t3uC6Y175X2y2ObT0g2r9raw4",
+            "name": "projects__getAll",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "AVaut04t3uC6Y175X2y2ObT0g2r9raw4",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"name\":\"Revisão sobre tutoria\",\"created_at\":\"2026-11-17T00:08:29.091Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null},{\"id\":2,\"name\":\"Vazio\",\"created_at\":\"2026-11-17T00:08:29.091Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Você tem os seguintes projetos:\n\n- **ID 1:** Revisão sobre tutoria  \n- **ID 2:** Vazio  \n\n(Se quiser mais detalhes de algum projeto, é só pedir!)",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "projetos",
+          "probability": 0.9853093278126661
+        },
+        {
+          "area": "categorias",
+          "probability": 0.004234813637373591
+        },
+        {
+          "area": "acesso-rapido",
+          "probability": 0.0030230499244910647
+        }
+      ],
+      "chosen": [
+        "projetos",
+        "categorias"
+      ],
+      "fallback": "none",
+      "decisionMs": 842,
+      "decisionInputTokens": 357
+    }
+  }
+}

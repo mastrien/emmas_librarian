@@ -1,0 +1,165 @@
+{
+  "id": "cfg-1",
+  "kind": "happy",
+  "prompt": "Qual é a versão do aplicativo?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 3,
+  "toolsBytes": 2204,
+  "wallMs": 14119,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "2At6hIWOnm7sDWtB2iYfxfqL0Iqazz9L",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"sistema\"]}"
+            }
+          ],
+          "reasoning": "We need to find the version of the app. The user asks: \"Qual é a versão do aplicativo?\" According to the tool description, there is a function `select_areas` for choosing areas, but also there's mention under \"sistema\": \"versão do aplicativo e backups automáticos existentes\". So we need to use the `select_areas` tool with area \"sistema\" to get that info. The initial instruction says: \"Você começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido: só então recebe as ferramentas deles.\" So first call `select_areas` with areas: [\"sistema\"].\n\nLet's do that.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 313,
+            "promptMs": 881.274,
+            "generatedTokens": 181,
+            "generatedMs": 7021.703
+          },
+          "wallMs": 7938
+        },
+        "calls": [
+          {
+            "id": "2At6hIWOnm7sDWtB2iYfxfqL0Iqazz9L",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"sistema\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": ["sistema"],
+                "tools": ["app__getVersion", "backup__listAuto"]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "VUdtsr0tcvjQ05PkQUqcW1EXMSO4TPwL",
+              "name": "app__getVersion",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "We need to get the version of the app. Use app__getVersion tool.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 481,
+            "promptMs": 1335.399,
+            "generatedTokens": 30,
+            "generatedMs": 1147.457
+          },
+          "wallMs": 2491
+        },
+        "calls": [
+          {
+            "id": "VUdtsr0tcvjQ05PkQUqcW1EXMSO4TPwL",
+            "name": "app__getVersion",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": "1.0.0"
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "A versão atual do aplicativo da biblioteca é **1.0.0**.",
+          "toolCalls": [],
+          "reasoning": "We need to answer the user's question: \"Qual é a versão do aplicativo?\" The tool app__getVersion returned \"1.0.0\". So we just report that.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 520,
+            "promptMs": 1382.614,
+            "generatedTokens": 59,
+            "generatedMs": 2298.699
+          },
+          "wallMs": 3690
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "A versão atual do aplicativo da biblioteca é **1.0.0**.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Qual é a versão do aplicativo?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "2At6hIWOnm7sDWtB2iYfxfqL0Iqazz9L",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"sistema\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "2At6hIWOnm7sDWtB2iYfxfqL0Iqazz9L",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"sistema\"],\"tools\":[\"app__getVersion\",\"backup__listAuto\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "VUdtsr0tcvjQ05PkQUqcW1EXMSO4TPwL",
+            "name": "app__getVersion",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "VUdtsr0tcvjQ05PkQUqcW1EXMSO4TPwL",
+        "content": "{\"ok\":true,\"result\":\"1.0.0\"}"
+      },
+      {
+        "role": "assistant",
+        "content": "A versão atual do aplicativo da biblioteca é **1.0.0**.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "mon-2",
+  "kind": "happy",
+  "prompt": "Monitora a busca 1 do projeto da tutoria a cada 7 dias.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 1,
+  "toolsBytes": 1750,
+  "wallMs": 17694,
+  "asked": [],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 1,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [],
+          "reasoning": "We need to parse the user's request. The context: \"Hoje é domingo, 2026-11-15. Projeto em foco: 'Revisão sobre tutoria' (id 1). Você planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\"\n\nWe need to understand the task: \"Monitora a busca 1 do projeto da tutoria a cada 7 dias.\" This is Portuguese: \"Monitor search 1 of the tutoria project every 7 days.\" So we need to create tasks (tarefas) for the plan. The user says they are planning a request about the research library. They mention \"NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\"\n\nWe have tools: only `submit_plan`. It takes an object with key \"tarefas\" which is an array of tasks, each having \"assunto\" (one of the enum values) and \"tarefa\" (string). The number of items max 6.\n\nWe need to break down the request into small tasks in order. The subject for this task: \"busca\" maybe? Because it's about monitoring search #1 every 7 days. Let's see the definitions:\n\nAssuntos list includes many categories. For \"busca\": \"buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\". So there is a task type \"monitor de buscas\" (search monitoring). The user says \"Monitora a busca 1 do projeto da tutoria a cada 7 dias.\" That sounds like we need to set up a monitor for search #1 every 7 days. This likely corresponds to the \"busca\" subject, and the task is \"monitor de buscas\". Or maybe it's about \"monitorar\" which could be under \"acesso-rapido\"? But more likely \"busca\" includes \"monitor de buscas\".\n\nLet's parse: The list of assuntos:\n\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes\n\nThus \"busca\" is a subject. The task \"monitor de buscas\" is one of the tasks under busca.\n\nSo we need to create a task with assunto \"busca\", tarefa \"monitorar\" or \"monitor\"? The enum for tarefa? Not given explicitly but likely strings like \"converter consulta\", \"pré-visualizar e salvar busca, citações, monitor de buscas, etc.\" But we need to infer from the description: For \"busca\": \"buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas, citações, monitor de buscas\". So tasks include: convert query, preview, save search, citations, monitor searches. The user wants to monitor search #1 every 7 days. That's a \"monitor\" task.\n\nThus we can set:\n\n- assunto: \"busca\"\n- tarefa: \"monitorar busca 1 a cada 7 dias\" or something like that.\n\nBut need to match the exact phrase? Usually these tasks are defined by specific strings. Since not given, we can infer from typical naming conventions: For example, in \"artigos\", there is \"ver artigos de um projeto\", \"mudar status (novo, lido, arquivado)\", etc. So for \"busca\": \"converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\". The tasks could be: \"convertir consulta\", \"pré-visualizar\", \"salvar busca\", \"citas\", \"monitor de buscas\"? Not sure.\n\nGiven the lack of explicit mapping, we need to produce a plausible list. The user says \"NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\" So we just call `submit_plan` with tarefas array. If no tasks needed (empty), then empty list.\n\nBut there is definitely a task to monitor search #1 every 7 days. That's one task. Possibly also need to \"converter consulta\" etc? The phrase \"Monitora a busca 1 do projeto da tutoria a cada 7 dias.\" Means: Monitor search 1 of the tutoria project every 7 days.\n\nThus we can create a single task:\n\n{\n  \"assunto\": \"busca\",\n  \"tarefa\": \"monitorar busca 1 a cada 7 dias\"\n}\n\nBut maybe they want to break into smaller steps? The instruction says: \"Divida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\"\n\nSo we need to split the request into small tasks. For monitoring every 7 days, maybe there are multiple steps: e.g., \"converter consulta\", \"pré-visualizar\", \"salvar busca\", etc? But that seems more about creating/modifying searches rather than just monitoring.\n\nLet's think of typical actions for a search monitor:\n\n- Identify the search (search #1).\n- Set up periodic check every 7 days.\n- Possibly need to convert query, preview results, save it, etc. But not sure.\n\nGiven limited info, I'll assume one task is enough: \"monitorar busca 1\" with frequency 7 days. The subject \"busca\" and tarefa \"monitorar\" (or \"monitor de buscas\").\n\nThus the plan:\n\ntarefas = [\n  {assunto: \"busca\", tarefa: \"monitorar busca 1 a cada 7 dias\"}\n]\n\nBut maybe they want to include \"converter consulta\" as part of search creation? The phrase \"busca bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas, citações, monitor de buscas\". That's a list. So tasks could be:\n\n- converter consulta\n- pré-visualizar\n- salvar busca\n- citar (citações)\n- monitorar busca\n\nBut we only need to do \"monitorar\" every 7 days.\n\nGiven the instruction: \"Cada tarefa usa um só assunto.\" So each task has one subject. For \"busca\", there are multiple tasks? Possibly separate tasks for each action, but they said each task uses a single subject. So we can have multiple tasks all under \"busca\". That's allowed.\n\nThus we could break down the request into:\n\n1. converter consulta (convert query)\n2. pré-visualizar (preview search)\n3. salvar busca (save search)\n4. monitorar busca 1 a cada 7 dias\n\nBut the user only mentions monitoring, not converting or previewing. So maybe just one task.\n\nGiven ambiguity, I'll go with minimal: one task \"monitorar busca 1\" under assunto \"busca\". But we need to phrase exactly as expected? The tool likely expects exact strings for \"tarefa\"? Not sure but we can guess.\n\nLet's see the typical naming conventions from earlier tasks in similar contexts. For example, \"projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\". So for \"projetos\", tasks like \"listar\", \"criar\", etc. They are verbs in Portuguese. So for \"busca\": \"converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\". These are also verbs/phrases: \"converter consulta\" (convert query), \"pré-visualizar\" (preview), \"salvar busca\" (save search), \"citações\" maybe \"citar\"? Not sure. But we can map.\n\nThus for our task, \"monitorar a busca 1 a",
+          "finishReason": "length",
+          "timings": {
+            "promptTokens": 516,
+            "promptMs": 62.413,
+            "generatedTokens": 2048,
+            "generatedMs": 17610.643
+          },
+          "wallMs": 17694
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "",
+    "stopped": "model-error",
+    "error": "Error: [ERR_INVALID_PLAN] Offending value: \"[]\". No submit_plan call. Expected a submit_plan call with { \"tarefas\": [{ \"assunto\": \"<id>\", \"tarefa\": \"<texto>\" }] }, at most 6 tasks.",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Monitora a busca 1 do projeto da tutoria a cada 7 dias."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      }
+    ]
+  }
+}

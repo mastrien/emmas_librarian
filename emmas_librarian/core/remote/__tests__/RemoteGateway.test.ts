@@ -50,7 +50,7 @@ beforeEach(() => {
   commands = new CommandRegistry();
   commands.add(IpcChannel.PROJECTS_GET_ALL, () => [{ id: 1, name: 'Tese' }]);
   commands.add(IpcChannel.DIARY_SAVE, (...args: unknown[]) => void ran.push(`diary(${args.join(', ')})`));
-  commands.add(IpcChannel.SETTINGS_GET, () => 'sk-segredo');
+  commands.add(IpcChannel.SETTINGS_GET, (_key: string) => 'sk-segredo');
   commands.add(IpcChannel.PDF_GET, () => Buffer.from('%PDF-1.4'));
   commands.add(IpcChannel.ARTICLES_GET_ONE, (id: number) => {
     if (id === 404) throw new Error('[ERR_NOT_FOUND] Artigo não encontrado. Offending value: id=404');

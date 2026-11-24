@@ -1,0 +1,130 @@
+{
+  "id": "ano-1",
+  "kind": "happy",
+  "prompt": "Quais são as minhas anotações do artigo 1?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 81,
+  "toolsBytes": 29105,
+  "wallMs": 5283,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "a37i38rRhklSDGCn5AmBhPz1862Rr9bM",
+              "name": "annotations__get",
+              "arguments": "{\"articleId\":1}"
+            }
+          ],
+          "reasoning": "1. **Identify User Intent:** The user is asking for the annotations of \"article 1\".\n2. **Analyze Available Tools:** Review the provided tool definitions to find a function related to retrieving annotations for an article.\n3. **Select Appropriate Tool:** The `annotations__get` tool has the description \"Comando 'annotations:get' da biblioteca do Emma's Librarian.\" and takes `articleId` as a required parameter.\n4. **Extract Parameters:** The user specified \"article 1\", so `articleId` should be `1`.\n5. **Construct the Tool Call:** Call `annotations__get(articleId=1)`.\n6. **Final Output Generation:** Generate the tool call in the required JSON format.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 18,
+            "promptMs": 52.138,
+            "generatedTokens": 172,
+            "generatedMs": 2829.726
+          },
+          "wallMs": 2953
+        },
+        "calls": [
+          {
+            "id": "a37i38rRhklSDGCn5AmBhPz1862Rr9bM",
+            "name": "annotations__get",
+            "arguments": "{\"articleId\":1}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "article_id": 1,
+                  "highlight_id": null,
+                  "content_markdown": "Comparar com o estudo de Pereira",
+                  "created_at": "2026-11-16 16:47:42",
+                  "deleted_at": null
+                },
+                {
+                  "id": 2,
+                  "article_id": 1,
+                  "highlight_id": null,
+                  "content_markdown": "Boa revisão da literatura",
+                  "created_at": "2026-11-16 16:47:42",
+                  "deleted_at": null
+                }
+              ]
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Suas anotações para o artigo 1 são:\n\n1.  **ID 1:** \"Comparar com o estudo de Pereira\"\n2.  **ID 2:** \"Boa revisão da literatura\"",
+          "toolCalls": [],
+          "reasoning": "The user asked for the annotations of article 1.\nI used the `annotations__get` tool with `articleId: 1`.\nThe tool returned a JSON object containing two annotations:\n1. ID 1: \"Comparar com o estudo de Pereira\"\n2. ID 2: \"Boa revisão da literatura\"\n\nI should now present this information to the user in Portuguese, as requested.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 149,
+            "promptMs": 85.818,
+            "generatedTokens": 132,
+            "generatedMs": 2172.257
+          },
+          "wallMs": 2329
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Suas anotações para o artigo 1 são:\n\n1.  **ID 1:** \"Comparar com o estudo de Pereira\"\n2.  **ID 2:** \"Boa revisão da literatura\"",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Quais são as minhas anotações do artigo 1?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "a37i38rRhklSDGCn5AmBhPz1862Rr9bM",
+            "name": "annotations__get",
+            "arguments": "{\"articleId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "a37i38rRhklSDGCn5AmBhPz1862Rr9bM",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"article_id\":1,\"highlight_id\":null,\"content_markdown\":\"Comparar com o estudo de Pereira\",\"created_at\":\"2026-11-16 16:47:42\",\"deleted_at\":null},{\"id\":2,\"article_id\":1,\"highlight_id\":null,\"content_markdown\":\"Boa revisão da literatura\",\"created_at\":\"2026-11-16 16:47:42\",\"deleted_at\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Suas anotações para o artigo 1 são:\n\n1.  **ID 1:** \"Comparar com o estudo de Pereira\"\n2.  **ID 2:** \"Boa revisão da literatura\"",
+        "toolCalls": []
+      }
+    ]
+  }
+}

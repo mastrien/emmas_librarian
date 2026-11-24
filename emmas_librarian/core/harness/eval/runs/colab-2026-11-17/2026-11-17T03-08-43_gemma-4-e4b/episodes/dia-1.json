@@ -1,0 +1,146 @@
+{
+  "id": "dia-1",
+  "kind": "happy",
+  "prompt": "O que escrevi no diário em 2026-11-10?",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 17,
+  "toolsBytes": 4844,
+  "wallMs": 7159,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "kIpf8UBPH7xPn9BgvoJz4LvGga2FvQON",
+              "name": "diary__getOne",
+              "arguments": "{\"date\":\"2026-11-10\",\"projectId\":1}"
+            }
+          ],
+          "reasoning": "The user is asking for the diary entry on a specific date, 2026-11-10.\nThe available tools related to the diary are:\n1. `diary__appendAgentRecord`: Adds a record. (Not relevant for retrieval)\n2. `diary__getAll`: Gets all records for a project. (Not specific enough)\n3. `diary__getHistory`: Gets history for a project on a specific date.\n4. `diary__getOne`: Gets a single record for a project on a specific date.\n\nThe user did not specify a `projectId`. The current focus project is \"Revisão sobre tutoria\" (id 1). I should use this project ID.\n\nI can use `diary__getOne` or `diary__getHistory`. Since the user asks \"O que escrevi\" (What I wrote), `diary__getOne` seems most appropriate to retrieve the specific entry for that date.\n\nI will call `diary__getOne` with `projectId=1` and `date=\"2026-11-10\"`.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1217,
+            "promptMs": 331.494,
+            "generatedTokens": 265,
+            "generatedMs": 4260.112
+          },
+          "wallMs": 4642
+        },
+        "calls": [
+          {
+            "id": "kIpf8UBPH7xPn9BgvoJz4LvGga2FvQON",
+            "name": "diary__getOne",
+            "arguments": "{\"date\":\"2026-11-10\",\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": {
+                "id": 1,
+                "project_id": 1,
+                "entry_date": "2026-11-10",
+                "content": "Li dois artigos."
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Você escreveu: \"Li dois artigos.\"",
+          "toolCalls": [],
+          "reasoning": "The user asked what they wrote in the diary on 2026-11-10.\nI used the `diary__getOne` tool with `date: \"2026-11-10\"` and `projectId: 1` (since the project in focus is \"Revisão sobre tutoria\" with id 1).\nThe tool returned the content: `{\"ok\":true,\"result\":{\"id\":1,\"project_id\":1,\"entry_date\":\"2026-11-10\",\"content\":\"Li dois artigos.\"}}`.\nI should now present this information to the user in Portuguese, as requested.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 84,
+            "promptMs": 56.931,
+            "generatedTokens": 150,
+            "generatedMs": 2406.052
+          },
+          "wallMs": 2481
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Você escreveu: \"Li dois artigos.\"",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "O que escrevi no diário em 2026-11-10?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "kIpf8UBPH7xPn9BgvoJz4LvGga2FvQON",
+            "name": "diary__getOne",
+            "arguments": "{\"date\":\"2026-11-10\",\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "kIpf8UBPH7xPn9BgvoJz4LvGga2FvQON",
+        "content": "{\"ok\":true,\"result\":{\"id\":1,\"project_id\":1,\"entry_date\":\"2026-11-10\",\"content\":\"Li dois artigos.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Você escreveu: \"Li dois artigos.\"",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "diario",
+          "probability": 0.9847107103628173
+        },
+        {
+          "area": "projetos",
+          "probability": 0.004200173622729461
+        },
+        {
+          "area": "categorias",
+          "probability": 0.001843569859769982
+        }
+      ],
+      "chosen": [
+        "diario",
+        "projetos"
+      ],
+      "fallback": "none",
+      "decisionMs": 36,
+      "decisionInputTokens": 369
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "loc-1",
+  "kind": "happy",
+  "prompt": "Resume o artigo 1.",
+  "context": {
+    "modelIsLocal": true
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 1,
+  "toolsBytes": 1750,
+  "wallMs": 17870,
+  "asked": [],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 1,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [],
+          "reasoning": "We need to parse the user's request: \"Resume o artigo 1.\" (Summarize article 1.) The context: We have a tool `submit_plan` but also there are many other functions? Actually, only one function is listed: `submit_plan`. But the prompt mentions tasks with assuntos etc. It seems like we need to use some tool to get information about articles, maybe \"artigos\" or something. However, the available tools are not fully enumerated except for `submit_plan`. The user says: \"Você planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\" So we must just call `submit_plan` with the appropriate parameters.\n\nBut what is the request? The user asks to \"Resume o artigo 1.\" That's a task: summarize article 1. This likely involves retrieving an article and summarizing it. But there is no tool for searching or summarizing articles directly. However, maybe we need to interpret the context: There are categories like \"artigos\", \"anotacoes\", etc. The instruction says: \"Cada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer.\" So we need to break down the request into tasks based on the subject IDs.\n\nWe have no explicit data about article 1. Possibly there is a hidden tool or knowledge base? The prompt mentions \"Nenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\" But we need to decide what to do with the request.\n\nGiven that only `submit_plan` is available, and the instruction says: \"Você planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\" So we must just call `submit_plan` with tasks. But what tasks? The user asked to summarize article 1. That is likely an \"artigos\" task: ver artigos de um projeto, mudar status, etc. Or maybe it's about reading the article and producing a summary.\n\nWe need to decide the appropriate list of tasks for `submit_plan`. According to the description:\n\n- Each task has an \"assunto\" (subject) from the enum list.\n- The \"tarefa\" field is the action: e.g., \"listar\", \"criar\", \"renomear\", \"apagar\" for projetos; \"ver artigos de um projeto, mudar status...\", etc. For \"artigos\": ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto. So tasks under \"artigos\" include: ver, mudar status, editar metadados, importar.\n\n- For pdfs: ver biblioteca de PDFs, desvincular, baixar PDF de acesso aberto.\n- For anotacoes: ler as anotações e os destaques de um artigo.\n- For diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro.\n- For categorias: ver, criar, aplicar um conjunto.\n- For acesso-rapido: links e documentos de acesso rápido.\n- For lixeira: ver o que foi apagado e restaurar.\n- For triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos.\n- For prisma: fontes e registros do fluxo PRISMA (só leitura).\n- For perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração.\n- For busca: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas.\n- For ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores.\n- For agenda: agenda científica: congressos e periódicos com prazos.\n- For sistema: versão do aplicativo e backups automáticos existentes.\n\nWe need to map \"Resume o artigo 1.\" to tasks. Likely we need to get article 1, maybe from \"artigos\" subject and action \"resumo\" or \"resumo de artigo\". There is an \"ia\" task: \"usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\". So summarizing article 1 could be a \"ia\" task with tarefa \"resumo de artigo\". Also maybe we need to \"ver artigos\" or something.\n\nBut the user didn't mention any project, PDFs, etc. Just \"Resume o artigo 1.\" That's it. So likely we just need to create tasks for \"artigos\" subject: ver (maybe list) article 1? Or \"resumo de artigo\" is under \"ia\". Let's parse the \"ia\" description: \"usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\". So tasks for \"ia\": maybe \"resumo de artigo\", \"extrair metadados\", etc. But we need to know the exact phrasing of each task.\n\nGiven the lack of explicit mapping, I think we should assume a typical set: For \"artigos\" there is \"ver artigos de um projeto\". So ver article 1 would be \"ver artigos\". Then maybe \"resumo de artigo\" falls under \"ia\". But also \"anotacoes\" might involve reading notes and highlights of an article. Not sure.\n\nThe instruction says: \"Divida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\" So we need to decide which subject(s) apply. If none, pass empty list.\n\nThus for \"Resume o artigo 1.\", the appropriate subject is likely \"artigos\" or \"ia\". Let's reason: Summarizing an article is using AI (resumo de artigo). That seems like a task under \"ia\". Also maybe we need to \"ver artigos\" first. But if we have no prior context, perhaps just one task: \"resumo de artigo 1\" with assunto \"ia\", tarefa \"resumo de artigo\". Or could be \"anotacoes\" (read notes and highlights). Not sure.\n\nGiven the limited info, I'll go with a simple approach: Use `submit_plan` with an empty list? But that would ignore the request. The user explicitly asks to summarize article 1. So we need to produce tasks accordingly.\n\nLet's examine the \"submit_plan\" function signature:\n\n```\nsubmit_plan({type: object, parameters: {tarefas: array of objects with keys assunto and tarefa}})\n```\n\nWe must provide a list of up to 6 items. Each item has fields \"assunto\": one of the enum values, and \"tarefa\": string.\n\nThus we need to decide tasks:\n\n- For \"artigos\" subject:\n  - \"ver artigos de um projeto\"\n  - \"mudar status (novo, lido, arquivado)\"\n  - \"editar metadados\"\n  - \"importar de outro projeto\"\n\n- For \"pdfs\": etc.\n\n- For \"anotacoes\": \"ler as anotações e os destaques de um artigo\".\n\n- For \"diario\": \"ler o diário do projeto (por dia, com histórico) e acrescentar um registro\".\n\n- For \"categorias\": \"ver, criar, aplicar um conjunto\".\n\n- For \"acesso-rapido\": links and docs.\n\n- For \"lixeira\": \"ver o que foi apagado e restaurar\".\n\n- For \"triagem\": \"rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\".\n\n- For \"prisma\": \"fontes e registros do fluxo PRISMA (só leitura)\".\n\n- For \"perguntas\": \"conjuntos de perguntas para extração, resultados e auditorias de extração\".\n\n- For \"busca\": various.\n\n- For \"ia\": \"usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\".\n\n- For \"agenda\": scientific agenda.\n\n- For \"sistema\": version and backups.\n\nGiven we only have article 1, maybe the relevant tasks are:\n\n- \"artigos\" -> \"ver artigos\" (maybe list articles). But to get article 1 specifically, perhaps \"busca\" or \"artigos\" includes search. Not sure.\n\n- \"ia\" -> \"resumo de artigo\" for article 1.\n\nThus we could have two tasks: one under \"artigos\" to view the article? Or maybe just \"resumo de artigo\" is enough.\n\nBut the instruction says each task uses only one assunto. So we can't mix subjects in a single task. We need separate entries per subject.\n\nGiven ambiguity, I think the safest is to create tasks that align with typical actions: For summarizing an article, you'd likely use \"ia\" (AI) and action \"resumo de artigo\". Also maybe \"anotacoes\" for reading notes? But not needed.\n\nThus we could have",
+          "finishReason": "length",
+          "timings": {
+            "promptTokens": 497,
+            "promptMs": 64.903,
+            "generatedTokens": 2048,
+            "generatedMs": 17777.732
+          },
+          "wallMs": 17870
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "",
+    "stopped": "model-error",
+    "error": "Error: [ERR_INVALID_PLAN] Offending value: \"[]\". No submit_plan call. Expected a submit_plan call with { \"tarefas\": [{ \"assunto\": \"<id>\", \"tarefa\": \"<texto>\" }] }, at most 6 tasks.",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Resume o artigo 1."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      }
+    ]
+  }
+}

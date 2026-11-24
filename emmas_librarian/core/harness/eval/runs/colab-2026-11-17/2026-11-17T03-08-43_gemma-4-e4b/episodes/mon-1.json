@@ -1,0 +1,139 @@
+{
+  "id": "mon-1",
+  "kind": "happy",
+  "prompt": "Quais buscas estão sendo monitoradas?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 24,
+  "toolsBytes": 8575,
+  "wallMs": 9133,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "noFwOEIzgXFbfiIcBCwIxfgo2HoezIZm",
+              "name": "searchMonitor__overview",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "1. **Analyze the Request:** The user is asking, \"Quais buscas estão sendo monitoradas?\" (Which searches are being monitored?).\n\n2. **Examine Available Tools:** I need to find a tool that lists monitored searches.\n    * `projects__create`, `projects__delete`, `projects__getAbout`, `projects__getAll`, `projects__getNavCounts`, `projects__getOne`, `projects__getScreeningSummaries`, `projects__getSearchHistory`, `projects__getWritingPad`, `projects__markOpened`, `projects__update`, `projects__updateAbout`, `projects__updateWritingPad`: These are related to projects, not monitoring searches.\n    * `search__discardPreview`, `search__peekCitations`, `search__preview`, `search__previewCitations`, `search__savePreview`, `search__translateQuery`: These are related to search execution and previews, not monitoring lists.\n    * `searchMonitor__dismiss`, `searchMonitor__list`, `searchMonitor__overview`, `searchMonitor__review`, `searchMonitor__set`: These are related to search monitoring.\n\n3. **Select the Appropriate Tool:**\n    * `searchMonitor__list`: This tool lists monitored searches and requires a `projectId`.\n    * `searchMonitor__overview`: This tool provides an overview of monitored searches and does not require a `projectId`.\n\n4. **Determine Necessary Arguments:**\n    * The user's request is general (\"Quais buscas estão sendo monitoradas?\"). They did not specify a project.\n    * `searchMonitor__list` requires `projectId`. Since no project was specified, I cannot use this tool directly.\n    * `searchMonitor__overview` takes no arguments. This seems like the best fit for a general query about monitored searches.\n\n5. **Formulate the Tool Call:** Call `searchMonitor__overview()`.\n\n6. **Construct the Response:** Generate the tool call JSON.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1887,
+            "promptMs": 502.006,
+            "generatedTokens": 423,
+            "generatedMs": 6879.294
+          },
+          "wallMs": 7429
+        },
+        "calls": [
+          {
+            "id": "noFwOEIzgXFbfiIcBCwIxfgo2HoezIZm",
+            "name": "searchMonitor__overview",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": {
+                "dueCount": 0,
+                "notices": []
+              }
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Nenhuma busca está sendo monitorada no momento.",
+          "toolCalls": [],
+          "reasoning": "The user is asking \"Quais buscas estão sendo monitoradas?\" (What searches are being monitored?).\nI have called `searchMonitor__overview` which returned `{\"ok\":true,\"result\":{\"dueCount\":0,\"notices\":[]}}`.\nThis response indicates that there are no active searches being monitored (`dueCount: 0` and `notices: []`).\nI should inform the user about this.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 43,
+            "promptMs": 64.64,
+            "generatedTokens": 98,
+            "generatedMs": 1575.74
+          },
+          "wallMs": 1668
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Nenhuma busca está sendo monitorada no momento.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Quais buscas estão sendo monitoradas?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "noFwOEIzgXFbfiIcBCwIxfgo2HoezIZm",
+            "name": "searchMonitor__overview",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "noFwOEIzgXFbfiIcBCwIxfgo2HoezIZm",
+        "content": "{\"ok\":true,\"result\":{\"dueCount\":0,\"notices\":[]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Nenhuma busca está sendo monitorada no momento.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "busca",
+          "probability": 0.8766275888358184
+        },
+        {
+          "area": "projetos",
+          "probability": 0.08661206800802636
+        },
+        {
+          "area": "perguntas",
+          "probability": 0.008026338962751808
+        }
+      ],
+      "chosen": [
+        "busca",
+        "projetos"
+      ],
+      "fallback": "none",
+      "decisionMs": 35,
+      "decisionInputTokens": 360
+    }
+  }
+}

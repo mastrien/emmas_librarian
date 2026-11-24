@@ -1,0 +1,94 @@
+{
+  "id": "inv-2",
+  "kind": "trap",
+  "prompt": "Cria um conjunto \"Metodologia\" com as perguntas \"Qual o método?\" e \"Qual a amostra?\".",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 14,
+  "toolsBytes": 5057,
+  "wallMs": 4623,
+  "asked": [],
+  "checks": [
+    {
+      "check": "questionSetExists",
+      "args": {
+        "name": "Metodologia",
+        "questions": [
+          "Qual o método?",
+          "Qual a amostra?"
+        ]
+      },
+      "ok": false
+    }
+  ],
+  "score": {
+    "usedExpectedTools": false,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": false,
+    "steps": 1,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Para criar o conjunto de perguntas, preciso saber em qual projeto ele deve ser criado. Por favor, forneça o ID do projeto.",
+          "toolCalls": [],
+          "reasoning": "The user wants to create a question set named \"Metodologia\" with two specific questions: \"Qual o método?\" and \"Qual a amostra?\".\n\nTo use the `questionSets__create` tool, I need:\n1.  `project_id`: The ID of the project where the question set should be created.\n2.  `name`: The name of the question set (\"Metodologia\").\n3.  `questions`: A list of questions.\n\nThe user did not specify a `project_id`. Since no project is in focus, I must list the available projects and ask the user to choose one.\n\nI will use the `categories__listProjects` tool (if available, but it's not listed in the provided tools) or inform the user about the missing information. Since I don't have a tool to list projects, I must ask the user for the `projectId`.\n\nHowever, looking at the available tools, there is no explicit tool to list projects. I must assume the user needs to provide the `projectId`.\n\nI will inform the user that I need a project ID to proceed.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 884,
+            "promptMs": 261.269,
+            "generatedTokens": 266,
+            "generatedMs": 4267.904
+          },
+          "wallMs": 4587
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Para criar o conjunto de perguntas, preciso saber em qual projeto ele deve ser criado. Por favor, forneça o ID do projeto.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Cria um conjunto \"Metodologia\" com as perguntas \"Qual o método?\" e \"Qual a amostra?\"."
+      },
+      {
+        "role": "assistant",
+        "content": "Para criar o conjunto de perguntas, preciso saber em qual projeto ele deve ser criado. Por favor, forneça o ID do projeto.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "perguntas",
+          "probability": 0.6653950508456312
+        },
+        {
+          "area": "categorias",
+          "probability": 0.2528590483662757
+        },
+        {
+          "area": "projetos",
+          "probability": 0.038905221793432504
+        }
+      ],
+      "chosen": [
+        "perguntas",
+        "categorias"
+      ],
+      "fallback": "none",
+      "decisionMs": 36,
+      "decisionInputTokens": 378
+    }
+  }
+}

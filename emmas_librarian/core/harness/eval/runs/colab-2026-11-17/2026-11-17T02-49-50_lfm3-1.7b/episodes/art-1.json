@@ -1,0 +1,411 @@
+{
+  "id": "art-1",
+  "kind": "happy",
+  "prompt": "Quantos artigos do projeto da tutoria ainda não foram lidos?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 19,
+  "toolsBytes": 6273,
+  "wallMs": 14452,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "iui6mjYB8W6lFyWw7tiUvWBxO3E9kLya",
+              "name": "projects__getAll",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "We need to find out how many articles from the project \"da tutoria\" (tutoring) have not been read. The user asks: \"Quantos artigos do projeto da tutoria ainda não foram lidos?\" which translates to \"How many articles of the tutoring project have not yet been read?\"\n\nWe need to identify the project ID for \"projeto da tutoria\". We can use `projects__getAll` or `projects__getAbout` etc. But we don't know the exact projectId. The user mentions \"projeto da tutoria\" - likely a project named \"tutoria\". We might need to list all projects to find its ID, then get articles by that project and check status (read/archived/new). Or maybe there's a specific function for article status.\n\nLet's look at available tools:\n\n- `articles__getByProject(projectId)` - gets articles by project.\n- `articles__getOne(id)` - get one article.\n- `articles__importFromProject(...)` etc.\n- `articles__updateMetadata`, `articles__updateStatus`, etc.\n- For projects: many functions like `projects__create`, `projects__delete`, `projects__getAbout`, `projects__getAll`, `projects__getNavCounts`, `projects__getOne`, `projects__getScreeningSummaries`, `projects__getSearchHistory`, `projects__getWritingPad`, `projects__markOpened`, `projects__update`, etc.\n\nWe need to find the number of articles from project \"tutoria\" that are not yet read. So we need to know:\n\n- The project ID for \"tutoria\".\n- Then get its articles (maybe via `articles__getByProject`).\n- For each article, check status? There's a function `articles__updateStatusMany` but not a direct query of status. However maybe there is a way to see status from metadata or something else.\n\nWe might need to use `projects__getAll` to list projects and find the one with name \"tutoria\". Let's try that first.\n\nI'll call `projects__getAll()` to get all projects.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 275,
+            "promptMs": 47.77,
+            "generatedTokens": 462,
+            "generatedMs": 3966.893
+          },
+          "wallMs": 4031
+        },
+        "calls": [
+          {
+            "id": "iui6mjYB8W6lFyWw7tiUvWBxO3E9kLya",
+            "name": "projects__getAll",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "name": "Revisão sobre tutoria",
+                  "created_at": "2026-11-17T02:50:24.713Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                },
+                {
+                  "id": 2,
+                  "name": "Vazio",
+                  "created_at": "2026-11-17T02:50:24.713Z",
+                  "last_executed_at": null,
+                  "deleted_at": null,
+                  "writing_pad": null,
+                  "about_markdown": null,
+                  "last_opened_at": null,
+                  "screening_inclusion": null,
+                  "screening_exclusion": null,
+                  "screening_predicted_order": null
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "9mV6YNLnsMl9q7OpkpTSmMazZ8gPXKb8",
+              "name": "articles__getByProject",
+              "arguments": "{\"projectId\":1}"
+            }
+          ],
+          "reasoning": "We need to find \"projeto da tutoria\" and count articles not yet read. The user asks: \"Quantos artigos do projeto da tutoria ainda não foram lidos?\" (How many articles of the tutoring project have not been read yet?). We need to identify the project ID for \"tutoria\". From projects__getAll we got a list of projects, but it's weird: result array includes objects with id and name. There are two entries: id 1 name \"Revisão sobre tutoria\", id 2 name \"Vazio\". So likely \"projeto da tutoria\" is project id 1 (\"Revisão sobre tutoria\"). Need to get articles for that project, maybe via articles__getByProject(projectId=1). Then need to know which are not read. Possibly we can use articles__updateStatusMany? Or there might be a status field per article indicating \"read\". We need to find number of articles not yet read (status = new?). Let's see tools: articles__getByProject, articles__getOne, etc.\n\nWe should call articles__getByProject with projectId 1.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 483,
+            "promptMs": 61.448,
+            "generatedTokens": 263,
+            "generatedMs": 2316.522
+          },
+          "wallMs": 2397
+        },
+        "calls": [
+          {
+            "id": "9mV6YNLnsMl9q7OpkpTSmMazZ8gPXKb8",
+            "name": "articles__getByProject",
+            "arguments": "{\"projectId\":1}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Adaptive feedback in intelligent tutoring systems",
+                  "authors": null,
+                  "year": 2020,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "read",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 1,
+                  "ai_summary": null
+                },
+                {
+                  "id": 2,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Hints and student modelling in tutoring dialogues",
+                  "authors": null,
+                  "year": 2021,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "read",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 2,
+                  "ai_summary": null
+                },
+                {
+                  "id": 3,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Tutores baseados em regras para ensino de álgebra",
+                  "authors": null,
+                  "year": 2018,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "new",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 3,
+                  "ai_summary": null
+                },
+                {
+                  "id": 4,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Retrieval practice with an adaptive tutor",
+                  "authors": null,
+                  "year": 2022,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "new",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 4,
+                  "ai_summary": null
+                },
+                {
+                  "id": 5,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Effect sizes of tutoring systems: a meta-analysis",
+                  "authors": null,
+                  "year": 2019,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "new",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 5,
+                  "ai_summary": null
+                },
+                {
+                  "id": 6,
+                  "project_id": 1,
+                  "doi": null,
+                  "title": "Early tutoring prototypes",
+                  "authors": null,
+                  "year": 2005,
+                  "source_query": "Manual Import",
+                  "source_databases": "[\"Manual\"]",
+                  "csl_json": "{}",
+                  "local_file_path": null,
+                  "status": "archived",
+                  "archive_note": null,
+                  "is_oa": null,
+                  "publisher": null,
+                  "url": null,
+                  "accessed": null,
+                  "deleted_at": null,
+                  "abstract": null,
+                  "author_keywords": null,
+                  "index_keywords": null,
+                  "journal": null,
+                  "volume": null,
+                  "issue": null,
+                  "pages": null,
+                  "affiliations": null,
+                  "references_list": null,
+                  "document_type": null,
+                  "issn": null,
+                  "citation_count": null,
+                  "search_id": 6,
+                  "ai_summary": null
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "No projeto **“Revisão sobre tutoria” (ID 1)** há **4 artigos que ainda não foram marcados como lidos** (status = `new` ou `archived`):\n\n- ID 3 – *Tutores baseados em regras para ensino de álgebra*  \n- ID 4 – *Retrieval practice with an adaptive tutor*  \n- ID 5 – *Effect sizes of tutoring systems: a meta-analysis*  \n- ID 6 – *Early tutoring prototypes*\n\nOs demais artigos (ID 1 e ID 2) já têm status `read`.",
+          "toolCalls": [],
+          "reasoning": "We need to find how many articles of the project \"tutoria\" (maybe \"Revisão sobre tutoria\"?). The user asked: \"Quantos artigos do projeto da tutoria ainda não foram lidos?\" Means: How many articles from the tutoring project have not been read yet? We have project id 1 for \"Revisão sobre tutoria\". The articles list includes status fields. Need to count those with status not \"read\"? Let's parse the result.\n\nFrom articles__getByProject result (project_id=1) we got an array of article objects, each with fields: id, title, etc., and a field \"status\": e.g., for id 1: status \"read\". For id2: \"read\". id3: \"new\". id4: \"new\". id5: \"new\". id6: \"archived\".\n\nWe need to know which are not yet read. Usually \"read\" means already read; others (new, archived) maybe not read? The question: \"ainda não foram lidos\" = not yet read. So we count articles where status != \"read\". Let's list:\n\n- id 1: status \"read\" -> already read.\n- id 2: \"read\".\n- id 3: \"new\" -> not read.\n- id 4: \"new\" -> not read.\n- id 5: \"new\" -> not read.\n- id 6: \"archived\" -> maybe not read? Usually archived means not active, but status is \"archived\". Not sure if considered read. Typically \"read\" indicates read status; others are new or archived (maybe not yet read). I'll assume any status other than \"read\" counts as not yet read.\n\nThus count: ids 3,4,5,6 = 4 articles? Wait id1 and id2 are read, so exclude them. So total non-read = 4 (ids 3,4,5,6). But also maybe there is a separate field \"last_opened_at\" etc. But status seems enough.\n\nThus answer: 4 articles not yet read.\n\nBut let's double-check if any article with id=1 and id=2 are both \"read\". Yes. So non-read count = total (6) - read count (2) = 4.\n\nWe should verify if there is a project named \"tutoria\" maybe different ID? The earlier projects__getAll returned two entries: id1 name \"Revisão sobre tutoria\", id2 \"Vazio\". So projectId=1 corresponds to \"Revisão sobre tutoria\" which includes tutoring. So we used correct.\n\nThus answer: 4 articles not yet read.\n\nWe might also need to mention article IDs and titles? The user asked \"Quantos artigos... ainda não foram lidos?\" Just number, but could give details. I'll say there are 4 articles with status new or archived that haven't been marked as read.\n\nLet's craft short answer in Portuguese: \"Até agora, 4 dos 6 artigos do projeto 'Revisão sobre tutoria' ainda não foram marcados como lidos (status 'new' ou 'archived').\" Provide IDs and titles maybe.\n\nFrom result:\n\nid3: \"Tutores baseados em regras para ensino de álgebra\"\nid4: \"Retrieval practice with an adaptive tutor\"\nid5: \"Effect sizes of tutoring systems: a meta-analysis\"\nid6: \"Early tutoring prototypes\"\n\nThus 4 articles.\n\nI'll answer.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 1540,
+            "promptMs": 160.476,
+            "generatedTokens": 876,
+            "generatedMs": 7808.477
+          },
+          "wallMs": 7988
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "No projeto **“Revisão sobre tutoria” (ID 1)** há **4 artigos que ainda não foram marcados como lidos** (status = `new` ou `archived`):\n\n- ID 3 – *Tutores baseados em regras para ensino de álgebra*  \n- ID 4 – *Retrieval practice with an adaptive tutor*  \n- ID 5 – *Effect sizes of tutoring systems: a meta-analysis*  \n- ID 6 – *Early tutoring prototypes*\n\nOs demais artigos (ID 1 e ID 2) já têm status `read`.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Quantos artigos do projeto da tutoria ainda não foram lidos?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "iui6mjYB8W6lFyWw7tiUvWBxO3E9kLya",
+            "name": "projects__getAll",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "iui6mjYB8W6lFyWw7tiUvWBxO3E9kLya",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"name\":\"Revisão sobre tutoria\",\"created_at\":\"2026-11-17T02:50:24.713Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null},{\"id\":2,\"name\":\"Vazio\",\"created_at\":\"2026-11-17T02:50:24.713Z\",\"last_executed_at\":null,\"deleted_at\":null,\"writing_pad\":null,\"about_markdown\":null,\"last_opened_at\":null,\"screening_inclusion\":null,\"screening_exclusion\":null,\"screening_predicted_order\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "9mV6YNLnsMl9q7OpkpTSmMazZ8gPXKb8",
+            "name": "articles__getByProject",
+            "arguments": "{\"projectId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "9mV6YNLnsMl9q7OpkpTSmMazZ8gPXKb8",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"project_id\":1,\"doi\":null,\"title\":\"Adaptive feedback in intelligent tutoring systems\",\"authors\":null,\"year\":2020,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"read\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":1,\"ai_summary\":null},{\"id\":2,\"project_id\":1,\"doi\":null,\"title\":\"Hints and student modelling in tutoring dialogues\",\"authors\":null,\"year\":2021,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"read\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":2,\"ai_summary\":null},{\"id\":3,\"project_id\":1,\"doi\":null,\"title\":\"Tutores baseados em regras para ensino de álgebra\",\"authors\":null,\"year\":2018,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"new\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":3,\"ai_summary\":null},{\"id\":4,\"project_id\":1,\"doi\":null,\"title\":\"Retrieval practice with an adaptive tutor\",\"authors\":null,\"year\":2022,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"new\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":4,\"ai_summary\":null},{\"id\":5,\"project_id\":1,\"doi\":null,\"title\":\"Effect sizes of tutoring systems: a meta-analysis\",\"authors\":null,\"year\":2019,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"new\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":5,\"ai_summary\":null},{\"id\":6,\"project_id\":1,\"doi\":null,\"title\":\"Early tutoring prototypes\",\"authors\":null,\"year\":2005,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"archived\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":6,\"ai_summary\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "No projeto **“Revisão sobre tutoria” (ID 1)** há **4 artigos que ainda não foram marcados como lidos** (status = `new` ou `archived`):\n\n- ID 3 – *Tutores baseados em regras para ensino de álgebra*  \n- ID 4 – *Retrieval practice with an adaptive tutor*  \n- ID 5 – *Effect sizes of tutoring systems: a meta-analysis*  \n- ID 6 – *Early tutoring prototypes*\n\nOs demais artigos (ID 1 e ID 2) já têm status `read`.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "artigos",
+          "probability": 0.7313310002548701
+        },
+        {
+          "area": "projetos",
+          "probability": 0.10499516832722947
+        },
+        {
+          "area": "diario",
+          "probability": 0.0986791183654802
+        }
+      ],
+      "chosen": [
+        "artigos",
+        "projetos"
+      ],
+      "fallback": "none",
+      "decisionMs": 36,
+      "decisionInputTokens": 367
+    }
+  }
+}

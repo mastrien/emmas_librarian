@@ -1,0 +1,244 @@
+{
+  "id": "lix-2",
+  "kind": "happy",
+  "prompt": "Restaura o projeto que apaguei.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 3,
+  "toolsBytes": 2292,
+  "wallMs": 2734,
+  "asked": [
+    {
+      "tool": "trash__restoreItem",
+      "command": "trash:restoreItem",
+      "input": {
+        "type": "project",
+        "id": 3
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "projectExists",
+      "args": {
+        "name": "Projeto antigo"
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 5,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "BU3CX8XK69yoggUihLcADmyFajJsmAR4",
+              "name": "submit_plan",
+              "arguments": "{\"tarefas\":[{\"assunto\": \"lixeira\", \"tarefa\": \"restaurar o projeto apagado\"}]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 21,
+            "promptMs": 99.224,
+            "generatedTokens": 51,
+            "generatedMs": 737.054
+          },
+          "wallMs": 896
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "w5OWRRs8JTBFSa4ru8HkgGTonUcMoZUC",
+              "name": "trash__getItems",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 60,
+            "promptMs": 108.222,
+            "generatedTokens": 17,
+            "generatedMs": 237.087
+          },
+          "wallMs": 415
+        },
+        "calls": [
+          {
+            "id": "w5OWRRs8JTBFSa4ru8HkgGTonUcMoZUC",
+            "name": "trash__getItems",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 3,
+                  "type": "project",
+                  "title": "Projeto antigo",
+                  "deleted_at": "2026-11-17 03:54:36"
+                },
+                {
+                  "id": 3,
+                  "type": "annotation",
+                  "title": "comentário",
+                  "deleted_at": "2026-11-17 03:54:36"
+                }
+              ]
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "7WbZ6VsTPgCVkA7RhuTJ5UjYRdH4VoVa",
+              "name": "trash__restoreItem",
+              "arguments": "{\"type\":\"project\",\"id\":3}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 100,
+            "promptMs": 93.252,
+            "generatedTokens": 40,
+            "generatedMs": 577.217
+          },
+          "wallMs": 680
+        },
+        "calls": [
+          {
+            "id": "7WbZ6VsTPgCVkA7RhuTJ5UjYRdH4VoVa",
+            "name": "trash__restoreItem",
+            "arguments": "{\"type\":\"project\",\"id\":3}",
+            "result": {
+              "ok": true,
+              "result": null
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Restorei o projeto \"Projeto antigo\" da lixeira.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 83.11,
+            "generatedTokens": 16,
+            "generatedMs": 226.066
+          },
+          "wallMs": 319
+        },
+        "calls": []
+      },
+      {
+        "reply": {
+          "content": "O projeto \"Projeto antigo\" foi restaurado com sucesso da lixeira.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 67,
+            "promptMs": 106.223,
+            "generatedTokens": 18,
+            "generatedMs": 250.282
+          },
+          "wallMs": 421
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O projeto \"Projeto antigo\" foi restaurado com sucesso da lixeira.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Hoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.\n\nVocê planeja pedidos sobre a biblioteca de pesquisa. Agora você NÃO executa nada e não responde à pessoa: só entrega o plano chamando a ferramenta submit_plan.\nCada tarefa tem um assunto (um dos ids abaixo) e uma frase dizendo o que fazer. Cada tarefa usa um só assunto.\nDivida o pedido em tarefas pequenas, na ordem em que devem acontecer. Se nenhum assunto serve ao pedido, chame submit_plan com a lista de tarefas vazia.\nAssuntos:\n- projetos: listar, criar, renomear e apagar projetos; sobre o projeto, bloco de escrita, contagens e histórico de buscas\n- artigos: ver artigos de um projeto, mudar status (novo, lido, arquivado), editar metadados, importar de outro projeto\n- pdfs: PDFs dos artigos: ver a biblioteca de PDFs, desvincular, baixar PDF de acesso aberto\n- anotacoes: ler as anotações e os destaques de um artigo\n- diario: ler o diário do projeto (por dia, com histórico) e acrescentar um registro\n- categorias: categorias personalizadas do projeto: ver, criar, aplicar um conjunto\n- acesso-rapido: links e documentos de acesso rápido do projeto\n- lixeira: ver o que foi apagado e restaurar\n- triagem: rótulos e critérios da triagem de artigos, decisões já tomadas; criar e renomear rótulos\n- prisma: fontes e registros do fluxo PRISMA (só leitura)\n- perguntas: conjuntos de perguntas para extração, resultados e auditorias de extração\n- busca: buscas bibliográficas: converter consulta, pré-visualizar e salvar busca, citações, monitor de buscas\n- ia: usar IA: resumo de artigo, extração de metadados e de respostas; indexar para perguntas e gerar vetores\n- agenda: agenda científica: congressos e periódicos com prazos\n- sistema: versão do aplicativo e backups automáticos existentes"
+      },
+      {
+        "role": "user",
+        "content": "Restaura o projeto que apaguei."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": []
+      },
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Pedido da pessoa: Restaura o projeto que apaguei.\nTarefa de agora (só esta): restaurar o projeto apagado\nFaça só esta tarefa com as ferramentas e diga em uma frase o que fez ou encontrou."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "w5OWRRs8JTBFSa4ru8HkgGTonUcMoZUC",
+            "name": "trash__getItems",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "w5OWRRs8JTBFSa4ru8HkgGTonUcMoZUC",
+        "content": "{\"ok\":true,\"result\":[{\"id\":3,\"type\":\"project\",\"title\":\"Projeto antigo\",\"deleted_at\":\"2026-11-17 03:54:36\"},{\"id\":3,\"type\":\"annotation\",\"title\":\"comentário\",\"deleted_at\":\"2026-11-17 03:54:36\"}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "7WbZ6VsTPgCVkA7RhuTJ5UjYRdH4VoVa",
+            "name": "trash__restoreItem",
+            "arguments": "{\"type\":\"project\",\"id\":3}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "7WbZ6VsTPgCVkA7RhuTJ5UjYRdH4VoVa",
+        "content": "{\"ok\":true,\"result\":null}"
+      },
+      {
+        "role": "assistant",
+        "content": "Restorei o projeto \"Projeto antigo\" da lixeira.",
+        "toolCalls": []
+      }
+    ],
+    "plan": [
+      {
+        "area": "lixeira",
+        "task": "restaurar o projeto apagado"
+      }
+    ]
+  }
+}

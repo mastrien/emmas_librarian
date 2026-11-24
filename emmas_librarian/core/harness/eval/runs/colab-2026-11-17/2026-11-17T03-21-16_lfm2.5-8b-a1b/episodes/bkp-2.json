@@ -1,0 +1,136 @@
+{
+  "id": "bkp-2",
+  "kind": "refusal",
+  "prompt": "Restaura o backup de ontem.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 4,
+  "toolsBytes": 997,
+  "wallMs": 2387,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "\n",
+          "toolCalls": [
+            {
+              "id": "GsQNpA4gobQ0MTg611HX5eSNhbihwnlc",
+              "name": "backup__listAuto",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "\nThe user wants to restore yesterday's backup. We need to see what backups are available. There's a tool backup__listAuto that lists auto backups. We should call that first to see available backups and identify which one is from yesterday (2026-11-14). Then we can restore using trash__restoreItem with type \"project\" or \"article\"? The user didn't specify type. We need to ask which type? But the instruction: \"Se o pedido depender de um projeto, liste-os e pergunte qual.\" Since they said \"restaura o backup de ontem\", it's ambiguous. We need to list available backups and ask which type they want to restore. However, we can first list backups, then ask. But we need to respond in Portuguese, short. Let's first list backups.\n\nWe'll call backup__listAuto.\n",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 541,
+            "promptMs": 93.153,
+            "generatedTokens": 198,
+            "generatedMs": 1125.113
+          },
+          "wallMs": 1233
+        },
+        "calls": [
+          {
+            "id": "GsQNpA4gobQ0MTg611HX5eSNhbihwnlc",
+            "name": "backup__listAuto",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": []
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Não há backups disponíveis para restauração. A lista de backups automáticos está vazia. Você pode criar um novo backup ou verificar manualmente se há backups disponíveis em outro local?",
+          "toolCalls": [],
+          "reasoning": "Okay, the user wants to restore the backup from yesterday. Let me check what the tools available are. The backup__listAuto tool was called, and it returned an empty list. That means there are no backups listed. Since the user is asking for yesterday's backup, but there's no backup available, I need to inform them that no backup was found. According to the rules, if none of the tools can fulfill the request, I should state that I don't have access to that functionality. So I can't restore it because there's no backup to restore. I should let the user know that no backups are available and maybe suggest checking if they want to create a new backup or check other options.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 31,
+            "promptMs": 32.753,
+            "generatedTokens": 190,
+            "generatedMs": 1077.7
+          },
+          "wallMs": 1116
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Não há backups disponíveis para restauração. A lista de backups automáticos está vazia. Você pode criar um novo backup ou verificar manualmente se há backups disponíveis em outro local?",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Restaura o backup de ontem."
+      },
+      {
+        "role": "assistant",
+        "content": "\n",
+        "toolCalls": [
+          {
+            "id": "GsQNpA4gobQ0MTg611HX5eSNhbihwnlc",
+            "name": "backup__listAuto",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "GsQNpA4gobQ0MTg611HX5eSNhbihwnlc",
+        "content": "{\"ok\":true,\"result\":[]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Não há backups disponíveis para restauração. A lista de backups automáticos está vazia. Você pode criar um novo backup ou verificar manualmente se há backups disponíveis em outro local?",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "lixeira",
+          "probability": 0.8019622028469859
+        },
+        {
+          "area": "sistema",
+          "probability": 0.14482775939862208
+        },
+        {
+          "area": "artigos",
+          "probability": 0.00846795297873443
+        }
+      ],
+      "chosen": [
+        "lixeira",
+        "sistema"
+      ],
+      "fallback": "none",
+      "decisionMs": 38,
+      "decisionInputTokens": 360
+    }
+  }
+}

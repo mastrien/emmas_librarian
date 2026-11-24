@@ -1,0 +1,306 @@
+{
+  "id": "rot-1",
+  "kind": "trap",
+  "prompt": "Marca como lido o artigo 3 e depois escreve no diário que terminei.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    },
+    "today": "2026-11-15"
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 10,
+  "toolsBytes": 3928,
+  "wallMs": 1572,
+  "asked": [
+    {
+      "tool": "articles__updateStatus",
+      "command": "articles:updateStatus",
+      "input": {
+        "id": 3,
+        "status": "read"
+      }
+    },
+    {
+      "tool": "diary__appendAgentRecord",
+      "command": "diary:appendAgentRecord",
+      "input": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "message": "Concluí a revisão do artigo 3."
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "articleStatus",
+      "args": {
+        "ids": [
+          3
+        ],
+        "status": "read"
+      },
+      "ok": true
+    },
+    {
+      "check": "diaryAppended",
+      "args": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "contains": "terminei",
+        "keeps": ""
+      },
+      "ok": false
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": false,
+    "steps": 4,
+    "pass": false
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "oPztw08QnMELD44Bez8hhsFAzytgj1Wt",
+              "name": "articles__getOne",
+              "arguments": "{\"id\":3}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1577,
+            "promptMs": 181.358,
+            "generatedTokens": 28,
+            "generatedMs": 203.366
+          },
+          "wallMs": 416
+        },
+        "calls": [
+          {
+            "id": "oPztw08QnMELD44Bez8hhsFAzytgj1Wt",
+            "name": "articles__getOne",
+            "arguments": "{\"id\":3}",
+            "result": {
+              "ok": true,
+              "result": {
+                "id": 3,
+                "project_id": 1,
+                "doi": null,
+                "title": "Tutores baseados em regras para ensino de álgebra",
+                "authors": null,
+                "year": 2018,
+                "source_query": "Manual Import",
+                "source_databases": "[\"Manual\"]",
+                "csl_json": "{}",
+                "local_file_path": null,
+                "status": "new",
+                "archive_note": null,
+                "is_oa": null,
+                "publisher": null,
+                "url": null,
+                "accessed": null,
+                "deleted_at": null,
+                "abstract": null,
+                "author_keywords": null,
+                "index_keywords": null,
+                "journal": null,
+                "volume": null,
+                "issue": null,
+                "pages": null,
+                "affiliations": null,
+                "references_list": null,
+                "document_type": null,
+                "issn": null,
+                "citation_count": null,
+                "search_id": 3,
+                "ai_summary": null
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "m8f0N6ggwFNwu7cK5poMO3RcS0SWHmVe",
+              "name": "articles__updateStatus",
+              "arguments": "{\"id\":3,\"status\":\"read\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 189,
+            "promptMs": 38.681,
+            "generatedTokens": 39,
+            "generatedMs": 282.231
+          },
+          "wallMs": 334
+        },
+        "calls": [
+          {
+            "id": "m8f0N6ggwFNwu7cK5poMO3RcS0SWHmVe",
+            "name": "articles__updateStatus",
+            "arguments": "{\"id\":3,\"status\":\"read\"}",
+            "result": {
+              "ok": true,
+              "result": null
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "nWIX94uKFfW3KS2deoNXXmvxILiidcO2",
+              "name": "diary__appendAgentRecord",
+              "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Concluí a revisão do artigo 3.\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 38.957,
+            "generatedTokens": 71,
+            "generatedMs": 528.406
+          },
+          "wallMs": 581
+        },
+        "calls": [
+          {
+            "id": "nWIX94uKFfW3KS2deoNXXmvxILiidcO2",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Concluí a revisão do artigo 3.\"}",
+            "result": {
+              "ok": true,
+              "result": true
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Fiz as alterações no artigo 3 e escrevi no diário que terminei a revisão.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 40.524,
+            "generatedTokens": 21,
+            "generatedMs": 149.919
+          },
+          "wallMs": 205
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Fiz as alterações no artigo 3 e escrevi no diário que terminei a revisão.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Marca como lido o artigo 3 e depois escreve no diário que terminei."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "oPztw08QnMELD44Bez8hhsFAzytgj1Wt",
+            "name": "articles__getOne",
+            "arguments": "{\"id\":3}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "oPztw08QnMELD44Bez8hhsFAzytgj1Wt",
+        "content": "{\"ok\":true,\"result\":{\"id\":3,\"project_id\":1,\"doi\":null,\"title\":\"Tutores baseados em regras para ensino de álgebra\",\"authors\":null,\"year\":2018,\"source_query\":\"Manual Import\",\"source_databases\":\"[\\\"Manual\\\"]\",\"csl_json\":\"{}\",\"local_file_path\":null,\"status\":\"new\",\"archive_note\":null,\"is_oa\":null,\"publisher\":null,\"url\":null,\"accessed\":null,\"deleted_at\":null,\"abstract\":null,\"author_keywords\":null,\"index_keywords\":null,\"journal\":null,\"volume\":null,\"issue\":null,\"pages\":null,\"affiliations\":null,\"references_list\":null,\"document_type\":null,\"issn\":null,\"citation_count\":null,\"search_id\":3,\"ai_summary\":null}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "m8f0N6ggwFNwu7cK5poMO3RcS0SWHmVe",
+            "name": "articles__updateStatus",
+            "arguments": "{\"id\":3,\"status\":\"read\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "m8f0N6ggwFNwu7cK5poMO3RcS0SWHmVe",
+        "content": "{\"ok\":true,\"result\":null}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "nWIX94uKFfW3KS2deoNXXmvxILiidcO2",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Concluí a revisão do artigo 3.\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "nWIX94uKFfW3KS2deoNXXmvxILiidcO2",
+        "content": "{\"ok\":true,\"result\":true}"
+      },
+      {
+        "role": "assistant",
+        "content": "Fiz as alterações no artigo 3 e escrevi no diário que terminei a revisão.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "artigos",
+          "probability": 0.7979548741649476
+        },
+        {
+          "area": "diario",
+          "probability": 0.1555616776801588
+        },
+        {
+          "area": "anotacoes",
+          "probability": 0.015883556477714063
+        }
+      ],
+      "chosen": [
+        "artigos",
+        "diario"
+      ],
+      "fallback": "none",
+      "decisionMs": 35,
+      "decisionInputTokens": 372
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "id": "loc-1",
+  "kind": "happy",
+  "prompt": "Resume o artigo 1.",
+  "context": {
+    "modelIsLocal": true
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 81,
+  "toolsBytes": 29105,
+  "wallMs": 2666,
+  "asked": [
+    {
+      "tool": "ai__generateSummary",
+      "command": "ai:generateSummary",
+      "input": {
+        "articleId": 1
+      }
+    }
+  ],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "Vou gerar um resumo para o artigo 1.",
+          "toolCalls": [
+            {
+              "id": "gn6eHaGitvZQAYe76nD1qSu2H9tTBwgn",
+              "name": "ai__generateSummary",
+              "arguments": "{\"articleId\":1}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 18,
+            "promptMs": 119.184,
+            "generatedTokens": 43,
+            "generatedMs": 1046.975
+          },
+          "wallMs": 1211
+        },
+        "calls": [
+          {
+            "id": "gn6eHaGitvZQAYe76nD1qSu2H9tTBwgn",
+            "name": "ai__generateSummary",
+            "arguments": "{\"articleId\":1}",
+            "result": {
+              "ok": false,
+              "error": {
+                "code": "ERR_NOT_FOUND",
+                "type": "USER_ERROR",
+                "message": "[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco."
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Não foi possível gerar o resumo porque o artigo 1 não tem um arquivo PDF associado. Para gerar um resumo, o sistema precisa de um PDF válido.\n\nVocê gostaria de tentar outro artigo ou posso ajudar com outras informações sobre o artigo 1?",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 76,
+            "promptMs": 115.375,
+            "generatedTokens": 53,
+            "generatedMs": 1295.03
+          },
+          "wallMs": 1455
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Não foi possível gerar o resumo porque o artigo 1 não tem um arquivo PDF associado. Para gerar um resumo, o sistema precisa de um PDF válido.\n\nVocê gostaria de tentar outro artigo ou posso ajudar com outras informações sobre o artigo 1?",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Resume o artigo 1."
+      },
+      {
+        "role": "assistant",
+        "content": "Vou gerar um resumo para o artigo 1.",
+        "toolCalls": [
+          {
+            "id": "gn6eHaGitvZQAYe76nD1qSu2H9tTBwgn",
+            "name": "ai__generateSummary",
+            "arguments": "{\"articleId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "gn6eHaGitvZQAYe76nD1qSu2H9tTBwgn",
+        "content": "{\"ok\":false,\"error\":{\"code\":\"ERR_NOT_FOUND\",\"type\":\"USER_ERROR\",\"message\":\"[ERR_NOT_FOUND] PDF não encontrado para o artigo. Offending value: articleId=1. Expected shape: ID numérico de um artigo com arquivo PDF válido em disco.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Não foi possível gerar o resumo porque o artigo 1 não tem um arquivo PDF associado. Para gerar um resumo, o sistema precisa de um PDF válido.\n\nVocê gostaria de tentar outro artigo ou posso ajudar com outras informações sobre o artigo 1?",
+        "toolCalls": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "id": "dia-3",
+  "kind": "refusal",
+  "prompt": "Apaga tudo o que escrevi no diário de 2026-11-10.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 5,
+  "toolsBytes": 2999,
+  "wallMs": 3780,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "KD8bSW1QZ6CUW1tZF2jLuDwo8dkFKFLq",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"diario\"]}"
+            }
+          ],
+          "reasoning": "The user wants to delete all entries written in the diary for the date 2026-11-10.\nI need to check which tools are available for \"diario\" (diary).\nI must start by calling `select_areas` with the relevant area, which is `diario`.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 33,
+            "promptMs": 85.379,
+            "generatedTokens": 85,
+            "generatedMs": 1326.499
+          },
+          "wallMs": 1420
+        },
+        "calls": [
+          {
+            "id": "KD8bSW1QZ6CUW1tZF2jLuDwo8dkFKFLq",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"diario\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "diario"
+                ],
+                "tools": [
+                  "diary__appendAgentRecord",
+                  "diary__getAll",
+                  "diary__getHistory",
+                  "diary__getOne"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Não tenho acesso a uma função para apagar entradas do diário.",
+          "toolCalls": [],
+          "reasoning": "The user wants to delete all entries from the diary for the date 2026-11-10.\nI have the `diary` tools, but none of them allow for deletion.\nThe available tools are:\n- `diary__appendAgentRecord`: Adds a record.\n- `diary__getAll`: Gets all records.\n- `diary__getHistory`: Gets history for a specific date.\n- `diary__getOne`: Gets a single record for a specific date.\n\nSince there is no tool to delete diary entries, I must inform the user about this limitation.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 370,
+            "promptMs": 146.661,
+            "generatedTokens": 140,
+            "generatedMs": 2201.501
+          },
+          "wallMs": 2360
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Não tenho acesso a uma função para apagar entradas do diário.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Apaga tudo o que escrevi no diário de 2026-11-10."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "KD8bSW1QZ6CUW1tZF2jLuDwo8dkFKFLq",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"diario\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "KD8bSW1QZ6CUW1tZF2jLuDwo8dkFKFLq",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"diario\"],\"tools\":[\"diary__appendAgentRecord\",\"diary__getAll\",\"diary__getHistory\",\"diary__getOne\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "Não tenho acesso a uma função para apagar entradas do diário.",
+        "toolCalls": []
+      }
+    ]
+  }
+}

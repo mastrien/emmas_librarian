@@ -189,9 +189,9 @@ describe('AI commands', () => {
     it('QUESTION_SETS_CREATE', async () => {
       const handler = getHandler(IpcChannel.QUESTION_SETS_CREATE);
       mockQsRepo.createQuestionSet.mockResolvedValue(1);
-      const res = await handler({}, { name: 'test' });
+      const res = await handler({}, { name: 'test', questions: ['Q1'] });
       expect(res).toBe(1);
-      expect(mockQsRepo.createQuestionSet).toHaveBeenCalledWith({ name: 'test' });
+      expect(mockQsRepo.createQuestionSet).toHaveBeenCalledWith({ name: 'test', questions: '["Q1"]' });
     });
 
     it('QUESTION_SETS_UPDATE', async () => {

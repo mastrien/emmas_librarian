@@ -1,0 +1,200 @@
+{
+  "id": "mon-2",
+  "kind": "happy",
+  "prompt": "Monitora a busca 1 do projeto da tutoria a cada 7 dias.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 12,
+  "toolsBytes": 6730,
+  "wallMs": 3524,
+  "asked": [
+    {
+      "tool": "searchMonitor__set",
+      "command": "searchMonitor:set",
+      "input": {
+        "projectId": 1,
+        "searchId": 1,
+        "days": 7
+      }
+    }
+  ],
+  "checks": [],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 3,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "fw6SeH7oNpkhjDlVukyVvheoxkEE4vHV",
+              "name": "select_areas",
+              "arguments": "{\"areas\":[\"busca\"]}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 514,
+            "promptMs": 315.262,
+            "generatedTokens": 30,
+            "generatedMs": 693.188
+          },
+          "wallMs": 1075
+        },
+        "calls": [
+          {
+            "id": "fw6SeH7oNpkhjDlVukyVvheoxkEE4vHV",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"busca\"]}",
+            "result": {
+              "ok": true,
+              "result": {
+                "areas": [
+                  "busca"
+                ],
+                "tools": [
+                  "search__discardPreview",
+                  "search__peekCitations",
+                  "search__preview",
+                  "search__previewCitations",
+                  "search__savePreview",
+                  "search__translateQuery",
+                  "searchMonitor__dismiss",
+                  "searchMonitor__list",
+                  "searchMonitor__overview",
+                  "searchMonitor__review",
+                  "searchMonitor__set"
+                ]
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "FUTXKD1P50qIGNcUSWMVD66s5MwU99d7",
+              "name": "searchMonitor__set",
+              "arguments": "{\"projectId\":1,\"searchId\":1,\"days\":7}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 521,
+            "promptMs": 338.016,
+            "generatedTokens": 52,
+            "generatedMs": 1235.403
+          },
+          "wallMs": 1664
+        },
+        "calls": [
+          {
+            "id": "FUTXKD1P50qIGNcUSWMVD66s5MwU99d7",
+            "name": "searchMonitor__set",
+            "arguments": "{\"projectId\":1,\"searchId\":1,\"days\":7}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "search_id": 1,
+                  "interval_days": 7,
+                  "last_checked_at": null,
+                  "pending_count": 0,
+                  "failed_bases": [],
+                  "project_id": 1,
+                  "project_name": "Revisão sobre tutoria",
+                  "unified_query": "Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems"
+                }
+              ]
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "A busca 1 do projeto \"Revisão sobre tutoria\" está configurada para ser monitorada a cada 7 dias.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 86,
+            "promptMs": 115.833,
+            "generatedTokens": 28,
+            "generatedMs": 652.088
+          },
+          "wallMs": 784
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "A busca 1 do projeto \"Revisão sobre tutoria\" está configurada para ser monitorada a cada 7 dias.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nVocê começa só com a ferramenta select_areas. Antes de agir, chame select_areas com os assuntos do pedido:\nsó então recebe as ferramentas deles. Um pedido pode ter mais de um assunto; pode chamar select_areas de novo para somar.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Monitora a busca 1 do projeto da tutoria a cada 7 dias."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "fw6SeH7oNpkhjDlVukyVvheoxkEE4vHV",
+            "name": "select_areas",
+            "arguments": "{\"areas\":[\"busca\"]}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "fw6SeH7oNpkhjDlVukyVvheoxkEE4vHV",
+        "content": "{\"ok\":true,\"result\":{\"areas\":[\"busca\"],\"tools\":[\"search__discardPreview\",\"search__peekCitations\",\"search__preview\",\"search__previewCitations\",\"search__savePreview\",\"search__translateQuery\",\"searchMonitor__dismiss\",\"searchMonitor__list\",\"searchMonitor__overview\",\"searchMonitor__review\",\"searchMonitor__set\"]}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "FUTXKD1P50qIGNcUSWMVD66s5MwU99d7",
+            "name": "searchMonitor__set",
+            "arguments": "{\"projectId\":1,\"searchId\":1,\"days\":7}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "FUTXKD1P50qIGNcUSWMVD66s5MwU99d7",
+        "content": "{\"ok\":true,\"result\":[{\"search_id\":1,\"interval_days\":7,\"last_checked_at\":null,\"pending_count\":0,\"failed_bases\":[],\"project_id\":1,\"project_name\":\"Revisão sobre tutoria\",\"unified_query\":\"Adição manual de artigo avulso: Adaptive feedback in intelligent tutoring systems\"}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "A busca 1 do projeto \"Revisão sobre tutoria\" está configurada para ser monitorada a cada 7 dias.",
+        "toolCalls": []
+      }
+    ]
+  }
+}
