@@ -23,7 +23,7 @@ Fonte: https://www.liquid.ai/lfm-license (resumo, não é aconselhamento jurídi
   patente. Descumprir a licença a encerra, e então é preciso apagar todas as cópias.
 - **Sem copyleft:** não obriga a abrir o código do que se constrói por cima.
 
-## Distribuição: baixar no primeiro uso (implementado, issue #198; a decisão de distribuição ainda é para o autor confirmar)
+## Distribuição: baixar no primeiro uso (implementado, issue #198; decisão do autor em 2026-11-24)
 
 **Baixar no primeiro uso, com consentimento, e não empacotar.**
 
@@ -42,7 +42,18 @@ casos do LFM3-1.7B (detalhes em `docs/avaliacao-modelos.md`, seção das bateria
   (`full`: 10,8 s).
 - O Qwen é mais rápido, porém menos preciso nas armadilhas (7/14 no `decided`, contra 12/14 do LFM3): ele pergunta em
   texto em vez de chamar a ferramenta que dispara a confirmação do sistema.
-- Decisão do autor: manter os dois como opção final e avaliar no uso real. Nenhuma troca de modelo padrão foi decidida.
+- Decisão do autor: manter os dois como opção final e avaliar no uso real.
+
+## Decisões do autor (2026-11-24)
+
+- **Nada é embutido no instalador.** Os modelos são de download opcional e explícito, no primeiro uso.
+- **Sem modelo padrão.** Os dois (LFM3-1.7B e Qwen3.5-4B) aparecem como disponíveis para baixar, cada um com um botão de download
+  acessível; a pessoa escolhe qual baixar.
+- **Aviso perto da área de configurações**, com links para as licenças (LFM Open License v1.0, Apache-2.0 e MIT do llama.cpp), que
+  diga de quem é a responsabilidade do limite de receita do LFM (de quem usa; ver a leitura das licenças abaixo).
+- Para o Qwen3.5-4B no modo `full` (61/72 nas baterias de 2026-11-24) o modelo de decisão d1-2B não é usado, então só o Qwen e o
+  llama.cpp (Apache-2.0 e MIT) entram: a única combinação sem nada sob a LFM Open License. Em `decided`, o d1-2B (LFM) continua
+  necessário. Issue de implementação: ver as issues da épica #27.
 
 ## Limitações conhecidas
 
