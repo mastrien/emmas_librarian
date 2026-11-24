@@ -72,9 +72,10 @@ describe('phone sync over the plain listener', () => {
   });
 
   it('pairs a phone, shows it in the status, and syncs a project over real HTTP', async () => {
-    db.createProject('From the computer');
     const identityStore = new MemoryIdentity();
     const offer = parseScannedOffer((await service.startSyncPairing()).url);
+    // After the offer: the sync schema is installed by the first pairing, and rows made before it are not logged.
+    db.createProject('From the computer');
 
     const desktop = await pairPhone(crypto, offer, 'Pixel of Ana', identityStore);
     const library = LocalLibrary.empty(desktop.deviceId, { now: () => 't', newUuid: () => String(Math.random()) });
@@ -88,12 +89,12 @@ describe('phone sync over the plain listener', () => {
   });
 
   it('sends the PDF of an article, byte for byte, when the phone asks for it', async () => {
+    const offer = parseScannedOffer((await service.startSyncPairing()).url);
     const project = db.createProject('P');
     const article = db.saveArticle(project.id, { title: 'A', source_query: '', source_databases: '', csl_json: '{}' });
     const file = path.join(dir, 'a.pdf');
     fs.writeFileSync(file, Buffer.from('%PDF-1.4 conteúdo'));
     db.updateArticleFilePath(article, file);
-    const offer = parseScannedOffer((await service.startSyncPairing()).url);
     const desktop = await pairPhone(crypto, offer, 'Pixel', new MemoryIdentity());
     const library = LocalLibrary.empty(desktop.deviceId, { now: () => 't', newUuid: () => String(Math.random()) });
     const client = new PhoneSyncClient(crypto, identityOf(desktop), library, new HttpSyncTransport(desktop.baseUrl));

@@ -38,9 +38,20 @@ export class PhoneSyncAccess {
     return this.host.syncParts !== undefined;
   }
 
-  /** The three encrypted calls for the LAN server, or undefined when this computer does not sync. */
+  /**
+   * The encrypted calls for the LAN server, or undefined when this computer does not sync. They are lazy on
+   * purpose: answering the routes must not install the sync schema (triggers, a uuid for every row) in a library
+   * whose owner never paired a phone. The schema goes in when the first offer is opened, or at once when a phone
+   * was paired in an earlier run (#207 review, M1).
+   */
   public routes(): SyncRoutes | undefined {
-    return this.available() ? this.ensureHub() : undefined;
+    if (!this.available()) return undefined;
+    return {
+      completePairing: async (answer) => this.hubForRoute('pair').completePairing(answer),
+      hello: async (deviceId, phoneNonce) => this.hubForRoute('hello').hello(deviceId, phoneNonce),
+      round: async (sessionId, message) => this.hubForRoute('round').round(sessionId, message),
+      pdf: async (sessionId, message) => this.hubForRoute('pdf').pdf(sessionId, message),
+    };
   }
 
   /** A new one-time pairing offer as the address a QR code carries; the offer travels in the fragment. */
@@ -85,6 +96,13 @@ export class PhoneSyncAccess {
     if (!this.host.syncParts)
       throw new Error('Phone sync is not available on this computer: no library with sync support is open.');
     return this.host.syncParts();
+  }
+
+  private hubForRoute(step: string): DesktopSyncHub {
+    if (this.hub || this.registry.list().length > 0) return this.ensureHub();
+    throw new Error(
+      `No phone is paired with this computer and no pairing is open (step "${step}"); open "Parear um celular" and read the QR code.`,
+    );
   }
 
   private ensureHub(): DesktopSyncHub {
