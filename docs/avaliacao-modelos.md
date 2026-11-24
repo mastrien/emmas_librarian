@@ -416,10 +416,12 @@ reserva acionada (`fallbacks: none 72`), então elas medem a combinação de fat
 | Armadilha | 12/14 | 7/14 | 9/14 |
 | Erro esperado | 3/4 | 3/4 | 3/4 |
 | Recusa | 25/28 | 28/28 | 27/28 |
-| Mediana por caso | 33,7 s | **13,3 s** | **10,8 s** |
+| Mediana por caso | 33,2 s | **13,1 s** | **10,8 s** |
 | Tempo total | 60,7 min | **18,6 min** | 31,7 min |
 | Execução | `2026-11-24T09-13-45_lfm3-1.7b` | `2026-11-24T10-14-57_qwen3.5-4b` | `2026-11-24T10-33-59_qwen3.5-4b` |
 
+- **Mediana:** com 72 casos, a média dos dois tempos do meio da lista ordenada (o 36º e o 37º), calculada a partir do
+  `wallMs` de cada caso em `summary.json`. A primeira versão desta tabela usava só o 37º (33,7 / 13,3 / 10,8 s).
 - **Falhas do LFM3 `decided` (8):** `mon-3`, `ano-2`, `cat-3`, `tri-1`, `tri-3`, `tri-6`, `pri-1`, `ctx-2`. `bus-2` e
   `bus-3` passam, e `rot-1` também (as correções de `rot-1` e da descrição de `translateQuery` valeram nesta bateria).
   `ctx-2` quebrou uma regra (chamou `articles__getByProject`) e `mon-3` parou por `max-steps`.
@@ -439,7 +441,7 @@ reserva acionada (`fallbacks: none 72`), então elas medem a combinação de fat
     você" pode estar sendo lida pelo Qwen como "pergunte antes de chamar". Reescrever a regra para dizer "chame a
     ferramenta; o sistema pede a aprovação" e rodar de novo esses três casos mostraria se o problema é o prompt ou o modelo.
 - **Tempo:** o Qwen é de 2,5 a 3 vezes mais rápido que o LFM3 por caso na mediana, porque gera muito menos texto (6,5 a
-  7,7 mil tokens contra 80 mil do LFM3). O `decided` do Qwen não foi mais rápido que o `full` na mediana (13,3 s contra
+  7,7 mil tokens contra 80 mil do LFM3). O `decided` do Qwen não foi mais rápido que o `full` na mediana (13,1 s contra
   10,8 s), mas foi no total (18,6 min contra 31,7 min).
 - **`bus-3` do Qwen** terminou por `max-steps` no `decided` e por `model-error` no `full`. É o caso que a primeira
   redação da descrição de `translateQuery` quebrava; com a redação atual o LFM3 passa, o Qwen não.
