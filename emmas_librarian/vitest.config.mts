@@ -43,6 +43,10 @@ export default defineConfig({
         'adapters/electron/types.ts',
         'src/main.tsx',
         'src/vite-env.d.ts',
+        // The two evaluation scripts start llama-server with real models on a GPU and run for hours, so they cannot run
+        // in a unit test. What they use (modes, setup, scoring, the episode loop) is tested one by one (#195, #201).
+        'core/harness/eval/run/runEval.ts',
+        'core/harness/eval/decision/runDecisionEval.ts',
       ],
       // Ratchet: floor of measured coverage, raised as coverage improves. Never lower it.
       thresholds: {

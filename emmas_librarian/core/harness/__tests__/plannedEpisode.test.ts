@@ -111,4 +111,18 @@ describe('runPlannedEpisode', () => {
     expect(record.steps.length).toBe(5);
     expect(record.plan).toHaveLength(1);
   });
+
+  it('fails with the model error when the planning step fails, before any task', async () => {
+    const record = await runPlannedEpisode(input(new ScriptedChat([])));
+    expect(record).toMatchObject({ stopped: 'model-error', steps: [] });
+    expect(record.error).toContain('ERR_SCRIPT_ENDED');
+  });
+
+  it('fails with the plan kept when the closing answer cannot be had after the tasks were done', async () => {
+    const chat = new ScriptedChat([PLAN, reply({ content: 'Há 1 projeto: A.' })]);
+    const record = await runPlannedEpisode(input(chat));
+    expect(record.stopped).toBe('model-error');
+    expect(record.plan).toEqual([{ area: 'projetos', task: 'listar os projetos' }]);
+    expect(record.error).toContain('ERR_SCRIPT_ENDED');
+  });
 });
