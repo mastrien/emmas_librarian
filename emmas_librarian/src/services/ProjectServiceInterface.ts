@@ -11,6 +11,7 @@
 import type { SearchLimits } from '../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
 import type { AuditParams } from '../utils/auditSampling';
+import type { RemoteAccessStatus, RemotePairingInvite } from '../types/remoteAccess';
 import type {
   CategoryOption,
   CitationRequest,
@@ -267,6 +268,15 @@ export interface IProjectService {
   listAutoBackups(): Promise<AutoBackupEntry[]>;
   restoreAutoBackup(filename: string): Promise<boolean>;
   getAppVersion(): Promise<string>;
+
+  // ── Access from a phone over the local network (#32) ──────────────
+  getRemoteAccessStatus(): Promise<RemoteAccessStatus>;
+  /** Turns the LAN server on or off; a failure to start comes in the status's `error`. */
+  setRemoteAccessEnabled(enabled: boolean): Promise<RemoteAccessStatus>;
+  /** Opens a one-time pairing code, valid for a few minutes. */
+  startRemotePairing(): Promise<RemotePairingInvite>;
+  cancelRemotePairing(): Promise<void>;
+  revokeRemoteDevice(deviceId: string): Promise<RemoteAccessStatus>;
 
   // ── AI ────────────────────────────────────────────────────────────
   generateSummary(articleId: number): Promise<ArticleSummary>;

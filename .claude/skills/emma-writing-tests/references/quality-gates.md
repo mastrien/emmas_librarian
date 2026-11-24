@@ -9,7 +9,7 @@
 `release.yml` also runs typecheck + tests before building. The local git pre-commit hook runs typecheck only.
 
 ## Coverage thresholds (`vitest.config.mts`)
-Global: lines/statements 90, branches 88, functions 83. `electron/**/*`: 94/90/94/94.
+Global: lines/statements 90, branches 88, functions 83. `adapters/electron/**/*`: 94/90/94/94.
 They are a ratchet set just below measured values. After your change improves coverage, raise them to
 `floor(measured)` or one point below; never lower them to make a change pass — add the missing tests instead.
 Note that deleting well-covered code or reformatting (more lines) can move the percentage; cover a real gap

@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import type Database from 'better-sqlite3';
-import { libraryTables } from '../electron/database/__tests__/support/fullLibraryFixture';
+import { libraryTables } from '../core/database/__tests__/support/fullLibraryFixture';
 import { columnsOf } from './libraryTransfer';
 
 export interface TableDump {

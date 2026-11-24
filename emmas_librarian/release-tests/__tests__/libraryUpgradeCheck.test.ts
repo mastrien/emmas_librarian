@@ -4,7 +4,7 @@ import os from 'os';
 import path from 'path';
 import type Database from 'better-sqlite3';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { initializeSchema } from '../../electron/database/schemaMigrations';
+import { initializeSchema } from '../../core/database/schemaMigrations';
 import { buildFullLibrary, copyLibraryInto, openLibrary } from '../libraryTransfer';
 import { dumpLibrary, findLostData, type LibraryDump } from '../libraryDump';
 

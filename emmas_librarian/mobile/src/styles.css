@@ -1,0 +1,359 @@
+/* Mobile client (#33). The colours are the desktop's light and dark tokens; the layout is one column. */
+:root {
+  --color-primary: #4f46e5;
+  --color-danger: #ef4444;
+  --bg-main: #f8fafc;
+  --bg-surface: #ffffff;
+  --text-main: #334155;
+  --text-heading: #0f172a;
+  --text-muted: #5b6b80;
+  --border-color: #e2e8f0;
+  --radius-md: 0.5rem;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #818cf8;
+    --bg-main: #0f172a;
+    --bg-surface: #1e293b;
+    --text-main: #cbd5e1;
+    --text-heading: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1,
+h2 {
+  margin: 0;
+  color: var(--text-heading);
+}
+
+h2 {
+  font-size: 1rem;
+}
+
+p {
+  margin: 0.5rem 0;
+}
+
+.m-screen {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 0.75rem calc(1.5rem + env(safe-area-inset-bottom));
+}
+
+.m-screen--pdf {
+  padding: 0 0.5rem 1rem;
+}
+
+.m-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 2.75rem 1fr auto;
+  align-items: center;
+  min-height: 3rem;
+  margin: 0 -0.75rem 0.75rem;
+  padding: env(safe-area-inset-top) 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-surface);
+}
+
+.m-header__back {
+  display: grid;
+  place-items: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  color: var(--color-primary);
+  font-size: 1.75rem;
+  text-decoration: none;
+}
+
+.m-header__title {
+  overflow: hidden;
+  font-size: 1.05rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.m-start__title {
+  padding: 2rem 0 1rem;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.m-source,
+.m-note {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.m-note {
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.m-note--error {
+  color: var(--color-danger);
+}
+
+.m-card {
+  margin: 0 0 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.m-list {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  list-style: none;
+}
+
+.m-list--plain {
+  border: 0;
+}
+
+.m-list > li + li {
+  border-top: 1px solid var(--border-color);
+}
+
+.m-row {
+  display: block;
+  min-height: 2.75rem;
+  padding: 0.75rem 1rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.m-row__title {
+  display: block;
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.m-row__detail {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.m-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+.m-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  overflow-x: auto;
+}
+
+.m-tab {
+  flex: 1;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.5rem;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.m-tab.is-active {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.m-input {
+  width: 100%;
+  min-height: 2.75rem;
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-heading);
+  font: inherit;
+}
+
+.m-input--area {
+  min-height: 9rem;
+  resize: vertical;
+}
+
+.m-button {
+  display: inline-block;
+  min-height: 2.75rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-heading);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.m-button--primary {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.m-button:disabled {
+  opacity: 0.5;
+}
+
+.m-link {
+  padding: 0.5rem 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  text-decoration: underline;
+}
+
+.m-status {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.m-prose {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.m-article-title {
+  font-size: 1.15rem;
+}
+
+.m-field {
+  margin-top: 0.75rem;
+}
+
+.m-field__label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.m-field__value {
+  color: var(--text-heading);
+}
+
+.m-choices {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.m-choices label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.m-highlight {
+  margin: 0.75rem 0 0;
+  padding: 0.25rem 0 0.25rem 0.75rem;
+  border-left: 4px solid var(--border-color);
+}
+
+.m-highlight__note {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.m-pdf-page {
+  margin: 0 0 0.5rem;
+}
+
+.m-pdf-page canvas {
+  display: block;
+  background: #fff;
+}
+
+/* Markdown written on the desktop (#191): the spacing of running text, inside a card. */
+.m-markdown {
+  overflow-wrap: anywhere;
+}
+
+.m-markdown > :first-child {
+  margin-top: 0;
+}
+
+.m-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.m-markdown h1,
+.m-markdown h2,
+.m-markdown h3 {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 1rem;
+}
+
+.m-markdown ul,
+.m-markdown ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.m-markdown a {
+  color: var(--color-primary);
+}
+
+.m-markdown blockquote {
+  margin: 0.5rem 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--border-color);
+  color: var(--text-muted);
+}
+
+.m-markdown code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.m-markdown pre,
+.m-markdown table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}

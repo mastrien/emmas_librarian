@@ -1,0 +1,283 @@
+import { app, BrowserWindow, session, shell, dialog, nativeImage, protocol } from 'electron';
+import path from 'path';
+import log from 'electron-log';
+import { autoUpdater } from 'electron-updater';
+import { setupIpcRegistries } from './ipc/ipcRegistries';
+import { UpdateHealthChecker } from './services/UpdateHealthChecker';
+import { RecoveryService } from './services/RecoveryService';
+import { UpdateSafetyService } from './services/UpdateSafetyService';
+import { offerRecoveryAfterFailedStartup } from './startupRecovery';
+import { appPathsIn } from '../../core/ports/AppPaths';
+import { isE2ELaunch, resolveUserDataDir } from './userDataDir';
+import { windowIconFile } from './windowIcon';
+import { logShutdownTimeline, type ShutdownEmitter } from './shutdownTimeline';
+import { askWhileInstalling } from './updateInstallDialog';
+import { runStartupUpdateGuard } from './updateInstallGuard';
+import { attachExternalLinkGuard } from './externalLinks';
+import { cliArgumentsFrom, keepStdoutForResults, runElectronCli, streamSink } from './cli/electronCli';
+import { cliHostFor } from '../../core/cli/openCliLibrary';
+import { LocalChannel } from './remote/LocalChannel';
+import type { IpcRegistriesResult } from './ipc/ipcRegistries';
+import { clearAppRunning, markAppRunning } from '../../core/cli/appRunningMarker';
+import { SafeStorageSecretStore } from './ports/SafeStorageSecretStore';
+
+const DEV_ORIGIN = 'http://localhost:5173';
+
+// `emmas-librarian cli <command>` runs one command of the library in this process, without a window (#31).
+const cliArgs = cliArgumentsFrom(process.argv, app.isPackaged);
+if (cliArgs) {
+  // stdout carries only the JSON result: logs and stray console.log calls go to stderr or the log file.
+  log.transports.console.level = false;
+  keepStdoutForResults(console);
+  // No window is ever created. On Linux without a display, start with --ozone-platform=headless before
+  // `cli`: Chromium picks its platform before this script runs, so it cannot be set from here.
+  app.disableHardwareAcceleration();
+}
+
+// Configure logging for auto-updater
+autoUpdater.logger = log;
+log.info(cliArgs ? 'CLI starting...' : 'App starting...');
+const appStartTime = performance.now();
+
+const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
+const isE2ETest = isE2ELaunch(process.argv);
+
+// Development uses ./dev_data and automated runs a throwaway folder, never the installed app's library.
+const userDataDir = resolveUserDataDir({
+  isPackaged: app.isPackaged,
+  isProductionEnv: process.env.NODE_ENV === 'production',
+  argv: process.argv,
+  env: process.env,
+  cwd: process.cwd(),
+  pid: process.pid,
+});
+if (userDataDir) app.setPath('userData', userDataDir);
+
+// Fix for GPU Cache creation errors in terminal
+app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
+
+function createBrowserWindow(): BrowserWindow {
+  return new BrowserWindow({
+    width: 1200,
+    height: 800,
+    show: false,
+    icon: nativeImage.createFromPath(windowIconFile(app.getAppPath(), process.platform, isDev)),
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#eef0f3', // --bg-sunken of the light theme, until the page sends its own
+      symbolColor: '#334155',
+    },
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+}
+
+function loadWindowContent(window: BrowserWindow): void {
+  if (isDev) {
+    window.loadURL('http://localhost:5173');
+    window.webContents.on('did-finish-load', () => {
+      const startupTime = performance.now() - appStartTime;
+      log.info(`[Performance] App initialized in ${startupTime.toFixed(2)}ms (Dev)`);
+      console.log(`[Performance] App initialized in ${startupTime.toFixed(2)}ms (Dev)`);
+
+      window.show();
+      if (!isE2ETest) {
+        window.webContents.openDevTools();
+      }
+    });
+  } else {
+    window.loadFile(path.join(app.getAppPath(), 'dist/index.html'));
+    window.webContents.on('did-finish-load', () => {
+      const startupTime = performance.now() - appStartTime;
+      log.info(`[Performance] App initialized in ${startupTime.toFixed(2)}ms (Prod)`);
+      console.log(`[Performance] App initialized in ${startupTime.toFixed(2)}ms (Prod)`);
+
+      window.show();
+    });
+  }
+}
+
+function setupWindowListeners(window: BrowserWindow): void {
+  window.webContents.on('render-process-gone', (event, details) => {
+    console.error('Render process gone:', details);
+  });
+  window.webContents.on('unresponsive', () => {
+    console.warn('Window unresponsive');
+  });
+  // Links in the diary and in markdown are plain anchors: without this guard they replaced the app page.
+  attachExternalLinkGuard(window.webContents, (url) => void shell.openExternal(url), isDev ? DEV_ORIGIN : null);
+}
+
+function setupSessionCSP(): void {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const csp = isDev
+      ? "default-src 'self' emma-pdf: http://localhost:* ws://localhost:* blob: https://unpkg.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:*; img-src 'self' data: blob:; connect-src 'self' emma-pdf: http://localhost:* ws://localhost:* blob:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; worker-src 'self' blob:;"
+      : "default-src 'self' emma-pdf: blob: https://unpkg.com; script-src 'self'; img-src 'self' data: blob:; connect-src 'self' emma-pdf: blob:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; worker-src 'self' blob:;";
+
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [csp],
+      },
+    });
+  });
+}
+
+function createWindow() {
+  const mainWindow = createBrowserWindow();
+  loadWindowContent(mainWindow);
+  setupWindowListeners(mainWindow);
+  setupSessionCSP();
+}
+
+// Handle unhandled exceptions in the main process
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  const isTestOrHeadless =
+    cliArgs !== null ||
+    process.env.NODE_ENV === 'test' ||
+    process.env.CI === 'true' ||
+    process.env.HEADLESS_E2E === 'true' ||
+    !!process.env.ANTIGRAVITY_AGENT ||
+    process.argv.includes('--headless') ||
+    process.argv.includes('--headless=new');
+  if (isTestOrHeadless) {
+    process.exit(1);
+  } else {
+    dialog.showErrorBox('Main Process Error', error.message || String(error));
+  }
+});
+
+process.on('unhandledRejection', (reason: unknown) => {
+  log.error('Unhandled Promise Rejection in Main Process:', reason);
+  console.error('Unhandled Promise Rejection in Main Process:', reason);
+});
+
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'emma-pdf', privileges: { standard: true, secure: true, supportFetchAPI: true, bypassCSP: true } },
+]);
+
+// The library may not have opened, so the safety service works on the files alone (no adapter).
+function offerUpdateRecovery(err: unknown): boolean {
+  const { userData, dbPath, backupsDir } = appPathsIn(app.getPath('userData'));
+  const safety = new UpdateSafetyService(null, dbPath, backupsDir, userData);
+  return offerRecoveryAfterFailedStartup(err, app.getVersion(), safety, new RecoveryService(safety));
+}
+
+// Before the library opens: a second start of the old version while its installer works (#22) must not run, and an
+// update that did not land must not be "verified". A failure here never blocks the start.
+function shouldQuitForRunningInstaller(): boolean {
+  try {
+    const { userData, dbPath, backupsDir } = appPathsIn(app.getPath('userData'));
+    const safety = new UpdateSafetyService(null, dbPath, backupsDir, userData);
+    return (
+      runStartupUpdateGuard({
+        safety,
+        runningVersion: app.getVersion(),
+        now: Date.now,
+        askWhileInstalling,
+        logWarning: (message) => log.warn(message),
+      }) === 'quit'
+    );
+  } catch (err: unknown) {
+    log.error('Update install guard failed; starting normally:', err);
+    return false;
+  }
+}
+
+// Electron types `app.on` per event name; the timeline only needs the generic string form.
+logShutdownTimeline(app as unknown as ShutdownEmitter, log);
+
+// The CLI opens the same library the app would (or --data-dir), with the OS keychain for the API keys.
+function startCli(args: string[]): void {
+  void runElectronCli(args, {
+    ready: () => app.whenReady(),
+    open: ({ dataDir }) => {
+      const paths = appPathsIn(dataDir ?? app.getPath('userData'));
+      const secrets = new SafeStorageSecretStore();
+      return cliHostFor({ paths, secrets, appVersion: app.getVersion(), env: process.env }, process.cwd());
+    },
+    stdout: streamSink(process.stdout),
+    stderr: streamSink(process.stderr),
+    exit: (code) => app.exit(code),
+  });
+}
+
+// Beside IPC: the loopback channel the CLI uses while the app is open (#31), and the LAN server for
+// paired phones when the person turned it on (#32). Neither may stop the app from starting.
+function startOtherTransports({ commands, remoteAccess }: IpcRegistriesResult): void {
+  const userData = app.getPath('userData');
+  const localChannel = new LocalChannel(commands);
+  // The marker goes down first, without a channel: a CLI that runs before the channel is up opens the library.
+  markAppRunning(userData, process.pid);
+  localChannel
+    .start()
+    .then((address) => markAppRunning(userData, process.pid, address))
+    .catch((err: unknown) => log.warn('Local channel for the CLI did not start:', err));
+  void remoteAccess.startIfEnabled();
+  app.on('will-quit', () => {
+    localChannel.stop();
+    remoteAccess.stop();
+    clearAppRunning(userData, process.pid);
+  });
+}
+
+function startDesktopApp(): void {
+  app
+    .whenReady()
+    .then(() => {
+      if (shouldQuitForRunningInstaller()) {
+        app.quit();
+        return;
+      }
+      try {
+        const library = setupIpcRegistries({ updater: autoUpdater });
+        const { db, safetyService, updateManager } = library;
+        startOtherTransports(library);
+
+        const healthChecker = new UpdateHealthChecker(db, safetyService);
+        const healthResult = healthChecker.runStartupHealthCheck();
+        if (!healthResult.passed) {
+          log.error('Post-update health check failed:', healthResult.error);
+          new RecoveryService(safetyService).handlePostUpdateFailure(
+            healthResult.error || 'Falha na integridade do banco de dados pós-atualização',
+            healthResult.state,
+          );
+          return;
+        }
+
+        createWindow();
+
+        // Check for updates (opt-in metadata query, does not auto-download)
+        if (!isDev) {
+          updateManager.checkForUpdates().catch((err: unknown) => {
+            log.warn('Background update check failed:', err);
+          });
+        }
+      } catch (err: unknown) {
+        log.error('Error during app startup:', err);
+        console.error('Error during app startup:', err);
+        if (offerUpdateRecovery(err)) return;
+        dialog.showErrorBox('Startup Error', (err as Error).message || String(err));
+      }
+
+      app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+      });
+    })
+    .catch((err) => {
+      log.error('Failed to start app:', err);
+      console.error('Failed to start app:', err);
+      dialog.showErrorBox('Initialization Error', (err as Error).message || String(err));
+    });
+}
+
+if (cliArgs) startCli(cliArgs);
+else startDesktopApp();
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
