@@ -169,7 +169,7 @@ function configOf(plan: RunPlan, runId: string): Record<string, unknown> {
     systemPromptVersion: SYSTEM_PROMPT_VERSION,
     planPromptVersion: plan.mode === 'planned' ? PLAN_PROMPT_VERSION : null,
     scorerVersion: SCORER_VERSION,
-    modelIsLocal: 'por caso (padr„o: true)',
+    modelIsLocal: 'por caso (padr√£o: true)',
     confirmation: 'FakeConfirmer: sim, exceto casos com confirm: no',
     library: 'Biblioteca de teste F, nova a cada caso',
   };

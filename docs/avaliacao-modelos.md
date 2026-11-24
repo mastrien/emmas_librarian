@@ -374,11 +374,13 @@ Acertos em 72 casos (tempo médio por caso). `full` e `routed` vêm do Colab de 
 Comparação limpa (70 casos, sem `rot-1` e `mon-3`, que mudaram), `decided` contra `full`: LFM3 61 contra 63; Qwen 9B 58
 contra 63; Qwen 4B 58 contra 62; Gemma 56 contra 48; Qwen 2B 54 contra 40; LFM2.5-8B 41 contra 36.
 
-- **decided** ficou mais rápido que o `full` em 5 dos 6 modelos (de 25% a 36% nos que melhoram; LFM3 14,1 s para
-  10,6 s). A decisão custa 36 ms por caso. Empata no LFM3, perde 4 a 5 casos nos Qwen 4B/9B e ganha muito no Qwen 2B e no
+- **decided** ficou mais rápido que o `full` em 5 dos 6 modelos (de cerca de 17% a 37% do tempo total nos que
+  melhoram, e o Qwen 2B ficou 1,7% mais lento; LFM3 14,1 s para 10,6 s; são execuções de dias diferentes, não uma
+  comparação pareada). A decisão custa 36 ms por caso. Empata no LFM3, perde 4 a 5 casos nos Qwen 4B/9B e ganha muito no Qwen 2B e no
   Gemma.
 - **planned** é pior ou mais lento na maioria (LFM3 29, LFM2.5-8B 17), como no local. Exceção: Gemma 4 E4B, 62 contra 48
-  do `full`, a 17 s por caso. Qwen 4B chega perto do `full` (59 contra 62).
+  do `full`, a 17 s por caso. Qwen 4B chega perto do `full` (59 contra 62). Estes dois pares são da comparação limpa
+  de 70 casos; na tabela de 72 casos acima os mesmos modelos fazem 63 contra 49 e 60 contra 63.
 - **Fallback para o `full`:** raro. Qwen 2B 6 vezes e Qwen 9B 1 vez, sempre "unanswered"; nos outros nunca. A regra de
   segurança quase não foi exercitada.
 - Os números do LFM3 batem com o local (62 no Colab contra 63 no Vulkan).
