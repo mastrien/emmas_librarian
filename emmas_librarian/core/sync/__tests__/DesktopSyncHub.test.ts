@@ -18,6 +18,8 @@ import { fromBase64Url, toBase64Url, utf8 } from '../crypto/bytes';
 const SCHEMA = fs.readFileSync(path.join(__dirname, '../../database/schema.sql'), 'utf8');
 const crypto = new WebCryptoProvider(globalThis.crypto);
 const EMPTY_ROUND: SyncRequest = { cursor: 0, operations: [], processed: [] };
+const TEN_MINUTES = 10 * 60_000;
+const SESSION_CAP = 8;
 
 class MemoryDeviceStore implements SyncDeviceStore {
   private devices: StoredSyncDevice[] = [];
@@ -75,6 +77,38 @@ async function openSession(): Promise<PhoneSession> {
 
 const sealedRound = (session: PhoneSession): Promise<SealedMessage> =>
   session.channel.seal(utf8(JSON.stringify(EMPTY_ROUND)));
+
+describe('DesktopSyncHub sessions', () => {
+  it('answers a round on an open session', async () => {
+    const session = await openSession();
+    const reply = await hub.round(session.sessionId, await sealedRound(session));
+    expect(reply.counter).toBe(1);
+  });
+
+  it('refuses a round on a session older than ten minutes, naming it (#207 review, T3)', async () => {
+    const session = await openSession();
+    clock += TEN_MINUTES + 1;
+    await expect(hub.round(session.sessionId, await sealedRound(session))).rejects.toThrow(
+      `Sync session "${session.sessionId}" is unknown, expired`,
+    );
+  });
+
+  it('still answers on the last millisecond of the session', async () => {
+    const session = await openSession();
+    clock += TEN_MINUTES;
+    await expect(hub.round(session.sessionId, await sealedRound(session))).resolves.toBeDefined();
+  });
+
+  it('keeps at most eight sessions: the ninth pushes out the oldest, which stops working (T3)', async () => {
+    const sessions: PhoneSession[] = [];
+    for (let opened = 0; opened <= SESSION_CAP; opened += 1) sessions.push(await openSession());
+    await expect(hub.round(sessions[0].sessionId, await sealedRound(sessions[0]))).rejects.toThrow('unknown, expired');
+    await expect(hub.round(sessions[1].sessionId, await sealedRound(sessions[1]))).resolves.toBeDefined();
+    await expect(
+      hub.round(sessions[SESSION_CAP].sessionId, await sealedRound(sessions[SESSION_CAP])),
+    ).resolves.toBeDefined();
+  });
+});
 
 describe('DesktopSyncHub after the phone is unpaired (#207 review, M2)', () => {
   it('closes the sessions of that phone', async () => {
