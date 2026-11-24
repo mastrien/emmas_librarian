@@ -6,8 +6,9 @@ import path from 'path';
 import { FakeSecretStore } from '../../../../core/ports/__tests__/fakes/FakeSecretStore';
 import { DatabaseAdapter } from '../../../../core/database/DatabaseAdapter';
 import { WebCryptoProvider } from '../../../../core/sync/crypto/WebCryptoProvider';
-import { answerPairingOffer, type PairingOffer } from '../../../../core/sync/crypto/pairing';
-import { fromBase64Url } from '../../../../core/sync/crypto/bytes';
+import { answerPairingOffer, type PairedDevice, type PairingOffer } from '../../../../core/sync/crypto/pairing';
+import { SecureChannel, deriveSessionKey } from '../../../../core/sync/crypto/SecureChannel';
+import { fromBase64Url, toBase64Url, utf8 } from '../../../../core/sync/crypto/bytes';
 import { PhoneSyncAccess } from '../PhoneSyncAccess';
 
 let dir: string;
@@ -30,11 +31,12 @@ afterEach(() => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-async function pairPhone(): Promise<void> {
+async function pairPhone(): Promise<PairedDevice> {
   const { url } = await access.offerUrl('192.168.0.10', 47810);
   const offer = JSON.parse(new TextDecoder().decode(fromBase64Url(url.split('#sync=')[1]))) as PairingOffer;
-  const { answer } = await answerPairingOffer(crypto, offer, 'Pixel of Ana', Date.now());
+  const { answer, device } = await answerPairingOffer(crypto, offer, 'Pixel of Ana', Date.now());
   await access.routes()?.completePairing(answer);
+  return device;
 }
 
 describe('PhoneSyncAccess without a library that syncs', () => {
@@ -73,6 +75,23 @@ describe('pairing', () => {
     await pairPhone();
     access.revoke();
     expect(access.device()).toBeNull();
+  });
+});
+
+describe('a session open when the phone is unpaired (#207 review, M2)', () => {
+  it('is refused afterwards: the revoke ends it, a new hello is refused too', async () => {
+    const device = await pairPhone();
+    const phoneNonce = crypto.randomBytes(16);
+    const reply = await access.routes()!.hello(device.deviceId, toBase64Url(phoneNonce));
+    const key = await deriveSessionKey(crypto, device.deviceKey, phoneNonce, fromBase64Url(reply.desktopNonce));
+    const sealed = await new SecureChannel(crypto, key, 'phone', device.deviceId).seal(
+      utf8(JSON.stringify({ cursor: 0, operations: [], processed: [] })),
+    );
+
+    access.revoke();
+
+    await expect(access.routes()!.round(reply.sessionId, sealed)).rejects.toThrow('unknown, expired');
+    await expect(access.routes()!.hello(device.deviceId, toBase64Url(phoneNonce))).rejects.toThrow('is not paired');
   });
 });
 

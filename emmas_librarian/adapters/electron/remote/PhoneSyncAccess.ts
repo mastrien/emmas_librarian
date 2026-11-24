@@ -66,8 +66,12 @@ export class PhoneSyncAccess {
     return stored ? { ...stored, verificationCode: this.verificationCode } : null;
   }
 
+  /** Forgets the phone and ends its open sessions: a session opened before the revoke must not keep answering (M2). */
   public revoke(): void {
-    for (const device of this.registry.list()) this.registry.revoke(device.deviceId);
+    for (const { deviceId } of this.registry.list()) {
+      this.registry.revoke(deviceId);
+      this.hub?.closeSessionsOf(deviceId);
+    }
     this.verificationCode = null;
   }
 

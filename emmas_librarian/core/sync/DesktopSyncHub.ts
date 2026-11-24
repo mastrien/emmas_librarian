@@ -34,6 +34,7 @@ export interface HubParts {
 }
 
 interface Session {
+  deviceId: string;
   endpoint: DesktopSyncEndpoint;
   expiresAt: number;
 }
@@ -97,7 +98,7 @@ export class DesktopSyncHub {
       this.parts.readPdf,
     );
     const sessionId = toBase64Url(this.parts.crypto.randomBytes(NONCE_LENGTH));
-    this.remember(sessionId, { endpoint, expiresAt: this.parts.now() + SESSION_TTL_MS });
+    this.remember(sessionId, { deviceId, endpoint, expiresAt: this.parts.now() + SESSION_TTL_MS });
     return { sessionId, desktopNonce: toBase64Url(desktopNonce) };
   }
 
@@ -109,11 +110,21 @@ export class DesktopSyncHub {
     return this.sessionFor(sessionId).handlePdfSealed(message);
   }
 
+  /** Ends every open session of a phone; used when it is unpaired, so a session opened before keeps no access. */
+  public closeSessionsOf(deviceId: string): void {
+    for (const [sessionId, session] of this.sessions) {
+      if (session.deviceId === deviceId) this.sessions.delete(sessionId);
+    }
+  }
+
   private sessionFor(sessionId: string): DesktopSyncEndpoint {
     const session = this.sessions.get(sessionId);
-    if (!session || session.expiresAt < this.parts.now()) {
+    const alive = session && session.expiresAt >= this.parts.now() && this.parts.registry.get(session.deviceId);
+    if (!session || !alive) {
       this.sessions.delete(sessionId);
-      throw new Error(`Sync session "${sessionId}" is unknown or expired; open a new one with hello.`);
+      throw new Error(
+        `Sync session "${sessionId}" is unknown, expired or of an unpaired phone; open a new one with hello.`,
+      );
     }
     return session.endpoint;
   }
