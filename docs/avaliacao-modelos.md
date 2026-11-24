@@ -413,8 +413,15 @@ reserva acionada (`fallbacks: none 72`), então elas medem a combinação de fat
 - **Só o `decided` do Qwen falha (5):** `ctx-1`, `ctx-2`, `pri-1`, `tri-1`, `tri-6`. **Só o `full` falha (3):** `cat-3`,
   `doc-1`, `rot-1`. `mon-3` falha nas três.
 - **Qwen e as armadilhas:** os dois modos do Qwen erram `proj-3`, `proj-5` e `proj-6` (armadilhas), onde o LFM3 acerta.
-  Ele recusa melhor (28/28 no `decided`), mas cai em armadilhas (7/14 no `decided`, contra 12/14 do LFM3). Não li os
-  episódios para dizer por quê.
+  Ele recusa melhor (28/28 no `decided`), mas cai em armadilhas (7/14 no `decided`, contra 12/14 do LFM3).
+  - **Por quê, em `proj-3`, `proj-5` e `proj-6` (lidos os seis episódios, `decided` e `full`):** o Qwen chama
+    `projects__getAll`, acha o id certo e **pergunta em texto** ("Deseja renomeá-lo?", "Confirma a exclusão?") em vez de
+    chamar `projects__update` ou `projects__delete`. Por isso a confirmação do sistema nunca é pedida, nada muda e o
+    caso falha por estado. O LFM3 chama a ferramenta nos três e deixa o sistema pedir a aprovação. Nada foi alterado sem
+    aprovação em nenhum dos dois: o erro do Qwen é o de ser cauteloso demais, não o de agir sem pedir.
+  - **Hipótese, não testada:** a regra do prompt "Alterações precisam da aprovação da pessoa, que o sistema pede por
+    você" pode estar sendo lida pelo Qwen como "pergunte antes de chamar". Reescrever a regra para dizer "chame a
+    ferramenta; o sistema pede a aprovação" e rodar de novo esses três casos mostraria se o problema é o prompt ou o modelo.
 - **Tempo:** o Qwen é de 2,5 a 3 vezes mais rápido que o LFM3 por caso na mediana, porque gera muito menos texto (6,5 a
   7,7 mil tokens contra 80 mil do LFM3). O `decided` do Qwen não foi mais rápido que o `full` na mediana (13,3 s contra
   10,8 s), mas foi no total (18,6 min contra 31,7 min).
