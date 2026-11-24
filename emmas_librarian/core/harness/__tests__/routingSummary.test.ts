@@ -41,6 +41,23 @@ describe('summarizeRouting', () => {
     });
   });
 
+  it('counts allInTop2 over the cases that need a subject: every needed subject within the 2 most likely', () => {
+    const rows = [
+      row({ required: ['projetos', 'diario'], ranked: ['diario', 'projetos', 'artigos'] }),
+      row({ id: 'multi', required: ['projetos', 'diario'], ranked: ['projetos', 'artigos', 'diario'] }),
+      row({ id: 'single', required: ['artigos'], ranked: ['artigos', 'projetos'] }),
+      row({ id: 'late', required: ['artigos'], ranked: ['projetos', 'diario', 'artigos'] }),
+      row({ id: 'rec-1', kind: 'refusal', required: [], ranked: ['projetos'], score: undefined, toolRank: null }),
+    ];
+    expect(summarizeRouting(rows)).toMatchObject({ needing: 4, allInTop2: 50 });
+  });
+
+  it('has allInTop2 of 0 for no case that needs a subject, with no division by zero', () => {
+    expect(summarizeRouting([row({ required: [], score: undefined, toolRank: null })])).toMatchObject({
+      allInTop2: 0,
+    });
+  });
+
   it('takes the middle of the sorted times as the median and rounds the mean to one decimal', () => {
     const rows = [row({ wallMs: 30 }), row({ wallMs: 10 }), row({ wallMs: 21 })];
     expect(summarizeRouting(rows)).toMatchObject({ wallMsMedian: 21, wallMsMean: 20.3 });
