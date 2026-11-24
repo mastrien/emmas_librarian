@@ -1,4 +1,5 @@
 import * as pdfjs from 'pdfjs-dist';
+import 'pdfjs-dist/web/pdf_viewer.css';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 /** An open PDF as the viewer needs it; the screens never touch pdf.js directly. */
@@ -8,6 +9,8 @@ export interface PdfPages {
   pageRatio: number;
   /** Draws page `pageNumber` (from 1) on the canvas, `cssWidth` CSS pixels wide. */
   renderPage(pageNumber: number, canvas: HTMLCanvasElement, cssWidth: number): Promise<void>;
+  /** Puts the page's text over it as selectable, invisible text, so a passage can be marked. Absent: no marking. */
+  renderTextLayer?(pageNumber: number, container: HTMLElement, cssWidth: number): Promise<void>;
   close(): void;
 }
 
@@ -38,6 +41,13 @@ export const openPdf: PdfOpener = async (bytes) => {
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       await page.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise;
+    },
+    async renderTextLayer(pageNumber, container, cssWidth) {
+      const page = await document.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: cssWidth / page.getViewport({ scale: 1 }).width });
+      container.replaceChildren();
+      container.style.setProperty('--scale-factor', String(viewport.scale));
+      await new pdfjs.TextLayer({ textContentSource: page.streamTextContent(), container, viewport }).render();
     },
     close: () => void document.destroy(),
   };

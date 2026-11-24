@@ -110,6 +110,7 @@ describe('RemoteAccessService: off by default', () => {
       addresses: ['192.168.0.10'],
       fingerprint: null,
       devices: [],
+      syncDevice: null,
       error: null,
     });
     expect(fs.existsSync(path.join(userData, 'lan-certificate.json'))).toBe(false);

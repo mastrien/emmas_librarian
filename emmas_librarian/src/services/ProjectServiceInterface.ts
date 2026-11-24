@@ -11,7 +11,12 @@
 import type { SearchLimits } from '../utils/searchLimits';
 import type { CategorySetEntry, CategorySetResult } from '../utils/categoryTemplates';
 import type { AuditParams } from '../utils/auditSampling';
-import type { RemoteAccessStatus, RemotePairingInvite } from '../types/remoteAccess';
+import type {
+  PendingPhoneChange,
+  PhoneChangeDecision,
+  RemoteAccessStatus,
+  RemotePairingInvite,
+} from '../types/remoteAccess';
 import type {
   CategoryOption,
   CitationRequest,
@@ -277,6 +282,15 @@ export interface IProjectService {
   startRemotePairing(): Promise<RemotePairingInvite>;
   cancelRemotePairing(): Promise<void>;
   revokeRemoteDevice(deviceId: string): Promise<RemoteAccessStatus>;
+  /** Opens a one-time offer to pair a phone for encrypted sync (valid for a few minutes). */
+  startPhoneSyncPairing(): Promise<RemotePairingInvite>;
+  /** Forgets the paired phone: its key stops working at once. */
+  revokePhoneSync(): Promise<RemoteAccessStatus>;
+  /** What the phone changed that waits for confirmation here (nothing has been applied yet). */
+  listPhoneChanges(): Promise<PendingPhoneChange[]>;
+  applyPhoneChanges(opIds: string[]): Promise<PhoneChangeDecision[]>;
+  /** The phone undoes what is rejected, on its next sync. */
+  rejectPhoneChanges(opIds: string[]): Promise<PhoneChangeDecision[]>;
 
   // ── AI ────────────────────────────────────────────────────────────
   generateSummary(articleId: number): Promise<ArticleSummary>;

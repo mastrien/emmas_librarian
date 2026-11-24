@@ -5,7 +5,16 @@ import { handle, type IpcRegistrar } from './handle';
 /** The part of the service the settings screen drives, so tests can stand in for it with a named fake. */
 export type RemoteAccessControls = Pick<
   RemoteAccessService,
-  'status' | 'setEnabled' | 'startPairing' | 'cancelPairing' | 'revokeDevice'
+  | 'status'
+  | 'setEnabled'
+  | 'startPairing'
+  | 'cancelPairing'
+  | 'revokeDevice'
+  | 'startSyncPairing'
+  | 'revokeSyncDevice'
+  | 'listPhoneChanges'
+  | 'applyPhoneChanges'
+  | 'rejectPhoneChanges'
 >;
 
 /**
@@ -21,4 +30,18 @@ export function registerRemoteAccessHandlers(ipc: IpcRegistrar, remote: RemoteAc
   handle(ipc, IpcChannel.REMOTE_ACCESS_START_PAIRING, () => remote.startPairing());
   handle(ipc, IpcChannel.REMOTE_ACCESS_CANCEL_PAIRING, () => remote.cancelPairing());
   handle(ipc, IpcChannel.REMOTE_ACCESS_REVOKE_DEVICE, (_e, deviceId: string) => remote.revokeDevice(String(deviceId)));
+  handle(ipc, IpcChannel.REMOTE_ACCESS_START_SYNC_PAIRING, () => remote.startSyncPairing());
+  handle(ipc, IpcChannel.REMOTE_ACCESS_REVOKE_SYNC_DEVICE, () => remote.revokeSyncDevice());
+  handle(ipc, IpcChannel.REMOTE_ACCESS_LIST_PHONE_CHANGES, () => remote.listPhoneChanges());
+  handle(ipc, IpcChannel.REMOTE_ACCESS_APPLY_PHONE_CHANGES, (_e, opIds: unknown) =>
+    remote.applyPhoneChanges(toIds(opIds)),
+  );
+  handle(ipc, IpcChannel.REMOTE_ACCESS_REJECT_PHONE_CHANGES, (_e, opIds: unknown) =>
+    remote.rejectPhoneChanges(toIds(opIds)),
+  );
+}
+
+function toIds(value: unknown): string[] {
+  if (Array.isArray(value) && value.every((id) => typeof id === 'string')) return value;
+  throw new Error(`Expected a list of operation ids (strings), got ${JSON.stringify(value)}`);
 }

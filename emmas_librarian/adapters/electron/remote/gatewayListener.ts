@@ -54,9 +54,10 @@ function gatewayRequestOf(req: IncomingMessage, body: Buffer): GatewayRequest {
 }
 
 // The pages may run only their own scripts and talk only to this server. pdf.js draws from blob: and
-// data: images and starts its worker from a file of the site; styles are set inline by React.
+// data: images, loads the fonts embedded in a PDF as data: URLs (font-src) and starts its worker from a file of
+// the site; styles are set inline by React.
 const PAGE_POLICY =
-  "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
+  "default-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
 
 function send(res: ServerResponse, response: GatewayResponse): void {
   const body = Buffer.isBuffer(response.body) ? response.body : Buffer.from(response.body, 'utf8');

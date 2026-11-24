@@ -324,6 +324,11 @@ export enum IpcChannel {
   REMOTE_ACCESS_START_PAIRING = 'remoteAccess:startPairing',
   REMOTE_ACCESS_CANCEL_PAIRING = 'remoteAccess:cancelPairing',
   REMOTE_ACCESS_REVOKE_DEVICE = 'remoteAccess:revokeDevice',
+  REMOTE_ACCESS_START_SYNC_PAIRING = 'remoteAccess:startSyncPairing',
+  REMOTE_ACCESS_REVOKE_SYNC_DEVICE = 'remoteAccess:revokeSyncDevice',
+  REMOTE_ACCESS_LIST_PHONE_CHANGES = 'remoteAccess:listPhoneChanges',
+  REMOTE_ACCESS_APPLY_PHONE_CHANGES = 'remoteAccess:applyPhoneChanges',
+  REMOTE_ACCESS_REJECT_PHONE_CHANGES = 'remoteAccess:rejectPhoneChanges',
 }
 
 export interface CategoryOption {

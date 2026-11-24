@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { errorText } from './errorText';
 
 export type Loaded<T> =
   | { state: 'loading' }
@@ -20,8 +21,7 @@ export function useLoaded<T>(load: () => Promise<T>): Loaded<T> {
     let current = true;
     load().then(
       (value) => current && setResult({ turn, value }),
-      (error: unknown) =>
-        current && setResult({ turn, message: error instanceof Error ? error.message : String(error) }),
+      (error: unknown) => current && setResult({ turn, message: errorText(error) }),
     );
     return () => {
       current = false;

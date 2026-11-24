@@ -108,18 +108,17 @@ describe('ProjectScreen: articles', () => {
 
     expect(address()).toBe('/projects/1/diary');
     expect(screen.getByRole('link', { name: 'Diário' })).toHaveAttribute('aria-current', 'page');
-    expect(await screen.findByText('Nenhuma página no diário.')).toBeInTheDocument();
+    expect(await screen.findByLabelText('Página de hoje')).toBeInTheDocument();
   });
 });
 
-describe('ProjectScreen: diary', () => {
+describe('ProjectScreen: diary, one page at a time', () => {
   let reader: FakeProjectReader;
   const TODAY = '2026-11-14';
-  const todayIs = (date: Date) => vi.setSystemTime(date);
 
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] });
-    todayIs(new Date(2026, 10, 14, 10, 0));
+    vi.setSystemTime(new Date(2026, 10, 14, 10, 0));
     reader = new FakeProjectReader();
     reader.diary.push(
       { id: 1, project_id: 1, entry_date: '2026-11-10', content: 'Li o primeiro.' },
@@ -128,23 +127,60 @@ describe('ProjectScreen: diary', () => {
     return () => vi.useRealTimers();
   });
 
-  it('shows the pages newest first', async () => {
+  it('opens on today, with the page before one tap away', async () => {
     renderLibrary(reader, '/projects/1/diary');
-    await screen.findByText('Li o segundo.');
+    expect(await screen.findByLabelText('Página de hoje')).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Próxima página' })).toBeDisabled();
 
-    const pages = screen.getAllByRole('article').map((page) => page.textContent);
-    expect(pages[0]).toContain('Li o segundo.');
-    expect(pages[1]).toContain('Li o primeiro.');
+    fireEvent.click(screen.getByRole('button', { name: 'Página anterior' }));
+
+    expect(await screen.findByLabelText(/Página de 12 de novembro/)).toHaveValue('Li o segundo.');
+    expect(screen.queryByText('Li o primeiro.')).not.toBeInTheDocument();
   });
 
-  it('draws the Markdown of a page formatted (#191)', async () => {
-    reader.diary.push({ id: 9, project_id: 1, entry_date: '2026-11-13', content: 'Achei **importante**.' });
+  it('goes back through the pages and forward again', async () => {
     renderLibrary(reader, '/projects/1/diary');
+    await screen.findByLabelText('Página de hoje');
+    fireEvent.click(screen.getByRole('button', { name: 'Página anterior' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Página anterior' }));
+    expect(await screen.findByLabelText(/Página de 10 de novembro/)).toHaveValue('Li o primeiro.');
+    expect(screen.getByRole('button', { name: 'Página anterior' })).toBeDisabled();
 
-    expect((await screen.findByText('importante')).tagName).toBe('STRONG');
+    fireEvent.click(screen.getByRole('button', { name: 'Próxima página' }));
+
+    expect(await screen.findByLabelText(/Página de 12 de novembro/)).toBeInTheDocument();
   });
 
-  it("saves today's page on the desktop and then shows it in the list", async () => {
+  it('opens a calendar from the date, marks the days with a page, and jumps to one', async () => {
+    renderLibrary(reader, '/projects/1/diary');
+    await screen.findByLabelText('Página de hoje');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Escolher outra página' }));
+    const calendar = screen.getByRole('dialog', { name: 'Escolher página do diário' });
+    expect(within(calendar).getByText('novembro de 2026')).toBeInTheDocument();
+    expect(within(calendar).getByRole('button', { name: 'Dia 10' })).toHaveClass('has-page');
+    expect(within(calendar).getByRole('button', { name: 'Dia 11' })).not.toHaveClass('has-page');
+
+    fireEvent.click(within(calendar).getByRole('button', { name: 'Dia 10' }));
+
+    expect(await screen.findByLabelText(/Página de 10 de novembro/)).toHaveValue('Li o primeiro.');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('writes on a day without a page, and comes back to today in one tap', async () => {
+    renderLibrary(reader, '/projects/1/diary');
+    await screen.findByLabelText('Página de hoje');
+    fireEvent.click(screen.getByRole('button', { name: 'Escolher outra página' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Dia 11' }));
+    expect(await screen.findByLabelText(/Página de 11 de novembro/)).toHaveValue('');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Escolher outra página' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ir para hoje' }));
+
+    expect(await screen.findByLabelText('Página de hoje')).toBeInTheDocument();
+  });
+
+  it("saves today's page and keeps the confirmation on screen", async () => {
     renderLibrary(reader, '/projects/1/diary');
     const editor = await screen.findByLabelText('Página de hoje');
     expect(screen.getByRole('button', { name: 'Salvar página' })).toBeDisabled();
@@ -153,16 +189,13 @@ describe('ProjectScreen: diary', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar página' }));
 
     await waitFor(() => expect(reader.written).toEqual([`saveDiaryEntry(1, ${TODAY}, Do celular.)`]));
-    expect(await screen.findByText('Do celular.', { selector: 'p' })).toBeInTheDocument();
-    // The confirmation stays after the list reloads, and there is nothing left to save.
+    expect(await screen.findByLabelText('Página de hoje')).toHaveValue('Do celular.');
     expect(screen.getByText('Salvo no computador.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Salvar página' })).toBeDisabled();
   });
 
   it("continues today's page when it already has text", async () => {
     reader.diary.push({ id: 3, project_id: 1, entry_date: TODAY, content: 'De manhã.' });
     renderLibrary(reader, '/projects/1/diary');
-
     expect(await screen.findByLabelText('Página de hoje')).toHaveValue('De manhã.');
   });
 
@@ -177,12 +210,19 @@ describe('ProjectScreen: diary', () => {
     expect(screen.getByLabelText('Página de hoje')).toHaveValue('Rascunho');
   });
 
-  it('offers nothing to write in a file, and says when the diary is empty', async () => {
+  it('draws the Markdown of a page formatted in a file (#191), and offers nothing to write', async () => {
     const file = new FakeProjectReader(false);
+    file.diary.push({ id: 9, project_id: 1, entry_date: '2026-11-13', content: 'Achei **importante**.' });
     renderLibrary(file, '/projects/1/diary');
 
-    expect(await screen.findByText('Nenhuma página no diário.')).toBeInTheDocument();
+    expect((await screen.findByText('importante')).tagName).toBe('STRONG');
     expect(screen.queryByLabelText('Página de hoje')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Salvar página' })).not.toBeInTheDocument();
+  });
+
+  it('says when the diary of a file is empty', async () => {
+    renderLibrary(new FakeProjectReader(false), '/projects/1/diary');
+    expect(await screen.findByText('Nenhuma página no diário.')).toBeInTheDocument();
   });
 });
 

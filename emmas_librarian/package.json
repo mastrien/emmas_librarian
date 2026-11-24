@@ -24,6 +24,7 @@
     "test:performance:load": "npm run rebuild:node && concurrently --kill-others --success first \"node performance-tests/performance-harness.js\" \"wait-on http://localhost:3001 && k6 run -e TEST_TYPE=load performance-tests/load_tests.js\"",
     "test:performance:stress": "npm run rebuild:node && concurrently --kill-others --success first \"node performance-tests/performance-harness.js\" \"wait-on http://localhost:3001 && k6 run -e TEST_TYPE=stress performance-tests/load_tests.js\"",
     "test:performance:soak": "npm run rebuild:node && concurrently --kill-others --success first \"node performance-tests/performance-harness.js\" \"wait-on http://localhost:3001 && k6 run -e TEST_TYPE=soak performance-tests/load_tests.js\"",
+    "test:mobile-e2e": "playwright test --config=playwright.mobile.config.js",
     "test:playwright": "npm run rebuild:electron && tsc -p tsconfig.electron.json && npm run build:mobile && concurrently --kill-others --success first \"vite\" \"wait-on http://localhost:5173 && npx playwright test e2e-tests/ --config=playwright.config.js --workers=1\"",
     "test:performance": "npm run test:performance:smoke",
     "test:e2e": "npm run test:playwright",
@@ -40,6 +41,10 @@
     "schemas:check": "tsc -p tools/tsconfig.json && node tools/dist/tools/generateCommandSchemas.js --check"
   },
   "devDependencies": {
+    "@capacitor-mlkit/barcode-scanning": "^8.2.2",
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
     "@playwright/test": "^1.61.1",
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
@@ -68,6 +73,7 @@
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "fake-indexeddb": "^6.2.8",
     "jsdom": "^27.0.1",
     "playwright": "^1.61.1",
     "prettier": "^3.8.3",
