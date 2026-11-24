@@ -21,10 +21,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  # Build and deploy are separate jobs, as GitHub documents: with the upload and the deploy in the same job, the deploy
+  # step ran two seconds after the upload and found "0 artifact(s)" (runs of #189 and of the merge of the stack).
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -56,6 +55,13 @@ jobs:
         with:
           path: 'landing_page'
 
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
