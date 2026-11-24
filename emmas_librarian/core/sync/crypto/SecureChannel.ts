@@ -14,7 +14,12 @@ export interface SealedMessage {
 
 const DIRECTION_BYTE: Record<Role, number> = { phone: 1, desktop: 2 };
 
-function nonceFor(sender: Role, counter: number): Bytes {
+/**
+ * The GCM nonce of one message. The direction byte keeps the phone's message n and the computer's message n apart:
+ * both sides count from 1 under the same key, so equal nonces would reuse a (key, nonce) pair, which breaks GCM.
+ * Exported so a test can pin that (#207 review, T1).
+ */
+export function nonceFor(sender: Role, counter: number): Bytes {
   const nonce = new Uint8Array(12);
   nonce[0] = DIRECTION_BYTE[sender];
   new DataView(nonce.buffer).setBigUint64(4, BigInt(counter));

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { WebCryptoProvider } from '../WebCryptoProvider';
-import { PROTOCOL_VERSION, SecureChannel, deriveSessionKey } from '../SecureChannel';
+import { PROTOCOL_VERSION, SecureChannel, deriveSessionKey, nonceFor } from '../SecureChannel';
 import { fromBase64Url, toBase64Url, toHex, utf8 } from '../bytes';
 
 const crypto = new WebCryptoProvider(globalThis.crypto);
@@ -85,5 +85,39 @@ describe('deriveSessionKey', () => {
     const next = await deriveSessionKey(crypto, deviceKey, crypto.randomBytes(16), desktopNonce);
     expect(toHex(one)).toBe(toHex(again));
     expect(toHex(one)).not.toBe(toHex(next));
+  });
+});
+
+describe('nonceFor (#207 review, T1)', () => {
+  it('never gives the phone and the computer the same nonce for the same counter', () => {
+    for (const counter of [1, 2, 255, 2 ** 32]) {
+      expect(toHex(nonceFor('phone', counter))).not.toBe(toHex(nonceFor('desktop', counter)));
+    }
+  });
+
+  it('gives each counter of one side its own nonce, 12 bytes long', () => {
+    expect(nonceFor('phone', 1)).toHaveLength(12);
+    expect(toHex(nonceFor('phone', 1))).not.toBe(toHex(nonceFor('phone', 2)));
+  });
+});
+
+describe('deriveSessionKey with the computer nonce (#207 review, T2)', () => {
+  it('gives two sessions of the same phone different keys when only the computer nonce differs', async () => {
+    const deviceKey = crypto.randomBytes(32);
+    const phoneNonce = crypto.randomBytes(16);
+    const first = await deriveSessionKey(crypto, deviceKey, phoneNonce, crypto.randomBytes(16));
+    const second = await deriveSessionKey(crypto, deviceKey, phoneNonce, crypto.randomBytes(16));
+    expect(toHex(first)).not.toBe(toHex(second));
+  });
+
+  it('does not open in one session what the other session sealed', async () => {
+    const deviceKey = crypto.randomBytes(32);
+    const phoneNonce = crypto.randomBytes(16);
+    const keyA = await deriveSessionKey(crypto, deviceKey, phoneNonce, crypto.randomBytes(16));
+    const keyB = await deriveSessionKey(crypto, deviceKey, phoneNonce, crypto.randomBytes(16));
+    const sealed = await new SecureChannel(crypto, keyA, 'phone', 'dev-1').seal(utf8('one session'));
+    await expect(new SecureChannel(crypto, keyB, 'desktop', 'dev-1').unseal(sealed)).rejects.toThrow(
+      'failed authentication',
+    );
   });
 });
