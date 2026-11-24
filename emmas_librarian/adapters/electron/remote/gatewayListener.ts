@@ -1,5 +1,6 @@
 import type { IncomingMessage, RequestListener, ServerResponse } from 'http';
 import type { GatewayRequest, GatewayResponse, RemoteGateway } from '../../../core/remote/RemoteGateway';
+import { syncAnswerHeaders, syncPreflightHeaders, type SyncCorsOptions } from './syncCors';
 import type { StaticSite } from './staticSite';
 
 /** Bodies are command arguments (a diary page at most); anything bigger is not a legitimate request. */
@@ -8,6 +9,8 @@ export const MAX_BODY_BYTES = 1_000_000;
 export interface GatewayListenerOptions {
   /** The web pages served beside the API (the mobile client): asked for every GET outside /api/. */
   site?: StaticSite;
+  /** Set only on the plain-HTTP sync port: lets the phone app's WebView (another origin) call /api/sync/* (#208). */
+  syncCors?: SyncCorsOptions;
 }
 
 const TOO_LARGE: GatewayResponse = {
@@ -59,7 +62,7 @@ function gatewayRequestOf(req: IncomingMessage, body: Buffer): GatewayRequest {
 const PAGE_POLICY =
   "default-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
 
-function send(res: ServerResponse, response: GatewayResponse): void {
+function send(res: ServerResponse, response: GatewayResponse, extraHeaders: { [name: string]: string } = {}): void {
   const body = Buffer.isBuffer(response.body) ? response.body : Buffer.from(response.body, 'utf8');
   res.writeHead(response.status, {
     'Content-Type': response.contentType,
@@ -67,6 +70,7 @@ function send(res: ServerResponse, response: GatewayResponse): void {
     // Library data must not linger in a browser's or a proxy's cache.
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
+    ...extraHeaders,
     ...(response.contentType.startsWith('text/html') && { 'Content-Security-Policy': PAGE_POLICY }),
   });
   res.end(body);
@@ -87,10 +91,13 @@ function pageFor(req: IncomingMessage, site: StaticSite | undefined): GatewayRes
 export function gatewayListener(gateway: RemoteGateway, options: GatewayListenerOptions = {}): RequestListener {
   return (req, res) => {
     void (async () => {
+      const preflight = syncPreflightHeaders(req, options.syncCors);
+      if (preflight) return void res.writeHead(204, preflight).end();
       const page = pageFor(req, options.site);
       if (page) return send(res, page);
       const body = await readBody(req);
-      send(res, body === null ? TOO_LARGE : await gateway.handle(gatewayRequestOf(req, body)));
+      const answer = body === null ? TOO_LARGE : await gateway.handle(gatewayRequestOf(req, body));
+      send(res, answer, syncAnswerHeaders(req, options.syncCors));
     })().catch(() => res.destroy());
   };
 }

@@ -134,6 +134,14 @@ describe('phone sync over the plain listener', () => {
     expect([commands.status, page.status]).toEqual([401, 404]);
   });
 
+  it('lets the app WebView (https://localhost) preflight the sync calls, and no one else (#208)', async () => {
+    const { syncPort } = parseScannedOffer((await service.startSyncPairing()).url);
+    const ask = (origin: string) =>
+      fetch(`http://127.0.0.1:${syncPort}/api/sync/hello`, { method: 'OPTIONS', headers: { Origin: origin } });
+    expect((await ask('https://localhost')).status).toBe(204);
+    expect((await ask('https://elsewhere.example')).status).toBe(404);
+  });
+
   it('stops listening when the server is turned off', async () => {
     const { syncPort } = parseScannedOffer((await service.startSyncPairing()).url);
     await service.setEnabled(false);
