@@ -50,7 +50,7 @@ function call(port: number, method: string, route: string, body?: object, token?
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers.Authorization = `Bearer ${token}`;
     // The certificate is self-signed: the test checks it by fingerprint, as the person pairing a phone does.
-    const options = { host: '127.0.0.1', port, method, path: route, headers, rejectUnauthorized: false };
+    const options = { host: '127.0.0.1', port, method, path: route, headers, rejectUnauthorized: false, agent: false };
     const request = https.request(options, (response) => {
       const certificate = (response.socket as import('tls').TLSSocket).getPeerCertificate();
       let text = '';

@@ -131,7 +131,7 @@ export class RemoteGateway {
 
   private async runCommand(request: GatewayRequest): Promise<GatewayResponse> {
     const principal = this.requirePrincipal(request);
-    const name = decodeURIComponent(request.path.slice(COMMAND_PREFIX.length));
+    const name = commandNameOf(request.path);
     const given = argumentsOf(readJsonBody(request));
     const { command, args } = authorizeRemoteCommand(this.options.commands, principal, name, given);
     const result = await command.run(...(args as never[]));
@@ -200,6 +200,21 @@ function readJsonBody(request: GatewayRequest): unknown {
       'ERR_REMOTE_BAD_REQUEST',
       'O corpo não é JSON válido',
       'um objeto JSON, por exemplo {"args":[3]}',
+    );
+  }
+}
+
+// A malformed escape ("%E0%A4%A") makes decodeURIComponent throw a URIError, which would come out as a 500 for what is a
+// bad request (#189 review).
+function commandNameOf(path: string): string {
+  const encoded = path.slice(COMMAND_PREFIX.length);
+  try {
+    return decodeURIComponent(encoded);
+  } catch {
+    throw remoteError(
+      'ERR_REMOTE_BAD_REQUEST',
+      `O nome do comando tem uma sequência % inválida. Offending value: "${encoded}"`,
+      'um nome de comando, por exemplo projects%3AgetAll',
     );
   }
 }

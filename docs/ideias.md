@@ -118,3 +118,10 @@ Sugerido pelo autor na validação final da epic #44 (2026-11-05). Quando "Explo
 projeto cita outro, ou é citado por ele, essa ligação poderia ficar visível dentro do app: no modal de detalhes do artigo,
 ir direto para quem o cita e para quem ele cita, entre os artigos já salvos. Hoje a exploração só traz artigos novos e
 esquece a ligação. Precisaria guardar os pares encontrados, que hoje não ficam salvos.
+
+## Landing page: anel animado e corredor de estantes no hero
+
+Ideias do autor (2026-11-20) para testar em A/B depois que a landing for atualizada ao novo design. (1) Usar no hero o
+componente do anel que o app tem em React, customizado para ficar na mesma posição do logo e se mover só de vez em quando.
+(2) Pôr no hero um fundo, ou elementos em CSS, que simulem um corredor longo e escuro com várias estantes de biblioteca
+ao fundo. A variante do fundo do hero (escuro antigo, neutro novo, quente novo) é outro teste, já decidido.
