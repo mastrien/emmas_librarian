@@ -1,5 +1,11 @@
+/* Fundo escuro do topo e do rodapé: por padrão o tom neutro do modo escuro do app (--bg-main de
+   emmas_librarian/src/style.css). ?hero=antigo e ?hero=quente mostram as outras variantes do teste A/B. */
+:root { --dark-band: #141416; }
+:root[data-hero='antigo'] { --dark-band: #0f172a; }
+:root[data-hero='quente'] { --dark-band: #161413; }
+
 body {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Lexend', system-ui, -apple-system, sans-serif;
     margin: 0; 
     padding: 0;
     color: #1e1b4b;
@@ -18,7 +24,7 @@ body {
 
 /* Hero Section */
 .hero-section {
-    background: #0f172a;
+    background: var(--dark-band);
     text-align: center;
     padding: 6rem 0 1.5rem;
 }
@@ -144,7 +150,7 @@ body {
 /* Minimalist Footer */
 .site-footer {
     padding: 1.5rem 0; 
-    background: #0f172a;
+    background: var(--dark-band);
     color: #cbd5e1;
     margin-top: auto;
 }
@@ -278,3 +284,71 @@ body {
 .hero-tutorials-link:hover {
     color: #ffffff;
 }
+
+/* Faixa "O aplicativo do seu jeito" */
+.capability-list {
+    list-style: none;
+    margin: 2rem auto 0;
+    padding: 0;
+    max-width: 900px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.capability-list li {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.capability-list strong {
+    display: block;
+    color: #831843;
+    font-size: 1.15rem;
+    margin-bottom: 0.4rem;
+}
+
+/* Ampliar ao clicar (lightbox.js) */
+.feature-visual img { cursor: zoom-in; }
+
+.lightbox {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    max-width: 96vw;
+    max-height: 96vh;
+    overflow: visible;
+}
+
+.lightbox::backdrop { background: rgba(0, 0, 0, 0.75); }
+
+.lightbox img {
+    display: block;
+    max-width: 96vw;
+    max-height: 86vh;
+    width: auto;
+    height: auto;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: -2.6rem;
+    right: 0;
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 0;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.lightbox-close:hover { background: #fbcfe8; }

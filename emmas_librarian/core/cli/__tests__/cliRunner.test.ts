@@ -169,6 +169,12 @@ describe('runCli', () => {
     expect(library.restored).toEqual(['emma_backup_2026-11-14.db.gz']);
   });
 
+  it('indents the error too with --pretty', async () => {
+    const outcome = await run('nope', '--pretty');
+    expect(outcome.stderr).toContain('"ok": false');
+    expect(outcome.stderr?.split(String.fromCharCode(10)).length).toBeGreaterThan(1);
+  });
+
   it('reports a library that does not open', async () => {
     const outcome = await runCli([IpcChannel.PROJECTS_GET_ALL], () => {
       throw new AppError('ERR_LIBRARY_NOT_FOUND', 'USER_ERROR', 'Nenhuma biblioteca em /x');

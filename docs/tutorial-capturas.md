@@ -119,3 +119,13 @@ O texto novo cita recursos sem imagem. Só vale capturar se o autor quiser:
 ## Capturas feitas pelo autor (2026-11-13)
 
 As cinco imagens "só o autor" abaixo foram recapturadas por ele e copiadas para `landing_page/assets/tutoriais/`: `cap2-busca-concluida.png`, `cap2-explorar-citacoes.png`, `cap4-baixando.png`, `cap4-relatorio.png` e `cap9-avaliar.png`. O texto e os `alt` do tutorial foram ajustados aos números novos (busca com OpenAlex e Crossref, 10 artigos no download, avaliação com gemini/gemini-2.5-flash). Falta só `cap10-resposta.png` e `cap10-trecho.png`.
+
+## Recaptura de 2026-11-21
+
+Feita no app redesenhado, em 1440x900, com um projeto de exemplo só de bases abertas (OpenAlex e arXiv, 58 artigos, 13 PDFs) montado pelo CLI. `width` e `height` de cada `<img>` foram atualizados.
+
+- **Refeitas:** a Introdução e os capítulos 1 a 10, menos as cinco imagens que o autor já tinha atualizado em 13/11 (`cap2-busca-concluida`, `cap2-explorar-citacoes`, `cap4-baixando`, `cap4-relatorio`, `cap9-avaliar`). Os dois vídeos de timelapse não mudaram.
+- **Ilustrativas:** `cap5-investigacao`, `cap5-revisar-resposta`, `cap5-auditoria`, `cap9-sugestao`, `cap10-resposta` e `cap10-trecho` mostram respostas escritas por um modelo a partir de PDFs reais do exemplo (trechos conferidos na página citada), e não saídas de uma chamada real de IA. As chaves das Configurações são fictícias.
+- **Sem o tooltip nativo:** `cap1-cabecalho-menu` não mostra o nome do ícone sobre "Perguntar aos projetos", porque a dica é a nativa do sistema e a captura de página não a registra.
+- **Texto ajustado em 2026-11-21** para bater com o exemplo novo: contagens e nomes (58 artigos, 25 ativos, 13 com PDF, 33 arquivados; categorias, países, artigo de exemplo do leitor, conjunto "Técnicas e métricas"; PRISMA, triagem e ordem prevista; indexação e citações do Perguntar aos projetos; auditoria 9 de 9). Os trechos ligados às cinco capturas do autor de 13/11 ficaram como estavam (busca concluída, explorar citações, baixando e relatório dos PDFs, avaliar sugestões).
+- **Dependem de decisão do autor:** as explicações de score (0,49), confiança (0,86) e da evidência fraca do ERA5 no capítulo 5 descrevem uma execução real do exemplo antigo; foram reescritas como "numa investigação anterior, de outro projeto de exemplo", e a imagem da investigação não as mostra. O trecho "A IA pode ter generalizado a partir de um artigo só" do capítulo 10 foi trocado por uma descrição da resposta nova, porque a resposta ilustrativa não tem esse problema.

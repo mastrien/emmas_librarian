@@ -3,7 +3,8 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Writable } from 'node:stream';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AgentModelFile } from '../runtime/agentModels';
 import { ensureModelFile, sha256Of } from '../runtime/modelDownload';
 import { FakeModelHost } from './support/FakeModelHost';
@@ -21,10 +22,20 @@ const model: AgentModelFile = {
   licenseUrl: 'https://host.test/license',
 };
 
+/** A write stream whose disk is full: every write fails with ENOSPC. */
+class FullDisk extends Writable {
+  _write(_chunk: Buffer, _encoding: string, done: (error?: Error | null) => void): void {
+    done(new Error('ENOSPC: no space left on device'));
+  }
+}
+
 let dir: string;
 const yes = async (): Promise<boolean> => true;
 beforeEach(() => void (dir = fs.mkdtempSync(path.join(os.tmpdir(), 'emma-model-'))));
-afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+afterEach(() => {
+  vi.restoreAllMocks();
+  fs.rmSync(dir, { recursive: true, force: true });
+});
 
 describe('ensureModelFile', () => {
   it('downloads the file after a yes, reports the progress, and checks it', async () => {
@@ -100,6 +111,45 @@ describe('ensureModelFile', () => {
     const host = new FakeModelHost(CONTENT);
     await ensureModelFile(model, { dir, fetch: host.fetch, consent: yes });
     expect(host.requests[0].range).toBeUndefined();
+  });
+
+  // Regressions (review of #202): a .part that was already whole made Range: bytes=<total>- answer 416 forever.
+  it('renames a .part that already has every byte, without asking the host for anything', async () => {
+    fs.writeFileSync(path.join(dir, 'fake.gguf.part'), CONTENT);
+    const host = new FakeModelHost(CONTENT);
+    const file = await ensureModelFile(model, { dir, fetch: host.fetch, consent: yes });
+    expect(host.requests).toEqual([]);
+    expect(fs.readFileSync(file).equals(CONTENT)).toBe(true);
+    expect(fs.existsSync(`${file}.part`)).toBe(false);
+  });
+
+  it('throws away a whole .part with the wrong hash and downloads again from the start', async () => {
+    fs.writeFileSync(path.join(dir, 'fake.gguf.part'), Buffer.alloc(CONTENT.length, 'z'));
+    const host = new FakeModelHost(CONTENT);
+    const file = await ensureModelFile(model, { dir, fetch: host.fetch, consent: yes });
+    expect(host.requests).toEqual([{ url: model.url, range: undefined }]);
+    expect(fs.readFileSync(file).equals(CONTENT)).toBe(true);
+  });
+
+  it('starts over from zero when the host answers 416 to the range', async () => {
+    fs.writeFileSync(path.join(dir, 'fake.gguf.part'), CONTENT.subarray(0, 300));
+    const host = new FakeModelHost(CONTENT, { rejectRanges: true });
+    const file = await ensureModelFile(model, { dir, fetch: host.fetch, consent: yes });
+    expect(host.requests.map((r) => r.range)).toEqual(['bytes=300-', undefined]);
+    expect(fs.readFileSync(file).equals(CONTENT)).toBe(true);
+  });
+
+  // Regression (review of #202): a write stream without an 'error' listener threw an unhandled error besides rejecting.
+  // The failure is simulated with a stream that fails on the first write, since a full disk is not the same error on
+  // every system (a folder in place of the .part is refused by a different call on Linux).
+  it('rejects with the offending path when the .part cannot be written, with no unhandled error', async () => {
+    vi.spyOn(fs, 'createWriteStream').mockImplementation(() => new FullDisk() as unknown as fs.WriteStream);
+    const failure = await ensureModelFile(model, { dir, fetch: new FakeModelHost(CONTENT).fetch, consent: yes }).catch(
+      (e: Error) => e,
+    );
+    expect((failure as Error).message).toMatch(
+      /\[ERR_MODEL_STREAM\].*ENOSPC.*fake\.gguf\.part.*Expected a writable file/s,
+    );
   });
 
   // Bytes that arrive wrong must never be kept as the model.

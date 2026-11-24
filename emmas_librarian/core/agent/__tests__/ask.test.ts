@@ -56,6 +56,16 @@ describe('askLibrary', () => {
     expect(runtime.stops).toBe(1);
   });
 
+  // Surviving mutation of the review of #202: with modelIsLocal false the tools that send text out stay hidden.
+  it('marks the model as local, so the tools that need a local model are offered', async () => {
+    const { commands } = library();
+    commands.add('ask:indexPlan', () => ({}));
+    const chat = new ScriptedChat([reply({ content: 'ok' })]);
+    await askLibrary('Quanto falta indexar?', commands, deps(new FakeRuntime(chat, new FakeDecisionModel({ ia: 1 }))));
+    const offered = chat.asked[0].tools.map((tool) => tool.function.name);
+    expect(offered).toContain('ask__indexPlan');
+  });
+
   it('gives the model today and the local-model rules in the system prompt', async () => {
     const chat = new ScriptedChat([reply({ content: 'ok' })]);
     await askLibrary('oi', library().commands, deps(new FakeRuntime(chat, projectsDecider())));

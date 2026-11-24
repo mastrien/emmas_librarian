@@ -52,6 +52,28 @@ async function stopAll(servers: Array<RunningServer | undefined>): Promise<void>
 }
 
 /**
+ * Starts both servers and waits for BOTH attempts to end. With Promise.all the first failure returned while the other
+ * server was still coming up, so it was never stopped and kept the GPU memory (review of #202).
+ */
+async function launchBoth(
+  deps: AgentRuntimeDeps,
+  models: AgentModelFile[],
+  device: string,
+): Promise<Array<RunningServer | undefined>> {
+  const started: Array<RunningServer | undefined> = [undefined, undefined];
+  const attempts = await Promise.allSettled(
+    models.map(async (model, index) => {
+      const build = model.role === 'chat' ? chatServerArgs : decisionServerArgs;
+      started[index] = await launch(deps, model, device, build);
+    }),
+  );
+  const failed = attempts.find((attempt): attempt is PromiseRejectedResult => attempt.status === 'rejected');
+  if (!failed) return started;
+  await stopAll(started);
+  throw failed.reason;
+}
+
+/**
  * Brings the agent's two models up: both files present (downloaded after a yes), a device chosen, and the chat and the
  * decision server started on free ports. `stop` ends both.
  *
@@ -62,6 +84,8 @@ async function stopAll(servers: Array<RunningServer | undefined>): Promise<void>
  */
 export async function startAgentRuntime(deps: AgentRuntimeDeps): Promise<AgentRuntime> {
   const models = [agentModel('chat'), agentModel('decision')];
+  // Before the ~2.2 GB download: a wrong --llama-server must fail now, not after the files are on disk (review of #202).
+  const device = chooseDevice(parseDevices(await deps.listDevices()), MIN_DEVICE_MEMORY_MIB);
   const ensure = deps.ensure ?? ensureModelFile;
   for (const model of models)
     await ensure(model, {
@@ -70,19 +94,7 @@ export async function startAgentRuntime(deps: AgentRuntimeDeps): Promise<AgentRu
       consent: deps.consent,
       onProgress: (done, total) => deps.onProgress?.(model, done, total),
     });
-  const device = chooseDevice(parseDevices(await deps.listDevices()), MIN_DEVICE_MEMORY_MIB);
-  const started: Array<RunningServer | undefined> = [undefined, undefined];
-  try {
-    await Promise.all(
-      models.map(async (model, index) => {
-        const build = model.role === 'chat' ? chatServerArgs : decisionServerArgs;
-        started[index] = await launch(deps, model, device, build);
-      }),
-    );
-  } catch (error) {
-    await stopAll(started);
-    throw error;
-  }
+  const started = await launchBoth(deps, models, device);
   const [chatServer, decisionServer] = started as RunningServer[];
   return {
     chat: new LlamaServerChat(chatServer.url),

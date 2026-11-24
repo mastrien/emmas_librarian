@@ -27,6 +27,15 @@ describe('startServer, with a stand-in for llama-server', () => {
     );
   });
 
+  // Regression (review of #202): without an 'error' listener a missing executable was an unhandled exception.
+  it('rejects with the executable and the error when the process cannot be started', async () => {
+    const port = await findFreePort();
+    const missing = path.join(__dirname, 'support', 'no-such-llama-server.exe');
+    await expect(startServer(missing, [], port, 10000)).rejects.toThrow(
+      /\[ERR_SERVER_SPAWN\].*no-such-llama-server\.exe.*ENOENT.*Expected an executable/s,
+    );
+  });
+
   it('gives up with the address it waited for when /health never answers in time', async () => {
     const port = await findFreePort();
     const failure = await startServer(process.execPath, [FAKE, String(port), '60000'], port, 1500).catch(

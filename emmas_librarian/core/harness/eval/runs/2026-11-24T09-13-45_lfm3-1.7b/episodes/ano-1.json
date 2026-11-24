@@ -1,0 +1,153 @@
+{
+  "id": "ano-1",
+  "kind": "happy",
+  "prompt": "Quais são as minhas anotações do artigo 1?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 8,
+  "toolsBytes": 3213,
+  "wallMs": 15627,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "JJ4VpJpCvSVPryXNqsx181KIpEYd8xI2",
+              "name": "annotations__get",
+              "arguments": "{\"articleId\":1}"
+            }
+          ],
+          "reasoning": "We need to get annotations for article ID 1. The tool `annotations__get` requires parameter `articleId`. So I'll call that with articleId=1.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 423,
+            "promptMs": 1138.492,
+            "generatedTokens": 55,
+            "generatedMs": 2214.938
+          },
+          "wallMs": 3379
+        },
+        "calls": [
+          {
+            "id": "JJ4VpJpCvSVPryXNqsx181KIpEYd8xI2",
+            "name": "annotations__get",
+            "arguments": "{\"articleId\":1}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "article_id": 1,
+                  "highlight_id": null,
+                  "content_markdown": "Comparar com o estudo de Pereira",
+                  "created_at": "2026-11-24 09:34:06",
+                  "deleted_at": null
+                },
+                {
+                  "id": 2,
+                  "article_id": 1,
+                  "highlight_id": null,
+                  "content_markdown": "Boa revisão da literatura",
+                  "created_at": "2026-11-24 09:34:06",
+                  "deleted_at": null
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Aqui estão suas anotações para o artigo 1:\n\n1. **“Comparar com o estudo de Pereira”** – criada em 2026‑11‑24 09:34:06.  \n2. **“Boa revisão da literatura”** – criada em 2026‑11‑24 09:34:06.  \n\n(Não há marcar ou links associados.)",
+          "toolCalls": [],
+          "reasoning": "We need to answer the user's question: \"Quais são as minhas anotações do artigo 1?\" The tool annotations__get with articleId=1 returned a result array containing two entries. We should present them in Portuguese, short.\n\nThe result shows:\n- id:1, article_id:1, highlight_id:null, content_markdown:\"Comparar com o estudo de Pereira\", created_at...\n- id:2, article_id:1, ... \"Boa revisão da literatura\".\n\nWe need to interpret these as annotations for article 1. So list them.\n\nThus answer: You have two notes: one about comparing with Pereira's study; another about good literature review. Provide dates maybe not needed but can mention created_at.\n\nLet's craft a short response.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 559,
+            "promptMs": 1543.609,
+            "generatedTokens": 243,
+            "generatedMs": 9905.143
+          },
+          "wallMs": 11460
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Aqui estão suas anotações para o artigo 1:\n\n1. **“Comparar com o estudo de Pereira”** – criada em 2026‑11‑24 09:34:06.  \n2. **“Boa revisão da literatura”** – criada em 2026‑11‑24 09:34:06.  \n\n(Não há marcar ou links associados.)",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Quais são as minhas anotações do artigo 1?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "JJ4VpJpCvSVPryXNqsx181KIpEYd8xI2",
+            "name": "annotations__get",
+            "arguments": "{\"articleId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "JJ4VpJpCvSVPryXNqsx181KIpEYd8xI2",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"article_id\":1,\"highlight_id\":null,\"content_markdown\":\"Comparar com o estudo de Pereira\",\"created_at\":\"2026-11-24 09:34:06\",\"deleted_at\":null},{\"id\":2,\"article_id\":1,\"highlight_id\":null,\"content_markdown\":\"Boa revisão da literatura\",\"created_at\":\"2026-11-24 09:34:06\",\"deleted_at\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Aqui estão suas anotações para o artigo 1:\n\n1. **“Comparar com o estudo de Pereira”** – criada em 2026‑11‑24 09:34:06.  \n2. **“Boa revisão da literatura”** – criada em 2026‑11‑24 09:34:06.  \n\n(Não há marcar ou links associados.)",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "anotacoes",
+          "probability": 0.9795056003949846
+        },
+        {
+          "area": "artigos",
+          "probability": 0.0032651789804931117
+        },
+        {
+          "area": "ia",
+          "probability": 0.002616531356840912
+        }
+      ],
+      "chosen": [
+        "anotacoes",
+        "artigos"
+      ],
+      "fallback": "none",
+      "decisionMs": 787,
+      "decisionInputTokens": 365
+    }
+  }
+}

@@ -5,18 +5,20 @@ import { execFileSync } from 'child_process';
 import { commandSchemas } from '../../commandSchemas';
 import { LibraryToolkit } from '../../LibraryToolkit';
 import { TOOL_AREAS } from '../../toolAreas';
-import { FakeConfirmer } from '../../__tests__/support/FakeConfirmer';
-import { openTestLibrary } from '../../__tests__/support/openTestLibrary';
+import { FakeConfirmer } from '../support/FakeConfirmer';
+import { openTestLibrary } from '../support/openTestLibrary';
 import { parseEvalCases, type EvalCase } from '../evalCase';
 import { flagsOf } from '../run/flags';
+import { pickById } from '../run/runSummary';
 import { setupFromEnv } from '../run/runSetup';
 import { startServer, type RunningServer } from '../../../agent/runtime/serverProcess';
 import { routingDecision, routingRequest } from '../../../agent/areaRouting';
 import { DECISION_MODELS, decisionServerArgs, type DecisionModelSpec } from './decisionCatalog';
-import { areaOfTool, requiredAreas, scoreRouting } from './routingMetrics';
+import { areaOfTool, requiredAreas } from './routingMetrics';
+import { parseThreshold, routingRowOf } from './routingRow';
 import { summarizeByKind, summarizeRouting, withThreshold, type RoutingRow } from './routingSummary';
 import { SystemOneClient, type DecisionModel } from '../../../agent/systemOne';
-import { BEST_TOOL, rankedTools, toolQuestion } from './toolPicking';
+import { BEST_TOOL, toolQuestion } from './toolPicking';
 
 const EVAL_DIR = path.join(__dirname, '..');
 const PORT = 8090;
@@ -50,23 +52,7 @@ async function rowFor(
   if (tools.length > 0) request.questions[BEST_TOOL] = toolQuestion(tools);
   const reply = await model.decide(request);
   const decision = routingDecision(reply, TOOL_AREAS, threshold);
-  const required = requiredAreas(testCase, areaOfTool(TOOL_AREAS));
-  const first = testCase.expect.calls[0]?.tool;
-  const place = first ? rankedTools(reply.answers[BEST_TOOL]).indexOf(first) : -1;
-  return {
-    id: testCase.id,
-    kind: testCase.kind,
-    required,
-    selected: decision.selected,
-    best: decision.best,
-    bestProbability: decision.ranked[0]?.probability ?? 0,
-    ranked: decision.ranked.map((entry) => entry.area),
-    noul: decision.noul,
-    score: required.length > 0 ? scoreRouting(required, decision) : undefined,
-    toolRank: place >= 0 ? place + 1 : null,
-    wallMs: reply.wallMs,
-    inputTokens: reply.inputTokens,
-  };
+  return routingRowOf(testCase, reply, decision, requiredAreas(testCase, areaOfTool(TOOL_AREAS)));
 }
 
 const stampOf = (): string => new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -104,12 +90,8 @@ function writeResult(
  */
 async function main(): Promise<void> {
   const args = flagsOf(process.argv.slice(2));
-  const spec = DECISION_MODELS.find((m) => m.id === args.model);
-  if (!spec)
-    throw new Error(
-      `[ERR_UNKNOWN_MODEL] Offending value: ${JSON.stringify(args.model)}. Expected one of: ${DECISION_MODELS.map((m) => m.id).join(', ')}.`,
-    );
-  const threshold = Number(args.threshold ?? 0.5);
+  const spec = pickById(DECISION_MODELS, args.model, 'model');
+  const threshold = parseThreshold(args.threshold);
   const perArea = args.noul !== 'no';
   const cases = parseEvalCases(fs.readFileSync(path.join(EVAL_DIR, 'cases.jsonl'), 'utf-8'));
   const tools = args.tools === 'no' ? [] : offeredTools();

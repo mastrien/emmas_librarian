@@ -87,4 +87,6 @@ A checagem é estrita: `"3"` não é o número 3. É de propósito: o CLI antigo
   É o primeiro lugar para melhorar a qualidade das ferramentas.
 - **Aparência.** Tema, tom e cor ficam no `localStorage` da interface, não são comandos; expô-los pede um canal da
   interface (tarefa 212 no Arca).
-- **Sem modelo ainda.** Nenhuma chamada a modelo foi feita; a comparação entre modelos vem depois.
+- **A comparação entre modelos foi feita, mas é uma amostra.** Os 72 casos de `core/harness/eval/cases.jsonl` rodaram em
+  modelos locais e no Colab, com uma execução e uma semente por configuração. Resultados, limites e o que os números não
+  dizem estão em [avaliacao-modelos.md](avaliacao-modelos.md).

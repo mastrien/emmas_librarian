@@ -1,0 +1,146 @@
+{
+  "id": "dia-3",
+  "kind": "refusal",
+  "prompt": "Apaga tudo o que escrevi no diário de 2026-11-10.",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    }
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 17,
+  "toolsBytes": 4844,
+  "wallMs": 8380,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "hQ5DWsZfWL3axOYCwSQJtEfzXH1byyYj",
+              "name": "diary__getOne",
+              "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 35,
+            "promptMs": 536.66,
+            "generatedTokens": 50,
+            "generatedMs": 3115.319
+          },
+          "wallMs": 3662
+        },
+        "calls": [
+          {
+            "id": "hQ5DWsZfWL3axOYCwSQJtEfzXH1byyYj",
+            "name": "diary__getOne",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}",
+            "result": {
+              "ok": true,
+              "result": {
+                "id": 1,
+                "project_id": 1,
+                "entry_date": "2026-11-10",
+                "content": "Li dois artigos."
+              }
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O diário de 2026-11-10 contém apenas \"Li dois artigos.\". Como não há uma ferramenta para apagar entradas específicas do diário, apenas adicionar novas, não consigo apagar esse conteúdo.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 55,
+            "promptMs": 956.276,
+            "generatedTokens": 48,
+            "generatedMs": 2961.387
+          },
+          "wallMs": 3929
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O diário de 2026-11-10 contém apenas \"Li dois artigos.\". Como não há uma ferramenta para apagar entradas específicas do diário, apenas adicionar novas, não consigo apagar esse conteúdo.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Apaga tudo o que escrevi no diário de 2026-11-10."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "hQ5DWsZfWL3axOYCwSQJtEfzXH1byyYj",
+            "name": "diary__getOne",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-10\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "hQ5DWsZfWL3axOYCwSQJtEfzXH1byyYj",
+        "content": "{\"ok\":true,\"result\":{\"id\":1,\"project_id\":1,\"entry_date\":\"2026-11-10\",\"content\":\"Li dois artigos.\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "O diário de 2026-11-10 contém apenas \"Li dois artigos.\". Como não há uma ferramenta para apagar entradas específicas do diário, apenas adicionar novas, não consigo apagar esse conteúdo.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "diario",
+          "probability": 0.4730853750194434
+        },
+        {
+          "area": "projetos",
+          "probability": 0.42912535824756154
+        },
+        {
+          "area": "lixeira",
+          "probability": 0.06696647918803797
+        }
+      ],
+      "chosen": [
+        "diario",
+        "projetos"
+      ],
+      "fallback": "none",
+      "decisionMs": 788,
+      "decisionInputTokens": 371
+    }
+  }
+}

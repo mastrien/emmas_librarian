@@ -88,4 +88,10 @@ describe('server arguments', () => {
     expect(args).toEqual(expect.arrayContaining(['-b', '4096', '-ub', '4096', '--port', '8090']));
     expect(args).not.toContain('--jinja');
   });
+
+  // Surviving mutation of the review of #202: 0.0.0.0 would open both servers to the network.
+  it('binds both servers to the loopback only', () => {
+    for (const args of [chatServerArgs(launch), decisionServerArgs(launch)])
+      expect(args[args.indexOf('--host') + 1]).toBe('127.0.0.1');
+  });
 });

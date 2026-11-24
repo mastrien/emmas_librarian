@@ -1,0 +1,146 @@
+{
+  "id": "hig-1",
+  "kind": "happy",
+  "prompt": "Que trechos eu destaquei no artigo 1?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 9,
+  "toolsBytes": 3000,
+  "wallMs": 16250,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "kqDLyFfi2bjTfZwxDvHwNakC7GizKHI4",
+              "name": "highlights__get",
+              "arguments": "{\"articleId\":1}"
+            }
+          ],
+          "reasoning": "We need to find the highlights for article ID 1. The user asks: \"Que trechos eu destaquei no artigo 1?\" which translates to \"What excerpts did I highlight in article 1?\" There's a tool `highlights__get` that takes `articleId`. So we just call it with articleId=1.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1026,
+            "promptMs": 2263.245,
+            "generatedTokens": 92,
+            "generatedMs": 3738.288
+          },
+          "wallMs": 6025
+        },
+        "calls": [
+          {
+            "id": "kqDLyFfi2bjTfZwxDvHwNakC7GizKHI4",
+            "name": "highlights__get",
+            "arguments": "{\"articleId\":1}",
+            "result": {
+              "ok": true,
+              "result": [
+                {
+                  "id": 1,
+                  "article_id": 1,
+                  "color": "#FFEB3B",
+                  "position_data": "{\"page\":3}",
+                  "content_text": "adaptive feedback",
+                  "annotation_id": null,
+                  "comment": null
+                }
+              ]
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "No artigo 1 você destaquei o trecho **“adaptive feedback”**, localizado na página 3 do texto.",
+          "toolCalls": [],
+          "reasoning": "We need to answer the user's question: \"Que trechos eu destaquei no artigo 1?\" They asked what excerpts they highlighted in article 1. We called highlights__get with articleId=1 and got a result array containing one entry: id 1, article_id 1, color #FFEB3B, position_data JSON string, content_text \"adaptive feedback\", annotation_id null, comment null.\n\nWe need to interpret this. The tool likely returns highlights for the article. It shows a highlight with content_text \"adaptive feedback\". Possibly there are multiple? Only one entry. So we should tell them that they highlighted the text \"adaptive feedback\" on page 3 (position_data: {\"page\":3}). We can present it.\n\nThus answer in Portuguese, short.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 599,
+            "promptMs": 1644.049,
+            "generatedTokens": 193,
+            "generatedMs": 7784.801
+          },
+          "wallMs": 9438
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "No artigo 1 você destaquei o trecho **“adaptive feedback”**, localizado na página 3 do texto.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Que trechos eu destaquei no artigo 1?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "kqDLyFfi2bjTfZwxDvHwNakC7GizKHI4",
+            "name": "highlights__get",
+            "arguments": "{\"articleId\":1}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "kqDLyFfi2bjTfZwxDvHwNakC7GizKHI4",
+        "content": "{\"ok\":true,\"result\":[{\"id\":1,\"article_id\":1,\"color\":\"#FFEB3B\",\"position_data\":\"{\\\"page\\\":3}\",\"content_text\":\"adaptive feedback\",\"annotation_id\":null,\"comment\":null}]}"
+      },
+      {
+        "role": "assistant",
+        "content": "No artigo 1 você destaquei o trecho **“adaptive feedback”**, localizado na página 3 do texto.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "anotacoes",
+          "probability": 0.9443957705989205
+        },
+        {
+          "area": "ia",
+          "probability": 0.01055364789325583
+        },
+        {
+          "area": "artigos",
+          "probability": 0.007266863283554099
+        }
+      ],
+      "chosen": [
+        "anotacoes",
+        "ia"
+      ],
+      "fallback": "none",
+      "decisionMs": 785,
+      "decisionInputTokens": 364
+    }
+  }
+}

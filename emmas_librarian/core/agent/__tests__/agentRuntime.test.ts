@@ -25,6 +25,23 @@ class FakeServers {
   };
 }
 
+/** The first start fails at once and the second one is still coming up (50 ms) when that happens. */
+class FakeStaggeredServers {
+  readonly stopped: number[] = [];
+  private calls = 0;
+
+  readonly start = async (_exe: string, _args: string[], port: number): Promise<RunningServer> => {
+    if (this.calls++ === 0) throw new Error('[ERR_SERVER_EXITED] fake fast failure');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    return {
+      url: `http://127.0.0.1:${port}`,
+      startupMs: 50,
+      log: () => '',
+      stop: async () => void this.stopped.push(port),
+    };
+  };
+}
+
 /** Says each model file is in place, and remembers which ones it was asked about. */
 class FakeFiles {
   readonly asked: AgentModelFile[] = [];
@@ -80,6 +97,30 @@ describe('startAgentRuntime', () => {
     const servers = new FakeServers(1);
     await expect(startAgentRuntime(deps(servers))).rejects.toThrow(/ERR_SERVER_EXITED/);
     expect(servers.stopped).toHaveLength(1);
+  });
+
+  // Regression (review of #202): Promise.all rejected before the slow server came up, which was then never stopped.
+  it('stops the slow server too when the other one fails at once', async () => {
+    const servers = new FakeStaggeredServers();
+    await expect(startAgentRuntime(deps(new FakeServers(), { start: servers.start }))).rejects.toThrow(
+      /ERR_SERVER_EXITED/,
+    );
+    expect(servers.stopped).toHaveLength(1);
+  });
+
+  // Review of #202: a wrong llama-server used to fail only after both models were downloaded.
+  it('lists the devices before any download or question, so a bad llama-server costs nothing', async () => {
+    const files = new FakeFiles();
+    let asked = 0;
+    const failing = async (): Promise<string> => {
+      throw new Error('[ERR_LIST_DEVICES] llama-server not found');
+    };
+    const counted = async (): Promise<boolean> => (asked++, true);
+    await expect(
+      startAgentRuntime(deps(new FakeServers(), { listDevices: failing, ensure: files.ensure, consent: counted })),
+    ).rejects.toThrow(/ERR_LIST_DEVICES/);
+    expect(files.asked).toEqual([]);
+    expect(asked).toBe(0);
   });
 
   it('starts nothing when a download is declined', async () => {
