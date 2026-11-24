@@ -21,6 +21,10 @@ export interface RoutingRow {
   inputTokens: number;
 }
 
+/** True when every subject the case needs is among the first `k` the model ranked. */
+const allInTopK = (row: RoutingRow, k: number): boolean =>
+  row.required.every((area) => row.ranked.slice(0, k).includes(area));
+
 const percent = (count: number, total: number): number => (total === 0 ? 0 : Math.round((count / total) * 1000) / 10);
 const mean = (values: number[]): number =>
   values.length === 0 ? 0 : Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10;
@@ -50,6 +54,8 @@ export function summarizeRouting(rows: RoutingRow[]): Record<string, number> {
     bestHit: hits((s) => s.bestHit),
     top3Hit: hits((s) => s.top3Hit),
     allSelected: hits((s) => s.allSelected),
+    // Whether the subjects a case needs are all among the 2 most likely: what routing to the top areas (topAreas=2) bets on.
+    allInTop2: percent(needing.filter((row) => allInTopK(row, 2)).length, needing.length),
     exact: hits((s) => s.exact),
     extrasMean: mean(needing.map((row) => row.score?.extras ?? 0)),
     toolTop1: within(1),

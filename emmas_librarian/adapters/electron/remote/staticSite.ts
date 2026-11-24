@@ -17,6 +17,15 @@ const CONTENT_TYPES: Record<string, string> = {
 /** Answers a GET for a path with a file of the site, or null when the site has no such file. */
 export type StaticSite = (pathname: string) => GatewayResponse | null;
 
+// A malformed escape ("%E0%A4%A") makes decodeURIComponent throw; nothing is served at such a path (#189 review).
+function decodedRelative(pathname: string): string | null {
+  try {
+    return decodeURIComponent(pathname).replace(/^\/+/, '');
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Serves the files of one folder (the built mobile client) and nothing outside it: a path that climbs
  * out with "..", an unknown file type and a missing file are all "not here".
@@ -28,7 +37,8 @@ export type StaticSite = (pathname: string) => GatewayResponse | null;
 export function staticSiteIn(rootDir: string): StaticSite {
   const root = path.resolve(rootDir);
   return (pathname) => {
-    const relative = pathname === '/' ? 'index.html' : decodeURIComponent(pathname).replace(/^\/+/, '');
+    const relative = pathname === '/' ? 'index.html' : decodedRelative(pathname);
+    if (relative === null) return null;
     const file = path.resolve(root, relative);
     const contentType = CONTENT_TYPES[path.extname(file).toLowerCase()];
     if (!contentType || !file.startsWith(root + path.sep) || !fs.existsSync(file)) return null;

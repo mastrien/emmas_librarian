@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emma's Librarian — Suíte para Revisão Sistemática e Gestão de PDFs</title>
-    <meta name="description" content="Software open-source para revisão sistemática acadêmica. Realize buscas federadas no Scopus e Web of Science, gerencie bibliotecas locais e converse com seus PDFs via IA.">
-    <meta name="keywords" content="revisão sistemática, busca federada, scopus, web of science, leitor de pdf, IA local, RAG, pesquisa acadêmica, software científico, artigos científicos">
+    <title>Emma's Librarian — Suíte para a sua Pesquisa Acadêmica e Gestão de PDFs</title>
+    <meta name="description" content="Software open-source para a sua pesquisa acadêmica. Busque em 7 bases, organize e faça a triagem dos artigos, gerencie seus PDFs no seu computador e converse com eles via IA.">
+    <meta name="keywords" content="revisão sistemática, PRISMA, triagem, busca federada, openalex, scopus, web of science, leitor de pdf, IA local, RAG, pesquisa acadêmica, software científico, artigos científicos">
     <meta name="author" content="mastrien">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://mastrien.github.io/emmas_librarian/">
@@ -13,18 +13,18 @@
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://mastrien.github.io/emmas_librarian/">
-    <meta property="og:title" content="Emma's Librarian — Suíte Completa para Revisão Sistemática">
-    <meta property="og:description" content="Busca federada Scopus/WoS, gerenciador de biblioteca local e RAG com IA em uma aplicação desktop com total privacidade.">
+    <meta property="og:title" content="Emma's Librarian — Suíte Completa para a sua Pesquisa">
+    <meta property="og:description" content="Busca em 7 bases, triagem e PRISMA 2020, biblioteca de PDFs local e IA com citação de artigo e página, em um aplicativo desktop que guarda tudo no seu computador.">
     <meta property="og:image" content="https://mastrien.github.io/emmas_librarian/assets/og-image.png">
-    <meta property="og:image:alt" content="Emma's Librarian — Suíte para Revisão Sistemática">
+    <meta property="og:image:alt" content="Emma's Librarian — Suíte para a sua Pesquisa">
     <meta property="og:site_name" content="Emma's Librarian">
     <meta property="og:locale" content="pt_BR">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://mastrien.github.io/emmas_librarian/">
-    <meta name="twitter:title" content="Emma's Librarian — Suíte para Revisão Sistemática">
-    <meta name="twitter:description" content="Busca federada Scopus/WoS, gerenciador de biblioteca local e RAG com IA em uma aplicação desktop com total privacidade.">
+    <meta name="twitter:title" content="Emma's Librarian — Suíte para a sua Pesquisa">
+    <meta name="twitter:description" content="Busca em 7 bases, triagem e PRISMA 2020, biblioteca de PDFs local e IA com citação de artigo e página, em um aplicativo desktop que guarda tudo no seu computador.">
     <meta name="twitter:image" content="https://mastrien.github.io/emmas_librarian/assets/og-image.png">
 
     <!-- Favicon & Fonts -->
@@ -32,7 +32,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Teste do fundo do hero: ?hero=antigo | neutro | quente. Sem o parâmetro, vale o neutro. -->
+    <script>
+        (function () {
+            var wanted = new URLSearchParams(location.search).get('hero');
+            if (['antigo', 'neutro', 'quente'].indexOf(wanted) !== -1) document.documentElement.dataset.hero = wanted;
+        })();
+    </script>
 
     <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
@@ -43,13 +51,13 @@
           "@type": "SoftwareApplication",
           "name": "Emma's Librarian",
           "applicationCategory": "EducationalApplication",
-          "operatingSystem": "Windows",
+          "operatingSystem": "Windows, Linux",
           "offers": {
             "@type": "Offer",
             "price": "0",
             "priceCurrency": "BRL"
           },
-          "description": "Suíte desktop open-source para conduzir revisões sistemáticas da literatura com busca federada no Scopus e Web of Science, biblioteca de PDFs local e RAG com IA.",
+          "description": "Suíte desktop open-source para a sua pesquisa acadêmica: busca federada em 7 bases, triagem de artigos com diagrama PRISMA 2020 para revisões sistemáticas, biblioteca de PDFs local e perguntas aos PDFs com IA.",
           "url": "https://mastrien.github.io/emmas_librarian/",
           "author": {
             "@type": "Person",
@@ -73,7 +81,7 @@
               "name": "Meus arquivos PDFs vão para a nuvem?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Não. Seus PDFs e sua base de dados são salvos estritamente no disco da sua máquina para garantir total privacidade dos seus dados."
+                "text": "Não. Seus PDFs e sua base de dados são salvos estritamente no disco da sua máquina para garantir total privacidade dos seus dados. Só vai para fora o que você mesmo escolhe enviar a um provedor de IA em nuvem."
               }
             },
             {
@@ -81,15 +89,39 @@
               "name": "Quais IAs o sistema suporta?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Você pode configurar o uso da API da OpenAI (GPT-4), Anthropic (Claude), Google (Gemini) ou configurar Ollama para rodar modelos 100% locais sem internet."
+                "text": "Você pode configurar o uso da API da OpenAI, Anthropic (Claude), Google (Gemini) ou configurar Ollama para rodar modelos 100% locais sem internet."
               }
             },
             {
               "@type": "Question",
-              "name": "Preciso ter chave API da Scopus e WoS?",
+              "name": "Preciso de chave de API para buscar?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Sim. Como o Emma's Librarian é apenas uma interface local, você precisará de chaves institucionais fornecidas pela sua universidade ou departamento para acessar as bases de pesquisa."
+                "text": "Só para algumas bases. OpenAlex, Crossref, Europe PMC e arXiv funcionam sem chave. Scopus, Web of Science e IEEE Xplore (experimental) pedem a chave que a sua universidade ou o seu departamento fornece."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Funciona no Windows, Linux e Mac?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Há instalador para Windows e AppImage para Linux (experimental). Ainda não há versão para Mac."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Dá para ver meus projetos no celular?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Dá, de dois jeitos. Com o computador ligado e na mesma rede Wi-Fi, você liga o \"Acesso pelo celular\" nas Configurações do aplicativo, lê o código QR com a câmera e passa a ver a biblioteca no navegador do celular (ele vai avisar que não reconhece o certificado, e a própria tela de Configurações mostra o que conferir antes de aceitar). Sem o computador por perto, você exporta o projeto como arquivo .emmapcarc, manda para o celular e abre no leitor para celular. Nesse segundo caso é só leitura."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Tem modo escuro?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Tem. Além do modo claro e escuro, você escolhe o tom de cada um e a cor de destaque."
               }
             }
           ]
@@ -103,7 +135,7 @@
         <div class="container hero-container">
             <img src="logo.svg" alt="Emma's Librarian Logo" class="brand-logo">
             <h1 class="headline">Emma's Librarian</h1>
-            <h2 class="subheadline">A suíte completa para Revisão Sistemática</h2>
+            <h2 class="subheadline">A suíte completa para a sua pesquisa</h2>
             <p class="description">Tudo o que você precisa para conduzir pesquisas acadêmicas de alto nível, com total controle sobre os seus dados e privacidade garantida.</p>
             
             <div class="hero-actions" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
@@ -122,11 +154,12 @@
     <section class="feature-section section-white">
         <div class="container feature-container left-align">
             <div class="feature-text">
-                <h3>Busca Federada em Tempo Real</h3>
-                <p>Conecte as APIs oficiais da Scopus e Web of Science. Faça buscas simultâneas com nosso construtor visual de regras, unificando os resultados instantaneamente.</p>
+                <h3>Busca em 7 bases, com a query montada por você</h3>
+                <p>Monte a busca com o construtor visual de regras e veja como cada base recebe a consulta. OpenAlex, Crossref, Europe PMC e arXiv funcionam sem chave; Scopus, Web of Science e IEEE Xplore (experimental) usam a chave da sua instituição.</p>
+                <p>Você revisa os resultados antes de salvar, baixa os PDFs de acesso aberto e exporta o relatório da estratégia de busca.</p>
             </div>
             <div class="feature-visual">
-                <img src="assets/busca-federada.png" alt="Interface do Construtor de Busca Federada em Tempo Real no Scopus e Web of Science">
+                <img src="assets/busca-federada.png" alt="Tela Nova busca com o construtor visual de regras e a consulta traduzida para OpenAlex, Europe PMC e arXiv" width="1440" height="900">
             </div>
         </div>
     </section>
@@ -134,11 +167,12 @@
     <section class="feature-section section-gray">
         <div class="container feature-container right-align">
             <div class="feature-text">
-                <h3>Agenda de Pesquisa</h3>
-                <p>Organize seus compromissos, tarefas e etapas da revisão bibliográfica em uma agenda integrada. Acompanhe os prazos de submissão e mantenha o foco na produtividade da sua pesquisa.</p>
+                <h3>Triagem com rótulos e em duas etapas</h3>
+                <p>Leia o resumo de um artigo por vez e decida com as teclas A, E e R (incluso, em dúvida, excluído), com uma nota que vai junto da decisão. A triagem tem duas etapas, título e resumo e depois texto completo, e os rótulos são seus. Excluir arquiva o artigo no projeto, com o rótulo como motivo.</p>
+                <p>A ajuda da IA na triagem é experimental: sugere um rótulo e uma ordem de leitura a partir dos seus critérios, e a decisão continua sendo sua.</p>
             </div>
             <div class="feature-visual">
-                <img src="assets/agenda.png" alt="Interface da Agenda de Pesquisa e Prazos para Revisão Sistemática" loading="lazy">
+                <img src="assets/revisao-triagem-guiada.png" alt="Triagem guiada: o resumo do artigo à esquerda e, à direita, os botões Incluso, Em dúvida e Excluído com atalhos de teclado" width="1440" height="900" loading="lazy">
             </div>
         </div>
     </section>
@@ -146,11 +180,12 @@
     <section class="feature-section section-white">
         <div class="container feature-container left-align">
             <div class="feature-text">
-                <h3>Converse com seus PDFs</h3>
-                <p>Nossa plataforma realiza a extração e RAG com IA para que você possa conversar com seus PDFs e extrair dados estruturados de múltiplos artigos simultaneamente. Compatível com GPT-4, Claude, Gemini ou Ollama (local).</p>
+                <h3>Diagrama PRISMA 2020 com os seus números</h3>
+                <p>O diagrama sai das decisões que você já tomou: registros identificados por base, removidos antes da triagem, avaliados, excluídos e incluídos. Clique numa caixa para ver de onde vem o número.</p>
+                <p>Exporte o diagrama e a tabela de dados para o seu artigo.</p>
             </div>
             <div class="feature-visual">
-                <img src="assets/rag-ia.png" alt="Painel de Inteligência Artificial e RAG para Extração de Dados de Artigos Científicos" loading="lazy">
+                <img src="assets/revisao-prisma.png" alt="Diagrama PRISMA 2020 gerado a partir das decisões da triagem" width="1440" height="900" loading="lazy">
             </div>
         </div>
     </section>
@@ -158,15 +193,52 @@
     <section class="feature-section section-gray">
         <div class="container feature-container right-align">
             <div class="feature-text">
-                <h3>Segurança e Privacidade First</h3>
-                <p>Seus arquivos PDF e todo o seu banco de dados SQLite ficam armazenados estritamente na sua máquina local. O que é seu, fica com você.</p>
+                <h3>Investigação com IA, com evidência e revisão</h3>
+                <p>Faça as mesmas perguntas a cada PDF do projeto e receba as respostas em grade, cada uma com o trecho lido e a página. Você aceita, edita ou rejeita cada resposta, e uma auditoria por amostra, com intervalo de confiança, mostra o quanto confiar no conjunto.</p>
+                <p>Funciona com OpenAI, Anthropic, Google (Gemini) ou Ollama local.</p>
             </div>
             <div class="feature-visual">
-                <img src="assets/biblioteca-pdf.png" alt="Gerenciador de Biblioteca de PDFs Local com Armazenamento Offline Seguro" loading="lazy">
+                <img src="assets/investigacao-ia.png" alt="Página de Investigação com IA com respostas em grade e a evidência de cada uma" width="1440" height="900" loading="lazy">
             </div>
         </div>
     </section>
+
+    <section class="feature-section section-white">
+        <div class="container feature-container left-align">
+            <div class="feature-text">
+                <h3>Pergunte aos PDFs dos seus projetos</h3>
+                <p>Converse com os PDFs de um ou mais projetos. Cada afirmação da resposta traz o artigo e a página de onde veio, e o que o modelo disse sem base nos trechos lidos aparece marcado como não conferido.</p>
+            </div>
+            <div class="feature-visual">
+                <img src="assets/perguntar-projetos.png" alt="Tela Perguntar aos projetos com uma resposta e as citações numeradas de cada afirmação" width="1440" height="900" loading="lazy">
+            </div>
+        </div>
+    </section>
+
+    <section class="feature-section section-gray">
+        <div class="container feature-container right-align">
+            <div class="feature-text">
+                <h3>Agenda de pesquisa</h3>
+                <p>Organize reuniões, entregas e prazos de submissão numa agenda integrada, em calendário ou em lista, e acompanhe o que vence nos próximos dias já na tela inicial.</p>
+            </div>
+            <div class="feature-visual">
+                <img src="assets/agenda.png" alt="Agenda de Pesquisa em calendário com eventos e prazos de submissão" width="1440" height="900" loading="lazy">
+            </div>
+        </div>
+    </section>
+
     <section class="feature-section section-white text-center">
+        <div class="container">
+            <h3>O aplicativo do seu jeito</h3>
+            <ul class="capability-list">
+                <li><strong>Claro ou escuro</strong>Dois tons para cada modo.</li>
+                <li><strong>Cor de destaque</strong>Seis cores à escolha.</li>
+                <li><strong>Paleta de comandos</strong>Ctrl K leva a qualquer tela.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="feature-section section-gray text-center">
         <div class="container">
             <h3>Aprenda a dominar o Emma's Librarian</h3>
             <p style="margin: 1rem auto 2rem auto; max-width: 600px; color: #475569; font-size: 1.15rem; line-height: 1.7;">Preparamos guias detalhados e práticos para você aproveitar ao máximo todos os recursos da ferramenta, desde buscas até o painel de Inteligência Artificial.</p>
@@ -174,7 +246,7 @@
         </div>
     </section>
 
-    <section class="feature-section section-gray">
+    <section class="feature-section section-white">
         <div class="container faq-container">
             <h3 class="text-center" style="margin-bottom: 2rem;">Perguntas Frequentes (FAQ)</h3>
             <div class="accordion">
@@ -184,19 +256,27 @@
                 </details>
                 <details class="faq-item">
                     <summary>Meus arquivos PDFs vão para a nuvem?</summary>
-                    <p>Não. Seus PDFs e sua base de dados são salvos estritamente no disco da sua máquina para garantir total privacidade dos seus dados.</p>
+                    <p>Não. Seus PDFs e sua base de dados são salvos estritamente no disco da sua máquina para garantir total privacidade dos seus dados. Só vai para fora o que você mesmo escolhe enviar a um provedor de IA em nuvem.</p>
                 </details>
                 <details class="faq-item">
                     <summary>Quais IAs o sistema suporta?</summary>
-                    <p>Você pode configurar o uso da API da OpenAI (GPT-4), Anthropic (Claude), Google (Gemini) ou configurar Ollama para rodar modelos 100% locais sem internet.</p>
+                    <p>Você pode configurar o uso da API da OpenAI, Anthropic (Claude), Google (Gemini) ou configurar Ollama para rodar modelos 100% locais sem internet.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Preciso de chave de API para buscar?</summary>
+                    <p>Só para algumas bases. OpenAlex, Crossref, Europe PMC e arXiv funcionam sem chave. Scopus, Web of Science e IEEE Xplore (experimental) pedem a chave que a sua universidade ou o seu departamento fornece.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Funciona no Windows, Linux e Mac?</summary>
+                    <p>Há instalador para Windows e AppImage para Linux (experimental). Ainda não há versão para Mac.</p>
                 </details>
                 <details class="faq-item">
                     <summary>Dá para ver meus projetos no celular?</summary>
                     <p>Dá, de dois jeitos. Com o computador ligado e na mesma rede Wi-Fi, você liga o "Acesso pelo celular" nas Configurações do aplicativo, lê o código QR com a câmera e passa a ver a biblioteca no navegador do celular (ele vai avisar que não reconhece o certificado, e a própria tela de Configurações mostra o que conferir antes de aceitar). Sem o computador por perto, você exporta o projeto como arquivo .emmapcarc, manda para o celular e abre no <a href="app/">leitor para celular</a>. Nesse segundo caso é só leitura.</p>
                 </details>
                 <details class="faq-item">
-                    <summary>Preciso ter chave API da Scopus e WoS?</summary>
-                    <p>Sim. Como o Emma's Librarian é apenas uma interface local, você precisará de chaves institucionais fornecidas pela sua universidade ou departamento para acessar as bases de pesquisa.</p>
+                    <summary>Tem modo escuro?</summary>
+                    <p>Tem. Além do modo claro e escuro, você escolhe o tom de cada um e a cor de destaque.</p>
                 </details>
             </div>
         </div>
@@ -211,18 +291,27 @@
         </div>
     </footer>
 
+    <dialog id="lightbox" class="lightbox" aria-label="Imagem ampliada">
+        <button type="button" class="lightbox-close" aria-label="Fechar">&times;</button>
+        <img alt="">
+    </dialog>
+
+    <script src="lightbox.js"></script>
+    <script src="download.js"></script>
     <script>
+        // The button points to the releases page until the latest release is known; the installer is then picked per system.
+        const label = document.getElementById('version-label');
+        const button = document.getElementById('download-btn');
         fetch('https://api.github.com/repos/mastrien/emmas_librarian/releases/latest')
             .then(res => res.json())
             .then(data => {
-                const winAsset = data.assets?.find(a => a.name.endsWith('.exe'));
-                if (winAsset) {
-                    document.getElementById('download-btn').href = winAsset.browser_download_url;
-                }
-                document.getElementById('version-label').textContent = `Baixar ${data.tag_name} (Windows)`;
+                const choice = EmmaDownload.chooseDownload(navigator.userAgent, data.assets);
+                if (choice.asset) button.href = choice.asset.browser_download_url;
+                const version = choice.label ? `Baixar ${data.tag_name} (${choice.label})` : `Versão ${data.tag_name}`;
+                label.textContent = choice.note ? `${version}. ${choice.note}` : version;
             })
             .catch(() => {
-                document.getElementById('version-label').textContent = "Disponível no GitHub.";
+                label.textContent = "Disponível no GitHub.";
             });
     </script>
 </body>

@@ -10,7 +10,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="tutoriais.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script>
+        (function () {
+            var wanted = new URLSearchParams(location.search).get('hero');
+            if (['antigo', 'neutro', 'quente'].indexOf(wanted) !== -1) document.documentElement.dataset.hero = wanted;
+        })();
+    </script>
 </head>
 <body>
     <header class="tutorials-header">
@@ -19,8 +25,8 @@
             <div class="header-branding">
                 <img src="logo.svg" alt="Emma's Librarian Logo" class="brand-logo-small">
                 <div>
-                    <h1>Tutoriais do Emma's Librarian</h1>
-                    <p>Guia completo e documentação de todas as funcionalidades da plataforma.</p>
+                    <h1>Tutoriais</h1>
+                    <p>Emma's Librarian</p>
                 </div>
             </div>
         </div>
@@ -38,17 +44,22 @@
                     <span class="nav-toggle-current">Introdução - Visão Geral & Instalação</span>
                 </button>
                 <ul id="chapter-list">
+                    <li class="nav-group">Começar</li>
                     <li><a href="#intro" class="active">Introdução - Visão Geral & Instalação</a></li>
                     <li><a href="#dashboard">Capítulo 1 - Dashboard & Projetos</a></li>
+                    <li class="nav-group">Pesquisar e organizar</li>
                     <li><a href="#busca-federada">Capítulo 2 - Busca Federada (APIs)</a></li>
                     <li><a href="#gestao-artigos">Capítulo 3 - Triagem & Categorias</a></li>
                     <li><a href="#leitor-pdf">Capítulo 4 - Leitor de PDF & Fichamento</a></li>
                     <li><a href="#ia-rag">Capítulo 5 - Inteligência Artificial & RAG</a></li>
+                    <li class="nav-group">Biblioteca e rotina</li>
                     <li><a href="#biblioteca-pdfs">Capítulo 6 - Biblioteca Local de PDFs</a></li>
                     <li><a href="#agenda">Capítulo 7 - Agenda & Cronogramas</a></li>
                     <li><a href="#configuracoes-backup">Capítulo 8 - Configurações & Backups</a></li>
+                    <li class="nav-group">Revisão e perguntas</li>
                     <li><a href="#revisao-sistematica">Capítulo 9 - Revisão Sistemática & PRISMA</a></li>
                     <li><a href="#perguntar-projetos">Capítulo 10 - Perguntar aos Projetos</a></li>
+                    <li class="nav-group">Extra</li>
                     <li><a href="#extras">Extra - Curiosidades & Bastidores</a></li>
                 </ul>
             </div>
@@ -90,7 +101,7 @@
 
                 <h3 id="como-instalar">Como instalar</h3>
                 <p>Hoje existem dois jeitos de baixar o Emma's Librarian: pelo botão de instalação na <a href="index.html">página inicial</a> ou pela aba <a href="https://github.com/mastrien/emmas_librarian/releases/latest" target="_blank" rel="noopener noreferrer">Releases do repositório no GitHub</a>. Os dois levam pro mesmo instalador, então tanto faz.</p>
-                <p>Por enquanto só existe versão para <strong>Windows</strong>. Como o sistema é feito em <em>Electron</em>, gerar uma versão para Linux não deve ser complicado, mas por agora é só Windows mesmo.</p>
+                <p>Existem duas versões: o instalador para <strong>Windows</strong> e um <strong>AppImage para Linux</strong>, que ainda é experimental. Para Mac não há versão por enquanto.</p>
                 <p>A instalação em si é a de qualquer programa do Windows:</p>
                 <ol>
                     <li>Baixe o instalador da versão mais recente (um arquivo com nome parecido com <code>Emma's Librarian Setup 1.1.23.exe</code>).</li>
@@ -105,12 +116,12 @@
                     <p>Observação: a pasta que você escolhe na instalação é onde fica o <strong>programa</strong>, não os seus <strong>dados</strong>. Os dados ficam sempre na pasta do usuário do Windows que abriu o programa. Na prática, isso quer dizer que se duas pessoas usam o mesmo computador, cada uma com o seu usuário do Windows, cada uma vai ter a sua própria biblioteca, separada da outra.</p>
                 </blockquote>
                 <p>Saber onde os dados ficam também é útil na hora de fazer backup, que é assunto do <a href="#configuracoes-backup">Capítulo 8</a>.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap1-dashboard-vazio.png" alt="Primeira tela do Emma's Librarian logo depois da instalação" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap1-dashboard-vazio.png" alt="Primeira tela do Emma's Librarian logo depois da instalação" width="1440" height="900" loading="lazy">
 
                 <p><strong>E é isso!</strong> Com o programa instalado, o próximo passo é criar o seu primeiro projeto, que é o assunto do próximo capítulo.</p>
 
                 <div class="chapter-pagination">
-                    <a href="#dashboard" class="chapter-btn next">Capítulo 1 - Dashboard & Projetos →</a>
+                    <a href="#dashboard" class="chapter-btn next"><span class="chapter-btn-text"><span class="chapter-btn-label">Próximo</span><span class="chapter-btn-title">Capítulo 1 - Dashboard & Projetos</span></span></a>
                 </div>
             </section>
 
@@ -142,7 +153,7 @@
                     <li>vermelho, quando o prazo já passou ("venceu há 2 d").</li>
                 </ul>
                 <p>Cada prazo tem uma caixinha para marcar como concluído. Quando você marca, ele sai da lista e o próximo da fila ocupa o lugar. Se não tiver nada pendente, aparece "Nenhum prazo pendente para os próximos dias.", o que é sempre uma mensagem agradável de ler. O link <strong>Agenda</strong>, no cabeçalho do bloco, abre a agenda completa.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap1-dashboard-topo.png" alt="Tela Início com a data e a hora no alto, os projetos à esquerda e, à direita, os quatro prazos mais próximos e o calendário" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap1-dashboard-topo.png" alt="Tela Início com a data e a hora no alto, os projetos à esquerda e, à direita, os quatro prazos mais próximos e o calendário" width="1440" height="900" loading="lazy">
 
                 <h3>Projetos</h3>
                 <p>Na coluna da esquerda fica a seção <strong>Projetos</strong>, com um card para cada projeto e, ao lado do título, a ordem da lista: <strong>Recentes</strong> (do aberto por último para o mais antigo) ou <strong>A–Z</strong>. Cada card mostra o nome do projeto, a data em que ele foi criado, há quanto tempo foi aberto pela última vez, uma barra de progresso e quatro números:</p>
@@ -152,15 +163,15 @@
                     <li><strong>Com PDF</strong>: artigos que já têm um PDF vinculado;</li>
                     <li><strong>Arquivados</strong>: artigos que você tirou do caminho, normalmente porque não passaram nos critérios de inclusão da pesquisa.</li>
                 </ul>
-                <p>A barra de progresso depende do que você já fez no projeto. Num projeto que ainda não teve nenhuma decisão de triagem (<a href="#revisao-sistematica">Capítulo 9</a>), ela mostra a <strong>Leitura</strong>, por exemplo "7 de 96 lidos". Depois que um artigo recebe uma decisão na revisão sistemática, o card ganha a etiqueta <strong>Revisão sistemática</strong> e a barra passa a mostrar a <strong>Triagem por título e resumo</strong>, com quantos artigos já foram decididos (os arquivados contam, já que arquivar é um resultado da triagem).</p>
-                <p>O projeto de exemplo que aparece nas imagens deste tutorial, sobre "Previsão Climática de Precipitação", tem 96 artigos vindos de duas buscas: 89 ativos, 7 lidos, 17 com PDF e nenhum arquivado. [CONFIRMAR: esses números foram escritos antes de o exemplo ganhar decisões de triagem; conferir o que o card mostra na captura nova] Conforme você vai triando, os números vão migrando de uma coluna pra outra, e só de bater o olho no card dá pra ter uma noção de quanto falta. Pra abrir um projeto, é só clicar no card.</p>
+                <p>A barra de progresso depende do que você já fez no projeto. Num projeto que ainda não teve nenhuma decisão de triagem (<a href="#revisao-sistematica">Capítulo 9</a>), ela mostra a <strong>Leitura</strong>, por exemplo "7 de 58 lidos". Depois que um artigo recebe uma decisão na revisão sistemática, o card ganha a etiqueta <strong>Revisão sistemática</strong> e a barra passa a mostrar a <strong>Triagem por título e resumo</strong>, com quantos artigos já foram decididos (os arquivados contam, já que arquivar é um resultado da triagem).</p>
+                <p>O projeto de exemplo que aparece nas imagens deste tutorial, sobre "Previsão Climática de Precipitação", tem 58 artigos vindos de uma busca: 25 ativos, nenhum lido, 13 com PDF e 33 arquivados (a triagem arquivou os excluídos). Como o exemplo já tem decisões, o card mostra a Triagem por título e resumo ("44 de 58") no lugar da Leitura. Conforme você vai triando, os números vão migrando de uma coluna pra outra, e só de bater o olho no card dá pra ter uma noção de quanto falta. Pra abrir um projeto, é só clicar no card.</p>
                 <p>E quando você acabou de instalar? Aí não tem card de projeto nenhum, claro: aparece o aviso <strong>"Nenhum projeto encontrado"</strong> e, no fim da lista, o card <strong>Novo projeto</strong>, que está sempre lá. Assim que você cria o primeiro projeto, o card dele passa a ocupar esse espaço.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap1-dashboard-vazio.png" alt="Tela Início sem projetos, com o aviso Nenhum projeto encontrado e o card Novo projeto" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap1-dashboard-vazio.png" alt="Tela Início sem projetos, com o aviso Nenhum projeto encontrado e o card Novo projeto" width="1440" height="900" loading="lazy">
 
                 <h3 id="criar-projeto">Criando o seu primeiro projeto</h3>
                 <p>Pra criar um projeto, clique em <strong>Novo projeto</strong>, no canto direito do cabeçalho da tela Início (o card Novo projeto, no fim da lista, faz a mesma coisa). Vai abrir uma tela pedindo só uma coisa: o <strong>Nome</strong>.</p>
                 <p>Só o nome? Sim. Busca, categorias, diário, links, tudo isso é configurado depois, de dentro do projeto, conforme você for precisando (o próprio nome dá pra mudar depois, no título da Visão geral do projeto). Escolha um nome que te ajude a reconhecer o projeto no meio dos outros (o campo sugere algo como "Sistemas de Recomendação na Educação") e clique em <strong>Criar projeto</strong>, ou aperte Enter. Ao lado do formulário, o bloco <strong>Depois de criar</strong> lembra os passos mais comuns: buscar nas bases, trazer o que você já tem (PDFs ou artigos de outro projeto) e escrever os critérios da revisão. Você é levado direto pra página do projeto novo, que é onde a maior parte do trabalho acontece.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap1-novo-projeto.png" alt="Tela Novo Projeto com o nome preenchido" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap1-novo-projeto.png" alt="Tela Novo Projeto com o nome preenchido" width="1440" height="900" loading="lazy">
 
                 <h3>Importando um projeto (.emmapcarc)</h3>
                 <p>Ao lado do Novo projeto tem o botão <strong>Importar</strong> (e a tela de criar projeto tem o link <strong>Importar um projeto (.emmapcarc)</strong>). Ele serve pra abrir um projeto que foi exportado de outro Emma's Librarian, num arquivo com a extensão <code>.emmapcarc</code>. Esse arquivo é gerado de dentro de um projeto, no menu <strong>Exportar</strong> da seção Artigos, na opção <strong>Pacote .emmapcarc (com PDFs)</strong>, e leva o projeto praticamente inteiro: os artigos com os PDFs, o histórico de buscas, as categorias e a classificação de cada artigo, as marcações e anotações feitas na leitura, o diário, os links e documentos do acesso rápido e as investigações com IA e as respostas. O que fica de fora são os prazos da agenda, que não pertencem a um projeto específico.</p>
@@ -179,14 +190,14 @@
                     <li><strong>Sem PDF</strong>, os artigos "sem arquivo vinculado".</li>
                 </ul>
                 <p>O último é um bom lembrete. Se muitos artigos estão sem PDF, a leitura dentro da plataforma e a investigação com IA ficam limitadas, porque as duas dependem do arquivo. Como vincular os PDFs, e como baixar de uma vez os que são de acesso aberto, é assunto do <a href="#leitor-pdf">Capítulo 4</a>.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap1-dashboard-baixo.png" alt="Seção Visão geral no fim da tela Início, com os totais de artigos, lidos, com PDF e sem PDF" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap1-dashboard-baixo.png" alt="Seção Visão geral no fim da tela Início, com os totais de artigos, lidos, com PDF e sem PDF" width="1384" height="344" loading="lazy">
                 <p>No canto de baixo da coluna da direita tem uma frase discreta: "Ao usar o sistema, você concorda com os Termos de uso". Vale a pena abrir pelo menos uma vez, principalmente se você pretende usar os recursos de IA (a página se chama <strong>Termos de uso e IA</strong>, e também dá pra chegar nela pela paleta Ctrl K). Os termos explicam o que fica só no seu computador e o que é enviado pra fora quando você usa IA ou busca em bases proprietárias, e também resumem o que cada base permite fazer com os dados dela (as políticas de mineração de texto e dados, ou <em>TDM</em>). Como estamos falando de material acadêmico, que muitas vezes tem regras de uso próprias, é bom saber disso antes de mandar um monte de artigos pra um modelo de linguagem.</p>
 
                 <p>Por agora é isso. Você já conhece a tela Início e tem um projeto criado, mas um projeto vazio não serve pra muita coisa, né? No próximo capítulo vamos enchê-lo de artigos.</p>
 
                 <div class="chapter-pagination">
-                    <a href="#intro" class="chapter-btn prev">← Introdução</a>
-                    <a href="#busca-federada" class="chapter-btn next">Capítulo 2 - Busca Federada (APIs) →</a>
+                    <a href="#intro" class="chapter-btn prev"><span class="chapter-btn-text"><span class="chapter-btn-label">Anterior</span><span class="chapter-btn-title">Introdução</span></span></a>
+                    <a href="#busca-federada" class="chapter-btn next"><span class="chapter-btn-text"><span class="chapter-btn-label">Próximo</span><span class="chapter-btn-title">Capítulo 2 - Busca Federada (APIs)</span></span></a>
                 </div>
             </section>
 
@@ -199,7 +210,7 @@
 
                 <h3>Onde fica a busca</h3>
                 <p>Quando você entra num projeto, a coluna ao lado dos módulos vira a <strong>barra do projeto</strong>: o nome dele no alto (com o número de artigos e desde quando existe) e as seções embaixo. Primeiro vêm <strong>Visão geral</strong>, <strong>Artigos</strong>, <strong>Categorias</strong> e <strong>Diário</strong>; depois o grupo <strong>Busca</strong>, com <strong>Nova busca</strong> e <strong>Histórico</strong>; e o grupo <strong>Análise</strong>, com <strong>Revisão sistemática</strong> e <strong>Investigação com IA</strong>. No fim da barra fica o <strong>Acesso rápido</strong>, com os links e documentos que você abriu por último (o link da reunião do grupo, a pasta compartilhada), e a engrenagem ao lado do título dele abre a janela pra gerenciá-los. A <strong>Visão geral</strong> mostra os números do projeto (artigos, lidos, com PDF, acesso aberto, artigos por ano, bases de origem e editoras), com o botão <strong>Exportar gráficos</strong>, que salva os gráficos de ano, bases e editoras num arquivo SVG, e o espaço <strong>Sobre o projeto</strong>, um texto livre pro objetivo e a pergunta de pesquisa. É nela também que você renomeia ou exclui o projeto. Cada uma dessas partes aparece com calma nos próximos capítulos. Por agora, o que interessa é <strong>Busca › Nova busca</strong>, que leva pra tela <strong>Nova busca</strong>.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-projeto.png" alt="Barra do projeto com os grupos Busca e Análise e o item Nova busca destacado" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-projeto.png" alt="Barra do projeto com os grupos Busca e Análise e o item Nova busca destacado" width="1440" height="900" loading="lazy">
 
                 <h3>Escolhendo as bases</h3>
                 <p>A tela tem três passos numerados, e o primeiro é <strong>Bases</strong> (ao lado do título ela diz quantas estão escolhidas), onde você escolhe em quais bases quer buscar. Cada base é um botão que fica marcado quando está escolhido, e as que pedem chave mostram um ícone de chave: em destaque quando a chave já está salva, em cinza quando falta. Hoje são sete bases, e elas não cobrem as mesmas áreas:</p>
@@ -219,7 +230,7 @@
                     <p>A <a href="https://www.cochranelibrary.com/" target="_blank" rel="noopener noreferrer">Cochrane Library</a> não tem uma API pública de busca: a API que ela documenta serve pra quem escreve revisões dentro da própria Cochrane. Só que as revisões sistemáticas da Cochrane são indexadas no MEDLINE, então aparecem nas buscas do Europe PMC (e também na OpenAlex e na Crossref, com DOIs que começam com <code>10.1002/14651858</code>).</p>
                 </blockquote>
                 <p>A IEEE Xplore aparece com a etiqueta <strong>Exp.</strong>, de experimental. A integração foi escrita seguindo a documentação da IEEE, mas ainda não foi testada com uma chave real, porque eu ainda não consegui a minha (a IEEE aprova cada chave manualmente). Ou seja, a sintaxe da busca e o limite diário podem não funcionar do jeito que a documentação diz. Quando você marca a IEEE Xplore, esse aviso aparece logo abaixo das bases, e ela nunca vem marcada sozinha, mesmo com a chave cadastrada.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-busca-topo.png" alt="Passo Bases com as sete bases, a IEEE Xplore marcada como experimental e o aviso logo abaixo" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-busca-topo.png" alt="Passo Bases com as sete bases, a IEEE Xplore marcada como experimental e o aviso logo abaixo" width="1440" height="900" loading="lazy">
 
                 <h3>Montando a busca no construtor visual</h3>
                 <p>O segundo passo é a <strong>Query</strong>, um construtor visual em árvore. A busca é montada com <strong>regras</strong>, e cada regra tem três partes:</p>
@@ -232,7 +243,7 @@
                 <p>Por que árvore? Porque é assim que uma busca booleana funciona por baixo dos panos. Vamos supor que, no projeto "Previsão Climática de Precipitação", eu queira artigos que tenham "precipitation forecast" <strong>ou</strong> "rainfall prediction" no título, <strong>e</strong> que falem de "machine learning" em qualquer lugar. Escrevendo à mão, isso fica assim:</p>
                 <p><code>(tudo: "machine learning") E (título: "precipitation forecast" OU título: "rainfall prediction")</code></p>
                 <p>No construtor, isso vira um grupo principal com <strong>E</strong>, contendo uma regra de "machine learning" e um subgrupo com <strong>OU</strong> com as duas regras de título. Note que o subgrupo faz exatamente o papel daqueles parênteses.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-construtor.png" alt="Construtor visual com um grupo E contendo um subgrupo OU" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-construtor.png" alt="Construtor visual com um grupo E contendo um subgrupo OU" width="1440" height="900" loading="lazy">
 
                 <h3>Tradução e transparência</h3>
                 <p>Na coluna da direita fica a parte que eu considero a mais importante da tela: o painel <strong>Antes de buscar</strong>. Ele mostra a busca escrita em palavras e, em <strong>Como cada base recebe</strong>, um cartão pra cada base selecionada com a busca exatamente como ela vai ser enviada, já na sintaxe daquela base. O exemplo acima fica assim:</p>
@@ -249,15 +260,15 @@
                 <p>Nas imagens não aparecem Scopus e Web of Science porque o cartão de tradução só aparece pras bases marcadas, e ali as duas estavam sem chave.</p>
                 <p>E a Crossref? Pois é, ela não apareceu na lista porque a API da Crossref não aceita operadores lógicos como OU e NÃO. Nesse caso, o cartão dela mostra um aviso de <strong>Incompatibilidade de Sintaxe</strong> explicando o motivo, e se você tentar buscar assim mesmo, o sistema pede pra você escrever uma busca manual pra ela ou desmarcar a base. Buscas só com <strong>E</strong> funcionam normalmente na Crossref.</p>
                 <p>Se precisar de algo que o construtor não oferece (um filtro de ano específico da Scopus, por exemplo), cada cartão tem o botão <strong>Editar</strong>, que troca a tradução automática por uma query customizada. Ele abre um campo já preenchido com a tradução, e você só ajusta o que precisar. Se mudar de ideia, o botão <strong>Restaurar</strong> desfaz tudo e volta à tradução automática.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-traducao.png" alt="Painel Antes de buscar com os cartões de tradução da OpenAlex, da Crossref, com o aviso de incompatibilidade, e do Europe PMC" width="1424" height="892" loading="lazy">
-                <img class="tutorial-img" src="assets/tutoriais/cap2-traducao-2.png" alt="Painel Antes de buscar com os cartões de tradução do arXiv e da IEEE Xplore" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-traducao.png" alt="Painel Antes de buscar com os cartões de tradução da OpenAlex, da Crossref, com o aviso de incompatibilidade, e do Europe PMC" width="1440" height="900" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-traducao-2.png" alt="Painel Antes de buscar com os cartões de tradução do arXiv e da IEEE Xplore" width="1440" height="900" loading="lazy">
 
                 <h3>Ordenação, quantidade e a busca em si</h3>
                 <p>O terceiro passo é <strong>Opções</strong>: a <strong>Ordenação</strong> (Mais relevantes, Mais citados ou Mais recentes) e o <strong>Máximo de resultados por base</strong>, que começa em 1.000.</p>
                 <p>Atenção ao "por base": com quatro bases marcadas e o máximo em 1.000, a busca pode trazer até 4.000 resultados. Logo abaixo do campo aparece uma linha com quanto cada base vai receber, e em <strong>Ajustar por base</strong> você muda o valor de uma base sem mexer nas outras. Um campo de ajuste vazio segue o valor comum, que é o que o "1000 (comum)" dentro dele quer dizer. Na imagem, por exemplo, o arXiv foi ajustado pra 200 e as outras bases seguem os 1.000.</p>
                 <p>Nem toda base ordena do mesmo jeito. O arXiv não ordena por citações, e a API da IEEE Xplore não ordena nem por data nem por citações. Nesses casos a busca acontece assim mesmo, por relevância no arXiv e na ordem padrão da base na IEEE, e o resumo do fim da busca avisa.</p>
                 <p>Embaixo fica o campo <strong>Publicados desde (opcional)</strong>, que limita a busca aos trabalhos publicados a partir de uma data. OpenAlex, Crossref, Europe PMC e arXiv filtram pelo dia exato. A Scopus e a Web of Science só filtram pelo ano (uma data em março de 2025 vira "publicados de 2025 em diante"), e a IEEE Xplore roda sem esse filtro, porque o filtro de data da API dela é pela data em que o trabalho entrou na base, e não pela publicação. A tela avisa quando alguma das bases marcadas está nesses casos.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-opcoes.png" alt="Passo Opções com a ordenação e o máximo de resultados por base, com Ajustar por base aberto e um valor acima do teto da IEEE Xplore" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-opcoes.png" alt="Passo Opções com a ordenação e o máximo de resultados por base, com Ajustar por base aberto e um valor acima do teto da IEEE Xplore" width="1440" height="900" loading="lazy">
 
                 <h4>Por que cada base tem um teto?</h4>
                 <p>Nenhuma API entrega milhares de resultados de uma vez. Elas entregam em páginas, e o Emma's Librarian pede uma página atrás da outra até chegar no número que você escolheu. Cada página é uma <strong>requisição</strong>, e as bases limitam quantas requisições você pode fazer por segundo ou por dia. Por isso, em Ajustar por base, do lado de cada base aparecem o teto dela, quantas requisições a busca vai custar e, quando a base pede uma pausa entre as páginas, quanto tempo isso leva. Na imagem, os 1.000 resultados da OpenAlex custam 10 requisições (ela manda 100 por página), enquanto os mesmos 1.000 do Europe PMC custam uma só.</p>
@@ -288,17 +299,17 @@
                 <p>Isso é bem útil na hora de escrever a metodologia de um artigo ou relatório, porque você não precisa lembrar (nem ter anotado) qual string usou, em qual base, em que dia e com quantos resultados. Está tudo ali.</p>
                 <p>Cada registro também tem o botão <strong>Desfazer Busca</strong>, que remove do projeto todos os artigos que aquela busca trouxe. Cuidado que essa remoção é permanente, então o sistema pede confirmação antes.</p>
                 <p>E se você quiser uma busca parecida com uma que já fez, mudando só um termo ou uma base? O botão <strong>Nova busca a partir desta</strong> abre a tela de busca com tudo daquela busca já preenchido: o construtor visual, as bases marcadas, as queries customizadas, a ordenação e a quantidade. Você ajusta o que quiser e clica em <strong>Fazer busca</strong>, e a busca antiga continua no histórico do jeito que estava. Buscas feitas antes da versão que trouxe esse botão não guardavam o construtor visual, então nelas a query de cada base volta como query customizada (a tela avisa quando isso acontece). O botão não aparece nos registros de importação de outro projeto nem nos de artigo manual, porque neles não existe uma busca pra reaproveitar.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-historico.png" alt="Seção Histórico de buscas com o registro da busca, o limite com o ajuste do arXiv, os resultados por base, a falha do arXiv e as requisições" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-historico.png" alt="Seção Histórico de buscas com o registro da busca, o limite usado, os resultados por base, a falha da Europe PMC e as requisições" width="1440" height="900" loading="lazy">
                 <p>No topo do histórico fica o menu <strong>Exportar estratégia</strong>, com as opções <strong>Exportar estratégia de busca (XLSX)</strong> e <strong>(Markdown)</strong>, que juntam tudo isso num arquivo só: uma linha por base em cada busca, com a data, a query exatamente como foi enviada (já com o filtro de data, quando houver), o limite pedido, quantos resultados vieram e se o limite foi atingido. É o que normalmente vai no apêndice de uma revisão sistemática, e o Markdown dá pra colar direto num documento.</p>
 
                 <h4>Rodando a busca de novo</h4>
-                <p>Uma revisão costuma levar meses, e nesse meio tempo saem artigos novos. O botão <strong>Rodar de novo</strong> abre a tela de busca com tudo da busca antiga preenchido, como o Nova busca a partir desta, mas já com o <strong>Publicados desde</strong> na data em que ela foi feita. No projeto de exemplo, a busca #2 foi feita em 07/08/2026, então a nova busca procura só o que foi publicado desse dia em diante. Os artigos que já estão no projeto aparecem com a marca Já no projeto e não são salvos de novo.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-publicados-desde.png" alt="Tela de busca aberta pelo Rodar de novo, com a query da OpenAlex preenchida e o campo Publicados desde em 07/08/2026" width="1424" height="892" loading="lazy">
+                <p>Uma revisão costuma levar meses, e nesse meio tempo saem artigos novos. O botão <strong>Rodar de novo</strong> abre a tela de busca com tudo da busca antiga preenchido, como o Nova busca a partir desta, mas já com o <strong>Publicados desde</strong> na data em que ela foi feita. No projeto de exemplo, a busca #1 foi feita em 21/11/2026, então a nova busca procura só o que foi publicado desse dia em diante. Os artigos que já estão no projeto aparecem com a marca Já no projeto e não são salvos de novo.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap2-publicados-desde.png" alt="Tela de busca aberta pelo Rodar de novo, com a query da OpenAlex preenchida e o campo Publicados desde em 21/11/2026" width="1440" height="900" loading="lazy">
                 <p>Note que, na imagem, só a OpenAlex ficou marcada, apesar de a busca original ter usado também a Scopus e a Web of Science. Isso acontece porque as bases que precisam de chave só voltam marcadas quando a chave está configurada, e o computador onde tirei a captura não tinha essas chaves.</p>
 
                 <h4>Monitorar uma busca (experimental)</h4>
                 <p>E se você não quiser lembrar de rodar de novo? Marcando <strong>Monitorar esta busca</strong> num registro do histórico, o Emma's Librarian roda essa busca sozinho de tempos em tempos (<strong>Todo dia</strong>, <strong>Toda semana</strong> ou <strong>A cada 2 semanas</strong>) e avisa na tela Início quando encontra artigos que ainda não estão no projeto. Clicando em <strong>Revisar</strong> no aviso, você vê esses artigos no mesmo resumo do fim de uma busca e decide se salva ou descarta, então nada entra no projeto sem você ver.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-monitorar.png" alt="Registro da busca #2 no histórico com Monitorar esta busca marcado, o intervalo Toda semana e o aviso do custo de cada verificação" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-monitorar.png" alt="Registro da busca #1 no histórico com Monitorar esta busca marcado, o intervalo Toda semana e o aviso do custo de cada verificação" width="1440" height="900" loading="lazy">
                 <p>Alguns detalhes que vale saber antes de marcar. A verificação só acontece com o programa aberto: se ele ficar fechado por duas semanas, ela roda na próxima vez que você abrir. Cada verificação gasta a cota das suas chaves, pelo menos uma requisição por base, e a linha logo abaixo do intervalo diz em quais bases. E cada verificação olha os publicados desde 30 dias antes da anterior, porque um artigo pode entrar na base bem depois de publicado; o que já está no projeto ou já foi mostrado não aparece de novo.</p>
                 <p>Por que experimental? Até agora o monitoramento só foi visto rodando sem encontrar nada novo. Ele ainda não foi visto encontrando um artigo novo de verdade, então pode ter algum problema que só aparece nesse caso.</p>
 
@@ -335,7 +346,7 @@
                     <li>Espere a aprovação, que a IEEE faz manualmente. Quando sair, copie a chave e cole no campo <strong>IEEE Xplore API Key (experimental)</strong>.</li>
                 </ol>
                 <p>O campo repete o aviso da tela de busca: como a integração ainda não foi testada com uma chave real, a busca na IEEE Xplore pode falhar ou trazer resultados diferentes dos do site da IEEE.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-chaves-api.png" alt="Campos de chave de API da Scopus, da Web of Science, da OpenAlex e da IEEE Xplore na seção Chaves das bases das Configurações, com o aviso de experimental" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap2-chaves-api.png" alt="Campos de chave de API da Scopus, da Web of Science, da OpenAlex e da IEEE Xplore na seção Chaves das bases das Configurações, com o aviso de experimental" width="1440" height="900" loading="lazy">
 
                 <h3>Os resultados</h3>
                 <p>Fechando o resumo, você volta pro projeto, na seção <strong>Artigos</strong>, e os artigos encontrados aparecem na tabela. Com dezenas (ou centenas) de artigos na tela, você vai querer filtrar. Na primeira linha acima da tabela ficam o campo <strong>Buscar por título ou autor</strong> (a tecla <strong>/</strong> leva o cursor pra ele), o botão <strong>Selecionar</strong> e o <strong>Ordenar</strong>, que ordena pela data em que o artigo foi adicionado, pelo ano, pelo título ou pelo número de citações. Na segunda linha ficam os status, <strong>Todos</strong>, <strong>Ativos</strong>, <strong>Lidos</strong> e <strong>Arquivados</strong>, cada um com a sua contagem (a tela abre em Ativos), e o botão <strong>Filtros</strong>.</p>
@@ -347,8 +358,8 @@
                     <li><strong>Tipo de documento</strong>: artigo, capítulo, anais de congresso...;</li>
                     <li><strong>Palavras-chave</strong>, numa nuvem com as que mais aparecem.</li>
                 </ul>
-                <p>Do lado de cada opção aparece quantos artigos sobrariam se você escolhesse ela, já contando os outros filtros ativos, e as opções que deixariam a lista vazia ficam apagadas. Assim você sabe o resultado antes de clicar. Os filtros ativos aparecem como etiquetas na linha logo acima da tabela, cada uma com um X pra remover, e o <strong>Limpar</strong> tira todos de uma vez (o botão Filtros também mostra quantos estão ativos). Embaixo da tabela fica a contagem: com o filtro Com PDF, o projeto de exemplo mostra "10 de 89 artigos", ou seja, dos 89 artigos ativos, só 10 têm PDF.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap2-resultados.png" alt="Seção Artigos com o painel Filtros aberto, o filtro Com PDF ativo e a contagem 10 de 89 artigos" width="1424" height="892" loading="lazy">
+                <p>Do lado de cada opção aparece quantos artigos sobrariam se você escolhesse ela, já contando os outros filtros ativos, e as opções que deixariam a lista vazia ficam apagadas. Assim você sabe o resultado antes de clicar. Os filtros ativos aparecem como etiquetas na linha logo acima da tabela, cada uma com um X pra remover, e o <strong>Limpar</strong> tira todos de uma vez (o botão Filtros também mostra quantos estão ativos). Embaixo da tabela fica a contagem: com o filtro Com PDF, o projeto de exemplo mostra "8 de 25 artigos", ou seja, dos 25 artigos ativos, só 8 têm PDF.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap2-resultados.png" alt="Seção Artigos com o painel Filtros aberto, o filtro Com PDF ativo e a contagem 8 de 25 artigos" width="1440" height="900" loading="lazy">
                 <p>O filtro de bases é útil pra ver o que só uma base trouxe. E o Acesso aberto ajuda a começar a leitura pelos artigos que você consegue baixar sem depender da assinatura da instituição. Ele também é o ponto de partida do download automático de PDFs, no <a href="#leitor-pdf">Capítulo 4</a>.</p>
 
                 <h3>Explorar citações</h3>
@@ -358,11 +369,11 @@
                 <p>Na imagem, só <strong>Referências</strong> está marcada, e a janela confirma: "São 136 trabalhos". Marcando as duas direções, o total soma as duas e passa do máximo, e aí o aviso diz quantos serão baixados. Quando há mais trabalhos que o máximo, o limite é dividido igualmente entre os artigos e as direções escolhidas. Com o ERA5 e as duas direções, são até 100 referências e 100 citações, e as citações vêm das mais citadas pras menos citadas. O resultado passa pelo mesmo resumo de uma busca, com a marca Já no projeto, e fica no histórico como qualquer outra busca.</p>
                 <p>Só dá pra explorar artigos que têm DOI ou identificador da OpenAlex, porque é assim que o artigo é encontrado lá. Os que não têm ficam de fora, e a janela avisa quantos foram.</p>
 
-                <p>Pronto, o projeto de exemplo já tem os seus 96 artigos. Só que ninguém lê 96 artigos com a mesma atenção, e é aí que entra a triagem: decidir o que fica, o que sai e organizar o que ficou. Esse é o assunto do próximo capítulo.</p>
+                <p>Pronto, o projeto de exemplo já tem os seus 58 artigos. Só que ninguém lê 58 artigos com a mesma atenção, e é aí que entra a triagem: decidir o que fica, o que sai e organizar o que ficou. Esse é o assunto do próximo capítulo.</p>
 
                 <div class="chapter-pagination">
-                    <a href="#dashboard" class="chapter-btn prev">← Capítulo 1 - Dashboard & Projetos</a>
-                    <a href="#gestao-artigos" class="chapter-btn next">Capítulo 3 - Triagem & Categorias →</a>
+                    <a href="#dashboard" class="chapter-btn prev"><span class="chapter-btn-text"><span class="chapter-btn-label">Anterior</span><span class="chapter-btn-title">Capítulo 1 - Dashboard & Projetos</span></span></a>
+                    <a href="#gestao-artigos" class="chapter-btn next"><span class="chapter-btn-text"><span class="chapter-btn-label">Próximo</span><span class="chapter-btn-title">Capítulo 3 - Triagem & Categorias</span></span></a>
                 </div>
             </section>
 
@@ -385,38 +396,38 @@
                 <ul>
                     <li><strong>Técnica mencionada</strong> (Múltipla escolha), com opções como LSTM, Transformer, Random Forest e Support Vector Regression, já que um mesmo artigo pode combinar mais de uma técnica;</li>
                     <li><strong>Estudo prático</strong> (Sim ou não), pra separar os artigos que testaram alguma coisa dos que só discutem o tema;</li>
-                    <li><strong>País onde foi feito o estudo</strong> (Lista), com China, Tunísia e outros que foram aparecendo;</li>
+                    <li><strong>País onde foi feito o estudo</strong> (Lista), com Estados Unidos, Brasil, Japão e outros que foram aparecendo;</li>
                     <li><strong>Qual a eficácia da técnica mencionada?</strong> (Texto), pra anotar com as próprias palavras o que o artigo concluiu.</li>
                 </ul>
                 <p>Note que uma categoria pode ser uma pergunta inteira, como a última. Na prática, as categorias acabam sendo as perguntas que você quer responder sobre cada artigo, então vale pensar nelas com calma antes de começar a leitura.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap3-criar-categorias.png" alt="Janela Categorias com as quatro categorias do exemplo, cada uma com o selo do tipo" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap3-criar-categorias.png" alt="Janela Categorias com as quatro categorias do exemplo, cada uma com o selo do tipo" width="1440" height="900" loading="lazy">
 
                 <h4>Começando de um modelo</h4>
                 <p>Algumas categorias se repetem em quase toda revisão. Em <strong>Conjuntos e JSON</strong>, embaixo da lista da mesma janela, a parte <strong>Começar de um modelo</strong> tem três conjuntos prontos: <strong>PICO</strong> (População, Intervenção, Comparação e Desfecho, em campos de texto), <strong>Características do estudo</strong> (desenho, local, amostra, período e financiamento) e <strong>Qualidade metodológica (genérica)</strong>, com uma avaliação geral e por domínio e um campo pra justificar. Esse último é só um ponto de partida: ele não substitui um instrumento validado de avaliação de qualidade. Se o projeto já tem categorias, o sistema pergunta antes de acrescentar as do modelo.</p>
                 <p>Os botões <strong>Importar JSON</strong> e <strong>Exportar JSON</strong> servem pra reaproveitar as suas próprias categorias: você exporta as de um projeto e importa em outro, ou manda o arquivo pra alguém do grupo que vai fazer a mesma extração.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap3-modelos.png" alt="Janela Categorias com a parte Conjuntos e JSON aberta, o modelo PICO escolhido em Começar de um modelo, os botões Importar JSON e Exportar JSON e as quatro categorias do projeto de exemplo" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap3-modelos.png" alt="Janela Categorias com a parte Conjuntos e JSON aberta, o modelo PICO escolhido em Começar de um modelo, os botões Importar JSON e Exportar JSON e as quatro categorias do projeto de exemplo" width="1440" height="900" loading="lazy">
 
                 <h3>Categorizando os artigos</h3>
                 <p>As categorias são criadas na seção Categorias do projeto e preenchidas de dois jeitos. O mais natural é no leitor de PDF, já que é lendo o artigo que você descobre qual técnica ele usou. O outro é direto na tabela da seção Categorias, que veremos mais abaixo.</p>
-                <p>Com um artigo aberto no leitor, clique no botão <strong>Categorias</strong>, na barra de cima. Vai aparecer o painel <strong>Categorias</strong>, flutuando no canto inferior esquerdo da tela, com um campo pra cada categoria do projeto, do tipo certo: um campo de texto, um seletor de Sim/Não, uma lista pra escolher uma opção ou várias opções pra marcar. Se a opção que você precisa não estiver na lista, escolha <strong>+ Adicionar nova opção...</strong>, digite e ela passa a valer pra todos os artigos do projeto.</p>
-                <p>Por exemplo, no artigo "Improving S2S Precipitation Forecast over China", a categoria País onde foi feito o estudo recebeu China, Estudo prático recebeu Sim, e Técnica mencionada recebeu duas opções, Modelo de comitê e Machine Learning. Já a pergunta sobre eficácia ficou em branco, e tudo bem: nenhum campo é obrigatório.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap3-leitor-categorizar.png" alt="Leitor de PDF com o botão Categorias na barra de cima e o painel Categorias aberto no canto inferior esquerdo" width="1424" height="892" loading="lazy">
+                <p>Com um artigo aberto no leitor, clique no botão <strong>Categorias</strong>, na barra de cima. Vai aparecer o painel <strong>Categorias</strong>, numa janela no centro da tela, com um campo pra cada categoria do projeto, do tipo certo: um campo de texto, um seletor de Sim/Não, uma lista pra escolher uma opção ou várias opções pra marcar. Se a opção que você precisa não estiver na lista, escolha <strong>+ Adicionar nova opção...</strong>, digite e ela passa a valer pra todos os artigos do projeto.</p>
+                <p>Por exemplo, no artigo "MetNet: A Neural Weather Model for Precipitation Forecasting", a categoria País onde foi feito o estudo recebeu Estados Unidos, Estudo prático recebeu Sim, Técnica mencionada recebeu a opção Transformer e a pergunta sobre eficácia recebeu o texto "Supera o HRRR até 8 horas de antecedência, medido pelo escore F1." Nenhum campo é obrigatório, então dá pra deixar em branco o que o artigo não responde.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap3-leitor-categorizar.png" alt="Leitor de PDF com o botão Categorias na barra de cima e o painel Categorias aberto numa janela no centro" width="1440" height="900" loading="lazy">
                 <blockquote>
                     <p>Observação: o leitor de PDF tem muito mais coisa além das categorias (marcações, anotações, busca dentro do texto), e tudo isso é assunto do <a href="#leitor-pdf">Capítulo 4</a>. Aqui o foco é só o botão Categorias.</p>
                 </blockquote>
 
                 <h3>A seção Categorias</h3>
-                <p>De volta ao projeto, a seção <strong>Categorias</strong> (cujo título é "Categorias e extrações") mostra tudo o que você já preencheu numa tabela: uma linha pra cada artigo e uma coluna pra cada categoria. O cabeçalho de cada coluna diz o tipo da categoria e quantos artigos já estão preenchidos ("Lista · 12/96"), e uma linha acima da tabela resume quantos artigos têm alguma categoria. Dá pra filtrar os artigos pelo título em <strong>Filtrar artigos</strong> e escolher a ordem das linhas, <strong>Preenchidos primeiro</strong> ou <strong>Ordem do projeto</strong>. Clicando numa célula, você edita o valor ali mesmo (Esc sai sem mudar nada), então dá pra preencher a tabela sem abrir o leitor. Artigos arquivados não aparecem nessa tabela, afinal eles saíram da análise.</p>
+                <p>De volta ao projeto, a seção <strong>Categorias</strong> (cujo título é "Categorias e extrações") mostra tudo o que você já preencheu numa tabela: uma linha pra cada artigo e uma coluna pra cada categoria. O cabeçalho de cada coluna diz o tipo da categoria e quantos artigos já estão preenchidos ("Lista · 6/25"), e uma linha acima da tabela resume quantos artigos têm alguma categoria. Dá pra filtrar os artigos pelo título em <strong>Filtrar artigos</strong> e escolher a ordem das linhas, <strong>Preenchidos primeiro</strong> ou <strong>Ordem do projeto</strong>. Clicando numa célula, você edita o valor ali mesmo (Esc sai sem mudar nada), então dá pra preencher a tabela sem abrir o leitor. Artigos arquivados não aparecem nessa tabela, afinal eles saíram da análise.</p>
                 <p>É aqui que a planilha do começo do capítulo volta. O menu <strong>Exportar</strong>, no cabeçalho, tem as opções <strong>Exportar CSV</strong> e <strong>Exportar XLSX</strong>, que geram um arquivo com o DOI, o título, os autores, o ano, a base de origem, o status e o motivo do arquivamento de cada artigo, mais uma coluna por categoria (na imagem, a tabela está rolada até os artigos que já foram categorizados). Com isso em mãos, você pode montar gráficos, contar quantos artigos usaram cada técnica, cruzar país com técnica, ou levar os dados pra qualquer outra ferramenta de análise.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap3-aba-categorias.png" alt="Seção Categorias e extrações com os valores preenchidos em cada artigo" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap3-aba-categorias.png" alt="Seção Categorias e extrações com os valores preenchidos em cada artigo" width="1440" height="900" loading="lazy">
 
                 <h3>Lidos e arquivados</h3>
                 <p>Conforme você for lendo, dá pra dizer ao sistema o que já foi resolvido. Na seção Artigos, cada linha tem um menu <strong>⋯</strong> (<strong>Mais ações</strong>), e no primeiro grupo dele, <strong>Organização</strong>, ficam <strong>Marcar como Lido</strong> e <strong>Arquivar</strong>. No leitor, o botão <strong>Marcar como lido</strong> fica na barra de cima.</p>
                 <p>Os artigos lidos e os arquivados não saem da tabela: ficam na mesma lista, e o controle de status acima da tabela (<strong>Todos</strong>, <strong>Ativos</strong>, <strong>Lidos</strong> e <strong>Arquivados</strong>, cada um com a contagem) escolhe o que aparece. Marcando como lido, o artigo sai de Ativos e passa a aparecer em Lidos. Se marcou sem querer, <strong>Desmarcar como Lido</strong> devolve ele pra Ativos.</p>
                 <p>Já o <strong>Arquivar</strong> é pra quando o artigo não serve pra sua pesquisa. A janela <strong>Arquivar este artigo?</strong> avisa que ele sai da lista de ativos e volta quando você quiser, e tem um campo de motivo, com o exemplo "ex.: fora do escopo". Você pode deixar em branco e clicar em <strong>Arquivar</strong>, mas vale a pena escrever alguma coisa.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap3-motivo-arquivamento.png" alt="Janela Arquivar este artigo? com um motivo preenchido" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap3-motivo-arquivamento.png" alt="Janela Arquivar este artigo? com um motivo preenchido" width="1440" height="900" loading="lazy">
                 <p>Mas por que registrar o motivo? Porque numa revisão sistemática você precisa relatar quantos artigos foram excluídos e por quê (fora do tema, só o resumo disponível, estudo de outra região, duplicado com outro artigo...). Se você anota o motivo na hora, não precisa reler nada lá no final pra lembrar por que tirou aquele artigo. O motivo fica visível embaixo do título do artigo quando você escolhe o status <strong>Arquivados</strong>, e o item <strong>Restaurar Artigo</strong> do menu ⋯ devolve o artigo pra Ativos, caso você mude de ideia. O motivo também vai na coluna <code>archive_note</code> quando você exporta os artigos em CSV ou XLSX, então a contagem por motivo pra revisão sai direto da planilha.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap3-arquivados.png" alt="Seção Artigos com o status Arquivados escolhido, mostrando o motivo do arquivamento embaixo do título" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap3-arquivados.png" alt="Seção Artigos com o status Arquivados escolhido, mostrando o motivo do arquivamento embaixo do título" width="1440" height="900" loading="lazy">
 
                 <h3>Vários artigos de uma vez</h3>
                 <p>Marcar como lido ou arquivar um por um funciona, mas tem horas em que a decisão é a mesma pra vários artigos: os 15 que vieram de uma área que não tem nada a ver com a sua pesquisa, ou os 8 que você leu no fim de semana. Pra isso, clique em <strong>Selecionar</strong>, na linha acima da tabela. Cada artigo ganha uma caixinha, e no lugar da contagem de artigos aparece uma barra com quantos estão selecionados e o que dá pra fazer com eles:</p>
@@ -429,7 +440,7 @@
                     <li><strong>Baixar PDFs abertos</strong>, que é assunto do <a href="#leitor-pdf">Capítulo 4</a>.</li>
                 </ul>
                 <p>O X no fim da barra (ou o botão <strong>Sair da seleção</strong>) sai do modo de seleção.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap3-selecao.png" alt="Lista de artigos no modo de seleção, com três artigos marcados e a barra de ações" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap3-selecao.png" alt="Lista de artigos no modo de seleção, com três artigos marcados e a barra de ações" width="1440" height="900" loading="lazy">
 
                 <p>No próximo capítulo, o leitor de PDF, que tem bem mais coisa além do botão Categorias.</p>
 
@@ -441,8 +452,8 @@
                 -->
 
                 <div class="chapter-pagination">
-                    <a href="#busca-federada" class="chapter-btn prev">← Capítulo 2 - Busca Federada (APIs)</a>
-                    <a href="#leitor-pdf" class="chapter-btn next">Capítulo 4 - Leitor de PDF & Fichamento →</a>
+                    <a href="#busca-federada" class="chapter-btn prev"><span class="chapter-btn-text"><span class="chapter-btn-label">Anterior</span><span class="chapter-btn-title">Capítulo 2 - Busca Federada (APIs)</span></span></a>
+                    <a href="#leitor-pdf" class="chapter-btn next"><span class="chapter-btn-text"><span class="chapter-btn-label">Próximo</span><span class="chapter-btn-title">Capítulo 4 - Leitor de PDF & Fichamento</span></span></a>
                 </div>
             </section>
 
@@ -453,19 +464,19 @@
 
                 <h3>Primeiro, o PDF</h3>
                 <p>A busca traz os metadados dos artigos (título, autores, resumo...), mas não o arquivo em si. Então, antes de ler, você precisa anexar o PDF ao artigo. Na tabela de artigos do projeto, a coluna <strong>PDF</strong> mostra, nos que ainda não têm arquivo, um ícone de documento riscado (o nome dele é <strong>Vincular PDF</strong>). Ele abre um menu com dois caminhos: <strong>Do computador…</strong>, pra quando você já tem o arquivo, e <strong>Buscar PDF aberto</strong>, pra quando o artigo é de acesso aberto e o sistema pode baixar por você (esse fica pra <a href="#pdfs-abertos">seção seguinte</a>).</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap4-vincular-menu.png" alt="Menu Vincular PDF aberto em um artigo, com as opções Do computador e Buscar PDF aberto" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap4-vincular-menu.png" alt="Menu Vincular PDF aberto em um artigo, com as opções Do computador e Buscar PDF aberto" width="1440" height="900" loading="lazy">
                 <p>O Do computador… abre a janela <strong>PDF do artigo</strong>, que oferece três caminhos:</p>
                 <ul>
                     <li>uma área tracejada, <strong>Solte o PDF aqui</strong>, pra arrastar o arquivo direto de uma pasta (ou clicar em <strong>escolha um arquivo</strong>, pra abrir o seletor);</li>
                     <li><strong>Buscar em acesso aberto</strong>, a mesma busca do <strong>Buscar PDF aberto</strong>, sem sair da janela;</li>
                     <li><strong>Usar um PDF da biblioteca</strong>, pra reaproveitar um PDF que já está salvo no Emma's Librarian, com um campo de filtro e o botão <strong>Vincular</strong> em cada arquivo (isso é assunto do <a href="#biblioteca-pdfs">Capítulo 6</a>).</li>
                 </ul>
-                <img class="tutorial-img" src="assets/tutoriais/cap4-anexar-pdf.png" alt="Janela PDF do artigo com a área Solte o PDF aqui, o botão Buscar em acesso aberto e o botão Usar um PDF da biblioteca" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap4-anexar-pdf.png" alt="Janela PDF do artigo com a área Solte o PDF aqui, o botão Buscar em acesso aberto e o botão Usar um PDF da biblioteca" width="1440" height="900" loading="lazy">
                 <p>E se você ainda não tem o PDF e o artigo não é de acesso aberto? O item <strong>Abrir pelo DOI</strong>, no menu <strong>⋯</strong> (Mais ações) da linha, abre a página do artigo no navegador, que normalmente é o caminho mais curto pra baixar o arquivo quando a sua instituição tem acesso.</p>
                 <p>Com o PDF anexado, o ícone da coluna PDF vira um documento em destaque (<strong>Ler o PDF</strong>), que abre o leitor. Pra desvincular o PDF do artigo, use <strong>Desvincular PDF</strong> no menu <strong>⋯</strong> da linha. Clicando no título de um artigo, abre ainda o painel <strong>Detalhes</strong>, ao lado da tabela, com o resumo, as palavras-chave, de onde o artigo veio e os botões <strong>Ler PDF</strong> (ou <strong>Vincular PDF</strong>), <strong>Citar</strong> e o de editar metadados.</p>
 
                 <h3 id="pdfs-abertos">Baixando os PDFs de acesso aberto</h3>
-                <p>Boa parte do que uma busca traz é de acesso aberto. No projeto de exemplo, dos 89 artigos ativos, 45 estão marcados como Acesso aberto. Baixar cada um pelo navegador, renomear e vincular dá trabalho, e é isso que o <strong>Buscar PDF aberto</strong> faz por você.</p>
+                <p>Boa parte do que uma busca traz é de acesso aberto. No projeto de exemplo, dos 25 artigos ativos, 15 estão marcados como Acesso aberto. Baixar cada um pelo navegador, renomear e vincular dá trabalho, e é isso que o <strong>Buscar PDF aberto</strong> faz por você.</p>
                 <p>Quando você clica nele, o sistema pergunta à OpenAlex, pelo DOI do artigo, onde existem cópias abertas dele, e tenta baixar nesta ordem:</p>
                 <ol>
                     <li>o arXiv, quando o artigo é um <em>preprint</em> de lá;</li>
@@ -498,24 +509,24 @@
 
                 <h3>As ferramentas do leitor</h3>
                 <p>O leitor tem três partes: a barra de cima, o PDF no meio e uma barra lateral à direita, com três abas (<strong>Anotações</strong>, <strong>Insights IA</strong> e <strong>Pesquisar</strong>; o botão <strong>Painel lateral</strong>, na ponta direita da barra, abre e fecha essa barra). Na barra de cima ficam, da esquerda pra direita, o link pra voltar (<strong>Voltar ao projeto</strong>, ou pra tela de onde você veio), o título do artigo, a página, o zoom, as cores de destaque e os botões <strong>Categorias</strong>, <strong>Citar</strong> e <strong>Marcar como lido</strong>, seguidos dos ícones de editar metadados e desvincular o PDF. Vamos passar por cada ferramenta.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap4-leitor.png" alt="Leitor de PDF com a barra de cima, o artigo e a barra lateral com a aba Anotações" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap4-leitor.png" alt="Leitor de PDF com a barra de cima, o artigo e a barra lateral com a aba Anotações" width="1440" height="900" loading="lazy">
 
                 <h4>Destaques e anotações</h4>
                 <p>Selecionando um trecho do texto com o mouse, aparece um menu com cinco cores de destaque e um campo <strong>Adicionar nota (opcional)...</strong>. Escolha a cor, escreva a nota se quiser e clique em <strong>Destacar</strong>. A cor com que esse menu começa é a que está marcada em <strong>Grifar:</strong>, as bolinhas coloridas da barra de cima. Todos os destaques aparecem na aba <strong>Anotações</strong> da barra lateral, onde dá pra editar ou excluir cada um. Ali também tem o campo <strong>Nova anotação avulsa...</strong>, pra quando você quer anotar uma ideia sobre o artigo sem ligá-la a um trecho específico.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap4-destaque.png" alt="Menu de destaque com as cinco cores e o campo de nota, aberto sobre um trecho selecionado" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap4-destaque.png" alt="Menu de destaque com as cinco cores e o campo de nota, aberto sobre um trecho selecionado" width="1440" height="900" loading="lazy">
                 <p>Uma dica que funciona bem é combinar um significado pra cada cor, tipo amarelo pra resultados, verde pra metodologia e azul pra trabalhos citados que você quer procurar depois. O sistema não obriga nada disso, é só um jeito de bater o olho na aba Anotações e já saber o que é cada coisa.</p>
 
                 <h4>Pesquisar</h4>
                 <p>A aba <strong>Pesquisar</strong> busca um termo dentro do PDF e lista os resultados com a página de cada um. É útil pra achar rápido onde o artigo fala de algo específico, tipo o tamanho da amostra ou o nome de um modelo.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap4-pesquisar.png" alt="Aba Pesquisar com os resultados da busca por precipitation, com a página de cada ocorrência" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap4-pesquisar.png" alt="Aba Pesquisar com os resultados da busca por precipitation, com a página de cada ocorrência" width="1440" height="900" loading="lazy">
 
                 <h4>Resumo com IA</h4>
                 <p>A aba <strong>Insights IA</strong> tem o botão <strong>Gerar Resumo com IA</strong>, que gera dois resumos: uma <strong>Visão Geral</strong> do artigo, em um parágrafo, e um resumo <strong>Por Seções</strong>. O resumo é gerado uma vez e fica salvo, então da próxima vez que você abrir o artigo ele já está lá, sem gastar outra chamada de IA. Isso depende de um provedor de IA configurado, que é assunto do <a href="#ia-rag">próximo capítulo</a>.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap4-insights.png" alt="Aba Insights IA com o botão Gerar Resumo com IA" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap4-insights.png" alt="Aba Insights IA com o botão Gerar Resumo com IA" width="1440" height="900" loading="lazy">
 
                 <h4>Citar</h4>
                 <p>O botão <strong>Citar</strong>, na barra de cima, abre a janela <strong>Citar artigo</strong>, que gera a referência do artigo nos estilos ABNT, APA, Vancouver, Harvard e IEEE, e também em BibTeX, pra quem escreve em LaTeX. Os seis formatos ficam num seletor só, e o programa lembra o último que você escolheu. O botão <strong>Copiar</strong> copia a referência (e vira "Copiado!"), e <strong>Editar metadados</strong> deixa corrigir um dado do artigo sem sair da janela.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap4-citar.png" alt="Janela Citar artigo com o seletor de formato e a referência do artigo do ERA5 em ABNT" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap4-citar.png" alt="Janela Citar artigo com o seletor de formato e a referência do artigo do MetNet em ABNT" width="1440" height="900" loading="lazy">
 
                 <h4>Zoom</h4>
                 <p>Os botões <strong>Menos zoom</strong> e <strong>Mais zoom</strong> diminuem e aumentam o zoom, e o número entre eles (a porcentagem atual) volta pros 100% quando você clica nele.</p>
@@ -528,11 +539,11 @@
                 <p>Todo artigo tem a opção <strong>Editar Metadados</strong> (no menu <strong>⋯</strong> da lista do projeto, no painel Detalhes e na barra de cima do leitor), que abre a janela <strong>Editar metadados</strong>, onde você pode corrigir qualquer campo à mão (o <kbd>Ctrl</kbd>+<kbd>Enter</kbd> salva). Quando o artigo tem PDF vinculado, essa janela também tem o botão <strong>Preencher com IA</strong>, que lê o começo do PDF e tenta extrair título, autores, ano, DOI, revista e resumo.</p>
                 <p>E se a IA errar algum dado que já estava certo? Ela não mexe nos campos que já estão preenchidos, só completa os que estão vazios. Além disso, nada é salvo sozinho: os valores aparecem no formulário, você confere e só então clica pra salvar.</p>
 
-                <p>Com o leitor você já consegue fazer o fichamento completo de um artigo. Só que, com 96 artigos, ler tudo do começo ao fim nem sempre é viável, e é aí que a investigação com IA, do próximo capítulo, ajuda bastante.</p>
+                <p>Com o leitor você já consegue fazer o fichamento completo de um artigo. Só que, com 58 artigos, ler tudo do começo ao fim nem sempre é viável, e é aí que a investigação com IA, do próximo capítulo, ajuda bastante.</p>
 
                 <div class="chapter-pagination">
-                    <a href="#gestao-artigos" class="chapter-btn prev">← Capítulo 3 - Triagem & Categorias</a>
-                    <a href="#ia-rag" class="chapter-btn next">Capítulo 5 - Inteligência Artificial & RAG →</a>
+                    <a href="#gestao-artigos" class="chapter-btn prev"><span class="chapter-btn-text"><span class="chapter-btn-label">Anterior</span><span class="chapter-btn-title">Capítulo 3 - Triagem & Categorias</span></span></a>
+                    <a href="#ia-rag" class="chapter-btn next"><span class="chapter-btn-text"><span class="chapter-btn-label">Próximo</span><span class="chapter-btn-title">Capítulo 5 - Inteligência Artificial & RAG</span></span></a>
                 </div>
             </section>
             
@@ -552,14 +563,14 @@
                 <p>Nos dois casos é uma chamada só, com o texto inteiro (ou quase) indo junto. Isso funciona pra um artigo. Mas e pra perguntar a mesma coisa a 50 artigos?</p>
 
                 <h3>Investigação com IA</h3>
-                <p>No projeto de exemplo, eu queria saber de cada artigo se ele menciona técnicas de previsão de precipitação, qual a eficácia dessas técnicas, onde o estudo foi feito e se é um estudo prático avaliado com dados reais. Com 17 artigos com PDF, isso é uma tarde inteira procurando essas informações artigo por artigo. A investigação com IA faz esse trabalho: você escreve as perguntas uma vez, escolhe os artigos, e o sistema responde cada pergunta pra cada artigo, <strong>mostrando de qual trecho do artigo tirou cada resposta</strong>.</p>
+                <p>No projeto de exemplo, eu queria saber de cada artigo se ele menciona técnicas de previsão de precipitação, qual a eficácia dessas técnicas, onde o estudo foi feito e se é um estudo prático avaliado com dados reais. Com 13 artigos com PDF, isso é uma tarde inteira procurando essas informações artigo por artigo. A investigação com IA faz esse trabalho: você escreve as perguntas uma vez, escolhe os artigos, e o sistema responde cada pergunta pra cada artigo, <strong>mostrando de qual trecho do artigo tirou cada resposta</strong>.</p>
                 <p>Pra abrir, clique em <strong>Investigação com IA</strong>, no grupo Análise da barra do projeto. A investigação tem uma página própria, e as investigações do projeto aparecem na própria barra, embaixo desse item: no topo o <strong>+ Nova investigação</strong>, depois a que estiver rodando (<strong>Em andamento</strong>, com a porcentagem) e as já feitas, cada uma com o estado, o modelo, o tamanho e quantas respostas ainda faltam revisar. O resto da tela mostra a que estiver aberta. Até a versão 1.2 ela era uma janela por cima do projeto, e com 17 artigos e 4 perguntas as respostas não cabiam mais nela.</p>
 
                 <h4>Uma nova investigação</h4>
                 <p>Clique em <strong>+ Nova investigação</strong>. A criação é feita em quatro passos, numerados no alto da página: <strong>Perguntas</strong>, <strong>Artigos</strong>, <strong>Modelo e custo</strong> e <strong>Executar</strong>. Embaixo ficam o botão <strong>Próximo</strong> (que mostra o nome do passo seguinte), o <strong>Voltar</strong> e o <strong>Cancelar</strong>, e uma linha que diz o que falta ("Escreva pelo menos uma pergunta.") ou quantas perguntas e artigos você já tem.</p>
-                <p>No primeiro passo você escolhe de onde partem as perguntas, em <strong>Começar de um conjunto</strong>: <strong>Da investigação #N</strong>, que reaproveita as perguntas da última investigação do projeto, ou <strong>Do zero</strong>. Aí você escreve as perguntas, uma por linha (P1, P2...), e adiciona mais com <strong>+ Pergunta</strong>. Como é comum usar as mesmas perguntas mais de uma vez (em outra leva de artigos, ou até em outro projeto), dá pra salvar essas perguntas como um <strong>conjunto</strong>. Clicando em <strong>+ Salvar Atual</strong>, você dá um nome e uma descrição (opcional) ao conjunto e escolhe se ele fica disponível só <strong>Neste Projeto</strong> ou se é <strong>Global</strong>, aparecendo em todos os projetos. Os conjuntos salvos ficam em <strong>Conjuntos Salvos</strong>, com o botão <strong>Usar</strong>, que carrega as perguntas, e os botões de editar, duplicar e excluir. As quatro perguntas do projeto de exemplo estão salvas no "Conjunto WorCAP".</p>
-                <p>No segundo passo você escolhe em quais artigos rodar. Só entram artigos com PDF anexado. Dá pra buscar por título, autor e ano, filtrar pela busca de origem (as buscas do histórico, do <a href="#busca-federada">Capítulo 2</a>) e marcar tudo de uma vez com <strong>Selecionar Todos</strong>. O terceiro passo, <strong>Modelo e custo</strong>, mostra qual modelo vai responder (com o link <strong>Trocar em Configurações</strong>) e faz a conta do que você vai pedir, por exemplo "17 artigos × 1 perguntas = 17 respostas". Cada resposta é uma chamada ao modelo, então essa conta também é uma ideia do custo. No quarto passo você confere o resumo e clica em <strong>Iniciar investigação</strong>.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap5-nova-investigacao.png" alt="Nova investigação no passo Perguntas, com uma pergunta escrita e o Conjunto WorCAP salvo; os 17 artigos com PDF são escolhidos no passo seguinte" width="1424" height="892" loading="lazy">
+                <p>No primeiro passo você escolhe de onde partem as perguntas, em <strong>Começar de um conjunto</strong>: <strong>Da investigação #N</strong>, que reaproveita as perguntas da última investigação do projeto, ou <strong>Do zero</strong>. Aí você escreve as perguntas, uma por linha (P1, P2...), e adiciona mais com <strong>+ Pergunta</strong>. Como é comum usar as mesmas perguntas mais de uma vez (em outra leva de artigos, ou até em outro projeto), dá pra salvar essas perguntas como um <strong>conjunto</strong>. Clicando em <strong>+ Salvar Atual</strong>, você dá um nome e uma descrição (opcional) ao conjunto e escolhe se ele fica disponível só <strong>Neste Projeto</strong> ou se é <strong>Global</strong>, aparecendo em todos os projetos. Os conjuntos salvos ficam em <strong>Conjuntos Salvos</strong>, com o botão <strong>Usar</strong>, que carrega as perguntas, e os botões de editar, duplicar e excluir. O projeto de exemplo tem um conjunto salvo, "Técnicas e métricas", com quatro perguntas (a técnica, a base de dados ou região, a métrica e as limitações).</p>
+                <p>No segundo passo você escolhe em quais artigos rodar. Só entram artigos com PDF anexado. Dá pra buscar por título, autor e ano, filtrar pela busca de origem (as buscas do histórico, do <a href="#busca-federada">Capítulo 2</a>) e marcar tudo de uma vez com <strong>Selecionar Todos</strong>. O terceiro passo, <strong>Modelo e custo</strong>, mostra qual modelo vai responder (com o link <strong>Trocar em Configurações</strong>) e faz a conta do que você vai pedir, por exemplo "13 artigos × 1 perguntas = 13 respostas". Cada resposta é uma chamada ao modelo, então essa conta também é uma ideia do custo. No quarto passo você confere o resumo e clica em <strong>Iniciar investigação</strong>.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap5-nova-investigacao.png" alt="Nova investigação no passo Perguntas, com uma pergunta escrita e o conjunto Técnicas e métricas salvo; os 13 artigos com PDF são escolhidos no passo seguinte" width="1440" height="900" loading="lazy">
                 <p>Enquanto ela roda, a página mostra a investigação com o selo <strong>Rodando</strong> e uma linha como "Iniciada às 22:05 · modelo · 17 artigos · 4 perguntas". O cartão <strong>Perguntando aos PDFs</strong> tem a barra de progresso ("12 de 68 chamadas"), o artigo em que está agora e o tempo decorrido, e as <strong>Etapas</strong> mostram em que ponto ela está: <strong>Indexar os PDFs</strong>, <strong>Perguntar a cada PDF</strong> e <strong>Revisar as respostas</strong>. Dá pra sair da página e voltar que a investigação continua, e o botão <strong>Cancelar</strong> para no próximo artigo, guardando o que já foi respondido. As respostas aparecem pra revisão quando ela termina.</p>
 
                 <h3>Como funciona por dentro</h3>
@@ -588,38 +599,38 @@
                 <p>Esse é calculado de verdade. Quando a pergunta vira um vetor, o banco de vetores mede a <strong>distância euclidiana</strong> (a distância "em linha reta", também chamada de L2) entre o vetor da pergunta e o vetor de cada trecho do artigo. Quanto menor a distância, mais parecido é o significado. Os 10 trechos com menor distância são os que vão pro modelo de linguagem.</p>
                 <p>Como distância é um número pouco intuitivo (0 é o melhor e não tem limite pra cima), o sistema converte pra uma escala de 0 a 1 com a fórmula:</p>
                 <p><code>score = 1 / (1 + distância)</code></p>
-                <p>Ou seja, distância 0 vira score 1, distância 1 vira 0,5, e distâncias maiores vão chegando perto de 0. No projeto de exemplo, na pergunta "Onde foi feito o estudo?" feita ao artigo do ERA5, o trecho usado como evidência (na página 46) teve score 0,49, o que corresponde a uma distância de mais ou menos 1,04. Na tela, os dois números aparecem em porcentagem: "Score: 49" na evidência e "86% Confiança" na resposta.</p>
+                <p>Ou seja, distância 0 vira score 1, distância 1 vira 0,5, e distâncias maiores vão chegando perto de 0. Numa investigação anterior, de outro projeto de exemplo, na pergunta "Onde foi feito o estudo?" feita ao artigo do ERA5, o trecho usado como evidência (na página 46) teve score 0,49, o que corresponde a uma distância de mais ou menos 1,04. Na tela, os dois números aparecem em porcentagem: "Score: 49" na evidência e "86% Confiança" na resposta.</p>
                 <p>O modelo de linguagem recebe cada trecho já com o seu score e é instruído a copiar esse valor pra evidência que usar. Se ele não copiar, o próprio sistema preenche, procurando o trecho correspondente.</p>
                 <p>Um cuidado: esse score é bom pra <strong>comparar trechos entre si</strong>, dentro da mesma pergunta, mas o valor absoluto depende do modelo de embedding. Um 0,5 com o <code>nomic-embed-text</code> não quer dizer a mesma coisa que um 0,5 com o <code>text-embedding-3-small</code>, então não vale a pena criar uma regra do tipo "abaixo de 0,5 eu descarto".</p>
                 <h4>O grau de confiança da resposta</h4>
-                <p>Esse <strong>não</strong> vem de uma fórmula. É o próprio modelo de linguagem que estima, de 0 a 1, o quanto a resposta está sustentada pelos trechos que ele recebeu, junto com a instrução de dar uma confiança baixa (e nenhuma evidência) quando a resposta não está nos trechos. Na pergunta do ERA5, por exemplo, a confiança foi 0,86.</p>
+                <p>Esse <strong>não</strong> vem de uma fórmula. É o próprio modelo de linguagem que estima, de 0 a 1, o quanto a resposta está sustentada pelos trechos que ele recebeu, junto com a instrução de dar uma confiança baixa (e nenhuma evidência) quando a resposta não está nos trechos. Nessa mesma pergunta do ERA5, por exemplo, a confiança foi 0,86.</p>
                 <p>Isso quer dizer que a confiança é uma autoavaliação do modelo, e não uma probabilidade calibrada. Ela ajuda a separar as respostas que merecem uma conferência mais cuidadosa, mas uma confiança alta não garante que a resposta está certa. Modelos diferentes também tendem a ser mais ou menos "confiantes", então vale comparar a confiança entre respostas do mesmo modelo.</p>
 
                 <h3>Conferindo as respostas</h3>
                 <p>Uma investigação aberta tem três abas. Em <strong>Respostas</strong> ficam as respostas numa grade: uma linha por artigo, uma coluna por pergunta. Clicando numa célula, o painel da direita mostra a resposta inteira, a confiança e as evidências, cada uma com a página, o score, o raciocínio do modelo e o botão <strong>Abrir no PDF</strong>, que abre o leitor no ponto do trecho. Em <strong>Chamadas</strong> fica cada chamada feita (artigo × pergunta), com as que deram erro e o motivo, e o <strong>Copiar</strong> do painel copia a pergunta, os trechos citados e a resposta (ou o erro) da chamada selecionada. A terceira, <strong>Auditoria</strong>, aparece mais abaixo.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap5-investigacao.png" alt="Página Investigação com IA, com as investigações listadas na barra do projeto, a grade de respostas e o painel da resposta selecionada com a confiança e as evidências" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap5-investigacao.png" alt="Página Investigação com IA, com as investigações listadas na barra do projeto, a grade de respostas e o painel da resposta selecionada com a confiança e as evidências" width="1440" height="900" loading="lazy">
                 <p>As evidências, desde a versão 1.3, são <strong>copiadas do trecho que a IA leu</strong>, e não do jeito que ela digitou a citação. Isso importa porque o modelo às vezes reescreve a frase ao citar (troca uma palavra, junta duas linhas), e aí a citação não era encontrada no PDF. Quando o sistema não acha nem um pedaço parecido no trecho lido, ele marca o trecho inteiro, em vez de deixar a evidência sumir.</p>
 
                 <h4>Revisando cada resposta</h4>
                 <p>No fim do painel ficam os botões <strong>Aceitar</strong>, <strong>Editar</strong> e <strong>Rejeitar</strong>. Aceitar diz que a resposta está certa; Editar abre um campo pra você escrever a resposta correta, que passa a ser a usada nas exportações; Rejeitar marca a resposta como errada, e ela sai vazia nas exportações. Depois de decidir, os três botões dão lugar a <strong>Desfazer</strong>. Os filtros acima da grade (<strong>Pendentes</strong>, <strong>Revisadas</strong>, <strong>Com erro</strong> e <strong>Todas</strong>) e a escolha da pergunta ajudam a revisar por partes, e o teclado acelera bastante: <strong>A</strong> aceita, <strong>E</strong> edita, <strong>R</strong> rejeita, e a seta passa pra próxima pendente.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap5-revisar-resposta.png" alt="Painel da resposta com a última evidência, o raciocínio, o botão Abrir no PDF e os botões Aceitar, Editar e Rejeitar" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap5-revisar-resposta.png" alt="Painel da resposta com a última evidência, o raciocínio, o botão Abrir no PDF e os botões Aceitar, Editar e Rejeitar" width="1440" height="900" loading="lazy">
                 <p>As respostas podem ser exportadas pelo menu <strong>Exportar</strong>, com <strong>Exportar CSV</strong> ou <strong>Exportar JSON</strong>, e <strong>Rodar de novo</strong> abre uma nova investigação com as mesmas perguntas e artigos (útil depois de trocar de modelo, por exemplo).</p>
 
                 <h4>Quanto a IA acerta? A auditoria por amostra</h4>
                 <p>Revisar 36 respostas uma por uma é possível, mas e com 200? A aba <strong>Auditoria</strong> responde uma pergunta mais modesta: <strong>com que frequência esse modelo acerta, nesse projeto</strong>. Clicando em <strong>Sortear amostra</strong>, o sistema sorteia uma parte das respostas (10% por padrão, com um mínimo de 2 por pergunta, pra nenhuma pergunta ficar de fora), e você revisa só essas. A tela abre no primeiro item pendente da amostra e mostra um por vez, com a evidência ao lado. Ali também vale o teclado (<strong>A</strong>, <strong>E</strong> e <strong>R</strong>, como nas respostas), e a tecla <strong>P</strong> abre o PDF na evidência.</p>
-                <p>Com a amostra revisada, aparece o <strong>acerto estimado</strong>. A conta é simples: aceita conta como certa, e editada ou rejeitada conta como erro. Junto vem o <strong>IC 95%</strong> (intervalo de confiança), calculado pelo método de Wilson, que mostra o quanto essa estimativa ainda é incerta. Na captura abaixo, com 7 dos 8 itens da amostra marcados como corretos, o acerto estimado é 88%, mas o intervalo vai de 53% a 98%. Ou seja, com 8 itens, o acerto real pode estar em qualquer lugar entre "metade" e "quase tudo", e só uma amostra maior estreita isso. O número da semente fica salvo, então o mesmo sorteio pode ser refeito.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap5-auditoria.png" alt="Aba Auditoria com amostra de 8 itens, acerto estimado de 88% e intervalo de confiança de 53% a 98%" width="1424" height="892" loading="lazy">
+                <p>Com a amostra revisada, aparece o <strong>acerto estimado</strong>. A conta é simples: aceita conta como certa, e editada ou rejeitada conta como erro. Junto vem o <strong>IC 95%</strong> (intervalo de confiança), calculado pelo método de Wilson, que mostra o quanto essa estimativa ainda é incerta. Na captura abaixo, com os 9 itens da amostra marcados como corretos, o acerto estimado é 100%, mas o intervalo vai de 70% a 100%. Ou seja, mesmo sem nenhum erro em 9 itens, o acerto real pode estar bem abaixo de 100%, e só uma amostra maior estreita isso. O número da semente fica salvo, então o mesmo sorteio pode ser refeito.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap5-auditoria.png" alt="Aba Auditoria com amostra de 8 itens, acerto estimado de 100% e intervalo de confiança de 70% a 100%" width="1440" height="900" loading="lazy">
                 <p>Só os itens sorteados entram na taxa, mesmo que você tenha revisado outras respostas, porque só a amostra sorteada representa o conjunto. E quando o projeto tem investigações auditadas de modelos diferentes, a seção <strong>Comparação por modelo</strong> mostra os acertos lado a lado, no mesmo eixo.</p>
                 <blockquote>
                     <p>Observação: a IA erra. Se a informação não estiver nos 10 trechos recuperados, o modelo deveria dizer que não encontrou, mas às vezes ele tenta responder assim mesmo. Por isso as evidências e a auditoria existem: use a investigação pra achar rápido onde está a informação, e confira no texto antes de levar a resposta pro seu trabalho.</p>
-                    <p>O próprio exemplo do ERA5 mostra isso. A resposta ("o estudo foi realizado no ECMWF, em Reading, Reino Unido") está certa, mas a única evidência é a linha de uma referência, "ECMWF Technical Memorandum 734, ECMWF, Reading.", e não um trecho que diga isso com todas as letras. Aqui a resposta bate, mas é o tipo de evidência que merece um segundo olhar.</p>
+                    <p>O exemplo do ERA5, daquela investigação anterior, mostra isso. A resposta ("o estudo foi realizado no ECMWF, em Reading, Reino Unido") está certa, mas a única evidência é a linha de uma referência, "ECMWF Technical Memorandum 734, ECMWF, Reading.", e não um trecho que diga isso com todas as letras. Aqui a resposta bate, mas é o tipo de evidência que merece um segundo olhar.</p>
                 </blockquote>
 
                 <h3 id="configurar-ia">Configurando os provedores</h3>
                 <p>Tudo fica em <strong>Configurações</strong>, na seção <strong>Inteligência artificial</strong> (a lista de seções fica na esquerda da tela). Ela tem três partes. Em <strong>Provedores</strong>, uma linha por provedor, com o campo da chave e um selo que diz se ela está configurada. Em <strong>Por tarefa</strong>, uma tabela com <strong>Tarefa</strong>, <strong>Provedor</strong> e <strong>Modelo</strong>, onde você escolhe o provedor e o modelo pra cada tarefa: Extração de metadados, Geração de resumos, Investigação com IA, Vetores (embeddings) e Sugestão de triagem (essa última aparece no <a href="#revisao-sistematica">Capítulo 9</a>). E o bloco <strong>Avançado: busca nos PDFs (RAG)</strong>, que fica recolhido. Escolher por tarefa permite, por exemplo, usar um modelo barato pros resumos e um mais capaz pra investigação. Acima de tudo isso, um aviso lembra que, com provedores na nuvem, título, resumo e trechos dos PDFs saem do computador, com o link pros Termos de uso e IA.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap5-config-chaves.png" alt="Seção Inteligência artificial das Configurações, com as linhas dos provedores OpenAI, Gemini, Anthropic, Ollama local e Ollama Cloud" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap5-config-chaves.png" alt="Seção Inteligência artificial das Configurações, com as linhas dos provedores OpenAI, Gemini, Anthropic, Ollama local e Ollama Cloud" width="1440" height="900" loading="lazy">
                 <p>Cada tarefa mostra algumas sugestões de modelo pra clicar, mas o campo aceita qualquer nome. Os provedores lançam e aposentam modelos com frequência, então os nomes abaixo são os que funcionam no momento em que escrevo, e vale conferir a página de modelos de cada um.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap5-config-avancada.png" alt="Tabela Por tarefa, com provedor e modelo para cada tarefa de IA, e o bloco Avançado: busca nos PDFs (RAG)" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap5-config-avancada.png" alt="Tabela Por tarefa, com provedor e modelo para cada tarefa de IA, e o bloco Avançado: busca nos PDFs (RAG)" width="1440" height="900" loading="lazy">
 
                 <h4>OpenAI</h4>
                 <p>Gere uma chave na <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">página de chaves da OpenAI</a> e cole na linha <strong>OpenAI</strong>. O uso é pago por volume. Pra resumos e metadados, um modelo pequeno como o <code>gpt-4o-mini</code> costuma bastar. Pros embeddings, o <code>text-embedding-3-small</code>. A lista atual fica na <a href="https://platform.openai.com/docs/models" target="_blank" rel="noopener noreferrer">documentação de modelos</a>.</p>
@@ -660,8 +671,8 @@
                 <p>Toda essa leitura e investigação depende dos PDFs, e com vários projetos eles vão se acumulando. No próximo capítulo vamos ver onde eles ficam guardados e como evitar ter o mesmo arquivo repetido.</p>
 
                 <div class="chapter-pagination">
-                    <a href="#leitor-pdf" class="chapter-btn prev">← Capítulo 4 - Leitor de PDF & Fichamento</a>
-                    <a href="#biblioteca-pdfs" class="chapter-btn next">Capítulo 6 - Biblioteca Local de PDFs →</a>
+                    <a href="#leitor-pdf" class="chapter-btn prev"><span class="chapter-btn-text"><span class="chapter-btn-label">Anterior</span><span class="chapter-btn-title">Capítulo 4 - Leitor de PDF & Fichamento</span></span></a>
+                    <a href="#biblioteca-pdfs" class="chapter-btn next"><span class="chapter-btn-text"><span class="chapter-btn-label">Próximo</span><span class="chapter-btn-title">Capítulo 6 - Biblioteca Local de PDFs</span></span></a>
                 </div>
             </section>
 
@@ -674,7 +685,7 @@
                 <h3>O que tem na biblioteca</h3>
                 <p>No topo aparecem quatro cartões: o total de <strong>Arquivos</strong>, o <strong>Espaço usado</strong> no disco, quantos PDFs são <strong>Reutilizados</strong> (ligados a mais de um artigo) e quantos são <strong>Órfãos</strong>, isto é, arquivos que não estão ligados a nenhum artigo e que só estão ocupando espaço.</p>
                 <p>Logo abaixo tem uma busca por nome do arquivo ou título do artigo, o filtro <strong>Todos</strong>, <strong>Reutilizados</strong> ou <strong>Órfãos</strong> (cada um com a contagem) e o <strong>Ordenar</strong> (por tamanho, que é o padrão, pelos mais recentes ou pelo nome). A tabela tem uma linha por PDF: o nome do arquivo, o tamanho, a data em que foi adicionado e o artigo vinculado, com o projeto dele. Em cada linha, <strong>Abrir</strong> abre o PDF no leitor, e o menu <strong>⋯</strong> tem <strong>Vincular a outro artigo</strong> e <strong>Excluir PDF</strong>.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap6-biblioteca.png" alt="Biblioteca de PDFs com os quatro cartões, o filtro e a tabela de arquivos" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap6-biblioteca.png" alt="Biblioteca de PDFs com os quatro cartões, o filtro e a tabela de arquivos" width="1440" height="900" loading="lazy">
 
                 <h3>Reaproveitando um PDF em vários projetos</h3>
                 <p>Vamos supor que o artigo "The ERA5 global reanalysis" esteja no projeto de previsão de precipitação, com PDF, e que ele apareça numa busca de outro projeto. Em vez de baixar e anexar o arquivo de novo, você tem dois caminhos:</p>
@@ -688,8 +699,8 @@
                 </blockquote>
 
                 <div class="chapter-pagination">
-                    <a href="#ia-rag" class="chapter-btn prev">← Capítulo 5 - Inteligência Artificial & RAG</a>
-                    <a href="#agenda" class="chapter-btn next">Capítulo 7 - Agenda & Cronogramas →</a>
+                    <a href="#ia-rag" class="chapter-btn prev"><span class="chapter-btn-text"><span class="chapter-btn-label">Anterior</span><span class="chapter-btn-title">Capítulo 5 - Inteligência Artificial & RAG</span></span></a>
+                    <a href="#agenda" class="chapter-btn next"><span class="chapter-btn-text"><span class="chapter-btn-label">Próximo</span><span class="chapter-btn-title">Capítulo 7 - Agenda & Cronogramas</span></span></a>
                 </div>
             </section>
 
@@ -701,7 +712,7 @@
                 <h3>Cadastrando um evento</h3>
                 <p>Na Agenda, clique em <strong>Novo evento</strong>. A janela é bem direta, e o primeiro grupo, <strong>Evento ou revista</strong>, tem o <strong>Nome do evento</strong> (o único campo obrigatório), a <strong>Sigla</strong>, o <strong>Tipo</strong> (Congresso / Conferência, Periódico / Revista, Workshop, Simpósio ou Outro Evento) e o <strong>Site (opcional)</strong>, onde você pode colar o link da chamada pra consultar quando precisar.</p>
                 <p>Tem também a <strong>Cor do emblema</strong>, que parece detalhe, mas ajuda bastante. É com essa cor que o evento aparece em todo lugar: na etiqueta do prazo e nas bolinhas do calendário da tela Início. Com três ou quatro eventos ao mesmo tempo, dar uma cor pra cada um faz você reconhecer, só de olhar pro calendário, de qual evento é cada prazo.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap7-novo-evento.png" alt="Janela Novo evento com os campos do evento, as cores do emblema e os três prazos padrão" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap7-novo-evento.png" alt="Janela Novo evento com os campos do evento, as cores do emblema e os três prazos padrão" width="1440" height="900" loading="lazy">
 
                 <h3>Os prazos de cada evento</h3>
                 <p>A parte mais importante da janela é o grupo <strong>Prazos</strong>. Cada prazo ocupa uma linha, com o nome, a data e um X pra removê-lo, e pode ser de dois tipos:</p>
@@ -711,19 +722,19 @@
                 </ul>
                 <p>Num prazo pontual, a opção <strong>Incluir horário</strong> marca também a hora, pra prazos que fecham numa hora específica.</p>
                 <p>Todo evento novo já vem com três prazos: <strong>Inscrição</strong> (pontual), <strong>Submissão</strong> (intervalo) e <strong>Apresentação</strong> (pontual). Eles são só um ponto de partida, pensado pro caso mais comum, que é o de um congresso. Você pode remover os que não fazem sentido (uma revista não tem apresentação, por exemplo) e criar quantos quiser com o botão <strong>+ Prazo</strong>, dando um nome (tipo "Avaliação de Pares" ou "Câmera Ready") e escolhendo se é pontual ou intervalo. Com tudo preenchido, clique em <strong>Criar evento</strong> (ao editar um evento que já existe, o botão é <strong>Salvar</strong>).</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap7-novo-campo.png" alt="Janela Novo evento com o formulário do novo prazo aberto, com o nome e a escolha entre Pontual e Intervalo" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap7-novo-campo.png" alt="Janela Novo evento com o formulário do novo prazo aberto, com o nome e a escolha entre Pontual e Intervalo" width="1440" height="900" loading="lazy">
 
                 <h3>Acompanhando os prazos</h3>
                 <p>A Agenda tem duas visualizações, escolhidas no topo: <strong>Calendário</strong>, a grade do mês com uma pílula colorida por prazo (na cor do evento, e um intervalo repete a sigla em cada dia), e <strong>Lista de prazos</strong>, com todas as datas em ordem, agrupadas por mês. No calendário, as setas e o botão <strong>Hoje</strong> andam pelos meses, e o painel <strong>Eventos e revistas</strong>, à direita, tem um cartão por evento, com os prazos, a caixinha de marcar cada um e os botões de abrir o site, editar e excluir. Na lista de prazos, a barra de cima filtra por busca (nome ou sigla), por categoria e por situação (<strong>Pendentes</strong>, <strong>Feitos</strong> ou <strong>Todos</strong>, com as contagens). Prazos que venceram há mais de 60 dias ficam escondidos se você desligar <strong>Mostrar vencidos há mais de 60 dias</strong>, e um aviso embaixo da lista oferece <strong>Marcar os N como feitos</strong>. Quando um prazo passa ou é cumprido, marque como concluído, e ele sai da lista de próximos prazos da tela Início.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap7-agenda.png" alt="Agenda na visualização Calendário, com a grade do mês e o painel Eventos e revistas" width="1424" height="892" loading="lazy">
-                <img class="tutorial-img" src="assets/tutoriais/cap7-lista-prazos.png" alt="Agenda na visualização Lista de prazos, com as datas agrupadas por mês" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap7-agenda.png" alt="Agenda na visualização Calendário, com a grade do mês e o painel Eventos e revistas" width="1440" height="900" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap7-lista-prazos.png" alt="Agenda na visualização Lista de prazos, com as datas agrupadas por mês" width="1440" height="900" loading="lazy">
                 <p>Um atalho: clicando num dia vazio do calendário (o da Agenda ou o da tela Início), a janela Novo evento já abre com aquela data.</p>
 
                 <p>Chegamos ao último capítulo, que trata do que acontece quando algo dá errado: a lixeira e os backups.</p>
 
                 <div class="chapter-pagination">
-                    <a href="#biblioteca-pdfs" class="chapter-btn prev">← Capítulo 6 - Biblioteca Local de PDFs</a>
-                    <a href="#configuracoes-backup" class="chapter-btn next">Capítulo 8 - Configurações & Backups →</a>
+                    <a href="#biblioteca-pdfs" class="chapter-btn prev"><span class="chapter-btn-text"><span class="chapter-btn-label">Anterior</span><span class="chapter-btn-title">Capítulo 6 - Biblioteca Local de PDFs</span></span></a>
+                    <a href="#configuracoes-backup" class="chapter-btn next"><span class="chapter-btn-text"><span class="chapter-btn-label">Próximo</span><span class="chapter-btn-title">Capítulo 8 - Configurações & Backups</span></span></a>
                 </div>
             </section>
 
@@ -735,7 +746,7 @@
 
                 <h3>A lixeira</h3>
                 <p>Quando você exclui um projeto, um artigo ou uma anotação, ele não é apagado na hora: vai pra <strong>Lixeira</strong>, uma seção das Configurações. Ali dá pra restaurar o item ou excluir de vez, um por um ou esvaziando a lixeira inteira. Só na exclusão definitiva os dados e os arquivos PDF são removidos do disco, e o sistema pede confirmação antes.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap8-backups-lixeira.png" alt="Seção Lixeira das Configurações com um projeto excluído" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap8-backups-lixeira.png" alt="Seção Lixeira das Configurações com um projeto excluído" width="1440" height="900" loading="lazy">
 
                 <h3>O backup completo (.emmabak)</h3>
                 <p>Na seção <strong>Backup e segurança</strong>, em <strong>Backup Manual Completo</strong>, o botão <strong>Criar Backup Completo</strong> gera um arquivo <code>.emmabak</code> com tudo: o banco de dados, os PDFs e os documentos dos projetos. É um arquivo só, então dá pra guardar num HD externo, num pendrive ou num serviço de nuvem.</p>
@@ -746,7 +757,7 @@
                     <li><strong>Importar e Mesclar</strong> mantém tudo o que você já tem e só acrescenta os projetos do backup que ainda não existem na sua biblioteca. É o que você usa pra juntar o trabalho de dois computadores, por exemplo o do laboratório e o de casa.</li>
                 </ul>
                 <p>Na dúvida, prefira o Importar e Mesclar, porque ele não apaga nada. E, antes de um Restaurar e Sobrescrever, vale criar um backup completo do estado atual, só por garantia.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap8-backup-automatico.png" alt="Seção Backup e segurança com a opção de backup automático, os botões de backup manual e o histórico de backups automáticos" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap8-backup-automatico.png" alt="Seção Backup e segurança com a opção de backup automático, os botões de backup manual e o histórico de backups automáticos" width="1440" height="900" loading="lazy">
 
                 <h3>Backups automáticos e o esquema GFS</h3>
                 <p>Além do backup manual, o Emma's Librarian faz um backup automático por dia, na primeira vez que você abre o programa no dia. Antes de copiar, ele confere se o banco de dados está íntegro, pra não fazer backup de dados corrompidos. Esses backups aparecem em <strong>Histórico de Backups Automáticos</strong>, cada um com a opção de restaurar (que funciona como o Restaurar e Sobrescrever), e podem ser desligados na mesma seção, em <strong>Habilitar backups automáticos locais</strong>.</p>
@@ -764,15 +775,15 @@
                 <p>Os dois próximos capítulos são sobre o que chegou na versão 1.3: a revisão sistemática, com o diagrama PRISMA, e as perguntas feitas a projetos inteiros.</p>
 
                 <div class="chapter-pagination">
-                    <a href="#agenda" class="chapter-btn prev">← Capítulo 7 - Agenda & Cronogramas</a>
-                    <a href="#revisao-sistematica" class="chapter-btn next">Capítulo 9 - Revisão Sistemática & PRISMA →</a>
+                    <a href="#agenda" class="chapter-btn prev"><span class="chapter-btn-text"><span class="chapter-btn-label">Anterior</span><span class="chapter-btn-title">Capítulo 7 - Agenda & Cronogramas</span></span></a>
+                    <a href="#revisao-sistematica" class="chapter-btn next"><span class="chapter-btn-text"><span class="chapter-btn-label">Próximo</span><span class="chapter-btn-title">Capítulo 9 - Revisão Sistemática & PRISMA</span></span></a>
                 </div>
             </section>
 
             <section id="revisao-sistematica" class="wiki-section">
                 <h2>Capítulo 9 - Revisão Sistemática & PRISMA</h2>
                 <p>Numa revisão sistemática, não basta ler os artigos que parecem bons. Cada artigo encontrado precisa de uma decisão (fica ou sai), quem sai precisa de um motivo, e no fim o artigo publicado mostra essas contas num fluxograma, o <strong>diagrama PRISMA</strong>, que a maioria dos periódicos pede. Fazer isso numa planilha funciona, mas é fácil perder a conta de quantos registros vieram de cada base ou de quantos saíram por cada motivo. Desde a versão 1.3, o Emma's Librarian faz essa parte numa página própria, aberta pelo item <strong>Revisão sistemática</strong>, no grupo Análise da barra do projeto.</p>
-                <p>Os exemplos deste capítulo usam o projeto de exemplo com critérios escritos e 33 artigos já decididos na primeira etapa.</p>
+                <p>Os exemplos deste capítulo usam o projeto de exemplo com critérios escritos e 44 artigos já decididos na primeira etapa.</p>
 
                 <h3>Rótulos</h3>
                 <p>Cada decisão é um <strong>rótulo</strong>. Todo projeto começa com quatro: <strong>Incluso</strong>, <strong>Em dúvida</strong>, <strong>Excluído</strong> e <strong>Duplicado</strong>. O nome é livre, o que importa é o tipo, porque é ele que diz como o rótulo conta:</p>
@@ -783,16 +794,16 @@
                     <li><strong>Remover antes da triagem</strong>: duplicados e afins, que o PRISMA conta à parte.</li>
                 </ul>
                 <p>Em <strong>Rótulos</strong>, no cabeçalho da página, você cria, renomeia, reordena e apaga rótulos, e pode aplicar o modelo <strong>PRISMA 2020</strong>, que acrescenta motivos de exclusão comuns na leitura do texto completo: Texto completo não recuperado, População diferente, Desenho de estudo não elegível e Desfecho não relatado. A PRISMA pede que os motivos sejam relatados, mas não diz quais são, então a ideia é renomear esses pra o que faz sentido na sua revisão. Por isso também dá pra ter vários rótulos de exclusão: no diagrama, cada um aparece com a sua contagem.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap9-rotulos.png" alt="Janela Rótulos de triagem com os rótulos de cada tipo, a contagem de artigos e o campo Novo rótulo" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap9-rotulos.png" alt="Janela Rótulos de triagem com os rótulos de cada tipo, a contagem de artigos e o campo Novo rótulo" width="1440" height="900" loading="lazy">
 
                 <h3>A página da revisão</h3>
                 <p>A página <strong>Triagem</strong> tem três partes, listadas embaixo de Revisão sistemática na barra do projeto: a própria <strong>Triagem</strong> (com quantos artigos ainda esperam decisão), o <strong>Diagrama PRISMA</strong> e <strong>Avaliar sugestões</strong>. No cabeçalho ficam os botões <strong>Critérios</strong>, <strong>Rótulos</strong> e <strong>Iniciar triagem guiada</strong>, e embaixo do título uma linha diz quantos artigos já foram decididos por título e resumo.</p>
-                <p>Acima da lista fica um controle com as situações e a contagem de cada uma: <strong>Sem decisão</strong>, <strong>Incluídos</strong>, <strong>Em dúvida</strong>, <strong>Excluídos</strong> e <strong>Removidos antes</strong> (no exemplo, 63 sem decisão, 11 incluídos, 3 em dúvida e 19 excluídos), com uma barra de progresso embaixo. A lista mostra a situação escolhida: em Sem decisão, os artigos que ainda faltam; nas outras, uma seção por rótulo, e os excluídos agrupados por motivo. Passando o mouse numa linha sem decisão aparecem <strong>Incluir</strong>, <strong>Dúvida</strong> e <strong>Excluir</strong>, cada um com a sua tecla (1, 2 e 3, que valem pra linha sob o ponteiro), e o menu <strong>Rótulo</strong> ao lado oferece os outros rótulos. Nos artigos já decididos, <strong>Rótulo</strong> troca a decisão, <strong>Desfazer decisão</strong> desfaz e <strong>Ver</strong> abre o leitor. Pra decidir de uma vez os que claramente não têm nada a ver com o tema, <strong>Selecionar vários</strong> (na situação Sem decisão) mostra uma barra com <strong>Aplicar rótulo</strong>, e a seção dos incluídos tem a <strong>Citação em massa</strong>, que gera as referências de todos eles.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap9-revisao.png" alt="Página Triagem da revisão sistemática com o controle de situações e a seção Incluso com os artigos e os botões Ver, Rótulo e Desfazer decisão" width="1424" height="892" loading="lazy">
+                <p>Acima da lista fica um controle com as situações e a contagem de cada uma: <strong>Sem decisão</strong>, <strong>Incluídos</strong>, <strong>Em dúvida</strong>, <strong>Excluídos</strong> e <strong>Removidos antes</strong> (no exemplo, 14 sem decisão, 13 incluídos, 3 em dúvida e 28 excluídos), com uma barra de progresso embaixo. A lista mostra a situação escolhida: em Sem decisão, os artigos que ainda faltam; nas outras, uma seção por rótulo, e os excluídos agrupados por motivo. Passando o mouse numa linha sem decisão aparecem <strong>Incluir</strong>, <strong>Dúvida</strong> e <strong>Excluir</strong>, cada um com a sua tecla (1, 2 e 3, que valem pra linha sob o ponteiro), e o menu <strong>Rótulo</strong> ao lado oferece os outros rótulos. Nos artigos já decididos, <strong>Rótulo</strong> troca a decisão, <strong>Desfazer decisão</strong> desfaz e <strong>Ver</strong> abre o leitor. Pra decidir de uma vez os que claramente não têm nada a ver com o tema, <strong>Selecionar vários</strong> (na situação Sem decisão) mostra uma barra com <strong>Aplicar rótulo</strong>, e a seção dos incluídos tem a <strong>Citação em massa</strong>, que gera as referências de todos eles.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap9-revisao.png" alt="Página Triagem da revisão sistemática com o controle de situações e a seção Incluso com os artigos e os botões Ver, Rótulo e Desfazer decisão" width="1440" height="900" loading="lazy">
                 <p>Como a exclusão arquiva o artigo, a página do projeto continua coerente com a revisão: os excluídos somem da lista de não lidos, e o motivo aparece no artigo arquivado. Desfazendo a exclusão, o artigo volta.</p>
 
                 <h3>A triagem guiada</h3>
-                <p>Decidir artigo por artigo numa lista cansa rápido. O botão <strong>Iniciar triagem guiada</strong> ocupa a janela inteira (sem a coluna de módulos nem a barra do projeto) e mostra um artigo por vez, com título, autores, ano e resumo, e a coluna <strong>Sua decisão</strong>, à direita, com os rótulos coloridos, cada um com a sua tecla. A barra de cima tem o <strong>Sair da triagem</strong> (tecla Esc), "Artigo 12 de 63" e quantos já foram decididos. A triagem tem duas etapas, como na PRISMA: primeiro <strong>Título e resumo</strong>, e quem passa (incluídos e em dúvida) segue pro <strong>Texto completo</strong>, onde se decide de vez. É por isso que "em dúvida" não é o mesmo que excluir: o artigo continua no páreo até alguém ler o texto inteiro.</p>
+                <p>Decidir artigo por artigo numa lista cansa rápido. O botão <strong>Iniciar triagem guiada</strong> ocupa a janela inteira (sem a coluna de módulos nem a barra do projeto) e mostra um artigo por vez, com título, autores, ano e resumo, e a coluna <strong>Sua decisão</strong>, à direita, com os rótulos coloridos, cada um com a sua tecla. A barra de cima tem o <strong>Sair da triagem</strong> (tecla Esc), "Artigo 2 de 58" e quantos já foram decididos. A triagem tem duas etapas, como na PRISMA: primeiro <strong>Título e resumo</strong>, e quem passa (incluídos e em dúvida) segue pro <strong>Texto completo</strong>, onde se decide de vez. É por isso que "em dúvida" não é o mesmo que excluir: o artigo continua no páreo até alguém ler o texto inteiro.</p>
                 <p>A triagem guiada foi pensada pro teclado. As teclas <strong>A</strong>, <strong>E</strong> e <strong>R</strong> (as mesmas da auditoria) incluem, marcam como dúvida e excluem; se o projeto tem mais de um rótulo do mesmo tipo, os seguintes ganham as teclas <strong>1</strong>, <strong>2</strong> e assim por diante. <strong>D</strong> marca como duplicado de outro artigo, as setas andam entre os artigos, <strong>Z</strong> desfaz a última decisão e <strong>N</strong> abre o campo de nota, que vai junto com a decisão. No rodapé da coluna ficam também <strong>Anterior</strong>, <strong>Desfazer</strong> e <strong>Pular</strong>. Decidir já passa pro próximo artigo sem decisão nesta etapa, e <strong>Só pendentes</strong>, na barra de cima, esconde os que já foram decididos.</p>
 
                 <h3>Ajuda da IA na triagem</h3>
@@ -800,17 +811,17 @@
 
                 <h4>Critérios</h4>
                 <p>A IA só sugere bem se souber o que o projeto procura. Em <strong>Critérios</strong>, no cabeçalho da página, você escreve o que entra (<strong>Incluir quando</strong>) e o que sai (<strong>Excluir quando</strong>), e eles são salvos ao sair de cada campo (<strong>Concluir</strong> só fecha a janela). Esses critérios vão junto com o título, o ano e o resumo de cada artigo, então, sem eles, não há sugestão. Escreva do jeito que escreveria no protocolo da revisão: quanto mais concreto, melhor a sugestão.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap9-criterios.png" alt="Janela Critérios de inclusão e exclusão com os critérios do projeto de exemplo" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap9-criterios.png" alt="Janela Critérios de inclusão e exclusão com os critérios do projeto de exemplo" width="1440" height="900" loading="lazy">
 
                 <h4>Sugestão de triagem (experimental)</h4>
                 <p>Na etapa de título e resumo, o botão <strong>Sugerir</strong> (ou a tecla <strong>S</strong>) pede à IA o rótulo que você marcaria. A resposta vem com a confiança declarada pelo modelo, uma justificativa e um trecho do resumo que sustenta a sugestão, marcado no texto. O modelo usado é o da linha <strong>Sugestão de triagem</strong> da tabela Por tarefa, nas Configurações (<a href="#configurar-ia">Capítulo 5</a>), e cada sugestão fica guardada, porque gastou tokens: voltar no artigo não pede de novo. Artigos sem resumo não têm sugestão, porque não há o que a IA leia.</p>
-                <p>Antes de mostrar a sugestão, o sistema confere se o trecho citado está mesmo no resumo. Se não estiver, aparece o aviso "O trecho citado não está no resumo. A IA pode ter inventado". Foi exatamente o que aconteceu na captura abaixo: a sugestão (Incluso, com 95% de confiança) faz sentido, mas o "trecho" juntava duas frases do resumo com reticências e trocava "These findings highlight" por "highlighting". A sugestão não está errada por isso, mas o aviso existe justamente pra você não confiar no trecho sem olhar.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap9-sugestao.png" alt="Triagem guiada com o resumo de um artigo e a sugestão Incluso com 95% de confiança, a justificativa e o aviso de que o trecho citado não está no resumo" width="1424" height="892" loading="lazy">
+                <p>Antes de mostrar a sugestão, o sistema confere se o trecho citado está mesmo no resumo. Se não estiver, aparece o aviso "O trecho citado não está no resumo. A IA pode ter inventado". Foi exatamente o que aconteceu na captura abaixo: a sugestão (Incluso, com 95% de confiança) faz sentido, mas o "trecho" não está no resumo: é uma paráfrase do que o resumo diz, e não uma citação literal. A sugestão não está errada por isso, mas o aviso existe justamente pra você não confiar no trecho sem olhar.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap9-sugestao.png" alt="Triagem guiada com o resumo de um artigo e a sugestão Incluso com 95% de confiança, a justificativa e o aviso de que o trecho citado não está no resumo" width="1440" height="900" loading="lazy">
 
                 <h4>Ordem prevista (experimental)</h4>
                 <p>Numa triagem de centenas de artigos, a ordem importa: se os relevantes aparecem cedo, você entende mais rápido o que o tema tem e cansa menos antes de chegar neles. Marcando <strong>Ordenar por relevância prevista</strong> (na barra de cima da triagem guiada, com a etiqueta Experimental), um classificador aprende com as suas decisões e traz pra frente os artigos mais parecidos com os que você manteve. Ele começa depois de 3 artigos relevantes e 3 excluídos, e precisa dos <strong>vetores</strong> dos artigos (os mesmos <em>embeddings</em> do <a href="#ia-rag">Capítulo 5</a>, mas calculados a partir do título e do resumo). Na primeira vez, o sistema oferece o botão <strong>Gerar e ordenar</strong>; com o modelo local, isso roda no seu computador, sem custo.</p>
-                <p>No projeto de exemplo, com 33 decisões, o primeiro artigo pendente passou a ser um sobre previsão de chuva forte com <em>deep learning</em>, que de fato é relevante. Nenhum artigo sai da fila, só muda de lugar. E a faixa mostra só o que já aconteceu ("Nos últimos 33 artigos, 17 relevantes"), nunca uma estimativa de quantos relevantes faltam, porque esse número pareceria seguro sem ser.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap9-ordem.png" alt="Triagem guiada com a ordem prevista ativa, aprendida com 33 decisões, e o artigo Multimodel ensemble heavy precipitation forecast with U-Net em primeiro" width="1424" height="892" loading="lazy">
+                <p>No projeto de exemplo, com 44 decisões, o primeiro artigo pendente passou a ser um sobre a comparação de estimativas de chuva de pluviômetro, radar e satélite. Nenhum artigo sai da fila, só muda de lugar. E a faixa mostra só o que já aconteceu ("Nos últimos 44 artigos, 16 relevantes"), nunca uma estimativa de quantos relevantes faltam, porque esse número pareceria seguro sem ser.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap9-ordem.png" alt="Triagem guiada com a ordem prevista ativa, aprendida com 44 decisões, e o artigo Intercomparison of Rain Gauge, Radar, and Satellite-Based Precipitation Estimates em primeiro" width="1440" height="900" loading="lazy">
 
                 <h4>Avaliar sugestões (experimental)</h4>
                 <p>Dá pra confiar na sugestão? Em vez de responder com uma promessa, a parte <strong>Avaliar sugestões</strong> mede, no seu projeto. Ela abre com uma lista do que falta pra comparar (os critérios, alguns artigos já decididos e o modelo que será medido) e o botão <strong>Avaliar</strong>. Ela manda à IA os artigos que você já decidiu, sem mostrar as suas decisões, e compara as respostas com o que você marcou. No exemplo, foram 19 artigos (os decididos que têm resumo), e o resultado do gemini/gemini-2.5-flash foi este:</p>
@@ -827,9 +838,9 @@
                 <p>A mesma tela tem mais três coisas. A tabela <strong>A confiança da IA vale alguma coisa?</strong> agrupa os acertos pela confiança declarada (no exemplo, as 19 sugestões vieram com 80% ou mais e só 42,1% acertaram, então a confiança declarada não garantiu nada). O botão <strong>Medir o classificador local</strong> põe na tabela o mesmo classificador da ordem prevista, que roda no seu computador e não gasta tokens, mas não escreve justificativa. E <strong>Simular a ordenação</strong> refaz a triagem no computador, usando as suas decisões como resposta, pra mostrar quantos relevantes a ordem prevista teria encontrado antes da ordem original. Com poucas decisões o classificador tem pouco com o que aprender, então o resultado diz mais sobre o tamanho da triagem do que sobre a ordenação. Vale rodar de novo quando a sua triagem estiver maior.</p>
 
                 <h3>O diagrama PRISMA</h3>
-                <p>A parte <strong>Diagrama PRISMA</strong> monta o fluxograma da PRISMA 2020, com os termos da tradução oficial pro português, a partir do que o projeto já tem: o histórico de buscas (<a href="#busca-federada">Capítulo 2</a>) e as decisões da triagem. No exemplo, são 120 registros identificados (40 de cada base, em duas buscas), 96 triados, 16 excluídos no título e resumo, 2 textos completos não recuperados e 1 excluído no texto completo por desenho de estudo não elegível.</p>
+                <p>A parte <strong>Diagrama PRISMA</strong> monta o fluxograma da PRISMA 2020, com os termos da tradução oficial pro português, a partir do que o projeto já tem: o histórico de buscas (<a href="#busca-federada">Capítulo 2</a>) e as decisões da triagem. No exemplo, são 60 registros identificados (30 de cada base, numa busca), 2 duplicados removidos antes da triagem, 58 triados, 28 excluídos no título e resumo, 13 textos completos recuperados, 5 excluídos no texto completo e 8 estudos incluídos.</p>
                 <p>Clicando numa caixa, o painel <strong>De onde vem o número</strong> mostra a conta por trás dela, até busca por busca. Isso é útil na hora de conferir o diagrama, e também na hora de explicar a conta pra um orientador ou revisor.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap9-prisma.png" alt="Diagrama PRISMA com as caixas de identificação e triagem do projeto de exemplo e o painel De onde vem o número da caixa Registros identificados" width="1424" height="892" loading="lazy">
+                <img class="tutorial-img" src="assets/tutoriais/cap9-prisma.png" alt="Diagrama PRISMA com as caixas de identificação e triagem do projeto de exemplo e o painel De onde vem o número da caixa Registros identificados" width="1440" height="1500" loading="lazy">
                 <p>Acima do diagrama ficam os avisos, e o sistema nunca corrige um número sozinho. <strong>Aguardando decisões</strong> quer dizer que ainda há artigos em dúvida ou sem decisão: os números estão certos, mas a conta só fecha quando você decidir. <strong>Números que não batem</strong> aparece quando dois números que deveriam ser iguais não são (por exemplo, depois de apagar artigos). <strong>Podem ser parciais</strong> marca uma base que devolveu exatamente o limite pedido, ou seja, pode haver mais resultados lá. E <strong>sem dados para conferir</strong> aparece em buscas salvas antes de o app guardar quantos resultados eram únicos, como as duas do exemplo: os duplicados delas ficam "sem dados", nunca estimados.</p>
                 <p>Quando o projeto tem artigos que não vieram das buscas (adicionados à mão, importados de PDFs ou de outro projeto), aparece a coluna de <strong>outros métodos</strong>, à direita, e cada um desses artigos ganha uma origem (buscas por citações, sites e buscadores, organizações, outros projetos do app ou outros). E se um mesmo estudo tem mais de uma publicação (o <em>preprint</em> e o artigo publicado, por exemplo), você marca as duas como do mesmo estudo na caixa dos incluídos, e o diagrama conta estudos e publicações separadamente, como a PRISMA pede.</p>
                 <p>Por fim, o <strong>Exportar</strong> salva o diagrama em <strong>SVG</strong> (vetor, pro artigo) ou <strong>PNG</strong> (imagem, pra slides), sempre junto com tabelas em CSV: os números de cada caixa com a explicação de onde vêm, e a lista das publicações excluídas no texto completo com a referência de cada uma, como pede o item 16b da PRISMA. O ícone <strong>Ajuda sobre esta página</strong>, na coluna de módulos, tem o significado de cada termo do diagrama.</p>
@@ -837,8 +848,8 @@
                 <p>A revisão decide quais artigos ficam. O próximo capítulo é sobre o que fazer com eles depois: perguntar ao conjunto dos PDFs, em vez de a um artigo por vez.</p>
 
                 <div class="chapter-pagination">
-                    <a href="#configuracoes-backup" class="chapter-btn prev">← Capítulo 8 - Configurações & Backups</a>
-                    <a href="#perguntar-projetos" class="chapter-btn next">Capítulo 10 - Perguntar aos Projetos →</a>
+                    <a href="#configuracoes-backup" class="chapter-btn prev"><span class="chapter-btn-text"><span class="chapter-btn-label">Anterior</span><span class="chapter-btn-title">Capítulo 8 - Configurações & Backups</span></span></a>
+                    <a href="#perguntar-projetos" class="chapter-btn next"><span class="chapter-btn-text"><span class="chapter-btn-label">Próximo</span><span class="chapter-btn-title">Capítulo 10 - Perguntar aos Projetos</span></span></a>
                 </div>
             </section>
 
@@ -848,18 +859,18 @@
 
                 <h3>Escolhendo os projetos e indexando</h3>
                 <p>No topo, em <strong>Respondendo com</strong>, você escolhe os projetos com <strong>+ projeto</strong>. Dá pra perguntar a vários de uma vez, e um artigo que está em dois projetos com o mesmo PDF só conta uma vez.</p>
-                <p>A resposta usa a mesma ideia de RAG explicada no <a href="#ia-rag">Capítulo 5</a>: os PDFs são cortados em trechos, cada trecho vira um vetor, e a pergunta busca os trechos mais próximos. Só que um PDF só entra nessa busca depois de <strong>indexado</strong>, ou seja, depois de ter os vetores calculados com o modelo de embeddings atual. Quando falta algum, a página avisa quantos PDFs ainda não entram nas respostas e oferece <strong>Indexar agora</strong>. No projeto de exemplo, os 17 PDFs levaram poucos minutos com o modelo local. Se você trocar o modelo de embeddings depois, os PDFs indexados com o modelo anterior também aparecem como faltando, com o botão <strong>Recalcular</strong>, porque vetores de modelos diferentes não podem ser comparados.</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap10-indexar.png" alt="Página Perguntar aos projetos com o projeto de exemplo escolhido e o aviso de que 17 PDFs ainda não entram nas respostas, com o botão Indexar agora" width="1424" height="892" loading="lazy">
+                <p>A resposta usa a mesma ideia de RAG explicada no <a href="#ia-rag">Capítulo 5</a>: os PDFs são cortados em trechos, cada trecho vira um vetor, e a pergunta busca os trechos mais próximos. Só que um PDF só entra nessa busca depois de <strong>indexado</strong>, ou seja, depois de ter os vetores calculados com o modelo de embeddings atual. Quando falta algum, a página avisa quantos PDFs ainda não entram nas respostas e oferece <strong>Indexar agora</strong>. Numa indexação anterior, 17 PDFs levaram poucos minutos com o modelo local. Se você trocar o modelo de embeddings depois, os PDFs indexados com o modelo anterior também aparecem como faltando, com o botão <strong>Recalcular</strong>, porque vetores de modelos diferentes não podem ser comparados.</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap10-indexar.png" alt="Página Perguntar aos projetos com o projeto de exemplo escolhido e o aviso de que 13 PDFs ainda não entram nas respostas, com o botão Indexar agora" width="1440" height="900" loading="lazy">
 
                 <h3>A resposta</h3>
-                <p>Com os PDFs indexados, é só escrever a pergunta (Enter envia, Shift+Enter quebra a linha). Embaixo da caixa, a página diz qual modelo responde e qual modelo faz a busca nos PDFs, com o link <strong>Mudar nas configurações</strong>. A primeira pergunta feita no projeto de exemplo foi "Quais técnicas de aprendizado de máquina esses artigos usam para prever precipitação, e como elas foram avaliadas?". Acima da resposta aparece o que foi lido ("Buscou nos PDFs de 1 projeto: 20 trechos de 7 artigos"), e cada afirmação vem com as suas citações, números pequenos ao lado do texto que, com o mouse em cima, mostram a fonte, como "Troudi, p. 9".</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap10-resposta.png" alt="Resposta à pergunta sobre técnicas de aprendizado de máquina, com duas afirmações citando Troudi, página 9" width="1424" height="892" loading="lazy">
-                <p>Note um problema nessa resposta: ela começa com "Os artigos utilizam...", no plural, mas as duas afirmações citam um artigo só. O modelo leu trechos de 7 artigos e generalizou a partir de um. É por isso que as citações existem, e é por isso que vale abrir pelo menos as que sustentam o que você vai usar.</p>
+                <p>Com os PDFs indexados, é só escrever a pergunta (Enter envia, Shift+Enter quebra a linha). Embaixo da caixa, a página diz qual modelo responde e qual modelo faz a busca nos PDFs, com o link <strong>Mudar nas configurações</strong>. A primeira pergunta feita no projeto de exemplo foi "Quais técnicas de aprendizado de máquina esses artigos usam para prever precipitação, e como elas foram avaliadas?". Acima da resposta aparece o que foi lido ("Buscou nos PDFs de 1 projeto: 7 trechos de 4 artigos"), e cada afirmação vem com as suas citações, números pequenos ao lado do texto que, com o mouse em cima, mostram a fonte, como "Casper 2020, p. 1" (primeiro autor, ano e página).</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap10-resposta.png" alt="Resposta à pergunta sobre técnicas de aprendizado de máquina, com quatro afirmações e sete citações numeradas" width="1440" height="900" loading="lazy">
+                <p>Cada afirmação cita o artigo e a página de onde veio: aqui são quatro afirmações, de quatro artigos diferentes, e o modelo leu trechos desses 4 artigos. É por isso que as citações existem, e é por isso que vale abrir pelo menos as que sustentam o que você vai usar.</p>
                 <p>Clicando numa citação, abre o painel <strong>Fontes</strong>, à direita, com um cartão para cada fonte da resposta (número, artigo, autores e página) e o trecho que o modelo leu na que você escolheu. O botão <strong>Abrir</strong> de cada cartão abre o PDF nessa página. Quando uma afirmação não indica de onde veio, ou cita um trecho que não foi lido, ela aparece marcada com um aviso pra conferir antes de usar.</p>
 
                 <h4>Por que a pergunta em português não achou o artigo?</h4>
-                <p>Na mesma conversa, a pergunta seguinte foi "E os outros artigos? Algum usa modelos de difusão ou redes convolucionais?", e a resposta foi que nenhum dos trechos indicava o uso de modelos de difusão. Só que o projeto tem um artigo chamado "Short-Term Precipitation Forecast Based on Diffusion Spatiotemporal Network", com PDF. Fazendo a mesma pergunta em inglês, a resposta encontrou o artigo logo na primeira afirmação (Dong, p. 2).</p>
-                <img class="tutorial-img" src="assets/tutoriais/cap10-trecho.png" alt="Conversa com a pergunta em português, que não encontrou modelos de difusão, a mesma pergunta em inglês, que encontrou o artigo, e o painel Fontes aberto à direita" width="1424" height="892" loading="lazy">
+                <p>Numa conversa, a pergunta foi "Algum artigo usa modelos de difusão?", e a resposta foi que os trechos lidos não respondiam a ela. Só que o projeto tem um artigo chamado "Guided Diffusion Sampling for Precipitation Forecast Interventions", com PDF. Fazendo a mesma pergunta em inglês, a resposta encontrou o artigo logo na primeira afirmação (Ayumu 2026, p. 1).</p>
+                <img class="tutorial-img" src="assets/tutoriais/cap10-trecho.png" alt="Conversa com a pergunta em português, que não encontrou modelos de difusão, a mesma pergunta em inglês, que encontrou o artigo, e o painel Fontes aberto à direita" width="1440" height="900" loading="lazy">
                 <p>O que aconteceu? O modelo de embeddings local padrão, o <strong>all-MiniLM-L6-v2</strong>, foi treinado com textos em inglês. Ele compara bem uma pergunta em inglês com trechos em inglês, mas uma pergunta em português fica "longe" dos trechos certos, e a busca traz outros. O modelo de linguagem que escreve a resposta entende português sem problema, mas só lê os trechos que a busca trouxe. Então, com o modelo padrão e PDFs em inglês, pergunte em inglês. Outra opção é trocar, nas Configurações, o modelo de embeddings pelo <strong>paraphrase-multilingual-MiniLM-L12-v2</strong>, o modelo local multilíngue (experimental, com cerca de 118 MB), e indexar os PDFs de novo.</p>
 
                 <h3>Conversas</h3>
@@ -871,8 +882,8 @@
                 <p>Bons estudos, e até mais o/</p>
 
                 <div class="chapter-pagination">
-                    <a href="#revisao-sistematica" class="chapter-btn prev">← Capítulo 9 - Revisão Sistemática & PRISMA</a>
-                    <a href="#extras" class="chapter-btn next">Extra - Curiosidades & Bastidores →</a>
+                    <a href="#revisao-sistematica" class="chapter-btn prev"><span class="chapter-btn-text"><span class="chapter-btn-label">Anterior</span><span class="chapter-btn-title">Capítulo 9 - Revisão Sistemática & PRISMA</span></span></a>
+                    <a href="#extras" class="chapter-btn next"><span class="chapter-btn-text"><span class="chapter-btn-label">Próximo</span><span class="chapter-btn-title">Extra - Curiosidades & Bastidores</span></span></a>
                 </div>
             </section>
 
@@ -974,11 +985,19 @@
                 </p>
 
                 <div class="chapter-pagination">
-                    <a href="#perguntar-projetos" class="chapter-btn prev">← Capítulo 10 - Perguntar aos Projetos</a>
+                    <a href="#perguntar-projetos" class="chapter-btn prev"><span class="chapter-btn-text"><span class="chapter-btn-label">Anterior</span><span class="chapter-btn-title">Capítulo 10 - Perguntar aos Projetos</span></span></a>
                 </div>
             </section>
 
         </main>
+
+        <!-- Right column: the open chapter's own headings (chapter-toc.js) -->
+        <aside class="chapter-toc" id="chapter-toc" aria-label="Neste capítulo" hidden>
+            <div class="toc-sticky">
+                <h3>Neste capítulo</h3>
+                <ul id="toc-list"></ul>
+            </div>
+        </aside>
 
     </div>
 
@@ -989,6 +1008,12 @@
         </div>
     </footer>
 
+    <dialog id="lightbox" class="lightbox" aria-label="Imagem ampliada">
+        <button type="button" class="lightbox-close" aria-label="Fechar">&times;</button>
+        <img alt="">
+    </dialog>
+    <script src="lightbox.js"></script>
+    <script src="chapter-toc.js"></script>
     <script>
         // O alvo pode ser um capítulo (#intro) ou um ponto dentro dele (#como-instalar);
         // nos dois casos o capítulo que o contém é o que fica visível.
@@ -1004,6 +1029,7 @@
                 link.classList.toggle('active', href === section.id);
             });
             updateNavToggle();
+            ChapterToc.show(section);
 
             // Capítulo inteiro: rola até o topo do conteúdo; ponto interno: rola até ele
             const scrollTarget = target === section ? document.querySelector('.wiki-content') : target;
