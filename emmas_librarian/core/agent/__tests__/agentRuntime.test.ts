@@ -25,6 +25,23 @@ class FakeServers {
   };
 }
 
+/** The first start fails at once and the second one is still coming up (50 ms) when that happens. */
+class FakeStaggeredServers {
+  readonly stopped: number[] = [];
+  private calls = 0;
+
+  readonly start = async (_exe: string, _args: string[], port: number): Promise<RunningServer> => {
+    if (this.calls++ === 0) throw new Error('[ERR_SERVER_EXITED] fake fast failure');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    return {
+      url: `http://127.0.0.1:${port}`,
+      startupMs: 50,
+      log: () => '',
+      stop: async () => void this.stopped.push(port),
+    };
+  };
+}
+
 /** Says each model file is in place, and remembers which ones it was asked about. */
 class FakeFiles {
   readonly asked: AgentModelFile[] = [];
@@ -79,6 +96,15 @@ describe('startAgentRuntime', () => {
   it('stops the server that did start when the other one fails, and passes the error on', async () => {
     const servers = new FakeServers(1);
     await expect(startAgentRuntime(deps(servers))).rejects.toThrow(/ERR_SERVER_EXITED/);
+    expect(servers.stopped).toHaveLength(1);
+  });
+
+  // Regression (review of #202): Promise.all rejected before the slow server came up, which was then never stopped.
+  it('stops the slow server too when the other one fails at once', async () => {
+    const servers = new FakeStaggeredServers();
+    await expect(startAgentRuntime(deps(new FakeServers(), { start: servers.start }))).rejects.toThrow(
+      /ERR_SERVER_EXITED/,
+    );
     expect(servers.stopped).toHaveLength(1);
   });
 
