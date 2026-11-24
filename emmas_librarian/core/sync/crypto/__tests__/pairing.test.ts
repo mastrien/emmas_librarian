@@ -62,6 +62,28 @@ describe('pairing', () => {
     await expect(acceptPairingAnswer(crypto, pending, answer, NOW)).rejects.toThrow('already used');
   });
 
+  it('accepts only one of two valid answers that arrive together (#207 review, P5)', async () => {
+    const { offer, pending } = await createPairingOffer(crypto, IN_FIVE_MINUTES);
+    const first = await answerPairingOffer(crypto, offer, 'Pixel of Ana', NOW);
+    const second = await answerPairingOffer(crypto, offer, 'Pixel of Bob', NOW);
+    const results = await Promise.allSettled([
+      acceptPairingAnswer(crypto, pending, first.answer, NOW),
+      acceptPairingAnswer(crypto, pending, second.answer, NOW),
+    ]);
+    expect(results.map((result) => result.status).sort()).toEqual(['fulfilled', 'rejected']);
+  });
+
+  it('keeps the code usable after a refused answer, so a bogus one does not burn the QR code', async () => {
+    const { offer, pending } = await createPairingOffer(crypto, IN_FIVE_MINUTES);
+    const guess = { ...offer, secret: toBase64Url(crypto.randomBytes(32)) };
+    const bogus = await answerPairingOffer(crypto, guess, 'Intruder', NOW);
+    await expect(acceptPairingAnswer(crypto, pending, bogus.answer, NOW)).rejects.toThrow('does not match');
+    const { answer } = await answerPairingOffer(crypto, offer, 'Pixel of Ana', NOW);
+    await expect(acceptPairingAnswer(crypto, pending, answer, NOW)).resolves.toMatchObject({
+      deviceName: 'Pixel of Ana',
+    });
+  });
+
   it('refuses an expired code on both sides, naming the times', async () => {
     const { offer, pending } = await createPairingOffer(crypto, NOW + 10);
     await expect(answerPairingOffer(crypto, offer, 'Late', NOW + 11)).rejects.toThrow(`expired at ${NOW + 10}`);

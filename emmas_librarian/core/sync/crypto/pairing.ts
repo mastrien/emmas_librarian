@@ -129,6 +129,22 @@ export async function acceptPairingAnswer(
   if (pending.used) throw new Error('This pairing code was already used; ask for a new one.');
   if (now > pending.expiresAt)
     throw new Error(`The pairing code expired at ${pending.expiresAt} (now ${now}); ask for a new one.`);
+  // Marked before the first await: two answers arriving together would otherwise both pass the check above
+  // and both pair (#207 review, P5). Put back below when this one is refused, so a bogus answer does not burn the code.
+  pending.used = true;
+  try {
+    return await confirmAnswer(crypto, pending, answer);
+  } catch (failure) {
+    pending.used = false;
+    throw failure;
+  }
+}
+
+async function confirmAnswer(
+  crypto: CryptoProvider,
+  pending: PendingPairing,
+  answer: PairingAnswer,
+): Promise<PairedDevice> {
   const phonePublicKey = fromBase64Url(answer.phonePublicKey);
   const shared = await crypto.sharedSecret(pending.keyPair, phonePublicKey);
   const keys = await deriveKeys(crypto, shared, pending.secret);
@@ -141,6 +157,5 @@ export async function acceptPairingAnswer(
       'The pairing confirmation does not match: the QR code was not the one shown or the answer was altered.',
     );
   }
-  pending.used = true;
   return describeDevice(crypto, keys.deviceKey, answer.deviceName);
 }
