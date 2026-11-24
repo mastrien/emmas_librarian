@@ -23,7 +23,7 @@ Fonte: https://www.liquid.ai/lfm-license (resumo, não é aconselhamento jurídi
   patente. Descumprir a licença a encerra, e então é preciso apagar todas as cópias.
 - **Sem copyleft:** não obriga a abrir o código do que se constrói por cima.
 
-## Distribuição: baixar no primeiro uso (implementado, issue #198)
+## Distribuição: baixar no primeiro uso (implementado, issue #198; a decisão de distribuição ainda é para o autor confirmar)
 
 **Baixar no primeiro uso, com consentimento, e não empacotar.**
 

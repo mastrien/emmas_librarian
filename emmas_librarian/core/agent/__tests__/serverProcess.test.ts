@@ -32,7 +32,7 @@ describe('startServer, with a stand-in for llama-server', () => {
     const port = await findFreePort();
     const missing = path.join(__dirname, 'support', 'no-such-llama-server.exe');
     await expect(startServer(missing, [], port, 10000)).rejects.toThrow(
-      /[ERR_SERVER_SPAWN].*no-such-llama-server.exe.*ENOENT.*Expected an executable/s,
+      /\[ERR_SERVER_SPAWN\].*no-such-llama-server\.exe.*ENOENT.*Expected an executable/s,
     );
   });
 
