@@ -71,29 +71,34 @@ const passage: PageSelection = {
   page: { left: 8, top: 100, width: 352, height: 490 },
 };
 
-// The default wait of Testing Library is 1 s, which the Windows runner of the CI missed once (#207): the selection reaches the
-// screen after a few renders of the PDF page.
-const SLOW_RUNNER = { timeout: 5000 };
+// `selectionchange` is only a signal, and the screen listens from a passive effect, which React runs after the page is
+// already in the DOM. A test that dispatches it as soon as `findBy` returns can dispatch it before the listener is on, and
+// then nothing ever shows the bar, however long it waits (#207 review, P3). So the event is repeated until the screen
+// reacts. The waits themselves already last 4 s for every suite (src/setupTests.ts), so no per-test timeout is needed.
+const selectUntil = (value: PageSelection, reaction: () => void) =>
+  waitFor(() => {
+    select(value);
+    reaction();
+  });
 
 describe('marking a passage', () => {
   it('offers the colours when text is selected, and hides the bar when the selection goes away', async () => {
     renderPdf(new TextPdf());
-    await screen.findByLabelText('Página 2', {}, SLOW_RUNNER);
+    await screen.findByLabelText('Página 2');
     expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
 
-    select(passage);
-    const bar = await screen.findByRole('toolbar', { name: 'Marcar trecho' }, SLOW_RUNNER);
-    expect(bar).toHaveTextContent('Anxiety scores dropped');
+    await selectUntil(passage, () => screen.getByRole('toolbar', { name: 'Marcar trecho' }));
+    expect(screen.getByRole('toolbar')).toHaveTextContent('Anxiety scores dropped');
 
     select(null);
-    await waitFor(() => expect(screen.queryByRole('toolbar')).not.toBeInTheDocument(), SLOW_RUNNER);
+    await waitFor(() => expect(screen.queryByRole('toolbar')).not.toBeInTheDocument());
   });
 
   it('marks the passage with the chosen colour and the note, as a position the desktop can read', async () => {
     renderPdf(new TextPdf());
     await screen.findByLabelText('Página 2');
-    select(passage);
-    fireEvent.change(await screen.findByLabelText('Nota (opcional)'), { target: { value: 'check the scale' } });
+    await selectUntil(passage, () => screen.getByLabelText('Nota (opcional)'));
+    fireEvent.change(screen.getByLabelText('Nota (opcional)'), { target: { value: 'check the scale' } });
 
     fireEvent.click(screen.getByRole('button', { name: 'Marcar de azul' }));
 
@@ -120,8 +125,8 @@ describe('marking a passage', () => {
   it('shows a new mark right after it is made', async () => {
     renderPdf(new TextPdf());
     await screen.findByLabelText('Página 2');
-    select(passage);
-    fireEvent.click(await screen.findByRole('button', { name: 'Marcar de amarelo' }));
+    await selectUntil(passage, () => screen.getByRole('button', { name: 'Marcar de amarelo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Marcar de amarelo' }));
     expect(await screen.findAllByTestId('pdf-mark')).toHaveLength(1);
   });
 
@@ -131,8 +136,8 @@ describe('marking a passage', () => {
     };
     renderPdf(new TextPdf());
     await screen.findByLabelText('Página 2');
-    select(passage);
-    fireEvent.click(await screen.findByRole('button', { name: 'Marcar de amarelo' }));
+    await selectUntil(passage, () => screen.getByRole('button', { name: 'Marcar de amarelo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Marcar de amarelo' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível marcar');
   });
 
