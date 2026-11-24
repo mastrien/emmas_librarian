@@ -71,17 +71,22 @@ const passage: PageSelection = {
   page: { left: 8, top: 100, width: 352, height: 490 },
 };
 
+// The default wait of Testing Library is 1 s, which the Windows runner of the CI missed once (#207): the selection reaches the
+// screen after a few renders of the PDF page.
+const SLOW_RUNNER = { timeout: 5000 };
+
 describe('marking a passage', () => {
   it('offers the colours when text is selected, and hides the bar when the selection goes away', async () => {
     renderPdf(new TextPdf());
-    await screen.findByLabelText('Página 2');
+    await screen.findByLabelText('Página 2', {}, SLOW_RUNNER);
     expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
 
     select(passage);
-    expect(await screen.findByRole('toolbar', { name: 'Marcar trecho' })).toHaveTextContent('Anxiety scores dropped');
+    const bar = await screen.findByRole('toolbar', { name: 'Marcar trecho' }, SLOW_RUNNER);
+    expect(bar).toHaveTextContent('Anxiety scores dropped');
 
     select(null);
-    await waitFor(() => expect(screen.queryByRole('toolbar')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('toolbar')).not.toBeInTheDocument(), SLOW_RUNNER);
   });
 
   it('marks the passage with the chosen colour and the note, as a position the desktop can read', async () => {
