@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import type { EvalCase } from '../eval/evalCase';
-import type { DecisionTrace } from '../eval/run/episode';
+import type { DecisionTrace } from '../../agent/episode';
 import {
   casesSha,
   chooseCases,

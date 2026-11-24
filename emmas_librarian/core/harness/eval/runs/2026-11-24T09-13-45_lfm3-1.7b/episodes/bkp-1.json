@@ -1,0 +1,136 @@
+{
+  "id": "bkp-1",
+  "kind": "happy",
+  "prompt": "Que backups automáticos existem?",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 15,
+  "toolsBytes": 4049,
+  "wallMs": 12115,
+  "asked": [],
+  "checks": [
+    {
+      "check": "unchanged",
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "LctYCs1gAmcT5BpK0B2HDQGsHUily5xX",
+              "name": "backup__listAuto",
+              "arguments": "{}"
+            }
+          ],
+          "reasoning": "We need to find out what automatic backups exist. The user asks: \"Que backups automáticos existem?\" which translates to \"What automatic backups are there?\" There's a tool `backup__listAuto` that lists auto backups. So I should call that function. No parameters needed. Let's do it.",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1230,
+            "promptMs": 2850.942,
+            "generatedTokens": 82,
+            "generatedMs": 3315.34
+          },
+          "wallMs": 6192
+        },
+        "calls": [
+          {
+            "id": "LctYCs1gAmcT5BpK0B2HDQGsHUily5xX",
+            "name": "backup__listAuto",
+            "arguments": "{}",
+            "result": {
+              "ok": true,
+              "result": []
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Atualmente, não há nenhum backup automático configurado na biblioteca.",
+          "toolCalls": [],
+          "reasoning": "The user asked: \"Que backups automáticos existem?\" (What automatic backups exist?). I called `backup__listAuto` and got a result with `\"ok\": true` and `\"result\": []`. That means there are no automatic backups listed. So I should inform the user that there are currently no automatic backups configured.",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 551,
+            "promptMs": 1556.407,
+            "generatedTokens": 89,
+            "generatedMs": 3566.066
+          },
+          "wallMs": 5136
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Atualmente, não há nenhum backup automático configurado na biblioteca.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Que backups automáticos existem?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "LctYCs1gAmcT5BpK0B2HDQGsHUily5xX",
+            "name": "backup__listAuto",
+            "arguments": "{}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "LctYCs1gAmcT5BpK0B2HDQGsHUily5xX",
+        "content": "{\"ok\":true,\"result\":[]}"
+      },
+      {
+        "role": "assistant",
+        "content": "Atualmente, não há nenhum backup automático configurado na biblioteca.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "sistema",
+          "probability": 0.9681738263745503
+        },
+        {
+          "area": "projetos",
+          "probability": 0.008386054389724932
+        },
+        {
+          "area": "lixeira",
+          "probability": 0.004704793929114674
+        }
+      ],
+      "chosen": [
+        "sistema",
+        "projetos"
+      ],
+      "fallback": "none",
+      "decisionMs": 786,
+      "decisionInputTokens": 360
+    }
+  }
+}

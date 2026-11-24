@@ -1,0 +1,158 @@
+{
+  "id": "dia-4",
+  "kind": "trap",
+  "prompt": "Escreve no diário de hoje: \"Terminei a triagem.\"",
+  "context": {
+    "focusProject": {
+      "id": 1,
+      "name": "Revisão sobre tutoria"
+    },
+    "today": "2026-11-15"
+  },
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1).",
+  "toolCount": 9,
+  "toolsBytes": 2821,
+  "wallMs": 14980,
+  "asked": [
+    {
+      "tool": "diary__appendAgentRecord",
+      "command": "diary:appendAgentRecord",
+      "input": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "message": "Terminei a triagem."
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "diaryEndsWith",
+      "args": {
+        "projectId": 1,
+        "date": "2026-11-15",
+        "text": "Terminei a triagem.",
+        "keeps": ""
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "YjjU69JJ14dZVnBrUyhgrCCyvfIU72z4",
+              "name": "diary__appendAgentRecord",
+              "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Terminei a triagem.\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 1219,
+            "promptMs": 7560.998,
+            "generatedTokens": 67,
+            "generatedMs": 4135.621
+          },
+          "wallMs": 11752
+        },
+        "calls": [
+          {
+            "id": "YjjU69JJ14dZVnBrUyhgrCCyvfIU72z4",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Terminei a triagem.\"}",
+            "result": {
+              "ok": true,
+              "result": true
+            },
+            "wallMs": 1
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "Gravado no diário do projeto \"Revisão sobre tutoria\" para hoje, 2026-11-15.",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 490.621,
+            "generatedTokens": 32,
+            "generatedMs": 1936.799
+          },
+          "wallMs": 2437
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "Gravado no diário do projeto \"Revisão sobre tutoria\" para hoje, 2026-11-15.",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nProjeto em foco: \"Revisão sobre tutoria\" (id 1)."
+      },
+      {
+        "role": "user",
+        "content": "Escreve no diário de hoje: \"Terminei a triagem.\""
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "YjjU69JJ14dZVnBrUyhgrCCyvfIU72z4",
+            "name": "diary__appendAgentRecord",
+            "arguments": "{\"projectId\":1,\"date\":\"2026-11-15\",\"message\":\"Terminei a triagem.\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "YjjU69JJ14dZVnBrUyhgrCCyvfIU72z4",
+        "content": "{\"ok\":true,\"result\":true}"
+      },
+      {
+        "role": "assistant",
+        "content": "Gravado no diário do projeto \"Revisão sobre tutoria\" para hoje, 2026-11-15.",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "diario",
+          "probability": 0.9114587036860659
+        },
+        {
+          "area": "triagem",
+          "probability": 0.04736669125665182
+        },
+        {
+          "area": "projetos",
+          "probability": 0.012278484147870222
+        }
+      ],
+      "chosen": [
+        "diario",
+        "triagem"
+      ],
+      "fallback": "none",
+      "decisionMs": 789,
+      "decisionInputTokens": 369
+    }
+  }
+}

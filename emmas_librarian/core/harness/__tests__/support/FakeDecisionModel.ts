@@ -1,4 +1,4 @@
-import type { DecisionModel, DecisionReply, DecisionRequest } from '../../eval/decision/systemOne';
+import type { DecisionModel, DecisionReply, DecisionRequest } from '../../../agent/systemOne';
 
 /** A decision model that answers with prepared probabilities for the subject, or fails, and remembers what it was asked. */
 export class FakeDecisionModel implements DecisionModel {

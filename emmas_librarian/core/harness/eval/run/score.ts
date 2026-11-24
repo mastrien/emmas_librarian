@@ -1,5 +1,5 @@
 import type { EvalCase } from '../evalCase';
-import type { EpisodeRecord } from './episode';
+import type { EpisodeRecord } from '../../../agent/episode';
 
 /** Bump when the rules below change: runs are only comparable with the same version. v1 failed any other route. */
 export const SCORER_VERSION = 'v2';

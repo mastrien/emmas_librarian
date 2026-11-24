@@ -5,11 +5,18 @@ export interface CliOptions {
   dataDir?: string;
   /** Indent the JSON for a person; the default is one line, for scripts. */
   pretty: boolean;
+  /** `ask` only: answer in plain text for a person instead of one JSON document. */
+  text?: true;
+  /** `ask` only: the folder the models live in (default: `models` inside the app's data folder). */
+  modelsDir?: string;
+  /** `ask` only: path of llama-server (default: the LLAMA_SERVER environment variable). */
+  llamaServer?: string;
 }
 
 export type CliRequest =
   | { kind: 'help'; command?: string; options: CliOptions }
   | { kind: 'list'; options: CliOptions }
+  | { kind: 'ask'; question: string; options: CliOptions }
   | { kind: 'run'; command: string; args: unknown[]; options: CliOptions };
 
 // A value is JSON when it parses (3, true, null, [1,2], {"a":1}, "text"); anything else is taken as text,
@@ -44,7 +51,7 @@ interface ParsedTokens {
   argsJson?: unknown[];
 }
 
-const VALUE_OPTIONS = new Set(['--data-dir', '--args-json']);
+const VALUE_OPTIONS = new Set(['--data-dir', '--args-json', '--models-dir', '--llama-server']);
 
 // `--data-dir=/lib` is read as `--data-dir /lib`. Only the options that take a value are split, so an
 // argument such as `a=b` stays whole.
@@ -66,7 +73,7 @@ function unknownOption(token: string): never {
   throw usageError(
     'ERR_CLI_USAGE',
     `Opção desconhecida. Offending value: ${JSON.stringify(token)}`,
-    'uma de --pretty, --help, --data-dir <pasta>, --args-json <array>; para passar como argumento um valor que começa com --, ponha -- antes dos argumentos',
+    'uma de --pretty, --text, --help, --data-dir <pasta>, --args-json <array>, --models-dir <pasta>, --llama-server <caminho>; para passar como argumento um valor que começa com --, ponha -- antes dos argumentos',
   );
 }
 
@@ -81,12 +88,26 @@ function readTokens(argv: string[]): ParsedTokens {
     }
     if (token === '--pretty') parsed.options.pretty = true;
     else if (token === '--help' || token === '-h') parsed.help = true;
+    else if (token === '--text') parsed.options.text = true;
     else if (token === '--data-dir') parsed.options.dataDir = requireValue(token, tokens[(i += 1)]);
+    else if (token === '--models-dir') parsed.options.modelsDir = requireValue(token, tokens[(i += 1)]);
+    else if (token === '--llama-server') parsed.options.llamaServer = requireValue(token, tokens[(i += 1)]);
     else if (token === '--args-json') parsed.argsJson = argsFromJson(tokens[(i += 1)]);
     else if (token.startsWith('--')) unknownOption(token);
     else parsed.positional.push(token);
   }
   return parsed;
+}
+
+// The words of the question are joined: a shell that split it at its spaces (`ask Quais projetos`) still asks it whole.
+function askRequest(words: string[], argsJson: unknown[] | undefined, options: CliOptions): CliRequest {
+  if (argsJson)
+    throw usageError(
+      'ERR_CLI_USAGE',
+      `--args-json não vale para ask. Offending value: ${JSON.stringify(argsJson)}`,
+      'a pergunta como texto: cli ask -- "Quais projetos eu tenho?"',
+    );
+  return { kind: 'ask', question: words.join(' '), options };
 }
 
 /**
@@ -105,6 +126,7 @@ export function parseCliArguments(argv: string[]): CliRequest {
   // `<command> --help` asks how that command is called.
   if (help) return { kind: 'help', command: command === 'commands' ? undefined : command, options };
   if (command === 'commands') return { kind: 'list', options };
+  if (command === 'ask') return askRequest(rest, argsJson, options);
   if (argsJson && rest.length > 0) {
     throw usageError(
       'ERR_CLI_USAGE',

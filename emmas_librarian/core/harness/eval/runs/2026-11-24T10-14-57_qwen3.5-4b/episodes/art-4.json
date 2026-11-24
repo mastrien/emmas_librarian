@@ -1,0 +1,151 @@
+{
+  "id": "art-4",
+  "kind": "error",
+  "prompt": "Muda o status do artigo 3 para lido.",
+  "context": {},
+  "system": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual.",
+  "toolCount": 8,
+  "toolsBytes": 3213,
+  "wallMs": 9081,
+  "asked": [
+    {
+      "tool": "articles__updateStatus",
+      "command": "articles:updateStatus",
+      "input": {
+        "id": 3,
+        "status": "read"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "articleStatus",
+      "args": {
+        "ids": [
+          3
+        ],
+        "status": "read"
+      },
+      "ok": true
+    }
+  ],
+  "score": {
+    "usedExpectedTools": true,
+    "violations": [],
+    "unknownTools": [],
+    "invalidCalls": 0,
+    "refusedByPerson": 0,
+    "stateOk": true,
+    "steps": 2,
+    "pass": true
+  },
+  "record": {
+    "steps": [
+      {
+        "reply": {
+          "content": "",
+          "toolCalls": [
+            {
+              "id": "FbHZPFTOYDgMwAmKQEOT4tJXeEXJa035",
+              "name": "articles__updateStatus",
+              "arguments": "{\"id\":3,\"status\":\"read\"}"
+            }
+          ],
+          "reasoning": "",
+          "finishReason": "tool_calls",
+          "timings": {
+            "promptTokens": 518,
+            "promptMs": 4383.476,
+            "generatedTokens": 39,
+            "generatedMs": 2406.384
+          },
+          "wallMs": 6898
+        },
+        "calls": [
+          {
+            "id": "FbHZPFTOYDgMwAmKQEOT4tJXeEXJa035",
+            "name": "articles__updateStatus",
+            "arguments": "{\"id\":3,\"status\":\"read\"}",
+            "result": {
+              "ok": true,
+              "result": null
+            },
+            "wallMs": 0
+          }
+        ]
+      },
+      {
+        "reply": {
+          "content": "O status do artigo 3 foi alterado para \"lido\".",
+          "toolCalls": [],
+          "reasoning": "",
+          "finishReason": "stop",
+          "timings": {
+            "promptTokens": 27,
+            "promptMs": 493.865,
+            "generatedTokens": 15,
+            "generatedMs": 888.452
+          },
+          "wallMs": 1394
+        },
+        "calls": []
+      }
+    ],
+    "finalText": "O status do artigo 3 foi alterado para \"lido\".",
+    "stopped": "answered",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você é o assistente da biblioteca de pesquisa do Emma's Librarian. Use as ferramentas para consultar e alterar a biblioteca.\nRegras:\n- Nunca invente ids, datas ou nomes: consulte a biblioteca antes de agir sobre algo que a pessoa só citou pelo nome.\n- Se nenhuma ferramenta permite o que a pessoa pediu, diga que não tem acesso a isso e não tente outro caminho.\n- Alterações precisam da aprovação da pessoa, que o sistema pede por você. Se uma chamada voltar ERR_NOT_CONFIRMED, avise que nada foi feito.\n- Se uma chamada voltar um erro, leia a mensagem: corrija os argumentos se o erro for seu; se for da biblioteca, conte à pessoa.\n- Responda em português, de forma curta.\n\nHoje é domingo, 2026-11-15.\nNenhum projeto em foco: se o pedido depender de um projeto, liste-os e pergunte qual."
+      },
+      {
+        "role": "user",
+        "content": "Muda o status do artigo 3 para lido."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "toolCalls": [
+          {
+            "id": "FbHZPFTOYDgMwAmKQEOT4tJXeEXJa035",
+            "name": "articles__updateStatus",
+            "arguments": "{\"id\":3,\"status\":\"read\"}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "toolCallId": "FbHZPFTOYDgMwAmKQEOT4tJXeEXJa035",
+        "content": "{\"ok\":true,\"result\":null}"
+      },
+      {
+        "role": "assistant",
+        "content": "O status do artigo 3 foi alterado para \"lido\".",
+        "toolCalls": []
+      }
+    ],
+    "decision": {
+      "ranked": [
+        {
+          "area": "artigos",
+          "probability": 0.9848697559062262
+        },
+        {
+          "area": "anotacoes",
+          "probability": 0.004614817258597377
+        },
+        {
+          "area": "triagem",
+          "probability": 0.0021123103619028047
+        }
+      ],
+      "chosen": [
+        "artigos",
+        "anotacoes"
+      ],
+      "fallback": "none",
+      "decisionMs": 789,
+      "decisionInputTokens": 363
+    }
+  }
+}

@@ -11,13 +11,13 @@ import { parseEvalCases, type EvalCase } from '../evalCase';
 import { flagsOf } from '../run/flags';
 import { pickById } from '../run/runSummary';
 import { setupFromEnv } from '../run/runSetup';
-import { startServer, type RunningServer } from '../run/serverProcess';
-import { routingDecision, routingRequest } from './areaRouting';
+import { startServer, type RunningServer } from '../../../agent/runtime/serverProcess';
+import { routingDecision, routingRequest } from '../../../agent/areaRouting';
 import { DECISION_MODELS, decisionServerArgs, type DecisionModelSpec } from './decisionCatalog';
 import { areaOfTool, requiredAreas } from './routingMetrics';
 import { parseThreshold, routingRowOf } from './routingRow';
 import { summarizeByKind, summarizeRouting, withThreshold, type RoutingRow } from './routingSummary';
-import { SystemOneClient, type DecisionModel } from './systemOne';
+import { SystemOneClient, type DecisionModel } from '../../../agent/systemOne';
 import { BEST_TOOL, toolQuestion } from './toolPicking';
 
 const EVAL_DIR = path.join(__dirname, '..');

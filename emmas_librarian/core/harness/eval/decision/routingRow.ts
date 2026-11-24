@@ -1,8 +1,8 @@
 import type { EvalCase } from '../evalCase';
-import type { RoutingDecision } from './areaRouting';
+import type { RoutingDecision } from '../../../agent/areaRouting';
 import { scoreRouting } from './routingMetrics';
 import type { RoutingRow } from './routingSummary';
-import type { DecisionReply } from './systemOne';
+import type { DecisionReply } from '../../../agent/systemOne';
 import { rankedTools, BEST_TOOL } from './toolPicking';
 
 /** The yes/no threshold of `--threshold`: a probability in (0, 1]; 0.5 when the flag is absent. */

@@ -1,4 +1,5 @@
 import type { CliOptions } from '../../../core/cli/cliArguments';
+import type { AskDeps } from '../../../core/agent/ask';
 import { runCli, type CliOutcome, type OpenedCliHost } from '../../../core/cli/cliRunner';
 
 /**
@@ -39,6 +40,8 @@ export interface CliProcess {
   /** Resolves once the shell can open the library (Electron: app ready, so safeStorage works). */
   ready: () => Promise<unknown>;
   open: (options: CliOptions) => OpenedCliHost | Promise<OpenedCliHost>;
+  /** The agent behind `ask`: the models, the terminal and the confirmations. */
+  ask?: (options: CliOptions) => AskDeps;
   stdout: TextSink;
   stderr: TextSink;
   exit: (code: number) => void;
@@ -58,7 +61,7 @@ async function print(outcome: CliOutcome, cli: CliProcess): Promise<void> {
  */
 export async function runElectronCli(args: string[], cli: CliProcess): Promise<void> {
   await cli.ready();
-  const outcome = await runCli(args, cli.open);
+  const outcome = await runCli(args, cli.open, cli.ask);
   await print(outcome, cli);
   cli.exit(outcome.exitCode);
 }

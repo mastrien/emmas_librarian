@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import type { EvalCase } from '../evalCase';
-import type { ChatTimings } from './chatClient';
-import type { DecisionTrace } from './episode';
+import type { ChatTimings } from '../../../agent/chatClient';
+import type { DecisionTrace } from '../../../agent/episode';
 import { MODES, type Mode } from './runMode';
 import type { Score } from './score';
 

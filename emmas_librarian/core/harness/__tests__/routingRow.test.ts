@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import type { RoutingDecision } from '../eval/decision/areaRouting';
+import type { RoutingDecision } from '../../agent/areaRouting';
 import { parseThreshold, routingRowOf } from '../eval/decision/routingRow';
-import type { DecisionReply } from '../eval/decision/systemOne';
+import type { DecisionReply } from '../../agent/systemOne';
 import type { EvalCase } from '../eval/evalCase';
 
 const caseOf = (tool: string | undefined, kind: EvalCase['kind'] = 'happy'): EvalCase => ({
