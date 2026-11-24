@@ -53,7 +53,7 @@ function failIfDead(watched: WatchedChild, exe: string, url: string): void {
  * Starts llama-server and waits until it can answer. If the process dies first, the error carries the end of its log.
  *
  * Usage:
- *   const server = await startServer('F:\llm-lab\bin\b12425\llama-server.exe', serverArgs(model, 8089), 8089);
+ *   const server = await startServer('F:\\llm-lab\\bin\\b12425\\llama-server.exe', serverArgs(model, 8089), 8089);
  *   // ...use server.url...  await server.stop();
  */
 export async function startServer(
