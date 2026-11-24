@@ -39,8 +39,12 @@ function partialSize(partial: string, model: AgentModelFile): number {
   return 0;
 }
 
-async function openResponse(model: AgentModelFile, deps: DownloadDeps, from: number): Promise<Response> {
-  const response = await deps.fetch(model.url, { headers: from > 0 ? { range: `bytes=${from}-` } : {} });
+/** What the host answers when asked for the bytes from `from` on (0 asks for the whole file). */
+function request(model: AgentModelFile, deps: DownloadDeps, from: number): Promise<Response> {
+  return deps.fetch(model.url, { headers: from > 0 ? { range: `bytes=${from}-` } : {} });
+}
+
+function assertBody(model: AgentModelFile, response: Response): Response {
   if (response.ok && response.body) return response;
   throw fail(
     'ERR_MODEL_HTTP',
@@ -49,13 +53,22 @@ async function openResponse(model: AgentModelFile, deps: DownloadDeps, from: num
   );
 }
 
+/** 416 means the old bytes are not a prefix this host can continue (a finished or foreign .part): start over. */
+async function openResponse(model: AgentModelFile, deps: DownloadDeps, partial: string): Promise<[Response, boolean]> {
+  const from = partialSize(partial, model);
+  const response = await request(model, deps, from);
+  if (response.status !== 416) return [assertBody(model, response), from > 0];
+  fs.rmSync(partial, { force: true });
+  return [assertBody(model, await request(model, deps, 0)), false];
+}
+
 async function writeBody(
   response: Response,
   partial: string,
   resumed: boolean,
   model: AgentModelFile,
   deps: DownloadDeps,
-) {
+): Promise<void> {
   // A host that answers 200 to a range request sent the whole file: start over instead of appending to the old bytes.
   const append = resumed && response.status === 206;
   const out = fs.createWriteStream(partial, { flags: append ? 'a' : 'w' });
@@ -66,6 +79,36 @@ async function writeBody(
     deps.onProgress?.(done, model.sizeBytes);
   }
   await new Promise<void>((resolve, reject) => out.end((error?: Error | null) => (error ? reject(error) : resolve())));
+}
+
+/** A .part that already has every byte (the app died before the rename) must not be asked for a range past its end. */
+async function adoptCompletePartial(model: AgentModelFile, partial: string, target: string): Promise<boolean> {
+  if (!fs.existsSync(partial) || fs.statSync(partial).size !== model.sizeBytes) return false;
+  try {
+    await verified(model, partial);
+  } catch {
+    fs.rmSync(partial, { force: true });
+    return false;
+  }
+  fs.renameSync(partial, target);
+  return true;
+}
+
+async function downloadAndKeep(
+  model: AgentModelFile,
+  deps: DownloadDeps,
+  partial: string,
+  target: string,
+): Promise<void> {
+  const [response, resumed] = await openResponse(model, deps, partial);
+  await writeBody(response, partial, resumed, model, deps);
+  try {
+    await verified(model, partial);
+  } catch (error) {
+    fs.rmSync(partial, { force: true });
+    throw error;
+  }
+  fs.renameSync(partial, target);
 }
 
 /**
@@ -89,14 +132,6 @@ export async function ensureModelFile(model: AgentModelFile, deps: DownloadDeps)
     );
   fs.mkdirSync(deps.dir, { recursive: true });
   const partial = `${target}.part`;
-  const from = partialSize(partial, model);
-  await writeBody(await openResponse(model, deps, from), partial, from > 0, model, deps);
-  try {
-    await verified(model, partial);
-  } catch (error) {
-    fs.rmSync(partial, { force: true });
-    throw error;
-  }
-  fs.renameSync(partial, target);
+  if (!(await adoptCompletePartial(model, partial, target))) await downloadAndKeep(model, deps, partial, target);
   return target;
 }

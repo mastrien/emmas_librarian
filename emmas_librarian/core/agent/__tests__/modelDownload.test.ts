@@ -102,6 +102,32 @@ describe('ensureModelFile', () => {
     expect(host.requests[0].range).toBeUndefined();
   });
 
+  // Regressions (review of #202): a .part that was already whole made Range: bytes=<total>- answer 416 forever.
+  it('renames a .part that already has every byte, without asking the host for anything', async () => {
+    fs.writeFileSync(path.join(dir, 'fake.gguf.part'), CONTENT);
+    const host = new FakeModelHost(CONTENT);
+    const file = await ensureModelFile(model, { dir, fetch: host.fetch, consent: yes });
+    expect(host.requests).toEqual([]);
+    expect(fs.readFileSync(file).equals(CONTENT)).toBe(true);
+    expect(fs.existsSync(`${file}.part`)).toBe(false);
+  });
+
+  it('throws away a whole .part with the wrong hash and downloads again from the start', async () => {
+    fs.writeFileSync(path.join(dir, 'fake.gguf.part'), Buffer.alloc(CONTENT.length, 'z'));
+    const host = new FakeModelHost(CONTENT);
+    const file = await ensureModelFile(model, { dir, fetch: host.fetch, consent: yes });
+    expect(host.requests).toEqual([{ url: model.url, range: undefined }]);
+    expect(fs.readFileSync(file).equals(CONTENT)).toBe(true);
+  });
+
+  it('starts over from zero when the host answers 416 to the range', async () => {
+    fs.writeFileSync(path.join(dir, 'fake.gguf.part'), CONTENT.subarray(0, 300));
+    const host = new FakeModelHost(CONTENT, { rejectRanges: true });
+    const file = await ensureModelFile(model, { dir, fetch: host.fetch, consent: yes });
+    expect(host.requests.map((r) => r.range)).toEqual(['bytes=300-', undefined]);
+    expect(fs.readFileSync(file).equals(CONTENT)).toBe(true);
+  });
+
   // Bytes that arrive wrong must never be kept as the model.
   it('deletes the download and says both hashes when the bytes are not the published ones', async () => {
     const wrong = Buffer.concat([CONTENT.subarray(0, CONTENT.length - 1), Buffer.from('X')]);
