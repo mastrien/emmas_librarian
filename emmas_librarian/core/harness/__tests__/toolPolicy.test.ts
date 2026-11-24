@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { commandSchemas } from '../commandSchemas';
-import { DEFAULT_EXCLUSIONS } from '../toolPolicy';
+import { DEFAULT_EXCLUSIONS, NEEDS_LOCAL_MODEL, whyHidden } from '../toolPolicy';
 import { TOOL_ACCESS, buildAccess } from '../toolAccess';
 
 describe('DEFAULT_EXCLUSIONS', () => {
@@ -60,5 +60,48 @@ describe('TOOL_ACCESS', () => {
     'search:revert',
   ])('does not offer %s at all', (name) => {
     expect(TOOL_ACCESS.has(name)).toBe(false);
+  });
+});
+
+describe('whyHidden', () => {
+  const command = { name: 'projects:getAll', handler: () => [] } as unknown as Parameters<
+    typeof whyHidden
+  >[0]['command'];
+  const schema = { name: 'projects:getAll', parameters: [], source: 't' };
+  const base = { command, schema, inTerminal: true, modelIsLocal: true };
+
+  it('hides what a terminal cannot run, before looking at anything else', () => {
+    expect(whyHidden({ ...base, inTerminal: false, access: { confirm: false, localOnly: false } })).toMatch(
+      /desktop app/,
+    );
+  });
+
+  it('hides a command nobody allowed, giving the reason of its rule when it has one', () => {
+    expect(whyHidden({ ...base, access: undefined })).toEqual(expect.any(String));
+    const keys = DEFAULT_EXCLUSIONS[0];
+    const ruled = { ...command, name: keys.pattern.source.replace(/[^a-z:]/gi, '') } as typeof command;
+    expect(whyHidden({ ...base, command: ruled, access: undefined })).toEqual(expect.any(String));
+  });
+
+  it('offers an allowed command that touches no file', () => {
+    expect(whyHidden({ ...base, access: { confirm: false, localOnly: false } })).toBeUndefined();
+  });
+
+  it('hides a command that asks for a file path unless that parameter is hidden from the model', () => {
+    const withPath = {
+      ...schema,
+      parameters: [{ name: 'filePath', required: true, schema: { type: 'string' as const } }],
+    };
+    const access = { confirm: false, localOnly: false };
+    expect(whyHidden({ ...base, schema: withPath, access })).toMatch(/file at a path/);
+    expect(
+      whyHidden({ ...base, schema: withPath, access: { ...access, hideParameters: ['filePath'] } }),
+    ).toBeUndefined();
+  });
+
+  it('offers a command that sends text to a third party only with a local model', () => {
+    const access = { confirm: false, localOnly: true };
+    expect(whyHidden({ ...base, access, modelIsLocal: false })).toBe(NEEDS_LOCAL_MODEL);
+    expect(whyHidden({ ...base, access, modelIsLocal: true })).toBeUndefined();
   });
 });

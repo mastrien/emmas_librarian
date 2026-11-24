@@ -254,6 +254,14 @@ describe('RemoteGateway: the local channel (the CLI on this computer)', () => {
     expect(parsed(await run(IpcChannel.ARTICLES_GET_ONE, [1])).error.message).toContain('/home/ana/segredo.db');
   });
 
+  it('answers 400, not 500, for a command name with a malformed percent escape', async () => {
+    const response = await run('%E0%A4%A', []);
+
+    expect(response.status).toBe(400);
+    expect(parsed(response).error.code).toBe('ERR_REMOTE_BAD_REQUEST');
+    expect(parsed(response).error.message).toContain('%E0%A4%A');
+  });
+
   it('refuses desktop-only commands like the CLI itself does', async () => {
     const response = await run(IpcChannel.PDF_GET, [1]);
 

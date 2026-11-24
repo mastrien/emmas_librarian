@@ -38,6 +38,7 @@ describe('staticSiteIn', () => {
     ['a path that climbs out of the folder', '/../segredo.json'],
     ['a climbing path with encoded dots', '/%2e%2e/segredo.json'],
     ['a climbing path through a subfolder', '/assets/../../segredo.json'],
+    ['a malformed percent escape', '/%E0%A4%A'],
   ])('answers nothing for %s', (_label, pathname) => {
     expect(staticSiteIn(siteDir)(pathname)).toBeNull();
   });
