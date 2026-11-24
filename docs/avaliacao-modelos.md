@@ -43,6 +43,8 @@ vazio). Matei os processos, apaguei o arquivo e baixei de novo sem retomar; a se
 
 ## Teste de fumaça: um caso por modelo (`art-2`)
 
+*Histórico (2026-11-15): a primeira etapa, de um caso por modelo. A bateria de 72 casos veio depois, nas seções abaixo.*
+
 Pedido: "Marca como lido o artigo sobre tutores baseados em regras." Projeto A em foco. A rota ideal é listar os
 artigos e chamar `articles__updateStatus({ id: 3, status: "read" })`. **Um só caso por modelo: serve para ver se o
 executor funciona e como cada modelo se comporta, não para ordenar os modelos.**
@@ -99,6 +101,8 @@ v2 em `art-2-scorer-v2`. Só as duas execuções Qwen mudaram de resultado.
 
 ## Limites
 
+*Histórico (2026-11-15): vale para a rodada de um caso por modelo. As baterias de 72 casos (mais abaixo) já rodaram, mas continuam com uma amostra por caso.*
+
 - **Um caso por modelo.** Nenhuma conclusão sobre qual modelo é melhor: falta rodar os 72 casos.
 - **Uma amostra por caso** (temperatura baixa, `seed 42`). Não medi variação entre repetições.
 - **Tempo inclui o prompt de ferramentas inteiro.** Os números mudam com roteamento ou menos ferramentas.
@@ -116,6 +120,10 @@ npx vite-node core/harness/eval/run/runEval.ts -- --model lfm3-1.7b --cases all 
 ```
 
 Modelos disponíveis: `core/harness/eval/run/modelCatalog.ts`. Cada execução grava uma pasta nova em `runs/`.
+
+O `casesSha` de `config.json` é o hash do `cases.jsonl` com as quebras de linha normalizadas para LF. Os `casesSha` gravados antes
+desta mudança hasheavam o texto bruto, então diferem do mesmo arquivo só por causa de CRLF (Windows) contra LF (Linux, Colab): o
+valor de uma execução antiga não bate com o de uma nova mesmo com os mesmos casos.
 
 ## Bateria de 72 casos: LFM3-1.7B, modo roteado (15/11/2026, 22h21 UTC)
 
@@ -138,6 +146,8 @@ Registro: `runs/2026-11-15T22-21-37_lfm3-1.7b/`. O teste de fumaça do roteament
 
 ## Mudança de plano (a pedido do autor)
 
+*Histórico (2026-11-15): o plano e o estado do notebook naquela data. O notebook rodou no Colab em 2026-11-16 e 2026-11-17 (seções abaixo).*
+
 A bateria seguiu para o LFM2.5-8B-A1B por segundos, e eu a abortei (`runs/2026-11-15T23-55-18_lfm2.5-8b-a1b/ABORTED.txt`).
 Estimativa de continuar na RX 580: mais de 30 horas, com Qwen3.5-4B e Gemma 4 levando 5 a 6 horas por bloco.
 
@@ -159,6 +169,8 @@ Python e o executor localmente com os mesmos padrões. A célula 5 (a biblioteca
 `llama-server` CUDA listando a T4) são as que mais provavelmente precisarão de ajuste na primeira execução.
 
 ## Terceira abordagem: plano em tarefas (`--mode planned`)
+
+*Histórico (2026-11-16): escrito antes das baterias do `planned`, que depois rodaram, no LFM3 local e nos seis modelos do Colab (seções abaixo).*
 
 Implementada em 2026-11-16, ainda sem nenhuma bateria rodada. O modelo trabalha em três etapas:
 
@@ -268,6 +280,8 @@ pedidos, o modelo de decisão escolhe entre os 15 assuntos, e se compara com o a
 
 ### Modo `decided`, LFM3 + d1-2B (2026-11-17): bateria parcial
 
+*Histórico (2026-11-17): a bateria foi interrompida; a versão completa, com os 72 casos, está na seção seguinte.*
+
 Implementado (`--mode decided`): o d1-2B (porta 8090) escolhe os 2 assuntos mais prováveis do pedido, o LFM3 recebe só as
 ferramentas deles (sem `select_areas`), e o completo assume se o roteador falha, ou se a tentativa restrita não responde
 ou chama ferramenta fora dos assuntos **e nada alterou a biblioteca** (senão o pedido seria feito duas vezes). A reserva
@@ -374,3 +388,40 @@ contra 63; Qwen 4B 58 contra 62; Gemma 56 contra 48; Qwen 2B 54 contra 40; LFM2.
   (`b12425`) e as 14 execuções gravaram `b12425@18b74fa`, o commit do binário local (`build 12425, commit 18b74fa41`),
   então os resultados não são afetados. O notebook do repositório agora tem essa alteração e um `assert` que confere o
   commit `18b74fa` depois do clone, para que a replicação não dependa da confiança na rede.
+
+## O que os números não dizem
+
+**(a) O piso não é zero.** Um modelo que nunca chama ferramenta e responde qualquer texto passa **28 dos 72 casos (38,9%)**:
+as 28 recusas só exigem a biblioteca inalterada e `stopped: answered`, e o texto da resposta não é avaliado (confirmado
+pontuando um episódio vazio, com `answered`, contra os 72 casos e o estado real da biblioteca F). Lê-se "63 de 72" como
+"35 de 44 a mais que o piso", não como 87,5% de competência.
+
+**(b) Sem as recusas (os 44 casos de fazer algo).** Calculado dos `summary.json` gravados em `runs/`, pelo campo `kind`
+de cada caso (`refusal` = recusa; os outros três tipos somam 44). Recusa e total conferem com as tabelas acima.
+
+| Execução | Total | Recusas (28) | Fazer algo (44) |
+|---|---|---|---|
+| LFM3 local, decided (`00-08-24` até `ano-2` + `00-34-09`) | 63/72 | 26/28 | **37/44 (84,1%)** |
+| LFM3 local, completo (`2026-11-16T15-36-25`) | 61/72 | 26/28 | 35/44 (79,5%) |
+| LFM3 local, roteado (`2026-11-15T22-21-37`) | 59/72 | 24/28 | 35/44 (79,5%) |
+| Colab decided, lfm3-1.7b | 62/72 | 26/28 | 36/44 (81,8%) |
+| Colab decided, qwen3.5-4b | 59/72 | 28/28 | 31/44 (70,5%) |
+| Colab decided, qwen3.5-9b | 59/72 | 27/28 | 32/44 (72,7%) |
+| Colab decided, gemma-4-e4b | 58/72 | 28/28 | 30/44 (68,2%) |
+| Colab decided, qwen3.5-2b | 54/72 | 22/28 | 32/44 (72,7%) |
+| Colab decided, lfm2.5-8b-a1b | 41/72 | 28/28 | 13/44 (29,5%) |
+| Colab planned, lfm3-1.7b | 30/72 | 11/28 | 19/44 (43,2%) |
+| Colab planned, qwen3.5-4b | 60/72 | 25/28 | 35/44 (79,5%) |
+| Colab planned, qwen3.5-9b | 56/72 | 27/28 | 29/44 (65,9%) |
+| Colab planned, gemma-4-e4b | 63/72 | 28/28 | 35/44 (79,5%) |
+| Colab planned, qwen3.5-2b | 31/72 | 18/28 | 13/44 (29,5%) |
+| Colab planned, lfm2.5-8b-a1b | 17/72 | 13/28 | 4/44 (9,1%) |
+
+Fazer algo é o que distingue os modelos: no Colab decided, Qwen 4B, Qwen 9B e Gemma recusam quase tudo certo (27 a 28 de
+28) e acertam só 68% a 73% do resto; o LFM3 local decided tem a melhor taxa em fazer algo. Colab `full` e `routed` não estão
+na tabela: vêm de `runs/colab-2026-11-16/`, fora do recorte pedido.
+
+**(c) Sem conjunto separado.** Os mesmos 72 casos escolheram `topAreas=2` (a medida "todos os necessários entre os 2 mais
+prováveis", 44/44 no d1-2B, que o resumo da decisão agora grava como `allInTop2`) e avaliaram o d1-2B no modo `decided`.
+Não houve conjunto de ajuste separado de um de teste, então a escolha de `topAreas=2` e o resultado do `decided` não são
+independentes: o número do decided pode estar um pouco otimista.
