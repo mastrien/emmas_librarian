@@ -6,9 +6,18 @@ interface Candidate {
   address: string;
 }
 
-// Adapters a phone on the Wi-Fi cannot reach: VPNs, virtual machines, containers and WSL.
-const VIRTUAL_ADAPTER =
-  /vethernet|virtualbox|vmware|vmnet|hyper-v|wsl|docker|radmin|hamachi|zerotier|tailscale|vpn|tap-|tun/i;
+// Adapters a phone on the Wi-Fi cannot reach: VPNs, virtual machines, containers and WSL. The long names are safe as
+// substrings. The short ones (tun, tap, wsl) only count as a whole word or followed by a digit or a dash ("tun0",
+// "tap-windows", "TAP"), because as a substring they would demote "Ethernet Tunnel Bridge" or "Tapestry LAN" (#195 review).
+// "vpn" also counts at the end of a word, for "OpenVPN" and "ProtonVPN".
+const VIRTUAL_ADAPTER = new RegExp(
+  [
+    'vethernet|virtualbox|vmware|vmnet|hyper-v|docker|radmin|hamachi|zerotier|tailscale|wintun|openvpn',
+    '(?<![a-z])(?:tun|tap|wsl)(?![a-z])',
+    '(?<![a-z])vpn|vpn(?![a-z])',
+  ].join('|'),
+  'i',
+);
 // The default range of the VirtualBox host-only network, which looks like any other 192.168.x address.
 const VIRTUALBOX_HOST_ONLY = /^192\.168\.56\./;
 const PRIVATE_IPV4 = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
