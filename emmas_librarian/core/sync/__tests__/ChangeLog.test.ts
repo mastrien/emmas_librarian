@@ -39,18 +39,26 @@ describe('installSyncSchema', () => {
     expect(triggers.n).toBe(18);
   });
 
-  it('does not log rows that existed before sync as changes', () => {
-    expect(log.readSince(0)).toEqual([]);
+  it('logs rows that existed before sync was enabled as inserts, so the phone receives the library', () => {
+    const changes = log.readSince(0);
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toMatchObject({ entity: 'projects', kind: 'insert', uuid: log.uuidOf('projects', 1) });
+  });
+
+  it('does not log those rows again when the schema is installed twice', () => {
+    installSyncSchema(db);
+    expect(log.readSince(0)).toHaveLength(1);
   });
 });
 
 describe('ChangeLog.readSince', () => {
   it('reports insert, update and delete in order, by uuid', () => {
+    const mark = log.latestSeq();
     const id = addProject('Review');
     db.prepare("UPDATE projects SET name = 'Review 2' WHERE id = ?").run(id);
     db.prepare('DELETE FROM projects WHERE id = ?').run(id);
 
-    const changes = log.readSince(0);
+    const changes = log.readSince(mark);
 
     expect(changes.map((change) => change.kind)).toEqual(['insert', 'update', 'delete']);
     expect(new Set(changes.map((change) => change.uuid)).size).toBe(1);
@@ -75,14 +83,15 @@ describe('ChangeLog.readSince', () => {
     db.prepare("INSERT INTO project_diary (project_id, entry_date, content) VALUES (?, '2026-11-21', 'x')").run(
       project,
     );
-    expect(log.readSince(0).map((change) => change.entity)).toEqual(['projects', 'project_diary']);
+    expect(log.readSince(0).map((change) => change.entity)).toEqual(['projects', 'projects', 'project_diary']);
   });
 });
 
 describe('ChangeLog.whileApplying', () => {
   it('does not log writes that come from a remote device', () => {
+    const mark = log.latestSeq(); // the library that pre-dates sync is already in the log
     log.whileApplying(() => addProject('From the phone'));
-    expect(log.readSince(0)).toEqual([]);
+    expect(log.readSince(mark)).toEqual([]);
   });
 
   it('logs local writes again afterwards, even if the remote write threw', () => {
@@ -91,8 +100,9 @@ describe('ChangeLog.whileApplying', () => {
         throw new Error('boom');
       }),
     ).toThrow('boom');
+    const mark = log.latestSeq();
     addProject('Local');
-    expect(log.readSince(0)).toHaveLength(1);
+    expect(log.readSince(mark)).toHaveLength(1);
   });
 });
 

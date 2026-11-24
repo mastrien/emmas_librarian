@@ -65,13 +65,37 @@ function captureTriggersSql(table: SyncedTable): string {
   ].join('\n');
 }
 
-/** Gives a uuid to every row of the table that has none yet (rows that existed before sync was enabled). */
+/** Whether the table keeps a trash flag (`deleted_at`); not every synced table does. */
+function hasTrashColumn(db: Database.Database, table: SyncedTable): boolean {
+  const columns = db.prepare(`PRAGMA table_info(${table.entity})`).all() as { name: string }[];
+  return columns.some((column) => column.name === 'deleted_at');
+}
+
+/**
+ * Gives a uuid to every row of the table that has none yet (rows that existed before sync was enabled) and logs
+ * each of them as an `insert`, exactly as the capture trigger would have. Without that entry the phone would
+ * never receive the library that was already there: the endpoint only reads `sync_changes`.
+ *
+ * Rows in the trash (`deleted_at` set) get a uuid but no entry: the phone never knew them and must not show
+ * them. If one is restored later, the `update` the trigger logs then brings it. Only rows without a uuid are
+ * touched, so a second install adds nothing.
+ */
 function assignMissingUuids(db: Database.Database, table: SyncedTable): void {
+  // A row made after the triggers exist already has its own log entry (its uuid is only minted on first read).
+  const notTrashed = hasTrashColumn(db, table) ? 'deleted_at IS NULL' : '1 = 1';
+  const alive = `${notTrashed} AND id NOT IN (SELECT local_id FROM sync_changes WHERE entity = '${table.entity}')`;
   const missing = db
-    .prepare(`SELECT id FROM ${table.entity} WHERE id NOT IN (SELECT local_id FROM sync_ids WHERE entity = ?)`)
-    .all(table.entity) as { id: number }[];
-  const insert = db.prepare('INSERT INTO sync_ids (entity, local_id, uuid) VALUES (?, ?, ?)');
-  for (const row of missing) insert.run(table.entity, row.id, randomUUID());
+    .prepare(
+      `SELECT id, ${alive} AS alive FROM ${table.entity}
+       WHERE id NOT IN (SELECT local_id FROM sync_ids WHERE entity = ?) ORDER BY id`,
+    )
+    .all(table.entity) as { id: number; alive: number }[];
+  const insertId = db.prepare('INSERT INTO sync_ids (entity, local_id, uuid) VALUES (?, ?, ?)');
+  const logInsert = db.prepare("INSERT INTO sync_changes (entity, local_id, kind) VALUES (?, ?, 'insert')");
+  for (const row of missing) {
+    insertId.run(table.entity, row.id, randomUUID());
+    if (row.alive) logInsert.run(table.entity, row.id);
+  }
 }
 
 /**
