@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import type { AgentModelFile } from './agentModels';
 
 /** Just what the download needs from `fetch`, so a test can serve the file without a network. */
@@ -62,6 +64,16 @@ async function openResponse(model: AgentModelFile, deps: DownloadDeps, partial: 
   return [assertBody(model, await request(model, deps, 0)), false];
 }
 
+/** The bytes as they arrive, counted for the progress report. */
+async function* counted(source: AsyncIterable<Uint8Array>, start: number, model: AgentModelFile, deps: DownloadDeps) {
+  let done = start;
+  for await (const chunk of source) {
+    done += chunk.length;
+    deps.onProgress?.(done, model.sizeBytes);
+    yield chunk;
+  }
+}
+
 async function writeBody(
   response: Response,
   partial: string,
@@ -71,14 +83,20 @@ async function writeBody(
 ): Promise<void> {
   // A host that answers 200 to a range request sent the whole file: start over instead of appending to the old bytes.
   const append = resumed && response.status === 206;
-  const out = fs.createWriteStream(partial, { flags: append ? 'a' : 'w' });
-  let done = append ? fs.statSync(partial).size : 0;
-  for await (const chunk of response.body as unknown as AsyncIterable<Uint8Array>) {
-    if (!out.write(chunk)) await new Promise((resolve) => out.once('drain', resolve));
-    done += chunk.length;
-    deps.onProgress?.(done, model.sizeBytes);
-  }
-  await new Promise<void>((resolve, reject) => out.end((error?: Error | null) => (error ? reject(error) : resolve())));
+  const start = append ? fs.statSync(partial).size : 0;
+  const body = Readable.fromWeb(response.body as Parameters<typeof Readable.fromWeb>[0]);
+  // pipeline listens to the 'error' of the file (ENOSPC, EISDIR, EPERM) and closes it, which a bare write stream does not.
+  await pipeline(
+    body,
+    (source) => counted(source, start, model, deps),
+    fs.createWriteStream(partial, { flags: append ? 'a' : 'w' }),
+  ).catch((error: Error) => {
+    throw fail(
+      'ERR_MODEL_STREAM',
+      `Offending value: ${error.message} while writing ${partial}`,
+      'a writable file and a body that ends',
+    );
+  });
 }
 
 /** A .part that already has every byte (the app died before the rename) must not be asked for a range past its end. */

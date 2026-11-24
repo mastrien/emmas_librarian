@@ -128,6 +128,16 @@ describe('ensureModelFile', () => {
     expect(fs.readFileSync(file).equals(CONTENT)).toBe(true);
   });
 
+  // Regression (review of #202): a write stream without an 'error' listener threw an unhandled error besides rejecting.
+  it('rejects with the offending path when the .part cannot be written, with no unhandled error', async () => {
+    const partial = path.join(dir, 'fake.gguf.part');
+    fs.mkdirSync(partial);
+    const failure = await ensureModelFile(model, { dir, fetch: new FakeModelHost(CONTENT).fetch, consent: yes }).catch(
+      (e: Error) => e,
+    );
+    expect((failure as Error).message).toMatch(/[ERR_MODEL_STREAM].*EISDIR.*fake.gguf.part.*Expected a writable file/s);
+  });
+
   // Bytes that arrive wrong must never be kept as the model.
   it('deletes the download and says both hashes when the bytes are not the published ones', async () => {
     const wrong = Buffer.concat([CONTENT.subarray(0, CONTENT.length - 1), Buffer.from('X')]);
