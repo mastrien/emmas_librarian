@@ -108,6 +108,21 @@ describe('startAgentRuntime', () => {
     expect(servers.stopped).toHaveLength(1);
   });
 
+  // Review of #202: a wrong llama-server used to fail only after both models were downloaded.
+  it('lists the devices before any download or question, so a bad llama-server costs nothing', async () => {
+    const files = new FakeFiles();
+    let asked = 0;
+    const failing = async (): Promise<string> => {
+      throw new Error('[ERR_LIST_DEVICES] llama-server not found');
+    };
+    const counted = async (): Promise<boolean> => (asked++, true);
+    await expect(
+      startAgentRuntime(deps(new FakeServers(), { listDevices: failing, ensure: files.ensure, consent: counted })),
+    ).rejects.toThrow(/ERR_LIST_DEVICES/);
+    expect(files.asked).toEqual([]);
+    expect(asked).toBe(0);
+  });
+
   it('starts nothing when a download is declined', async () => {
     const servers = new FakeServers();
     const declined = async (): Promise<string> => {

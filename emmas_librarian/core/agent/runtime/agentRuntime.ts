@@ -84,6 +84,8 @@ async function launchBoth(
  */
 export async function startAgentRuntime(deps: AgentRuntimeDeps): Promise<AgentRuntime> {
   const models = [agentModel('chat'), agentModel('decision')];
+  // Before the ~2.2 GB download: a wrong --llama-server must fail now, not after the files are on disk (review of #202).
+  const device = chooseDevice(parseDevices(await deps.listDevices()), MIN_DEVICE_MEMORY_MIB);
   const ensure = deps.ensure ?? ensureModelFile;
   for (const model of models)
     await ensure(model, {
@@ -92,7 +94,6 @@ export async function startAgentRuntime(deps: AgentRuntimeDeps): Promise<AgentRu
       consent: deps.consent,
       onProgress: (done, total) => deps.onProgress?.(model, done, total),
     });
-  const device = chooseDevice(parseDevices(await deps.listDevices()), MIN_DEVICE_MEMORY_MIB);
   const started = await launchBoth(deps, models, device);
   const [chatServer, decisionServer] = started as RunningServer[];
   return {
