@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CommandRegistry } from '../../commands/CommandRegistry';
 import { RemoteGateway, type GatewayRequest, type GatewayResponse, type SyncRoutes } from '../RemoteGateway';
 import type { PairingAnswer } from '../../sync/crypto/pairing';
@@ -47,6 +47,48 @@ beforeEach(() => {
     authenticate: () => null,
     sync: routes,
     hideInternalErrors: true,
+  });
+});
+
+/** What the gateway wrote to the error log, as parsed JSON lines. */
+class ErrorLogCapture {
+  public readonly lines: { [key: string]: unknown }[] = [];
+  private readonly spy = vi.spyOn(console, 'error').mockImplementation((line: string) => {
+    this.lines.push(JSON.parse(line) as { [key: string]: unknown });
+  });
+  public restore(): void {
+    this.spy.mockRestore();
+  }
+}
+
+describe('RemoteGateway: failures that are not the sync layer refusing (#207 review, P1)', () => {
+  let errorLog: ErrorLogCapture;
+  beforeEach(() => {
+    errorLog = new ErrorLogCapture();
+  });
+  afterEach(() => errorLog.restore());
+
+  it('does not repeat the TypeError of a malformed body (answer missing) to the network', async () => {
+    const response = await gateway.handle(post('/api/sync/pair', {}));
+    expect(response.status).toBe(403);
+    expect(parsed(response).error.message).not.toContain('Cannot read properties');
+    expect(parsed(response).error.message).toContain('Expected shape');
+    expect(errorLog.lines).toMatchObject([{ event: 'sync_route_failed', step: 'pair', name: 'TypeError' }]);
+    expect(String(errorLog.lines[0].message)).toContain('Cannot read properties');
+  });
+
+  it('hides an error that carries a code (SQLite, file system), which may name a table or a path', async () => {
+    routes.failWith = Object.assign(new Error('ENOENT: no such file, open C:/Users/ana/a.pdf'), { code: 'ENOENT' });
+    const response = await gateway.handle(post('/api/sync/hello', { deviceId: 'x', phoneNonce: 'n' }));
+    expect(parsed(response).error.message).not.toContain('Users');
+    expect(errorLog.lines).toHaveLength(1);
+  });
+
+  it('keeps the reason of the sync layer, and logs nothing for it', async () => {
+    routes.failWith = new Error('Device "x" is not paired with this computer; pair it again.');
+    const response = await gateway.handle(post('/api/sync/hello', { deviceId: 'x', phoneNonce: 'n' }));
+    expect(parsed(response).error.message).toContain('is not paired');
+    expect(errorLog.lines).toEqual([]);
   });
 });
 

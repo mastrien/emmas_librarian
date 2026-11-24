@@ -75,6 +75,23 @@ const remoteError = (code: string, problem: string, expected: string) =>
 const syncRefused = (problem: string) =>
   remoteError('ERR_SYNC_REFUSED', problem, 'um aparelho pareado com uma sessão aberta');
 
+/**
+ * What a phone may read of a failed sync call. An AppError and a plain `new Error(...)` thrown by the sync code
+ * (not paired, replay, expired: reasons written for the person) go through; anything else (a TypeError from a
+ * malformed body, SQLite, the file system) may name tables or paths of this computer, so the phone gets a generic
+ * text and the detail goes to the log (#207 review, P1).
+ */
+function syncFailure(error: unknown, step: string): AppError {
+  if (error instanceof AppError) return error;
+  if (isDeliberateRefusal(error)) return syncRefused(error.message);
+  const detail = error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : { error };
+  console.error(JSON.stringify({ level: 'error', event: 'sync_route_failed', step, ...detail }));
+  return syncRefused(`Falha interna ao sincronizar (passo "${step}"); o detalhe está no registro do computador`);
+}
+
+const isDeliberateRefusal = (error: unknown): error is Error =>
+  error instanceof Error && Object.getPrototypeOf(error) === Error.prototype && !('code' in error);
+
 const json = (status: number, document: object): GatewayResponse => ({
   status,
   contentType: 'application/json; charset=utf-8',
@@ -151,11 +168,12 @@ export class RemoteGateway {
     this.refuseThrottled(request.remoteAddress);
     if (!sync) throw syncRefused('A sincronização com o celular não está configurada neste computador');
     const body = readJsonBody(request) as { [key: string]: unknown };
+    const step = request.path.slice(SYNC_PREFIX.length);
     try {
-      return json(200, { ok: true, result: await this.callSync(sync, request.path.slice(SYNC_PREFIX.length), body) });
+      return json(200, { ok: true, result: await this.callSync(sync, step, body) });
     } catch (error) {
       this.noteFailure(request.remoteAddress);
-      throw error instanceof AppError ? error : syncRefused(error instanceof Error ? error.message : String(error));
+      throw syncFailure(error, step);
     }
   }
 
