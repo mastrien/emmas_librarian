@@ -96,6 +96,11 @@ describe('a session open when the phone is unpaired (#207 review, M2)', () => {
 });
 
 describe('review of what the phone changed', () => {
+  // Changes are only ever staged by a paired phone, so an offer is open before there is anything to review.
+  beforeEach(async () => {
+    await access.offerUrl('192.168.0.10', 47810);
+  });
+
   function stagePhoneRename(): string {
     const project = db.createProject('Review');
     const uuid = db.librarySync.parts().log.uuidOf('projects', project.id);

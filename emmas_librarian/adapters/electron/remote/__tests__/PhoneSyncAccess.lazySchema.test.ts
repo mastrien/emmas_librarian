@@ -62,6 +62,21 @@ describe('PhoneSyncAccess installs the sync schema lazily', () => {
     expect(syncObjects(raw)).toEqual([]);
   });
 
+  it('answers the empty review without installing it, as the settings screen polls it (#207 review, B)', () => {
+    const access = accessOver(raw);
+    expect(access.listPending()).toEqual([]);
+    expect(access.apply(['op-1'])).toEqual([]);
+    expect(access.reject(['op-1'])).toEqual([]);
+    expect(syncObjects(raw)).toEqual([]);
+  });
+
+  it('reads the review of a phone paired in an earlier run, installing the schema then', async () => {
+    await pair(accessOver(raw));
+    const afterRestart = openLibrary();
+    expect(accessOver(afterRestart).listPending()).toEqual([]);
+    expect(syncObjects(afterRestart)).toContain('sync_ids');
+  });
+
   it('installs it when the first pairing offer is opened', async () => {
     await accessOver(raw).offerUrl('192.168.0.10', 47810);
     expect(syncObjects(raw)).toContain('sync_ids');

@@ -105,6 +105,7 @@ describe('phone sync over the plain listener', () => {
   });
 
   it('lists, applies and rejects what the phone changed, through the service the settings screen calls', async () => {
+    await service.startSyncPairing(); // changes are only staged by a paired phone
     const project = db.createProject('Review');
     const uuid = db.librarySync.parts().log.uuidOf('projects', project.id);
     const op = (opId: string, name: string) => ({

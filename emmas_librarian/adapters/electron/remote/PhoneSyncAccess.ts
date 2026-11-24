@@ -75,25 +75,35 @@ export class PhoneSyncAccess {
     this.verificationCode = null;
   }
 
+  /**
+   * What the phone sent and still waits for the user's decision. Empty, without touching the library, while no
+   * phone is paired and no offer is open: the settings screen polls this every 10 s (#207 review, B).
+   */
   public listPending(): PendingPhoneChange[] {
-    return this.parts()
-      .store.listPending()
-      .map(({ operation, current }) => ({
-        opId: operation.opId,
-        entity: operation.entity,
-        kind: operation.kind,
-        fields: operation.fields,
-        current,
-        changedAt: operation.changedAt,
-      }));
+    const parts = this.partsForReview();
+    if (!parts) return [];
+    return parts.store.listPending().map(({ operation, current }) => ({
+      opId: operation.opId,
+      entity: operation.entity,
+      kind: operation.kind,
+      fields: operation.fields,
+      current,
+      changedAt: operation.changedAt,
+    }));
   }
 
   public apply(opIds: string[]): PhoneChangeDecision[] {
-    return this.parts().store.apply(opIds).map(toDecision);
+    return (this.partsForReview()?.store.apply(opIds) ?? []).map(toDecision);
   }
 
   public reject(opIds: string[]): PhoneChangeDecision[] {
-    return this.parts().store.reject(opIds).map(toDecision);
+    return (this.partsForReview()?.store.reject(opIds) ?? []).map(toDecision);
+  }
+
+  /** The sync side for the review, or null while nothing could have been staged (see `hasPhoneOrOffer`). */
+  private partsForReview(): LibrarySyncParts | null {
+    if (!this.available()) return this.parts(); // throws, naming why
+    return this.hasPhoneOrOffer() ? this.parts() : null;
   }
 
   private parts(): LibrarySyncParts {
@@ -102,8 +112,13 @@ export class PhoneSyncAccess {
     return this.host.syncParts();
   }
 
+  /** The one condition under which the sync schema may exist: a phone is paired or an offer was opened. */
+  private hasPhoneOrOffer(): boolean {
+    return this.hub !== null || this.registry.list().length > 0;
+  }
+
   private hubForRoute(step: string): DesktopSyncHub {
-    if (this.hub || this.registry.list().length > 0) return this.ensureHub();
+    if (this.hasPhoneOrOffer()) return this.ensureHub();
     throw new Error(
       `No phone is paired with this computer and no pairing is open (step "${step}"); open "Parear um celular" and read the QR code.`,
     );
