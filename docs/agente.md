@@ -51,7 +51,50 @@ casos do LFM3-1.7B (detalhes em `docs/avaliacao-modelos.md`, seção das bateria
 - O diálogo de confirmação mostra só os primeiros 200 caracteres de cada chamada.
 - O `cli ask` não mostra o progresso do download no Windows, porque o stderr do executável do Electron não aparece.
 
+## Leitura dos textos das licenças (2026-11-24)
+
+Lidos no site da Liquid AI, nos repositórios do Hugging Face e no GitHub. Não é aconselhamento jurídico.
+
+**LFM Open License v1.0** (`https://www.liquid.ai/lfm-license`; o mesmo texto está no arquivo `LICENSE` de `LiquidAI/LFM3-1.7B-GGUF` e de
+`LiquidAI/d1-2B-GGUF`):
+
+- O limite de receita só condiciona o **uso comercial**: a Seção 5(a) diz que os direitos de uso comercial dependem de "You or
+  Your Legal Entity" não ultrapassar o limite (`annual revenue of 10 million United States dollars`). "Commercial Use" é "any use of
+  the Work for direct or indirect commercial advantage or monetary compensation". Passado o limite, o uso comercial "is not licensed".
+- **Quem é o licenciado é quem usa o modelo**: "You" é "an individual or Legal Entity exercising permissions granted by this
+  License". Como o aplicativo baixa o modelo na máquina de cada pessoa, a licença vale entre a Liquid AI e quem usa, não só
+  entre a Liquid AI e o autor do aplicativo. A receita do autor ser zero não resolve o caso de um usuário institucional.
+- Não há definição de uso pessoal. A isenção expressa do limite é só para "Qualified Non-Profit Organization" (entidade
+  organizada e operada exclusivamente para fins religiosos, de caridade, científicos etc., isenta pela Seção 501(c)(3) dos Estados
+  Unidos "or foreign equivalent"). O resumo da página diz que pesquisa e uso sem fins lucrativos não têm limite, mas esse texto é
+  mais amplo que a cláusula. Se uma universidade pública brasileira é "equivalente estrangeiro" não está dito.
+- O texto principal escreve "Non-Commercial or Research Purposes" e o quadro de diferenças escreve "and": divergência de redação.
+- Redistribuição (Seção 4): permitida, entregando cópia da licença, marcando arquivos modificados e mantendo os avisos. O FAQ
+  trata a hospedagem em plataformas como canal de distribuição, que não é uso comercial. A página não diz se um aplicativo que
+  baixa direto do Hugging Face para o usuário final conta como distribuição feita pelo autor do aplicativo.
+- Rescisão automática se qualquer condição for descumprida (Seção 11). Não encontrei cláusula de lei aplicável nem de foro.
+- Não está esclarecido: o ano fiscal de referência da receita, se conta a receita de qualquer produto ou só do modelo, e as
+  condições da licença comercial acima do limite (o FAQ manda escrever a `sales@liquid.ai`).
+- O cartão de cada modelo mostra só a sigla `lfm1.0`; o texto da licença acompanha os arquivos do repositório (`LICENSE`, 10,6 kB).
+  O cartão do d1-2B diz que o modelo é "built on LFM3-VL-2B", e a licença desse modelo base não foi verificada.
+
+**Qwen3.5-4B**: Apache-2.0 nos metadados de `Qwen/Qwen3.5-4B` e de `unsloth/Qwen3.5-4B-GGUF`, e o `LICENSE` do repositório da Qwen é o
+texto completo da Apache 2.0. Não encontrei limite de receita, de usuários, política de uso aceitável nem exigência de atribuição
+além da Seção 4 da Apache. O repositório da unsloth, de onde baixamos o arquivo, **não tem arquivo `LICENSE` nem `NOTICE`**: a
+licença aparece só nos metadados.
+
+**llama.cpp**: MIT, "Copyright (c) 2023-2026 The ggml authors".
+
+**O que isso significa para o aplicativo** (a decisão de distribuição é do autor):
+
+- Para quem usa o aplicativo por conta própria, para pesquisa, ou numa instituição sem fins lucrativos reconhecida, o LFM não
+  traz limite. O ponto de atenção é o uso comercial por quem tem receita de US$ 10 milhões ou mais, inclusive empresas que
+  adotem o aplicativo: para elas o LFM3 não está licenciado, e o Qwen3.5-4B (Apache-2.0) está.
+- O aplicativo já mostra a licença e pede o "sim" antes de baixar. Para o LFM, vale mostrar também o aviso de que o limite é de
+  quem usa.
+- O texto da licença do Qwen deveria vir da fonte oficial (`Qwen/Qwen3.5-4B`), já que a cópia da unsloth não o traz.
+
 ## O que fica por conferir
 
-- O texto da licença acompanha o arquivo do modelo no Hugging Face? Hoje o cartão só mostra a sigla `lfm1.0`.
+- A licença do modelo base do d1-2B (`LFM3-VL-2B`) e se há `NOTICE`.
 - Se o aplicativo for distribuído por uma instituição ou empresa, a regra de receita se aplica a ela.
