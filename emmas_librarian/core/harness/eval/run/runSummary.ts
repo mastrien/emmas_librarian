@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import fs from 'fs';
 import type { EvalCase } from '../evalCase';
 import type { ChatTimings } from '../../../agent/chatClient';
 import type { DecisionTrace } from '../../../agent/episode';
@@ -43,6 +44,22 @@ export function chooseCases(all: EvalCase[], ids: string | undefined): EvalCase[
   if (missing.length > 0)
     throw new Error(`[ERR_UNKNOWN_CASE] Offending value: ${missing.join(', ')}. Expected ids from cases.jsonl.`);
   return all.filter((c) => wanted.includes(c.id));
+}
+
+/**
+ * The text of the cases: the file `--cases-file` names (a notebook writes its own copy), or the one next to the code.
+ * A missing file is an error that names it, instead of a run on no cases.
+ *
+ * Usage:
+ *   readCasesText('/content/cases.jsonl', '/repo/core/harness/eval/cases.jsonl'); // the text of /content/cases.jsonl
+ */
+export function readCasesText(flag: string | undefined, fallback: string): string {
+  const file = flag && flag !== 'true' ? flag : fallback;
+  if (!fs.existsSync(file))
+    throw new Error(
+      `[ERR_CASES_FILE] Offending value: ${JSON.stringify(file)}. Expected the path of a cases.jsonl that exists.`,
+    );
+  return fs.readFileSync(file, 'utf-8');
 }
 
 /** The mode of `--mode`; "full" when the flag is absent. */

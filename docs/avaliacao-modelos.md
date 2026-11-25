@@ -122,8 +122,18 @@ npx vite-node core/harness/eval/run/runEval.ts -- --model lfm3-1.7b --cases all 
 Modelos disponíveis: `core/harness/eval/run/modelCatalog.ts`. Cada execução grava uma pasta nova em `runs/`.
 
 O `casesSha` de `config.json` é o hash do `cases.jsonl` com as quebras de linha normalizadas para LF. Os `casesSha` gravados antes
-desta mudança hasheavam o texto bruto, então diferem do mesmo arquivo só por causa de CRLF (Windows) contra LF (Linux, Colab): o
-valor de uma execução antiga não bate com o de uma nova mesmo com os mesmos casos.
+desta mudança (commit `c4ca8b0`, 24/11) hasheavam o texto bruto, então diferem do mesmo arquivo só pelas quebras de linha: o
+valor de uma execução antiga não bate com o de uma nova mesmo com os mesmos casos. Recalculado de `git show` dos dois
+conjuntos de casos (o anterior e o posterior à correção de `rot-1` e `mon-3`, commit `5fc2d87`):
+
+| Conjunto de casos | `casesSha` do arquivo com LF | `casesSha` do arquivo com CRLF |
+|---|---|---|
+| Antigo (até 16/11) | `0d7a23fc…` | `db3cfb8f…` |
+| Corrigido (`5fc2d87`, o atual) | `ec5f0973…` | `a8399a9f…` |
+
+Os dois valores de cada linha são o mesmo conjunto. Nas rodadas de 16/11 as locais gravaram o hash com LF e as do Colab o
+com CRLF (o texto anterior atribuía CRLF ao Windows e LF ao Colab, o que os dados não confirmam); nas de 24/11, as locais
+e o Colab de 17/11 gravaram `a8399a9f…` (CRLF).
 
 ## Bateria de 72 casos: LFM3-1.7B, modo roteado (15/11/2026, 22h21 UTC)
 
@@ -472,6 +482,42 @@ npx vite-node core/harness/eval/run/runEval.ts -- --model lfm3-1.7b --cases proj
 Primeira execução (`runs/2026-11-24T14-26-25_lfm3-1.7b`, LFM3-1.7B `decided`, RX 580): **4/4**, o d1-2B respondeu nos 4 sem
 reserva, 156 s no total contando subir os dois servidores. Rodou dentro do Claude Code sem ser interrompida: a falta de
 memória só atingiu as baterias de 72 casos. Isto não mede qualidade, só avisa se algo quebrou por inteiro.
+
+## Benchmarks de tool calling e a rodada final (2026-11-25)
+
+**Não achei benchmark independente** dos modelos avaliados. O ranking oficial do Berkeley
+([data_overall.csv](https://gorilla.cs.berkeley.edu/data_overall.csv), 109 linhas, sem data no arquivo) não tem Qwen3.5,
+Gemma 4, LFM (LFM2, 2.5, 3) nem Phi-4-mini; só Qwen3, Gemma 3, Phi-4 (não o mini), Granite 4.0 350m, xLAM-2 e outros. O
+`SUPPORTED_MODELS.md` do repositório oficial também não lista nenhum deles. Os números que existem são dos fabricantes, nos
+cards dos modelos (lidos em 2026-11-25; **não reproduzi nenhum**):
+
+| Modelo | BFCL V4 (card) | Quem mediu |
+|---|---|---|
+| LFM3-1.7B | 71,4 | Liquid AI ([card](https://huggingface.co/LiquidAI/LFM3-1.7B)) |
+| Qwen3.5-9B | 66,1 | Qwen ([card](https://huggingface.co/Qwen/Qwen3.5-9B)); a Liquid publica 62,8 |
+| Qwen3.5-4B | 50,3 | Qwen ([card](https://huggingface.co/Qwen/Qwen3.5-4B)); a Liquid publica 55,1 |
+| LFM2.5-8B-A1B | 48,5 e 49,7 (duas tabelas do mesmo card) | Liquid AI ([card](https://huggingface.co/LiquidAI/LFM2.5-8B-A1B)) |
+| Qwen3.5-2B | 43,6 (modo Thinking) | Qwen ([card](https://huggingface.co/Qwen/Qwen3.5-2B)) |
+| Gemma 4 E4B | sem BFCL no card do Google (τ² 42,2); a Liquid publica 48,3 e 33,9 em páginas diferentes | terceiros, sem método claro |
+| Phi-4-mini, LFM2-1.2B-Tool | sem número | |
+
+Os números não são comparáveis entre si (BFCL v3 e v4, modos Thinking e Non-thinking, τ² e τ³). Neste recorte, o
+LFM3-1.7B e, por ser o menor, o LFM2.5-350M (21,9) ficam na fronteira de Pareto de tamanho × BFCL; Qwen3.5 2B, 4B e 9B, Gemma 4
+E4B e LFM2.5-8B-A1B ficam dominados pelo LFM3. **Os benchmarks não entraram na
+escolha dos dez primeiros modelos** (a pesquisa é de 25/11, depois de todas as baterias de 15 a 24/11); servem como
+confirmação posterior de que a escolha é coerente com o que os fabricantes reportam, e para decidir quais modelos novos testar.
+
+**Rodada final.** `core/harness/eval/colab/avaliacao_final_colab.ipynb` roda os 72 casos nas três abordagens (`full`,
+`routed`, `decided`; o `planned` fica de fora, pelo resultado das rodadas anteriores) em dez modelos: os seis que já
+tínhamos (LFM3-1.7B, Qwen3.5-4B, 9B e 2B, Gemma 4 E4B, LFM2.5-8B-A1B) e quatro novos, escolhidos dos números acima só para
+decidir o que testar e que têm GGUF `Q4_K_M` oficial com licença permissiva (LFM2.5-2.6B, MiniCPM5-2B, Granite 4.2-3B,
+Spark-X2.6-4B). Ficaram fora Phi-4-mini (o template não expõe as ferramentas) e os três LFM2 pequenos (abaixo de 45% em todas as
+rodadas). Os casos estão embutidos no notebook e o código vem de um commit fixo do GitHub. **A rodada ainda não foi executada
+no Colab**: o notebook foi testado em Linux (Ubuntu 22.04, CPU) até onde o ambiente permite; o que não se testa fora do Colab
+é a compilação com CUDA, a montagem do Drive e o desempenho em GPU. No teste em CPU rodaram as 23 células de código, com o
+LFM2.5-350M nas três abordagens e, só na abordagem `decided`, o LFM2.5-2.6B e o MiniCPM5-2B (os dois sobem, chamam
+ferramenta e passam `proj-1`). O Granite 4.2-3B e o Spark-X2.6-4B não foram baixados nesse teste; o notebook confere o GGUF e
+roda uma fumaça de cada modelo antes da bateria. Esta rodada é a que será apresentada; as anteriores ficam como histórico.
 
 ## O que não tem registro nos arquivos
 

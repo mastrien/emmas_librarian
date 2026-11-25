@@ -281,8 +281,8 @@ Limites que o artigo deve carregar (todos no [diário](avaliacao-modelos.md)):
 - **Mudanças que o texto acima não cobre:** o `mon-3` só passa se o modelo tentar a chamada de `searchMonitor__set` (o caso exige a ferramenta, mesmo que a resposta certa seja explicar as opções): um modelo que pergunta direto, sem a chamada inválida, reprova. Os Qwen3.5 foram avaliados com raciocínio desligado. O Colab usa outro binário e GPU (CUDA), com `repoCommit` `unknown`; a execução de conferência [verifica-casos-corrigidos](../emmas_librarian/core/harness/eval/runs/2026-11-17T01-46-03_lfm3-1.7b/summary.json) mostra `rot-1` passando e `mon-3` ainda falhando.
 - **Casos de dois momentos:** as baterias anteriores a 17/11 usam os casos antigos (`rot-1` e `mon-3`); as de 24/11 e o
   Colab de 17/11 usam os corrigidos. O `casesSha` de cada [config.json](../emmas_librarian/core/harness/eval/runs/2026-11-24T09-13-45_lfm3-1.7b/config.json)
-  diz qual. O hash passou a ser calculado com quebras de linha normalizadas, então hashes antigos não batem com os novos
-  para os mesmos casos.
+  diz qual, mas cada conjunto tem dois hashes possíveis (arquivo com LF ou com CRLF; o cálculo só passou a normalizar em 24/11):
+  a tabela de equivalência, recalculada do `git show` dos dois commits, está no [diário](avaliacao-modelos.md), seção "Como repetir".
 - **O registro do Colab de 16/11 diz `b12425`, mas o binário foi compilado de outro lugar** (e `repoCommit` ficou
   `unknown`); isso é admitido no [diário](avaliacao-modelos.md), seção "Eficácia no Colab".
 - **A biblioteca é sintética** ("Biblioteca de teste F"), com poucos projetos e artigos; não mede uso real.

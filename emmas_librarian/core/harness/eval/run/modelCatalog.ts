@@ -41,6 +41,12 @@ export const MODELS: ModelSpec[] = [
   spec('qwen3.5-9b', 'unsloth/Qwen3.5-9B-GGUF', 'Qwen3.5-9B-Q4_K_M.gguf', { templateKwargs: NO_THINKING }),
   spec('gemma-4-e4b', 'unsloth/gemma-4-E4B-it-GGUF', 'gemma-4-E4B-it-Q4_K_M.gguf'),
   spec('phi-4-mini', 'unsloth/Phi-4-mini-instruct-GGUF', 'Phi-4-mini-instruct-Q4_K_M.gguf'),
+  // Added for the final round (2026-11-25). Chosen from vendor-reported BFCL V4 figures only to decide what to test; the
+  // choice of the first ten models did not use them (docs/artigo-estrutura-experimento.md).
+  spec('lfm2.5-2.6b', 'LiquidAI/LFM2.5-2.6B-GGUF', 'LFM2.5-2.6B-Q4_K_M.gguf'),
+  spec('minicpm5-2b', 'openbmb/MiniCPM5-2B-GGUF', 'MiniCPM5-2B-Q4_K_M.gguf'),
+  spec('granite-4.2-3b', 'ibm-granite/granite-4.2-3b-GGUF', 'granite-4.2-3b-Q4_K_M.gguf'),
+  spec('spark-x2.6-4b', 'XHToken/Spark-X2.6-4B-GGUF', 'Spark-X2.6-4B-Q4_K_M.gguf'),
 ];
 
 /**
