@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
 import { describe, it, expect } from 'vitest';
-import { browserLocalEnvironment, wantsLocalLibrary } from '../browserWorkspace';
+import { browserLocalEnvironment, mustUseHttps, wantsLocalLibrary } from '../browserWorkspace';
 
 class MapStorage {
   private values = new Map<string, string>();
@@ -35,6 +35,16 @@ describe('wantsLocalLibrary', () => {
       },
     };
     expect(wantsLocalLibrary('?local=1', blocked, false)).toBe(false);
+  });
+});
+
+describe('mustUseHttps', () => {
+  it.each([
+    ['a page served over HTTPS in a browser', 'https:', false, true],
+    ['the app, served from https://localhost but with native requests', 'https:', true, false],
+    ['a page served over plain HTTP', 'http:', false, false],
+  ])('for %s', (_label, protocol, native, expected) => {
+    expect(mustUseHttps(protocol, native)).toBe(expected);
   });
 });
 
