@@ -16,7 +16,7 @@ brutos de cada execução estão em `emmas_librarian/core/harness/eval/runs/`: u
 | Dispositivo | `--device Vulkan0 -ngl 99` (todas as camadas na GPU). `llama-server --list-devices` lista a RX 580. |
 | Prompt | versão `v1` (`eval/run/systemPrompt.ts`): instruções curtas + data de hoje + projeto em foco |
 | Ferramentas | 81 oferecidas a modelo local, 29 105 bytes de definições (cerca de 7 900 tokens), todas de uma vez |
-| Amostragem | a do card de cada modelo (ver `modelCatalog.ts`), `seed 42`, contexto 16 384 |
+| Amostragem | o que `modelCatalog.ts` define (o código diz que segue o card de cada modelo): temperatura 0,1 em nove dos dez (0 no LFM2-1.2B-Tool), `top_k 50` e penalidade 1,1 só no LFM3; `seed 42`, contexto 16 384 |
 | Confirmação | `FakeConfirmer` responde "sim" (exceto casos com `confirm: no`) |
 | Biblioteca | "Biblioteca de teste F", nova em SQLite temporário a cada caso |
 | Nota | `scorer v2` (`eval/run/score.ts`) |
@@ -183,7 +183,8 @@ Implementada em 2026-11-16, ainda sem nenhuma bateria rodada. O modelo trabalha 
 
 A nota é a mesma (v2), calculada sobre as chamadas de todas as tarefas e o estado final da biblioteca. Diferenças em
 relação ao roteado: o plano e a resposta final são chamadas a mais, e quem escolhe o assunto é o plano. O registro da
-execução guarda `planPromptVersion` (`v1`) e, em cada episódio, o plano escrito pelo modelo.
+execução guarda `planPromptVersion` (`v1` nesta primeira versão; hoje o código está em `v3`, em que a lista chega por uma chamada de
+ferramenta `submit_plan`, como a seção seguinte conta) e, em cada episódio, o plano escrito pelo modelo.
 
 Código: `core/harness/eval/run/taskPlan.ts` e `plannedEpisode.ts`. Uso:
 `npx vite-node core/harness/eval/run/runEval.ts -- --model lfm3-1.7b --cases all --mode planned --label bateria-72-planned`.
@@ -213,7 +214,8 @@ Com o limiar de 70% em algum modo, passam ao teste de tempo local: **qwen3.5-9b,
   causa da CUDA 13), mas o `config.json` de cada execução diz `llamaCpp: b12425`. O commit real não foi gravado.
   `repoCommit` também ficou `unknown` (o código veio de um zip).
 - Dispositivo `cuda0` e backend `cuda`. O `server.log` não traz a linha de offload da GPU neste formato de log; a prova
-  de que rodou na GPU é a vazão: 8 a 9 mil tokens/s de prompt no LFM3, contra 360 na CPU local.
+  de que rodou na GPU é a vazão: 8 a 9 mil tokens/s de prompt no LFM3, contra cerca de 360 na GPU local (RX 580, Vulkan; o texto anterior dizia "CPU", mas a
+  bateria local rodou com `-ngl 99`, e os 358 tok/s de CPU são só do `llama-bench` do achado 2).
 - Instalação com `npm install --legacy-peer-deps` em vez de `npm ci`, e modelos baixados depois sem hash (`sha256`
   `verificacao-rapida`). Nenhuma dessas mudanças altera o que o modelo recebe ou como a nota é calculada.
 - Os tempos daqui (por exemplo, LFM3 completo em 17 min contra 86 min local) **não valem** para viabilidade.
@@ -228,7 +230,8 @@ modelo escreveu "Terminei de ler o artigo 3.". É defeito do caso, não do model
 
 ### Primeiras tentativas do modo `planned` com o LFM3 (2026-11-16): o plano não sai
 
-- **Prompt v1** (`runs/2026-11-16T17-02-49_lfm3-1.7b`, interrompida em 57/72, 24 acertos): o planejador recebia as regras do
+- **Prompt v1** (`runs/2026-11-16T17-02-49_lfm3-1.7b`, interrompida: 58 dos 72 episódios rodaram, o último deles `tri-5`
+  em 881 s, e os 14 restantes são `model-error` de cerca de 1 ms; 24 acertos): o planejador recebia as regras do
   sistema ("se nenhuma ferramenta permite, diga que não tem acesso") sem ter ferramentas, e respondia em texto ("Não tenho
   acesso...") ou inventava o assunto (`"listar"`). Defeito do prompt; a execução ficou marcada com `ABORTED.txt`.
 - **Prompt v2** (o planejador recebe só o contexto do dia e a lista de assuntos, e é proibido de responder em texto):
@@ -273,7 +276,10 @@ pedidos, o modelo de decisão escolhe entre os 15 assuntos, e se compara com o a
   assuntos em 75% dos casos mas sobram 2,2 assuntos por caso e 79% das recusas ganham algum; com 0,7 só 36%. Sem uso.
 - **Escolher a ferramenta entre as 81 é fraco**: a primeira ferramenta esperada fica em 1º lugar em 59%, entre as 3
   primeiras em 70,5% e entre as 5 primeiras em 75%. Serve para o assunto, não para a ferramenta.
-- O Kev-4B não ganha do d1-2B e é 2 a 7 vezes mais lento; o d1-2B ocupa 1,1 GB.
+- O Kev-4B não ganha do d1-2B e é mais lento: mediana de 7,5 s contra 4,4 s do d1-2B com as mesmas 15 perguntas sim/não
+  (1,7 vez) e contra 0,79 s do d1-2B só com a escolha do assunto (9,6 vezes); com as 81 ferramentas o d1-2B também leva
+  7,7 s, então ali não há diferença. O d1-2B ocupa 1,1 GB. *(Corrigido em 2026-11-25: o texto anterior dizia "2 a 7
+  vezes", que não corresponde a nenhuma comparação dos `result.json`.)*
 - Amostra pequena (44 casos, 3 de dois assuntos): o resultado indica a direção, não fixa o número.
 - A execução do Kev-4B com as 81 ferramentas foi interrompida pelo sistema por falta de memória (o servidor do Kev
   chega a 5,7 GB residentes) e não foi repetida.
@@ -287,6 +293,9 @@ ferramentas deles (sem `select_areas`), e o completo assume se o roteador falha,
 ou chama ferramenta fora dos assuntos **e nada alterou a biblioteca** (senão o pedido seria feito duas vezes). A reserva
 por confiança ficou desligada (`--min-confidence 0`): a probabilidade do melhor assunto não separa acerto de erro (os 2
 erros têm 0,57 e 0,77; há acertos em 0,61), e o segundo assunto já cobre os erros.
+
+A fumaça local do modo (`runs/2026-11-17T00-05-26_lfm3-1.7b`, 4 casos) fez 3/4: só `rot-1` falhou, o defeito do caso que
+a revisão de 2026-11-17 corrigiu mais abaixo.
 
 **A bateria foi interrompida pelo sistema por falta de memória** (`runs/2026-11-17T00-08-24_lfm3-1.7b`, com
 `ABORTED.txt`), com os dois servidores abertos (LFM3 e d1-2B). **Só os primeiros 37 casos, até `ano-2`, são válidos**: nos
@@ -324,8 +333,9 @@ configuração (seed 42). A reserva no completo **não foi acionada em nenhum do
 
 - **Falhas do decided (9):** `mon-3`, `cat-3`, `bus-2`, `rot-1`, `ctx-2` (falham também no completo e no roteado),
   `ano-2`, `tri-1`, `tri-6`, `pri-1`.
-- **Só o decided falha (2):** `ano-2` e `pri-1`. **O decided acerta e o completo erra (6):** `age-2`, `age-3`, `doc-1`,
-  `lix-2`, `tri-2`, `inv-1`.
+- **Só o decided falha, entre os três modos (2):** `ano-2` e `pri-1`. Contra o completo apenas são 4, porque `tri-1` e
+  `tri-6` também falham no roteado: `ano-2`, `tri-1`, `tri-6` e `pri-1`. **O decided acerta e o completo erra (6):**
+  `age-2`, `age-3`, `doc-1`, `lix-2`, `tri-2`, `inv-1`. O saldo contra o completo é 6 − 4 = +2, os 63 contra 61.
 - **Tempo:** 28% a menos de média que o completo e 38% a menos de mediana. A decisão do d1-2B leva 0,79 s; o resto é o
   LFM3 com 13 ferramentas em média no prompt em vez de 81.
 - **Ressalva de ruído:** a diferença para o completo (2 casos de 72) está dentro do que a amostragem pode mudar, e cada
@@ -358,7 +368,7 @@ novas). Execuções novas com este conjunto não são comparáveis caso a caso n
 
 Notebook `avaliacao_abordagens_colab.ipynb`, L4 (CUDA0), llama.cpp `b12425@18b74fa`, d1-2B como modelo de decisão
 (`--top-areas 2`), 72 casos por modo, uma execução e uma semente. Execuções em `runs/colab-2026-11-17/`. A fumaça (4 casos
-por modo, LFM3) passou antes da bateria.
+por modo, LFM3) rodou antes da bateria: `decided` 4/4 e `planned` 2/4 (`fumaca-decided` e `fumaca-planned` na mesma pasta).
 
 Acertos em 72 casos (tempo médio por caso). `full` e `routed` vêm do Colab de 2026-11-16, com os casos antigos.
 
@@ -462,6 +472,20 @@ npx vite-node core/harness/eval/run/runEval.ts -- --model lfm3-1.7b --cases proj
 Primeira execução (`runs/2026-11-24T14-26-25_lfm3-1.7b`, LFM3-1.7B `decided`, RX 580): **4/4**, o d1-2B respondeu nos 4 sem
 reserva, 156 s no total contando subir os dois servidores. Rodou dentro do Claude Code sem ser interrompida: a falta de
 memória só atingiu as baterias de 72 casos. Isto não mede qualidade, só avisa se algo quebrou por inteiro.
+
+## O que não tem registro nos arquivos
+
+Estas afirmações do diário vêm da sessão de trabalho e não têm arquivo que as confirme (conferido em 2026-11-25 contra
+`runs/`, `setup.jsonl` e os `server.log`, que não registram o build nem o offload da GPU):
+
+- Os números do `llama-bench` do achado 2 (Vulkan 497 e 27,5 tok/s; `-ngl 0`, 358 e 25,9).
+- O `llama.cpp` do Colab de 16/11 ter sido compilado do `master` e a versão da CUDA (13). O que está gravado é só
+  `llamaCpp: b12425` (errado, como a seção diz) e a GPU `CUDA0: NVIDIA L4`.
+- A versão do driver da AMD e os 5,7 GB residentes do servidor do Kev-4B.
+- A execução do Kev-4B com as 81 ferramentas, interrompida por falta de memória: não há `result.json` dela.
+
+A tabela de 72 casos do Colab de 17/11 mistura dois conjuntos: `full` e `routed` rodaram nos casos antigos e `decided` e
+`planned` nos corrigidos (`rot-1`, `mon-3`). A comparação que vale é a de 70 casos, logo abaixo da tabela.
 
 ## O que os números não dizem
 
