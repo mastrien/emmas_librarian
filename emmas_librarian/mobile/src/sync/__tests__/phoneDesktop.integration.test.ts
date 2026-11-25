@@ -16,6 +16,8 @@ import { installSyncSchema } from '../../../../core/sync/syncSchema';
 import { WebCryptoProvider } from '../../../../core/sync/crypto/WebCryptoProvider';
 import { answerPairingOffer } from '../../../../core/sync/crypto/pairing';
 import { LocalLibrary, type LibraryClock } from '../../local/LocalLibrary';
+import { LocalProjectReader } from '../../local/LocalProjectReader';
+import { MemoryPdfStorage } from '../../local/__tests__/fakes/MemoryPdfStorage';
 import { PhoneSyncClient, type PhoneIdentity, type SyncTransport } from '../PhoneSyncClient';
 
 const SCHEMA = fs.readFileSync(path.join(__dirname, '../../../../core/database/schema.sql'), 'utf8');
@@ -161,6 +163,26 @@ describe('from the computer to the phone', () => {
     expect(library.rows('projects')[0]).toMatchObject({ name: 'Review' });
     expect(library.rows('articles')[0]).toMatchObject({ title: 'Mindfulness', project_id: project });
     expect(library.rows('articles')[0]).not.toHaveProperty('local_file_path');
+  });
+
+  it('brings the quick-access links of a project, with their address and without the file path (#208)', async () => {
+    const project = desktopProject('With links');
+    const projectId = log.localIdOf('projects', project) as number;
+    run(
+      "INSERT INTO project_documents (project_id, title, url, position) VALUES (?, 'Guia', 'https://example.org/guia', 1)",
+      projectId,
+    );
+    run(
+      "INSERT INTO project_documents (project_id, title, local_file_path) VALUES (?, 'Planilha', 'C:\\planilha.xlsx')",
+      projectId,
+    );
+
+    await client.sync();
+
+    const phoneProjectId = library.find('projects', project)?.id as number;
+    const links = await new LocalProjectReader(library, new MemoryPdfStorage()).listDocuments(phoneProjectId);
+    expect(links.map((link) => link.title).sort()).toEqual(['Guia', 'Planilha']);
+    expect(links.find((link) => link.title === 'Guia')).toMatchObject({ url: 'https://example.org/guia' });
   });
 
   it('brings a later edit made on the computer', async () => {
