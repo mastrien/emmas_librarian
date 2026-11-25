@@ -15,7 +15,13 @@ const config: CapacitorConfig = {
   server: {
     // Served from https://localhost inside the WebView; the sync calls go out to http://<computer>:<port>.
     androidScheme: 'https',
+    // Lets the native HTTP client reach http://<computer>:<port> (Android blocks cleartext by default).
     cleartext: true,
+  },
+  plugins: {
+    // fetch() leaves the WebView and goes through the native HTTP client: no CORS preflight and no mixed-content block
+    // for the https://localhost page calling http://<computer> (#208). Without it the WebView would refuse the call.
+    CapacitorHttp: { enabled: true },
   },
 };
 

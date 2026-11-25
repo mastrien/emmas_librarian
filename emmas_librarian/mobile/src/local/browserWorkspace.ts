@@ -12,8 +12,21 @@ export interface BrowserParts {
   userAgent: string;
   /** "https:" for the web copy and the desktop-served page, "http:" or a custom scheme in the app. */
   protocol: string;
+  /** True inside the Capacitor app: its `fetch` goes through CapacitorHttp, which may call plain HTTP (#208). */
+  native?: boolean;
   newUuid: () => string;
   scan?: () => Promise<string>;
+}
+
+/**
+ * Whether the computer must be reached over HTTPS. A web page served over HTTPS may not call plain HTTP (mixed
+ * content), but the app is also served from "https://localhost" and its requests are native, so it may; asking for
+ * HTTPS there sent it to the computer's self-signed certificate, which Android refuses (#208).
+ *
+ * @example mustUseHttps('https:', true) // false: the app uses the plain sync port
+ */
+export function mustUseHttps(protocol: string, native: boolean): boolean {
+  return protocol === 'https:' && !native;
 }
 
 /**
@@ -36,7 +49,7 @@ export function browserLocalEnvironment(parts: BrowserParts): LocalAppEnvironmen
         send: (...args) => parts.fetch(...args),
         clock: { now: () => new Date().toISOString(), newUuid: parts.newUuid },
         deviceName: deviceNameFrom(parts.userAgent),
-        secureOnly: parts.protocol === 'https:',
+        secureOnly: mustUseHttps(parts.protocol, parts.native === true),
       });
     },
   };

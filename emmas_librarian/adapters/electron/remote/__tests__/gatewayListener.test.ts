@@ -35,3 +35,75 @@ describe('the pages the LAN server serves', () => {
     expect((await pageHeaders()).get('cache-control')).toBe('no-store');
   });
 });
+
+describe('CORS on the plain-HTTP sync port (#208)', () => {
+  const ORIGIN = 'https://localhost';
+
+  async function syncPort(allowedOrigins: string[] | null): Promise<string> {
+    const gateway = new RemoteGateway({ commands: new CommandRegistry(), authenticate: () => null });
+    const syncCors = allowedOrigins ? { allowedOrigins } : undefined;
+    server = http.createServer(gatewayListener(gateway, { syncCors }));
+    await new Promise<void>((resolve) => server!.listen(0, '127.0.0.1', resolve));
+    return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  }
+
+  const preflight = (base: string, path: string, origin = ORIGIN) =>
+    fetch(`${base}${path}`, {
+      method: 'OPTIONS',
+      headers: {
+        Origin: origin,
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'content-type',
+      },
+    });
+
+  it('answers the preflight of a sync call with 204 and the CORS headers', async () => {
+    const response = await preflight(await syncPort([ORIGIN]), '/api/sync/hello');
+    expect(response.status).toBe(204);
+    expect(response.headers.get('access-control-allow-origin')).toBe(ORIGIN);
+    expect(response.headers.get('access-control-allow-methods')).toContain('POST');
+    expect(response.headers.get('access-control-allow-headers')).toBe('Content-Type');
+    expect(response.headers.get('access-control-max-age')).toBe('600');
+  });
+
+  it('keeps answering 404 without CORS headers to the preflight of any other route', async () => {
+    const base = await syncPort([ORIGIN]);
+    for (const path of ['/api/commands/projects.list', '/api/ping', '/']) {
+      const response = await preflight(base, path);
+      expect(response.status).toBe(404);
+      expect(response.headers.get('access-control-allow-origin')).toBeNull();
+    }
+  });
+
+  it('does not answer the preflight of an origin that is not on the list', async () => {
+    const response = await preflight(await syncPort([ORIGIN]), '/api/sync/hello', 'https://evil.example');
+    expect(response.status).toBe(404);
+    expect(response.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
+  it('adds the allowed origin to the answer of a sync call, even a refused one', async () => {
+    const response = await fetch(`${await syncPort([ORIGIN])}/api/sync/hello`, {
+      method: 'POST',
+      headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    expect(response.headers.get('access-control-allow-origin')).toBe(ORIGIN);
+    expect(response.headers.get('vary')).toBe('Origin');
+  });
+
+  it('adds nothing to the answer of a command call', async () => {
+    const response = await fetch(`${await syncPort([ORIGIN])}/api/commands/projects.list`, {
+      method: 'POST',
+      headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    expect(response.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
+  it('has no CORS at all where the option is not set (the HTTPS gateway)', async () => {
+    const base = await syncPort(null);
+    expect((await preflight(base, '/api/sync/hello')).status).toBe(404);
+    const answer = await fetch(`${base}/api/sync/hello`, { method: 'POST', headers: { Origin: ORIGIN }, body: '{}' });
+    expect(answer.headers.get('access-control-allow-origin')).toBeNull();
+  });
+});

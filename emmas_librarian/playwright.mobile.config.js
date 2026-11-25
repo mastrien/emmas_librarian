@@ -1,7 +1,7 @@
 const { defineConfig, devices } = require('@playwright/test');
 
 // The phone client in a real browser (Chromium, phone-sized), against a real desktop sync stack
-// (mobile/e2e/syncServer.ts). It needs no display and no Electron.
+// (mobile/e2e/syncServer.ts: the page on :4180, the sync port on :4181, so the calls are cross-origin as on the phone). It needs no display and no Electron.
 // Where the browser is not the one Playwright installs (a container with its own Chromium): PW_CHROMIUM_PATH=/path/to/chrome.
 const launchOptions = process.env.PW_CHROMIUM_PATH
   ? { executablePath: process.env.PW_CHROMIUM_PATH, args: ['--no-sandbox'] }

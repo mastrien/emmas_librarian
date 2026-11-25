@@ -146,7 +146,8 @@ describe('pairing and syncing from Ajustes', () => {
     expect(screen.getByText(/1 alteração\(ões\) aguardando confirmação no computador/)).toBeInTheDocument();
 
     desktop.applyAllPending();
-    fireEvent.click(screen.getByRole('button', { name: 'Sincronizar agora' }));
+    // The button reads "Sincronizando…" until every round has ended (the sync now repeats rounds, #208).
+    fireEvent.click(await screen.findByRole('button', { name: 'Sincronizar agora' }));
     await waitFor(() => expect(screen.getByText(/Nada aguardando o computador/)).toBeInTheDocument());
     expect(desktop.db.prepare('SELECT content FROM project_diary').get()).toEqual({
       content: 'Escrito sem o computador',

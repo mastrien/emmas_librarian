@@ -19,6 +19,9 @@ export interface PhoneIdentity {
   deviceKey: Bytes;
 }
 
+/** A safety stop: 200 rounds of 500 changes is 100 thousand rows, more than a library has. */
+const MAX_ROUNDS = 200;
+
 export interface SyncReport {
   sent: number;
   staged: number;
@@ -56,7 +59,24 @@ export class PhoneSyncClient {
     private readonly transport: SyncTransport,
   ) {}
 
+  /**
+   * Syncs until the computer has nothing more: it answers at most 500 changes per round, and a library of two
+   * thousand rows (articles first, the diary and the quick-access links last) took five taps on the button (#208).
+   * What the phone sent and what the computer decided are reported once; `received` adds up all the rounds.
+   */
   public async sync(): Promise<SyncReport> {
+    const report = await this.syncRound();
+    let cursor = this.library.state.cursor;
+    for (let round = 1; round < MAX_ROUNDS; round += 1) {
+      const next = await this.syncRound();
+      report.received += next.received;
+      if (this.library.state.cursor === cursor) break;
+      cursor = this.library.state.cursor;
+    }
+    return report;
+  }
+
+  private async syncRound(): Promise<SyncReport> {
     const channel = await this.openChannel();
     const request: SyncRequest = {
       cursor: this.library.state.cursor,

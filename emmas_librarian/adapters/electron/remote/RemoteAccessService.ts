@@ -13,6 +13,7 @@ import { PairedDevices } from '../../../core/remote/PairedDevices';
 import { PairingDesk } from '../../../core/remote/PairingDesk';
 import { RemoteGateway } from '../../../core/remote/RemoteGateway';
 import { gatewayListener } from './gatewayListener';
+import { WEBVIEW_ORIGIN } from './syncCors';
 import { staticSiteIn, type StaticSite } from './staticSite';
 import { loadTlsIdentity, type CertificateIssuer, type TlsIdentity } from './tlsIdentity';
 import type { QrEncoder } from './qrEncoder';
@@ -153,7 +154,7 @@ export class RemoteAccessService {
       sync,
       hideInternalErrors: true,
     });
-    const server = http.createServer(gatewayListener(gateway, {}));
+    const server = http.createServer(gatewayListener(gateway, { syncCors: { allowedOrigins: [WEBVIEW_ORIGIN] } }));
     const saved = Number(this.host.settings.getSetting(SYNC_PORT_KEY)) || DEFAULT_SYNC_PORT;
     for (const port of [saved, 0]) {
       try {

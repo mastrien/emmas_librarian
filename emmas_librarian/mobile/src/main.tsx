@@ -37,6 +37,7 @@ const environment: AppEnvironment = {
         fetch: (...args) => fetch(...args),
         userAgent: navigator.userAgent,
         protocol: window.location.protocol,
+        native: isNativeApp(),
         newUuid: () => window.crypto.randomUUID(),
         scan: isNativeApp() ? scanPairingCode : undefined,
       })
