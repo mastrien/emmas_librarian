@@ -19,7 +19,7 @@ import { RunRecorder } from './runRecorder';
 import { setupFromEnv } from './runSetup';
 import { SCORER_VERSION, scoreEpisode } from './score';
 import { startServer } from '../../../agent/runtime/serverProcess';
-import { casesSha, chooseCases, parseMode, pickById, summarize } from './runSummary';
+import { casesSha, chooseCases, parseMode, pickById, readCasesText, summarize } from './runSummary';
 import { PLAN_PROMPT_VERSION } from './taskPlan';
 import { systemContext } from '../../systemContext';
 import { systemPromptFor, SYSTEM_PROMPT_VERSION } from '../../../agent/systemPrompt';
@@ -115,7 +115,7 @@ function planFromArgs(argv: string[]): RunPlan {
   const args = flagsOf(argv);
   const mode = parseMode(args.mode);
   const model = pickById(MODELS, args.model, 'model');
-  const casesText = fs.readFileSync(path.join(EVAL_DIR, 'cases.jsonl'), 'utf-8');
+  const casesText = readCasesText(args['cases-file'], path.join(EVAL_DIR, 'cases.jsonl'));
   const setup = setupFromEnv(process.env);
   const port = 8089;
   const decision = mode === 'decided' ? decidedConfig(args) : undefined;
@@ -187,7 +187,7 @@ async function runAll(plan: RunPlan, chat: LlamaServerChat, recorder: RunRecorde
   return results;
 }
 
-/** Usage: vite-node core/harness/eval/run/runEval.ts -- --model qwen3.5-4b --cases art-2,proj-1 [--label texto] [--mode full|routed|planned|decided] */
+/** Usage: vite-node core/harness/eval/run/runEval.ts -- --model qwen3.5-4b --cases art-2,proj-1 [--label texto] [--mode full|routed|planned|decided] [--cases-file caminho] */
 async function main(): Promise<void> {
   const plan = planFromArgs(process.argv.slice(2));
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);

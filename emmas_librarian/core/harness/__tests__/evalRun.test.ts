@@ -9,6 +9,7 @@ import { runEpisode, toOpenAiTools } from '../../agent/episode';
 import { flagsOf } from '../eval/run/flags';
 import { MODELS, samplingOf, serverArgs } from '../eval/run/modelCatalog';
 import { RunRecorder } from '../eval/run/runRecorder';
+import { readCasesText } from '../eval/run/runSummary';
 import { setupFromEnv } from '../eval/run/runSetup';
 import { scoreEpisode } from '../eval/run/score';
 import { systemPromptFor } from '../../agent/systemPrompt';
@@ -230,6 +231,24 @@ describe('the run setup', () => {
   it('sends the sampling of the model card with a fixed seed', () => {
     expect(samplingOf(MODELS[0])).toEqual({ temperature: 0.1, seed: 42, top_k: 50, repeat_penalty: 1.1 });
     expect(samplingOf(MODELS.find((m) => m.id === 'lfm2-1.2b-tool')!)).toEqual({ temperature: 0, seed: 42 });
+  });
+
+  it('has the four models of the final round, each with a Q4_K_M file of its own repository', () => {
+    const added = ['lfm2.5-2.6b', 'minicpm5-2b', 'granite-4.2-3b', 'spark-x2.6-4b'].map((id) =>
+      MODELS.find((m) => m.id === id),
+    );
+    expect(added.every((m) => m?.file.endsWith('-Q4_K_M.gguf') && m.source.endsWith('-GGUF'))).toBe(true);
+    expect(new Set(MODELS.map((m) => m.id)).size).toBe(MODELS.length);
+  });
+
+  it('reads the cases from the file --cases-file names, and says which file is missing', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cases-'));
+    const file = path.join(dir, 'cases.jsonl');
+    fs.writeFileSync(file, '{"id":"x"}\n');
+    expect(readCasesText(file, path.join(dir, 'unused.jsonl'))).toBe('{"id":"x"}\n');
+    expect(readCasesText(undefined, file)).toBe('{"id":"x"}\n');
+    expect(() => readCasesText(path.join(dir, 'missing.jsonl'), file)).toThrow(/ERR_CASES_FILE.*missing\.jsonl/);
+    fs.rmSync(dir, { recursive: true });
   });
 
   it('reads flags, refusing what is not a flag', () => {
