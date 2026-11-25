@@ -62,6 +62,49 @@ npx vite --config vite.mobile.config.mts
 O segundo sobe o cliente com recarga automática; sem o desktop por trás ele se comporta como a cópia da web
 (só abre arquivos). Para testar o modo controle remoto, gere o build e use o endereço do QR code.
 
+## Gerar o APK de teste
+
+O app Android é o mesmo build do cliente (`dist-mobile/`) dentro do WebView do Capacitor. A pasta `android/` é gerada
+(`npx cap add android`) e fica no `.gitignore`; o que a torna reproduzível é a configuração em `capacitor.config.ts`
+e o passo `npm run android:prepare`, que ajusta o manifest gerado.
+
+Por que isso importa (#208): a página roda em `https://localhost` e chama `http://<ip do computador>:47811/api/sync/*`.
+`plugins.CapacitorHttp.enabled` faz o `fetch` sair pelo cliente HTTP nativo, sem preflight de CORS e sem bloqueio de
+conteúdo misto. O Android 9 em diante recusa HTTP sem TLS, e `server.cleartext` não grava `usesCleartextTraffic` neste
+projeto; por isso `android:prepare` grava o atributo (e a permissão `CAMERA` e o módulo do leitor de QR). Como segunda
+linha de defesa, a porta de sincronização do desktop também responde ao preflight para `https://localhost`.
+
+Pré-requisitos: JDK 21, Android SDK com a plataforma 36 e o build-tools (o Gradle baixa o que faltar se as licenças
+estiverem aceitas) e uns 3 GB livres para os caches do Gradle. Em `emmas_librarian/`:
+
+```powershell
+$env:JAVA_HOME = 'C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot'
+$env:ANDROID_HOME = 'C:\Android\Sdk'
+npm run build:mobile
+npx cap add android          # só na primeira vez
+npm run android:prepare      # cleartext, CAMERA e módulo do leitor de QR no manifest
+npx cap sync android
+cd android
+.\gradlew.bat assembleDebug
+```
+
+O APK sai em `android/app/build/outputs/apk/debug/app-debug.apk` (cerca de 28 MB, assinado com a chave de debug).
+Para instalar:
+
+- Com o celular em modo desenvolvedor, depuração USB ligada e cabo: `adb install -r app-debug.apk`.
+- Ou copie o arquivo para o celular, abra-o e permita a instalação de fontes desconhecidas quando o Android pedir.
+
+### Testar no aparelho
+
+1. Computador e celular na mesma rede Wi-Fi. O firewall do Windows pode pedir para liberar as portas do aplicativo:
+   permita em redes privadas.
+2. No desktop, em Configurações, ligue "Acesso pelo celular" e abra "Parear um celular" para mostrar o QR.
+3. No app, vá em Ajustes, toque para parear e leia o QR (aceite a permissão da câmera).
+4. Sincronize e confira que a biblioteca do computador aparece no celular.
+5. Crie algo no celular (uma página do diário ou um destaque), sincronize de novo e, no desktop, aplique a mudança
+   na lista de mudanças do celular.
+6. Se algo falhar, `adb logcat | findstr /i "Capacitor chromium"` mostra o erro de rede do WebView.
+
 ## Limitações conhecidas
 
 - Não testado em celular de verdade: os testes rodam em jsdom e, no E2E, numa janela do Electron com largura de
