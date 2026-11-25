@@ -185,6 +185,25 @@ describe('from the computer to the phone', () => {
     expect(links.find((link) => link.title === 'Guia')).toMatchObject({ url: 'https://example.org/guia' });
   });
 
+  it('keeps going until the computer has nothing more, past the 500 changes of one round (#208)', async () => {
+    const project = desktopProject('Big library');
+    const projectId = log.localIdOf('projects', project) as number;
+    for (let n = 0; n < 1200; n += 1)
+      run('INSERT INTO articles (project_id, title) VALUES (?, ?)', projectId, `Paper ${n}`);
+    run(
+      "INSERT INTO project_diary (project_id, entry_date, content) VALUES (?, '2026-11-20', 'last in line')",
+      projectId,
+    );
+    run("INSERT INTO project_documents (project_id, title, url) VALUES (?, 'Guia', 'https://example.org')", projectId);
+
+    const report = await client.sync();
+
+    expect(report.received).toBe(1203);
+    expect(library.rows('articles')).toHaveLength(1200);
+    expect(library.rows('project_diary')).toHaveLength(1);
+    expect(library.rows('project_documents')).toHaveLength(1);
+  });
+
   it('brings a later edit made on the computer', async () => {
     const project = desktopProject('Old name');
     await client.sync();
